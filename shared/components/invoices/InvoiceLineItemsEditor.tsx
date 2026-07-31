@@ -244,7 +244,7 @@ export function InvoiceLineItemsEditor({
                       onChange={(e) =>
                         handleItemChange(index, "taxable", e.target.checked)
                       }
-                      className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+                      className="h-4 w-4 rounded border-altair-border-strong text-altair-graphite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2"
                     />
                     Tax
                   </label>

@@ -494,12 +494,12 @@ function ToggleRow({
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-60 ${
-          checked ? "bg-cyan-600" : "bg-slate-200"
+        className={`relative h-7 w-12 shrink-0 rounded-full border border-altair-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 ${
+          checked ? "bg-altair-graphite" : "bg-altair-stone"
         }`}
       >
         <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+          className={`absolute top-0.5 h-6 w-6 rounded-full bg-altair-paper-elevated shadow transition-transform ${
             checked ? "left-[22px]" : "left-0.5"
           }`}
         />

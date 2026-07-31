@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/shared/design-system/components";
+import {
+  Button,
+  fieldControlClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
@@ -24,10 +28,8 @@ type ExpenseFormProps = {
   onCancel: () => void;
 };
 
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const labelClass = fieldLabelClass;
 
 export function ExpenseForm({
   initialData,

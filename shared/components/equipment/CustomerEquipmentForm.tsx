@@ -1,6 +1,12 @@
 "use client";
 
 import type { CustomerEquipmentFormData } from "@/shared/types/customer-equipment";
+import {
+  fieldCheckboxClass,
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 type CustomerEquipmentFormProps = {
   formId: string;
@@ -10,10 +16,9 @@ type CustomerEquipmentFormProps = {
   compact?: boolean;
 };
 
-const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const textareaClass = fieldTextareaClass;
+const labelClass = fieldLabelClass;
 
 export function CustomerEquipmentForm({
   formId,
@@ -156,18 +161,18 @@ export function CustomerEquipmentForm({
           value={data.notes}
           onChange={(event) => updateField("notes", event.target.value)}
           placeholder="Additional details..."
-          className={inputClass}
+          className={textareaClass}
         />
       </div>
 
       {showActiveToggle ? (
         <div className="sm:col-span-2">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+          <label className="inline-flex items-center gap-2 text-sm text-altair-ink-on-paper">
             <input
               type="checkbox"
               checked={data.isActive}
               onChange={(event) => updateField("isActive", event.target.checked)}
-              className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+              className={fieldCheckboxClass}
             />
             Active equipment
           </label>

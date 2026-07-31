@@ -53,8 +53,8 @@ export const teamMemberNorthStarStyles = {
     "inline-flex items-center rounded-full bg-[rgba(245,158,11,0.12)] px-2.5 py-0.5 text-xs font-medium text-amber-900 ring-1 ring-[rgba(245,158,11,0.22)]",
   statusSuspended:
     "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.08)] px-2.5 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]",
-  toggleTrackOn: "bg-[#B88A2E]",
-  toggleTrackOff: "bg-[rgba(138,99,36,0.18)]",
+  toggleTrackOn: "bg-altair-graphite",
+  toggleTrackOff: "bg-altair-stone",
   certChip:
     "inline-flex items-center gap-1 rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-sm font-medium text-[#4F4638]",
   certRemove:

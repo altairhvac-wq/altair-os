@@ -10,6 +10,12 @@ import { formatActionError } from "@/shared/lib/operational-errors";
 import { getEditableLeadStatusOptions } from "@/shared/lib/leads/lead-status-transitions";
 import { ls } from "@/shared/components/leads/north-star-m14/lead-north-star-styles";
 import {
+  fieldControlClass,
+  fieldLabelClass,
+  fieldSelectClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
+import {
   LEAD_SOURCE_OPTIONS,
   LEAD_STATUS_OPTIONS,
   mapLeadToFormData,
@@ -45,8 +51,10 @@ const DEFAULT_FORM_DATA: LeadFormData = {
   nextFollowUpAt: "",
 };
 
-const LEGACY_INPUT_CLASS =
-  "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm";
+const LEGACY_INPUT_CLASS = `mt-1 ${fieldControlClass}`;
+const LEGACY_TEXTAREA_CLASS = `mt-1 ${fieldTextareaClass}`;
+const LEGACY_SELECT_CLASS = `mt-1 ${fieldSelectClass}`;
+const LEGACY_LABEL_CLASS = fieldLabelClass;
 
 function resolveFollowUpDate(
   preset: FollowUpPreset,
@@ -80,11 +88,9 @@ export function LeadForm({
 }: LeadFormProps) {
   const timeZone = useCompanyTimezone();
   const inputClass = northStar ? ls.formInput : LEGACY_INPUT_CLASS;
-  const textareaClass = northStar ? ls.formTextarea : LEGACY_INPUT_CLASS;
-  const selectClass = northStar ? ls.formSelect : LEGACY_INPUT_CLASS;
-  const labelClass = northStar
-    ? ls.formLabel
-    : "font-medium text-slate-700";
+  const textareaClass = northStar ? ls.formTextarea : LEGACY_TEXTAREA_CLASS;
+  const selectClass = northStar ? ls.formSelect : LEGACY_SELECT_CLASS;
+  const labelClass = northStar ? ls.formLabel : LEGACY_LABEL_CLASS;
   const sectionLabelClass = northStar
     ? `${ls.sectionLabel} block`
     : "text-sm font-medium text-slate-700";

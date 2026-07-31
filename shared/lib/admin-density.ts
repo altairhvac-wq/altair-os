@@ -1,6 +1,11 @@
 /** Shared spacing and control sizing for admin / field workflows (Master Shell V2 density). */
 
 import {
+  fieldGroupClass,
+  fieldGridClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components/field-styles";
+import {
   adminFormInputClass,
   masterSectionSurfaceClass,
 } from "@/shared/design-system/shell/tokens";
@@ -14,12 +19,14 @@ export const adminCardSectionClass = masterSectionSurfaceClass;
 
 export const adminPanelBodyClass = "min-h-0 flex-1 overflow-y-auto px-3 py-2";
 
-export const adminFormStackClass = "space-y-2";
+/** Vertical rhythm between fields — matches Field group spacing. */
+export const adminFormStackClass = fieldGroupClass;
 
-export const adminFormGridClass = "grid gap-2 sm:grid-cols-2";
+/** Two-column field grid — matches Field grid spacing. */
+export const adminFormGridClass = fieldGridClass;
 
-export const adminFormLabelClass =
-  "mb-0.5 block text-[11px] font-semibold leading-tight text-slate-600";
+/** Field label — matches Field label presentation. */
+export const adminFormLabelClass = fieldLabelClass;
 
 export const adminFormActionsClass =
   "flex gap-2 border-t border-slate-100 pt-2";

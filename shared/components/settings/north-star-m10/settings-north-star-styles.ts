@@ -1,5 +1,10 @@
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 export const settingsNorthStarStyles = {
   pageCanvas: lt.pageCanvas,
@@ -52,11 +57,9 @@ export const settingsNorthStarStyles = {
   ivoryCardHeader:
     "border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-3 sm:px-4",
   ivoryCardBody: "px-3 py-3 sm:px-4",
-  formInput:
-    "w-full min-h-11 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#4F4638] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:py-2.5",
-  formTextarea:
-    "w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#4F4638] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
-  formLabel: "mb-1 block text-xs font-semibold text-[#4F4638]",
+  formInput: fieldControlClass,
+  formTextarea: fieldTextareaClass,
+  formLabel: fieldLabelClass,
   saveButton: buttonClassName("primary", "md", "w-full sm:w-auto"),
 } as const;
 

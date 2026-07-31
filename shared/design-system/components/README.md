@@ -1,6 +1,9 @@
 # Altair V2 Design System Components
 
-Reusable visual building blocks for Altair OS V2. Do not wire these into production pages until a deliberate adoption pass.
+Reusable visual building blocks for Altair OS V2. Form controls (`Field`,
+`Input`, `Textarea`, `Select`, and `field-styles.ts`) are the production form
+language — see the Input/Field sections below. Other V2 surface components
+remain on deliberate adoption passes.
 
 **Design Lab:** Visual review of all V2 components with realistic sample content at `/altair-design-lab` (internal route — not in admin nav).
 
@@ -630,8 +633,10 @@ border, focus, radius, or padding.
   rule in app/globals.css (`font-size: 1rem !important` under 768px for
   every native input/select/textarea) — Input does not need its own
   mobile-specific text size.
-- Not yet adopted repository-wide — see CustomerForm's "Service location"
-  fields for the first production pilot.
+- Production standard for Altair form controls. Compatibility surfaces
+  (`adminFormInputClass`, `.admin-form-input`, North Star `formInput` tokens)
+  share presentation via `field-styles.ts`. Prefer `Field` + `Input` /
+  `Textarea` / `Select` for new and migrated forms.
 
 ---
 

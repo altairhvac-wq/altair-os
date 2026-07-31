@@ -4,7 +4,13 @@ import {
   type ServiceItem,
   type ServiceItemFormData,
 } from "@/shared/types/service-item";
-import { Button } from "@/shared/design-system/components";
+import {
+  Button,
+  fieldCheckboxClass,
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components";
 
 type ServiceItemFormProps = {
   initialData?: Partial<ServiceItemFormData>;
@@ -25,10 +31,9 @@ const emptyForm: ServiceItemFormData = {
   isActive: true,
 };
 
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const textareaClass = fieldTextareaClass;
+const labelClass = fieldLabelClass;
 
 export function ServiceItemForm({
   initialData,
@@ -95,7 +100,7 @@ export function ServiceItemForm({
           rows={3}
           defaultValue={defaults.description}
           placeholder="Optional details shown on estimates"
-          className={inputClass}
+          className={textareaClass}
         />
       </div>
 
@@ -155,7 +160,7 @@ export function ServiceItemForm({
             type="checkbox"
             name="taxable"
             defaultChecked={defaults.taxable}
-            className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+            className={fieldCheckboxClass}
           />
           Taxable by default
         </label>
@@ -165,7 +170,7 @@ export function ServiceItemForm({
             type="checkbox"
             name="isActive"
             defaultChecked={defaults.isActive}
-            className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+            className={fieldCheckboxClass}
           />
           Active in price book
         </label>

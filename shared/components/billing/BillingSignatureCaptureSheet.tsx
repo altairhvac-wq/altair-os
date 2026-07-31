@@ -20,6 +20,11 @@ import type { BillingSignatureBlockVariant } from "@/shared/lib/billing-signatur
 import { getBillingSignatureBlockContent } from "@/shared/lib/billing-signature-block";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import {
+  fieldCheckboxClass,
+  fieldControlClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components/field-styles";
 import { SignaturePad, type SignaturePadHandle } from "./SignaturePad";
 
 type BillingSignatureCaptureSheetProps = {
@@ -35,10 +40,8 @@ type BillingSignatureCaptureSheetProps = {
   triggerClassName?: string;
 };
 
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const labelClass = fieldLabelClass;
 
 const CAPTURE_SIGNATURE_TITLE_ID = "capture-signature-modal-title";
 

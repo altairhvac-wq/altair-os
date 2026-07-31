@@ -22,19 +22,19 @@ type ServiceItemsSearchFilterBarProps = {
 };
 
 const legacySelectClass =
-  "h-11 min-h-11 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-10 md:min-h-10";
+  "h-11 min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-10 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
 
 const legacySearchClass =
-  "h-11 min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-10 md:min-h-10";
+  "h-11 min-h-11 w-full rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
 
 const northStarCatalogToolbarClass =
   "shrink-0 border-b-2 border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 sm:px-4 lg:px-5";
 
 const northStarCatalogSearchClass =
-  "h-11 w-full min-h-11 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] py-1.5 pl-9 pr-3 text-sm font-medium text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFF9EA] focus:ring-2 focus:ring-[rgba(201,164,77,0.18)] md:h-9 md:min-h-9";
+  "h-11 w-full min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-3 text-sm font-medium text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-9 md:min-h-9";
 
 const northStarCatalogSelectClass =
-  "h-11 w-full min-h-11 appearance-none rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] py-1.5 pl-9 pr-8 text-sm font-semibold text-[#17130E] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFF9EA] focus:ring-2 focus:ring-[rgba(201,164,77,0.18)] sm:w-auto sm:pr-10 md:h-9 md:min-h-9";
+  "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-8 text-sm font-semibold text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated sm:w-auto sm:pr-10 md:h-9 md:min-h-9";
 
 const northStarCatalogFilterIconClass = "text-[#64748B]";
 

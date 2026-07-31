@@ -5,6 +5,12 @@ import {
   type MockTimeEntryFormData,
   type MockTimeEntryStatus,
 } from "@/shared/types/time-entry-mock";
+import {
+  fieldCheckboxClass,
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 type TimeEntryFormProps = {
   initialData?: Partial<MockTimeEntryFormData>;
@@ -24,10 +30,9 @@ const emptyForm: MockTimeEntryFormData = {
   notes: "",
 };
 
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const textareaClass = fieldTextareaClass;
+const labelClass = fieldLabelClass;
 
 export function TimeEntryForm({
   initialData,
@@ -144,7 +149,7 @@ export function TimeEntryForm({
           type="checkbox"
           name="isOvertime"
           defaultChecked={initialData?.isOvertime ?? emptyForm.isOvertime}
-          className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+          className={fieldCheckboxClass}
         />
         Mark as overtime
       </label>
@@ -158,7 +163,7 @@ export function TimeEntryForm({
           name="notes"
           rows={3}
           defaultValue={initialData?.notes ?? emptyForm.notes}
-          className={inputClass}
+          className={textareaClass}
         />
       </div>
 

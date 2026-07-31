@@ -5,6 +5,10 @@ import {
   deriveIsReimbursable,
   type ExpensePaymentMethod,
 } from "@/shared/types/expense";
+import {
+  fieldLabelClass,
+  fieldSelectClass,
+} from "@/shared/design-system/components/field-styles";
 
 type ExpensePaymentMethodFieldProps = {
   variant?: "select" | "toggle";
@@ -14,7 +18,7 @@ type ExpensePaymentMethodFieldProps = {
   name?: string;
 };
 
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const labelClass = fieldLabelClass;
 
 export function ExpensePaymentMethodField({
   variant = "select",
@@ -33,14 +37,14 @@ export function ExpensePaymentMethodField({
             type="button"
             disabled={disabled}
             onClick={() => onChange("personal_card")}
-            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors ${
+            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 ${
               value !== "company_card"
-                ? "border-cyan-300 bg-cyan-50 text-cyan-900"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-altair-border-strong bg-altair-paper-subtle text-altair-ink-on-paper"
+                : "border-altair-border bg-altair-paper-elevated text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
             }`}
           >
             <span className="block text-sm font-semibold">My card / cash</span>
-            <span className="mt-0.5 block text-xs text-slate-500">
+            <span className="mt-0.5 block text-xs text-altair-ink-on-paper-muted">
               Reimbursable
             </span>
           </button>
@@ -48,14 +52,14 @@ export function ExpensePaymentMethodField({
             type="button"
             disabled={disabled}
             onClick={() => onChange("company_card")}
-            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors ${
+            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 ${
               value === "company_card"
-                ? "border-cyan-300 bg-cyan-50 text-cyan-900"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-altair-border-strong bg-altair-paper-subtle text-altair-ink-on-paper"
+                : "border-altair-border bg-altair-paper-elevated text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
             }`}
           >
             <span className="block text-sm font-semibold">Company card</span>
-            <span className="mt-0.5 block text-xs text-slate-500">
+            <span className="mt-0.5 block text-xs text-altair-ink-on-paper-muted">
               Not reimbursable
             </span>
           </button>
@@ -77,7 +81,7 @@ export function ExpensePaymentMethodField({
         onChange={(event) =>
           onChange(event.target.value as ExpensePaymentMethod)
         }
-        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+        className={fieldSelectClass}
       >
         {EXPENSE_PAYMENT_METHOD_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>

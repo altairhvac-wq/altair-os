@@ -1,4 +1,5 @@
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import { fieldControlClass } from "@/shared/design-system/components/field-styles";
 
 /** Shared rhythm and width tokens for Master Shell V2. */
 
@@ -98,8 +99,13 @@ export const adminSegmentedItemActiveClass = "admin-segmented-item-active";
 /** Pressed/selected state for operational filter cards (e.g. dispatch workload). */
 export const adminFilterCardActiveClass = "admin-filter-card-active";
 
-/** Shared admin text/select/textarea control — pairs with `.admin-form-input` in globals.css. */
-export const adminFormInputClass = "admin-form-input text-sm";
+/**
+ * Shared admin text/select/textarea control.
+ * Presentation matches the canonical Field/Input contract in field-styles.ts;
+ * `.admin-form-input` in globals.css mirrors the same visual language for
+ * call sites that still apply the CSS class directly.
+ */
+export const adminFormInputClass = fieldControlClass;
 
 /** Compact panel header icon button (close, overflow actions). */
 export const adminIconBtnClass = "admin-icon-btn";

@@ -25,9 +25,9 @@ const SORT_OPTIONS: { value: LeadSortField; label: string }[] = [
 ];
 
 const legacySearchInputClass =
-  "h-11 min-h-11 w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2 md:h-10 md:min-h-10";
+  "h-11 min-h-11 w-full rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
 const legacySelectClass =
-  "h-11 min-h-11 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2 md:h-10 md:min-h-10";
+  "h-11 min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated px-3 py-2.5 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
 
 export function LeadSearchFilterBar({
   search,

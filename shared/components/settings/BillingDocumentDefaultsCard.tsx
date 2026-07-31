@@ -10,6 +10,11 @@ import {
 } from "@/shared/lib/company-billing-defaults";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { st } from "@/shared/components/settings/north-star-m10/settings-north-star-styles";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 type BillingDocumentDefaultsCardProps = {
   initialDefaults: CompanyBillingDefaults;
@@ -23,13 +28,9 @@ type FeedbackState = {
   message: string;
 } | null;
 
-const legacyInputClass =
-  "w-full min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[44px] sm:py-2.5";
-
-const legacyTextareaClass =
-  "w-full min-h-[80px] max-w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[96px] sm:py-2.5";
-
-const legacyLabelClass = "mb-1 block text-xs font-semibold text-slate-600";
+const legacyInputClass = fieldControlClass;
+const legacyTextareaClass = fieldTextareaClass;
+const legacyLabelClass = fieldLabelClass;
 
 type CollapsibleNotesFieldProps = {
   id: string;

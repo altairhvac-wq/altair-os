@@ -12,7 +12,7 @@ type TimeTrackingSearchFilterBarProps = {
 };
 
 const legacySearchClass =
-  "h-11 min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-10 md:min-h-10";
+  "h-11 min-h-11 w-full rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
 
 const legacySelectClass =
   "h-11 min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 md:h-10 md:min-h-10";

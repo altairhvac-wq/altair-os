@@ -1,5 +1,11 @@
 import type { LeadStatus } from "@/shared/types/lead";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+  fieldSelectClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 export const LEAD_STATUS_NORTH_STAR_BADGE_STYLES: Record<LeadStatus, string> = {
   new: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
@@ -23,13 +29,10 @@ export const leadNorthStarStyles = {
   secondaryText: "text-[#4F4638]",
   linkAccent:
     "font-medium text-[#8A6324] transition-colors hover:text-[#B88A2E]",
-  formLabel: "mb-1 block text-xs font-semibold text-[#4F4638]",
-  formInput:
-    "w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[44px] sm:py-2.5",
-  formTextarea:
-    "w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
-  formSelect:
-    "w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[44px] sm:py-2.5",
+  formLabel: fieldLabelClass,
+  formInput: fieldControlClass,
+  formTextarea: fieldTextareaClass,
+  formSelect: fieldSelectClass,
   optionalFieldsCard:
     "space-y-3 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3",
   followUpChipActive:

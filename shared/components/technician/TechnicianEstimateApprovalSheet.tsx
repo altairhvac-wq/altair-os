@@ -15,6 +15,11 @@ import {
   MobileSheetPanel,
   MobileSheetSuccess,
 } from "@/shared/components/ui/mobile-sheet";
+import {
+  fieldCheckboxClass,
+  fieldControlClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components/field-styles";
 
 type TechnicianEstimateApprovalSheetProps = {
   estimateId: string;
@@ -27,10 +32,8 @@ type TechnicianEstimateApprovalSheetProps = {
 
 const TITLE_ID = "technician-estimate-approval-sheet-title";
 
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const inputClass = fieldControlClass;
+const labelClass = fieldLabelClass;
 
 export function TechnicianEstimateApprovalSheet({
   estimateId,
@@ -152,7 +155,7 @@ export function TechnicianEstimateApprovalSheet({
                     checked={authorized}
                     onChange={(event) => setAuthorized(event.target.checked)}
                     disabled={isPending}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                    className={`mt-0.5 ${fieldCheckboxClass}`}
                   />
                   <span>
                     The customer authorizes the proposed work in this estimate.

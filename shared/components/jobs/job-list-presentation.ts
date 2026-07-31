@@ -140,9 +140,9 @@ export const jobMissionClasses = {
   filterTabsBand: "px-3 pt-2.5 sm:px-4",
   filterSearchBand: "px-3 pb-3 pt-2 sm:px-4",
   searchInput:
-    "h-11 w-full min-h-11 rounded-lg border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors focus:border-altair-brass focus:ring-2 focus:ring-altair-brass/25 md:h-10 md:min-h-10",
+    "h-11 w-full min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10",
   filterSelect:
-    "h-11 w-full min-h-11 appearance-none rounded-lg border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-8 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors focus:border-altair-brass focus:ring-2 focus:ring-altair-brass/25 sm:w-auto sm:pr-10 md:h-10 md:min-h-10",
+    "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-8 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated sm:w-auto sm:pr-10 md:h-10 md:min-h-10",
   filterIcon: "text-altair-ink-on-paper-muted",
   filterMeta: "mt-1.5 text-[11px] text-altair-ink-on-paper-muted sm:text-xs",
   clearFilters:

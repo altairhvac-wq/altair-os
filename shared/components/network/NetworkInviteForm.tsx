@@ -36,8 +36,8 @@ export function NetworkInviteForm({
 }: NetworkInviteFormProps) {
   const isNorthStar = surface === "north-star";
   const inputClass = isNorthStar ? st.formInput : inputClassName;
-  const labelClass = isNorthStar ? st.formLabel : "text-xs font-semibold text-slate-700";
-  const optionalClass = isNorthStar ? st.formLabelOptional : "font-normal text-slate-500";
+  const labelClass = isNorthStar ? st.formLabel : "text-sm font-medium text-altair-ink-on-paper";
+  const optionalClass = isNorthStar ? st.formLabelOptional : "font-normal text-altair-ink-on-paper-muted";
   const submitClass = isNorthStar ? st.saveButton : "admin-btn-primary";
   const cancelClass = isNorthStar ? st.cancelButton : "admin-btn-secondary";
   const [formData, setFormData] = useState<NetworkInviteFormData>(DEFAULT_FORM);

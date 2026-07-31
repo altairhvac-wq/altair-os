@@ -21,6 +21,10 @@ import {
   formatConnectionCatchError,
   formatPreservedFormError,
 } from "@/shared/lib/operational-errors";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components/field-styles";
 
 type TechnicianExpenseFormProps = {
   jobId?: string;
@@ -39,12 +43,9 @@ const FIELD_CATEGORY_OPTIONS: ExpenseCategory[] = [
   "other",
 ];
 
-const inputClass =
-  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-sm";
-
+const inputClass = fieldControlClass;
 const numericInputClass = `${inputClass} tabular-nums`;
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const labelClass = fieldLabelClass;
 
 export function TechnicianExpenseForm({
   jobId,

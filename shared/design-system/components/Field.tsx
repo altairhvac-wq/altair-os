@@ -1,6 +1,12 @@
 "use client";
 
 import { cloneElement, useId, type ReactElement } from "react";
+import {
+  fieldDescriptionClass,
+  fieldErrorClass,
+  fieldLabelClass,
+  fieldStackClass,
+} from "./field-styles";
 
 /**
  * Canonical Altair field composition.
@@ -93,8 +99,8 @@ export function Field({
   });
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <label htmlFor={controlId} className="text-sm font-medium text-altair-ink-on-paper">
+    <div className={`${fieldStackClass} ${className}`}>
+      <label htmlFor={controlId} className={fieldLabelClass}>
         {label}
         {isRequired ? (
           <span aria-hidden="true" className="ml-0.5 text-altair-ink-on-paper-secondary">
@@ -104,7 +110,7 @@ export function Field({
       </label>
 
       {description ? (
-        <p id={descriptionId} className="text-sm text-altair-ink-on-paper-secondary">
+        <p id={descriptionId} className={fieldDescriptionClass}>
           {description}
         </p>
       ) : null}
@@ -112,7 +118,7 @@ export function Field({
       {control}
 
       {error ? (
-        <p id={errorId} role="alert" className="text-sm text-altair-danger-foreground">
+        <p id={errorId} role="alert" className={fieldErrorClass}>
           {error}
         </p>
       ) : null}

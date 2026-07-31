@@ -6,7 +6,14 @@ import {
   type CustomerStatus,
 } from "@/shared/types/customer";
 import { adminFormActionsClass } from "@/shared/lib/admin-density";
-import { Field, Input } from "@/shared/design-system/components";
+import {
+  Field,
+  Input,
+  Select,
+  Textarea,
+  fieldGroupClass,
+  fieldGridClass,
+} from "@/shared/design-system/components";
 
 type CustomerFormProps = {
   initialData?: Partial<CustomerFormData>;
@@ -29,11 +36,6 @@ const emptyForm: CustomerFormData = {
   zip: "",
   notes: "",
 };
-
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function CustomerForm({
   initialData,
@@ -66,75 +68,44 @@ export function CustomerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label htmlFor="name" className={labelClass}>
-            Full name
-          </label>
-          <input
-            id="name"
+    <form onSubmit={handleSubmit} className={fieldGroupClass}>
+      <div className={fieldGridClass}>
+        <Field label="Full name" required className="sm:col-span-2">
+          <Input
             name="name"
-            required
             defaultValue={defaults.name}
             placeholder="Jane Smith"
-            className={inputClass}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor="email" className={labelClass}>
-            Email
-          </label>
-          <input
-            id="email"
+        <Field label="Email" required={requireContact}>
+          <Input
             name="email"
             type="email"
-            required={requireContact}
             defaultValue={defaults.email}
             placeholder="jane@example.com"
-            className={inputClass}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor="phone" className={labelClass}>
-            Phone
-          </label>
-          <input
-            id="phone"
+        <Field label="Phone" required={requireContact}>
+          <Input
             name="phone"
             type="tel"
-            required={requireContact}
             defaultValue={defaults.phone}
             placeholder="(555) 555-0100"
-            className={inputClass}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor="company" className={labelClass}>
-            Company
-          </label>
-          <input
-            id="company"
+        <Field label="Company">
+          <Input
             name="company"
             defaultValue={defaults.company}
             placeholder="Optional"
-            className={inputClass}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label htmlFor="status" className={labelClass}>
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaults.status}
-            className={inputClass}
-          >
+        <Field label="Status">
+          <Select name="status" defaultValue={defaults.status}>
             {CUSTOMER_STATUS_OPTIONS.filter((o) => o.value !== "all").map(
               (option) => (
                 <option key={option.value} value={option.value}>
@@ -142,26 +113,17 @@ export function CustomerForm({
                 </option>
               ),
             )}
-          </select>
-        </div>
+          </Select>
+        </Field>
       </div>
 
-      <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className={fieldGroupClass}>
+        <p className="text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-secondary">
           Service location
         </p>
-        {/*
-          Canonical Input/Field pilot (Design Foundation Phase 6). Isolated
-          from the contact-identity grid above, which stays on the existing
-          admin-form-input contract for this phase — see
-          shared/design-system/components/README.md for the migration
-          rationale and shared/lib/admin-density.ts / app/globals.css for the
-          untouched legacy contract.
-        */}
-        <div className="grid gap-4">
+        <div className={fieldGroupClass}>
           <Field label="Street address" required>
             <Input
-              id="address"
               name="address"
               defaultValue={defaults.address}
               placeholder="123 Main St"
@@ -169,39 +131,38 @@ export function CustomerForm({
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="City" required>
-              <Input id="city" name="city" defaultValue={defaults.city} />
+              <Input name="city" defaultValue={defaults.city} />
             </Field>
             <Field label="State" required>
-              <Input id="state" name="state" defaultValue={defaults.state} />
+              <Input name="state" defaultValue={defaults.state} />
             </Field>
             <Field label="ZIP" required>
-              <Input id="zip" name="zip" defaultValue={defaults.zip} />
+              <Input name="zip" defaultValue={defaults.zip} />
             </Field>
           </div>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="notes" className={labelClass}>
-          Notes
-        </label>
-        <textarea
-          id="notes"
+      <Field label="Notes">
+        <Textarea
           name="notes"
           rows={3}
           defaultValue={defaults.notes}
           placeholder="Scheduling preferences, access codes, etc."
-          className={`${inputClass} resize-none`}
+          className="resize-none"
         />
-      </div>
+      </Field>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          className="rounded-xl border border-altair-danger/30 bg-altair-danger-surface px-3 py-2 text-sm text-altair-danger-foreground"
+        >
           {error}
         </p>
       ) : null}
 
-      <div className={`${adminFormActionsClass} border-t border-slate-100 pt-4`}>
+      <div className={`${adminFormActionsClass} border-t border-altair-border pt-4`}>
         <button
           type="submit"
           disabled={isSubmitting}
@@ -217,7 +178,7 @@ export function CustomerForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="min-h-11 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-altair-border px-4 py-2.5 text-sm font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

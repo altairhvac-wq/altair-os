@@ -285,10 +285,18 @@ export const northStarListTokens: NorthStarListPageTokens = {
   viewTabsCountActive: "ml-1.5 text-xs font-medium text-[#4B5563]",
   filterBar:
     "shrink-0 border-b border-[rgba(100,116,139,0.18)] bg-[#DCE3EC] px-3 py-2.5 sm:px-4 lg:px-5 lg:py-3",
-  searchInput:
-    "h-11 w-full min-h-11 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] py-1.5 pl-9 pr-3 text-sm text-[#101827] placeholder:text-[#6B7280] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] md:h-9 md:min-h-9",
-  filterSelect:
-    "h-11 w-full min-h-11 appearance-none rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] py-1.5 pl-9 pr-8 text-sm font-medium text-[#101827] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:w-auto sm:pr-10 md:h-9 md:min-h-9",
+  searchInput: [
+    "h-11 w-full min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors",
+    "hover:border-altair-border-strong",
+    "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
+    "disabled:cursor-not-allowed disabled:opacity-70 md:h-9 md:min-h-9",
+  ].join(" "),
+  filterSelect: [
+    "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-8 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors",
+    "hover:border-altair-border-strong",
+    "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
+    "disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:pr-10 md:h-9 md:min-h-9",
+  ].join(" "),
   filterIcon: "text-[#8A6324]",
   filterMeta: "mt-1.5 text-[11px] text-[#64748B] sm:text-xs",
   tableHeaderRow:
@@ -301,7 +309,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
   tableRowSelected:
     "bg-[rgba(201,164,77,0.12)] shadow-[inset_3px_0_0_0_#C9A44D] ring-1 ring-inset ring-[rgba(201,164,77,0.22)]",
   tableCheckbox:
-    "h-4 w-4 rounded border-[rgba(138,99,36,0.35)] text-[#8A6324] focus:ring-[rgba(201,164,77,0.35)] disabled:cursor-not-allowed disabled:opacity-40",
+    "h-4 w-4 rounded border-altair-border-strong text-altair-graphite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated disabled:cursor-not-allowed disabled:opacity-40",
   tableAvatar:
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6D092] to-[#D4C4A0] text-xs font-bold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.16)] shadow-[0_1px_3px_rgba(138,99,36,0.12)]",
   tablePrimaryText: "truncate font-semibold text-[#17130E]",

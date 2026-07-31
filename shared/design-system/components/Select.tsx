@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef } from "react";
+import { fieldSelectClass } from "./field-styles";
 
 /**
  * Canonical Altair native `<select>` primitive.
@@ -19,27 +20,16 @@ import type { ComponentPropsWithoutRef } from "react";
  * as an inert state here, unlike Input/Textarea which also support
  * `readOnly`.
  *
- * Never owns a label, description, error message, generated id, or
- * `aria-describedby`/`aria-invalid` wiring — that composition belongs to
- * `Field`. Never owns option data, domain wording, or business logic.
+ * Presentation classes live in `field-styles.ts` so compatibility surfaces
+ * share the same contract.
  *
  * See shared/design-system/components/README.md for the full contract.
  */
 export type SelectProps = ComponentPropsWithoutRef<"select">;
 
-const baseSelectClass = [
-  "w-full min-h-11 rounded-xl border text-sm outline-none transition-colors",
-  "bg-altair-paper-elevated text-altair-ink-on-paper",
-  "border-altair-border hover:border-altair-border-strong",
-  "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
-  "aria-[invalid=true]:border-altair-danger-foreground aria-[invalid=true]:focus-visible:ring-altair-danger-foreground",
-  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-altair-border disabled:bg-altair-paper-subtle disabled:text-altair-ink-muted disabled:opacity-70",
-  "px-3.5 py-2.5",
-].join(" ");
-
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { className = "", ...props },
   ref,
 ) {
-  return <select ref={ref} className={`${baseSelectClass} ${className}`} {...props} />;
+  return <select ref={ref} className={`${fieldSelectClass} ${className}`} {...props} />;
 });

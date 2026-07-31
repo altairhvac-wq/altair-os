@@ -1539,10 +1539,12 @@ a[href] {
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .customer-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar svg {
@@ -1639,10 +1641,12 @@ a[href] {
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .job-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .job-north-star-filter-bar svg {
@@ -1756,10 +1760,12 @@ a[href] {
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .invoice-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar svg {
@@ -1866,10 +1872,12 @@ a[href] {
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .estimate-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar svg {
@@ -2101,10 +2109,12 @@ a[href] {
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .dispatch-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar svg {
@@ -2351,10 +2361,12 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .time-north-star-active-card {
@@ -2485,9 +2497,11 @@ a[href] {
 
 .admin-north-star-shell .settings-north-star-team-ledger select:focus,
 .admin-north-star-shell .settings-north-star-team-ledger input:focus {
-  border-color: #b88a2e !important;
+  border-color: var(--altair-border-strong) !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22) !important;
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .bg-cyan-600 {
@@ -2550,10 +2564,12 @@ a[href] {
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .expense-north-star-filter-bar select:focus {
-  border-color: #b88a2e;
+  border-color: var(--altair-border-strong);
   background: var(--north-star-work-input);
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar svg {
@@ -3470,43 +3486,78 @@ a[href] {
   }
 }
 
+/*
+ * Compatibility mirror of fieldControlClass (shared/design-system/components/field-styles.ts).
+ * Prefer Field + Input/Textarea/Select or adminFormInputClass (= fieldControlClass).
+ * Keep this CSS contract for any remaining direct `.admin-form-input` class usage.
+ */
 .admin-form-input,
 .admin-input {
   width: 100%;
   min-height: 2.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid rgb(226 232 240);
-  background-color: #ffffff;
-  padding: 0.375rem 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--altair-border);
+  background-color: var(--altair-paper-elevated);
+  padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  color: #0f172a;
+  color: var(--altair-ink-on-paper);
   outline: none;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .admin-form-input::placeholder,
 .admin-input::placeholder {
-  color: #94a3b8;
+  color: var(--altair-ink-on-paper-muted);
 }
 
-.admin-form-input:hover:not(:disabled):not(:focus-visible),
-.admin-input:hover:not(:disabled):not(:focus-visible) {
-  border-color: rgb(203 213 225);
+.admin-form-input:hover:not(:disabled):not(:focus-visible):not([readonly]),
+.admin-input:hover:not(:disabled):not(:focus-visible):not([readonly]) {
+  border-color: var(--altair-border-strong);
 }
 
 .admin-form-input:focus-visible,
 .admin-input:focus-visible {
-  border-color: rgb(6 182 212);
-  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.2);
+  border-color: var(--altair-border-strong);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-ink-on-paper);
+}
+
+.admin-form-input[aria-invalid="true"],
+.admin-input[aria-invalid="true"] {
+  border-color: var(--altair-danger-foreground);
+}
+
+.admin-form-input[aria-invalid="true"]:focus-visible,
+.admin-input[aria-invalid="true"]:focus-visible {
+  border-color: var(--altair-danger-foreground);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-elevated),
+    0 0 0 4px var(--altair-danger-foreground);
 }
 
 .admin-form-input:disabled,
 .admin-input:disabled {
+  pointer-events: none;
   cursor: not-allowed;
-  opacity: 0.6;
-  background-color: rgb(248 250 252);
+  opacity: 0.7;
+  border-color: var(--altair-border);
+  background-color: var(--altair-paper-subtle);
+  color: var(--altair-ink-muted);
+}
+
+.admin-form-input:read-only:not(:disabled),
+.admin-input:read-only:not(:disabled) {
+  cursor: default;
+  background-color: var(--altair-stone);
+}
+
+.admin-form-input:read-only:not(:disabled):hover,
+.admin-input:read-only:not(:disabled):hover {
+  border-color: var(--altair-border);
 }
 
 .admin-icon-btn {

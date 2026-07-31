@@ -1,5 +1,10 @@
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "@/shared/design-system/components/field-styles";
 
 export const networkNorthStarStyles = {
   pageCanvas: lt.pageCanvas,
@@ -31,8 +36,7 @@ export const networkNorthStarStyles = {
   filterToolbar: "shrink-0 border-b border-[rgba(138,99,36,0.08)] pb-3",
   filterToolbarRow:
     "grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)_minmax(0,11rem)] lg:grid-cols-[minmax(0,1.4fr)_minmax(0,10rem)_minmax(0,12rem)]",
-  filterInput:
-    "h-9 w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-sm leading-normal text-[#17130E] outline-none transition-colors placeholder:text-[#64748B] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
+  filterInput: `${fieldControlClass} h-9 min-h-9`,
   emptyState: lt.emptyState,
   emptyTitle: "text-sm font-semibold text-[#17130E]",
   emptyDescription: "mt-1 text-xs text-[#64748B]",
@@ -155,12 +159,10 @@ export const networkNorthStarStyles = {
     "rounded-[1rem] border border-[rgba(22,101,52,0.22)] bg-[#F0F7F2] px-4 py-3",
   errorBanner:
     "rounded-xl border border-[rgba(185,28,28,0.22)] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]",
-  formInput:
-    "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[44px] sm:py-2.5",
-  formTextarea:
-    "mt-1 w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
-  formLabel: "text-xs font-semibold text-[#4F4638]",
-  formLabelOptional: "font-normal text-[#64748B]",
+  formInput: `mt-1 ${fieldControlClass}`,
+  formTextarea: `mt-1 ${fieldTextareaClass}`,
+  formLabel: fieldLabelClass,
+  formLabelOptional: "font-normal text-altair-ink-on-paper-muted",
   saveButton: buttonClassName("primary", "md"),
   cancelButton: buttonClassName("secondary", "md"),
   permissionCopy: "text-sm text-[#4F4638]",

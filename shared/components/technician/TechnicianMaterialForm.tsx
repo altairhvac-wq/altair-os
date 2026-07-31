@@ -17,6 +17,10 @@ import {
   type JobMaterialFormData,
 } from "@/shared/types/job-material";
 import type { ServiceItem } from "@/shared/types/service-item";
+import {
+  fieldControlClass,
+  fieldLabelClass,
+} from "@/shared/design-system/components/field-styles";
 
 type TechnicianMaterialFormProps = {
   jobId: string;
@@ -27,12 +31,9 @@ type TechnicianMaterialFormProps = {
   onSubmittingChange?: (isSubmitting: boolean) => void;
 };
 
-const inputClass =
-  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-sm";
-
+const inputClass = fieldControlClass;
 const numericInputClass = `${inputClass} tabular-nums`;
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const labelClass = fieldLabelClass;
 
 export function TechnicianMaterialForm({
   jobId,
