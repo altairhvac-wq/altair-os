@@ -34,6 +34,16 @@ export const settingsNorthStarStyles = {
   systemCheckDescription: "text-xs leading-snug text-[#4F4638] sm:text-sm",
   systemCheckBadge:
     "shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A6324]",
+  subNavBand:
+    "settings-north-star-subnav shrink-0 border-b border-[rgba(138,99,36,0.12)] pb-3",
+  subNavControl:
+    "flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#EFE4CB] p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+  subNavItem:
+    "inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:text-[#17130E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.40)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE4CB] sm:px-3",
+  subNavItemActive:
+    "bg-[#FFF9EA] text-[#17130E] shadow-[0_1px_3px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]",
+  subNavDivider:
+    "mx-0.5 my-1.5 w-px shrink-0 self-stretch bg-[rgba(138,99,36,0.22)]",
   statusChipCurrent:
     "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.07)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
   statusChipReview:

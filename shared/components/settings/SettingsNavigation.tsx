@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Building2,
-  ChevronDown,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -14,6 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { st } from "@/shared/components/settings/north-star-m10/settings-north-star-styles";
 
 type SettingsNavigationItem = {
   label: string;
@@ -64,13 +64,13 @@ const SETTINGS_NAVIGATION_GROUPS: readonly SettingsNavigationGroup[] = [
         icon: FileText,
       },
       {
-        label: "Altair Subscription",
+        label: "Subscription",
         description: "Your Altair plan and billing.",
         href: "/settings/subscription",
         icon: ReceiptText,
       },
       {
-        label: "Customer Payments",
+        label: "Payments",
         description: "Stripe Connect and payment collection.",
         href: "/settings/payments",
         icon: CreditCard,
@@ -94,7 +94,6 @@ const SETTINGS_NAVIGATION_GROUPS: readonly SettingsNavigationGroup[] = [
 type SettingsNavigationProps = {
   northStar: boolean;
   showSystemCheck: boolean;
-  variant: "desktop" | "mobile";
 };
 
 function isSettingsItemActive(
@@ -108,192 +107,105 @@ function isSettingsItemActive(
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
+function SettingsNavLinks({
+  groups,
+  pathname,
+  itemClassName,
+  activeItemClassName,
+  dividerClassName,
+  iconActiveClassName,
+  iconIdleClassName,
+}: {
+  groups: readonly SettingsNavigationGroup[];
+  pathname: string;
+  itemClassName: string;
+  activeItemClassName: string;
+  dividerClassName: string;
+  iconActiveClassName?: string;
+  iconIdleClassName?: string;
+}) {
+  return (
+    <>
+      {groups.map((group, groupIndex) => (
+        <span key={group.label} className="contents">
+          {groupIndex > 0 ? (
+            <span className={dividerClassName} aria-hidden="true" />
+          ) : null}
+          {group.items.map((item) => {
+            const active = isSettingsItemActive(pathname, item);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.description}
+                aria-current={active ? "page" : undefined}
+                className={`${itemClassName} ${
+                  active ? activeItemClassName : ""
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 shrink-0 ${
+                    active
+                      ? (iconActiveClassName ?? "")
+                      : (iconIdleClassName ?? "")
+                  }`}
+                  aria-hidden="true"
+                />
+                {item.label}
+              </Link>
+            );
+          })}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function SettingsNavigation({
   northStar,
   showSystemCheck,
-  variant,
 }: SettingsNavigationProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const groups = SETTINGS_NAVIGATION_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter((item) => !item.ownerOnly || showSystemCheck),
   })).filter((group) => group.items.length > 0);
-  const items = groups.flatMap((group) => group.items);
-  const currentItem = items.find((item) =>
-    isSettingsItemActive(pathname, item),
-  );
 
-  if (variant === "desktop") {
+  if (northStar) {
     return (
-      <nav aria-label="Settings navigation">
-        <p
-          className={`px-3 text-xs font-semibold uppercase tracking-[0.12em] ${
-            northStar
-              ? "text-[var(--north-star-text-light-muted)]"
-              : "text-altair-ink-muted"
-          }`}
-        >
-          Settings
-        </p>
-        <div className="mt-4 space-y-5">
-          {groups.map((group) => (
-            <div key={group.label}>
-              <p
-                className={`px-3 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-                  northStar
-                    ? "text-[var(--north-star-text-light-muted)]"
-                    : "text-altair-ink-muted"
-                }`}
-              >
-                {group.label}
-              </p>
-              <ul className="mt-1.5 space-y-0.5">
-                {group.items.map((item) => {
-                  const active = isSettingsItemActive(pathname, item);
-                  const Icon = item.icon;
-
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? "page" : undefined}
-                        className={`group flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 ${
-                          active
-                            ? "bg-altair-paper-elevated text-altair-ink shadow-sm"
-                            : northStar
-                              ? "text-[var(--north-star-text-light-muted)] hover:bg-[var(--north-star-panel)] hover:text-[var(--north-star-text-light)]"
-                              : "text-altair-ink-secondary hover:bg-altair-paper"
-                        }`}
-                      >
-                        <Icon
-                          className={`h-4 w-4 shrink-0 ${
-                            active
-                              ? "text-altair-brass"
-                              : northStar
-                                ? "text-[var(--north-star-text-light-muted)] group-hover:text-[var(--north-star-champagne)]"
-                                : "text-altair-ink-muted group-hover:text-altair-ink-secondary"
-                          }`}
-                          aria-hidden="true"
-                        />
-                        <span className="truncate text-sm font-medium">
-                          {item.label}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+      <nav aria-label="Settings categories" className={st.subNavBand}>
+        <div className={st.subNavControl}>
+          <SettingsNavLinks
+            groups={groups}
+            pathname={pathname}
+            itemClassName={st.subNavItem}
+            activeItemClassName={st.subNavItemActive}
+            dividerClassName={st.subNavDivider}
+          />
         </div>
       </nav>
     );
   }
 
   return (
-    <div
-      className="relative"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && mobileOpen) {
-          setMobileOpen(false);
-          mobileTriggerRef.current?.focus();
-        }
-      }}
+    <nav
+      aria-label="Settings categories"
+      className="border-b border-altair-border pb-3"
     >
-      <p
-        className={`mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
-          northStar
-            ? "md:text-[var(--north-star-text-light-muted)] text-altair-ink-muted"
-            : "text-altair-ink-muted"
-        }`}
-      >
-        Settings category
-      </p>
-      <button
-        ref={mobileTriggerRef}
-        type="button"
-        aria-controls="settings-mobile-navigation"
-        aria-expanded={mobileOpen}
-        aria-label="Choose a Settings category"
-        onClick={() => setMobileOpen((open) => !open)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-altair-border-strong bg-altair-paper-elevated px-3 py-2.5 text-left text-altair-ink-on-paper shadow-sm transition-colors hover:border-altair-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2"
-      >
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold">
-            {currentItem?.label ?? "Select category"}
-          </span>
-          {currentItem ? (
-            <span className="mt-0.5 block truncate text-xs text-altair-ink-on-paper-muted">
-              {currentItem.description}
-            </span>
-          ) : null}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-altair-ink-on-paper-muted transition-transform ${
-            mobileOpen ? "rotate-180" : ""
-          }`}
-          aria-hidden="true"
+      <div className="flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg border border-altair-border bg-altair-paper-subtle p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <SettingsNavLinks
+          groups={groups}
+          pathname={pathname}
+          itemClassName="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 sm:px-3"
+          activeItemClassName="bg-altair-paper-elevated text-altair-ink shadow-sm ring-1 ring-altair-border"
+          dividerClassName="mx-0.5 my-1.5 w-px shrink-0 self-stretch bg-altair-border-strong"
+          iconActiveClassName="text-altair-brass"
+          iconIdleClassName="text-altair-ink-muted"
         />
-      </button>
-
-      {mobileOpen ? (
-        <nav
-          id="settings-mobile-navigation"
-          aria-label="Settings navigation"
-          className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-altair-border-strong bg-altair-paper-elevated p-1.5 shadow-lg"
-        >
-          <div className="max-h-[min(70vh,32rem)] space-y-3 overflow-y-auto">
-            {groups.map((group) => (
-              <div key={group.label}>
-                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-altair-ink-on-paper-muted">
-                  {group.label}
-                </p>
-                <ul className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const active = isSettingsItemActive(pathname, item);
-                    const Icon = item.icon;
-
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => setMobileOpen(false)}
-                          className={`flex min-w-0 items-start gap-3 rounded-lg px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass ${
-                            active
-                              ? "bg-altair-paper text-altair-ink-on-paper"
-                              : "text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
-                          }`}
-                        >
-                          <Icon
-                            className={`mt-0.5 h-4 w-4 shrink-0 ${
-                              active
-                                ? "text-altair-brass"
-                                : "text-altair-ink-on-paper-muted"
-                            }`}
-                            aria-hidden="true"
-                          />
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold">
-                              {item.label}
-                            </span>
-                            <span className="mt-0.5 block text-xs leading-5 text-altair-ink-on-paper-muted">
-                              {item.description}
-                            </span>
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </nav>
-      ) : null}
-    </div>
+      </div>
+    </nav>
   );
 }
 
