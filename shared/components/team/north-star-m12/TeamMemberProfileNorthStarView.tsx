@@ -99,7 +99,7 @@ export function TeamMemberProfileNorthStarView({
   canViewProfitability,
   canEditProfitability,
   canViewWorkSummary,
-  backHref = "/settings#team-members",
+  backHref = "/settings/team",
   backLabel = "Team",
 }: TeamMemberProfileNorthStarViewProps) {
   const [profile, setProfile] = useState(initialProfile);

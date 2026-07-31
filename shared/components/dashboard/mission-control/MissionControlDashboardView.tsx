@@ -68,7 +68,7 @@ export function MissionControlDashboardView({
             <p className={`text-sm ${altairCanvasInkMutedClass}`}>
               Need example data?{" "}
               <Link
-                href="/settings#sample-data"
+                href="/settings/company"
                 className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
               >
                 Load it from Settings

@@ -76,7 +76,7 @@ function TeamMemberProfileLegacyView({
   canViewProfitability,
   canEditProfitability,
   canViewWorkSummary,
-  backHref = "/settings#team-members",
+  backHref = "/settings/team",
   backLabel = "Team",
 }: TeamMemberProfileViewProps) {
   const [profile, setProfile] = useState(initialProfile);

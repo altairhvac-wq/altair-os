@@ -4,9 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 import {
+  Building2,
   ChevronDown,
+  CreditCard,
+  FileText,
   LayoutDashboard,
+  ReceiptText,
   ShieldCheck,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,21 +24,70 @@ type SettingsNavigationItem = {
   icon: LucideIcon;
 };
 
-const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
+type SettingsNavigationGroup = {
+  label: string;
+  items: readonly SettingsNavigationItem[];
+};
+
+const SETTINGS_NAVIGATION_GROUPS: readonly SettingsNavigationGroup[] = [
   {
-    label: "Overview",
-    description:
-      "Company setup, team, billing, payments, and workspace configuration.",
-    href: "/settings",
-    exact: true,
-    icon: LayoutDashboard,
+    label: "General",
+    items: [
+      {
+        label: "Overview",
+        description: "Settings home and workspace status.",
+        href: "/settings",
+        exact: true,
+        icon: LayoutDashboard,
+      },
+      {
+        label: "Company",
+        description: "Business information and branding.",
+        href: "/settings/company",
+        icon: Building2,
+      },
+      {
+        label: "Team",
+        description: "Members, invitations, and permissions.",
+        href: "/settings/team",
+        icon: Users,
+      },
+    ],
   },
   {
-    label: "System Check",
-    description: "Review workspace readiness and production diagnostics.",
-    href: "/settings/system-check",
-    ownerOnly: true,
-    icon: ShieldCheck,
+    label: "Financial",
+    items: [
+      {
+        label: "Documents",
+        description: "Invoice and estimate defaults.",
+        href: "/settings/documents",
+        icon: FileText,
+      },
+      {
+        label: "Altair Subscription",
+        description: "Your Altair plan and billing.",
+        href: "/settings/subscription",
+        icon: ReceiptText,
+      },
+      {
+        label: "Customer Payments",
+        description: "Stripe Connect and payment collection.",
+        href: "/settings/payments",
+        icon: CreditCard,
+      },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      {
+        label: "System Check",
+        description: "Workspace readiness and diagnostics.",
+        href: "/settings/system-check",
+        ownerOnly: true,
+        icon: ShieldCheck,
+      },
+    ],
   },
 ];
 
@@ -62,9 +116,11 @@ export function SettingsNavigation({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
-  const items = SETTINGS_NAVIGATION_ITEMS.filter(
-    (item) => !item.ownerOnly || showSystemCheck,
-  );
+  const groups = SETTINGS_NAVIGATION_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.ownerOnly || showSystemCheck),
+  })).filter((group) => group.items.length > 0);
+  const items = groups.flatMap((group) => group.items);
   const currentItem = items.find((item) =>
     isSettingsItemActive(pathname, item),
   );
@@ -79,57 +135,59 @@ export function SettingsNavigation({
               : "text-altair-ink-muted"
           }`}
         >
-          Categories
+          Settings
         </p>
-        <ul className="mt-2 space-y-1">
-          {items.map((item) => {
-            const active = isSettingsItemActive(pathname, item);
-            const Icon = item.icon;
+        <div className="mt-4 space-y-5">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <p
+                className={`px-3 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  northStar
+                    ? "text-[var(--north-star-text-light-muted)]"
+                    : "text-altair-ink-muted"
+                }`}
+              >
+                {group.label}
+              </p>
+              <ul className="mt-1.5 space-y-0.5">
+                {group.items.map((item) => {
+                  const active = isSettingsItemActive(pathname, item);
+                  const Icon = item.icon;
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`group flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 ${
-                    active
-                      ? "border-altair-border-strong bg-altair-paper-elevated text-altair-ink shadow-sm"
-                      : northStar
-                        ? "border-transparent text-[var(--north-star-text-light-muted)] hover:border-[var(--north-star-border)] hover:bg-[var(--north-star-panel)] hover:text-[var(--north-star-text-light)]"
-                        : "border-transparent text-altair-ink-secondary hover:border-altair-border hover:bg-altair-paper"
-                  }`}
-                >
-                  <Icon
-                    className={`mt-0.5 h-4 w-4 shrink-0 ${
-                      active
-                        ? "text-altair-brass"
-                        : northStar
-                          ? "text-[var(--north-star-text-light-muted)] group-hover:text-[var(--north-star-champagne)]"
-                          : "text-altair-ink-muted group-hover:text-altair-ink-secondary"
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">
-                      {item.label}
-                    </span>
-                    <span
-                      className={`mt-1 block text-xs leading-5 ${
-                        active
-                          ? "text-altair-ink-on-paper-muted"
-                          : northStar
-                            ? "text-[var(--north-star-text-light-muted)]"
-                            : "text-altair-ink-muted"
-                      }`}
-                    >
-                      {item.description}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                        className={`group flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 ${
+                          active
+                            ? "bg-altair-paper-elevated text-altair-ink shadow-sm"
+                            : northStar
+                              ? "text-[var(--north-star-text-light-muted)] hover:bg-[var(--north-star-panel)] hover:text-[var(--north-star-text-light)]"
+                              : "text-altair-ink-secondary hover:bg-altair-paper"
+                        }`}
+                      >
+                        <Icon
+                          className={`h-4 w-4 shrink-0 ${
+                            active
+                              ? "text-altair-brass"
+                              : northStar
+                                ? "text-[var(--north-star-text-light-muted)] group-hover:text-[var(--north-star-champagne)]"
+                                : "text-altair-ink-muted group-hover:text-altair-ink-secondary"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
     );
   }
@@ -186,44 +244,53 @@ export function SettingsNavigation({
           aria-label="Settings navigation"
           className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-altair-border-strong bg-altair-paper-elevated p-1.5 shadow-lg"
         >
-          <ul className="space-y-1">
-            {items.map((item) => {
-              const active = isSettingsItemActive(pathname, item);
-              const Icon = item.icon;
+          <div className="max-h-[min(70vh,32rem)] space-y-3 overflow-y-auto">
+            {groups.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-altair-ink-on-paper-muted">
+                  {group.label}
+                </p>
+                <ul className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = isSettingsItemActive(pathname, item);
+                    const Icon = item.icon;
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex min-w-0 items-start gap-3 rounded-lg border px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass ${
-                      active
-                        ? "border-altair-border-strong bg-altair-paper text-altair-ink-on-paper"
-                        : "border-transparent text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
-                    }`}
-                  >
-                    <Icon
-                      className={`mt-0.5 h-4 w-4 shrink-0 ${
-                        active
-                          ? "text-altair-brass"
-                          : "text-altair-ink-on-paper-muted"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold">
-                        {item.label}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-5 text-altair-ink-on-paper-muted">
-                        {item.description}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex min-w-0 items-start gap-3 rounded-lg px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass ${
+                            active
+                              ? "bg-altair-paper text-altair-ink-on-paper"
+                              : "text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
+                          }`}
+                        >
+                          <Icon
+                            className={`mt-0.5 h-4 w-4 shrink-0 ${
+                              active
+                                ? "text-altair-brass"
+                                : "text-altair-ink-on-paper-muted"
+                            }`}
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold">
+                              {item.label}
+                            </span>
+                            <span className="mt-0.5 block text-xs leading-5 text-altair-ink-on-paper-muted">
+                              {item.description}
+                            </span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
         </nav>
       ) : null}
     </div>
@@ -231,17 +298,10 @@ export function SettingsNavigation({
 }
 
 export function SettingsRouteContent({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const hideOverviewHeader = pathname === "/settings";
-
   return (
     <div
       aria-label="Settings route content"
-      className={`min-w-0 max-w-full ${
-        hideOverviewHeader
-          ? "[&_.admin-page-header]:hidden [&_.north-star-settings-page-header]:hidden"
-          : ""
-      }`}
+      className="min-w-0 max-w-full"
       role="region"
     >
       {children}

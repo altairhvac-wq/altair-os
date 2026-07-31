@@ -1,45 +1,27 @@
+import {
+  Building2,
+  CreditCard,
+  FileText,
+  ReceiptText,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import {
-  canAccessCompanySettings,
   canAccessSystemCheck,
-  canManageDemoData,
-  canManageOnlineCheckout,
-  canManageTeamMembers,
-  canRefreshStripePaymentAccountStatus,
-  canStartStripeConnectOnboarding,
 } from "@/lib/database/access-control";
-import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
-import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
-import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getDemoDataStatusSafe } from "@/lib/database/queries/demo-data";
-import {
-  listCompanyMembers,
-  listPendingInvitesForUserEmail,
-  resolveUserEmailForInvite,
-  type PendingTeamInvite,
-} from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
-import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
-import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
-import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
-import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
-import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import type { CompanyProfileSummary } from "@/shared/types/team-member";
-import type { DemoDataStatus } from "@/shared/types/demo-data";
-import type { OnboardingSnapshot } from "@/shared/types/onboarding";
-import type {
-  PaymentSetupReturnNotice,
-  StripePaymentSettingsSummary,
-} from "@/shared/types/settings/payment-settings";
-import { buildStripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
-import { isStripeConnectOnboardingConfigured, isStripeTestMode } from "@/lib/payments/env";
+import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
+import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import {
-  getCompanySubscriptionBillingSummary,
-  isSaasBillingCheckoutConfigured,
-  type CompanySubscriptionBillingSummary,
-} from "@/lib/saas-billing";
+  SettingsDestinationList,
+  SettingsWorkspacePage,
+  SettingsWorkspaceSection,
+  type SettingsDestination,
+} from "@/shared/components/settings/SettingsWorkspacePage";
+import type { OnboardingSnapshot } from "@/shared/types/onboarding";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
@@ -53,24 +35,6 @@ const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   hasBillingDefaultsConfigured: false,
 };
 
-async function loadPendingInvitesSafely(
-  email: string | null | undefined,
-): Promise<{ invites: PendingTeamInvite[]; error?: string }> {
-  if (!email) {
-    return { invites: [] };
-  }
-
-  try {
-    return await listPendingInvitesForUserEmail(email);
-  } catch (error) {
-    console.error("[SettingsPage] pending invites load failed:", error);
-    return {
-      invites: [],
-      error: "Failed to load pending invitations. Please refresh and try again.",
-    };
-  }
-}
-
 async function loadOnboardingSnapshotSafely(
   companyId: string,
   companyContext: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
@@ -78,80 +42,8 @@ async function loadOnboardingSnapshotSafely(
   try {
     return await getOnboardingSnapshot(companyId, companyContext);
   } catch (error) {
-    console.error("[SettingsPage] onboarding snapshot load failed:", error);
+    console.error("[SettingsOverviewPage] onboarding snapshot load failed:", error);
     return EMPTY_ONBOARDING_SNAPSHOT;
-  }
-}
-
-async function loadDemoDataStatusSafely(
-  companyId: string,
-  companyContext: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
-): Promise<{ status: DemoDataStatus | null; error?: string }> {
-  if (!canManageDemoData(companyContext)) {
-    return { status: null };
-  }
-
-  return getDemoDataStatusSafe(companyId, companyContext);
-}
-
-async function loadSubscriptionBillingSafely(
-  companyId: string,
-): Promise<{
-  summary: CompanySubscriptionBillingSummary | null;
-  error?: string;
-}> {
-  try {
-    const summary = await getCompanySubscriptionBillingSummary(companyId);
-    return { summary };
-  } catch (error) {
-    console.error("[SettingsPage] subscription billing load failed:", error);
-    return {
-      summary: null,
-      error:
-        "We couldn't load subscription status. Refresh the page or try again in a moment.",
-    };
-  }
-}
-
-async function loadStripePaymentSettingsSafely(
-  companyId: string,
-  canView: boolean,
-): Promise<{
-  summary: StripePaymentSettingsSummary | null | undefined;
-  error?: string;
-}> {
-  if (!canView) {
-    return { summary: undefined };
-  }
-
-  try {
-    const account = await getCompanyPaymentAccount(companyId, "stripe");
-
-    if (!account) {
-      return { summary: null };
-    }
-
-    return {
-      summary: buildStripePaymentSettingsSummary({
-        provider: account.provider,
-        status: account.status,
-        chargesEnabled: account.chargesEnabled,
-        payoutsEnabled: account.payoutsEnabled,
-        onlinePaymentsEnabled: account.onlinePaymentsEnabled,
-        providerAccountId: account.providerAccountId,
-        onboardingCompletedAt: account.onboardingCompletedAt,
-        disabledAt: account.disabledAt,
-        lastSyncedAt: account.lastSyncedAt,
-        providerMetadata: account.providerMetadata,
-      }),
-    };
-  } catch (error) {
-    console.error("[SettingsPage] stripe payment settings load failed:", error);
-    return {
-      summary: null,
-      error:
-        "We couldn't load Stripe payment status. Refresh the page or try again in a moment.",
-    };
   }
 }
 
@@ -160,142 +52,93 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ payments?: string }>;
 }) {
-  const user = await getCurrentUser();
   const companyContext = await getActiveCompanyContext();
   const params = await searchParams;
 
   if (!companyContext) {
-    redirect("/setup");
+    return null;
   }
 
-  if (!canAccessCompanySettings(companyContext)) {
-    return (
-      <UnauthorizedAccessView description="Company settings are limited to owner and admin roles." />
-    );
+  if (params.payments === "return" || params.payments === "refresh") {
+    redirect(`/settings/payments?payments=${params.payments}`);
   }
 
-  const profile = await getCurrentProfile();
-  const emailResolution = resolveUserEmailForInvite(
-    profile?.email,
-    user?.email ?? undefined,
-  );
-
-  const { members, error: membersError } = await listCompanyMembers(
+  const onboardingSnapshot = await loadOnboardingSnapshotSafely(
     companyContext.company.id,
     companyContext,
   );
-
-  const [pendingInvitesResult, onboardingSnapshot, demoDataResult] =
-    await Promise.all([
-      loadPendingInvitesSafely(emailResolution.email),
-      loadOnboardingSnapshotSafely(companyContext.company.id, companyContext),
-      loadDemoDataStatusSafely(companyContext.company.id, companyContext),
-    ]);
-
-  const pendingInvites = pendingInvitesResult.invites.filter(
-    (invite) => invite.companyId !== companyContext.company.id,
-  );
-
-  const companyProfile: CompanyProfileSummary = {
-    id: companyContext.company.id,
-    name: companyContext.company.name,
-    status: companyContext.company.status,
-    timezone: companyContext.company.timezone,
-    email: companyContext.company.email,
-    phone: companyContext.company.phone,
-    city: companyContext.company.city,
-    state: companyContext.company.state,
-    memberCount: members.length,
-    currentUserRole: companyContext.role,
-  };
-
   const onboardingChecklist = filterOnboardingChecklistForContext(
     buildOnboardingChecklist(onboardingSnapshot),
     companyContext,
   );
-  const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
   const northStar = isNorthStarShellEnabled();
-  const canViewPaymentSettings = companyContext.permissions.manageBilling;
-  const canStartStripeSetup = canStartStripeConnectOnboarding(companyContext);
-  const canManageOnlineCheckoutGate = canManageOnlineCheckout(companyContext);
-  const canRefreshStripeStatus = canRefreshStripePaymentAccountStatus(companyContext);
-  const stripeOnboardingConfigured = isStripeConnectOnboardingConfigured();
-  const stripeTestMode = isStripeTestMode();
-  const paymentSetupNotice: PaymentSetupReturnNotice | null =
-    params.payments === "return" || params.payments === "refresh"
-      ? params.payments
-      : null;
+  const destinations: SettingsDestination[] = [
+    {
+      title: "Company",
+      description: "Business information and branding.",
+      href: "/settings/company",
+      icon: Building2,
+    },
+    {
+      title: "Team",
+      description: "Members, invitations, and permissions.",
+      href: "/settings/team",
+      icon: Users,
+    },
+    {
+      title: "Documents",
+      description: "Invoices and estimate defaults.",
+      href: "/settings/documents",
+      icon: FileText,
+    },
+    {
+      title: "Altair Subscription",
+      description: "Manage your Altair plan and billing.",
+      href: "/settings/subscription",
+      icon: ReceiptText,
+    },
+    {
+      title: "Customer Payments",
+      description: "Stripe Connect and customer payment collection.",
+      href: "/settings/payments",
+      icon: CreditCard,
+    },
+  ];
 
-  const [stripePaymentSettingsResult, subscriptionBillingResult] =
-    await Promise.all([
-      loadStripePaymentSettingsSafely(
-        companyContext.company.id,
-        canViewPaymentSettings,
-      ),
-      loadSubscriptionBillingSafely(companyContext.company.id),
-    ]);
-  const stripePaymentSettings = stripePaymentSettingsResult.summary;
-  const canManageSubscriptionBilling = companyContext.permissions.manageCompany;
-  const subscriptionCheckoutConfigured = isSaasBillingCheckoutConfigured();
+  if (canAccessSystemCheck(companyContext)) {
+    destinations.push({
+      title: "System Check",
+      description: "Workspace diagnostics and production readiness.",
+      href: "/settings/system-check",
+      icon: ShieldCheck,
+      status: "Owner only",
+    });
+  }
 
   return (
-    <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
-      {emailResolution.mismatch ? (
-        <SettingsAlertBanner tone="warning" northStar={northStar}>
-          Your profile email and sign-in email do not match. Update them to the
-          same address before you can view or accept team invitations.
-        </SettingsAlertBanner>
-      ) : null}
-
-      {pendingInvitesResult.error ? (
-        <SettingsAlertBanner tone="error" northStar={northStar}>
-          {pendingInvitesResult.error}
-        </SettingsAlertBanner>
-      ) : null}
-
-      {stripePaymentSettingsResult.error ? (
-        <SettingsAlertBanner tone="error" northStar={northStar}>
-          {stripePaymentSettingsResult.error}
-        </SettingsAlertBanner>
-      ) : null}
-
-      {subscriptionBillingResult.error ? (
-        <SettingsAlertBanner tone="error" northStar={northStar}>
-          {subscriptionBillingResult.error}
-        </SettingsAlertBanner>
-      ) : null}
-
-      <SettingsPageView
-        companyProfile={companyProfile}
-        initialMembers={members}
-        currentUserId={companyContext.user.id}
-        currentUserRole={companyContext.role}
-        canManageTeam={canManageTeamMembers(companyContext)}
-        showSystemCheckLink={canAccessSystemCheck(companyContext)}
-        membersLoadError={membersError}
-        onboardingChecklist={onboardingChecklist}
-        billingDefaults={billingDefaults}
-        canManageBillingDefaults={canAccessCompanySettings(companyContext)}
-        showBillingDefaultsSetupHint={
-          !hasSavedCompanyBillingDefaults(companyContext.company.settings)
-        }
-        demoDataStatus={demoDataResult.status ?? undefined}
-        demoDataLoadError={demoDataResult.error}
-        pendingInvites={pendingInvites}
-        canViewPaymentSettings={canViewPaymentSettings}
-        stripePaymentSettings={stripePaymentSettings}
-        canStartStripeSetup={canStartStripeSetup}
-        canManageOnlineCheckout={canManageOnlineCheckoutGate}
-        canRefreshStripeStatus={canRefreshStripeStatus}
-        stripeOnboardingConfigured={stripeOnboardingConfigured}
-        stripeTestMode={stripeTestMode}
-        paymentSetupNotice={paymentSetupNotice}
-        companyTimezone={companyContext.company.timezone}
-        subscriptionBillingSummary={subscriptionBillingResult.summary}
-        subscriptionBillingLoadError={subscriptionBillingResult.error ?? null}
-        canManageSubscriptionBilling={canManageSubscriptionBilling}
-        subscriptionCheckoutConfigured={subscriptionCheckoutConfigured}
+    <SettingsWorkspacePage
+      title="Settings"
+      description="Manage every aspect of your company."
+      northStar={northStar}
+    >
+      <OnboardingChecklistSection
+        checklist={onboardingChecklist}
+        companyId={companyContext.company.id}
+        userId={companyContext.user.id}
+        variant="settings"
+        northStar={northStar}
       />
-    </div>
+
+      <SettingsWorkspaceSection
+        title="Settings categories"
+        description="Choose a category to review or update its configuration."
+        northStar={northStar}
+      >
+        <SettingsDestinationList
+          destinations={destinations}
+          northStar={northStar}
+        />
+      </SettingsWorkspaceSection>
+    </SettingsWorkspacePage>
   );
 }
