@@ -4,11 +4,7 @@ import {
   type MissionControlQuickAction,
 } from "@/shared/lib/dashboard-mission-control";
 import { MasterPageSection } from "@/shared/design-system/shell";
-import {
-  DecisionSurface,
-  ModuleGrid,
-  ModuleGridItem,
-} from "@/shared/design-system/layout";
+import { DecisionSurface } from "@/shared/design-system/layout";
 
 type MissionControlQuickActionsSectionProps = {
   actions: MissionControlQuickAction[];
@@ -26,35 +22,31 @@ export function MissionControlQuickActionsSection({
   }
 
   return (
-    <ModuleGrid rhythm="compact">
-      <ModuleGridItem span={1} size="s">
-        <MasterPageSection
-          title={MISSION_CONTROL_SECTION_LABELS.quickActions}
-          density="compact"
-          headerVariant="spacious"
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.quickActions}
+      density="compact"
+      headerVariant="spacious"
+    >
+      <DecisionSurface size="s" variant="section">
+        <div
+          className="flex flex-wrap gap-x-1 gap-y-1"
+          role="group"
+          aria-label={MISSION_CONTROL_SECTION_LABELS.quickActions}
         >
-          <DecisionSurface size="s" variant="bare">
-            <div
-              className="flex flex-wrap gap-x-1 gap-y-1"
-              role="group"
-              aria-label={MISSION_CONTROL_SECTION_LABELS.quickActions}
+          {actions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.href}
+              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:bg-altair-brass/10 hover:text-altair-ink-on-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
             >
-              {actions.map((action) => (
-                <Link
-                  key={action.id}
-                  href={action.href}
-                  className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:bg-altair-brass/10 hover:text-altair-ink-on-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-                >
-                  <span aria-hidden="true" className="text-altair-brass">
-                    +
-                  </span>
-                  <span>{action.shortLabel ?? action.label}</span>
-                </Link>
-              ))}
-            </div>
-          </DecisionSurface>
-        </MasterPageSection>
-      </ModuleGridItem>
-    </ModuleGrid>
+              <span aria-hidden="true" className="text-altair-brass">
+                +
+              </span>
+              <span>{action.shortLabel ?? action.label}</span>
+            </Link>
+          ))}
+        </div>
+      </DecisionSurface>
+    </MasterPageSection>
   );
 }

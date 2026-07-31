@@ -20,16 +20,20 @@ export function MissionControlInlineEmptyState({
       : "border border-altair-border bg-altair-paper-subtle text-altair-ink-on-paper-secondary";
 
   return (
-    <div className={`rounded-xl px-4 py-5 text-center ${toneClass}`}>
+    <div
+      className={`flex min-w-0 items-start gap-3 rounded-xl px-3.5 py-3 text-left sm:px-4 ${toneClass}`}
+    >
       {icon ? (
-        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-altair-paper shadow-sm ring-1 ring-altair-border">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-altair-paper shadow-sm ring-1 ring-altair-border">
           {icon}
         </div>
       ) : null}
-      <p className="text-sm font-semibold">{title}</p>
-      {description ? (
-        <p className="mt-1 text-xs leading-relaxed opacity-80">{description}</p>
-      ) : null}
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{title}</p>
+        {description ? (
+          <p className="mt-0.5 text-xs leading-relaxed opacity-80">{description}</p>
+        ) : null}
+      </div>
     </div>
   );
 }

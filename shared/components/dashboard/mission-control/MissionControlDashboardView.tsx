@@ -11,7 +11,7 @@ import {
   altairCanvasInkLinkClass,
   altairCanvasInkMutedClass,
 } from "@/shared/design-system/foundation";
-import { MasterContentStack } from "@/shared/design-system/shell";
+import { ModuleGrid, ModuleGridItem } from "@/shared/design-system/layout";
 import { MissionControlGreeting } from "./MissionControlGreeting";
 import { MissionCriticalSection } from "./MissionCriticalSection";
 import { MissionControlTodaysOperationsSection } from "./MissionControlTodaysOperationsSection";
@@ -49,9 +49,13 @@ export function MissionControlDashboardView({
   const showSampleDataDiscovery = Boolean(
     demoDataStatus?.canSetupDemoData && !demoDataStatus.hasDemoData,
   );
+  const activityCount = data.recentActivity.length;
+  const activitySpan = activityCount === 0 ? 1 : activityCount <= 4 ? 2 : 3;
+  const activitySize = activityCount === 0 ? "s" : activityCount <= 4 ? "m" : "l";
+  const hasAttentionIssues = !content.isMissionClear;
 
   return (
-    <>
+    <div className="space-y-4 lg:space-y-5">
       <DashboardOnboardingBands
         onboardingChecklist={onboardingChecklist}
         companyId={companyId}
@@ -61,42 +65,69 @@ export function MissionControlDashboardView({
         onboardingDismissed={onboardingDismissed}
       />
 
-      <MasterContentStack density="compact" className="gap-5 lg:gap-6">
-        <div className="space-y-1.5">
-          <MissionControlGreeting content={content.greeting} />
-          {showSampleDataDiscovery ? (
-            <p className={`text-sm ${altairCanvasInkMutedClass}`}>
-              Need example data?{" "}
-              <Link
-                href="/settings/company"
-                className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
-              >
-                Load it from Settings
-              </Link>
-              .
-            </p>
-          ) : null}
-        </div>
+      <ModuleGrid rhythm="compact">
+        <ModuleGridItem span={3} size="xs">
+          <div className="space-y-1.5">
+            <MissionControlGreeting content={content.greeting} />
+            {showSampleDataDiscovery ? (
+              <p className={`text-sm ${altairCanvasInkMutedClass}`}>
+                Need example data?{" "}
+                <Link
+                  href="/settings/company"
+                  className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
+                >
+                  Load it from Settings
+                </Link>
+                .
+              </p>
+            ) : null}
+          </div>
+        </ModuleGridItem>
 
-        <MissionCriticalSection
-          items={content.missionCritical}
-          isClear={content.isMissionClear}
-          data={data}
-        />
+        {content.missionCritical.length > 0 ? (
+          <ModuleGridItem
+            span={hasAttentionIssues ? 2 : 1}
+            size={hasAttentionIssues ? "m" : "s"}
+          >
+            <MissionCriticalSection
+              items={content.missionCritical}
+              isClear={content.isMissionClear}
+              data={data}
+            />
+          </ModuleGridItem>
+        ) : null}
 
-        <MissionControlTodaysOperationsSection cards={content.todaysOperations} />
+        {content.todaysOperations.length > 0 ? (
+          <ModuleGridItem span={1} size="m">
+            <MissionControlTodaysOperationsSection
+              cards={content.todaysOperations}
+            />
+          </ModuleGridItem>
+        ) : null}
 
-        <MissionControlQuickActionsSection actions={content.primaryQuickActions} />
+        {content.primaryQuickActions.length > 0 ? (
+          <ModuleGridItem span={1} size="s">
+            <MissionControlQuickActionsSection
+              actions={content.primaryQuickActions}
+            />
+          </ModuleGridItem>
+        ) : null}
 
-        <MissionControlCashFlowSection
-          cards={content.cashFlow}
-          collectionsTrend={
-            data.access.canViewBilling ? content.revenueTrend : undefined
-          }
-        />
+        {content.cashFlow.length > 0 ? (
+          <ModuleGridItem span={2} size="m">
+            <MissionControlCashFlowSection
+              cards={content.cashFlow}
+              collectionsTrend={
+                data.access.canViewBilling ? content.revenueTrend : undefined
+              }
+            />
+          </ModuleGridItem>
+        ) : null}
 
-        <MissionControlActivityTimelineSection data={data} />
-      </MasterContentStack>
-    </>
+        <ModuleGridItem span={activitySpan} size={activitySize}>
+          <MissionControlActivityTimelineSection data={data} />
+        </ModuleGridItem>
+      </ModuleGrid>
+    </div>
   );
 }

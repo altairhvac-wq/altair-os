@@ -31,7 +31,7 @@ export function MissionControlCashFlowSection({
       headerVariant="spacious"
     >
       <div className={`${altairSurfaceSectionClass} ${altairSurfaceSectionBodyClass}`}>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:gap-x-7 sm:gap-y-5 lg:grid-cols-4">
           {cards.map((card) => (
             <MissionControlMetricCell
               key={card.id}
