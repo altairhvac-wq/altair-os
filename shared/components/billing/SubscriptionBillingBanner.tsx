@@ -3,6 +3,11 @@
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
+  DecisionSurface,
+  ModuleGrid,
+  ModuleGridItem,
+} from "@/shared/design-system/layout";
+import {
   getSubscriptionBillingBannerModel,
   type SubscriptionBillingBannerTone,
 } from "./subscription-billing-banner-model";
@@ -85,17 +90,27 @@ export function SubscriptionBillingBanner({
   const isQuietInfo = northStar && model.tone === "info";
 
   return (
-    <div
-      role={model.role}
-      aria-live={model.role === "alert" ? "assertive" : "polite"}
-      className={`mb-2.5 min-w-0 break-words rounded-lg border text-sm ${styles.container} ${styles.text} ${
-        isQuietInfo ? "px-3 py-1.5" : "px-4 py-3"
-      } ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
+    <ModuleGrid
+      rhythm="compact"
+      className={`mb-2.5 ${hideOnMobile ? "hidden md:grid" : ""}`}
     >
-      <div className="min-w-0">
-        <p className={styles.title}>{model.title}</p>
-        <p className={styles.body}>{description}</p>
-      </div>
-    </div>
+      <ModuleGridItem span={1} size="s">
+        <DecisionSurface
+          size="s"
+          variant="bare"
+          role={model.role}
+          aria-live={model.role === "alert" ? "assertive" : "polite"}
+          title={model.title}
+          description={description}
+          className={`break-words rounded-lg border text-sm ${styles.container} ${styles.text} ${
+            isQuietInfo ? "px-3 py-1.5" : "px-4 py-3"
+          } ${className}`}
+          classNames={{
+            title: styles.title,
+            description: styles.body,
+          }}
+        />
+      </ModuleGridItem>
+    </ModuleGrid>
   );
 }

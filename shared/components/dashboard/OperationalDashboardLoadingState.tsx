@@ -6,6 +6,10 @@ import {
   altairSurfaceSectionBodyClass,
   altairSurfaceSectionClass,
 } from "@/shared/design-system/shell";
+import {
+  ModuleGrid,
+  ModuleGridItem,
+} from "@/shared/design-system/layout";
 import { MISSION_CONTROL_SECTION_LABELS } from "@/shared/lib/dashboard-mission-control";
 
 function Skeleton({ className }: { className?: string }) {
@@ -24,23 +28,27 @@ function GreetingSkeleton() {
 
 function NeedsAttentionSkeleton() {
   return (
-    <MasterPageSection
-      title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
-      density="compact"
-      headerVariant="spacious"
-    >
-      <div className={`${altairSurfaceSectionClass} space-y-0 px-2 py-1`}>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between gap-3 px-2 py-3"
-          >
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-5 w-8" />
+    <ModuleGrid rhythm="compact">
+      <ModuleGridItem span={2} size="m">
+        <MasterPageSection
+          title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
+          density="compact"
+          headerVariant="spacious"
+        >
+          <div className={`${altairSurfaceSectionClass} space-y-0 px-2 py-1`}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between gap-3 px-2 py-3"
+              >
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-5 w-8" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </MasterPageSection>
+        </MasterPageSection>
+      </ModuleGridItem>
+    </ModuleGrid>
   );
 }
 
@@ -72,17 +80,21 @@ function BriefGridSkeleton({
 
 function QuickActionsSkeleton() {
   return (
-    <MasterPageSection
-      title={MISSION_CONTROL_SECTION_LABELS.quickActions}
-      density="compact"
-      headerVariant="spacious"
-    >
-      <div className="flex flex-wrap gap-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton key={index} className="h-8 w-24 rounded-md" />
-        ))}
-      </div>
-    </MasterPageSection>
+    <ModuleGrid rhythm="compact">
+      <ModuleGridItem span={1} size="s">
+        <MasterPageSection
+          title={MISSION_CONTROL_SECTION_LABELS.quickActions}
+          density="compact"
+          headerVariant="spacious"
+        >
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-8 w-24 rounded-md" />
+            ))}
+          </div>
+        </MasterPageSection>
+      </ModuleGridItem>
+    </ModuleGrid>
   );
 }
 

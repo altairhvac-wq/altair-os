@@ -19,6 +19,11 @@ import {
   altairSurfaceAttentionClass,
   altairSurfaceListRowClass,
 } from "@/shared/design-system/shell";
+import {
+  DecisionSurface,
+  ModuleGrid,
+  ModuleGridItem,
+} from "@/shared/design-system/layout";
 
 type MissionCriticalSectionProps = {
   items: MissionCriticalItem[];
@@ -120,39 +125,50 @@ export function MissionCriticalSection({
   const attentionItems = items.filter((item) => item.severity !== "healthy");
 
   return (
-    <MasterPageSection
-      title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
-      density="compact"
-      headerVariant="spacious"
-    >
-      {isClear || attentionItems.length === 0 ? (
-        <div
-          className={`flex items-start gap-3 rounded-[var(--radius-section)] border px-3.5 py-4 sm:px-4 ${altairSemanticSurfaceClass.success}`}
+    <ModuleGrid rhythm="compact">
+      <ModuleGridItem span={2} size="m">
+        <MasterPageSection
+          title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
+          density="compact"
+          headerVariant="spacious"
         >
-          <CheckCircle2
-            className="mt-0.5 h-4 w-4 shrink-0 text-altair-success"
-            aria-hidden="true"
-          />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-altair-success-foreground">
-              Everything is running smoothly
-            </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-altair-success-foreground/80">
-              No overdue jobs, billing gaps, or dispatch pressure detected.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className={altairSurfaceAttentionClass}>
-          <ul className="divide-y divide-altair-border/60 px-1 sm:px-2">
-            {attentionItems.map((item) => (
-              <li key={item.id}>
-                <NeedsAttentionRow item={item} data={data} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </MasterPageSection>
+          {isClear || attentionItems.length === 0 ? (
+            <DecisionSurface
+              size="s"
+              variant="bare"
+              className={`rounded-[var(--radius-section)] border px-3.5 py-4 sm:px-4 ${altairSemanticSurfaceClass.success}`}
+              classNames={{ body: "flex items-start gap-3" }}
+            >
+              <CheckCircle2
+                className="mt-0.5 h-4 w-4 shrink-0 text-altair-success"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-altair-success-foreground">
+                  Everything is running smoothly
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-altair-success-foreground/80">
+                  No overdue jobs, billing gaps, or dispatch pressure detected.
+                </p>
+              </div>
+            </DecisionSurface>
+          ) : (
+            <DecisionSurface
+              size="m"
+              variant="bare"
+              className={altairSurfaceAttentionClass}
+            >
+              <ul className="divide-y divide-altair-border/60 px-1 sm:px-2">
+                {attentionItems.map((item) => (
+                  <li key={item.id}>
+                    <NeedsAttentionRow item={item} data={data} />
+                  </li>
+                ))}
+              </ul>
+            </DecisionSurface>
+          )}
+        </MasterPageSection>
+      </ModuleGridItem>
+    </ModuleGrid>
   );
 }

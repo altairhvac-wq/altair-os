@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/shared/design-system/components";
+import { DecisionSurface } from "@/shared/design-system/layout";
 import { ClosedBetaFeedbackStrip } from "@/shared/components/onboarding/ClosedBetaFeedbackStrip";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
@@ -108,7 +109,9 @@ export function DashboardActivationHero({
           ) : null}
         </div>
 
-        <div
+        <DecisionSurface
+          size="xs"
+          variant="bare"
           className={`w-full shrink-0 lg:max-w-sm ${
             northStar
               ? "rounded-xl border border-[rgba(201,164,77,0.18)] bg-[#221C14] p-4"
@@ -207,7 +210,7 @@ export function DashboardActivationHero({
               />
             </div>
           </div>
-        </div>
+        </DecisionSurface>
       </div>
 
       {!missionComplete ? (
