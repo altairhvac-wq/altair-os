@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  BarChart3,
   ClipboardList,
   FileText,
   MapPinned,
@@ -12,8 +13,6 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { HomepageProductFrame } from "@/shared/components/homepage/HomepageProductFrame";
-import { HOMEPAGE_SCREENSHOTS } from "@/shared/components/homepage/homepage-tokens";
 
 type WorkflowNode = {
   name: string;
@@ -30,6 +29,7 @@ const WORKFLOW_NODES: WorkflowNode[] = [
   { name: "Estimate", detail: "Approve without chase", icon: FileText },
   { name: "Invoice", detail: "Bill what was done", icon: Receipt },
   { name: "Payment", detail: "Cash closes the loop", icon: Wallet },
+  { name: "Reporting", detail: "See the whole business", icon: BarChart3 },
 ];
 
 export function HomepageOperatingSystemSection() {
@@ -88,7 +88,8 @@ export function HomepageOperatingSystemSection() {
           </h2>
           <p className="mt-3 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
             Altair connects the work that already exists in your company — so the
-            same customer, job, and dollars never get retyped into a new tool.
+            same customer, job, and dollars move forward together instead of
+            being retyped into another tool.
           </p>
         </div>
 
@@ -98,7 +99,7 @@ export function HomepageOperatingSystemSection() {
             active ? "mc-os-spine-active" : "",
           ].join(" ")}
           role="list"
-          aria-label="Workflow from lead to payment"
+          aria-label="Workflow from lead to reporting"
         >
           <div
             className="absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] bg-[rgba(222,228,236,0.1)]"
@@ -108,10 +109,10 @@ export function HomepageOperatingSystemSection() {
             className="mc-os-spine-rail absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] origin-left bg-[linear-gradient(to_right,rgba(184,138,46,0.25),rgba(201,164,77,0.95)_55%,rgba(201,164,77,1))]"
             aria-hidden="true"
           />
-          <ol className="relative grid grid-cols-8 gap-1.5">
+          <ol className="relative grid grid-cols-9 gap-1">
             {WORKFLOW_NODES.map((node, index) => {
               const Icon = node.icon;
-              const isPayment = index === WORKFLOW_NODES.length - 1;
+              const isOutcome = index === WORKFLOW_NODES.length - 1;
               return (
                 <li
                   key={node.name}
@@ -124,13 +125,13 @@ export function HomepageOperatingSystemSection() {
                   <span
                     className={[
                       "relative flex items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
-                      isPayment
+                      isOutcome
                         ? "h-16 w-16 border-[rgba(201,164,77,0.65)] shadow-[0_0_36px_-6px_rgba(201,164,77,0.55)]"
                         : "h-14 w-14 border-[rgba(201,164,77,0.4)] shadow-[0_0_28px_-10px_rgba(201,164,77,0.4)]",
                     ].join(" ")}
                   >
                     <Icon
-                      className={isPayment ? "h-6 w-6 text-[#c9a44d]" : "h-5 w-5 text-[#c9a44d]"}
+                      className={isOutcome ? "h-6 w-6 text-[#c9a44d]" : "h-5 w-5 text-[#c9a44d]"}
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
@@ -152,17 +153,17 @@ export function HomepageOperatingSystemSection() {
             "mc-os-spine-mobile relative mx-auto mt-8 grid max-w-lg grid-cols-2 gap-x-3 gap-y-3 lg:hidden",
             active ? "mc-os-spine-active" : "",
           ].join(" ")}
-          aria-label="Workflow from lead to payment"
+          aria-label="Workflow from lead to reporting"
         >
           {WORKFLOW_NODES.map((node, index) => {
             const Icon = node.icon;
-            const isPayment = index === WORKFLOW_NODES.length - 1;
+            const isOutcome = index === WORKFLOW_NODES.length - 1;
             return (
               <li
                 key={node.name}
                 className={[
                   "mc-os-node relative flex items-start gap-3 rounded-xl border px-3 py-3",
-                  isPayment
+                  isOutcome
                     ? "border-[rgba(201,164,77,0.45)] bg-[rgba(184,138,46,0.08)]"
                     : "border-[rgba(222,228,236,0.1)] bg-[rgba(14,16,20,0.55)]",
                 ].join(" ")}
@@ -171,7 +172,7 @@ export function HomepageOperatingSystemSection() {
                 <span
                   className={[
                     "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
-                    isPayment
+                    isOutcome
                       ? "border-[rgba(201,164,77,0.65)]"
                       : "border-[rgba(201,164,77,0.35)]",
                   ].join(" ")}
@@ -195,14 +196,6 @@ export function HomepageOperatingSystemSection() {
           })}
         </ol>
 
-        <div className="mx-auto mt-7 max-w-2xl lg:mt-8">
-          <HomepageProductFrame
-            src={HOMEPAGE_SCREENSHOTS.dashboard}
-            alt="Altair OS Mission Control — operating board with jobs, money, and field signals"
-            sizes="(max-width: 768px) 92vw, 672px"
-            className="mc-os-proof"
-          />
-        </div>
       </div>
     </section>
   );

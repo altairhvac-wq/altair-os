@@ -4,7 +4,7 @@ import { PricingPageView } from "@/shared/components/pricing/PricingPageView";
 export const metadata: Metadata = {
   title: "Pricing · Altair OS",
   description:
-    "Founding Company Beta — Starter, Growth, and Pro plans free for 3 months. No credit card required.",
+    "Altair OS pricing for field service businesses. Start a 14-day free trial with Starter, Growth, or Pro. Credit card required.",
 };
 
 export default function PricingPage() {

@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  FileClock,
-  LayoutGrid,
+  Clock,
+  Moon,
   Phone,
-  UserRound,
-  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,34 +17,22 @@ type Vignette = {
 
 const VIGNETTES: Vignette[] = [
   {
-    id: "tools",
-    title: "Disconnected tools",
-    detail: "Three apps that never quite agree on the same customer.",
-    icon: LayoutGrid,
-  },
-  {
-    id: "tech",
-    title: "Technicians waiting",
-    detail: "A truck idling while someone finds the address again.",
-    icon: UserRound,
-  },
-  {
-    id: "estimate",
-    title: "Missed estimates",
-    detail: "A quote drafted, then buried under the next call.",
-    icon: FileClock,
-  },
-  {
-    id: "office",
-    title: "Office overload",
-    detail: "The desk becomes a switchboard between systems.",
+    id: "customer",
+    title: "Customer waiting",
+    detail: "You promised you'd call back.",
     icon: Phone,
   },
   {
-    id: "cash",
-    title: "Slow cash flow",
-    detail: "Payment is “somewhere in QuickBooks.”",
-    icon: Wallet,
+    id: "dinner",
+    title: "Dinner interrupted",
+    detail: 'Another "quick question" after hours.',
+    icon: Moon,
+  },
+  {
+    id: "technician",
+    title: "Technician delayed",
+    detail: "The day is already behind schedule.",
+    icon: Clock,
   },
 ];
 
@@ -138,14 +124,15 @@ export function HomepageRealitySection() {
               attention.
             </p>
             <p className="text-[#f3ebdd]">
-              Altair is being built to help give it back.
+              Altair gives you one place to run the work—and gives that attention
+              back.
             </p>
           </div>
         </div>
 
         <ul
           className={[
-            "mt-8 hidden gap-3 sm:grid sm:grid-cols-2 lg:mt-10 lg:grid-cols-5",
+            "mx-auto mt-8 hidden max-w-5xl gap-3 sm:grid sm:grid-cols-3 lg:mt-10",
             visible ? "mc-reality-visible" : "opacity-0",
           ].join(" ")}
         >

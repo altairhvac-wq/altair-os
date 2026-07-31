@@ -9,7 +9,7 @@ const FOOTER_LINKS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/#about", label: "About" },
   { href: "/login", label: "Sign In" },
-  { href: "/signup", label: "Start Free Beta", accent: true },
+  { href: "/signup", label: "Start Your 14-Day Free Trial", accent: true },
 ] as const;
 
 export function MarketingFooter() {
@@ -25,7 +25,7 @@ export function MarketingFooter() {
             <AltairLogo variant="white" size="sm" showWordmark />
           </Link>
           <p className="mt-2 text-sm leading-relaxed text-[#8e826f]">
-            The operating system for HVAC companies.
+            The operating system for field service businesses.
           </p>
         </div>
 

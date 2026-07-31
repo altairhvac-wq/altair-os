@@ -7,9 +7,9 @@ const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
 
 const TRUST_ITEMS = [
-  "Free during beta",
-  "Setup support included",
-  "Built for HVAC & the trades",
+  "14-day free trial",
+  "Live onboarding included",
+  "Built for field service businesses",
 ] as const;
 
 /**
@@ -20,7 +20,7 @@ export function HomepageHero() {
   return (
     <section
       aria-labelledby="ah-hero-heading"
-      className="ah-hero relative isolate overflow-hidden px-5 pb-8 pt-20 sm:px-8 sm:pb-10 sm:pt-24 lg:px-12 lg:pb-12 lg:pt-24 xl:px-16"
+      className="ah-hero relative isolate overflow-hidden px-5 pb-10 pt-20 sm:px-8 sm:pb-12 sm:pt-24 lg:px-12 lg:pb-14 lg:pt-24 xl:px-16"
     >
       {/* Soft graphite light — environment alive, product remains the brightest plane */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -31,7 +31,7 @@ export function HomepageHero() {
       <div className="relative mx-auto w-full max-w-[96rem]">
         <div className="mx-auto max-w-3xl text-center lg:max-w-[52rem]">
           <p className="ah-hero-fade ah-hero-fade-1 inline-flex items-center rounded-full border border-[rgba(222,228,236,0.14)] bg-[rgba(23,27,34,0.55)] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#c9bfae]">
-            Closed Beta Now Available
+            The Operating System for Field Service Businesses
           </p>
 
           <h1
@@ -43,29 +43,28 @@ export function HomepageHero() {
             where it matters most.
           </h1>
 
-          <p className="ah-hero-fade ah-hero-fade-3 mx-auto mt-3.5 max-w-[600px] text-[0.95rem] leading-[1.75] text-[#c9bfae] sm:mt-4 sm:text-lg sm:leading-[1.8]">
-            Altair brings your customers, scheduling, technicians, jobs,
-            estimates, invoices, and payments into one calm, connected operating
-            system—so you can spend less time managing software and more time
-            leading your business.
+          <p className="ah-hero-fade ah-hero-fade-3 mx-auto mt-5 max-w-[600px] text-[0.95rem] leading-[1.75] text-[#c9bfae] sm:mt-6 sm:text-lg sm:leading-[1.8]">
+            Altair connects every stage of your service business—from the first
+            lead to the final payment—in one calm operating system, so you can
+            spend less time managing software and more time leading your company.
           </p>
 
-          <div className="ah-hero-fade ah-hero-fade-4 mt-5 flex flex-col items-stretch justify-center gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3.5">
+          <div className="ah-hero-fade ah-hero-fade-4 mt-7 flex flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-3.5">
             <Link
               href="/signup"
               className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#b88a2e] px-8 py-3.5 text-sm font-semibold text-[#08090c] transition-[background-color,transform] duration-200 hover:bg-[#c9a44d] active:translate-y-px motion-reduce:transition-none motion-reduce:active:translate-y-0 sm:w-auto ${focusRing}`}
             >
-              Start Free Beta
+              Start Your 14-Day Free Trial
             </Link>
             <Link
-              href="/#about"
+              href="/#product-proof"
               className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-[rgba(222,228,236,0.18)] bg-transparent px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-[border-color,background-color] duration-200 hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.45)] motion-reduce:transition-none sm:w-auto ${focusRing}`}
             >
-              Watch Our Story
+              See Altair in Action
             </Link>
           </div>
 
-          <ul className="ah-hero-fade ah-hero-fade-5 mx-auto mt-5 flex max-w-lg flex-row flex-wrap items-center justify-center gap-x-7 gap-y-2.5 sm:mt-6 sm:max-w-none sm:gap-x-10">
+          <ul className="ah-hero-fade ah-hero-fade-5 mx-auto mt-7 flex max-w-lg flex-row flex-wrap items-center justify-center gap-x-7 gap-y-2.5 sm:mt-8 sm:max-w-none sm:gap-x-10">
             {TRUST_ITEMS.map((item) => (
               <li
                 key={item}
@@ -82,7 +81,8 @@ export function HomepageHero() {
           </ul>
         </div>
 
-        <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-7 w-[min(100%,calc(84rem*1.2))] max-w-none sm:mt-9 lg:mt-10">
+        {/* Deliberate pause: screenshot is the reward after the mission */}
+        <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-14 w-full max-w-none sm:mt-20 sm:w-[88%] lg:mt-24 lg:w-[90%]">
           <div
             className="pointer-events-none absolute -inset-x-[6%] -inset-y-[8%] bg-[radial-gradient(ellipse_at_center,rgba(236,240,246,0.16)_0%,rgba(210,216,224,0.05)_46%,transparent_72%)]"
             aria-hidden="true"
@@ -92,7 +92,7 @@ export function HomepageHero() {
             alt="Altair Mission Control dashboard showing today's operations, mission-critical queues, cash flow, and technician activity"
             priority
             className="ah-hero-product"
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1550px"
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 88vw, 1380px"
           />
         </div>
       </div>

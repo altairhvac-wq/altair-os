@@ -1,0 +1,100 @@
+import Link from "next/link";
+import {
+  SAAS_TRIAL_CONFIG,
+  listPublicSaasCatalogPlans,
+} from "@/lib/saas-billing/catalog";
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+
+export function HomepagePricingSection() {
+  const plans = listPublicSaasCatalogPlans();
+
+  return (
+    <section
+      id="pricing"
+      aria-labelledby="mc-pricing-heading"
+      className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16"
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto max-w-[72rem]">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+            Simple plans for growing service businesses
+          </p>
+          <h2
+            id="mc-pricing-heading"
+            className="mt-3 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.35rem] sm:leading-[1.15]"
+          >
+            Run the full operation free for {SAAS_TRIAL_CONFIG.durationDays} days.
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
+            Choose the plan that fits your team. Every plan starts with the same
+            connected Altair experience and live onboarding.
+          </p>
+        </div>
+
+        <div className="mt-9 grid gap-4 lg:mt-11 lg:grid-cols-3">
+          {plans.map((plan) => {
+            const featured = plan.planKey === "growth";
+
+            return (
+              <article
+                key={plan.planKey}
+                className={[
+                  "relative flex flex-col rounded-2xl border p-5 sm:p-6",
+                  featured
+                    ? "border-[rgba(201,164,77,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,16,20,0.96))] shadow-[0_24px_60px_-38px_rgba(201,164,77,0.55)]"
+                    : "border-[rgba(222,228,236,0.12)] bg-[linear-gradient(165deg,rgba(32,36,44,0.72),rgba(14,16,20,0.92))]",
+                ].join(" ")}
+              >
+                {featured ? (
+                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c9a44d]">
+                    Most popular
+                  </p>
+                ) : null}
+                <h3 className="text-lg font-semibold text-[#fff9ea]">{plan.label}</h3>
+                <div className="mt-5 flex items-end gap-2">
+                  <span className="font-mono text-4xl font-semibold tracking-tight text-[#fff9ea]">
+                    ${plan.monthlyPriceUsd}
+                  </span>
+                  <span className="pb-1 text-sm text-[#9a9080]">/ month</span>
+                </div>
+                <p className="mt-2 text-sm text-[#9a9080]">
+                  ${plan.annualPriceUsd}/year · save ${plan.annualSavingsUsd}
+                </p>
+                <Link
+                  href="/signup"
+                  className={`mt-6 inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    featured
+                      ? "bg-[#b88a2e] text-[#08090c] hover:bg-[#c9a44d]"
+                      : "border border-[rgba(222,228,236,0.18)] text-[#f3ebdd] hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.55)]"
+                  } ${focusRing}`}
+                >
+                  Start Your 14-Day Free Trial
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-[#8e826f]">
+            Credit card required. Your selected plan begins after the trial unless
+            you cancel.
+          </p>
+          <Link
+            href="/pricing"
+            className={`mt-3 inline-flex rounded-sm text-sm font-semibold text-[#c9a44d] hover:text-[#e6d092] ${focusRing}`}
+          >
+            Compare plans and annual pricing
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

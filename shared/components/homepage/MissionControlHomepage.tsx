@@ -2,7 +2,10 @@ import Link from "next/link";
 import { HomepageFoundingSection } from "@/shared/components/homepage/HomepageFoundingSection";
 import { HomepageHero } from "@/shared/components/homepage/HomepageHero";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
+import { HomepageOnboardingSection } from "@/shared/components/homepage/HomepageOnboardingSection";
 import { HomepageOperatingSystemSection } from "@/shared/components/homepage/HomepageOperatingSystemSection";
+import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
+import { HomepageProductProofSection } from "@/shared/components/homepage/HomepageProductProofSection";
 import { HomepageRealitySection } from "@/shared/components/homepage/HomepageRealitySection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 
@@ -34,11 +37,14 @@ export function MissionControlHomepage() {
         <HomepageHero />
         <HomepageRealitySection />
         <HomepageOperatingSystemSection />
+        <HomepageProductProofSection />
         <HomepageFoundingSection />
+        <HomepageOnboardingSection />
+        <HomepagePricingSection />
 
         <section
           aria-labelledby="mc-final-cta-heading"
-          className="relative px-5 pb-10 pt-4 sm:px-8 sm:pb-12 sm:pt-5"
+          className="relative px-5 pb-10 pt-16 sm:px-8 sm:pb-12 sm:pt-20"
         >
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.22),transparent)]"
@@ -49,7 +55,7 @@ export function MissionControlHomepage() {
               id="mc-final-cta-heading"
               className="text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem] sm:leading-[1.25]"
             >
-              Build a business that gives you more time for what matters.
+              Put your whole service business on one connected operating system.
             </h2>
             <p className="mx-auto mt-3.5 max-w-xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
               Bring your customers, jobs, technicians, estimates, invoices, and
@@ -60,14 +66,14 @@ export function MissionControlHomepage() {
                 href="/signup"
                 className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-5 py-3.5 text-sm font-semibold text-[#08090c] transition-colors hover:bg-[#c9a44d] ${focusRing}`}
               >
-                Start Free Beta
+                Start Your 14-Day Free Trial
                 <span className="ml-1.5 opacity-70" aria-hidden="true">
                   →
                 </span>
               </Link>
             </div>
             <p className="mt-4 text-sm text-[#8e826f]">
-              Free during beta. Founder-led onboarding included.
+              Credit card required. Live onboarding included. Cancel anytime.
             </p>
           </div>
         </section>

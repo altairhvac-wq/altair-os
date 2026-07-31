@@ -31,6 +31,8 @@ export const HOMEPAGE_SCREENSHOTS = {
   dashboard: "/marketing/screenshots/mission-control-hero.png",
   leads: "/marketing/screenshots/social/leads-full-page.png",
   dispatch: "/marketing/screenshots/social/dispatch-full-page.png",
+  customers: "/marketing/screenshots/social/customers-full-page.png",
   estimate: "/marketing/screenshots/social/estimates-full-page.png",
   invoices: "/marketing/screenshots/social/invoices-full-page.png",
+  reports: "/marketing/screenshots/social/reports-full-page.png",
 } as const;

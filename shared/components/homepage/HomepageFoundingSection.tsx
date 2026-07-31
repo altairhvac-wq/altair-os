@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Check,
   Handshake,
@@ -9,23 +8,19 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
-
-const FOUNDING_BENEFITS = [
-  "3 months free",
-  "Lock in today's pricing while you remain a customer",
-  "Direct access to the founder during onboarding",
-  "Priority support during beta",
-  "Influence future features and roadmap",
+const TRUST_PILLARS = [
+  "Connected workflows from lead to reporting",
+  "Guided setup for your service business",
+  "Live onboarding included with every plan",
+  "Founder involvement in the customer experience",
 ] as const;
 
 const SWITCHING_POINTS: { label: string; icon: LucideIcon }[] = [
-  { label: "We'll help you get started.", icon: Handshake },
-  { label: "Direct access to the founder during beta.", icon: MessageCircle },
+  { label: "Guided setup helps your team start with confidence.", icon: Handshake },
+  { label: "The founder remains involved in customer feedback.", icon: MessageCircle },
   { label: "No long-term contracts.", icon: ShieldCheck },
   { label: "Cancel anytime.", icon: Unlock },
-  { label: "Built specifically for HVAC companies.", icon: Route },
+  { label: "Built around the way field service businesses operate.", icon: Route },
 ];
 
 export function HomepageFoundingSection() {
@@ -47,25 +42,26 @@ export function HomepageFoundingSection() {
         <div id="founding-member" className="relative mx-auto max-w-[90rem]">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
-              Closed Beta
+              Built for the real work
             </p>
             <h2
               id="mc-founding-heading"
               className="mt-3 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.35rem] sm:leading-[1.15]"
             >
-              Become a Founding Member
+              A serious operating system, with people behind it.
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-[#c9bfae] sm:text-lg">
-              Join Altair OS during our Closed Beta and help shape the operating
-              system built for real HVAC companies.
+              Altair is production software for service companies that need their
+              operation to stay connected—and a customer experience that feels
+              personal from day one.
             </p>
           </div>
 
           <ul className="mx-auto mt-8 grid max-w-3xl gap-3 sm:mt-10 sm:grid-cols-2">
-            {FOUNDING_BENEFITS.map((benefit, index) => {
+            {TRUST_PILLARS.map((benefit, index) => {
               const isLastOdd =
-                index === FOUNDING_BENEFITS.length - 1 &&
-                FOUNDING_BENEFITS.length % 2 === 1;
+                index === TRUST_PILLARS.length - 1 &&
+                TRUST_PILLARS.length % 2 === 1;
               return (
                 <li
                   key={benefit}
@@ -92,22 +88,9 @@ export function HomepageFoundingSection() {
           </ul>
 
           <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-[#9a9080] sm:text-[0.95rem]">
-            We intentionally onboard a limited number of companies at a time so
-            every customer receives hands-on onboarding, direct support, and a
-            smooth transition into Altair OS.
+            Every customer receives a professional path into Altair—from initial
+            setup through the workflows that keep the business moving.
           </p>
-
-          <div className="mt-7 flex justify-center">
-            <Link
-              href="/signup"
-              className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-5 py-3.5 text-sm font-semibold text-[#08090c] transition-colors hover:bg-[#c9a44d] ${focusRing}`}
-            >
-              Request Closed Beta Access
-              <span className="ml-1.5 opacity-70" aria-hidden="true">
-                →
-              </span>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -149,7 +132,7 @@ export function HomepageFoundingSection() {
       <section
         id="about"
         aria-labelledby="mc-about-heading"
-        className="mc-about relative scroll-mt-28 px-5 py-14 sm:px-8 sm:py-20"
+        className="mc-about relative scroll-mt-28 px-5 py-20 sm:px-8 sm:py-28 lg:py-32"
       >
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.16),transparent)]"
@@ -160,17 +143,17 @@ export function HomepageFoundingSection() {
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto max-w-2xl text-center">
+        <div className="relative mx-auto max-w-[38rem] text-center sm:max-w-[40rem]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
             A note from the founder
           </p>
           <h2
             id="mc-about-heading"
-            className="mt-5 text-[1.65rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.1rem] sm:leading-[1.2]"
+            className="mt-6 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:mt-7 sm:text-[2.35rem] sm:leading-[1.18]"
           >
             Built by someone who understands what it means to carry a business.
           </h2>
-          <div className="mx-auto mt-6 space-y-5 text-base leading-relaxed text-[#c9bfae] sm:mt-7 sm:text-lg sm:leading-[1.75]">
+          <div className="mx-auto mt-8 space-y-6 text-base leading-[1.8] text-[#c9bfae] sm:mt-9 sm:text-lg sm:leading-[1.85]">
             <p>
               Altair was not created because the world needed another software
               company.
@@ -186,7 +169,7 @@ export function HomepageFoundingSection() {
               serving their customers, and being present with their families.
             </p>
             <p className="text-[#f3ebdd]">
-              That is what Altair is being built to become.
+              That is the operating system Altair is here to deliver.
             </p>
           </div>
         </div>

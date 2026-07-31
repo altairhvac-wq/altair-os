@@ -7,7 +7,8 @@ import { Menu, X } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
 const NAV_LINKS = [
-  { href: "/#features", label: "Features", id: "features" },
+  { href: "/#features", label: "Product", id: "features" },
+  { href: "/#onboarding", label: "Onboarding", id: "onboarding" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
   { href: "/#about", label: "About", id: "about" },
 ] as const;
@@ -51,10 +52,6 @@ export function HomepageNav() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header
@@ -115,7 +112,7 @@ export function HomepageNav() {
             href="/signup"
             className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-2.5 text-[13px] font-semibold text-[#08090c] transition-colors duration-200 hover:bg-[#c9a44d] motion-reduce:transition-none ${focusRing}`}
           >
-            Start Free Beta
+            Start Your 14-Day Free Trial
           </Link>
         </div>
 
@@ -174,7 +171,7 @@ export function HomepageNav() {
               onClick={() => setMenuOpen(false)}
               className={`mt-2 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-3 text-sm font-semibold text-[#08090c] hover:bg-[#c9a44d] ${focusRing}`}
             >
-              Start Free Beta
+              Start Your 14-Day Free Trial
             </Link>
           </nav>
         </div>
