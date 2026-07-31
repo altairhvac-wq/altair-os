@@ -1,5 +1,4 @@
 import {
-  MasterContentStack,
   MasterPageCanvas,
   MasterPageSection,
   MasterShellPage,
@@ -28,27 +27,23 @@ function GreetingSkeleton() {
 
 function NeedsAttentionSkeleton() {
   return (
-    <ModuleGrid rhythm="compact">
-      <ModuleGridItem span={2} size="m">
-        <MasterPageSection
-          title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
-          density="compact"
-          headerVariant="spacious"
-        >
-          <div className={`${altairSurfaceSectionClass} space-y-0 px-2 py-1`}>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between gap-3 px-2 py-3"
-              >
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-5 w-8" />
-              </div>
-            ))}
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
+      density="compact"
+      headerVariant="spacious"
+    >
+      <div className={`${altairSurfaceSectionClass} space-y-0 px-2 py-1`}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-3 px-2 py-3"
+          >
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-5 w-8" />
           </div>
-        </MasterPageSection>
-      </ModuleGridItem>
-    </ModuleGrid>
+        ))}
+      </div>
+    </MasterPageSection>
   );
 }
 
@@ -80,21 +75,17 @@ function BriefGridSkeleton({
 
 function QuickActionsSkeleton() {
   return (
-    <ModuleGrid rhythm="compact">
-      <ModuleGridItem span={1} size="s">
-        <MasterPageSection
-          title={MISSION_CONTROL_SECTION_LABELS.quickActions}
-          density="compact"
-          headerVariant="spacious"
-        >
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-8 w-24 rounded-md" />
-            ))}
-          </div>
-        </MasterPageSection>
-      </ModuleGridItem>
-    </ModuleGrid>
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.quickActions}
+      density="compact"
+      headerVariant="spacious"
+    >
+      <div className={`${altairSurfaceSectionClass} flex flex-wrap gap-2 p-4`}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-8 w-24 rounded-md" />
+        ))}
+      </div>
+    </MasterPageSection>
   );
 }
 
@@ -124,31 +115,38 @@ export function OperationalDashboardLoadingState() {
   return (
     <MasterShellPage density="compact">
       <MasterPageCanvas width="wide">
-        <MasterContentStack
-          density="compact"
-          className="gap-5 lg:gap-6"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <GreetingSkeleton />
-          <NeedsAttentionSkeleton />
-          <MasterPageSection
-            title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
-            density="compact"
-            headerVariant="spacious"
-          >
-            <BriefGridSkeleton columns={4} />
-          </MasterPageSection>
-          <QuickActionsSkeleton />
-          <MasterPageSection
-            title={MISSION_CONTROL_SECTION_LABELS.cashFlow}
-            density="compact"
-            headerVariant="spacious"
-          >
-            <BriefGridSkeleton columns={4} wide />
-          </MasterPageSection>
-          <TimelineSkeleton />
-        </MasterContentStack>
+        <ModuleGrid rhythm="compact" aria-busy="true" aria-live="polite">
+          <ModuleGridItem span={3} size="xs">
+            <GreetingSkeleton />
+          </ModuleGridItem>
+          <ModuleGridItem span={2} size="m">
+            <NeedsAttentionSkeleton />
+          </ModuleGridItem>
+          <ModuleGridItem span={1} size="m">
+            <MasterPageSection
+              title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
+              density="compact"
+              headerVariant="spacious"
+            >
+              <BriefGridSkeleton columns={4} />
+            </MasterPageSection>
+          </ModuleGridItem>
+          <ModuleGridItem span={1} size="s">
+            <QuickActionsSkeleton />
+          </ModuleGridItem>
+          <ModuleGridItem span={2} size="m">
+            <MasterPageSection
+              title={MISSION_CONTROL_SECTION_LABELS.cashFlow}
+              density="compact"
+              headerVariant="spacious"
+            >
+              <BriefGridSkeleton columns={4} wide />
+            </MasterPageSection>
+          </ModuleGridItem>
+          <ModuleGridItem span={3} size="l">
+            <TimelineSkeleton />
+          </ModuleGridItem>
+        </ModuleGrid>
       </MasterPageCanvas>
     </MasterShellPage>
   );
