@@ -17,23 +17,10 @@ import type {
   NetworkInvite,
   PublicNetworkInvitePreview,
 } from "@/shared/types/network-invite";
-import type { TradeType } from "@/shared/types/network";
-
-const TRADE_TYPES = new Set<string>([
-  "HVAC",
-  "Plumbing",
-  "Electrical",
-  "Roofing",
-  "General Contracting",
-  "Landscaping",
-  "Painting",
-]);
-
-function normalizeTradeType(value: string): TradeType {
-  return TRADE_TYPES.has(value)
-    ? (value as TradeType)
-    : "General Contracting";
-}
+import {
+  normalizeTradeType,
+  type TradeType,
+} from "@/shared/types/network";
 
 function mapNetworkInviteRow(
   row: NetworkInviteRow,

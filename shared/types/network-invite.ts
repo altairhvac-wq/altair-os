@@ -6,7 +6,11 @@
  */
 
 import type { NetworkInviteStatus } from "@/lib/database/types/enums";
-import type { TradeType } from "@/shared/types/network";
+import {
+  isTradeType,
+  NETWORK_TRADE_OPTIONS,
+  type TradeType,
+} from "@/shared/types/network";
 import type { NetworkPartner } from "@/shared/types/network-partner";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 
@@ -73,18 +77,8 @@ export const NETWORK_INVITE_STATUS_OPTIONS: {
   { value: "cancelled", label: "Cancelled" },
 ];
 
-export const NETWORK_INVITE_TRADE_OPTIONS: {
-  value: TradeType;
-  label: string;
-}[] = [
-  { value: "HVAC", label: "HVAC" },
-  { value: "Plumbing", label: "Plumbing" },
-  { value: "Electrical", label: "Electrical" },
-  { value: "Roofing", label: "Roofing" },
-  { value: "General Contracting", label: "General Contracting" },
-  { value: "Landscaping", label: "Landscaping" },
-  { value: "Painting", label: "Painting" },
-];
+/** Same canonical Community category list as profiles / directory. */
+export const NETWORK_INVITE_TRADE_OPTIONS = NETWORK_TRADE_OPTIONS;
 
 export type NetworkInvitationsTab = "pending" | "accepted" | "expired";
 
@@ -129,6 +123,10 @@ export function validateNetworkInviteFormData(
 
   if (!EMAIL_PATTERN.test(data.invitedEmail)) {
     return "Enter a valid email address.";
+  }
+
+  if (!isTradeType(data.tradeCategory)) {
+    return "Select a valid trade category.";
   }
 
   return null;

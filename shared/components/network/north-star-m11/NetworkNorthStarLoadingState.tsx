@@ -34,6 +34,7 @@ export function NetworkNorthStarLoadingState() {
         titleClassName={st.pageHeaderTitle}
         subtitleClassName={st.pageHeaderSubtitle}
         primaryAction={<Skeleton dark className="h-9 w-36 rounded-lg" />}
+        secondaryAction={<Skeleton dark className="h-9 w-40 rounded-lg" />}
       />
 
       <MasterContentStack density="compact" className={st.workspaceStack}>
