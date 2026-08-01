@@ -4,6 +4,7 @@ import {
   getOpenBreakEntryForTechnician,
   getOpenClockEntryForTechnician,
   getOpenJobLaborEntryForTechnician,
+  getRecentlyClosedTimeEntryForTechnician,
   getTechnicianOpenTimeEntries,
   getTimeEntryById,
   listOpenClockEntriesForCompany,
@@ -116,6 +117,7 @@ export async function clockInTimeClockEntry(
 export async function clockOutTimeClockEntry(
   companyId: string,
   userId: string,
+  options: { expectedEntryId?: string } = {},
 ): Promise<{ entry: TimeClockEntry | null; error: string | null }> {
   const { entry: jobLabor } = await getOpenJobLaborEntryForTechnician(
     companyId,
@@ -146,6 +148,36 @@ export async function clockOutTimeClockEntry(
   }
 
   if (!clockEntry) {
+    let reconciled = null as Awaited<ReturnType<typeof getTimeEntryById>>;
+
+    if (options.expectedEntryId) {
+      const existing = await getTimeEntryById(
+        companyId,
+        options.expectedEntryId,
+      );
+      if (
+        existing &&
+        existing.endedAt &&
+        existing.technicianId === userId &&
+        existing.entryType === "clock"
+      ) {
+        reconciled = existing;
+      }
+    } else {
+      reconciled = await getRecentlyClosedTimeEntryForTechnician(
+        companyId,
+        userId,
+        "clock",
+      );
+    }
+
+    if (reconciled) {
+      return {
+        entry: mapClockTimeEntryToTimeClockEntry(reconciled),
+        error: null,
+      };
+    }
+
     return { entry: null, error: "You are not clocked in." };
   }
 
@@ -155,7 +187,7 @@ export async function clockOutTimeClockEntry(
     endedAt,
   );
 
-  const { entry, error } = await closeTimeEntry(
+  const { entry, error, alreadyClosed } = await closeTimeEntry(
     companyId,
     clockEntry.id,
     endedAt,
@@ -166,11 +198,13 @@ export async function clockOutTimeClockEntry(
     return { entry: null, error: error ?? "Failed to clock out." };
   }
 
-  await recordTechnicianClockedOutActivity({
-    companyId,
-    actorId: userId,
-    entry,
-  });
+  if (!alreadyClosed) {
+    await recordTechnicianClockedOutActivity({
+      companyId,
+      actorId: userId,
+      entry,
+    });
+  }
 
   return {
     entry: mapClockTimeEntryToTimeClockEntry(entry),
@@ -223,7 +257,7 @@ export async function correctOpenShiftTimeClockEntry(input: {
   let correctedShift: TimeEntry | null = null;
   for (const segment of segments) {
     const durationMinutes = calculateDurationMinutes(segment.startedAt, input.endedAt);
-    const { entry, error } = await closeTimeEntry(
+    const { entry, error, alreadyClosed } = await closeTimeEntry(
       input.companyId,
       segment.id,
       input.endedAt,
@@ -232,27 +266,29 @@ export async function correctOpenShiftTimeClockEntry(input: {
     );
     if (error || !entry) return { entry: null, error: error ?? "Failed to correct shift." };
 
-    await recordTimeActivity({
-      company_id: input.companyId,
-      time_entry_id: entry.id,
-      technician_id: entry.technicianId,
-      job_id: entry.jobId ?? null,
-      actor_id: input.actorId,
-      event_type:
-        entry.entryType === "clock"
-          ? "technician_clocked_out"
-          : entry.entryType === "break"
-            ? "break_ended"
-            : "job_labor_ended",
-      metadata: {
-        action_id: "missed_clock_out_correction",
-        correction_reason: reason,
-        original_started_at: segment.startedAt,
-        original_ended_at: segment.endedAt,
-        corrected_ended_at: input.endedAt,
-        corrected_duration_minutes: durationMinutes,
-      },
-    });
+    if (!alreadyClosed) {
+      await recordTimeActivity({
+        company_id: input.companyId,
+        time_entry_id: entry.id,
+        technician_id: entry.technicianId,
+        job_id: entry.jobId ?? null,
+        actor_id: input.actorId,
+        event_type:
+          entry.entryType === "clock"
+            ? "technician_clocked_out"
+            : entry.entryType === "break"
+              ? "break_ended"
+              : "job_labor_ended",
+        metadata: {
+          action_id: "missed_clock_out_correction",
+          correction_reason: reason,
+          original_started_at: segment.startedAt,
+          original_ended_at: segment.endedAt,
+          corrected_ended_at: input.endedAt,
+          corrected_duration_minutes: durationMinutes,
+        },
+      });
+    }
 
     if (entry.entryType === "clock") correctedShift = entry;
   }

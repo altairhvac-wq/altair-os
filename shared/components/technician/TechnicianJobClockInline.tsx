@@ -126,7 +126,8 @@ export function TechnicianJobClockInline({
     }
 
     if (toggleAction === "clock_out") {
-      runAction(stopClockAction);
+      const entryId = timeState.openClockEntry?.id;
+      runAction(() => stopClockAction(entryId));
     }
   }
 

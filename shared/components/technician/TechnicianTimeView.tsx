@@ -189,7 +189,8 @@ export function TechnicianTimeView({
     }
 
     if (isClockedIn) {
-      runAction(stopClockAction);
+      const entryId = state.openClockEntry?.id;
+      runAction(() => stopClockAction(entryId));
     }
   }
 
@@ -397,7 +398,9 @@ export function TechnicianTimeView({
           <button
             type="button"
             disabled={isPending || !isOnBreak}
-            onClick={() => runAction(endBreakAction)}
+            onClick={() =>
+              runAction(() => endBreakAction(state.openBreakEntry?.id))
+            }
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <PlayCircle className="h-4 w-4" />

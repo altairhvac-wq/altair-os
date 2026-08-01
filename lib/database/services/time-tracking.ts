@@ -4,7 +4,9 @@ import {
   getOpenBreakEntryForTechnician,
   getOpenClockEntryForTechnician,
   getOpenJobLaborEntryForTechnician,
+  getRecentlyClosedTimeEntryForTechnician,
   getTechnicianOpenTimeEntries,
+  getTimeEntryById,
   getTodayTimeEntriesForTechnician,
   listOpenJobLaborEntriesForJob,
   resolvePrimaryOpenTimeEntry,
@@ -91,6 +93,46 @@ async function loadTechnicianState(
   return buildStateSnapshot(entries);
 }
 
+/**
+ * Prove an already-closed segment matches the intended close when no open
+ * entry remains (lost success response / parallel retry).
+ *
+ * Prefer an explicit expectedEntryId when the caller retained it. Otherwise
+ * require a matching recently closed row (same type, optional job) within the
+ * narrow reconcile window — never treat "any historical close" as success.
+ */
+async function reconcileAlreadyClosedOwnEntry(input: {
+  companyId: string;
+  technicianId: string;
+  entryType: TimeEntry["entryType"];
+  jobId?: string;
+  expectedEntryId?: string;
+}): Promise<TimeEntry | null> {
+  if (input.expectedEntryId) {
+    const entry = await getTimeEntryById(
+      input.companyId,
+      input.expectedEntryId,
+    );
+    if (
+      entry &&
+      entry.endedAt &&
+      entry.technicianId === input.technicianId &&
+      entry.entryType === input.entryType &&
+      (input.jobId === undefined || entry.jobId === input.jobId)
+    ) {
+      return entry;
+    }
+    return null;
+  }
+
+  return getRecentlyClosedTimeEntryForTechnician(
+    input.companyId,
+    input.technicianId,
+    input.entryType,
+    { jobId: input.jobId },
+  );
+}
+
 async function closeActiveEntry(input: {
   companyId: string;
   actorId: string;
@@ -126,7 +168,7 @@ async function closeActiveEntry(input: {
     endedAt,
   );
 
-  const { entry, error } = await closeTimeEntry(
+  const { entry, error, alreadyClosed } = await closeTimeEntry(
     input.companyId,
     input.activeEntry.id,
     endedAt,
@@ -135,6 +177,11 @@ async function closeActiveEntry(input: {
 
   if (error || !entry) {
     return { entry: null, error: error ?? "Failed to close time entry." };
+  }
+
+  // Do not re-record activity or mutate review state on an idempotent retry.
+  if (alreadyClosed) {
+    return { entry, error: null };
   }
 
   if (input.activity === "technician_clocked_out") {
@@ -272,6 +319,8 @@ export async function stopClock(input: {
   companyId: string;
   technicianId: string;
   actorId: string;
+  /** Open clock entry ID retained by the client for safe retry correlation. */
+  expectedEntryId?: string;
 }): Promise<TimeTrackingResult> {
   const { entries } = await getTechnicianOpenTimeEntries(
     input.companyId,
@@ -291,6 +340,24 @@ export async function stopClock(input: {
   const clockEntry = entries.clock;
 
   if (!clockEntry) {
+    const reconciled = await reconcileAlreadyClosedOwnEntry({
+      companyId: input.companyId,
+      technicianId: input.technicianId,
+      entryType: "clock",
+      expectedEntryId: input.expectedEntryId,
+    });
+
+    if (reconciled) {
+      return {
+        entry: reconciled,
+        state: buildStateSnapshot({
+          clock: null,
+          jobLabor: null,
+          breakEntry: null,
+        }),
+      };
+    }
+
     return { error: "You are not clocked in." };
   }
 
@@ -374,6 +441,7 @@ export async function endBreak(input: {
   companyId: string;
   technicianId: string;
   actorId: string;
+  expectedEntryId?: string;
 }): Promise<TimeTrackingResult> {
   const { entry: breakEntry } = await getOpenBreakEntryForTechnician(
     input.companyId,
@@ -381,6 +449,21 @@ export async function endBreak(input: {
   );
 
   if (!breakEntry) {
+    const reconciled = await reconcileAlreadyClosedOwnEntry({
+      companyId: input.companyId,
+      technicianId: input.technicianId,
+      entryType: "break",
+      expectedEntryId: input.expectedEntryId,
+    });
+
+    if (reconciled) {
+      const state = await loadTechnicianState(
+        input.companyId,
+        input.technicianId,
+      );
+      return { entry: reconciled, state };
+    }
+
     return { error: "You are not currently on break." };
   }
 
@@ -501,6 +584,7 @@ export async function stopJobLabor(input: {
   technicianId: string;
   actorId: string;
   jobId?: string;
+  expectedEntryId?: string;
 }): Promise<TimeTrackingResult> {
   const { entry: jobLabor } = await getOpenJobLaborEntryForTechnician(
     input.companyId,
@@ -508,6 +592,22 @@ export async function stopJobLabor(input: {
   );
 
   if (!jobLabor) {
+    const reconciled = await reconcileAlreadyClosedOwnEntry({
+      companyId: input.companyId,
+      technicianId: input.technicianId,
+      entryType: "job_labor",
+      jobId: input.jobId,
+      expectedEntryId: input.expectedEntryId,
+    });
+
+    if (reconciled) {
+      const state = await loadTechnicianState(
+        input.companyId,
+        input.technicianId,
+      );
+      return { entry: reconciled, state };
+    }
+
     return { error: "You are not currently working a job." };
   }
 
@@ -560,7 +660,11 @@ export async function finalizeOpenJobLaborForTerminalJob(input: {
 
   for (const entry of openEntries) {
     const durationMinutes = calculateDurationMinutes(entry.startedAt, endedAt);
-    const { entry: closedEntry, error } = await closeTimeEntry(
+    const {
+      entry: closedEntry,
+      error,
+      alreadyClosed,
+    } = await closeTimeEntry(
       input.companyId,
       entry.id,
       endedAt,
@@ -581,6 +685,10 @@ export async function finalizeOpenJobLaborForTerminalJob(input: {
           error ??
           "Could not close open labor for this job. Stop job work and try again.",
       };
+    }
+
+    if (alreadyClosed) {
+      continue;
     }
 
     await recordJobLaborEndedActivity({
