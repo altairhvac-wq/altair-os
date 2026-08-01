@@ -45,7 +45,9 @@ import { countOperationalActive } from "@/shared/lib/operational-lifecycle";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
+import { sortJobsByScheduledTime } from "@/shared/lib/jobs-today-schedule";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
+import { buildJobsGlanceStats } from "@/shared/lib/jobs/jobs-glance-stats";
 import {
   buildJobsPageHref,
   filterJobsByPageFilters,
@@ -76,9 +78,9 @@ import { JobDetailsPanel } from "./JobDetailsPanel";
 import { JobSearchFilterBar } from "./JobSearchFilterBar";
 import { JobsBulkActionBar } from "./JobsBulkActionBar";
 import { JobsEmptyState } from "./JobsEmptyState";
+import { JobsStatStrip } from "./JobsStatStrip";
 import { JobsTable } from "./JobsTable";
 import { JobsTodayCardList } from "./JobsTodayCardList";
-import { JobsViewTabs } from "./JobsViewTabs";
 import { jobMissionClasses as jm } from "./job-list-presentation";
 import {
   buildJobSearchFields,
@@ -297,6 +299,17 @@ export function JobsPageView({
     [todayJobs, lifecycleFilter],
   );
 
+  const viewScopedJobsForGlance = useMemo(
+    () =>
+      viewTab === "today" ? lifecycleFilteredTodayJobs : lifecycleFilteredJobs,
+    [lifecycleFilteredJobs, lifecycleFilteredTodayJobs, viewTab],
+  );
+
+  const glanceStats = useMemo(
+    () => buildJobsGlanceStats({ jobs: viewScopedJobsForGlance }),
+    [viewScopedJobsForGlance],
+  );
+
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
     [customers],
@@ -344,11 +357,19 @@ export function JobsPageView({
       statusFilter,
       priorityFilter,
       unassignedOnly,
-      { matchDispatchInProgressCard: true },
     );
-    return applyJobSearch(filtered);
+    const result = applyJobSearch(filtered);
+    // Day-at-a-glance is chronological; All Jobs keeps owner-view sort.
+    if (!deferredSearch.trim()) {
+      return {
+        ...result,
+        items: sortJobsByScheduledTime(result.items),
+      };
+    }
+    return result;
   }, [
     applyJobSearch,
+    deferredSearch,
     lifecycleFilteredTodayJobs,
     statusFilter,
     priorityFilter,
@@ -849,8 +870,8 @@ export function JobsPageView({
             selectionEnabled={selectionEnabled}
             selectedIds={selectedIds}
             onToggleSelection={handleToggleJobSelection}
-            billingSummaries={billingSummaries}
             matchReasons={searchMatchReasons}
+            timeZone={companyTimeZone}
           />
           {selectionEnabled && lifecycleFilter === "active" ? (
             <JobsBulkActionBar
@@ -924,9 +945,22 @@ export function JobsPageView({
       subtitle="See what is happening, what needs attention, and what comes next."
       density="compact"
       headerSurfaceVariant="default"
-      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:shrink-0 sm:text-lg"
-      headerSubtitleClassName="min-w-0 text-xs leading-snug text-altair-ink-on-paper-muted sm:truncate"
-      headerClassName="items-start px-3 py-1.5 sm:items-center sm:px-3.5"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoJobs || isSearching ? undefined : (
+          <JobsStatStrip
+            stats={glanceStats}
+            activeStatus={statusFilter}
+            onFilterStatus={handleStatusFilterChange}
+            viewTab={viewTab}
+            onViewTabChange={handleViewTabChange}
+            todayCount={activeTodayCount}
+            allCount={activeAllCount}
+          />
+        )
+      }
       primaryAction={
         canDispatchJobs ? (
           <Button
@@ -962,16 +996,6 @@ export function JobsPageView({
       >
         {!hasNoJobs ? (
           <div className={jm.filterRegion}>
-            {!isSearching ? (
-              <div className={`${jm.filterTabsBand}`}>
-                <JobsViewTabs
-                  activeTab={viewTab}
-                  onTabChange={handleViewTabChange}
-                  todayCount={activeTodayCount}
-                  allCount={activeAllCount}
-                />
-              </div>
-            ) : null}
             <div className={jm.filterSearchBand}>
               <JobSearchFilterBar
                 search={search}
@@ -992,10 +1016,21 @@ export function JobsPageView({
                 onLifecycleFilterChange={setLifecycleFilter}
                 showLifecycleFilter={!isSearching && canDispatchJobs}
                 showJobFilters={!isSearching}
+                showMobileStatusFilter={!isSearching}
                 unassignedOnly={unassignedOnly}
                 onUnassignedOnlyChange={handleUnassignedOnlyChange}
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={handleClearFilters}
+                mobileViewControls={
+                  isSearching
+                    ? undefined
+                    : {
+                        viewTab,
+                        onViewTabChange: handleViewTabChange,
+                        todayCount: activeTodayCount,
+                        allCount: activeAllCount,
+                      }
+                }
                 bulkSelectAllControl={bulkSelectAllControl}
               />
             </div>

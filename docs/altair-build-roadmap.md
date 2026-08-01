@@ -2,7 +2,7 @@
 
 Living tracker for the 16-panel Mission Control / workspace UI redesign.
 
-**Surface system:** Dashboard, Customers, Customer Profile, and Leads use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
+**Surface system:** Dashboard, Customers, Customer Profile, Leads, and Jobs use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
 
 **Related:** Feature gaps that must not be faked → [`altair-feature-gaps.md`](./altair-feature-gaps.md). Broader product inventory → [`product/ALTair_BRAIN.md`](./product/ALTair_BRAIN.md).
 
@@ -13,7 +13,7 @@ Living tracker for the 16-panel Mission Control / workspace UI redesign.
 | 3 | Customers | `/customers` | **Done** | List + filters on MC v2 paper register |
 | 4 | Customer Profile | `/customers/[customerId]` | **Done** | Detail / 360; payment-ledger Total Spent |
 | 5 | Dispatch | `/dispatch` | Not started | Schedule / assign board |
-| 6 | Jobs | `/jobs` | Not started | List + detail |
+| 6 | Jobs | `/jobs` | **Done** | Header status glance pills (`JobsStatStrip`); thinned filter bar + More filters; All Jobs Type column; Today day-at-a-glance (`JobScheduleRow`, schedule sort + Now/gap markers); assignee as first name + last initial |
 | 7 | Estimates | `/estimates` | Not started | List + document surfaces |
 | 8 | Invoices | `/invoices` | Not started | Billing list + detail |
 | 9 | Leads | `/leads` | **Done** | Header filter pills + MC v2 list (Customers pattern); no Value column (see feature gaps) |

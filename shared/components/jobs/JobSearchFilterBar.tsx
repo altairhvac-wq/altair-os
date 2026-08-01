@@ -1,4 +1,7 @@
-import { Filter, Search } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { ChevronDown, Filter, Search, SlidersHorizontal } from "lucide-react";
 import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllControl";
 import {
   JOB_PRIORITY_OPTIONS,
@@ -8,6 +11,7 @@ import {
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
+import { JobsViewTabs, type TodayAllViewTab } from "./JobsViewTabs";
 import { jobMissionClasses as jm } from "./job-list-presentation";
 
 type JobSearchFilterBarProps = {
@@ -23,10 +27,19 @@ type JobSearchFilterBarProps = {
   onLifecycleFilterChange?: (value: JobLifecycleState) => void;
   showLifecycleFilter?: boolean;
   showJobFilters?: boolean;
+  /** Desktop status filtering lives in the header pills; keep a mobile select. */
+  showMobileStatusFilter?: boolean;
   unassignedOnly?: boolean;
   onUnassignedOnlyChange?: (value: boolean) => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  /** Compact Today/All + status fallback for viewports below lg. */
+  mobileViewControls?: {
+    viewTab: TodayAllViewTab;
+    onViewTabChange: (tab: TodayAllViewTab) => void;
+    todayCount: number;
+    allCount: number;
+  };
   bulkSelectAllControl?: {
     selectableCount: number;
     allSelected: boolean;
@@ -51,17 +64,65 @@ export function JobSearchFilterBar({
   onLifecycleFilterChange,
   showLifecycleFilter = false,
   showJobFilters = false,
+  showMobileStatusFilter = false,
   unassignedOnly = false,
   onUnassignedOnlyChange,
   hasActiveFilters = false,
   onClearFilters,
+  mobileViewControls,
   bulkSelectAllControl,
 }: JobSearchFilterBarProps) {
-  const showSecondaryFilters =
-    showJobFilters && onStatusFilterChange && onPriorityFilterChange;
+  const hasSecondaryFilters =
+    showJobFilters &&
+    Boolean(
+      onPriorityFilterChange ||
+        onUnassignedOnlyChange ||
+        (showLifecycleFilter && onLifecycleFilterChange),
+    );
+
+  const secondaryFilterActive =
+    priorityFilter !== "all" ||
+    unassignedOnly ||
+    (showLifecycleFilter && lifecycleFilter !== "active");
+
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(secondaryFilterActive);
+
+  const showMoreFilters = moreFiltersOpen || secondaryFilterActive;
 
   return (
     <div className="job-mission-search">
+      {mobileViewControls ? (
+        <div className="mb-2 space-y-2 lg:hidden">
+          <JobsViewTabs
+            activeTab={mobileViewControls.viewTab}
+            onTabChange={mobileViewControls.onViewTabChange}
+            todayCount={mobileViewControls.todayCount}
+            allCount={mobileViewControls.allCount}
+          />
+          {showMobileStatusFilter && onStatusFilterChange ? (
+            <div className="relative min-w-0">
+              <Filter
+                className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
+              />
+              <select
+                value={statusFilter}
+                onChange={(e) =>
+                  onStatusFilterChange(e.target.value as JobStatus | "all")
+                }
+                className={jm.filterSelect}
+                aria-label="Filter by status"
+              >
+                {JOB_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative min-w-0 w-full flex-1">
           <Search
@@ -85,51 +146,59 @@ export function JobSearchFilterBar({
           />
         </div>
 
-        {showLifecycleFilter && onLifecycleFilterChange ? (
-          <div className="relative min-w-0 lg:shrink-0">
-            <Filter
-              className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
+        {hasSecondaryFilters ? (
+          <button
+            type="button"
+            onClick={() => setMoreFiltersOpen((open) => !open)}
+            aria-expanded={showMoreFilters}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-altair-border bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper transition-colors hover:border-altair-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:min-h-10 lg:shrink-0"
+          >
+            <SlidersHorizontal className={`h-3.5 w-3.5 ${jm.filterIcon}`} />
+            More filters
+            {secondaryFilterActive ? (
+              <span className="rounded-md bg-altair-ink-on-paper/8 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-paper-secondary">
+                On
+              </span>
+            ) : null}
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-altair-ink-on-paper-muted transition-transform ${
+                showMoreFilters ? "rotate-180" : ""
+              }`}
             />
-            <select
-              value={lifecycleFilter}
-              onChange={(e) =>
-                onLifecycleFilterChange(e.target.value as JobLifecycleState)
-              }
-              className={jm.filterSelect}
-              aria-label="Filter by lifecycle"
-            >
-              {JOB_LIFECYCLE_FILTER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          </button>
         ) : null}
 
-        {showSecondaryFilters ? (
-          <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0 lg:flex-row lg:items-center lg:gap-2">
-            <div className="relative min-w-0">
+        {bulkSelectAllControl ? (
+          <BulkSelectAllControl {...bulkSelectAllControl} />
+        ) : null}
+      </div>
+
+      {hasSecondaryFilters && showMoreFilters ? (
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {showLifecycleFilter && onLifecycleFilterChange ? (
+            <div className="relative min-w-0 sm:max-w-[11rem]">
               <Filter
                 className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
               />
               <select
-                value={statusFilter}
+                value={lifecycleFilter}
                 onChange={(e) =>
-                  onStatusFilterChange(e.target.value as JobStatus | "all")
+                  onLifecycleFilterChange(e.target.value as JobLifecycleState)
                 }
                 className={jm.filterSelect}
-                aria-label="Filter by status"
+                aria-label="Filter by lifecycle"
               >
-                {JOB_STATUS_OPTIONS.map((option) => (
+                {JOB_LIFECYCLE_FILTER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
             </div>
+          ) : null}
 
-            <div className="relative min-w-0">
+          {onPriorityFilterChange ? (
+            <div className="relative min-w-0 sm:max-w-[11rem]">
               <Filter
                 className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
               />
@@ -148,28 +217,24 @@ export function JobSearchFilterBar({
                 ))}
               </select>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {showJobFilters && onUnassignedOnlyChange ? (
-          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper md:min-h-10 lg:shrink-0">
-            <input
-              type="checkbox"
-              checked={unassignedOnly}
-              onChange={(e) => onUnassignedOnlyChange(e.target.checked)}
-              className="h-4 w-4 rounded border-altair-border text-altair-brass focus:ring-altair-brass/40"
-              aria-label="Show unassigned jobs only"
-            />
-            Unassigned
-          </label>
-        ) : null}
+          {onUnassignedOnlyChange ? (
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-altair-border bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper md:min-h-10">
+              <input
+                type="checkbox"
+                checked={unassignedOnly}
+                onChange={(e) => onUnassignedOnlyChange(e.target.checked)}
+                className="h-4 w-4 rounded border-altair-border text-altair-brass focus:ring-altair-brass/40"
+                aria-label="Show unassigned jobs only"
+              />
+              Unassigned
+            </label>
+          ) : null}
+        </div>
+      ) : null}
 
-        {bulkSelectAllControl ? (
-          <BulkSelectAllControl {...bulkSelectAllControl} />
-        ) : null}
-      </div>
-
-      {search.trim() || showJobFilters || unassignedOnly ? (
+      {search.trim() || showJobFilters || unassignedOnly || statusFilter !== "all" ? (
         <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 ${jm.filterMeta}`}>
           <span>
             {resultCount}{" "}

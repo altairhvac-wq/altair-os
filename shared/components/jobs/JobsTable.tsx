@@ -94,7 +94,7 @@ export function JobsTable({
       />
 
       <div className={`hidden max-w-full overflow-x-auto md:block ${jm.listShell}`}>
-        <AltairTable className="min-w-[820px]">
+        <AltairTable className="min-w-[920px]">
           <AltairTableHeader>
             <AltairTableRow>
               {selectionEnabled ? (
@@ -111,6 +111,7 @@ export function JobsTable({
               ) : null}
               <AltairTableHead>Job</AltairTableHead>
               <AltairTableHead>Customer</AltairTableHead>
+              <AltairTableHead>Type</AltairTableHead>
               <AltairTableHead>Status</AltairTableHead>
               <AltairTableHead>Scheduled</AltairTableHead>
               <AltairTableHead>Technician</AltairTableHead>
@@ -186,6 +187,11 @@ export function JobsTable({
                       linkClassName={`${jm.primaryText} truncate font-medium ${jobNumberLinkFocusClass}`}
                       stopRowNavigation
                     />
+                  </AltairTableCell>
+                  <AltairTableCell className={jm.metaText}>
+                    <span className="truncate">
+                      {job.jobType?.trim() || "—"}
+                    </span>
                   </AltairTableCell>
                   <AltairTableCell>
                     <JobStatusBadge status={job.status} />

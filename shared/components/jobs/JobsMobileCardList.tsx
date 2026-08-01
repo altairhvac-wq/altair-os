@@ -100,6 +100,12 @@ export function JobsMobileCardList({
                     />
                   </p>
 
+                  {job.jobType?.trim() ? (
+                    <p className={`mt-0.5 truncate text-xs ${jm.metaText}`}>
+                      {job.jobType}
+                    </p>
+                  ) : null}
+
                   <p
                     className={`mt-1 truncate text-xs ${jobScheduleTextClass(schedule.kind)}`}
                   >

@@ -32,7 +32,7 @@ export function JobsViewTabs({
     <div
       className={`${adminSegmentedControlClass} w-full sm:w-auto`}
       role="tablist"
-      aria-label="Job queues"
+      aria-label="Job views"
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
