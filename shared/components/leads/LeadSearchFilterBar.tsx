@@ -1,20 +1,26 @@
 import { Search } from "lucide-react";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   LEAD_STATUS_OPTIONS,
   type LeadSortField,
   type LeadStatus,
 } from "@/shared/types/lead";
+import {
+  LEAD_LIST_FILTER_LABELS,
+  LEAD_LIST_FILTER_ORDER,
+  type LeadListFilter,
+} from "./lead-work-queues";
+import { leadMissionClasses as lm } from "./lead-list-presentation";
 
 type LeadSearchFilterBarProps = {
   search: string;
   statusFilter: LeadStatus | "all";
   sortField: LeadSortField;
+  listFilter: LeadListFilter;
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (value: LeadStatus | "all") => void;
   onSortFieldChange: (value: LeadSortField) => void;
+  onListFilterChange: (value: LeadListFilter) => void;
   resultCount: number;
-  northStar?: boolean;
   showStatusFilter?: boolean;
 };
 
@@ -24,91 +30,93 @@ const SORT_OPTIONS: { value: LeadSortField; label: string }[] = [
   { value: "nextFollowUpAt", label: "Follow-up date" },
 ];
 
-const legacySearchInputClass =
-  "h-11 min-h-11 w-full rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-3 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
-const legacySelectClass =
-  "h-11 min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated px-3 py-2.5 text-sm font-medium text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated md:h-10 md:min-h-10";
-
 export function LeadSearchFilterBar({
   search,
   statusFilter,
   sortField,
+  listFilter,
   onSearchChange,
   onStatusFilterChange,
   onSortFieldChange,
+  onListFilterChange,
   resultCount,
-  northStar = false,
   showStatusFilter = false,
 }: LeadSearchFilterBarProps) {
-  const searchInputClass = northStar ? lt.searchInput : legacySearchInputClass;
-  const selectClass = northStar ? lt.filterSelect : legacySelectClass;
-
   return (
-    <div
-      className={
-        northStar
-          ? `leads-north-star-filter-bar ${lt.filterBar}`
-          : "shrink-0 space-y-3 border-b border-slate-100/90 px-4 py-3 sm:px-5"
-      }
-    >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <label className="relative min-w-0 flex-1">
-          <Search
-            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
-              northStar ? lt.filterIcon : "text-slate-400"
-            }`}
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search leads..."
-            className={northStar ? searchInputClass : `${searchInputClass} pl-10`}
-          />
-        </label>
-
-        <div className="flex flex-wrap gap-2">
-          {showStatusFilter ? (
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                onStatusFilterChange(event.target.value as LeadStatus | "all")
-              }
-              className={selectClass}
-              aria-label="Filter by status"
-            >
-              {LEAD_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          ) : null}
-
+    <div className={lm.filterRegion}>
+      <div className={lm.filterSearchBand}>
+        {/* Header pills are lg+ only; keep queue switching on smaller viewports. */}
+        <label className="mb-2 block lg:hidden">
+          <span className="sr-only">Lead filter</span>
           <select
-            value={sortField}
+            value={listFilter}
             onChange={(event) =>
-              onSortFieldChange(event.target.value as LeadSortField)
+              onListFilterChange(event.target.value as LeadListFilter)
             }
-            className={selectClass}
-            aria-label="Sort leads"
+            className={lm.filterSelect}
+            aria-label="Filter leads"
           >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                Sort: {option.label}
+            {LEAD_LIST_FILTER_ORDER.map((filter) => (
+              <option key={filter} value={filter}>
+                {LEAD_LIST_FILTER_LABELS[filter]}
               </option>
             ))}
           </select>
-        </div>
-      </div>
+        </label>
 
-      <p
-        className={
-          northStar ? lt.filterMeta : "text-xs text-slate-500"
-        }
-      >
-        {resultCount} lead{resultCount === 1 ? "" : "s"}
-      </p>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative min-w-0 flex-1">
+            <Search
+              className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${lm.filterIcon}`}
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search leads..."
+              className={lm.searchInput}
+            />
+          </label>
+
+          <div className="flex flex-wrap gap-2">
+            {showStatusFilter ? (
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  onStatusFilterChange(event.target.value as LeadStatus | "all")
+                }
+                className={lm.filterSelect}
+                aria-label="Filter by status"
+              >
+                {LEAD_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+
+            <select
+              value={sortField}
+              onChange={(event) =>
+                onSortFieldChange(event.target.value as LeadSortField)
+              }
+              className={lm.filterSelect}
+              aria-label="Sort leads"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  Sort: {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <p className={lm.filterMeta}>
+          {resultCount} lead{resultCount === 1 ? "" : "s"}
+        </p>
+      </div>
     </div>
   );
 }

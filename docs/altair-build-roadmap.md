@@ -2,7 +2,7 @@
 
 Living tracker for the 16-panel Mission Control / workspace UI redesign.
 
-**Surface system:** Dashboard, Customers, and Customer Profile use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
+**Surface system:** Dashboard, Customers, Customer Profile, and Leads use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
 
 **Related:** Feature gaps that must not be faked → [`altair-feature-gaps.md`](./altair-feature-gaps.md). Broader product inventory → [`product/ALTair_BRAIN.md`](./product/ALTair_BRAIN.md).
 
@@ -16,7 +16,7 @@ Living tracker for the 16-panel Mission Control / workspace UI redesign.
 | 6 | Jobs | `/jobs` | Not started | List + detail |
 | 7 | Estimates | `/estimates` | Not started | List + document surfaces |
 | 8 | Invoices | `/invoices` | Not started | Billing list + detail |
-| 9 | Leads | `/leads` | Not started | Pipeline / work queue |
+| 9 | Leads | `/leads` | **Done** | Header filter pills + MC v2 list (Customers pattern); no Value column (see feature gaps) |
 | 10 | Expenses | `/expenses` | Not started | Receipts and categories |
 | 11 | Price Book | `/price-book` | Not started | Services / parts catalog |
 | 12 | Labor & payroll | `/time` | Not started | Time review (+ `/time-clock`) |

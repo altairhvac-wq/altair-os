@@ -7,7 +7,7 @@ import {
   listLeadsWithReferrals,
 } from "@/lib/database/queries/leads";
 import { LeadsPageView } from "@/shared/components/leads/LeadsPageView";
-import { isLeadWorkQueue } from "@/shared/components/leads/lead-work-queues";
+import { isLeadListFilter } from "@/shared/components/leads/lead-work-queues";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import type { LeadStatus } from "@/shared/types/lead";
 
@@ -49,8 +49,8 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       ? (status as LeadStatus)
       : undefined;
   const initialFollowUpDue = filter === "follow_up_due";
-  const initialWorkQueue =
-    queue && isLeadWorkQueue(queue) ? queue : undefined;
+  const initialListFilter =
+    queue && isLeadListFilter(queue) ? queue : undefined;
 
   const [leads, assignableMembers] = await Promise.all([
     listLeadsWithReferrals(companyContext.company.id),
@@ -81,7 +81,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       initialCreate={create === "1"}
       initialStatusFilter={initialStatusFilter}
       initialFollowUpDue={initialFollowUpDue}
-      initialWorkQueue={initialWorkQueue}
+      initialListFilter={initialListFilter}
     />
   );
 }

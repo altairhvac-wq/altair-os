@@ -1,7 +1,6 @@
 import { LeadCard } from "@/shared/components/leads/LeadCard";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
 import { getLeadLastActivityLabel } from "@/shared/lib/leads/lead-status";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   AltairTable,
   AltairTableBody,
@@ -17,6 +16,7 @@ import {
   formatLeadSource,
   type Lead,
 } from "@/shared/types/lead";
+import { leadMissionClasses as lm } from "./lead-list-presentation";
 
 /**
  * Leads have no dedicated detail route (a lead opens in the in-page panel
@@ -24,19 +24,16 @@ import {
  * `<Link>` the way Customers/Jobs/Invoices/Estimates do. This button reuses
  * the same "text link masquerading as a button" quiet-action pattern (see
  * the Buttons section of the Altair Design Foundation) so the row's primary
- * action stays keyboard-focusable without inventing a new control. Same
- * focus ring as the other ledgers' primary-cell links, reused rather than a
- * new token.
+ * action stays keyboard-focusable without inventing a new control.
  */
 const leadNameButtonFocusClass =
-  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
 
 type LeadListProps = {
   leads: Lead[];
   selectedId: string | null;
   onSelect: (lead: Lead) => void;
   timeZone?: string;
-  northStar?: boolean;
 };
 
 export function LeadList({
@@ -44,37 +41,27 @@ export function LeadList({
   selectedId,
   onSelect,
   timeZone,
-  northStar = false,
 }: LeadListProps) {
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className={`hidden min-w-0 lg:block ${lm.listShell}`}>
         <div className="overflow-x-auto">
-          <AltairTable className="min-w-[920px]">
+          <AltairTable className="min-w-[1040px]">
             <AltairTableHeader>
-              <AltairTableRow className={northStar ? lt.tableHeaderRow : undefined}>
-                <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
-                  Lead Name
-                </AltairTableHead>
-                <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
-                  Phone
-                </AltairTableHead>
-                <AltairTableHead
-                  className={`hidden md:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
-                >
+              <AltairTableRow>
+                <AltairTableHead>Lead Name</AltairTableHead>
+                <AltairTableHead>Phone</AltairTableHead>
+                <AltairTableHead className="hidden md:table-cell">
                   Source
                 </AltairTableHead>
-                <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
-                  Status
+                <AltairTableHead>Status</AltairTableHead>
+                <AltairTableHead className="hidden xl:table-cell">
+                  Created
                 </AltairTableHead>
-                <AltairTableHead
-                  className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
-                >
+                <AltairTableHead className="hidden lg:table-cell">
                   Next Follow-Up
                 </AltairTableHead>
-                <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
-                  Last Activity
-                </AltairTableHead>
+                <AltairTableHead>Last Activity</AltairTableHead>
               </AltairTableRow>
             </AltairTableHeader>
             <AltairTableBody>
@@ -86,7 +73,6 @@ export function LeadList({
                     key={lead.id}
                     selected={isSelected}
                     onClick={() => onSelect(lead)}
-                    className={northStar ? lt.tableRow : undefined}
                   >
                     <AltairTablePrimaryCell
                       primary={
@@ -96,41 +82,34 @@ export function LeadList({
                             event.stopPropagation();
                             onSelect(lead);
                           }}
-                          className={
-                            northStar
-                              ? `${lt.tablePrimaryText} ${leadNameButtonFocusClass}`
-                              : `font-medium text-slate-900 ${leadNameButtonFocusClass}`
-                          }
+                          className={`${lm.primaryText} ${leadNameButtonFocusClass}`}
                         >
                           {formatLeadName(lead)}
                         </button>
                       }
                     />
-                    <AltairTableCell
-                      className={northStar ? lt.tableSecondaryText : "text-slate-600"}
-                    >
+                    <AltairTableCell className={lm.secondaryText}>
                       {lead.phone || "—"}
                     </AltairTableCell>
                     <AltairTableCell
-                      className={`hidden md:table-cell ${
-                        northStar ? lt.tableSecondaryText : "text-slate-600"
-                      }`}
+                      className={`hidden md:table-cell ${lm.secondaryText}`}
                     >
                       {formatLeadSource(lead.source)}
                     </AltairTableCell>
                     <AltairTableCell>
-                      <LeadStatusBadge status={lead.status} northStar={northStar} />
+                      <LeadStatusBadge status={lead.status} />
                     </AltairTableCell>
                     <AltairTableCell
-                      className={`hidden lg:table-cell ${
-                        northStar ? lt.tableDateText : "text-slate-600"
-                      }`}
+                      className={`hidden xl:table-cell ${lm.mutedText}`}
+                    >
+                      {formatLeadDate(lead.createdAt, timeZone)}
+                    </AltairTableCell>
+                    <AltairTableCell
+                      className={`hidden lg:table-cell ${lm.secondaryText}`}
                     >
                       {formatLeadDate(lead.nextFollowUpAt, timeZone)}
                     </AltairTableCell>
-                    <AltairTableCell
-                      className={northStar ? lt.tableMutedText : "text-slate-600"}
-                    >
+                    <AltairTableCell className={lm.mutedText}>
                       {getLeadLastActivityLabel(lead)}
                     </AltairTableCell>
                   </AltairTableRow>
@@ -149,7 +128,6 @@ export function LeadList({
             selected={lead.id === selectedId}
             onSelect={onSelect}
             timeZone={timeZone}
-            northStar={northStar}
           />
         ))}
       </div>

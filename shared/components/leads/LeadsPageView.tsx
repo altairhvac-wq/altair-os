@@ -9,23 +9,22 @@ import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { Button } from "@/shared/design-system/components";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
 import { LeadList } from "@/shared/components/leads/LeadList";
-import { LeadQueueTabs } from "@/shared/components/leads/LeadQueueTabs";
 import { LeadSearchFilterBar } from "@/shared/components/leads/LeadSearchFilterBar";
 import { LeadsEmptyState } from "@/shared/components/leads/LeadsEmptyState";
+import { LeadsStatStrip } from "@/shared/components/leads/LeadsStatStrip";
 import {
-  countLeadsForWorkQueue,
-  filterLeadsForWorkQueue,
-  resolveInitialLeadWorkQueue,
-  type LeadWorkQueue,
+  filterLeadsForListFilter,
+  resolveInitialLeadListFilter,
+  type LeadListFilter,
 } from "@/shared/components/leads/lead-work-queues";
+import { buildLeadsGlanceStats } from "@/shared/lib/leads/leads-glance-stats";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
 import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
@@ -52,7 +51,7 @@ type LeadsPageViewProps = {
   initialCreate?: boolean;
   initialStatusFilter?: LeadStatus;
   initialFollowUpDue?: boolean;
-  initialWorkQueue?: LeadWorkQueue;
+  initialListFilter?: LeadListFilter;
 };
 
 function filterLeads(
@@ -98,17 +97,17 @@ export function LeadsPageView({
   initialCreate = false,
   initialStatusFilter,
   initialFollowUpDue = false,
-  initialWorkQueue,
+  initialListFilter,
 }: LeadsPageViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
-  const [workQueue, setWorkQueue] = useState<LeadWorkQueue>(() =>
-    resolveInitialLeadWorkQueue(
+  const [listFilter, setListFilter] = useState<LeadListFilter>(() =>
+    resolveInitialLeadListFilter(
       initialStatusFilter,
       initialFollowUpDue,
-      initialWorkQueue,
+      initialListFilter,
     ),
   );
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">(
@@ -140,28 +139,18 @@ export function LeadsPageView({
     }
   }, [initialLeads, initialSelectedId]);
 
-  const queueCounts = useMemo(
+  const glanceStats = useMemo(
     () =>
-      ({
-        "needs-contact": countLeadsForWorkQueue(
-          leads,
-          "needs-contact",
-          timeZone,
-        ),
-        qualified: countLeadsForWorkQueue(leads, "qualified", timeZone),
-        "estimate-ready": countLeadsForWorkQueue(
-          leads,
-          "estimate-ready",
-          timeZone,
-        ),
-        past: countLeadsForWorkQueue(leads, "past", timeZone),
-      }) satisfies Record<LeadWorkQueue, number>,
+      buildLeadsGlanceStats({
+        leads,
+        timeZone,
+      }),
     [leads, timeZone],
   );
 
   const queueScopedLeads = useMemo(
-    () => filterLeadsForWorkQueue(leads, workQueue, timeZone),
-    [leads, workQueue, timeZone],
+    () => filterLeadsForListFilter(leads, listFilter, timeZone),
+    [leads, listFilter, timeZone],
   );
 
   const filteredLeads = useMemo(() => {
@@ -198,8 +187,8 @@ export function LeadsPageView({
     );
   }
 
-  function handleQueueChange(queue: LeadWorkQueue) {
-    setWorkQueue(queue);
+  function handleQueueChange(queue: LeadListFilter) {
+    setListFilter(queue);
     setStatusFilter("all");
   }
 
@@ -259,94 +248,70 @@ export function LeadsPageView({
       title="Leads"
       subtitle="Contact, qualify, and convert new opportunities."
       density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoLeads ? undefined : (
+          <LeadsStatStrip
+            stats={glanceStats}
+            activeQueue={listFilter}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
       primaryAction={
-        <button
-          type="button"
+        <Button
+          size="sm"
           onClick={handleCreateLead}
-          className={
-            northStar
-              ? `north-star-leads-primary-action ${lt.primaryAction}`
-              : masterListPagePrimaryActionClass
-          }
+          leadingIcon={<Plus className="h-3.5 w-3.5" />}
         >
-          <Plus className="h-3.5 w-3.5" />
           New Lead
-        </button>
+        </Button>
       }
       banners={
         createError ? (
           <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
         ) : undefined
       }
-      className={northStar ? lt.pageCanvas : undefined}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant={northStar ? "northStarList" : "workspace"}
-        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
+        variant="workspace"
+        className={masterListPageSurfaceClass}
       >
-        {northStar ? (
-          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        {!hasNoLeads ? (
+          <LeadSearchFilterBar
+            search={search}
+            statusFilter={statusFilter}
+            sortField={sortField}
+            listFilter={listFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            onSortFieldChange={setSortField}
+            onListFilterChange={handleQueueChange}
+            resultCount={filteredLeads.length}
+            showStatusFilter={listFilter === "past"}
+          />
         ) : null}
 
-        <div
-          className={
-            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
-          }
-        >
-          {!hasNoLeads ? (
-            <div
-              className={
-                northStar
-                  ? lt.viewTabsBand
-                  : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-              }
-            >
-              <LeadQueueTabs
-                activeQueue={workQueue}
-                onQueueChange={handleQueueChange}
-                counts={queueCounts}
-                northStar={northStar}
-              />
-            </div>
-          ) : null}
-
-          {!hasNoLeads ? (
-            <LeadSearchFilterBar
-              search={search}
-              statusFilter={statusFilter}
-              sortField={sortField}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              onSortFieldChange={setSortField}
-              resultCount={filteredLeads.length}
+        <div className={masterListPageScrollRegionClass}>
+          {hasNoLeads ? (
+            <LeadsEmptyState
+              variant="no-leads"
+              onCreateLead={handleCreateLead}
               northStar={northStar}
-              showStatusFilter={workQueue === "past"}
             />
-          ) : null}
-
-          <div className={masterListPageScrollRegionClass}>
-            {hasNoLeads ? (
-              <LeadsEmptyState
-                variant="no-leads"
-                onCreateLead={handleCreateLead}
-                northStar={northStar}
-              />
-            ) : hasNoResults ? (
-              <LeadsEmptyState variant="no-results" northStar={northStar} />
-            ) : (
-              <LeadList
-                leads={filteredLeads}
-                selectedId={selectedId}
-                onSelect={handleSelectLead}
-                timeZone={timeZone}
-                northStar={northStar}
-              />
-            )}
-          </div>
+          ) : hasNoResults ? (
+            <LeadsEmptyState variant="no-results" northStar={northStar} />
+          ) : (
+            <LeadList
+              leads={filteredLeads}
+              selectedId={selectedId}
+              onSelect={handleSelectLead}
+              timeZone={timeZone}
+            />
+          )}
         </div>
       </MasterPageSurface>
 
