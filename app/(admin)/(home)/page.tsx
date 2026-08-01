@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { canManageDemoData } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getOnboardingDismissedFromContext } from "@/lib/database/queries/onboarding-dismiss";
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
+import { getDashboardKpiStripData } from "@/lib/database/queries/dashboard-kpi-strip";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
+import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
+import { buildMissionControlV2KpiCards } from "@/shared/lib/dashboard-mission-control-v2-kpi-strip";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 
 export default async function DashboardPage() {
@@ -20,19 +22,23 @@ export default async function DashboardPage() {
     redirect("/technician");
   }
 
-  const [data, onboardingSnapshot, demoDataStatus] = await Promise.all([
-    getDashboardData(companyContext),
-    getOnboardingSnapshot(companyContext.company.id, companyContext),
-    canManageDemoData(companyContext)
-      ? getDemoDataStatus(companyContext.company.id, companyContext)
-      : Promise.resolve(null),
-  ]);
+  const companyId = companyContext.company.id;
+
+  const [data, onboardingSnapshot, demoDataStatus, billingAccess, kpiStrip] =
+    await Promise.all([
+      getDashboardData(companyContext),
+      getOnboardingSnapshot(companyId, companyContext),
+      canManageDemoData(companyContext)
+        ? getDemoDataStatus(companyId, companyContext)
+        : Promise.resolve(null),
+      getRequestCompanyBillingAccess(companyId),
+      getDashboardKpiStripData(companyId, companyContext.company.timezone),
+    ]);
 
   const onboardingChecklist = filterOnboardingChecklistForContext(
     buildOnboardingChecklist(onboardingSnapshot),
     companyContext,
   );
-  const onboardingDismissed = getOnboardingDismissedFromContext(companyContext);
 
   const userDisplayName =
     companyContext.profile.full_name ??
@@ -44,10 +50,11 @@ export default async function DashboardPage() {
       data={data}
       userDisplayName={userDisplayName}
       onboardingChecklist={onboardingChecklist}
-      companyId={companyContext.company.id}
-      userId={companyContext.user.id}
       demoDataStatus={demoDataStatus}
-      onboardingDismissed={onboardingDismissed}
+      companyName={companyContext.company.name}
+      companyTimeZone={companyContext.company.timezone}
+      billingAccess={billingAccess}
+      kpiCards={buildMissionControlV2KpiCards(kpiStrip)}
     />
   );
 }

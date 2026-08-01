@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ArrowRight, CheckCircle2, ChevronDown, Circle } from "lucide-react";
 import { Button } from "@/shared/design-system/components";
 import { DecisionSurface } from "@/shared/design-system/layout";
-import { ClosedBetaFeedbackStrip } from "@/shared/components/onboarding/ClosedBetaFeedbackStrip";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
 import {
@@ -30,9 +30,17 @@ export function DashboardActivationHero({
   northStar = false,
   checklistDismissed = false,
 }: DashboardActivationHeroProps) {
+  const [remainingStepsOpen, setRemainingStepsOpen] = useState(false);
   const nextStep = useMemo(
     () => getNextOnboardingChecklistItem(checklist),
     [checklist],
+  );
+  const remainingSteps = useMemo(
+    () =>
+      checklist.items.filter(
+        (item) => !item.completed && item.id !== nextStep?.id,
+      ),
+    [checklist.items, nextStep?.id],
   );
   const firstName = getFirstNameFromDisplayName(userDisplayName);
   const welcome = buildOnboardingWelcomeCopy(firstName, nextStep, checklist);
@@ -210,14 +218,66 @@ export function DashboardActivationHero({
               />
             </div>
           </div>
+
+          {!missionComplete && remainingSteps.length > 0 ? (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setRemainingStepsOpen((open) => !open)}
+                aria-expanded={remainingStepsOpen}
+                className={`flex w-full items-center justify-between gap-2 rounded-md px-0.5 py-1 text-left text-[11px] font-semibold transition ${
+                  northStar
+                    ? "text-[#C6BBA8] hover:text-[#E8DDC2]"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                <span>View remaining steps</span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                    remainingStepsOpen ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+              {remainingStepsOpen ? (
+                <ul className="mt-1.5 space-y-1">
+                  {remainingSteps.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center gap-2 rounded-md px-1.5 py-1.5 text-xs font-medium transition ${
+                          northStar
+                            ? "text-[#E8DDC2] hover:bg-[#2A2418]"
+                            : "text-slate-700 hover:bg-cyan-50/80"
+                        }`}
+                      >
+                        <Circle
+                          className={`h-3.5 w-3.5 shrink-0 ${
+                            northStar ? "text-[#6B6255]" : "text-slate-400"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0 flex-1 truncate">
+                          {item.title}
+                        </span>
+                        {item.optional ? (
+                          <span
+                            className={`shrink-0 text-[10px] font-semibold ${
+                              northStar ? "text-[#8A6324]" : "text-slate-500"
+                            }`}
+                          >
+                            (optional)
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
         </DecisionSurface>
       </div>
-
-      {!missionComplete ? (
-        <div className="mt-4">
-          <ClosedBetaFeedbackStrip northStar={northStar} />
-        </div>
-      ) : null}
     </div>
   );
 

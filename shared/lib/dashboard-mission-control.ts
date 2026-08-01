@@ -11,10 +11,7 @@ import {
   DISPATCH_PAGE_TODAY_HREF,
   DISPATCH_PAGE_UNASSIGNED_HREF,
 } from "@/shared/lib/dispatch-page-focus";
-import type {
-  DashboardData,
-  DashboardRecentPayment,
-} from "@/shared/types/dashboard";
+import type { DashboardData } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -136,55 +133,6 @@ function formatDateLabel(reference = new Date()): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-  });
-}
-
-function startOfCalendarWeek(reference: Date): Date {
-  const date = new Date(reference);
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() - date.getDay());
-  return date;
-}
-
-function startOfCalendarMonth(reference: Date): Date {
-  return new Date(reference.getFullYear(), reference.getMonth(), 1);
-}
-
-function endOfDay(reference: Date): Date {
-  const date = new Date(reference);
-  date.setHours(23, 59, 59, 999);
-  return date;
-}
-
-function sumPaymentsInRange(
-  payments: DashboardRecentPayment[],
-  rangeStart: Date,
-  rangeEnd: Date,
-  includeTodayTotal: number,
-  todayAlreadyCounted: boolean,
-): number {
-  let total = payments
-    .filter((payment) => {
-      const paymentDate = new Date(`${payment.paymentDate}T12:00:00.000Z`);
-      return paymentDate >= rangeStart && paymentDate <= rangeEnd;
-    })
-    .reduce((sum, payment) => sum + payment.amount, 0);
-
-  if (!todayAlreadyCounted) {
-    total += includeTodayTotal;
-  }
-
-  return total;
-}
-
-function paymentCoversToday(payments: DashboardRecentPayment[], reference: Date): boolean {
-  return payments.some((payment) => {
-    const paymentDate = new Date(`${payment.paymentDate}T12:00:00.000Z`);
-    return (
-      paymentDate.getFullYear() === reference.getFullYear() &&
-      paymentDate.getMonth() === reference.getMonth() &&
-      paymentDate.getDate() === reference.getDate()
-    );
   });
 }
 
@@ -403,30 +351,15 @@ function buildTodaysOperationsCards(data: DashboardData): MissionControlOperatio
   return cards.slice(0, 4);
 }
 
-function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
+/** Business Health cards — Outstanding, Awaiting Payment (overdue), month revenue, week collections. */
+export function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
   const { access, money } = data;
   if (!access.canViewBilling) {
     return [];
   }
 
-  const reference = new Date();
-  const weekStart = startOfCalendarWeek(reference);
-  const monthStart = startOfCalendarMonth(reference);
-  const todayCounted = paymentCoversToday(money.recentPayments, reference);
-  const weekRevenue = sumPaymentsInRange(
-    money.recentPayments,
-    weekStart,
-    endOfDay(reference),
-    money.paymentsTodayTotal,
-    todayCounted,
-  );
-  const monthRevenue = sumPaymentsInRange(
-    money.recentPayments,
-    monthStart,
-    endOfDay(reference),
-    money.paymentsTodayTotal,
-    todayCounted,
-  );
+  const weekRevenue = money.paymentsThisWeekTotal;
+  const monthRevenue = money.paymentsThisMonthTotal;
 
   return [
     {
@@ -547,6 +480,13 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
   return actions;
 }
 
+function weekdayLabelFromDateOnly(dateOnly: string): string {
+  return new Date(`${dateOnly}T12:00:00.000Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+}
+
 function buildRevenueTrend(data: DashboardData): MissionControlChartSeries {
   const { access, money } = data;
   if (!access.canViewBilling) {
@@ -561,29 +501,12 @@ function buildRevenueTrend(data: DashboardData): MissionControlChartSeries {
     };
   }
 
-  const reference = new Date();
-  const points: MissionControlTrendPoint[] = [];
-
-  for (let offset = 6; offset >= 0; offset -= 1) {
-    const day = new Date(reference);
-    day.setDate(reference.getDate() - offset);
-    day.setHours(0, 0, 0, 0);
-    const dayEnd = endOfDay(day);
-    const dayTotal =
-      offset === 0
-        ? money.paymentsTodayTotal
-        : money.recentPayments
-            .filter((payment) => {
-              const paymentDate = new Date(`${payment.paymentDate}T12:00:00.000Z`);
-              return paymentDate >= day && paymentDate <= dayEnd;
-            })
-            .reduce((sum, payment) => sum + payment.amount, 0);
-
-    points.push({
-      label: day.toLocaleDateString("en-US", { weekday: "short" }),
-      value: dayTotal,
-    });
-  }
+  const points: MissionControlTrendPoint[] = money.paymentsLast7Days.map(
+    (day) => ({
+      label: weekdayLabelFromDateOnly(day.paymentDate),
+      value: day.total,
+    }),
+  );
 
   return {
     id: "collections-trend",
@@ -618,8 +541,12 @@ function buildJobsTrend(data: DashboardData): MissionControlChartSeries {
 export function buildMissionControlContent(
   data: DashboardData,
   userDisplayName: string,
-  reference = new Date(),
+  options?: {
+    omitSalutation?: boolean;
+    reference?: Date;
+  },
 ): MissionControlContent {
+  const reference = options?.reference ?? new Date();
   const missionCritical = buildMissionCriticalItems(data);
   const attention = buildAttentionSummary(data);
   const firstName = getFirstName(userDisplayName);
@@ -627,7 +554,9 @@ export function buildMissionControlContent(
 
   return {
     greeting: {
-      greeting: `${getTimeOfDayGreeting(reference)}, ${firstName}.`,
+      greeting: options?.omitSalutation
+        ? ""
+        : `${getTimeOfDayGreeting(reference)}, ${firstName}.`,
       dateLabel: formatDateLabel(reference),
       attentionSummary: attention.attentionSummary,
       attentionCount: attention.attentionCount,

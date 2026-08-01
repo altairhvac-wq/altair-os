@@ -279,6 +279,18 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
     overdueTotal: 4280,
     paymentsTodayCount: 3,
     paymentsTodayTotal: 2840,
+    paymentsYesterdayTotal: 2500,
+    paymentsThisWeekTotal: 8420,
+    paymentsThisMonthTotal: 28640,
+    paymentsLast7Days: [
+      { paymentDate: "2026-06-17", total: 1200 },
+      { paymentDate: "2026-06-18", total: 0 },
+      { paymentDate: "2026-06-19", total: 1840 },
+      { paymentDate: "2026-06-20", total: 960 },
+      { paymentDate: "2026-06-21", total: 1580 },
+      { paymentDate: "2026-06-22", total: 2500 },
+      { paymentDate: DEMO_TODAY, total: 2840 },
+    ],
     recentPayments: [
       {
         id: "pay-demo-1",
@@ -548,6 +560,7 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
     wonLeads: 3,
     lostLeads: 1,
     hasLeads: true,
+    newLeadsToday: 2,
   },
   workflowReminders: {
     totalActiveCount: 3,

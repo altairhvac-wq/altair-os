@@ -2,7 +2,11 @@ import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database/types";
-import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
+import {
+  addDaysToDateOnly,
+  getCompanyTimeZone,
+  getDateOnlyInTimeZone,
+} from "@/shared/lib/datetime";
 import type { InvoicePaymentRow } from "@/lib/database/types/core-tables";
 import {
   mapRecordInvoicePaymentRpcError,
@@ -223,22 +227,22 @@ function getTodayDateOnly(reference = new Date(), timeZone?: string): string {
   return getDateOnlyInTimeZone(reference, timeZone);
 }
 
-export async function getPaymentsTodaySummary(
+export async function getPaymentsSummaryForDate(
   companyId: string,
-  timeZone?: string,
+  paymentDate: string,
 ): Promise<{ count: number; total: number }> {
   const supabase = await createClient();
-  const today = getTodayDateOnly(new Date(), timeZone);
 
   const { data, error } = await supabase
     .from("invoice_payments")
     .select("amount")
     .eq("company_id", companyId)
-    .eq("payment_date", today);
+    .eq("payment_date", paymentDate);
 
   if (error) {
-    console.error("[getPaymentsTodaySummary] query failed:", {
+    console.error("[getPaymentsSummaryForDate] query failed:", {
       companyId,
+      paymentDate,
       code: error.code,
       message: error.message,
     });
@@ -253,6 +257,191 @@ export async function getPaymentsTodaySummary(
       payments.reduce((sum, payment) => sum + Number(payment.amount), 0),
     ),
   };
+}
+
+export async function getPaymentsTodaySummary(
+  companyId: string,
+  timeZone?: string,
+): Promise<{ count: number; total: number }> {
+  const today = getTodayDateOnly(new Date(), timeZone);
+  return getPaymentsSummaryForDate(companyId, today);
+}
+
+export async function getPaymentsYesterdaySummary(
+  companyId: string,
+  timeZone?: string,
+): Promise<{ count: number; total: number }> {
+  const today = getTodayDateOnly(new Date(), timeZone);
+  const yesterday = addDaysToDateOnly(today, -1, timeZone);
+  return getPaymentsSummaryForDate(companyId, yesterday);
+}
+
+export async function getPaymentsSummaryForDateRange(
+  companyId: string,
+  startDateOnly: string,
+  endDateOnly: string,
+): Promise<{ count: number; total: number }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select("amount")
+    .eq("company_id", companyId)
+    .gte("payment_date", startDateOnly)
+    .lte("payment_date", endDateOnly);
+
+  if (error) {
+    console.error("[getPaymentsSummaryForDateRange] query failed:", {
+      companyId,
+      startDateOnly,
+      endDateOnly,
+      code: error.code,
+      message: error.message,
+    });
+    return { count: 0, total: 0 };
+  }
+
+  const payments = data ?? [];
+
+  return {
+    count: payments.length,
+    total: roundCurrency(
+      payments.reduce((sum, payment) => sum + Number(payment.amount), 0),
+    ),
+  };
+}
+
+function getDayOfWeekInTimeZone(reference: Date, timeZone: string): number {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(reference);
+
+  const map: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  return map[weekday] ?? 0;
+}
+
+/** Sunday–today window in company timezone (matches Mission Control calendar week). */
+export async function getPaymentsThisWeekSummary(
+  companyId: string,
+  timeZone?: string,
+): Promise<{ count: number; total: number }> {
+  const reference = new Date();
+  const today = getTodayDateOnly(reference, timeZone);
+  const dayOfWeek = getDayOfWeekInTimeZone(
+    reference,
+    timeZone ?? getCompanyTimeZone(),
+  );
+  const weekStart = addDaysToDateOnly(today, -dayOfWeek, timeZone);
+  return getPaymentsSummaryForDateRange(companyId, weekStart, today);
+}
+
+/** Month-start–today window in company timezone. */
+export async function getPaymentsThisMonthSummary(
+  companyId: string,
+  timeZone?: string,
+): Promise<{ count: number; total: number }> {
+  const today = getTodayDateOnly(new Date(), timeZone);
+  const [yearStr, monthStr] = today.split("-");
+  const monthStart = `${yearStr}-${String(monthStr).padStart(2, "0")}-01`;
+  return getPaymentsSummaryForDateRange(companyId, monthStart, today);
+}
+
+export type DailyPaymentTotal = {
+  paymentDate: string;
+  total: number;
+  count: number;
+};
+
+/**
+ * Sum payments per calendar day for [startDateOnly, endDateOnly].
+ * Only returns days that have at least one payment.
+ */
+export async function getPaymentsDailyTotalsForDateRange(
+  companyId: string,
+  startDateOnly: string,
+  endDateOnly: string,
+): Promise<DailyPaymentTotal[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select("payment_date, amount")
+    .eq("company_id", companyId)
+    .gte("payment_date", startDateOnly)
+    .lte("payment_date", endDateOnly);
+
+  if (error) {
+    console.error("[getPaymentsDailyTotalsForDateRange] query failed:", {
+      companyId,
+      startDateOnly,
+      endDateOnly,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  const totalsByDate = new Map<string, { total: number; count: number }>();
+
+  for (const row of data ?? []) {
+    const paymentDate = toDateOnly(String(row.payment_date));
+    const amount = Number(row.amount) || 0;
+    const existing = totalsByDate.get(paymentDate) ?? { total: 0, count: 0 };
+    existing.total = roundCurrency(existing.total + amount);
+    existing.count += 1;
+    totalsByDate.set(paymentDate, existing);
+  }
+
+  return [...totalsByDate.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([paymentDate, { total, count }]) => ({
+      paymentDate,
+      total,
+      count,
+    }));
+}
+
+/**
+ * Daily payment totals for the last 7 company-timezone calendar days
+ * (today and the prior 6 days). Days with no payments are included as 0.
+ */
+export async function getPaymentsLast7DaysDailyTotals(
+  companyId: string,
+  timeZone?: string,
+): Promise<DailyPaymentTotal[]> {
+  const today = getTodayDateOnly(new Date(), timeZone);
+  const startDateOnly = addDaysToDateOnly(today, -6, timeZone);
+  const paidDays = await getPaymentsDailyTotalsForDateRange(
+    companyId,
+    startDateOnly,
+    today,
+  );
+  const byDate = new Map(
+    paidDays.map((day) => [day.paymentDate, day] as const),
+  );
+
+  const series: DailyPaymentTotal[] = [];
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const paymentDate = addDaysToDateOnly(today, -offset, timeZone);
+    const existing = byDate.get(paymentDate);
+    series.push({
+      paymentDate,
+      total: existing?.total ?? 0,
+      count: existing?.count ?? 0,
+    });
+  }
+
+  return series;
 }
 
 export async function recordInvoicePayment(

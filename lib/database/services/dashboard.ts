@@ -37,7 +37,14 @@ import {
 } from "@/shared/lib/unpaid-invoice-follow-up";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
-import { listRecentPayments } from "@/lib/database/queries/invoice-payments";
+import {
+  getPaymentsLast7DaysDailyTotals,
+  getPaymentsThisMonthSummary,
+  getPaymentsThisWeekSummary,
+  getPaymentsYesterdaySummary,
+  listRecentPayments,
+} from "@/lib/database/queries/invoice-payments";
+import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -112,6 +119,7 @@ const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
   wonLeads: 0,
   lostLeads: 0,
   hasLeads: false,
+  newLeadsToday: 0,
 };
 
 const EMPTY_WORKFLOW_REMINDERS: DashboardData["workflowReminders"] = {
@@ -129,6 +137,10 @@ const EMPTY_MONEY: DashboardData["money"] = {
   overdueTotal: 0,
   paymentsTodayCount: 0,
   paymentsTodayTotal: 0,
+  paymentsYesterdayTotal: 0,
+  paymentsThisWeekTotal: 0,
+  paymentsThisMonthTotal: 0,
+  paymentsLast7Days: [],
   recentPayments: [],
   approvedEstimates: [],
   overdueInvoices: [],
@@ -374,6 +386,10 @@ export async function getDashboardData(
     estimates,
     expenses,
     recentPayments,
+    paymentsYesterday,
+    paymentsThisWeek,
+    paymentsThisMonth,
+    paymentsLast7Days,
     recentActivity,
     notifications,
     unreadCount,
@@ -397,6 +413,18 @@ export async function getDashboardData(
       : Promise.resolve([]),
     access.canViewBilling
       ? listRecentPayments(companyId, RECENT_PAYMENTS_LIMIT)
+      : Promise.resolve([]),
+    access.canViewBilling
+      ? getPaymentsYesterdaySummary(companyId, context.company.timezone)
+      : Promise.resolve({ count: 0, total: 0 }),
+    access.canViewBilling
+      ? getPaymentsThisWeekSummary(companyId, context.company.timezone)
+      : Promise.resolve({ count: 0, total: 0 }),
+    access.canViewBilling
+      ? getPaymentsThisMonthSummary(companyId, context.company.timezone)
+      : Promise.resolve({ count: 0, total: 0 }),
+    access.canViewBilling
+      ? getPaymentsLast7DaysDailyTotals(companyId, context.company.timezone)
       : Promise.resolve([]),
     access.canViewOperationalReports
       ? listRecentOperationalActivitiesForCompany(
@@ -452,6 +480,15 @@ export async function getDashboardData(
   const hasActiveLeads = access.canManageCustomers
     ? leads.some((lead) => !lead.deletedAt && !lead.archivedAt)
     : false;
+  const newLeadsToday = access.canManageCustomers
+    ? leads.filter((lead) =>
+        isSameCalendarDayInTimeZone(
+          lead.createdAt,
+          new Date(),
+          context.company.timezone,
+        ),
+      ).length
+    : 0;
 
   const invoiceSummary = access.canViewBilling
     ? getInvoiceSummary(invoices)
@@ -555,6 +592,13 @@ export async function getDashboardData(
           overdueTotal: invoiceSummary.overdueTotal,
           paymentsTodayCount: summarySections.revenue.todayPaymentCount,
           paymentsTodayTotal: summarySections.revenue.todayCollectedRevenue,
+          paymentsYesterdayTotal: paymentsYesterday.total,
+          paymentsThisWeekTotal: paymentsThisWeek.total,
+          paymentsThisMonthTotal: paymentsThisMonth.total,
+          paymentsLast7Days: paymentsLast7Days.map((day) => ({
+            paymentDate: day.paymentDate,
+            total: day.total,
+          })),
           recentPayments: recentPayments.map((payment) => ({
             id: payment.id,
             invoiceId: payment.invoiceId,
@@ -722,6 +766,7 @@ export async function getDashboardData(
           wonLeads: leadPipelineMetrics.wonLeads,
           lostLeads: leadPipelineMetrics.lostLeads,
           hasLeads: hasActiveLeads,
+          newLeadsToday,
         }
       : EMPTY_LEAD_PIPELINE_SUMMARY,
     workflowReminders: access.canViewBilling

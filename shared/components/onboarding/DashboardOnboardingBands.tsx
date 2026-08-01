@@ -1,8 +1,6 @@
 import { DashboardActivationHero } from "@/shared/components/onboarding/DashboardActivationHero";
-import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import { OnboardingDismissedRecoveryBanner } from "@/shared/components/onboarding/OnboardingDismissedRecoveryBanner";
 import { isDashboardActivationMode } from "@/shared/lib/onboarding-activation";
-import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 
@@ -34,7 +32,6 @@ export function DashboardOnboardingBands({
     return null;
   }
 
-  const showChecklist = shouldShowOnboardingChecklist(onboardingChecklist);
   const activationMode = isDashboardActivationMode(
     onboardingChecklist,
     demoDataStatus,
@@ -53,24 +50,13 @@ export function DashboardOnboardingBands({
         />
       ) : null}
 
-      {showChecklist && !onboardingDismissed ? (
-        <OnboardingChecklistSection
-          checklist={onboardingChecklist}
-          companyId={companyId}
-          userId={userId}
-          variant="dashboard"
-          northStar={northStar}
-          dismissed={onboardingDismissed}
-        />
-      ) : (
-        <OnboardingDismissedRecoveryBanner
-          checklist={onboardingChecklist}
-          companyId={companyId}
-          userId={userId}
-          northStar={northStar}
-          dismissed={onboardingDismissed}
-        />
-      )}
+      <OnboardingDismissedRecoveryBanner
+        checklist={onboardingChecklist}
+        companyId={companyId}
+        userId={userId}
+        northStar={northStar}
+        dismissed={onboardingDismissed}
+      />
     </>
   );
 }

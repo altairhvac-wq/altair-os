@@ -122,6 +122,12 @@ export type DashboardRecentPayment = {
   createdAt: string;
 };
 
+/** One day in the Mission Control collections-trend series (company timezone). */
+export type DashboardDailyPaymentTotal = {
+  paymentDate: string;
+  total: number;
+};
+
 export type DashboardMoneySnapshot = {
   unpaidCount: number;
   unpaidTotal: number;
@@ -129,6 +135,17 @@ export type DashboardMoneySnapshot = {
   overdueTotal: number;
   paymentsTodayCount: number;
   paymentsTodayTotal: number;
+  /** Collected payment total for yesterday (company timezone), for glance deltas. */
+  paymentsYesterdayTotal: number;
+  /** Collected payment total for this calendar week (Sunday–today, company timezone). */
+  paymentsThisWeekTotal: number;
+  /** Collected payment total for this calendar month (month-start–today, company timezone). */
+  paymentsThisMonthTotal: number;
+  /**
+   * Daily collected totals for today and the prior 6 company-timezone days
+   * (oldest → newest). Used by the Mission Control collections-trend chart.
+   */
+  paymentsLast7Days: DashboardDailyPaymentTotal[];
   recentPayments: DashboardRecentPayment[];
   approvedEstimates: Estimate[];
   /** Overdue invoices (preview for mobile action sheets). */
@@ -230,6 +247,8 @@ export type DashboardLeadPipelineSummary = {
   wonLeads: number;
   lostLeads: number;
   hasLeads: boolean;
+  /** Leads created today in the company timezone. */
+  newLeadsToday: number;
 };
 
 export type DashboardWorkflowReminderPreview = {

@@ -1,42 +1,49 @@
-import { MissionControlDashboardView } from "@/shared/components/dashboard/mission-control";
-import type { DashboardData } from "@/shared/types/dashboard";
-import type { DemoDataStatus } from "@/shared/types/demo-data";
-import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
+import {
+  MissionControlV2View,
+  type MissionControlV2KpiCard,
+} from "@/shared/components/dashboard/mission-control-v2";
 import {
   MasterPageCanvas,
   MasterShellPage,
 } from "@/shared/design-system/shell";
+import type { DashboardData } from "@/shared/types/dashboard";
+import type { DemoDataStatus } from "@/shared/types/demo-data";
+import type { OnboardingChecklist } from "@/shared/types/onboarding";
 
 type OperationalDashboardViewProps = {
   data: DashboardData;
   userDisplayName: string;
   onboardingChecklist?: OnboardingChecklist;
-  companyId?: string;
-  userId?: string;
   demoDataStatus?: DemoDataStatus | null;
-  onboardingDismissed?: boolean;
+  companyName?: string;
+  companyTimeZone?: string;
+  billingAccess?: CompanyBillingAccess;
+  kpiCards?: MissionControlV2KpiCard[];
 };
 
 export function OperationalDashboardView({
   data,
   userDisplayName,
   onboardingChecklist,
-  companyId,
-  userId,
   demoDataStatus,
-  onboardingDismissed = false,
+  companyName,
+  companyTimeZone,
+  billingAccess,
+  kpiCards,
 }: OperationalDashboardViewProps) {
   return (
     <MasterShellPage density="compact">
       <MasterPageCanvas width="wide">
-        <MissionControlDashboardView
+        <MissionControlV2View
           data={data}
           userDisplayName={userDisplayName}
           onboardingChecklist={onboardingChecklist}
-          companyId={companyId}
-          userId={userId}
           demoDataStatus={demoDataStatus}
-          onboardingDismissed={onboardingDismissed}
+          companyName={companyName}
+          companyTimeZone={companyTimeZone}
+          billingAccess={billingAccess}
+          kpiCards={kpiCards}
         />
       </MasterPageCanvas>
     </MasterShellPage>
