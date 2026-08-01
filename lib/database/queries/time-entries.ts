@@ -461,19 +461,89 @@ export async function createTimeEntry(
   };
 }
 
+export type CloseTimeEntryResult = {
+  entry: TimeEntry | null;
+  error: string | null;
+  /** True when the target entry was already closed; row was not updated. */
+  alreadyClosed?: boolean;
+};
+
+/**
+ * Narrow window for reconciling a lost close success without an entry ID.
+ * Only a matching recently closed segment may be treated as idempotent success.
+ */
+export const TIME_ENTRY_CLOSE_RETRY_RECONCILE_WINDOW_MS = 2 * 60 * 1000;
+
+/**
+ * Find a recently closed segment for retry reconciliation when no open entry
+ * remains. Correlation: same company + technician + entry type (+ optional job),
+ * ended within the reconcile window, most recent ended_at first.
+ */
+export async function getRecentlyClosedTimeEntryForTechnician(
+  companyId: string,
+  technicianId: string,
+  entryType: TimeEntryType,
+  options: {
+    jobId?: string;
+    withinMs?: number;
+  } = {},
+): Promise<TimeEntry | null> {
+  const supabase = await createClient();
+  const withinMs =
+    options.withinMs ?? TIME_ENTRY_CLOSE_RETRY_RECONCILE_WINDOW_MS;
+  const closedSince = new Date(Date.now() - withinMs).toISOString();
+
+  let query = supabase
+    .from("time_entries")
+    .select(TIME_ENTRY_SELECT)
+    .eq("company_id", companyId)
+    .eq("technician_id", technicianId)
+    .eq("entry_type", entryType)
+    .not("ended_at", "is", null)
+    .gte("ended_at", closedSince)
+    .order("ended_at", { ascending: false })
+    .limit(1);
+
+  if (options.jobId) {
+    query = query.eq("job_id", options.jobId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    console.error("[getRecentlyClosedTimeEntryForTechnician] query failed:", {
+      companyId,
+      technicianId,
+      entryType,
+      jobId: options.jobId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  return data
+    ? mapTimeEntryRow(data as TimeEntryRowWithRelations)
+    : null;
+}
+
 export async function closeTimeEntry(
   companyId: string,
   entryId: string,
   endedAt: string,
   _durationMinutes: number,
   notes?: string,
-): Promise<{ entry: TimeEntry | null; error: string | null }> {
+): Promise<CloseTimeEntryResult> {
   const supabase = await createClient();
 
   // Close path is enforced by close_time_entry (migrations 119 / 123).
   // Duration is computed server-side. Future ends are rejected at the DB with
   // zero tolerance (p_ended_at <= now()). Caller-supplied minutes are retained
   // for API compatibility with existing clock-out / correction callers.
+  //
+  // Idempotency: when the RPC reports no active entry, re-read the same ID
+  // under RLS. If that authorized row is already closed, return it without
+  // updating ended_at / duration_minutes (lost-response / parallel retry).
   const { error: rpcError } = await supabase.rpc("close_time_entry", {
     p_company_id: companyId,
     p_entry_id: entryId,
@@ -492,6 +562,10 @@ export async function closeTimeEntry(
 
     const msg = rpcError.message ?? "";
     if (msg.includes("Active time entry not found")) {
+      const existing = await getTimeEntryById(companyId, entryId);
+      if (existing?.endedAt) {
+        return { entry: existing, error: null, alreadyClosed: true };
+      }
       return { entry: null, error: "Active time entry not found." };
     }
     if (msg.includes("ended_at cannot be in the future")) {
@@ -538,6 +612,7 @@ export async function closeTimeEntry(
   return {
     entry: mapTimeEntryRow(data as TimeEntryRowWithRelations),
     error: null,
+    alreadyClosed: false,
   };
 }
 

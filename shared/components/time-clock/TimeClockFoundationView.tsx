@@ -137,7 +137,7 @@ export function TimeClockFoundationView({
     setError(null);
     startTransition(async () => {
       try {
-        const result = await clockOutAction();
+        const result = await clockOutAction(openEntry?.id);
         if (result.error) {
           setError(
             formatActionError(result.error, "Could not clock out. Try again."),

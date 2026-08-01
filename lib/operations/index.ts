@@ -5,8 +5,8 @@
  * serialization, and a reusable operation executor. Infrastructure only —
  * no domain/business logic.
  *
- * @see docs/altair/OPERATIONS_FOUNDATION.md
- * @see docs/altair/OPERATIONS_EXECUTION_FRAMEWORK.md
+ * @see docs/product/OPERATIONS_FOUNDATION.md
+ * @see docs/product/OPERATIONS_EXECUTION_FRAMEWORK.md
  */
 
 export {

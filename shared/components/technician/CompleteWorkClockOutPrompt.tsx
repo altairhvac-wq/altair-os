@@ -17,6 +17,8 @@ import {
 } from "@/shared/components/ui/mobile-sheet";
 
 type CompleteWorkClockOutPromptProps = {
+  /** Retained open clock entry ID for safe clock-out retry after a lost response. */
+  openClockEntryId?: string | null;
   onClose: () => void;
   onStayClockedIn: () => void;
 };
@@ -24,6 +26,7 @@ type CompleteWorkClockOutPromptProps = {
 const TITLE_ID = "complete-work-clock-out-title";
 
 export function CompleteWorkClockOutPrompt({
+  openClockEntryId,
   onClose,
   onStayClockedIn,
 }: CompleteWorkClockOutPromptProps) {
@@ -36,7 +39,7 @@ export function CompleteWorkClockOutPrompt({
     setError(null);
     startTransition(async () => {
       try {
-        const result = await stopClockAction();
+        const result = await stopClockAction(openClockEntryId ?? undefined);
         if (result.error) {
           setError(
             formatActionError(

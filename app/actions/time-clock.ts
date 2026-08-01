@@ -53,7 +53,9 @@ export async function clockInAction(
   return { entry, openEntry: entry };
 }
 
-export async function clockOutAction(): Promise<TimeClockActionResult> {
+export async function clockOutAction(
+  expectedEntryId?: string,
+): Promise<TimeClockActionResult> {
   const context = await getActiveCompanyContext();
 
   if (!context) {
@@ -63,6 +65,7 @@ export async function clockOutAction(): Promise<TimeClockActionResult> {
   const { entry, error } = await clockOutTimeClockEntry(
     context.company.id,
     context.user.id,
+    { expectedEntryId },
   );
 
   if (error || !entry) {

@@ -61,8 +61,8 @@ export function TechnicianMobileShell({
       >
       <div className="tech-canvas min-h-dvh max-w-full overflow-x-clip">
         <div className="tech-shell mx-auto flex min-h-dvh min-w-0 flex-col">
-          <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-2.5 pt-0.5">
-            <div className="flex min-w-0 items-center gap-2">
+          <header className="tech-header tech-header-safe sticky top-0 z-30">
+            <div className="flex min-w-0 items-center gap-2 px-4 pb-2.5 pt-0.5">
               <QuickNavToggle
                 open={quickNavOpen}
                 onOpenChange={setQuickNavOpen}
@@ -76,6 +76,13 @@ export function TechnicianMobileShell({
                   variant="technician"
                 />
               </div>
+              {billingAccess ? (
+                <SubscriptionBillingBanner
+                  access={billingAccess}
+                  canManageBilling={canManageBilling}
+                  className="max-w-[9.5rem]"
+                />
+              ) : null}
               {isOwner ? (
                 <OwnerViewSwitcher
                   viewMode={viewMode}
@@ -100,12 +107,6 @@ export function TechnicianMobileShell({
             <PullToRefresh>
               <TechnicianConnectivityBanner />
               <PwaInstallBanner />
-              {billingAccess ? (
-                <SubscriptionBillingBanner
-                  access={billingAccess}
-                  canManageBilling={canManageBilling}
-                />
-              ) : null}
               {redirectPending ? (
                 <TechnicianShellContentLoadingState />
               ) : (

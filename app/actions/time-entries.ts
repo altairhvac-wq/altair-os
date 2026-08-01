@@ -138,7 +138,9 @@ export async function startClockAction(): Promise<TimeEntryActionResult> {
   return finalizeOwnTimeAction(context, actionResult);
 }
 
-export async function stopClockAction(): Promise<TimeEntryActionResult> {
+export async function stopClockAction(
+  expectedEntryId?: string,
+): Promise<TimeEntryActionResult> {
   const result = await assertOwnTimePermission();
   if (result.error || !result.context) {
     return { error: result.error };
@@ -149,6 +151,7 @@ export async function stopClockAction(): Promise<TimeEntryActionResult> {
     companyId: context.company.id,
     technicianId: context.user.id,
     actorId: context.user.id,
+    expectedEntryId,
   });
 
   if (actionResult.error) {
@@ -180,7 +183,9 @@ export async function startBreakAction(): Promise<TimeEntryActionResult> {
   return finalizeOwnTimeAction(context, actionResult);
 }
 
-export async function endBreakAction(): Promise<TimeEntryActionResult> {
+export async function endBreakAction(
+  expectedEntryId?: string,
+): Promise<TimeEntryActionResult> {
   const result = await assertOwnTimePermission();
   if (result.error || !result.context) {
     return { error: result.error };
@@ -191,6 +196,7 @@ export async function endBreakAction(): Promise<TimeEntryActionResult> {
     companyId: context.company.id,
     technicianId: context.user.id,
     actorId: context.user.id,
+    expectedEntryId,
   });
 
   if (actionResult.error) {
@@ -227,6 +233,7 @@ export async function startJobLaborAction(
 
 export async function stopJobLaborAction(
   jobId?: string,
+  expectedEntryId?: string,
 ): Promise<TimeEntryActionResult> {
   const result = await assertOwnTimePermission();
   if (result.error || !result.context) {
@@ -239,6 +246,7 @@ export async function stopJobLaborAction(
     technicianId: context.user.id,
     actorId: context.user.id,
     jobId,
+    expectedEntryId,
   });
 
   if (actionResult.error) {

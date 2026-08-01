@@ -80,6 +80,7 @@ export function CompleteJobSheet({
     "Saved for office review",
   );
   const [showClockOutPrompt, setShowClockOutPrompt] = useState(false);
+  const [clockOutEntryId, setClockOutEntryId] = useState<string | null>(null);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
@@ -210,6 +211,7 @@ export function CompleteJobSheet({
         ]);
 
         if (timeResult.state?.openClockEntry && promptResult.shouldPrompt) {
+          setClockOutEntryId(timeResult.state.openClockEntry.id);
           setShowClockOutPrompt(true);
           setShowSuccess(true);
           return;
@@ -229,6 +231,7 @@ export function CompleteJobSheet({
 
   function handleClockOutPromptClose() {
     setShowClockOutPrompt(false);
+    setClockOutEntryId(null);
     handleClose();
   }
 
@@ -399,6 +402,7 @@ export function CompleteJobSheet({
 
     {showClockOutPrompt ? (
       <CompleteWorkClockOutPrompt
+        openClockEntryId={clockOutEntryId}
         onClose={handleClockOutPromptClose}
         onStayClockedIn={handleClockOutPromptClose}
       />

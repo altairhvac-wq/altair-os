@@ -62,7 +62,10 @@ export function TechnicianJobLaborControls({
 
     setError(null);
     startTransition(async () => {
-      const result = await stopJobLaborAction(jobId);
+      const result = await stopJobLaborAction(
+        jobId,
+        timeState.openJobLaborEntry?.id,
+      );
       if (result.error) {
         setError(formatActionError(result.error, "Could not stop job work. Try again."));
         return;
