@@ -8,7 +8,7 @@ let stripeClient: Stripe | null = null;
 export function getStripeClient(): Stripe {
   if (!stripeClient) {
     stripeClient = new Stripe(requireStripeSecretKey(), {
-      apiVersion: "2026-05-27.dahlia",
+      apiVersion: "2026-07-29.dahlia",
       typescript: true,
     });
   }

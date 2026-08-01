@@ -5,9 +5,12 @@ export type SubscriptionBillingBannerTone = "info" | "warning" | "error";
 export type SubscriptionBillingBannerModel = {
   tone: SubscriptionBillingBannerTone;
   title: string;
+  /** Compact top-bar label (e.g. "Trial ends Aug 13, 2026"). */
+  shortLabel: string;
+  /** Fuller context for tooltip / accessible description. */
   description: string;
   showManageAction: boolean;
-  /** Semantic role for the banner region. */
+  /** Semantic role for the notice region. */
   role: "alert" | "status";
 };
 
@@ -29,8 +32,8 @@ function formatDateLabel(value: string | null): string | null {
 }
 
 /**
- * Derives a single soft-enforcement banner from the authoritative billing
- * resolver result. Returns null when no shell banner should render.
+ * Derives a single soft-enforcement notice from the authoritative billing
+ * resolver result. Returns null when no shell notice should render.
  */
 export function getSubscriptionBillingBannerModel(
   access: CompanyBillingAccess,
@@ -44,10 +47,11 @@ export function getSubscriptionBillingBannerModel(
       return {
         tone: "info",
         title: "Trial period",
+        shortLabel: trialEnds ? `Trial ends ${trialEnds}` : "Trial in progress",
         description: canManageBilling
           ? trialEnds
-            ? `Your company is on a free trial that ends ${trialEnds}.`
-            : "Your company is on a free trial."
+            ? `Your company is on a free trial that ends ${trialEnds}. Contact support to update billing details.`
+            : "Your company is on a free trial. Contact support to update billing details."
           : trialEnds
             ? `Your company is on a trial period that ends ${trialEnds}.`
             : "Your company is currently on a trial period.",
@@ -59,6 +63,9 @@ export function getSubscriptionBillingBannerModel(
       return {
         tone: "warning",
         title: "Payment past due",
+        shortLabel: graceEnds
+          ? `Payment past due · until ${graceEnds}`
+          : "Payment past due",
         description: canManageBilling
           ? graceEnds
             ? `Payment is past due. Full access continues until ${graceEnds}.`
@@ -72,6 +79,7 @@ export function getSubscriptionBillingBannerModel(
       return {
         tone: "warning",
         title: "Limited access",
+        shortLabel: "Limited access",
         description: canManageBilling
           ? graceEnds
             ? `Payment is past due and the grace period ended ${graceEnds}. Billing may limit operational changes.`
@@ -85,6 +93,7 @@ export function getSubscriptionBillingBannerModel(
       return {
         tone: "warning",
         title: "Read-only billing state",
+        shortLabel: "Read-only billing",
         description: canManageBilling
           ? "Subscription payment is unpaid. The workspace is in a read-only billing posture."
           : "Your company workspace is in a read-only billing state. An owner or admin can update billing.",
@@ -96,6 +105,7 @@ export function getSubscriptionBillingBannerModel(
       return {
         tone: "error",
         title: "Subscription inactive",
+        shortLabel: "Subscription inactive",
         description: canManageBilling
           ? "This company's subscription is inactive. Renew or contact support to restore access."
           : "Your company subscription is inactive. An owner or admin can restore access.",
@@ -108,6 +118,7 @@ export function getSubscriptionBillingBannerModel(
         return {
           tone: "info",
           title: "Closed beta access",
+          shortLabel: "Closed beta access",
           description: canManageBilling
             ? "This company has complimentary access during the closed beta. No paid subscription is required right now."
             : "Your company is using Altair OS with complimentary closed beta access.",

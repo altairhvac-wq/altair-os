@@ -7,6 +7,7 @@ import {
   SAAS_TRIAL_CONFIG,
   listPublicSaasCatalogPlans,
 } from "@/lib/saas-billing/catalog";
+import { SAAS_PLAN_DESCRIPTIONS } from "@/shared/components/pricing/plan-descriptions";
 
 const POSITIONING = [
   "One connected operating system",
@@ -14,13 +15,6 @@ const POSITIONING = [
   "Monthly or annual billing",
   "Built for field service businesses",
 ] as const;
-
-const PLAN_DESCRIPTIONS = {
-  beta: "",
-  starter: "For owner-operators and small teams building a stronger foundation.",
-  growth: "For growing service businesses coordinating more people and more work.",
-  pro: "For established operations managing multiple crews or locations.",
-} as const;
 
 const PLATFORM_FEATURES = [
   "Dispatch & Scheduling",
@@ -100,7 +94,7 @@ export function PricingPageView() {
                     {plan.label}
                   </h2>
                   <p className="mt-2 min-h-[2.75rem] text-sm leading-relaxed text-stone-600">
-                    {PLAN_DESCRIPTIONS[plan.planKey]}
+                    {SAAS_PLAN_DESCRIPTIONS[plan.planKey]}
                   </p>
                 </div>
 
