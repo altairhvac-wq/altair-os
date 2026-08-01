@@ -1,0 +1,55 @@
+---
+description: Altair design-system rules — surface tokens, data honesty, money collected, build workflow
+globs: shared/design-system/**/*,shared/components/**/*.tsx,app/(admin)/**/*.tsx
+alwaysApply: true
+---
+
+# Altair design system
+
+## Reuse tokens — do not invent chrome
+
+Prefer existing Altair materials and semantic roles in `shared/design-system/foundation/altair-tokens.ts` (`bg-altair-*`, `text-altair-*`, `border-altair-*`, success/warning/danger/information). Compose from design-system components (`EmptyState`, `MetricCard`, `StatusPill`, shell primitives) before adding parallel cards, colors, or radii.
+
+Do not hardcode new hex values or introduce a second token vocabulary for a page.
+
+## Surface registers (do not mix)
+
+**Mission Control v2 light paper** — Dashboard, Customers, Customer Profile:
+
+- Tokens: `shared/design-system/components/mc-surface.ts`
+- Classes: `altairMcCardClass`, `altairMcTileClass`, `altairMcListClass`, `altairMcMetricLabelClass`, `altairMcMetricValueClass`, etc.
+- Surfaces use `--surface-section` / `--surface-tile` / `--surface-card` with `border-altair-border`.
+
+**Reports dark elevated** — Reports only:
+
+- Tokens: `shared/design-system/components/report-surface.ts`
+- Classes: `altairReportCardClass`, `altairReportTileClass`, `altairReportMetric*Class`, range/action chrome.
+- Background is Graphite (`bg-altair-graphite`) — do not invent a parallel dark hex.
+
+**Reports icon chips only** — `shared/design-system/components/report-icon-tints.ts`:
+
+- Categorical tints (`reportIconTintClass` / `reportIconChipClassName`) are scoped to icon-chip backgrounds.
+- Never use those hues for text, trends, borders, or status meaning.
+- Never mix categorical chip tints with semantic success / warning / danger roles. Trends still use semantic success/danger.
+
+## Data honesty
+
+Never fabricate metrics, percentages, comparisons, or “on pace” copy. Every number must trace to a real query field, rollup, or typed helper. If the data is missing:
+
+1. Use an honest empty / em-dash state (`EmptyState`, `"—"`, permission-gated copy), or
+2. Cut the element entirely.
+
+Do not invent sample deltas, fake CLV, ratings, or forecast figures to fill a layout. See `docs/altair-feature-gaps.md` before building anything on that list.
+
+## Money collected = payment ledger
+
+“Money collected”, “Total Spent”, “lifetime revenue” (payment total), and similar collected figures are always the sum of `invoice_payments` amounts (payment ledger) — e.g. `sumCollectedRevenue` in `shared/lib/reports/report-metrics.ts`.
+
+Never use a cached invoice field such as `amount_paid` / `amountPaid` as the collected-revenue source of truth for dashboards, reports, or customer profile stats.
+
+## Build workflow
+
+- Work in small, verified passes (layout → audit real data → wire → verify).
+- Audit live data shapes and permissions before wiring UI.
+- When scope is ambiguous, ask — do not guess product meaning or invent metrics.
+- Track redesign status in `docs/altair-build-roadmap.md`.

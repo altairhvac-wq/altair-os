@@ -1,0 +1,25 @@
+# Altair feature gaps
+
+Running list of capabilities that are **not real product features yet** in this codebase. Do not build a fake UI, invent sample numbers, or imply these exist. Prefer honest empty states, omit the element, or leave a clear “not available” affordance until the real model ships.
+
+Companion docs: [`.cursor/rules/altair-design-system.mdc`](../.cursor/rules/altair-design-system.mdc) (data honesty), [`altair-build-roadmap.md`](./altair-build-roadmap.md) (UI redesign status).
+
+| Gap | Status | Notes / code anchors |
+|-----|--------|----------------------|
+| Technician photos | Placeholder / incomplete | Field photo UX exists in places (`TechnicianPhotoSheet`, job attachment upload paths), but do not treat technician photo capture as a finished, universally reliable product feature. Legacy `/tech` still uses “coming soon” toasts (`TechnicianDashboardView`). Do not invent photo counts or fake galleries. |
+| Technician ratings | Not built | No technician star/score model. Do not show fabricated ratings on team, jobs, or dispatch. |
+| Customer memberships | Not built | No customer loyalty / membership-tier product. Do not confuse with `company_memberships` (team access). |
+| Customer reviews | Not built | No review ingestion or display product. Community docs explicitly avoid public star-rating behavior. |
+| Real CLV model | Not built | Reports “lifetime revenue” is **all-time payments collected** (`sumCollectedRevenue` / `invoice_payments`), labeled as not a CLV model (`CustomerHealthCard`, `ReportCustomerHealth`). Do not present that total as modeled CLV. |
+| Customer response-time tracking | Not built | No SLA / first-response / reply-time metrics. Do not invent averages. |
+| Inbound call tracking | Not built | No call log, telephony integration, or missed-call pipeline. |
+| Revenue / profit forecast module | Not built | No forward forecast model. Momentum copy must stay directional and not claim forecast accuracy (`dashboard-operational-momentum`). |
+| Auto-generated insights engine | Not built | AI summary cards / operational insight helpers may exist for scoped summaries; there is no autonomous insights engine that invents priorities or narratives without traced inputs. Do not fabricate insight strings. |
+| Business Score (composite grade) | **Paused** | Composite “Business Score” grade is paused pending an explicit rubric decision. Operational health heuristics elsewhere must not be rebranded as a Business Score without that decision. |
+
+## How to use this list
+
+1. Before adding a KPI, badge, or section that sounds like one of the above — check here first.
+2. If you need a layout placeholder during redesign, use empty/honest states; never seed fake values.
+3. When a gap is truly implemented (schema + write path + traced reads), remove or update the row and note the owning modules.
+4. Money collected remains payment-ledger truth (`invoice_payments`) even after related features ship — see the design-system rule.
