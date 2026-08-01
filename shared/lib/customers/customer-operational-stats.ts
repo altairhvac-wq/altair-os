@@ -7,6 +7,8 @@ export type CustomerOperationalStats = {
   totalJobs: number;
   totalRevenue: number;
   lastServiceDate?: string;
+  /** True when the customer has at least one invoice with status === "overdue". */
+  hasOverdueInvoice: boolean;
 };
 
 type JobCompletionFields = Pick<Job, "status" | "completedAt" | "scheduledDate">;
@@ -42,6 +44,12 @@ export function computeLastServiceDateFromJobs(
   return latest ? toDateOnly(latest) : undefined;
 }
 
+export function customerHasOverdueInvoice(
+  invoices: CustomerOperationalInvoiceFields[],
+): boolean {
+  return invoices.some((invoice) => invoice.status === "overdue");
+}
+
 export function computeCustomerOperationalStatsFromRecords(input: {
   jobCount: number;
   completedJobs: JobCompletionFields[];
@@ -55,6 +63,7 @@ export function computeCustomerOperationalStatsFromRecords(input: {
     totalJobs: input.jobCount,
     totalRevenue: financial.totalCollected,
     lastServiceDate: computeLastServiceDateFromJobs(input.completedJobs),
+    hasOverdueInvoice: customerHasOverdueInvoice(input.invoices),
   };
 }
 
@@ -67,10 +76,21 @@ export function mergeCustomerOperationalStats(
     totalJobs: stats.totalJobs,
     totalRevenue: stats.totalRevenue,
     lastServiceDate: stats.lastServiceDate,
+    hasOverdueInvoice: stats.hasOverdueInvoice,
   };
+}
+
+export function countPastDueCustomers(
+  customers: ReadonlyArray<Pick<Customer, "hasOverdueInvoice">>,
+): number {
+  return customers.reduce(
+    (count, customer) => (customer.hasOverdueInvoice ? count + 1 : count),
+    0,
+  );
 }
 
 export const EMPTY_CUSTOMER_OPERATIONAL_STATS: CustomerOperationalStats = {
   totalJobs: 0,
   totalRevenue: 0,
+  hasOverdueInvoice: false,
 };

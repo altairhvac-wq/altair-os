@@ -18,6 +18,7 @@ import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
   formatCurrency,
+  formatDate,
   getCustomerInitials,
   type Customer,
 } from "@/shared/types/customer";
@@ -28,6 +29,15 @@ import {
   customerMissionClasses as cm,
   resolveCustomerListCue,
 } from "./customer-list-presentation";
+
+function formatCustomerContactLines(customer: Customer): {
+  email?: string;
+  phone?: string;
+} {
+  const email = customer.email?.trim() || undefined;
+  const phone = customer.phone?.trim() || undefined;
+  return { email, phone };
+}
 
 /**
  * Focus ring for the primary customer-name link: Paper-surface treatment
@@ -73,7 +83,7 @@ export function CustomersTable({
       <CustomersMobileCardList customers={customers} />
 
       <div className={`hidden max-w-full overflow-x-auto md:block ${cm.listShell}`}>
-        <AltairTable className="min-w-[640px]">
+        <AltairTable className="min-w-[820px]">
           <AltairTableHeader>
             <AltairTableRow>
               {selectionEnabled ? (
@@ -89,12 +99,14 @@ export function CustomersTable({
                 </AltairTableHead>
               ) : null}
               <AltairTableHead>Customer</AltairTableHead>
+              <AltairTableHead>Contact</AltairTableHead>
               <AltairTableHead>Status</AltairTableHead>
               <AltairTableHead className="hidden lg:table-cell">Location</AltairTableHead>
               <AltairTableHead align="right">Jobs</AltairTableHead>
               {showRevenueStats ? (
                 <AltairTableHead align="right">Revenue</AltairTableHead>
               ) : null}
+              <AltairTableHead>Last Service</AltairTableHead>
               <AltairTableHead>Next</AltairTableHead>
             </AltairTableRow>
           </AltairTableHeader>
@@ -102,6 +114,8 @@ export function CustomersTable({
             {customers.map((customer) => {
               const isBulkSelected = selectedIds?.has(customer.id) ?? false;
               const cue = resolveCustomerListCue(customer);
+              const contact = formatCustomerContactLines(customer);
+              const companyName = customer.company?.trim();
 
               return (
                 <AltairTableRow
@@ -142,11 +156,31 @@ export function CustomersTable({
                       ) : null
                     }
                     secondary={
-                      <AltairTableSecondaryText className={cm.secondaryText}>
-                        {customer.company ?? customer.email}
-                      </AltairTableSecondaryText>
+                      companyName ? (
+                        <AltairTableSecondaryText className={cm.secondaryText}>
+                          {companyName}
+                        </AltairTableSecondaryText>
+                      ) : null
                     }
                   />
+                  <AltairTableCell>
+                    {contact.email || contact.phone ? (
+                      <div className="min-w-0">
+                        {contact.email ? (
+                          <p className={`truncate ${cm.metaText}`}>
+                            {contact.email}
+                          </p>
+                        ) : null}
+                        {contact.phone ? (
+                          <p className={`truncate ${cm.secondaryText}`}>
+                            {contact.phone}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <span className={cm.metaText}>—</span>
+                    )}
+                  </AltairTableCell>
                   <AltairTableCell>
                     <CustomerStatusBadge status={customer.status} />
                   </AltairTableCell>
@@ -169,6 +203,11 @@ export function CustomersTable({
                       {formatCurrency(customer.totalRevenue)}
                     </AltairTableCell>
                   ) : null}
+                  <AltairTableCell className={cm.metaText}>
+                    {customer.lastServiceDate
+                      ? formatDate(customer.lastServiceDate)
+                      : "—"}
+                  </AltairTableCell>
                   <AltairTableCell
                     className={
                       cue.tone === "warning" ? cm.cueWarning : cm.cueNeutral

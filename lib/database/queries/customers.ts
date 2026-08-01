@@ -589,11 +589,14 @@ export function applyCustomerOperationalStats(
         totalJobs: 0,
         totalRevenue: 0,
         lastServiceDate: undefined,
+        hasOverdueInvoice: undefined,
       };
     }
 
     const merged = mergeCustomerOperationalStats(customer, stats);
-    return includeRevenue ? merged : { ...merged, totalRevenue: 0 };
+    return includeRevenue
+      ? merged
+      : { ...merged, totalRevenue: 0, hasOverdueInvoice: undefined };
   });
 }
 

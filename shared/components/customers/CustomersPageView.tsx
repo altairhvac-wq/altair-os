@@ -31,15 +31,16 @@ import {
 } from "@/shared/design-system/shell";
 import { Button } from "@/shared/design-system/components";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import { buildCustomersGlanceStats } from "@/shared/lib/customers/customers-glance-stats";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
-import { CustomerQueueTabs } from "./CustomerQueueTabs";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersBulkActionBar } from "./CustomersBulkActionBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
+import { CustomersStatStrip } from "./CustomersStatStrip";
 import { CustomersTable } from "./CustomersTable";
 import { customerMissionClasses as cm } from "./customer-list-presentation";
 import {
-  countCustomersForWorkQueue,
   filterCustomersForWorkQueue,
   resolveCustomerBulkLifecycleFilter,
   resolveDefaultCustomerWorkQueue,
@@ -51,7 +52,6 @@ type PanelMode = "create" | "empty";
 type CustomersPageViewProps = {
   initialCustomers: Customer[];
   canManageCustomers: boolean;
-  canViewBilling: boolean;
 };
 
 function filterCustomersBySearch(
@@ -83,6 +83,7 @@ export function CustomersPageView({
 }: CustomersPageViewProps) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
+  const timeZone = useCompanyTimezone();
   const [workQueue, setWorkQueue] = useState<CustomerWorkQueue>(() =>
     resolveDefaultCustomerWorkQueue(),
   );
@@ -114,15 +115,13 @@ export function CustomersPageView({
     setCustomers(initialCustomers);
   }, [initialCustomers]);
 
-  const queueCounts = useMemo(
+  const glanceStats = useMemo(
     () =>
-      ({
-        active: countCustomersForWorkQueue(customers, "active"),
-        "needs-info": countCustomersForWorkQueue(customers, "needs-info"),
-        inactive: countCustomersForWorkQueue(customers, "inactive"),
-        past: countCustomersForWorkQueue(customers, "past"),
-      }) satisfies Record<CustomerWorkQueue, number>,
-    [customers],
+      buildCustomersGlanceStats({
+        customers,
+        timeZone,
+      }),
+    [customers, timeZone],
   );
 
   const queueScopedCustomers = useMemo(
@@ -370,9 +369,16 @@ export function CustomersPageView({
       subtitle="Find who you need. See what needs attention."
       density="compact"
       headerSurfaceVariant="default"
-      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:shrink-0 sm:text-lg"
-      headerSubtitleClassName="min-w-0 text-xs leading-snug text-altair-ink-on-paper-muted sm:truncate"
-      headerClassName="items-start px-3 py-1.5 sm:items-center sm:px-3.5"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        <CustomersStatStrip
+          stats={glanceStats}
+          activeQueue={workQueue}
+          onFilterQueue={handleQueueChange}
+        />
+      }
       primaryAction={
         canManageCustomers ? (
           <Button
@@ -428,13 +434,6 @@ export function CustomersPageView({
                 showPastLifecycleFilter={workQueue === "past"}
                 pastLifecycleFilter={pastLifecycleFilter}
                 onPastLifecycleFilterChange={setPastLifecycleFilter}
-              />
-            </div>
-            <div className={`${cm.filterTabsBand} pb-2.5`}>
-              <CustomerQueueTabs
-                activeQueue={workQueue}
-                onQueueChange={handleQueueChange}
-                counts={queueCounts}
               />
             </div>
           </div>

@@ -19,6 +19,8 @@ export type Customer = {
   totalJobs: number;
   totalRevenue: number;
   lastServiceDate?: string;
+  /** List enrichment from ops-stats; true when ≥1 invoice status === "overdue". */
+  hasOverdueInvoice?: boolean;
   tags: string[];
   notes?: string;
   createdAt: string;
