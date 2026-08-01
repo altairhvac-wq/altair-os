@@ -96,6 +96,12 @@ export {
 } from "./PulseCard";
 
 export {
+  SectionHeader,
+  type SectionHeaderAction,
+  type SectionHeaderProps,
+} from "./SectionHeader";
+
+export {
   StatusPill,
   type StatusPillProps,
   type StatusPillSize,
@@ -108,3 +114,39 @@ export {
   type WorkspaceSectionProps,
   type WorkspaceSectionTone,
 } from "./WorkspaceSection";
+
+export {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcGridGapClass,
+  altairMcListClass,
+  altairMcListRowClass,
+  altairMcMetricLabelClass,
+  altairMcMetricValueClass,
+  altairMcTileClass,
+} from "./mc-surface";
+
+export {
+  altairReportCardClass,
+  altairReportCardPadClass,
+  altairReportCardPadTier1Class,
+  altairReportCardPadTier2Class,
+  altairReportCardPadTier3Class,
+  altairReportMetricLabelClass,
+  altairReportMetricMetaClass,
+  altairReportMetricValueClass,
+  altairReportRangeItemActiveClass,
+  altairReportRangeItemClass,
+  altairReportRangeItemIdleClass,
+  altairReportRangeTrackClass,
+  altairReportSecondaryActionClass,
+  altairReportSparklineWellClass,
+  altairReportTileClass,
+} from "./report-surface";
+
+export {
+  reportIconChipClass,
+  reportIconChipClassName,
+  reportIconTintClass,
+  type ReportIconTintCategory,
+} from "./report-icon-tints";
