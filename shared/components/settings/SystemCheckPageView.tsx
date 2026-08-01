@@ -159,8 +159,8 @@ export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
                     </li>
                   </ul>
                   <p className="mt-3 text-xs text-slate-500">
-                    See docs/internal-alpha-deployment-checklist.md and
-                    docs/internal-alpha-smoke-test.md in the repository.
+                    See docs/reference/internal-alpha-deployment-checklist.md and
+                    docs/reference/internal-alpha-smoke-test.md in the repository.
                   </p>
                 </div>
               </div>

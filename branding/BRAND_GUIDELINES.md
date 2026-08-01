@@ -3,7 +3,9 @@
 **Status:** Approved — Version 1 (locked)  
 **Effective:** June 2026
 
-This document is the single source of truth for the Altair brand identity. Version 1 of the luxury black-and-gold North Star logo concept is the official, approved brand direction. Do not generate additional logo concepts, redesigns, or alternative directions unless explicitly requested.
+This document is the source of truth for the **approved Altair logo mark and lockup production rules**. Version 1 of the luxury black-and-gold North Star logo concept is the official, approved brand direction. Do not generate additional logo concepts, redesigns, or alternative directions unless explicitly requested.
+
+Company mission, principles, personality, and standards live in `docs/foundation/`. The Altair creative world lives in `docs/foundation/ALTAIR_CANON.md`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Canonical structural foundation for Altair's modal dialogs, confirmation
 overlays, and form overlays. Read
-`docs/altair/ALTAIR_DESIGN_FOUNDATION.md` ("Shadow System", "Motion",
+`docs/product/ALTAIR_DESIGN_FOUNDATION.md` ("Shadow System", "Motion",
 "Accessibility", "Component Philosophy") first — that document is the
 standard this primitive exists to encode, not a new one.
 

@@ -1,7 +1,7 @@
 /**
  * Altair Design Foundation — semantic token reference.
  *
- * Source of truth: docs/altair/ALTAIR_DESIGN_FOUNDATION.md
+ * Source of truth: docs/product/ALTAIR_DESIGN_FOUNDATION.md
  * CSS values live in: app/globals.css (`:root` and `[data-theme="dark"]`)
  *
  * Material → Semantic token → Component → Page

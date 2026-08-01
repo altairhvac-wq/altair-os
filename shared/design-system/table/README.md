@@ -2,7 +2,7 @@
 
 Canonical structural foundation for Altair's desktop operational ledgers
 (customers, jobs, estimates, invoices, expenses, leads). Read
-`docs/altair/ALTAIR_DESIGN_FOUNDATION.md` ("Tables") first — that document
+`docs/product/ALTAIR_DESIGN_FOUNDATION.md` ("Tables") first — that document
 is the standard this primitive exists to encode, not a new one.
 
 ## Status
