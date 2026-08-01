@@ -82,12 +82,11 @@ export default async function CustomerDetailPage({
       includeInactive: true,
     }),
     listRecentJobAttachmentsForCustomer(companyContext.company.id, customerId, {
-      limit: 6,
-      imagesOnly: true,
+      limit: 24,
     }),
     access.canViewCompanyExpenses
       ? listRecentExpensesForCustomer(companyContext.company.id, customerId, {
-          limit: 6,
+          limit: 24,
           withReceiptOnly: true,
         })
       : Promise.resolve([]),
@@ -125,8 +124,6 @@ export default async function CustomerDetailPage({
     },
   );
 
-  const financialSummary = customer360?.financial ?? undefined;
-
   return (
     <CustomerDetailPageView
       customer={customer}
@@ -144,7 +141,6 @@ export default async function CustomerDetailPage({
       canViewBilling={canViewBillingData}
       canManageBilling={companyContext.permissions.manageBilling}
       canViewCompanyExpenses={access.canViewCompanyExpenses}
-      financialSummary={financialSummary}
       customer360={customer360}
       deleteDependencies={deleteDependencies}
     />

@@ -39,8 +39,8 @@ import {
   customerDetailSectionHref,
 } from "@/shared/lib/customers/customer-action-links";
 import {
-  CUSTOMER_DETAIL_BILLING_ANCHOR,
   CUSTOMER_DETAIL_EQUIPMENT_ANCHOR,
+  CUSTOMER_DETAIL_INVOICES_ANCHOR,
 } from "@/shared/lib/customers/customer-detail-anchors";
 
 export const CUSTOMER_360_RECORD_LIMIT = 500;
@@ -396,9 +396,9 @@ function buildOpportunities(input: {
       severity: overdueCount > 0 ? "critical" : "warning",
       href: customerDetailSectionHref(
         customerId,
-        CUSTOMER_DETAIL_BILLING_ANCHOR,
+        CUSTOMER_DETAIL_INVOICES_ANCHOR,
       ),
-      actionLabel: "View billing",
+      actionLabel: "View invoices",
     });
   }
 

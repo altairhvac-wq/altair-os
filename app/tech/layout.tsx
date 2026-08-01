@@ -26,9 +26,7 @@ export default async function TechLayout({
     redirect("/setup");
   }
 
-  const billingAccess = await requireCompanyBillingAppAccess(
-    companyContext.company.id,
-  );
+  await requireCompanyBillingAppAccess(companyContext.company.id);
 
   const unreadNotificationCount = await getUnreadNotificationCount(
     companyContext.company.id,
@@ -41,8 +39,6 @@ export default async function TechLayout({
       companyContext={companyContext}
       userCompanies={userCompanies}
       unreadNotificationCount={unreadNotificationCount}
-      billingAccess={billingAccess}
-      canManageBilling={companyContext.permissions.manageCompany}
     >
       {children}
     </TechnicianMobileShell>

@@ -114,14 +114,16 @@ export function averageTicketInBounds(
   payments: InvoicePayment[],
   bounds: ProfitabilityReportDateBounds,
 ): number | null {
-  const scoped = paymentsInBounds(payments, bounds);
-  if (scoped.length === 0) {
+  return averageTicket(paymentsInBounds(payments, bounds));
+}
+
+/** Mean payment amount (payment-ledger). Null when there are no payments. */
+export function averageTicket(payments: InvoicePayment[]): number | null {
+  if (payments.length === 0) {
     return null;
   }
 
-  return roundCurrency(
-    scoped.reduce((sum, payment) => sum + payment.amount, 0) / scoped.length,
-  );
+  return roundCurrency(sumCollectedRevenue(payments) / payments.length);
 }
 
 /** Sent-date used by estimate close-rate (sentAt, else createdAt for outbound statuses). */

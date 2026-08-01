@@ -40,6 +40,8 @@ type CustomerEquipmentSectionProps = {
   canManage: boolean;
   northStar?: boolean;
   compact?: boolean;
+  /** Skip outer chrome/title when nested in a parent tab panel. */
+  bare?: boolean;
 };
 
 const COMPACT_EQUIPMENT_LIMIT = 4;
@@ -50,6 +52,7 @@ export function CustomerEquipmentSection({
   canManage,
   northStar = false,
   compact = false,
+  bare = false,
 }: CustomerEquipmentSectionProps) {
   const [equipment, setEquipment] = useState(initialEquipment);
   const [isPending, startTransition] = useTransition();
@@ -136,11 +139,13 @@ export function CustomerEquipmentSection({
     });
   }
 
-  const sectionClass = northStar
-    ? compact
-      ? dt.compactSectionSurface
-      : dt.sectionSurface
-    : adminCardSectionClass;
+  const sectionClass = bare
+    ? ""
+    : northStar
+      ? compact
+        ? dt.compactSectionSurface
+        : dt.sectionSurface
+      : adminCardSectionClass;
   const visibleEquipment = compact
     ? equipment.slice(0, COMPACT_EQUIPMENT_LIMIT)
     : equipment;
@@ -151,25 +156,29 @@ export function CustomerEquipmentSection({
   return (
     <section
       className={`${sectionClass} scroll-mt-6`}
-      id={CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}
+      id={bare ? undefined : CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={
-              northStar
-                ? dt.sectionIconWrap
-                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10"
-            }
-          >
-            <Settings2
-              className={northStar ? "h-4 w-4" : "h-4 w-4 text-violet-600"}
-            />
+        {bare ? (
+          <span className="sr-only">Equipment</span>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <div
+              className={
+                northStar
+                  ? dt.sectionIconWrap
+                  : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10"
+              }
+            >
+              <Settings2
+                className={northStar ? "h-4 w-4" : "h-4 w-4 text-violet-600"}
+              />
+            </div>
+            <h2 className={northStar ? dt.sectionTitle : "text-sm font-bold text-slate-900"}>
+              Equipment
+            </h2>
           </div>
-          <h2 className={northStar ? dt.sectionTitle : "text-sm font-bold text-slate-900"}>
-            Equipment
-          </h2>
-        </div>
+        )}
 
         {canManage ? (
           <button

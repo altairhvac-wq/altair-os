@@ -27,9 +27,7 @@ export default async function TechnicianLayout({
     redirect("/setup");
   }
 
-  const billingAccess = await requireCompanyBillingAppAccess(
-    companyContext.company.id,
-  );
+  await requireCompanyBillingAppAccess(companyContext.company.id);
 
   const unreadNotificationCount = await getUnreadNotificationCount(
     companyContext.company.id,
@@ -38,7 +36,6 @@ export default async function TechnicianLayout({
   );
 
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
-  const canManageBilling = companyContext.permissions.manageCompany;
 
   return (
     <TechnicianMobileShell
@@ -46,8 +43,6 @@ export default async function TechnicianLayout({
       userCompanies={userCompanies}
       unreadNotificationCount={unreadNotificationCount}
       hideDemoPrefixes={hideDemoPrefixes}
-      billingAccess={billingAccess}
-      canManageBilling={canManageBilling}
     >
       {children}
     </TechnicianMobileShell>

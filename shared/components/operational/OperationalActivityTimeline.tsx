@@ -40,6 +40,8 @@ type OperationalActivityTimelineProps = {
   sectionClassName?: string;
   northStar?: boolean;
   compact?: boolean;
+  /** Skip section chrome/header when nested in a parent tab panel. */
+  bare?: boolean;
 };
 
 const COMPACT_ACTIVITY_LIMIT = 8;
@@ -235,16 +237,19 @@ export function OperationalActivityTimeline({
   sectionClassName,
   northStar = false,
   compact = false,
+  bare = false,
 }: OperationalActivityTimelineProps) {
   const visibleActivities = filterOperationalActivitiesForBillingAccess(
     activities,
     canViewBilling,
   );
-  const sectionClass = northStar
-    ? compact
-      ? dt.compactSectionSurface
-      : dt.sectionSurface
-    : adminCardSectionClass;
+  const sectionClass = bare
+    ? ""
+    : northStar
+      ? compact
+        ? dt.compactSectionSurface
+        : dt.sectionSurface
+      : adminCardSectionClass;
   const displayedActivities = compact
     ? visibleActivities.slice(0, COMPACT_ACTIVITY_LIMIT)
     : visibleActivities;
@@ -271,38 +276,40 @@ export function OperationalActivityTimeline({
       tabIndex={sectionId ? -1 : undefined}
       className={`${sectionClass} ${sectionClassName ?? ""}`}
     >
-      <div className="flex items-center gap-2.5">
-        <div
-          className={
-            northStar
-              ? dt.sectionIconWrap
-              : "flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200"
-          }
-        >
-          <History className={northStar ? "h-4 w-4" : "h-4 w-4 text-slate-500"} />
-        </div>
-        <div>
-          <h2
+      {bare ? null : (
+        <div className="flex items-center gap-2.5">
+          <div
             className={
               northStar
-                ? dt.sectionTitle
-                : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+                ? dt.sectionIconWrap
+                : "flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200"
             }
           >
-            {title}
-          </h2>
-          <p className={northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-600"}>
-            {description}
-          </p>
+            <History className={northStar ? "h-4 w-4" : "h-4 w-4 text-slate-500"} />
+          </div>
+          <div>
+            <h2
+              className={
+                northStar
+                  ? dt.sectionTitle
+                  : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+              }
+            >
+              {title}
+            </h2>
+            <p className={northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-600"}>
+              {description}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {visibleActivities.length === 0 ? (
         <div
           className={
             northStar
-              ? `mt-5 ${dt.emptyState}`
-              : "mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center"
+              ? `${bare ? "" : "mt-5"} ${dt.emptyState}`
+              : `${bare ? "" : "mt-5"} rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center`
           }
         >
           <p

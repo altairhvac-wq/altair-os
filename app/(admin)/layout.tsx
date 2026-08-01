@@ -34,9 +34,7 @@ export default async function AdminLayout({
     redirect("/technician");
   }
 
-  const billingAccess = await requireCompanyBillingAppAccess(
-    companyContext.company.id,
-  );
+  await requireCompanyBillingAppAccess(companyContext.company.id);
 
   const [notifications, unreadNotificationCount] = await Promise.all([
     getUserNotifications(companyContext.company.id, companyContext.user.id, {
@@ -50,7 +48,6 @@ export default async function AdminLayout({
 
   const showPlatformAdminNav = canAccessPlatformAdmin(user);
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
-  const canManageBilling = companyContext.permissions.manageCompany;
 
   return (
     <AdminShell
@@ -60,8 +57,6 @@ export default async function AdminLayout({
       unreadNotificationCount={unreadNotificationCount}
       showPlatformAdminNav={showPlatformAdminNav}
       hideDemoPrefixes={hideDemoPrefixes}
-      billingAccess={billingAccess}
-      canManageBilling={canManageBilling}
     >
       {children}
     </AdminShell>

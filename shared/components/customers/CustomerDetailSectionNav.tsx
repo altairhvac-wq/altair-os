@@ -1,57 +1,102 @@
-import Link from "next/link";
+"use client";
+
 import {
-  CUSTOMER_DETAIL_360_ANCHOR,
-  CUSTOMER_DETAIL_ACTIVITY_ANCHOR,
-  CUSTOMER_DETAIL_BILLING_ANCHOR,
-  CUSTOMER_DETAIL_EQUIPMENT_ANCHOR,
-  CUSTOMER_DETAIL_JOBS_ANCHOR,
+  CUSTOMER_DETAIL_TAB_ANCHORS,
+  type CustomerDetailTabId,
 } from "@/shared/lib/customers/customer-detail-anchors";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  adminSegmentedControlClass,
+  adminSegmentedItemActiveClass,
+  adminSegmentedItemClass,
+} from "@/shared/design-system/shell/tokens";
 
 type CustomerDetailSectionNavProps = {
-  showCustomer360: boolean;
+  activeTab: CustomerDetailTabId;
+  onTabChange: (tab: CustomerDetailTabId) => void;
   showBilling: boolean;
-  northStar?: boolean;
+  counts?: Partial<Record<CustomerDetailTabId, number>>;
 };
 
-const navLinkClass =
-  "inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900";
+const TAB_ORDER: CustomerDetailTabId[] = [
+  "jobs",
+  "estimates",
+  "invoices",
+  "payments",
+  "notes",
+  "files",
+  "equipment",
+  "activity",
+];
 
+const TAB_LABELS: Record<CustomerDetailTabId, string> = {
+  jobs: "Jobs",
+  estimates: "Estimates",
+  invoices: "Invoices",
+  payments: "Payments",
+  notes: "Notes",
+  files: "Files",
+  equipment: "Equipment",
+  activity: "Activity",
+};
+
+/**
+ * Segmented customer-profile tab control.
+ * Prefer CustomerDetailTabs for the full tabbed workspace; this export remains
+ * for call sites that only need the nav chrome.
+ */
 export function CustomerDetailSectionNav({
-  showCustomer360,
+  activeTab,
+  onTabChange,
   showBilling,
-  northStar = false,
+  counts,
 }: CustomerDetailSectionNavProps) {
-  const linkClass = northStar ? dt.sectionNavLink : navLinkClass;
+  const tabs = TAB_ORDER.filter((tab) => {
+    if (
+      !showBilling &&
+      (tab === "estimates" || tab === "invoices" || tab === "payments")
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <nav
       aria-label="Customer sections"
-      className={
-        northStar
-          ? dt.sectionNav
-          : "-mx-1 flex gap-1 overflow-x-auto px-1 pb-1"
-      }
+      className={`${adminSegmentedControlClass} !flex w-full max-w-full min-w-0 overflow-x-auto`}
+      role="tablist"
     >
-      {showCustomer360 ? (
-        <Link href={`#${CUSTOMER_DETAIL_360_ANCHOR}`} className={linkClass}>
-          360
-        </Link>
-      ) : null}
-      <Link href={`#${CUSTOMER_DETAIL_JOBS_ANCHOR}`} className={linkClass}>
-        Jobs
-      </Link>
-      <Link href={`#${CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}`} className={linkClass}>
-        Equipment
-      </Link>
-      {showBilling ? (
-        <Link href={`#${CUSTOMER_DETAIL_BILLING_ANCHOR}`} className={linkClass}>
-          Billing
-        </Link>
-      ) : null}
-      <Link href={`#${CUSTOMER_DETAIL_ACTIVITY_ANCHOR}`} className={linkClass}>
-        Activity
-      </Link>
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab;
+        const count = counts?.[tab];
+
+        return (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onTabChange(tab)}
+            className={`${adminSegmentedItemClass} shrink-0 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${
+              isActive ? adminSegmentedItemActiveClass : ""
+            }`}
+            data-anchor={CUSTOMER_DETAIL_TAB_ANCHORS[tab]}
+          >
+            <span>{TAB_LABELS[tab]}</span>
+            {typeof count === "number" ? (
+              <span
+                className={`ml-1.5 text-[10px] font-medium sm:text-xs ${
+                  isActive
+                    ? "text-altair-ink-on-paper-secondary"
+                    : "text-altair-ink-on-paper-muted"
+                }`}
+              >
+                {count}
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
     </nav>
   );
 }

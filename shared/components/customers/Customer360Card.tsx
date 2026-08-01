@@ -20,6 +20,11 @@ import { CustomerStatusBadge } from "@/shared/components/customers/CustomerStatu
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import {
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
+import {
   adminCardSectionClass,
   adminEmptyWrapClass,
   adminMetaRowClass,
@@ -93,12 +98,15 @@ export function Customer360Card({
 
   if (variant === "opportunities") {
     return (
-      <section className={`${sectionClass} scroll-mt-6`}>
-        <OpportunitiesSection
-          opportunities={data.opportunities}
-          northStar={northStar}
-          compact
-        />
+      <section className="scroll-mt-6 space-y-2">
+        <SectionHeader title="Opportunities" />
+        <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+          <OpportunitiesSection
+            opportunities={data.opportunities}
+            northStar={false}
+            compact
+          />
+        </div>
       </section>
     );
   }

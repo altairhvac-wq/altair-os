@@ -18,6 +18,8 @@ type CustomerJobsSectionProps = {
   canCreateJob: boolean;
   northStar?: boolean;
   compact?: boolean;
+  /** Skip outer chrome/title when nested in a parent tab panel. */
+  bare?: boolean;
 };
 
 const COMPACT_JOBS_LIMIT = 5;
@@ -28,40 +30,45 @@ export function CustomerJobsSection({
   canCreateJob,
   northStar = false,
   compact = false,
+  bare = false,
 }: CustomerJobsSectionProps) {
   const createJobHref = createJobForCustomerHref(customerId);
-  const sectionClass = northStar
-    ? compact
-      ? dt.compactSectionSurface
-      : dt.sectionSurface
-    : adminCardSectionClass;
+  const sectionClass = bare
+    ? ""
+    : northStar
+      ? compact
+        ? dt.compactSectionSurface
+        : dt.sectionSurface
+      : adminCardSectionClass;
   const visibleJobs = compact ? jobs.slice(0, COMPACT_JOBS_LIMIT) : jobs;
   const hiddenJobCount = compact ? Math.max(0, jobs.length - COMPACT_JOBS_LIMIT) : 0;
 
   return (
     <section
       className={`${sectionClass} scroll-mt-6`}
-      id={CUSTOMER_DETAIL_JOBS_ANCHOR}
+      id={bare ? undefined : CUSTOMER_DETAIL_JOBS_ANCHOR}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className={northStar ? dt.sectionTitle : "text-sm font-bold text-slate-900"}>
-          Jobs
-        </h2>
+      {bare ? null : (
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h2 className={northStar ? dt.sectionTitle : "text-sm font-bold text-slate-900"}>
+            Jobs
+          </h2>
 
-        {canCreateJob ? (
-          <Link
-            href={createJobHref}
-            className={
-              northStar
-                ? dt.primaryAction
-                : "inline-flex min-h-11 shrink-0 items-center gap-1.5 admin-btn-primary px-2.5 text-xs"
-            }
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New job
-          </Link>
-        ) : null}
-      </div>
+          {canCreateJob ? (
+            <Link
+              href={createJobHref}
+              className={
+                northStar
+                  ? dt.primaryAction
+                  : "inline-flex min-h-11 shrink-0 items-center gap-1.5 admin-btn-primary px-2.5 text-xs"
+              }
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New job
+            </Link>
+          ) : null}
+        </div>
+      )}
 
       {jobs.length === 0 ? (
         <div
