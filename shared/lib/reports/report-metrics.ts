@@ -19,6 +19,7 @@ import type { Lead } from "@/shared/types/lead";
 import type {
   AccountantSummaryData,
   ReportCashHealth,
+  ReportCustomerHealth,
   ReportFunnelStage,
   ReportKpiMetric,
   ReportKpiTrend,
@@ -109,7 +110,7 @@ function collectedRevenueInBounds(
   return sumCollectedRevenue(paymentsInBounds(payments, bounds));
 }
 
-function averageTicketInBounds(
+export function averageTicketInBounds(
   payments: InvoicePayment[],
   bounds: ProfitabilityReportDateBounds,
 ): number | null {
@@ -123,37 +124,53 @@ function averageTicketInBounds(
   );
 }
 
-function estimateSentInBounds(estimate: Estimate, bounds: ProfitabilityReportDateBounds): boolean {
+/** Sent-date used by estimate close-rate (sentAt, else createdAt for outbound statuses). */
+export function resolveEstimateSentReportDate(
+  estimate: Estimate,
+): string | undefined {
   if (EXCLUDED_ESTIMATE_STATUSES.has(estimate.status)) {
-    return false;
+    return undefined;
   }
 
   if (estimate.sentAt) {
-    return isDateWithinReportBounds(estimate.sentAt, bounds);
+    return estimate.sentAt;
   }
 
-  return (
-    ["sent", "approved", "declined", "converted"].includes(estimate.status) &&
-    isDateWithinReportBounds(estimate.createdAt, bounds)
-  );
+  if (["sent", "approved", "declined", "converted"].includes(estimate.status)) {
+    return estimate.createdAt;
+  }
+
+  return undefined;
 }
 
-function estimateApprovedInBounds(
+/** Approved-date used by estimate close-rate (approvedAt, else sent-date fallback). */
+export function resolveEstimateApprovedReportDate(
+  estimate: Estimate,
+): string | undefined {
+  if (!["approved", "converted"].includes(estimate.status)) {
+    return undefined;
+  }
+
+  return estimate.approvedAt ?? resolveEstimateSentReportDate(estimate);
+}
+
+export function estimateSentInBounds(
   estimate: Estimate,
   bounds: ProfitabilityReportDateBounds,
 ): boolean {
-  if (!["approved", "converted"].includes(estimate.status)) {
-    return false;
-  }
-
-  if (estimate.approvedAt) {
-    return isDateWithinReportBounds(estimate.approvedAt, bounds);
-  }
-
-  return estimateSentInBounds(estimate, bounds);
+  const sentDate = resolveEstimateSentReportDate(estimate);
+  return sentDate != null && isDateWithinReportBounds(sentDate, bounds);
 }
 
-function estimateCloseRateInBounds(
+export function estimateApprovedInBounds(
+  estimate: Estimate,
+  bounds: ProfitabilityReportDateBounds,
+): boolean {
+  const approvedDate = resolveEstimateApprovedReportDate(estimate);
+  return approvedDate != null && isDateWithinReportBounds(approvedDate, bounds);
+}
+
+export function estimateCloseRateInBounds(
   estimates: Estimate[],
   bounds: ProfitabilityReportDateBounds,
 ): number | null {
@@ -181,7 +198,7 @@ function resolveTrend(current: number, previous: number): ReportKpiTrend {
   return "flat";
 }
 
-function formatPercentChange(current: number, previous: number): string {
+export function formatPercentChange(current: number, previous: number): string {
   if (previous === 0) {
     return current > 0 ? "Up from prior period" : "Flat vs previous period";
   }
@@ -197,7 +214,7 @@ function formatPercentChange(current: number, previous: number): string {
   return `${direction} ${rounded}% vs previous period`;
 }
 
-function formatCurrencyChange(current: number, previous: number): string {
+export function formatCurrencyChange(current: number, previous: number): string {
   const delta = roundCurrency(current - previous);
   if (delta === 0) {
     return "Flat vs previous period";
@@ -207,7 +224,10 @@ function formatCurrencyChange(current: number, previous: number): string {
   return `${direction} ${formatCurrency(Math.abs(delta))} vs previous period`;
 }
 
-function formatRateChange(current: number | null, previous: number | null): string {
+export function formatRateChange(
+  current: number | null,
+  previous: number | null,
+): string {
   if (current == null || previous == null) {
     return "No prior period data";
   }
@@ -355,7 +375,10 @@ function buildCashHealth(
   };
 }
 
-function jobCompletedInBounds(job: Job, bounds: ProfitabilityReportDateBounds): boolean {
+export function jobCompletedInBounds(
+  job: Job,
+  bounds: ProfitabilityReportDateBounds,
+): boolean {
   if (job.status !== "completed") {
     return false;
   }
@@ -365,6 +388,15 @@ function jobCompletedInBounds(job: Job, bounds: ProfitabilityReportDateBounds): 
   }
 
   return isDateWithinReportBounds(job.scheduledDate, bounds);
+}
+
+/** Completion date used by jobs-completed KPI / funnel (completedAt, else scheduledDate). */
+export function resolveJobCompletedReportDate(job: Job): string | undefined {
+  if (job.status !== "completed") {
+    return undefined;
+  }
+
+  return job.completedAt ?? job.scheduledDate;
 }
 
 function invoicePaidInBounds(invoice: Invoice, bounds: ProfitabilityReportDateBounds): boolean {
@@ -414,7 +446,7 @@ function buildTechnicianProfitability(
   const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]));
   const metrics = new Map<
     string,
-    { name: string; revenue: number; laborHours: number }
+    { name: string; revenue: number; jobCount: number; laborHours: number }
   >();
 
   for (const job of jobs) {
@@ -425,9 +457,14 @@ function buildTechnicianProfitability(
     const existing = metrics.get(job.assignedTechnicianId) ?? {
       name: job.assignedTechnician?.trim() || "Unassigned",
       revenue: 0,
+      jobCount: 0,
       laborHours: 0,
     };
 
+    existing.jobCount += 1;
+    if (!existing.name || existing.name === "Unassigned") {
+      existing.name = job.assignedTechnician?.trim() || existing.name;
+    }
     metrics.set(job.assignedTechnicianId, existing);
   }
 
@@ -445,6 +482,7 @@ function buildTechnicianProfitability(
     const existing = metrics.get(job.assignedTechnicianId) ?? {
       name: job.assignedTechnician?.trim() || "Unassigned",
       revenue: 0,
+      jobCount: 0,
       laborHours: 0,
     };
 
@@ -465,6 +503,7 @@ function buildTechnicianProfitability(
     const existing = metrics.get(entry.technicianId) ?? {
       name: entry.technicianName.trim() || "Technician",
       revenue: 0,
+      jobCount: 0,
       laborHours: 0,
     };
 
@@ -497,6 +536,7 @@ function buildTechnicianProfitability(
         technicianId,
         name: entry.name,
         revenue: entry.revenue,
+        jobCount: entry.jobCount,
         laborHours: entry.laborHours,
         laborCost,
         grossProfit,
@@ -507,13 +547,7 @@ function buildTechnicianProfitability(
     .filter(
       (entry) => entry.revenue > 0 || entry.laborHours > 0,
     )
-    .sort((left, right) => {
-      const leftScore =
-        left.grossProfit ?? left.revenue;
-      const rightScore =
-        right.grossProfit ?? right.revenue;
-      return rightScore - leftScore;
-    })
+    .sort((left, right) => right.revenue - left.revenue)
     .slice(0, 5);
 }
 
@@ -609,6 +643,7 @@ function buildTopServiceCategories(
       label: jobType,
       detail: `${entry.jobCount} job${entry.jobCount === 1 ? "" : "s"}`,
       value: formatCurrency(entry.revenue),
+      amount: entry.revenue,
     }));
 }
 
@@ -727,12 +762,18 @@ function daysBetweenDates(startDate: string, endDate: string): number {
   return Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)));
 }
 
+/**
+ * Open AR by days past due. Buckets match standard aging framing
+ * (Current / 1–30 / 31–60 / 61–90 / 90+). Current holds not-yet-due
+ * balances separately from invoices that are actually 1–30 days overdue.
+ */
 function buildInvoiceAging(invoices: Invoice[]) {
   const buckets = [
     { label: "Current", count: 0, amount: 0 },
-    { label: "1–30 days", count: 0, amount: 0 },
-    { label: "31–60 days", count: 0, amount: 0 },
-    { label: "61+ days", count: 0, amount: 0 },
+    { label: "1-30 Days", count: 0, amount: 0 },
+    { label: "31-60 Days", count: 0, amount: 0 },
+    { label: "61-90 Days", count: 0, amount: 0 },
+    { label: "90+ Days", count: 0, amount: 0 },
   ];
 
   const today = toDateOnly(new Date());
@@ -745,11 +786,13 @@ function buildInvoiceAging(invoices: Invoice[]) {
     const daysPastDue = daysBetweenDates(invoice.dueDate, today);
     let bucketIndex = 0;
 
-    if (daysPastDue > 60) {
+    if (daysPastDue > 90) {
+      bucketIndex = 4;
+    } else if (daysPastDue > 60) {
       bucketIndex = 3;
     } else if (daysPastDue > 30) {
       bucketIndex = 2;
-    } else if (daysPastDue > 0) {
+    } else if (daysPastDue >= 1) {
       bucketIndex = 1;
     }
 
@@ -760,6 +803,70 @@ function buildInvoiceAging(invoices: Invoice[]) {
   }
 
   return buckets;
+}
+
+/**
+ * Repeat rate: customers with 2+ completed jobs or jobs tied to a paid invoice,
+ * divided by active customer count. Lifetime revenue is all-time payments
+ * collected — a simple total, not a modeled CLV.
+ */
+export function buildCustomerHealth(
+  jobs: Job[],
+  invoices: Invoice[],
+  payments: InvoicePayment[],
+  totalCustomerCount: number,
+): ReportCustomerHealth {
+  const qualifyingJobIdsByCustomer = new Map<string, Set<string>>();
+
+  function addQualifyingJob(customerId: string, jobId: string) {
+    const existing = qualifyingJobIdsByCustomer.get(customerId) ?? new Set();
+    existing.add(jobId);
+    qualifyingJobIdsByCustomer.set(customerId, existing);
+  }
+
+  for (const job of jobs) {
+    if (job.status === "completed") {
+      addQualifyingJob(job.customerId, job.id);
+    }
+  }
+
+  for (const invoice of invoices) {
+    if (
+      !isActiveInvoice(invoice) ||
+      invoice.status !== "paid" ||
+      !invoice.jobId
+    ) {
+      continue;
+    }
+
+    addQualifyingJob(invoice.customerId, invoice.jobId);
+  }
+
+  const repeatCustomerCount = [...qualifyingJobIdsByCustomer.values()].filter(
+    (jobIds) => jobIds.size >= 2,
+  ).length;
+
+  let repeatCustomerRate: number | null = null;
+  let repeatCustomerRateLabel: string;
+
+  if (totalCustomerCount <= 0) {
+    repeatCustomerRateLabel = "No customers";
+  } else {
+    repeatCustomerRate =
+      Math.round((repeatCustomerCount / totalCustomerCount) * 1000) / 10;
+    repeatCustomerRateLabel = formatPercent(repeatCustomerRate, 0);
+  }
+
+  const lifetimeRevenueTotal = sumCollectedRevenue(payments);
+
+  return {
+    repeatCustomerRate,
+    repeatCustomerRateLabel,
+    repeatCustomerCount,
+    totalCustomerCount,
+    lifetimeRevenueTotal,
+    lifetimeRevenueLabel: formatCurrency(lifetimeRevenueTotal),
+  };
 }
 
 function buildAccountantSummary(
@@ -857,11 +964,13 @@ export function buildReportsPageData(input: {
   showTechnicianProfitability: boolean;
   showLeadPipeline?: boolean;
   timeZone?: string;
+  totalCustomerCount?: number;
 }): ReportsPageData {
   const dateBounds =
     resolveReportDateBounds(input.dateRange) ??
     resolveProfitabilityReportDateBounds(input.dateRange);
   const previousBounds = resolvePreviousReportDateBounds(dateBounds);
+  const totalCustomerCount = input.totalCustomerCount ?? 0;
 
   const limitations = [
     ...input.datasets.chartSeries.meta.limitations,
@@ -869,6 +978,7 @@ export function buildReportsPageData(input: {
     "Outstanding invoice balances reflect current open amounts, not limited to the selected period.",
     "Estimate close rate compares approved estimates to estimates sent in the selected period.",
     "Collection rate compares payments collected in period to invoice totals issued in period.",
+    "Customer health uses all-time completed/paid jobs and payments, not the selected period.",
   ];
 
   if (input.showLeadPipeline) {
@@ -915,6 +1025,12 @@ export function buildReportsPageData(input: {
       input.dateRange,
       dateBounds,
       input.datasets,
+    ),
+    customerHealth: buildCustomerHealth(
+      input.datasets.jobs,
+      input.datasets.invoices,
+      input.datasets.payments,
+      totalCustomerCount,
     ),
     leadPipeline: input.showLeadPipeline
       ? buildLeadPipelineMetrics(

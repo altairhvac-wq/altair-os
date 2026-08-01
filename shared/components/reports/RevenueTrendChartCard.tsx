@@ -93,6 +93,7 @@ export function RevenueTrendChartCard({
     : `0,100 ${linePoints} 100,100`;
 
   const chartHeight = northStar ? CHART_HEIGHT : CHART_HEIGHT_LEGACY;
+  const midValue = maxValue / 2;
 
   return (
     <ReportChartCard
@@ -109,13 +110,14 @@ export function RevenueTrendChartCard({
           style={{ height: chartHeight }}
         >
           {northStar ? (
-            <div className="absolute left-0 top-2 z-10 flex h-[calc(100%-1.5rem)] flex-col justify-between py-1 pl-2 pr-1">
+            <div className="absolute left-0 top-2 z-10 flex h-[calc(100%-1.5rem)] flex-col justify-between py-1 pr-1">
               <span className={ns.axisLabel}>{formatCurrency(maxValue)}</span>
+              <span className={ns.axisLabel}>{formatCurrency(midValue)}</span>
               <span className={ns.axisLabel}>{formatCurrency(0)}</span>
             </div>
           ) : null}
 
-          <div className={northStar ? `${ns.chartPlot} pl-7` : "absolute inset-0"}>
+          <div className={northStar ? `${ns.chartPlot} pl-10` : "absolute inset-0"}>
             <div className="absolute inset-0 flex flex-col justify-between">
               {Array.from({ length: northStar ? 5 : 4 }).map((_, index) => (
                 <div
@@ -133,13 +135,21 @@ export function RevenueTrendChartCard({
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
               className="absolute inset-0 h-full w-full overflow-visible"
-              aria-label="Revenue trend line chart"
+              aria-label="Revenue trend area chart"
             >
               {northStar ? (
                 <defs>
                   <linearGradient id="ns-revenue-area" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={ns.revenue.areaTop} />
-                    <stop offset="100%" stopColor={ns.revenue.areaBottom} />
+                    <stop
+                      offset="0%"
+                      stopColor={ns.revenue.areaColor}
+                      stopOpacity={ns.revenue.areaTopOpacity}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={ns.revenue.areaColor}
+                      stopOpacity={ns.revenue.areaBottomOpacity}
+                    />
                   </linearGradient>
                 </defs>
               ) : null}
@@ -155,6 +165,7 @@ export function RevenueTrendChartCard({
                 strokeWidth={northStar ? ns.revenue.lineWidth : 0.6}
                 strokeLinejoin="round"
                 strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
                 className={northStar ? undefined : "text-emerald-600/90"}
                 points={linePoints}
               />
@@ -198,7 +209,7 @@ export function RevenueTrendChartCard({
           <div
             className={
               northStar
-                ? "mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-[rgba(138,99,36,0.08)] pt-2.5"
+                ? "mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-altair-border pt-2.5"
                 : "mt-2 flex flex-wrap gap-x-3 gap-y-1"
             }
           >
@@ -212,7 +223,7 @@ export function RevenueTrendChartCard({
                   key={point.label}
                   className={
                     northStar
-                      ? "text-[10px] font-medium tracking-wide text-[#64748B]"
+                      ? "text-[10px] font-medium tracking-wide text-altair-ink-muted"
                       : "text-[10px] font-medium text-slate-400"
                   }
                 >

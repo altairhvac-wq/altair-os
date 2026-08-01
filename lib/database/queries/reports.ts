@@ -1,3 +1,4 @@
+import { listCustomers } from "@/lib/database/queries/customers";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
 import { listInvoices } from "@/lib/database/queries/invoices";
@@ -16,6 +17,7 @@ import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { buildReportsPageData } from "@/shared/lib/reports/report-metrics";
+import { attachReportPageSparklines } from "@/shared/lib/reports/sparkline-series";
 import type {
   ReportsPageData,
   ReportsPageDateRange,
@@ -95,7 +97,7 @@ export async function getReportsPageData(
 ): Promise<ReportsPageData> {
   const showLeadPipeline = options.showLeadPipeline ?? false;
 
-  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates, openClockEntries, todayTimeEntries] =
+  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates, openClockEntries, todayTimeEntries, customers] =
     await Promise.all([
       listInvoices(companyId),
       listInvoicePayments(companyId),
@@ -108,6 +110,7 @@ export async function getReportsPageData(
       listTechnicianLaborCostRates(companyId),
       listOpenClockEntriesForCompany(companyId),
       listTodayTimeEntriesForCompany(companyId, options.timeZone),
+      listCustomers(companyId),
     ]);
 
   const report = buildReportsPageData({
@@ -116,6 +119,7 @@ export async function getReportsPageData(
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
     showLeadPipeline,
     timeZone: options.timeZone,
+    totalCustomerCount: customers.length,
     datasets: {
       invoices,
       payments,
@@ -166,7 +170,7 @@ export async function getReportsPageData(
     }))
     .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
 
-  return {
+  const withTimeTracking: ReportsPageData = {
     ...report,
     timeTracking: {
       shiftHoursToday: roundJobMaterialAmount(shiftMinutesToday / 60),
@@ -174,6 +178,13 @@ export async function getReportsPageData(
       staleOpenShifts,
     },
   };
+
+  return attachReportPageSparklines(withTimeTracking, {
+    payments,
+    estimates,
+    invoices,
+    chartSeries,
+  });
 }
 
 export async function getReportsFoundationData(

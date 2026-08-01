@@ -21,12 +21,15 @@ import {
 import { AccountantSummaryCard } from "./AccountantSummaryCard";
 import { AiBusinessSummaryCard } from "./AiBusinessSummaryCard";
 import { CashHealthChartCard } from "./CashHealthChartCard";
+import { CustomerHealthCard } from "./CustomerHealthCard";
 import { OperationsSnapshotSection } from "./OperationsSnapshotCard";
+import { ReceivablesAgingChartCard } from "./ReceivablesAgingChartCard";
 import { ReportDateRangeBar } from "./ReportDateRangeBar";
 import { ReportKpiCard } from "./ReportKpiCard";
 import { RevenueTrendChartCard } from "./RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "./SalesFunnelChartCard";
-import { TechnicianProfitabilityChartCard } from "./TechnicianProfitabilityChartCard";
+import { TopPerformersChartCard } from "./TopPerformersChartCard";
+import { TopRevenueSourcesChartCard } from "./TopRevenueSourcesChartCard";
 import { LeadPipelineSection } from "./LeadPipelineSection";
 import { TimeTrackingSummaryCard } from "./TimeTrackingSummaryCard";
 import { ReportsNorthStarView } from "./north-star-m8";
@@ -170,13 +173,28 @@ export function ReportsPageView({
             <div className="lg:col-span-6">
               <SalesFunnelChartCard stages={data.salesFunnel} />
             </div>
+          </div>
+
+          <div
+            className={`grid gap-3 ${
+              data.showTechnicianProfitability ? "lg:grid-cols-2 lg:gap-4" : ""
+            }`}
+          >
             {data.showTechnicianProfitability ? (
-              <div className="lg:col-span-6">
-                <TechnicianProfitabilityChartCard
-                  technicians={data.technicianProfitability}
-                />
-              </div>
+              <TopPerformersChartCard
+                technicians={data.technicianProfitability}
+              />
             ) : null}
+            <TopRevenueSourcesChartCard
+              categories={data.operationsSnapshot.topServiceCategories}
+            />
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+            <ReceivablesAgingChartCard
+              buckets={data.accountantSummary.invoiceAging}
+            />
+            <CustomerHealthCard data={data.customerHealth} />
           </div>
 
           {data.showLeadPipeline ? (

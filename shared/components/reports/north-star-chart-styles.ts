@@ -1,58 +1,120 @@
 /**
  * North Star report chart presentation tokens — visual only.
  * Consumed when ReportSurfaceVariant is "northStar"; legacy paths stay unchanged.
+ *
+ * Chart cards sit on dark Graphite report-surface chrome. Tokens below are
+ * tuned for readability on that surface (not the former ivory North Star paper).
  */
 
+/** Sky/blue revenue categorical tint — matches report icon chip `bg-sky-500/25`. */
+const REVENUE_SKY = "#38BDF8";
+
 export const nsReportChart = {
-  gridLine: "border-t border-[rgba(138,99,36,0.07)]",
-  track: "overflow-hidden rounded-md bg-[#EDE3C8]",
-  trackSegmented: "flex gap-0.5 overflow-hidden rounded-md bg-[#EDE3C8] p-0.5",
-  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-[#64748B]",
-  chartFrame:
-    "relative overflow-hidden rounded-lg border border-[rgba(138,99,36,0.08)] bg-gradient-to-b from-[#FFF9EA]/70 to-[#FBF7EF]",
-  chartPlot: "absolute inset-x-3 inset-y-2 sm:inset-x-4 sm:inset-y-3",
+  gridLine: "border-t border-white/[0.06]",
+  track: "overflow-hidden rounded-md bg-white/[0.06]",
+  trackSegmented: "flex gap-0.5 overflow-hidden rounded-md bg-white/[0.06] p-0.5",
+  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-altair-ink-muted",
+  chartFrame: "relative overflow-hidden",
+  chartPlot: "absolute inset-x-0 inset-y-1 sm:inset-y-2",
 
   revenue: {
-    line: "#8A6324",
-    lineWidth: 0.55,
-    areaTop: "rgba(184, 138, 46, 0.16)",
-    areaBottom: "rgba(184, 138, 46, 0.02)",
-    point: "#B88A2E",
-    pointPeak: "#8A6324",
-    pointRadius: 0.75,
-    pointPeakRadius: 1.05,
+    line: REVENUE_SKY,
+    lineWidth: 0.7,
+    /** Soft fill under the line — ~25% opacity fading to transparent. */
+    areaColor: REVENUE_SKY,
+    areaTopOpacity: 0.28,
+    areaBottomOpacity: 0,
+    point: REVENUE_SKY,
+    pointPeak: "#7DD3FC",
+    pointRadius: 0.85,
+    pointPeakRadius: 1.15,
   },
 
   cashHealth: {
-    paid: { bar: "bg-[#5C7A5F]", dot: "bg-[#5C7A5F]", text: "text-[#3D5A40]" },
-    outstanding: {
-      bar: "bg-[#B88A2E]",
-      dot: "bg-[#B88A2E]",
-      text: "text-[#8A6324]",
+    paid: {
+      stroke: "var(--altair-success)",
+      swatch: "bg-altair-success",
+      text: "text-altair-success",
     },
-    overdue: { bar: "bg-[#9E5555]", dot: "bg-[#9E5555]", text: "text-[#7A3D3D]" },
+    outstanding: {
+      stroke: "var(--altair-warning)",
+      swatch: "bg-altair-warning",
+      text: "text-altair-warning",
+    },
+    overdue: {
+      stroke: "var(--altair-danger)",
+      swatch: "bg-altair-danger",
+      text: "text-altair-danger",
+    },
   },
 
-  funnelStages: [
-    "bg-[#8A6324]",
-    "bg-[#5C7A5F]",
-    "bg-[#A68942]",
-    "bg-[#4F4638]",
+  /**
+   * Receivables aging risk gradient — Current = healthy success, then
+   * overdue tiers escalate neutral → warning → rose → danger.
+   * Index order matches buildInvoiceAging:
+   * Current → 1-30 → 31-60 → 61-90 → 90+.
+   */
+  agingPalette: [
+    {
+      stroke: "var(--altair-success)",
+      swatch: "bg-altair-success",
+      text: "text-altair-success",
+    },
+    {
+      stroke: "rgba(232, 228, 220, 0.55)",
+      swatch: "bg-altair-paper/55",
+      text: "text-altair-paper/80",
+    },
+    {
+      stroke: "var(--altair-warning)",
+      swatch: "bg-altair-warning",
+      text: "text-altair-warning",
+    },
+    {
+      stroke: "#F43F5E",
+      swatch: "bg-rose-500",
+      text: "text-rose-400",
+    },
+    {
+      stroke: "var(--altair-danger)",
+      swatch: "bg-altair-danger",
+      text: "text-altair-danger",
+    },
   ] as const,
 
-  funnelBar: "h-2.5 rounded-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]",
+  funnelStages: [
+    "bg-sky-400",
+    "bg-altair-success",
+    "bg-altair-brass",
+    "bg-altair-ink-muted",
+  ] as const,
+
+  funnelBar: "h-2.5 rounded-sm",
   funnelBarFill:
-    "h-full rounded-sm shadow-[inset_0_-1px_0_rgba(0,0,0,0.06)] transition-[width] duration-300 ease-out",
+    "h-full rounded-sm transition-[width] duration-300 ease-out",
 
   techBar: "h-2 rounded-sm",
   techBarFill:
-    "h-full rounded-sm shadow-[inset_0_-1px_0_rgba(0,0,0,0.05)] transition-[width] duration-300 ease-out",
-  techProfitBar: "bg-[#5C7A5F]",
-  techRevenueBar: "bg-[#8A6324]/85",
+    "h-full rounded-sm transition-[width] duration-300 ease-out",
+  techProfitBar: "bg-altair-success",
+  techRevenueBar: "bg-sky-400/85",
+
+  /**
+   * Fixed categorical palette for donut/legend segments (service categories).
+   * Hues align with report icon-chip tints; expand beyond 6 only if needed.
+   */
+  categoryPalette: [
+    { stroke: REVENUE_SKY, swatch: "bg-sky-400", text: "text-sky-300" },
+    { stroke: "#34D399", swatch: "bg-emerald-400", text: "text-emerald-300" },
+    { stroke: "#A78BFA", swatch: "bg-violet-400", text: "text-violet-300" },
+    { stroke: "#FBBF24", swatch: "bg-amber-400", text: "text-amber-300" },
+    { stroke: "#2DD4BF", swatch: "bg-teal-400", text: "text-teal-300" },
+    { stroke: "#FB7185", swatch: "bg-rose-400", text: "text-rose-300" },
+  ] as const,
 
   table: {
-    row: "px-3 py-3 transition-colors hover:bg-[#FFF9EA]/55 sm:px-4",
+    row: "px-3 py-3 transition-colors hover:bg-white/[0.03] sm:px-4",
     header:
-      "text-[10px] font-bold uppercase tracking-[0.14em] text-[#4F4638]",
+      "text-[10px] font-bold uppercase tracking-[0.14em] text-altair-ink-muted",
   },
 } as const;

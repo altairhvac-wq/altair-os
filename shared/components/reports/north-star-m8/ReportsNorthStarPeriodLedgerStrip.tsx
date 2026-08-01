@@ -1,10 +1,39 @@
-import Link from "next/link";
+import {
+  AlertCircle,
+  CircleDollarSign,
+  Landmark,
+  Receipt,
+  type LucideIcon,
+} from "lucide-react";
+import { KpiSparkline } from "@/shared/components/charts/KpiSparkline";
+import {
+  altairReportCardClass,
+  altairReportCardPadTier1Class,
+  altairReportMetricLabelClass,
+  altairReportMetricValueClass,
+  altairReportSparklineWellClass,
+  reportIconChipClassName,
+  type ReportIconTintCategory,
+  SectionHeader,
+} from "@/shared/design-system/components";
+import { altairCanvasInkMutedClass } from "@/shared/design-system/foundation";
 import { formatCurrency } from "@/shared/types/customer";
-import type { AccountantSummaryData } from "@/shared/types/reports-page";
+import type {
+  AccountantSummaryData,
+  ReportLedgerSparklineId,
+} from "@/shared/types/reports-page";
 import { REPORTS_PAGE_DATE_RANGE_OPTIONS } from "@/shared/types/reports-page";
 
 type ReportsNorthStarPeriodLedgerStripProps = {
   summary: AccountantSummaryData;
+};
+
+type LedgerMetric = {
+  id: ReportLedgerSparklineId;
+  label: string;
+  value: string;
+  tint: ReportIconTintCategory;
+  icon: LucideIcon;
 };
 
 function formatPeriodLabel(dateRange: AccountantSummaryData["dateRange"]): string {
@@ -20,65 +49,81 @@ export function ReportsNorthStarPeriodLedgerStrip({
   const periodLabel = formatPeriodLabel(summary.dateRange);
   const taxSummaryHref = `/reports/tax-summary?range=${summary.dateRange}`;
 
-  const metrics = [
+  const metrics: LedgerMetric[] = [
     {
       id: "collected",
       label: "Collected",
       value: formatCurrency(summary.totalPaymentsCollected),
+      tint: "revenue",
+      icon: CircleDollarSign,
     },
     {
       id: "outstanding",
       label: "Outstanding",
       value: formatCurrency(summary.outstandingBalance),
+      tint: "outstanding",
+      icon: Receipt,
     },
     {
       id: "overdue",
       label: "Overdue",
       value: formatCurrency(summary.overdueBalance),
+      tint: "outstanding",
+      icon: AlertCircle,
     },
     {
       id: "net-income",
       label: "Net income est.",
       value: formatCurrency(summary.netIncomeEstimate),
+      tint: "profit",
+      icon: Landmark,
     },
   ];
 
   return (
-    <section className="altair-surface-ns-card min-w-0 overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-[rgba(138,99,36,0.1)] bg-[#FFF9EA]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
-            Period ledger
-          </p>
-          <h2 className="mt-0.5 text-sm font-bold text-[#17130E]">
-            {periodLabel} operating snapshot
-          </h2>
-          <p className="mt-0.5 text-xs text-[#64748B]">
-            Bookkeeping totals from records entered in Altair OS.
-          </p>
-        </div>
-        <Link
-          href={taxSummaryHref}
-          className="north-star-reports-tax-link inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]"
-        >
-          Open tax summary
-        </Link>
+    <section className="flex min-w-0 flex-col gap-3">
+      <div className="min-w-0">
+        <SectionHeader
+          title="Period ledger"
+          action={{ label: "Open tax summary", href: taxSummaryHref }}
+        />
+        <p className={`mt-1 pl-[14px] text-xs ${altairCanvasInkMutedClass}`}>
+          {periodLabel} operating snapshot — bookkeeping totals from records
+          entered in Altair OS.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-px bg-[rgba(138,99,36,0.10)] sm:grid-cols-4">
-        {metrics.map((metric) => (
-          <div
-            key={metric.id}
-            className="min-w-0 bg-[#FBF7EF] px-3 py-3.5 sm:px-5 sm:py-4"
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
-              {metric.label}
-            </p>
-            <p className="mt-1.5 truncate text-base font-bold tabular-nums tracking-tight text-[#17130E] sm:text-xl">
-              {metric.value}
-            </p>
-          </div>
-        ))}
+      <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+          const sparkline = summary.sparklines?.[metric.id];
+
+          return (
+            <div
+              key={metric.id}
+              className={`min-w-0 ${altairReportCardClass} ${altairReportCardPadTier1Class}`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={reportIconChipClassName(metric.tint)}
+                  aria-hidden="true"
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <p className={altairReportMetricLabelClass}>{metric.label}</p>
+              </div>
+              <p className={`mt-2.5 ${altairReportMetricValueClass}`}>
+                {metric.value}
+              </p>
+              {sparkline ? (
+                <KpiSparkline
+                  values={sparkline}
+                  className={altairReportSparklineWellClass}
+                />
+              ) : null}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

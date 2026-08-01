@@ -2,7 +2,11 @@
 
 import { Loader2, Sparkles } from "lucide-react";
 import type { BusinessSummaryAiResult } from "@/shared/types/reports-page";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairReportCardClass,
+  altairReportCardPadTier1Class,
+  altairReportSecondaryActionClass,
+} from "@/shared/design-system/components";
 import {
   isNorthStarReportSurface,
   type ReportSurfaceVariant,
@@ -38,36 +42,41 @@ export function AiBusinessSummaryCard({
 
   if (northStar) {
     return (
-      <section className="altair-surface-ns-card overflow-hidden">
-        <div className="border-b border-[rgba(138,99,36,0.1)] bg-[#FFF9EA]/70 px-4 py-3 sm:px-5">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#8A6324]" aria-hidden="true" />
-            <h3 className="text-sm font-bold text-[#17130E]">AI business review</h3>
-          </div>
-          <p className="mt-0.5 text-xs text-[#64748B]">
-            Plain-English summary for this reporting period.
+      <section
+        className={`${altairReportCardClass} ${altairReportCardPadTier1Class} overflow-hidden border-altair-brass/25`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-altair-brass/20 text-altair-brass"
+            aria-hidden="true"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+          </span>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-brass">
+            AI-generated
           </p>
         </div>
 
-        <div className="space-y-3 p-4 sm:p-5">
+        <div className="mt-3 space-y-3">
           {isPending ? (
-            <div className="flex items-center gap-2 text-sm text-[#4F4638]">
+            <div className="flex items-center gap-2 text-sm text-altair-ink-secondary">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               Generating summary…
             </div>
           ) : summary ? (
             <>
               {summary.fromCache ? (
-                <p className="text-[11px] font-medium text-[#64748B]">
-                  Cached for this period · generated {formatGeneratedAt(summary.generatedAt)}
+                <p className="text-[11px] font-medium text-altair-ink-muted">
+                  Cached for this period · generated{" "}
+                  {formatGeneratedAt(summary.generatedAt)}
                 </p>
               ) : null}
 
-              <ul className="space-y-2 text-sm leading-relaxed text-[#17130E]">
+              <ul className="space-y-2 text-sm leading-relaxed text-altair-paper">
                 {summary.bullets.map((bullet) => (
                   <li key={bullet} className="flex gap-2.5">
                     <span
-                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#8A6324]"
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-altair-brass"
                       aria-hidden="true"
                     />
                     <span>{bullet}</span>
@@ -75,18 +84,18 @@ export function AiBusinessSummaryCard({
                 ))}
               </ul>
 
-              <div className="rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3.5 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#8A6324]">
+              <div className="rounded-lg border border-altair-brass/30 bg-altair-brass/10 px-3.5 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-altair-brass">
                   Period takeaway
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-[#17130E]">
+                <p className="mt-1 text-sm leading-relaxed text-altair-paper">
                   {summary.recommendedAction}
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 border-t border-[rgba(138,99,36,0.12)] pt-3">
+              <div className="flex flex-wrap items-center gap-3 border-t border-altair-border pt-3">
                 {!summary.fromCache ? (
-                  <p className="text-[11px] text-[#64748B]">
+                  <p className="text-[11px] text-altair-ink-muted">
                     Generated {formatGeneratedAt(summary.generatedAt)}
                   </p>
                 ) : null}
@@ -94,7 +103,7 @@ export function AiBusinessSummaryCard({
                   type="button"
                   onClick={onRefresh}
                   disabled={!aiFeaturesEnabled || isPending}
-                  className={`${lt.secondaryAction} text-xs disabled:cursor-not-allowed disabled:opacity-60`}
+                  className={`${altairReportSecondaryActionClass} h-9 px-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   Refresh Summary
                 </button>
@@ -103,7 +112,7 @@ export function AiBusinessSummaryCard({
           ) : null}
 
           {error ? (
-            <p className="text-sm text-[#991B1B]" role="alert">
+            <p className="text-sm text-altair-danger" role="alert">
               {error}
             </p>
           ) : null}
@@ -136,7 +145,8 @@ export function AiBusinessSummaryCard({
           <>
             {summary.fromCache ? (
               <p className="text-[11px] font-medium text-slate-400">
-                Cached for this period · generated {formatGeneratedAt(summary.generatedAt)}
+                Cached for this period · generated{" "}
+                {formatGeneratedAt(summary.generatedAt)}
               </p>
             ) : null}
 

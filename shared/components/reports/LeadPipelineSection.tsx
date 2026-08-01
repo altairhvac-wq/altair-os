@@ -1,7 +1,22 @@
 import Link from "next/link";
+import {
+  Percent,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { formatPercent } from "@/shared/types/analytics";
 import { formatLeadSource } from "@/shared/types/lead";
 import type { LeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
+import {
+  altairReportCardClass,
+  altairReportCardPadTier3Class,
+  altairReportMetricLabelClass,
+  altairReportMetricValueClass,
+  reportIconChipClassName,
+  type ReportIconTintCategory,
+} from "@/shared/design-system/components";
 import { nsReportChart as ns } from "./north-star-chart-styles";
 import {
   isNorthStarReportSurface,
@@ -13,24 +28,42 @@ type LeadPipelineSectionProps = {
   variant?: ReportSurfaceVariant;
 };
 
+type LeadKpiDefinition = {
+  label: string;
+  value: string;
+  tint: ReportIconTintCategory;
+  icon: LucideIcon;
+};
+
 type LeadKpiCardProps = {
   label: string;
   value: string;
+  tint?: ReportIconTintCategory;
+  icon?: LucideIcon;
   variant?: ReportSurfaceVariant;
 };
 
-function LeadKpiCard({ label, value, variant = "legacy" }: LeadKpiCardProps) {
+function LeadKpiCard({
+  label,
+  value,
+  tint,
+  icon: Icon,
+  variant = "legacy",
+}: LeadKpiCardProps) {
   const northStar = isNorthStarReportSurface(variant);
 
-  if (northStar) {
+  if (northStar && tint && Icon) {
     return (
-      <div className="altair-surface-ns-tile min-w-0 px-3 py-2.5 sm:px-3.5 sm:py-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]">
-          {label}
-        </p>
-        <p className="mt-1 truncate text-xl font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-2xl sm:leading-none">
-          {value}
-        </p>
+      <div
+        className={`min-w-0 ${altairReportCardClass} ${altairReportCardPadTier3Class}`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className={reportIconChipClassName(tint)} aria-hidden="true">
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+          <p className={altairReportMetricLabelClass}>{label}</p>
+        </div>
+        <p className={`mt-2.5 ${altairReportMetricValueClass}`}>{value}</p>
       </div>
     );
   }
@@ -62,68 +95,167 @@ export function LeadPipelineSection({
   const hasLeads = metrics.totalLeads > 0;
   const northStar = isNorthStarReportSurface(variant);
 
+  const kpis: LeadKpiDefinition[] = [
+    {
+      label: "Total Leads",
+      value: String(metrics.totalLeads),
+      tint: "jobs",
+      icon: Users,
+    },
+    {
+      label: "Won Leads",
+      value: String(metrics.wonLeads),
+      tint: "profit",
+      icon: TrendingUp,
+    },
+    {
+      label: "Lost Leads",
+      value: String(metrics.lostLeads),
+      tint: "outstanding",
+      icon: TrendingDown,
+    },
+    {
+      label: "Conversion Rate",
+      value: formatRate(metrics.conversionRate),
+      tint: "conversion",
+      icon: Percent,
+    },
+  ];
+
+  if (northStar) {
+    return (
+      <div className="min-w-0 space-y-3 overflow-x-hidden">
+        {!hasLeads ? (
+          <div
+            className={`${altairReportCardClass} ${altairReportCardPadTier3Class} border-dashed bg-white/[0.03] px-4 py-5 text-center sm:px-5`}
+          >
+            <p className="text-sm font-semibold text-altair-paper">
+              No leads created in this period.
+            </p>
+            <p className="mt-1 text-xs text-altair-ink-muted">
+              Try a wider date range or add a new lead to see pipeline metrics.
+            </p>
+            <Link
+              href="/leads"
+              className="mt-3 inline-flex text-xs font-semibold text-altair-brass-interactive transition-colors hover:text-altair-brass"
+            >
+              Create Lead
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-3">
+              {kpis.map((kpi) => (
+                <LeadKpiCard
+                  key={kpi.label}
+                  label={kpi.label}
+                  value={kpi.value}
+                  tint={kpi.tint}
+                  icon={kpi.icon}
+                  variant={variant}
+                />
+              ))}
+            </div>
+
+            <p className="text-[11px] text-altair-ink-muted sm:text-xs">
+              Won and lost reflect each lead&apos;s current status, not when they
+              closed.
+            </p>
+
+            {metrics.topSourceInsight ? (
+              <p className="text-xs text-altair-ink-secondary">
+                {metrics.topSourceInsight}
+              </p>
+            ) : null}
+
+            <div
+              className={`${altairReportCardClass} min-w-0 overflow-hidden`}
+            >
+              <div className="border-b border-altair-border px-3 py-2.5 sm:px-4">
+                <h4 className="text-xs font-bold text-altair-paper">
+                  Lead Source Performance
+                </h4>
+              </div>
+
+              <div className="hidden border-b border-altair-border/60 px-3 py-2.5 sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:gap-3 sm:px-4">
+                <span className={ns.table.header}>Source</span>
+                <span className={`${ns.table.header} text-right`}>Leads</span>
+                <span className={`${ns.table.header} text-right`}>Won</span>
+                <span className={`${ns.table.header} text-right`}>
+                  Close Rate
+                </span>
+              </div>
+
+              <ul className="divide-y divide-altair-border/60">
+                {metrics.sourcePerformance.length === 0 ? (
+                  <li className="px-3 py-4 text-center text-xs text-altair-ink-muted sm:px-4">
+                    No lead source activity in this period.
+                  </li>
+                ) : null}
+                {metrics.sourcePerformance.map((entry) => (
+                  <li
+                    key={entry.source}
+                    className={`grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:items-center sm:gap-3 ${ns.table.row}`}
+                  >
+                    <p className="col-span-2 break-words text-[13px] font-semibold text-altair-paper sm:col-span-1">
+                      {formatLeadSource(entry.source)}
+                    </p>
+                    <div className="flex items-center justify-between gap-2 sm:contents">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                        Leads
+                      </span>
+                      <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">
+                        {entry.total}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 sm:contents">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                        Won
+                      </span>
+                      <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">
+                        {entry.won}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 sm:contents">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                        Close Rate
+                      </span>
+                      <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">
+                        {formatRate(entry.conversionRate)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <section
-      className={
-        northStar
-          ? "altair-surface-ns-card min-w-0 space-y-3 overflow-x-hidden p-3 sm:p-3.5"
-          : "altair-surface-section altair-surface-section-body min-w-0 space-y-3 overflow-x-hidden"
-      }
-    >
+    <section className="altair-surface-section altair-surface-section-body min-w-0 space-y-3 overflow-x-hidden">
       <div>
-        <h3
-          className={
-            northStar
-              ? "text-sm font-bold text-[#17130E]"
-              : "admin-heading-section text-[13px] sm:text-sm"
-          }
-        >
+        <h3 className="admin-heading-section text-[13px] sm:text-sm">
           Lead Pipeline
         </h3>
-        <p
-          className={
-            northStar
-              ? "mt-0.5 text-xs text-[#64748B]"
-              : "admin-text-helper mt-0.5 text-[11px] sm:text-xs"
-          }
-        >
+        <p className="admin-text-helper mt-0.5 text-[11px] sm:text-xs">
           Lead activity created during the selected period.
         </p>
       </div>
 
       {!hasLeads ? (
-        <div
-          className={
-            northStar
-              ? "rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA]/60 px-4 py-5 text-center sm:px-5"
-              : "rounded-lg border border-dashed border-slate-200 bg-[var(--surface-tile)] px-4 py-5 text-center sm:px-5"
-          }
-        >
-          <p
-            className={
-              northStar
-                ? "text-sm font-semibold text-[#17130E]"
-                : "text-sm font-semibold text-slate-900"
-            }
-          >
+        <div className="rounded-lg border border-dashed border-slate-200 bg-[var(--surface-tile)] px-4 py-5 text-center sm:px-5">
+          <p className="text-sm font-semibold text-slate-900">
             No leads created in this period.
           </p>
-          <p
-            className={
-              northStar
-                ? "mt-1 text-xs text-[#64748B]"
-                : "admin-text-helper mt-1 text-xs"
-            }
-          >
+          <p className="admin-text-helper mt-1 text-xs">
             Try a wider date range or add a new lead to see pipeline metrics.
           </p>
           <Link
             href="/leads"
-            className={
-              northStar
-                ? "mt-3 inline-flex text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]"
-                : "mt-3 inline-flex text-xs font-semibold text-cyan-700 hover:text-cyan-800"
-            }
+            className="mt-3 inline-flex text-xs font-semibold text-cyan-700 hover:text-cyan-800"
           >
             Create Lead
           </Link>
@@ -131,208 +263,82 @@ export function LeadPipelineSection({
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
-            <LeadKpiCard
-              label="Total Leads"
-              value={String(metrics.totalLeads)}
-              variant={variant}
-            />
-            <LeadKpiCard
-              label="Won Leads"
-              value={String(metrics.wonLeads)}
-              variant={variant}
-            />
-            <LeadKpiCard
-              label="Lost Leads"
-              value={String(metrics.lostLeads)}
-              variant={variant}
-            />
-            <LeadKpiCard
-              label="Conversion Rate"
-              value={formatRate(metrics.conversionRate)}
-              variant={variant}
-            />
+            {kpis.map((kpi) => (
+              <LeadKpiCard
+                key={kpi.label}
+                label={kpi.label}
+                value={kpi.value}
+                variant={variant}
+              />
+            ))}
           </div>
 
-          <p
-            className={
-              northStar
-                ? "text-[11px] text-[#64748B] sm:text-xs"
-                : "text-[11px] text-slate-500 sm:text-xs"
-            }
-          >
+          <p className="text-[11px] text-slate-500 sm:text-xs">
             Won and lost reflect each lead&apos;s current status, not when they
             closed.
           </p>
 
           {metrics.topSourceInsight ? (
-            <p className={northStar ? "text-xs text-[#4F4638]" : "text-xs text-slate-600"}>
-              {metrics.topSourceInsight}
-            </p>
+            <p className="text-xs text-slate-600">{metrics.topSourceInsight}</p>
           ) : null}
 
-          <div
-            className={
-              northStar
-                ? "altair-surface-ns-tile min-w-0 overflow-hidden !p-0"
-                : "altair-surface-card min-w-0 overflow-hidden"
-            }
-          >
-            <div
-              className={
-                northStar
-                  ? "border-b border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2.5 sm:px-4"
-                  : "border-b border-slate-100 px-3 py-2.5 sm:px-4"
-              }
-            >
-              <h4
-                className={
-                  northStar
-                    ? "text-xs font-bold text-[#17130E]"
-                    : "text-xs font-bold text-slate-900"
-                }
-              >
+          <div className="altair-surface-card min-w-0 overflow-hidden">
+            <div className="border-b border-slate-100 px-3 py-2.5 sm:px-4">
+              <h4 className="text-xs font-bold text-slate-900">
                 Lead Source Performance
               </h4>
             </div>
 
-            <div
-              className={
-                northStar
-                  ? "hidden border-b border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/80 px-3 py-2.5 sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:gap-3 sm:px-4"
-                  : "hidden px-3 py-2 sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:gap-3 sm:px-4"
-              }
-            >
-              <span
-                className={
-                  northStar
-                    ? ns.table.header
-                    : "text-[10px] font-bold uppercase tracking-wide text-slate-500"
-                }
-              >
+            <div className="hidden px-3 py-2 sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:gap-3 sm:px-4">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
                 Source
               </span>
-              <span
-                className={
-                  northStar
-                    ? `${ns.table.header} text-right`
-                    : "text-right text-[10px] font-bold uppercase tracking-wide text-slate-500"
-                }
-              >
+              <span className="text-right text-[10px] font-bold uppercase tracking-wide text-slate-500">
                 Leads
               </span>
-              <span
-                className={
-                  northStar
-                    ? `${ns.table.header} text-right`
-                    : "text-right text-[10px] font-bold uppercase tracking-wide text-slate-500"
-                }
-              >
+              <span className="text-right text-[10px] font-bold uppercase tracking-wide text-slate-500">
                 Won
               </span>
-              <span
-                className={
-                  northStar
-                    ? `${ns.table.header} text-right`
-                    : "text-right text-[10px] font-bold uppercase tracking-wide text-slate-500"
-                }
-              >
+              <span className="text-right text-[10px] font-bold uppercase tracking-wide text-slate-500">
                 Close Rate
               </span>
             </div>
 
-            <ul
-              className={
-                northStar ? "divide-y divide-[rgba(138,99,36,0.10)]" : "divide-y divide-slate-100"
-              }
-            >
+            <ul className="divide-y divide-slate-100">
               {metrics.sourcePerformance.length === 0 ? (
-                <li
-                  className={
-                    northStar
-                      ? "px-3 py-4 text-center text-xs text-[#64748B] sm:px-4"
-                      : "px-3 py-4 text-center text-xs text-slate-500 sm:px-4"
-                  }
-                >
+                <li className="px-3 py-4 text-center text-xs text-slate-500 sm:px-4">
                   No lead source activity in this period.
                 </li>
               ) : null}
-              {metrics.sourcePerformance.map((entry, rowIndex) => (
+              {metrics.sourcePerformance.map((entry) => (
                 <li
                   key={entry.source}
-                  className={
-                    northStar
-                      ? `grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:items-center sm:gap-3 ${ns.table.row}${
-                          rowIndex % 2 === 1 ? " bg-[#FFF9EA]/25" : ""
-                        }`
-                      : "grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:items-center sm:gap-3 sm:px-4"
-                  }
+                  className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:items-center sm:gap-3 sm:px-4"
                 >
-                  <p
-                    className={
-                      northStar
-                        ? "col-span-2 break-words text-[13px] font-semibold text-[#17130E] sm:col-span-1"
-                        : "col-span-2 break-words text-xs font-medium text-slate-800 sm:col-span-1"
-                    }
-                  >
+                  <p className="col-span-2 break-words text-xs font-medium text-slate-800 sm:col-span-1">
                     {formatLeadSource(entry.source)}
                   </p>
                   <div className="flex items-center justify-between gap-2 sm:contents">
-                    <span
-                      className={
-                        northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
-                          : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
-                      }
-                    >
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden">
                       Leads
                     </span>
-                    <span
-                      className={
-                        northStar
-                          ? "text-sm font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-right"
-                          : "text-xs font-bold tabular-nums text-slate-900 sm:text-right"
-                      }
-                    >
+                    <span className="text-xs font-bold tabular-nums text-slate-900 sm:text-right">
                       {entry.total}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:contents">
-                    <span
-                      className={
-                        northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
-                          : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
-                      }
-                    >
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden">
                       Won
                     </span>
-                    <span
-                      className={
-                        northStar
-                          ? "text-sm font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-right"
-                          : "text-xs font-bold tabular-nums text-slate-900 sm:text-right"
-                      }
-                    >
+                    <span className="text-xs font-bold tabular-nums text-slate-900 sm:text-right">
                       {entry.won}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:contents">
-                    <span
-                      className={
-                        northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
-                          : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
-                      }
-                    >
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden">
                       Close Rate
                     </span>
-                    <span
-                      className={
-                        northStar
-                          ? "text-sm font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-right"
-                          : "text-xs font-bold tabular-nums text-slate-900 sm:text-right"
-                      }
-                    >
+                    <span className="text-xs font-bold tabular-nums text-slate-900 sm:text-right">
                       {formatRate(entry.conversionRate)}
                     </span>
                   </div>

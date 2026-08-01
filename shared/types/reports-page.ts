@@ -37,6 +37,8 @@ export type ReportKpiMetric = {
   value: string;
   comparison: string;
   trend?: ReportKpiTrend;
+  /** Period bucket values for the Tier 1 sparkline (daily/weekly/monthly). */
+  sparkline?: number[];
 };
 
 export type ReportTrendPoint = {
@@ -62,6 +64,7 @@ export type ReportTechnicianProfitability = {
   technicianId: string;
   name: string;
   revenue: number;
+  jobCount: number;
   laborHours: number;
   laborCost: number | null;
   grossProfit: number | null;
@@ -74,6 +77,8 @@ export type ReportSnapshotRow = {
   label: string;
   detail?: string;
   value: string;
+  /** Numeric amount when `value` is a formatted currency string (for charts). */
+  amount?: number;
   customerId?: string;
 };
 
@@ -109,6 +114,26 @@ export type ReportInvoiceAgingBucket = {
   amount: number;
 };
 
+export type ReportCustomerHealth = {
+  /** Customers with 2+ completed or paid jobs ÷ total active customers. */
+  repeatCustomerRate: number | null;
+  repeatCustomerRateLabel: string;
+  repeatCustomerCount: number;
+  totalCustomerCount: number;
+  /**
+   * All-time payments collected (company-wide). Simple payment total — not a
+   * modeled customer lifetime value.
+   */
+  lifetimeRevenueTotal: number;
+  lifetimeRevenueLabel: string;
+};
+
+export type ReportLedgerSparklineId =
+  | "collected"
+  | "outstanding"
+  | "overdue"
+  | "net-income";
+
 export type AccountantSummaryData = {
   companyName: string;
   dateRange: ReportsPageDateRange;
@@ -124,6 +149,8 @@ export type AccountantSummaryData = {
   revenueByCustomer: ReportSnapshotRow[];
   revenueByServiceCategory: ReportSnapshotRow[];
   invoiceAging: ReportInvoiceAgingBucket[];
+  /** Period bucket values for Period Ledger Tier 1 sparklines. */
+  sparklines?: Record<ReportLedgerSparklineId, number[]>;
 };
 
 export type ReportsPageData = {
@@ -138,6 +165,7 @@ export type ReportsPageData = {
   operationsSnapshot: ReportOperationsSnapshot;
   timeTracking: ReportTimeTrackingSummary;
   accountantSummary: AccountantSummaryData;
+  customerHealth: ReportCustomerHealth;
   leadPipeline: LeadPipelineMetrics;
   showLeadPipeline: boolean;
   limitations: string[];

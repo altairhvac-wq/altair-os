@@ -18,66 +18,200 @@ function hasCashData(data: ReportCashHealth): boolean {
 
 const LEGACY_ITEMS = [
   {
-    key: "paid",
+    key: "paid" as const,
     label: "Paid",
     barClass: "bg-emerald-500",
     textClass: "text-emerald-700",
   },
   {
-    key: "outstanding",
+    key: "outstanding" as const,
     label: "Outstanding",
     barClass: "bg-amber-400",
     textClass: "text-amber-700",
   },
   {
-    key: "overdue",
+    key: "overdue" as const,
     label: "Overdue",
     barClass: "bg-rose-500",
     textClass: "text-rose-700",
   },
-] as const;
+];
+
+const DONUT_SIZE = 148;
+const DONUT_STROKE = 18;
+const DONUT_RADIUS = (DONUT_SIZE - DONUT_STROKE) / 2;
+const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
+
+type CashHealthSegmentKey = "paid" | "outstanding" | "overdue";
+
+type DonutSegment = {
+  key: CashHealthSegmentKey;
+  label: string;
+  value: number;
+  stroke: string;
+};
+
+function CashHealthDonut({
+  items,
+  total,
+}: {
+  items: DonutSegment[];
+  total: number;
+}) {
+  let cumulative = 0;
+
+  return (
+    <div className="relative mx-auto h-[148px] w-[148px] shrink-0">
+      <svg
+        width={DONUT_SIZE}
+        height={DONUT_SIZE}
+        viewBox={`0 0 ${DONUT_SIZE} ${DONUT_SIZE}`}
+        className="-rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx={DONUT_SIZE / 2}
+          cy={DONUT_SIZE / 2}
+          r={DONUT_RADIUS}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={DONUT_STROKE}
+        />
+        {items.map((item) => {
+          if (item.value <= 0 || total <= 0) {
+            return null;
+          }
+
+          const fraction = item.value / total;
+          const dash = fraction * DONUT_CIRCUMFERENCE;
+          const gap = DONUT_CIRCUMFERENCE - dash;
+          const offset = -cumulative * DONUT_CIRCUMFERENCE;
+          cumulative += fraction;
+
+          return (
+            <circle
+              key={item.key}
+              cx={DONUT_SIZE / 2}
+              cy={DONUT_SIZE / 2}
+              r={DONUT_RADIUS}
+              fill="none"
+              stroke={item.stroke}
+              strokeWidth={DONUT_STROKE}
+              strokeDasharray={`${dash} ${gap}`}
+              strokeDashoffset={offset}
+              strokeLinecap="butt"
+            />
+          );
+        })}
+      </svg>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+        <span className="text-lg font-extrabold tabular-nums tracking-tight text-altair-paper">
+          {formatCurrency(total)}
+        </span>
+        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-altair-ink-muted">
+          Total
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function CashHealthChartCard({
   data,
   variant = "legacy",
 }: CashHealthChartCardProps) {
   const northStar = isNorthStarReportSurface(variant);
-
-  const items = northStar
-    ? [
-        {
-          key: "paid",
-          label: "Paid",
-          value: data.paid,
-          barClass: ns.cashHealth.paid.bar,
-          dotClass: ns.cashHealth.paid.dot,
-          textClass: ns.cashHealth.paid.text,
-        },
-        {
-          key: "outstanding",
-          label: "Outstanding",
-          value: data.outstanding,
-          barClass: ns.cashHealth.outstanding.bar,
-          dotClass: ns.cashHealth.outstanding.dot,
-          textClass: ns.cashHealth.outstanding.text,
-        },
-        {
-          key: "overdue",
-          label: "Overdue",
-          value: data.overdue,
-          barClass: ns.cashHealth.overdue.bar,
-          dotClass: ns.cashHealth.overdue.dot,
-          textClass: ns.cashHealth.overdue.text,
-        },
-      ]
-    : LEGACY_ITEMS.map((item) => ({
-        ...item,
-        value: data[item.key as keyof ReportCashHealth] as number,
-        dotClass: "",
-      }));
-
-  const total = items.reduce((sum, item) => sum + item.value, 0);
   const hasData = hasCashData(data);
+
+  if (northStar) {
+    const items = [
+      {
+        key: "paid" as const,
+        label: "Paid",
+        value: data.paid,
+        stroke: ns.cashHealth.paid.stroke,
+        swatchClass: ns.cashHealth.paid.swatch,
+        textClass: ns.cashHealth.paid.text,
+      },
+      {
+        key: "outstanding" as const,
+        label: "Outstanding",
+        value: data.outstanding,
+        stroke: ns.cashHealth.outstanding.stroke,
+        swatchClass: ns.cashHealth.outstanding.swatch,
+        textClass: ns.cashHealth.outstanding.text,
+      },
+      {
+        key: "overdue" as const,
+        label: "Overdue",
+        value: data.overdue,
+        stroke: ns.cashHealth.overdue.stroke,
+        swatchClass: ns.cashHealth.overdue.swatch,
+        textClass: ns.cashHealth.overdue.text,
+      },
+    ];
+    const total = items.reduce((sum, item) => sum + item.value, 0);
+
+    return (
+      <ReportChartCard
+        title="Cash Health"
+        subtitle="Invoice collection status for the period."
+        hasData={hasData}
+        emptyMessage="Invoice health will appear once invoices are created."
+        compact
+        variant={variant}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
+            {total > 0 ? <CashHealthDonut items={items} total={total} /> : null}
+
+            <div className="w-full min-w-0 flex-1 space-y-2.5">
+              {items.map((item) => {
+                const percent =
+                  total > 0 ? Math.round((item.value / total) * 100) : 0;
+
+                return (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2 text-xs font-medium text-altair-paper">
+                      <span
+                        className={`h-2.5 w-2.5 shrink-0 rounded-sm ${item.swatchClass}`}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </span>
+                    <span className="shrink-0 text-xs tabular-nums text-altair-ink-muted">
+                      <span className={`font-semibold ${item.textClass}`}>
+                        {formatCurrency(item.value)}
+                      </span>
+                      <span className="ml-1">({percent}%)</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-t border-altair-border pt-3">
+            <span className="text-xs font-semibold text-altair-ink-muted">
+              Collection Rate
+            </span>
+            <span className="text-base font-extrabold tabular-nums tracking-tight text-altair-paper">
+              {data.collectionRateLabel}
+            </span>
+          </div>
+        </div>
+      </ReportChartCard>
+    );
+  }
+
+  const legacyItems = LEGACY_ITEMS.map((item) => ({
+    ...item,
+    value: data[item.key],
+  }));
+  const total = legacyItems.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <ReportChartCard
@@ -88,99 +222,36 @@ export function CashHealthChartCard({
       compact
       variant={variant}
     >
-      <div className={northStar ? "flex flex-col gap-4" : "flex flex-col gap-3"}>
+      <div className="flex flex-col gap-3">
         {total > 0 ? (
-          northStar ? (
-            <div className="space-y-2">
-              <div className={ns.trackSegmented} aria-hidden="true">
-                {items.map((item) => {
-                  const widthPercent = (item.value / total) * 100;
-                  if (widthPercent <= 0) {
-                    return null;
-                  }
+          <div
+            className="flex h-1.5 overflow-hidden rounded-full bg-slate-100"
+            aria-hidden="true"
+          >
+            {legacyItems.map((item) => {
+              const widthPercent = (item.value / total) * 100;
+              if (widthPercent <= 0) {
+                return null;
+              }
 
-                  return (
-                    <div
-                      key={item.key}
-                      className={`${item.barClass} min-w-[3px] rounded-sm transition-all`}
-                      style={{ width: `${widthPercent}%` }}
-                    />
-                  );
-                })}
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {items.map((item) => {
-                  if (item.value <= 0) {
-                    return null;
-                  }
-
-                  return (
-                    <span
-                      key={item.key}
-                      className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#64748B]"
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.dotClass}`}
-                        aria-hidden="true"
-                      />
-                      {item.label}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div
-              className="flex h-1.5 overflow-hidden rounded-full bg-slate-100"
-              aria-hidden="true"
-            >
-              {items.map((item) => {
-                const widthPercent = (item.value / total) * 100;
-                if (widthPercent <= 0) {
-                  return null;
-                }
-
-                return (
-                  <div
-                    key={item.key}
-                    className={`${item.barClass} transition-all`}
-                    style={{ width: `${widthPercent}%` }}
-                  />
-                );
-              })}
-            </div>
-          )
+              return (
+                <div
+                  key={item.key}
+                  className={`${item.barClass} transition-all`}
+                  style={{ width: `${widthPercent}%` }}
+                />
+              );
+            })}
+          </div>
         ) : null}
 
-        <div
-          className={
-            northStar
-              ? "divide-y divide-[rgba(138,99,36,0.10)] rounded-lg border border-[rgba(138,99,36,0.08)] bg-[#FFF9EA]/40 px-3"
-              : "divide-y divide-slate-100"
-          }
-        >
-          {items.map((item) => (
+        <div className="divide-y divide-slate-100">
+          {legacyItems.map((item) => (
             <div
               key={item.key}
-              className={
-                northStar
-                  ? "flex items-center justify-between gap-3 py-3 first:pt-3 last:pb-3"
-                  : "flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-              }
+              className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
             >
-              <span
-                className={
-                  northStar
-                    ? "inline-flex items-center gap-2 text-xs font-medium text-[#4F4638]"
-                    : "text-xs font-medium text-slate-600"
-                }
-              >
-                {northStar ? (
-                  <span
-                    className={`h-2 w-2 shrink-0 rounded-full ${item.dotClass}`}
-                    aria-hidden="true"
-                  />
-                ) : null}
+              <span className="text-xs font-medium text-slate-600">
                 {item.label}
               </span>
               <span className={`text-sm font-bold tabular-nums ${item.textClass}`}>
@@ -188,29 +259,11 @@ export function CashHealthChartCard({
               </span>
             </div>
           ))}
-          <div
-            className={
-              northStar
-                ? "flex items-center justify-between gap-3 border-t border-[rgba(138,99,36,0.10)] py-3"
-                : "flex items-center justify-between gap-3 py-2.5"
-            }
-          >
-            <span
-              className={
-                northStar
-                  ? "text-xs font-semibold text-[#4F4638]"
-                  : "text-xs font-medium text-slate-600"
-              }
-            >
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <span className="text-xs font-medium text-slate-600">
               Collection Rate
             </span>
-            <span
-              className={
-                northStar
-                  ? "text-base font-extrabold tabular-nums tracking-tight text-[#17130E]"
-                  : "text-sm font-bold tabular-nums text-slate-900"
-              }
-            >
+            <span className="text-sm font-bold tabular-nums text-slate-900">
               {data.collectionRateLabel}
             </span>
           </div>

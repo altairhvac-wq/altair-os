@@ -10,21 +10,32 @@ import type {
   ReportsPageData,
 } from "@/shared/types/reports-page";
 import {
+  altairMcMetricLabelClass,
+  altairReportSecondaryActionClass,
+  SectionHeader,
+} from "@/shared/design-system/components";
+import {
+  altairCanvasInkClass,
+  altairCanvasInkMutedClass,
+} from "@/shared/design-system/foundation";
+import {
   MasterContentStack,
-  MasterPageHeader,
+  MasterPageCanvas,
   MasterShellPage,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { AccountantSummaryCard } from "../AccountantSummaryCard";
 import { AiBusinessSummaryCard } from "../AiBusinessSummaryCard";
 import { CashHealthChartCard } from "../CashHealthChartCard";
+import { CustomerHealthCard } from "../CustomerHealthCard";
 import { LeadPipelineSection } from "../LeadPipelineSection";
 import { OperationsSnapshotSection } from "../OperationsSnapshotCard";
+import { ReceivablesAgingChartCard } from "../ReceivablesAgingChartCard";
 import { ReportDateRangeBar } from "../ReportDateRangeBar";
 import { ReportKpiCard } from "../ReportKpiCard";
 import { RevenueTrendChartCard } from "../RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "../SalesFunnelChartCard";
-import { TechnicianProfitabilityChartCard } from "../TechnicianProfitabilityChartCard";
+import { TopPerformersChartCard } from "../TopPerformersChartCard";
+import { TopRevenueSourcesChartCard } from "../TopRevenueSourcesChartCard";
 import { TimeTrackingSummaryCard } from "../TimeTrackingSummaryCard";
 import { ReportsNorthStarPeriodLedgerStrip } from "./ReportsNorthStarPeriodLedgerStrip";
 
@@ -34,6 +45,29 @@ export type ReportsNorthStarViewProps = {
   canManageCustomers?: boolean;
   initialCachedSummary?: BusinessSummaryAiResult | null;
 };
+
+function TierSectionIntro({
+  title,
+  description,
+  quiet = false,
+}: {
+  title: string;
+  description: string;
+  quiet?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <SectionHeader title={title} />
+      <p
+        className={`mt-1 pl-[14px] ${
+          quiet ? `text-[11px] ${altairCanvasInkMutedClass}` : `text-xs ${altairCanvasInkMutedClass}`
+        }`}
+      >
+        {description}
+      </p>
+    </div>
+  );
+}
 
 export function ReportsNorthStarView({
   data,
@@ -83,116 +117,245 @@ export function ReportsNorthStarView({
     summary != null || isSummaryPending || summaryError != null;
 
   return (
-    <MasterShellPage density="compact" className={lt.pageCanvas}>
-      <MasterPageHeader
-        eyebrow="Operating brief"
-        title="Reports"
-        subtitle="Revenue, cash flow, tax readiness, and operational signals for your business."
-        density="compact"
-        surfaceVariant="northStar"
-        className={`north-star-reports-page-header ${lt.pageHeader} max-sm:flex-col max-sm:items-stretch`}
-        eyebrowClassName={lt.pageHeaderEyebrow}
-        titleClassName={lt.pageHeaderTitle}
-        subtitleClassName={lt.pageHeaderSubtitle}
-        primaryAction={
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <button
-              type="button"
-              className={`north-star-reports-secondary-action ${lt.secondaryAction} w-full justify-center sm:w-auto sm:justify-start`}
-              onClick={() => handleGenerateSummary(false)}
-              disabled={!aiFeaturesEnabled || isSummaryPending}
+    <MasterShellPage density="compact">
+      <MasterPageCanvas width="wide">
+        <MasterContentStack density="compact" className="min-w-0 overflow-x-hidden">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div className="min-w-0">
+              <p className={altairMcMetricLabelClass}>Operating brief</p>
+              <h1
+                className={`mt-1 text-2xl font-bold tracking-tight sm:text-3xl ${altairCanvasInkClass}`}
+              >
+                Reports
+              </h1>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-2.5">
+              <button
+                type="button"
+                className={altairReportSecondaryActionClass}
+                onClick={() => handleGenerateSummary(false)}
+                disabled={!aiFeaturesEnabled || isSummaryPending}
+              >
+                {isSummaryPending ? (
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                )}
+                Generate AI Summary
+              </button>
+              <Link
+                href={taxSummaryHref}
+                className={altairReportSecondaryActionClass}
+              >
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                Export Tax Summary
+              </Link>
+            </div>
+          </header>
+
+          <ReportDateRangeBar range={data.dateRange} variant="northStar" />
+
+          {/* Tier 1 — primary operating brief */}
+          <div className="flex min-w-0 flex-col gap-5">
+            <ReportsNorthStarPeriodLedgerStrip summary={data.accountantSummary} />
+
+            <section className="flex min-w-0 flex-col gap-3">
+              <TierSectionIntro
+                title="Key metrics"
+                description="Period performance at a glance."
+              />
+              <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
+                {data.kpis.map((metric) => (
+                  <ReportKpiCard
+                    key={metric.id}
+                    metric={metric}
+                    variant="northStar"
+                  />
+                ))}
+              </div>
+            </section>
+
+            {showAiSummaryCard ? (
+              <section className="flex min-w-0 flex-col gap-3">
+                <TierSectionIntro
+                  title="AI business review"
+                  description="Plain-English summary for this reporting period."
+                />
+                <AiBusinessSummaryCard
+                  aiFeaturesEnabled={aiFeaturesEnabled}
+                  summary={summary}
+                  error={summaryError}
+                  isPending={isSummaryPending}
+                  onRefresh={() => handleGenerateSummary(true)}
+                  variant="northStar"
+                />
+              </section>
+            ) : null}
+
+            <div className="grid min-w-0 gap-2.5 lg:grid-cols-12 lg:gap-3">
+              <div className="min-w-0 lg:col-span-12">
+                <SalesFunnelChartCard
+                  stages={data.salesFunnel}
+                  variant="northStar"
+                />
+              </div>
+              <div className="min-w-0 lg:col-span-8">
+                <RevenueTrendChartCard
+                  data={data.revenueTrend}
+                  variant="northStar"
+                />
+              </div>
+              <div className="min-w-0 lg:col-span-4">
+                <CashHealthChartCard
+                  data={data.cashHealth}
+                  variant="northStar"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tier 2 — secondary performance detail */}
+          <div className="flex min-w-0 flex-col gap-3.5 border-t border-altair-border/60 pt-4">
+            <div
+              className={`grid min-w-0 gap-3 ${
+                data.showTechnicianProfitability
+                  ? "lg:grid-cols-2 lg:gap-2.5"
+                  : ""
+              }`}
             >
-              {isSummaryPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-              )}
-              Generate AI Summary
-            </button>
-            <Link
-              href={taxSummaryHref}
-              className={`north-star-reports-primary-action ${lt.primaryAction} w-full justify-center sm:w-auto sm:justify-start`}
-            >
-              <FileText className="h-4 w-4" aria-hidden="true" />
-              Export Tax Summary
-            </Link>
-          </div>
-        }
-      />
+              {data.showTechnicianProfitability ? (
+                <section className="flex min-w-0 flex-col gap-2">
+                  <TierSectionIntro
+                    title="Top Performers"
+                    description="Technicians ranked by revenue on completed work."
+                    quiet
+                  />
+                  <TopPerformersChartCard
+                    technicians={data.technicianProfitability}
+                    variant="northStar"
+                  />
+                </section>
+              ) : null}
 
-      <MasterContentStack
-        density="compact"
-        className="reports-north-star-brief min-w-0 overflow-x-hidden px-3 sm:px-3.5 lg:px-5"
-      >
-        <ReportDateRangeBar range={data.dateRange} variant="northStar" />
+              <section className="flex min-w-0 flex-col gap-2">
+                <TierSectionIntro
+                  title="Top Revenue Sources"
+                  description="Revenue mix by service category for the period."
+                  quiet
+                />
+                <TopRevenueSourcesChartCard
+                  categories={data.operationsSnapshot.topServiceCategories}
+                  variant="northStar"
+                />
+              </section>
+            </div>
 
-        <ReportsNorthStarPeriodLedgerStrip summary={data.accountantSummary} />
+            <div className="grid min-w-0 gap-3 lg:grid-cols-2 lg:gap-2.5">
+              <section className="flex min-w-0 flex-col gap-2">
+                <TierSectionIntro
+                  title="Receivables Aging"
+                  description="Open invoice balances by days past due."
+                  quiet
+                />
+                <ReceivablesAgingChartCard
+                  buckets={data.accountantSummary.invoiceAging}
+                  variant="northStar"
+                />
+              </section>
 
-        <section className="altair-surface-ns-card min-w-0 overflow-hidden p-3 sm:p-3.5">
-          <div className="mb-2.5">
-            <h3 className="text-sm font-bold text-[#17130E]">Key metrics</h3>
-            <p className="mt-0.5 text-xs text-[#64748B]">
-              Period performance at a glance.
-            </p>
+              <section className="flex min-w-0 flex-col gap-2">
+                <TierSectionIntro
+                  title="Customer Health"
+                  description="Retention rate and all-time payment totals."
+                  quiet
+                />
+                <CustomerHealthCard
+                  data={data.customerHealth}
+                  variant="northStar"
+                />
+              </section>
+            </div>
           </div>
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4 lg:gap-2.5">
-            {data.kpis.map((metric) => (
-              <ReportKpiCard key={metric.id} metric={metric} variant="northStar" />
-            ))}
-          </div>
-        </section>
 
-        {showAiSummaryCard ? (
-          <AiBusinessSummaryCard
-            aiFeaturesEnabled={aiFeaturesEnabled}
-            summary={summary}
-            error={summaryError}
-            isPending={isSummaryPending}
-            onRefresh={() => handleGenerateSummary(true)}
-            variant="northStar"
-          />
-        ) : null}
+          {/* Tier 3 — quieter supporting reports (always visible) */}
+          <div className="flex min-w-0 flex-col gap-3 border-t border-altair-border/40 pt-3.5 opacity-90">
+            <div className="min-w-0">
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${altairCanvasInkMutedClass}`}
+              >
+                More reports
+              </p>
+            </div>
 
-        <div className="grid min-w-0 gap-2.5 lg:grid-cols-12 lg:gap-3">
-          <div className="min-w-0 lg:col-span-8">
-            <RevenueTrendChartCard
-              data={data.revenueTrend}
-              variant="northStar"
-            />
-          </div>
-          <div className="min-w-0 lg:col-span-4">
-            <CashHealthChartCard data={data.cashHealth} variant="northStar" />
-          </div>
-          <div className="min-w-0 lg:col-span-6">
-            <SalesFunnelChartCard stages={data.salesFunnel} variant="northStar" />
-          </div>
-          {data.showTechnicianProfitability ? (
-            <div className="min-w-0 lg:col-span-6">
-              <TechnicianProfitabilityChartCard
-                technicians={data.technicianProfitability}
+            <section className="flex min-w-0 flex-col gap-2">
+              <div className="min-w-0">
+                <SectionHeader
+                  title="Shift Time"
+                  action={{ label: "Review shifts", href: "/time-clock" }}
+                />
+                <p
+                  className={`mt-1 pl-[14px] text-[11px] ${altairCanvasInkMutedClass}`}
+                >
+                  Payroll shift clocks only. Job labor is allocation within shift
+                  time.
+                </p>
+              </div>
+              <TimeTrackingSummaryCard
+                summary={data.timeTracking}
                 variant="northStar"
               />
-            </div>
-          ) : null}
-        </div>
+            </section>
 
-        {data.showLeadPipeline ? (
-          <LeadPipelineSection metrics={data.leadPipeline} variant="northStar" />
-        ) : null}
+            {data.showLeadPipeline ? (
+              <section className="flex min-w-0 flex-col gap-2">
+                <TierSectionIntro
+                  title="Lead Pipeline"
+                  description="Lead activity created during the selected period."
+                  quiet
+                />
+                <LeadPipelineSection
+                  metrics={data.leadPipeline}
+                  variant="northStar"
+                />
+              </section>
+            ) : null}
 
-        <TimeTrackingSummaryCard summary={data.timeTracking} variant="northStar" />
+            <section className="flex min-w-0 flex-col gap-2">
+              <TierSectionIntro
+                title="Operations Snapshot"
+                description="Quick lists for customers, services, collections, and completed work."
+                quiet
+              />
+              <OperationsSnapshotSection
+                topCustomers={data.operationsSnapshot.topCustomers}
+                topServiceCategories={
+                  data.operationsSnapshot.topServiceCategories
+                }
+                overdueInvoices={data.operationsSnapshot.overdueInvoices}
+                workCompleted={data.operationsSnapshot.workCompleted}
+                canManageCustomers={canManageCustomers}
+                variant="northStar"
+              />
+            </section>
+          </div>
 
-        <OperationsSnapshotSection
-          topCustomers={data.operationsSnapshot.topCustomers}
-          topServiceCategories={data.operationsSnapshot.topServiceCategories}
-          overdueInvoices={data.operationsSnapshot.overdueInvoices}
-          workCompleted={data.operationsSnapshot.workCompleted}
-          canManageCustomers={canManageCustomers}
-          variant="northStar"
-        />
-
-        <AccountantSummaryCard dateRange={data.dateRange} variant="northStar" />
-      </MasterContentStack>
+          <section className="flex min-w-0 flex-col gap-2 border-t border-altair-border/30 pt-3 opacity-85">
+            <TierSectionIntro
+              title="Accountant summary"
+              description="Printable bookkeeping export for the selected period."
+              quiet
+            />
+            <AccountantSummaryCard
+              dateRange={data.dateRange}
+              variant="northStar"
+            />
+          </section>
+        </MasterContentStack>
+      </MasterPageCanvas>
     </MasterShellPage>
   );
 }

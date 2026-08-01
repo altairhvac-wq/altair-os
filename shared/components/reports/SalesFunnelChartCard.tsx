@@ -58,7 +58,7 @@ export function SalesFunnelChartCard({
                   <span
                     className={
                       northStar
-                        ? "truncate text-[13px] font-semibold text-[#17130E]"
+                        ? "truncate text-[13px] font-semibold text-altair-paper"
                         : "text-xs font-medium text-slate-700 sm:text-[13px]"
                     }
                   >
@@ -68,7 +68,7 @@ export function SalesFunnelChartCard({
                 <span
                   className={
                     northStar
-                      ? "shrink-0 text-sm font-extrabold tabular-nums tracking-tight text-[#17130E]"
+                      ? "shrink-0 text-sm font-extrabold tabular-nums tracking-tight text-altair-paper"
                       : "text-xs font-bold tabular-nums text-slate-900 sm:text-sm"
                   }
                 >
