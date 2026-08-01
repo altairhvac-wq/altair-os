@@ -18,11 +18,15 @@ export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
         aria-busy="true"
         className="admin-north-star-sidebar hidden shrink-0 flex-col md:flex"
       >
-        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
+        <div className="flex items-center gap-2.5 px-4 pb-3 pt-5">
+          <div className="admin-skeleton h-8 w-8 shrink-0 rounded-lg" />
+          <div className="admin-skeleton h-4 w-24 rounded" />
+        </div>
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-4 pt-1">
           <ul className="flex flex-col gap-7">
             {Array.from({ length: 3 }).map((_, groupIndex) => (
               <li key={groupIndex}>
-                <div className="admin-skeleton mb-2.5 ml-2.5 h-2.5 w-16 rounded" />
+                <div className="admin-skeleton mb-2.5 ml-2.5 h-2 w-14 rounded" />
                 <ul className="flex flex-col gap-1">
                   {Array.from({ length: 3 }).map((_, itemIndex) => (
                     <li key={itemIndex}>
@@ -34,6 +38,9 @@ export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
             ))}
           </ul>
         </nav>
+        <div className="px-3 pb-4 pt-2">
+          <div className="admin-skeleton h-12 w-full rounded-xl" />
+        </div>
       </aside>
     );
   }

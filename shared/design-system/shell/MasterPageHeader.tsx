@@ -7,7 +7,10 @@ export type MasterPageHeaderProps = {
   eyebrow?: string;
   primaryAction?: ReactNode;
   secondaryAction?: ReactNode;
-  /** Optional center slot between title block and actions (e.g. compact metrics). */
+  /**
+   * Optional metrics/meta slot inside the header card.
+   * Renders on the same row as title + actions, vertically centered between them.
+   */
   center?: ReactNode;
   /** Slimmer title bar for dense list pages */
   density?: MasterShellDensity;
@@ -47,26 +50,34 @@ export function MasterPageHeader({
   const layoutClass =
     surfaceVariant === "northStar"
       ? isCompact
-        ? center
-          ? "items-center gap-3"
-          : "items-start sm:items-center"
+        ? "items-center"
         : "flex-wrap items-start gap-3"
       : isCompact
-        ? center
-          ? "items-center gap-3 px-3 py-2 sm:px-3.5"
-          : "items-start px-3 py-2 sm:items-center sm:px-3.5"
+        ? "items-center px-3 py-2 sm:px-3.5"
         : "flex-wrap items-start gap-3";
 
   return (
     <header
       className={`${surfaceClass} ${hasMobileContent ? "flex" : "hidden md:flex"} shrink-0 gap-2 ${center ? "" : "justify-between"} ${layoutClass} ${className}`}
     >
-      <div className={`min-w-0 flex-1 ${isCompact ? "space-y-0.5" : ""}`}>
+      <div
+        className={`min-w-0 ${
+          center
+            ? isCompact
+              ? "max-w-[min(100%,9.5rem)] shrink-0 sm:max-w-[11rem]"
+              : "max-w-[min(100%,20rem)] shrink sm:max-w-[32%]"
+            : "flex-1"
+        } ${isCompact ? "space-y-0.5" : ""}`}
+      >
         {eyebrow ? (
           <p className={eyebrowClassName || "admin-heading-eyebrow"}>{eyebrow}</p>
         ) : null}
         {isCompact ? (
-          <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+          <div
+            className={`flex min-w-0 flex-col gap-0.5 ${
+              center ? "" : "sm:flex-row sm:items-baseline sm:gap-2"
+            }`}
+          >
             <h1
               className={`${
                 titleClassName ||
@@ -95,7 +106,11 @@ export function MasterPageHeader({
           </>
         )}
       </div>
-      {center ? <div className="hidden shrink-0 lg:block">{center}</div> : null}
+      {center ? (
+        <div className="flex min-w-0 flex-1 items-center justify-center overflow-hidden px-1 sm:px-2">
+          {center}
+        </div>
+      ) : null}
       {hasActions ? (
         <div className={`${actionRowClass} ${center ? "ml-auto" : ""}`}>
           {secondaryAction}

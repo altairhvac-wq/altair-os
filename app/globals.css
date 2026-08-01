@@ -1276,12 +1276,20 @@ a[href] {
     color: var(--north-star-bronze) !important;
   }
 
-  .admin-north-star-sidebar-group-label {
-    font-size: 0.625rem;
+  .admin-north-star-sidebar-wordmark {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.28em;
+    color: var(--altair-brass-interactive);
+  }
+
+  .admin-north-star-sidebar-group-label {
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0.26em;
     text-transform: uppercase;
-    color: var(--north-star-sidebar-label);
+    color: color-mix(in srgb, var(--altair-brass-interactive) 42%, transparent);
   }
 
   .admin-north-star-sidebar-link {
@@ -1310,35 +1318,53 @@ a[href] {
     box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
   }
 
-  /* Active destination — no fill. Brass underline + icon mark "you are here." */
+  /* Active destination — brass-tinted pill + brass accent mark. */
   .admin-north-star-sidebar-link-active {
-    background-color: transparent;
-    color: var(--north-star-ivory-strong);
+    background-color: color-mix(
+      in srgb,
+      var(--altair-brass-interactive) 16%,
+      transparent
+    );
+    color: var(--altair-brass-interactive);
     font-weight: 600;
     box-shadow: none;
   }
 
-  .admin-north-star-sidebar-link-active svg {
-    color: var(--altair-brass);
+  .admin-north-star-sidebar-link-active:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--altair-brass-interactive) 22%,
+      transparent
+    );
+    color: var(--altair-brass-interactive);
+  }
+
+  .admin-north-star-sidebar-link-active svg,
+  .admin-north-star-sidebar-link-active:hover svg {
+    color: var(--altair-brass-interactive);
   }
 
   .admin-north-star-sidebar-link-active::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 0.3rem;
-    width: min(2.25rem, 40%);
-    height: 1.5px;
-    transform: translateX(-50%);
-    border-radius: 1px;
-    background-color: var(--altair-brass);
-    pointer-events: none;
+    content: none;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .admin-north-star-sidebar-link-active::after {
-      animation: admin-nav-underline-in 0.12s ease-out;
-    }
+  .admin-north-star-sidebar-account {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+
+  .admin-north-star-sidebar-account:hover {
+    border-color: var(--altair-border-strong);
+  }
+
+  .admin-north-star-sidebar-account:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  }
+
+  .admin-north-star-sidebar-account-avatar {
+    background: linear-gradient(180deg, #c9a44d 0%, #8a6324 100%);
+    color: var(--north-star-text-dark);
+    box-shadow: 0 0 0 1px rgb(201 164 77 / 0.28);
   }
 
   .admin-north-star-sidebar-rail {
@@ -4476,9 +4502,6 @@ a[href] {
     animation: none;
   }
 
-  .admin-north-star-sidebar-link-active::after {
-    animation: none;
-  }
 
   .admin-btn-primary:active,
   .admin-btn-secondary:active {

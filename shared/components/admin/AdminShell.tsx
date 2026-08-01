@@ -19,7 +19,6 @@ import { Header } from "./Header";
 import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
 import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
-import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
@@ -86,6 +85,7 @@ export function AdminShell({
         ) : (
           <SidebarNav
             companyContext={navigationContext}
+            userCompanies={userCompanies}
             showPlatformAdminNav={showPlatformAdminNav}
           />
         )
@@ -106,6 +106,8 @@ export function AdminShell({
           showQuickNav={showMobileDestinationNav}
           quickNavOpen={quickNavOpen}
           onQuickNavOpenChange={setQuickNavOpen}
+          billingAccess={billingAccess}
+          canManageBilling={canManageBilling}
         />
         {!northStarShell ? (
           hideAdminNavigation ? (
@@ -131,12 +133,6 @@ export function AdminShell({
       <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
-          {billingAccess ? (
-            <SubscriptionBillingBanner
-              access={billingAccess}
-              canManageBilling={canManageBilling}
-            />
-          ) : null}
           {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>
       </main>

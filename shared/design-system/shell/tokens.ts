@@ -84,6 +84,7 @@ export const northStarSidebarGroupLabelClass =
 
 export const northStarSidebarLinkClass = "admin-north-star-sidebar-link";
 
+/** Active destination — brass-tinted filled pill (does not replace routing/active matching). */
 export const northStarSidebarLinkActiveClass =
   "admin-north-star-sidebar-link-active";
 

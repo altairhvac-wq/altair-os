@@ -3,7 +3,9 @@
 import { LogOut, Search } from "lucide-react";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { logoutAction } from "@/app/actions/auth";
+import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
@@ -28,6 +30,8 @@ type HeaderProps = {
   showQuickNav?: boolean;
   quickNavOpen?: boolean;
   onQuickNavOpenChange?: (open: boolean) => void;
+  billingAccess?: CompanyBillingAccess | null;
+  canManageBilling?: boolean;
 };
 
 function getInitials(fullName: string | null, email: string | undefined) {
@@ -59,6 +63,8 @@ export function Header({
   showQuickNav = false,
   quickNavOpen = false,
   onQuickNavOpenChange,
+  billingAccess = null,
+  canManageBilling = false,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -115,7 +121,14 @@ export function Header({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+        {billingAccess ? (
+          <SubscriptionBillingBanner
+            access={billingAccess}
+            canManageBilling={canManageBilling}
+            className="max-w-[9.5rem] sm:max-w-[14rem] md:max-w-none"
+          />
+        ) : null}
         <button
           type="button"
           className={`hidden rounded-lg p-2 transition-colors sm:inline-flex ${
@@ -146,15 +159,17 @@ export function Header({
               : "border-l border-slate-200 md:border-white/10"
           }`}
         >
-          <CompanySwitcher
-            activeCompanyId={companyContext.company.id}
-            companies={userCompanies}
-            variant="admin"
-            tone={chromeTone}
-            className={`${
-              userCompanies.length > 1 ? "block" : "hidden md:block"
-            } ${northStarChrome ? "north-star-company-switcher" : ""}`}
-          />
+          {northStarChrome ? null : (
+            <CompanySwitcher
+              activeCompanyId={companyContext.company.id}
+              companies={userCompanies}
+              variant="admin"
+              tone={chromeTone}
+              className={
+                userCompanies.length > 1 ? "block" : "hidden md:block"
+              }
+            />
+          )}
           {showViewSwitcher && onViewModeChange ? (
             <OwnerViewSwitcher
               viewMode={viewMode}
@@ -163,16 +178,14 @@ export function Header({
               className={northStarChrome ? "north-star-view-switcher" : ""}
             />
           ) : null}
-          <div
-            className={
-              northStarChrome
-                ? "north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
-                : "hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
-            }
-            title={displayName}
-          >
-            {initials}
-          </div>
+          {northStarChrome ? null : (
+            <div
+              className="hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
+              title={displayName}
+            >
+              {initials}
+            </div>
+          )}
           <form action={logoutAction}>
             <button
               type="submit"
