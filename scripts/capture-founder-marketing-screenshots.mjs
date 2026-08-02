@@ -179,17 +179,19 @@ const CAPTURES = [
     label: "Reports workspace",
     route: "/reports?range=30d",
     output: "reports-full-page.png",
-    anchor: ".north-star-reports-page-header",
-    ready: ".reports-north-star-brief",
+    // ReportsNorthStarView uses a plain <header><h1>; tax-summary keeps the old NS header class.
+    anchor: "header h1",
+    ready: 'a[href*="/reports/tax-summary"]',
   },
   {
     id: "leads-workspace",
     label: "Leads workspace",
     route: "/leads",
     output: "leads-full-page.png",
-    anchor: "h1",
+    // Mission Briefing list uses admin-page-header + leads-mission-* (not north-star-leads-*).
+    anchor: ".admin-page-header h1, .north-star-page-header h1",
     ready:
-      "button.north-star-leads-primary-action, .leads-north-star-filter-bar, .north-star-leads-primary-action",
+      ".leads-mission-filter-region, .leads-mission-list, .admin-empty-wrap",
   },
   {
     id: "marketing-workspace",
@@ -204,61 +206,67 @@ const CAPTURES = [
     label: "Customers workspace",
     route: "/customers",
     output: "customers-full-page.png",
-    anchor: ".north-star-page-header h1",
+    // Mission Briefing list: admin-page-header + customer-mission-* (not north-star-customers-*).
+    anchor: ".admin-page-header h1, .north-star-page-header h1",
     ready:
-      "button.north-star-customers-primary-action, .customer-north-star-filter-bar, .customer-north-star-ledger",
+      ".customer-mission-filter-region, .customer-mission-list, .admin-empty-wrap",
   },
   {
     id: "jobs-workspace",
     label: "Jobs workspace",
     route: "/jobs",
     output: "jobs-full-page.png",
-    anchor: ".north-star-page-header h1",
+    // Mission Control list: admin-page-header + job-mission-* (not north-star-jobs-*).
+    anchor: ".admin-page-header h1, .north-star-page-header h1",
     ready:
-      "button.north-star-jobs-primary-action, .job-north-star-filter-bar, .job-north-star-ledger",
+      ".job-mission-filter-region, .job-mission-list, .admin-empty-wrap",
   },
   {
     id: "estimates-workspace",
     label: "Estimates workspace",
     route: "/estimates",
     output: "estimates-full-page.png",
-    anchor: ".north-star-page-header h1",
+    // Header is admin-page-header; NS primary/filter/ledger classes remain when flag is on.
+    anchor: ".admin-page-header h1, .north-star-page-header h1",
     ready:
-      "button.north-star-estimates-primary-action, .estimate-north-star-filter-bar, .estimate-north-star-ledger",
+      "button.north-star-estimates-primary-action, .estimate-north-star-filter-bar, .estimate-north-star-ledger, .admin-empty-wrap",
   },
   {
     id: "invoices-workspace",
     label: "Invoices workspace",
     route: "/invoices",
     output: "invoices-full-page.png",
-    anchor: ".north-star-page-header h1",
+    // Header is admin-page-header; NS primary/ledger classes remain when flag is on.
+    anchor: ".admin-page-header h1, .north-star-page-header h1",
     ready:
-      "button.north-star-invoices-primary-action, .invoice-north-star-ledger, table",
+      "button.north-star-invoices-primary-action, .invoice-north-star-ledger, table, .admin-empty-wrap",
   },
   {
     id: "dispatch-workspace",
     label: "Dispatch workspace",
     route: "/dispatch",
     output: "dispatch-full-page.png",
-    anchor: ".north-star-dispatch-page-header",
-    ready: ".dispatch-north-star-filter-bar",
+    // Board title lives in the dark workbench header; old NS filter-bar class is gone.
+    anchor: "h1",
+    // Board shell always uses report-surface Graphite (`altairReportCardClass`).
+    ready: ".bg-altair-graphite",
   },
   {
     id: "expenses-workspace",
     label: "Expenses workspace",
     route: "/expenses",
     output: "expenses-full-page.png",
-    anchor: ".north-star-expenses-page-header, .north-star-page-header h1",
+    anchor: ".north-star-expenses-page-header, .north-star-page-header h1, .admin-page-header h1",
     ready:
-      "button.north-star-expenses-primary-action, .expense-north-star-filter-bar, .expense-north-star-ledger",
+      "button.north-star-expenses-primary-action, .expense-north-star-filter-bar, .expense-north-star-ledger, .admin-empty-wrap",
   },
   {
     id: "pricebook-workspace",
     label: "Price Book workspace",
     route: "/price-book",
     output: "pricebook-full-page.png",
-    anchor: ".north-star-page-header h1",
-    ready: "table, .north-star-page-header",
+    anchor: ".north-star-page-header h1, .admin-page-header h1",
+    ready: "table, .north-star-page-header, .admin-page-header",
   },
   {
     id: "network-workspace",
