@@ -3,21 +3,15 @@ import {
   MasterPageCanvas,
   masterDetailOverlayBodyInsetClass,
 } from "@/shared/design-system/shell";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcGridGapClass,
+} from "@/shared/design-system/components";
 import { northStarInvoiceDocumentTokens as idt } from "@/shared/design-system/north-star/tokens";
 
-function Skeleton({
-  className,
-  dark = false,
-}: {
-  className?: string;
-  dark?: boolean;
-}) {
-  return (
-    <div
-      className={`north-star-skeleton ${dark ? "north-star-skeleton-dark" : ""} ${className ?? ""}`}
-    />
-  );
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`north-star-skeleton ${className ?? ""}`} />;
 }
 
 export function InvoiceDetailNorthStarOverlayLoadingState() {
@@ -27,33 +21,41 @@ export function InvoiceDetailNorthStarOverlayLoadingState() {
       className={`${masterDetailOverlayBodyInsetClass} ${idt.overlayBodyCanvas}`}
     >
       <MasterContentStack density="default">
-        <div className={dt.commandPlate}>
-          <Skeleton className="h-4 w-48 max-w-full" />
-          <div className="flex flex-wrap gap-1.5">
-            <Skeleton className="h-8 w-24 rounded-lg" />
-            <Skeleton className="h-8 w-28 rounded-lg" />
+        <div className={`flex flex-col ${altairMcGridGapClass}`}>
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+            <div className="flex flex-wrap justify-end gap-1.5">
+              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="h-8 w-28 rounded-lg" />
+            </div>
           </div>
-        </div>
 
-        <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
-          <div className={dt.workspaceMain}>
-            <Skeleton className="h-[28rem] w-full rounded-[1.25rem]" />
-            <Skeleton className="h-40 w-full rounded-[1rem]" />
-            <Skeleton className="h-36 w-full rounded-[1rem]" />
+          <div
+            className={`flex flex-col ${altairMcGridGapClass} lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start`}
+          >
+            <aside
+              className={`order-1 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-2`}
+            >
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className={`h-28 w-full ${altairMcCardClass}`} />
+                </div>
+              ))}
+            </aside>
+            <div
+              className={`order-2 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-1`}
+            >
+              <Skeleton className={`h-[28rem] w-full ${altairMcCardClass}`} />
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className={`h-40 w-full ${altairMcCardClass}`} />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className={`h-36 w-full ${altairMcCardClass}`} />
+              </div>
+            </div>
           </div>
-          <div className={dt.workspaceSide}>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-28 w-full rounded-[1rem]" />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 lg:hidden">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-28 w-full rounded-[1rem]" />
-          ))}
-          <Skeleton className="h-[24rem] w-full rounded-[1.25rem]" />
-          <Skeleton className="h-32 w-full rounded-[1rem]" />
         </div>
       </MasterContentStack>
     </MasterPageCanvas>

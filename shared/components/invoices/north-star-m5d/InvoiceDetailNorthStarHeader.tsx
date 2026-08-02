@@ -1,9 +1,11 @@
-import { formatDate } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import { InvoiceStatusActions } from "@/shared/components/invoices/InvoiceStatusActions";
 import { InvoiceStatusBadge } from "@/shared/components/invoices/InvoiceStatusBadge";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
-import { formatInvoiceRelationshipLine } from "@/shared/lib/documents/relationship-labels";
+import {
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 
 type InvoiceDetailNorthStarHeaderProps = {
   invoice: InvoiceDetail;
@@ -33,7 +35,7 @@ function InvoiceDetailNorthStarCommandPlate({
   }
 
   return (
-    <div className={`${dt.commandPlate} no-print hidden sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2`}>
+    <div className="no-print flex flex-wrap items-center justify-end gap-2">
       <InvoiceStatusActions
         invoice={invoice}
         paymentCount={paymentCount}
@@ -68,36 +70,24 @@ export function InvoiceDetailNorthStarHeader({
     return commandPlate;
   }
 
+  // Dates / customer live on the printable document + side rail — keep header
+  // to identity (number + status) and actions only.
   return (
-    <>
-      <div className={`${dt.heroShell} no-print`}>
-        <div aria-hidden="true" className={dt.heroAccentRail} />
-
-        <div className="min-w-0">
-          <p className={dt.heroEyebrow}>Invoice</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h1 className={dt.heroTitle}>{invoice.invoiceNumber}</h1>
-            <InvoiceStatusBadge status={invoice.status} />
+    <section className="no-print space-y-2">
+      <SectionHeader title="Invoice" />
+      <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className="flex flex-wrap items-start justify-between gap-2.5">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg font-bold tracking-tight text-altair-ink-on-paper sm:text-xl">
+                {invoice.invoiceNumber}
+              </h1>
+              <InvoiceStatusBadge status={invoice.status} />
+            </div>
           </div>
-
-          <div className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
-            <span>
-              {formatInvoiceRelationshipLine({
-                jobNumber: invoice.jobNumber,
-                estimateNumber: invoice.estimateNumber,
-                customerName: invoice.customerName,
-              })}
-            </span>
-          </div>
-          <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
-            <span>Issued {formatDate(invoice.issueDate)}</span>
-            <span className="text-[#8A6324]">·</span>
-            <span>Due {formatDate(invoice.dueDate)}</span>
-          </div>
+          <div className="hidden sm:block">{commandPlate}</div>
         </div>
       </div>
-
-      {commandPlate}
-    </>
+    </section>
   );
 }

@@ -10,9 +10,12 @@ import type { InvoiceDetail } from "@/shared/types/invoice";
 import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
 import { InvoicePaymentCollectionCard } from "@/shared/components/invoices/InvoicePaymentCollectionCard";
 import {
-  northStarDetailTokens as dt,
-  northStarInvoiceDocumentTokens as idt,
-} from "@/shared/design-system/north-star/tokens";
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcGridGapClass,
+} from "@/shared/design-system/components";
+import { altairCanvasInkLinkClass } from "@/shared/design-system/foundation";
 
 type InvoiceDetailNorthStarSideRailProps = {
   invoice: InvoiceDetail;
@@ -33,31 +36,30 @@ export function InvoiceDetailNorthStarSideRail({
   const customerPhone = invoice.customerPhone?.trim();
 
   return (
-    <aside className="no-print flex flex-col gap-2.5">
-      <section className={`${dt.compactSectionSurface} scroll-mt-6`}>
-        <h2 className={`${dt.sectionTitle} ${idt.ivoryPrimary}`}>Customer</h2>
-
-        <div className="mt-1.5">
+    <aside className={`no-print flex flex-col ${altairMcGridGapClass}`}>
+      <section className="scroll-mt-6 space-y-2">
+        <SectionHeader title="Customer" />
+        <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
           <CustomerNameLink
             customerId={invoice.customerId}
             customerName={invoice.customerName}
             canManageCustomers={canManageCustomers}
-            linkClassName={`min-w-0 break-words text-sm font-semibold ${idt.ivoryPrimary} transition-colors hover:text-[#8A6324]`}
+            linkClassName="min-w-0 break-words text-sm font-semibold text-altair-ink-on-paper transition-colors hover:text-altair-brass"
           />
 
-          <div className="mt-1.5 space-y-0.5">
+          <div className="mt-2 space-y-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 py-2">
             {customerEmail ? (
               <a
                 href={`mailto:${customerEmail}`}
-                className={`${dt.ivoryMetaRow} break-all hover:text-[#17130E]`}
+                className="flex min-w-0 items-center gap-2 break-all text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
               >
-                <Mail className={dt.metaIcon} />
-                <span className={idt.ivorySecondary}>{customerEmail}</span>
+                <Mail className="h-3.5 w-3.5 shrink-0 text-altair-ink-on-paper-muted" />
+                <span>{customerEmail}</span>
               </a>
             ) : (
-              <div className={dt.ivoryMetaRow}>
-                <Mail className={dt.metaIcon} />
-                <span className={idt.ivoryMuted}>
+              <div className="flex items-start gap-2 text-xs text-altair-ink-on-paper-muted">
+                <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
                   No email on file
                   {canManageCustomers ? (
                     <>
@@ -65,7 +67,7 @@ export function InvoiceDetailNorthStarSideRail({
                       —{" "}
                       <Link
                         href={`/customers/${invoice.customerId}`}
-                        className={`font-semibold ${idt.ivoryLink}`}
+                        className={`font-semibold ${altairCanvasInkLinkClass}`}
                       >
                         add one on the customer record
                       </Link>{" "}
@@ -79,10 +81,10 @@ export function InvoiceDetailNorthStarSideRail({
             {customerPhone ? (
               <a
                 href={`tel:${customerPhone}`}
-                className={`${dt.ivoryMetaRow} hover:text-[#17130E]`}
+                className="flex items-center gap-2 text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
               >
-                <Phone className={dt.metaIcon} />
-                <span className={idt.ivorySecondary}>{customerPhone}</span>
+                <Phone className="h-3.5 w-3.5 shrink-0 text-altair-ink-on-paper-muted" />
+                <span>{customerPhone}</span>
               </a>
             ) : null}
           </div>
@@ -90,7 +92,7 @@ export function InvoiceDetailNorthStarSideRail({
           {canManageCustomers ? (
             <Link
               href={`/customers/${invoice.customerId}`}
-              className={`mt-1.5 inline-flex text-xs font-semibold ${idt.ivoryLink}`}
+              className={`mt-2.5 inline-flex text-xs font-semibold ${altairCanvasInkLinkClass}`}
             >
               Open customer
             </Link>
@@ -99,37 +101,45 @@ export function InvoiceDetailNorthStarSideRail({
       </section>
 
       {invoice.jobId ? (
-        <section className={`${dt.compactSectionSurface} scroll-mt-6`}>
-          <h2 className={`${dt.sectionTitle} ${idt.ivoryPrimary}`}>Related job</h2>
-          <Link
-            href={`/jobs/${invoice.jobId}`}
-            className={`mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold ${idt.ivoryLink}`}
-          >
-            <Briefcase className="h-3.5 w-3.5 shrink-0" />
-            <span className={`text-sm font-semibold ${idt.ivoryPrimary}`}>
-              {invoice.jobNumber ?? "View job"}
-            </span>
-          </Link>
+        <section className="scroll-mt-6 space-y-2">
+          <SectionHeader title="Related job" />
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+            <Link
+              href={`/jobs/${invoice.jobId}`}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold ${altairCanvasInkLinkClass}`}
+            >
+              <Briefcase className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-sm font-semibold text-altair-ink-on-paper">
+                {invoice.jobNumber ?? "View job"}
+              </span>
+            </Link>
+          </div>
         </section>
       ) : (
-        <section className={`${dt.compactSectionSurface} scroll-mt-6 border-dashed`}>
-          <h2 className={`${dt.sectionTitle} ${idt.ivoryPrimary}`}>Related job</h2>
-          <p className={`mt-1.5 text-xs ${idt.ivoryMuted}`}>No job linked</p>
+        <section className="scroll-mt-6 space-y-2">
+          <SectionHeader title="Related job" />
+          <div
+            className={`${altairMcCardClass} ${altairMcCardPadClass} border-dashed`}
+          >
+            <p className="text-xs text-altair-ink-on-paper-muted">No job linked</p>
+          </div>
         </section>
       )}
 
       {invoice.estimateId ? (
-        <section className={`${dt.compactSectionSurface} scroll-mt-6`}>
-          <h2 className={`${dt.sectionTitle} ${idt.ivoryPrimary}`}>Source estimate</h2>
-          <Link
-            href={`/estimates/${invoice.estimateId}`}
-            className={`mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold ${idt.ivoryLink}`}
-          >
-            <FileText className="h-3.5 w-3.5 shrink-0" />
-            <span className={`text-sm font-semibold ${idt.ivoryPrimary}`}>
-              {invoice.estimateNumber ?? "View estimate"}
-            </span>
-          </Link>
+        <section className="scroll-mt-6 space-y-2">
+          <SectionHeader title="Source estimate" />
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+            <Link
+              href={`/estimates/${invoice.estimateId}`}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold ${altairCanvasInkLinkClass}`}
+            >
+              <FileText className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-sm font-semibold text-altair-ink-on-paper">
+                {invoice.estimateNumber ?? "View estimate"}
+              </span>
+            </Link>
+          </div>
         </section>
       ) : null}
 

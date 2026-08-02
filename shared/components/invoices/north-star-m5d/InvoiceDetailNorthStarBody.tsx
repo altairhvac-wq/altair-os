@@ -19,7 +19,12 @@ import { InvoicePaymentHistory } from "@/shared/components/invoices/InvoicePayme
 import { InvoiceInternalTestCheckoutButton } from "@/shared/components/invoices/InvoiceInternalTestCheckoutButton";
 import { RecordPaymentForm } from "@/shared/components/invoices/RecordPaymentForm";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcGridGapClass,
+} from "@/shared/design-system/components";
 import { InvoiceDetailNorthStarHeader } from "./InvoiceDetailNorthStarHeader";
 import { InvoiceDetailNorthStarSideRail } from "./InvoiceDetailNorthStarSideRail";
 import { NorthStarAdminInvoiceDocument } from "./NorthStarAdminInvoiceDocument";
@@ -107,7 +112,7 @@ export function InvoiceDetailNorthStarBody({
   companyTimeZone,
   canManageBilling,
   canManageCustomers,
-  canCaptureSignature,
+  canCaptureSignature: _canCaptureSignature,
   signature,
   customerEmailBlockReason,
   lastEmailSentMessage,
@@ -122,89 +127,8 @@ export function InvoiceDetailNorthStarBody({
   const canRecordPayment = canRecordInvoicePayment(invoice);
   const recordPaymentBlockReason = getRecordPaymentBlockReason(invoice);
 
-  const documentSection = (
-    <NorthStarAdminInvoiceDocument
-      invoice={invoice}
-      company={company}
-      signature={signature}
-      companyTimeZone={companyTimeZone}
-      logoUrl={company.logoUrl}
-    />
-  );
-
-  const sideRail = (
-    <InvoiceDetailNorthStarSideRail
-      invoice={invoice}
-      canManageCustomers={canManageCustomers}
-      canManageBilling={canManageBilling}
-      onlinePaymentsEnabled={onlinePaymentsEnabled}
-      smsSendingConfigured={smsSendingConfigured}
-    />
-  );
-
-  const paymentsSection = (
-    <section className={`no-print ${dt.compactSectionSurface}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className={`${dt.sectionTitle} text-[#17130E]`}>Payments</h2>
-          {canManageBilling && canRecordPayment ? (
-            <p className={`mt-1 text-xs ${dt.ivoryCardMuted}`}>
-              Record a payment when the customer pays all or part of the balance due.
-            </p>
-          ) : canManageBilling && !canRecordPayment && recordPaymentBlockReason ? (
-            <p className={`mt-1 text-xs ${dt.ivoryCardMuted}`}>
-              {recordPaymentBlockReason}
-            </p>
-          ) : !canManageBilling ? (
-            <p className={`mt-1 text-xs ${dt.ivoryCardMuted}`}>
-              Payment history for this invoice.
-            </p>
-          ) : null}
-        </div>
-        {canManageBilling ? (
-          <div className="hidden sm:block">
-            <RecordPaymentForm invoice={invoice} />
-          </div>
-        ) : null}
-      </div>
-      <div className="mt-3">
-        <InvoicePaymentHistory payments={payments} northStar />
-      </div>
-      <InvoiceInternalTestCheckoutButton
-        invoice={invoice}
-        canManageBilling={canManageBilling}
-      />
-    </section>
-  );
-
-  const activitySection = (
-    <div className="no-print">
-      <InvoiceActivityTimeline activities={activities} northStar />
-    </div>
-  );
-
-  const workspace = (
-    <>
-      <div className="flex flex-col gap-2.5 lg:hidden">
-        <div className="no-print space-y-2.5">{sideRail}</div>
-        {documentSection}
-        {paymentsSection}
-        {activitySection}
-      </div>
-
-      <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
-        <div className={dt.workspaceMain}>
-          {documentSection}
-          {paymentsSection}
-          {activitySection}
-        </div>
-        <aside className={dt.workspaceSide}>{sideRail}</aside>
-      </div>
-    </>
-  );
-
   return (
-    <>
+    <div className={`flex flex-col ${altairMcGridGapClass}`}>
       <InvoiceDetailNorthStarHeader
         invoice={invoice}
         paymentCount={payments.length}
@@ -223,7 +147,79 @@ export function InvoiceDetailNorthStarBody({
         </div>
       ) : null}
 
-      {workspace}
+      {/*
+        Single document instance (critical for print/PDF). Side rail first on
+        mobile; document + payments + activity left / rail right on desktop.
+      */}
+      <div
+        className={`flex flex-col ${altairMcGridGapClass} lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start`}
+      >
+        <aside
+          className={`no-print order-1 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-2`}
+        >
+          <InvoiceDetailNorthStarSideRail
+            invoice={invoice}
+            canManageCustomers={canManageCustomers}
+            canManageBilling={canManageBilling}
+            onlinePaymentsEnabled={onlinePaymentsEnabled}
+            smsSendingConfigured={smsSendingConfigured}
+          />
+        </aside>
+
+        <div
+          className={`order-2 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-1`}
+        >
+          <NorthStarAdminInvoiceDocument
+            invoice={invoice}
+            company={company}
+            signature={signature}
+            companyTimeZone={companyTimeZone}
+            logoUrl={company.logoUrl}
+          />
+
+          <section className="no-print scroll-mt-6 space-y-2">
+            <SectionHeader title="Payments" />
+            <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  {canManageBilling && canRecordPayment ? (
+                    <p className="text-xs text-altair-ink-on-paper-muted">
+                      Record a payment when the customer pays all or part of the
+                      balance due.
+                    </p>
+                  ) : canManageBilling &&
+                    !canRecordPayment &&
+                    recordPaymentBlockReason ? (
+                    <p className="text-xs text-altair-ink-on-paper-muted">
+                      {recordPaymentBlockReason}
+                    </p>
+                  ) : !canManageBilling ? (
+                    <p className="text-xs text-altair-ink-on-paper-muted">
+                      Payment history for this invoice.
+                    </p>
+                  ) : null}
+                </div>
+                {canManageBilling ? (
+                  <div className="hidden sm:block">
+                    <RecordPaymentForm invoice={invoice} />
+                  </div>
+                ) : null}
+              </div>
+              <div className="mt-3">
+                <InvoicePaymentHistory payments={payments} northStar />
+              </div>
+              <InvoiceInternalTestCheckoutButton
+                invoice={invoice}
+                canManageBilling={canManageBilling}
+              />
+            </div>
+          </section>
+
+          <div className="no-print">
+            <InvoiceActivityTimeline activities={activities} northStar />
+          </div>
+        </div>
+      </div>
 
       {canManageBilling ? (
         <div className="no-print">
@@ -245,6 +241,6 @@ export function InvoiceDetailNorthStarBody({
         lastEmailSentMessage={lastEmailSentMessage}
         variant={isOverlay ? "overlay-footer" : "sticky"}
       />
-    </>
+    </div>
   );
 }

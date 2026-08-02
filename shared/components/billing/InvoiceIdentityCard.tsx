@@ -28,16 +28,16 @@ export function InvoiceIdentityCard({
 }: InvoiceIdentityCardProps) {
   if (northStar) {
     const numberClass =
-      "text-sm font-bold tabular-nums tracking-tight text-[#17130E] sm:text-base print:text-sm";
+      "text-sm font-bold tabular-nums tracking-tight text-altair-ink-on-paper sm:text-base print:text-sm print:text-slate-900";
     const metaClass =
-      "text-xs leading-snug text-[#64748B] print:text-slate-700";
+      "text-xs leading-snug text-altair-ink-on-paper-muted print:text-slate-700";
 
     return (
       <div className="invoice-document-meta min-w-0">
         <p className={numberClass}>{invoiceNumber}</p>
         <p className={`mt-0.5 ${metaClass}`}>
           Issued {formatDate(issueDate)}
-          <span className="text-[#8A6324]" aria-hidden>
+          <span className="text-altair-brass" aria-hidden>
             {" "}
             ·{" "}
           </span>

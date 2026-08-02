@@ -75,11 +75,12 @@ export function BillingTotalsSummary({
   const isInvoiceStyle = documentStyle === "invoice";
   const isEstimateStyle = documentStyle === "estimate";
   const isPremiumStyle = isInvoiceStyle || isEstimateStyle;
-  // Estimates always show Tax (honest $0); invoices keep hiding empty tax rows.
-  const showTax = isEstimateStyle || taxRate > 0 || taxAmount > 0;
+  // Estimates and invoices always show Tax (honest $0) — never hide or invent.
+  const showTax = isPremiumStyle || taxRate > 0 || taxAmount > 0;
+  // Invoices always show Balance when not hidden by the caller (honest $0).
+  const showBalanceInTotals = !hideBalanceDue && (isInvoiceStyle || balanceDue > 0);
   const showPaymentSummary =
-    amountPaid > 0 || (balanceDue > 0 && !hideBalanceDue);
-  const showBalanceInTotals = balanceDue > 0 && !hideBalanceDue;
+    amountPaid > 0 || showBalanceInTotals;
 
   const containerClass = northStar && isPremiumStyle
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-2"
@@ -129,18 +130,29 @@ export function BillingTotalsSummary({
       );
     }
 
+    const premiumLabelClass = northStar
+      ? "text-xs text-[#4F4638] print:text-slate-600"
+      : "text-xs text-slate-500";
+    const premiumValueClass = northStar
+      ? "text-xs font-medium tabular-nums text-[#4F4638] print:text-slate-700"
+      : "text-xs font-medium tabular-nums text-slate-700";
+
     return (
       <div className={containerClass}>
         <div className="ml-auto w-full max-w-[280px] space-y-1.5 print:max-w-[240px]">
           <InvoiceTotalsRow
             label="Subtotal"
             value={formatCurrency(subtotal)}
+            labelClassName={premiumLabelClass}
+            valueClassName={premiumValueClass}
           />
 
           {showTax ? (
             <InvoiceTotalsRow
               label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
               value={formatCurrency(taxAmount)}
+              labelClassName={premiumLabelClass}
+              valueClassName={premiumValueClass}
             />
           ) : null}
 

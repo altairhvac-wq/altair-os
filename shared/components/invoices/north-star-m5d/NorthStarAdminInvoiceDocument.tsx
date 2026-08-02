@@ -13,7 +13,11 @@ import {
   estimatePrintSignatureClass,
 } from "@/shared/lib/billing-document-style";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
-import { northStarInvoiceDocumentTokens as idt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcMetricLabelClass,
+} from "@/shared/design-system/components";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 
@@ -41,22 +45,18 @@ export function NorthStarAdminInvoiceDocument({
   const customerContactLine = [customerEmail, customerPhone]
     .filter(Boolean)
     .join(" · ");
-  const showTaxBreakdown =
-    (invoice.taxRate ?? 0) > 0 || (invoice.taxAmount ?? 0) > 0;
 
   return (
     <section
       id="invoice-document"
-      className={idt.documentSurface}
+      className={`${altairMcCardClass} ${altairMcCardPadClass} invoice-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none`}
       data-north-star-admin-invoice-document="true"
     >
       <div className="order-1">
         <InvoiceCompanyHeroHeader company={company} logoUrl={logoUrl} />
       </div>
 
-      <div
-        className={`order-2 mt-2.5 grid grid-cols-[minmax(0,1fr)_minmax(0,42%)] items-start gap-2 sm:mt-3 sm:grid-cols-1 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_min(100%,280px)] lg:items-stretch lg:gap-4 print:grid-cols-[1fr_200px] print:gap-4`}
-      >
+      <div className="order-2 mt-2.5 grid grid-cols-[minmax(0,1fr)_minmax(0,42%)] items-start gap-2 sm:mt-3 sm:grid-cols-1 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_min(100%,280px)] lg:items-stretch lg:gap-4 print:grid-cols-[1fr_200px] print:gap-4">
         <InvoiceIdentityCard
           invoiceNumber={invoice.invoiceNumber}
           issueDate={invoice.issueDate}
@@ -73,14 +73,14 @@ export function NorthStarAdminInvoiceDocument({
         />
       </div>
 
-      <div className="order-3 mt-2 border-t border-[rgba(138,99,36,0.12)] pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:pt-1.5">
-        <p className={idt.documentSectionLabel}>Bill to</p>
+      <div className="order-3 mt-2 border-t border-altair-border pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:border-slate-200 print:pt-1.5">
+        <p className={`${altairMcMetricLabelClass} print:text-slate-600`}>Bill to</p>
         <div className="mt-0.5 min-w-0 print:mt-0.5">
-          <p className="break-words text-sm font-semibold leading-tight text-[#17130E] print:text-sm">
+          <p className="break-words text-sm font-semibold leading-tight text-altair-ink-on-paper print:text-sm print:text-slate-900">
             <DemoDisplayName>{invoice.customerName}</DemoDisplayName>
           </p>
           {customerContactLine ? (
-            <p className="mt-0.5 text-xs leading-tight text-[#4F4638]">
+            <p className="mt-0.5 text-xs leading-tight text-altair-ink-on-paper-secondary print:text-slate-600">
               {customerContactLine}
             </p>
           ) : null}
@@ -89,10 +89,10 @@ export function NorthStarAdminInvoiceDocument({
 
       <div className="order-5 mt-2.5 flex min-h-0 flex-1 flex-col sm:mt-3 print:order-4 print:mt-2 print:flex-none">
         <div>
-          <h3 className={idt.documentSectionLabel}>Services performed</h3>
-          <div
-            className={`invoice-line-items mt-1 sm:mt-1.5 ${idt.documentLineItemsTable}`}
-          >
+          <h3 className={`${altairMcMetricLabelClass} print:text-slate-600`}>
+            Services performed
+          </h3>
+          <div className="invoice-line-items mt-1 sm:mt-1.5">
             <BillingLineItemsList
               items={invoice.lineItems}
               documentLabel="invoice"
@@ -103,29 +103,24 @@ export function NorthStarAdminInvoiceDocument({
           </div>
         </div>
 
-        {showTaxBreakdown || invoice.amountPaid > 0 ? (
-          <div className="invoice-totals-block mt-auto flex justify-end pt-4 sm:pt-6 print:mt-1.5 print:pt-2">
-            <div className="w-full max-w-md print:max-w-[220px]">
-              <BillingTotalsSummary
-                subtotal={invoice.subtotal}
-                taxRate={invoice.taxRate}
-                taxAmount={invoice.taxAmount ?? 0}
-                total={invoice.total}
-                amountPaid={invoice.amountPaid}
-                balanceDue={invoice.balanceDue}
-                documentStyle="invoice"
-                hideTotal
-                hideBalanceDue
-                compactSubtotal
-                northStar
-              />
-            </div>
+        <div className="invoice-totals-block mt-auto flex justify-end pt-4 sm:pt-6 print:mt-1.5 print:pt-2">
+          <div className="w-full max-w-md print:max-w-[220px]">
+            <BillingTotalsSummary
+              subtotal={invoice.subtotal}
+              taxRate={invoice.taxRate}
+              taxAmount={invoice.taxAmount ?? 0}
+              total={invoice.total}
+              amountPaid={invoice.amountPaid}
+              balanceDue={invoice.balanceDue}
+              documentStyle="invoice"
+              northStar
+            />
           </div>
-        ) : null}
+        </div>
       </div>
 
       {invoice.notes ? (
-        <div className="order-6 mt-2.5 border-t border-[rgba(138,99,36,0.12)] pt-2.5 sm:mt-3 sm:pt-3 print:order-5 print:mt-2 print:pt-2">
+        <div className="order-6 mt-2.5 border-t border-altair-border pt-2.5 sm:mt-3 sm:pt-3 print:order-5 print:mt-2 print:border-slate-200 print:pt-2">
           <InvoiceNotesBlock notes={invoice.notes} northStar />
         </div>
       ) : null}
