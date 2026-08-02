@@ -150,28 +150,41 @@ export async function listInvoicePaymentsForCustomer(
 type InvoicePaymentRowWithInvoice = InvoicePaymentRowWithRecorder & {
   invoice: {
     invoice_number: string;
-    customers: { name: string } | null;
+    customers: { id: string; name: string } | null;
   } | null;
 };
 
 export type RecentInvoicePayment = InvoicePayment & {
   invoiceNumber: string;
   customerName: string;
+  customerId?: string;
 };
+
+const INVOICE_PAYMENT_LIST_SELECT = `
+  *,
+  recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email),
+  invoice:invoices(invoice_number, customers(id, name))
+`;
+
+function mapPaymentRowWithInvoice(
+  row: InvoicePaymentRowWithInvoice,
+): RecentInvoicePayment {
+  return {
+    ...mapPaymentRow(row),
+    invoiceNumber: row.invoice?.invoice_number ?? "—",
+    customerName: row.invoice?.customers?.name ?? "Unknown",
+    customerId: row.invoice?.customers?.id,
+  };
+}
 
 export const listInvoicePayments = cache(async function listInvoicePayments(
   companyId: string,
-): Promise<InvoicePayment[]> {
+): Promise<RecentInvoicePayment[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("invoice_payments")
-    .select(
-      `
-      *,
-      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email)
-    `,
-    )
+    .select(INVOICE_PAYMENT_LIST_SELECT)
     .eq("company_id", companyId)
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false });
@@ -185,7 +198,9 @@ export const listInvoicePayments = cache(async function listInvoicePayments(
     return [];
   }
 
-  return ((data ?? []) as InvoicePaymentRowWithRecorder[]).map(mapPaymentRow);
+  return ((data ?? []) as InvoicePaymentRowWithInvoice[]).map(
+    mapPaymentRowWithInvoice,
+  );
 });
 
 export async function listRecentPayments(
@@ -196,13 +211,7 @@ export async function listRecentPayments(
 
   const { data, error } = await supabase
     .from("invoice_payments")
-    .select(
-      `
-      *,
-      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email),
-      invoice:invoices(invoice_number, customers(name))
-    `,
-    )
+    .select(INVOICE_PAYMENT_LIST_SELECT)
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -216,11 +225,9 @@ export async function listRecentPayments(
     return [];
   }
 
-  return ((data ?? []) as InvoicePaymentRowWithInvoice[]).map((row) => ({
-    ...mapPaymentRow(row),
-    invoiceNumber: row.invoice?.invoice_number ?? "—",
-    customerName: row.invoice?.customers?.name ?? "Unknown",
-  }));
+  return ((data ?? []) as InvoicePaymentRowWithInvoice[]).map(
+    mapPaymentRowWithInvoice,
+  );
 }
 
 function getTodayDateOnly(reference = new Date(), timeZone?: string): string {

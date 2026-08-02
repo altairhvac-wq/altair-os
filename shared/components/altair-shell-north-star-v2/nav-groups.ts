@@ -3,6 +3,7 @@ import {
   BookOpen,
   Briefcase,
   Clock,
+  CreditCard,
   DollarSign,
   FileText,
   LayoutDashboard,
@@ -52,6 +53,7 @@ export const missionNavGroups: MissionNavGroup[] = [
     label: "Money",
     items: [
       { label: "Invoices", href: "/invoices", icon: Receipt },
+      { label: "Payments", href: "/payments", icon: CreditCard },
       { label: "Expenses", href: "/expenses", icon: DollarSign },
       { label: "Labor & payroll", href: "/time", icon: Clock },
     ],

@@ -4,6 +4,7 @@ import {
   Briefcase,
   Bug,
   Clock,
+  CreditCard,
   DollarSign,
   FileText,
   LayoutDashboard,
@@ -84,6 +85,12 @@ export const adminNavItems: NavItem[] = [
     href: "/invoices",
     icon: Receipt,
     description: "Billing and payment tracking",
+  },
+  {
+    label: "Payments",
+    href: "/payments",
+    icon: CreditCard,
+    description: "Collected payments ledger",
   },
   {
     label: "Expenses",
@@ -185,7 +192,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "money",
     label: "Money",
-    hrefs: ["/invoices", "/expenses", "/time"],
+    hrefs: ["/invoices", "/payments", "/expenses", "/time"],
   },
   {
     id: "relationships",
@@ -247,6 +254,7 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/dispatch",
   "/customers",
   "/invoices",
+  "/payments",
   "/estimates",
   "/leads",
   "/expenses",
@@ -280,6 +288,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/estimates",
   "/price-book",
   "/invoices",
+  "/payments",
   "/expenses",
   "/reports",
   "/network",

@@ -4,6 +4,7 @@ import {
   Briefcase,
   Bug,
   Clock,
+  CreditCard,
   DollarSign,
   FileText,
   LayoutDashboard,
@@ -54,6 +55,7 @@ export const shellNavGroups: ShellNavGroup[] = [
     label: "Money",
     items: [
       { label: "Invoices", href: "/invoices", icon: Receipt },
+      { label: "Payments", href: "/payments", icon: CreditCard },
       { label: "Expenses", href: "/expenses", icon: DollarSign },
       { label: "Labor & payroll", href: "/time", icon: Clock },
     ],

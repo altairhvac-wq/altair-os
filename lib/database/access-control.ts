@@ -407,6 +407,7 @@ export type AdminNavHref =
   | "/estimates"
   | "/price-book"
   | "/invoices"
+  | "/payments"
   | "/expenses"
   | "/time-clock"
   | "/network"
@@ -424,6 +425,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/estimates",
   "/price-book",
   "/invoices",
+  "/payments",
   "/expenses",
   "/time-clock",
   "/network",
@@ -457,6 +459,7 @@ export function canAccessAdminNavItem(
     case "/estimates":
     case "/price-book":
     case "/invoices":
+    case "/payments":
       return access.canViewBilling;
     case "/expenses":
       return true;
@@ -493,6 +496,7 @@ export function getAccessibleAdminNavHrefs(
     "/estimates",
     "/price-book",
     "/invoices",
+    "/payments",
     "/expenses",
     "/time-clock",
     "/network",
@@ -588,7 +592,8 @@ export function canAccessAppRedirectPath(
   if (
     path.startsWith("/estimates") ||
     path.startsWith("/price-book") ||
-    path.startsWith("/invoices")
+    path.startsWith("/invoices") ||
+    path.startsWith("/payments")
   ) {
     return canViewBilling(context);
   }
