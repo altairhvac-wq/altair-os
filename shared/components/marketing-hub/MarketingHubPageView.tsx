@@ -483,6 +483,7 @@ export function MarketingHubPageView({
                 aiFeaturesEnabled={aiFeaturesEnabled}
                 aiDraftingConfigured={aiDraftingConfigured}
                 showFounderMarketing={showFounderMarketing}
+                connectedAccounts={connectedAccounts}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />
@@ -496,6 +497,7 @@ export function MarketingHubPageView({
                 aiFeaturesEnabled={aiFeaturesEnabled}
                 aiDraftingConfigured={aiDraftingConfigured}
                 showFounderMarketing={showFounderMarketing}
+                connectedAccounts={connectedAccounts}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
                 onRecurringCreated={handleRecurringCreated}

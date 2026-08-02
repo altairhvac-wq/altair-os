@@ -19,6 +19,8 @@ export type FacebookPageSummary = {
   accessToken?: string;
   category?: string;
   tasks?: string[];
+  /** Linked IG Professional account id when the Page has one. */
+  instagramBusinessAccountId?: string;
 };
 
 type FacebookGraphErrorBody = {
@@ -176,8 +178,7 @@ export async function fetchFacebookUserProfile(
 }
 
 /**
- * Lists Pages visible with `pages_show_list` via GET /me/accounts.
- * Read-only connect stage — does not require posting scopes.
+ * Lists Pages via GET /me/accounts, including linked Instagram Business account ids.
  */
 type FacebookPagesListResponse = {
   data?: Array<{
@@ -186,6 +187,7 @@ type FacebookPagesListResponse = {
     access_token?: string;
     category?: string;
     tasks?: string[];
+    instagram_business_account?: { id?: string } | null;
   }>;
   paging?: { next?: string };
 };
@@ -198,7 +200,10 @@ export async function fetchFacebookPages(
   const initialUrl = new URL(
     `${graphBaseUrl(config.graphApiVersion)}/me/accounts`,
   );
-  initialUrl.searchParams.set("fields", "id,name,access_token,category,tasks");
+  initialUrl.searchParams.set(
+    "fields",
+    "id,name,access_token,category,tasks,instagram_business_account",
+  );
   initialUrl.searchParams.set("access_token", accessToken);
 
   let nextUrl: string | null = initialUrl.toString();
@@ -219,12 +224,15 @@ export async function fetchFacebookPages(
         continue;
       }
 
+      const igId = page.instagram_business_account?.id?.trim();
+
       pages.push({
         id: page.id,
         name: page.name?.trim() || page.id,
         accessToken: page.access_token?.trim() || undefined,
         category: page.category?.trim() || undefined,
         tasks: Array.isArray(page.tasks) ? page.tasks : undefined,
+        instagramBusinessAccountId: igId || undefined,
       });
     }
 
@@ -234,3 +242,42 @@ export async function fetchFacebookPages(
 
   return pages;
 }
+
+/**
+ * Fetches the Instagram Business account linked to a Page.
+ * Used as a per-Page fallback when /me/accounts omits the nested field.
+ */
+export async function fetchFacebookPageInstagramBusinessAccount(input: {
+  pageId: string;
+  accessToken: string;
+}): Promise<string | null> {
+  const pageId = input.pageId.trim();
+  const accessToken = input.accessToken.trim();
+
+  if (!pageId || !accessToken) {
+    return null;
+  }
+
+  const config = getFacebookOAuthConfig();
+  const url = new URL(
+    `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(pageId)}`,
+  );
+  url.searchParams.set("fields", "instagram_business_account");
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  const data = await readFacebookJson<{
+    instagram_business_account?: { id?: string } | null;
+  }>(response, "Facebook Page Instagram Business account");
+
+  const igId = data.instagram_business_account?.id?.trim();
+  return igId || null;
+}
+
+export { graphBaseUrl, readFacebookJson };
+export type { FacebookGraphErrorBody };

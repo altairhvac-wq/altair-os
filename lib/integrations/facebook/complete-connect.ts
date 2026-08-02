@@ -11,6 +11,7 @@ import { FACEBOOK_CONNECT_SCOPES } from "./oauth-url";
 import {
   exchangeFacebookAuthorizationCode,
   exchangeFacebookShortLivedToken,
+  fetchFacebookPageInstagramBusinessAccount,
   fetchFacebookPages,
   fetchFacebookUserProfile,
 } from "./graph";
@@ -154,6 +155,30 @@ export async function completeFacebookOAuthConnect(
   const keptResourceIds: string[] = [];
 
   for (const page of pages) {
+    const tokenToStore = page.accessToken?.trim() || userAccessToken;
+
+    let instagramBusinessAccountId =
+      page.instagramBusinessAccountId?.trim() || null;
+
+    if (!instagramBusinessAccountId && tokenToStore) {
+      try {
+        instagramBusinessAccountId =
+          await fetchFacebookPageInstagramBusinessAccount({
+            pageId: page.id,
+            accessToken: tokenToStore,
+          });
+      } catch (igError) {
+        console.warn(
+          "[completeFacebookOAuthConnect] Instagram Business account lookup failed:",
+          {
+            companyId: input.companyId,
+            pageId: page.id,
+            error: igError,
+          },
+        );
+      }
+    }
+
     const accountResult = await upsertMarketingConnectedFacebookPage({
       companyId: input.companyId,
       connectedBy: input.connectedBy,
@@ -168,6 +193,7 @@ export async function completeFacebookOAuthConnect(
       metadata: {
         category: page.category ?? null,
         tasks: page.tasks ?? [],
+        instagramBusinessAccountId,
       },
     });
 
@@ -180,7 +206,6 @@ export async function completeFacebookOAuthConnect(
 
     keptResourceIds.push(page.id);
 
-    const tokenToStore = page.accessToken?.trim() || userAccessToken;
     const secretResult = await upsertMarketingConnectedAccountSecret({
       connectedAccountId: accountResult.account.id,
       accessTokenPlaintext: tokenToStore,

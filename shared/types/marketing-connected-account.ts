@@ -38,13 +38,13 @@ export const MARKETING_CONNECTED_PROVIDER_OPTIONS: {
     value: "facebook",
     label: "Facebook Page",
     helperText:
-      "Connect Pages you manage. Publishing requires a later App Review stage.",
+      "Connect Pages you manage. Founder drafts can post to Facebook and linked Instagram from Marketing Hub.",
   },
   {
     value: "instagram",
     label: "Instagram Business",
     helperText:
-      "Requires an Instagram Business account connected to a Facebook Page.",
+      "Publishing uses the Instagram Business account linked to a connected Facebook Page (no separate Instagram Login).",
   },
   {
     value: "google_business",

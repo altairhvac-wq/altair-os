@@ -580,7 +580,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Marketing post CRUD with draft/edit/archive/delete lifecycle
 - AI rewrite assistant (env-gated)
 - Completed job marketing draft picker
-- Connected accounts: Facebook Connect (pages_show_list) via OAuth callback + encrypted secrets (service_role)
+- Connected accounts: Facebook Connect (Pages + Instagram Content Publishing scopes) via OAuth callback + encrypted secrets (service_role); persists linked `instagram_business_account` id per Page; founder Post Now publish actions (Facebook feed/photos + Instagram container flow)
 - Scheduled post queue and recurring post UI
 - Route: `/marketing`
 

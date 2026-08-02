@@ -124,7 +124,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 
 ### Other Confirmed Additions
 
-- Marketing hub (`/marketing`) — post drafts, AI rewrite, Facebook Page Connect (read-only Pages; no publish yet)
+- Marketing hub (`/marketing`) — post drafts, AI rewrite, Facebook Page Connect (publish scopes + encrypted Page tokens); platform-admin founder draft Post Now to Facebook Page / linked Instagram (manual click only)
 - Mobile install experience (`/install`) — PWA guidance with device-specific walkthrough
 - Electrical demo seed pack
 - Network workspace tab restructure and parity fixes

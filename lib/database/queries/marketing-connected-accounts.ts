@@ -87,3 +87,39 @@ export async function listMarketingConnectedAccounts(
     mapMarketingConnectedAccountRow,
   );
 }
+
+export async function getMarketingConnectedAccountById(
+  companyId: string,
+  connectedAccountId: string,
+): Promise<MarketingConnectedAccount | null> {
+  const normalizedId = connectedAccountId.trim();
+  if (!normalizedId) {
+    return null;
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await marketingConnectedAccountsTable(supabase)
+    .select(
+      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
+    )
+    .eq("company_id", companyId)
+    .eq("id", normalizedId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getMarketingConnectedAccountById] query failed:", {
+      companyId,
+      connectedAccountId: normalizedId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapMarketingConnectedAccountRow(data as MarketingConnectedAccountRow);
+}

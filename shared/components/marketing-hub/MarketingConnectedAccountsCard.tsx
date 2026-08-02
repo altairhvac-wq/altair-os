@@ -171,8 +171,9 @@ export function MarketingConnectedAccountsCard({
               northStar ? "text-[#6B6255]" : "text-slate-500"
             }`}
           >
-            Connect a Facebook Page you manage. Posting stays manual until
-            Meta App Review unlocks publish scopes.
+            Connect a Facebook Page you manage. After reconnecting with publish
+            permissions, founder drafts can post to Facebook and linked
+            Instagram from the draft form.
           </p>
 
           {banner ? (
@@ -296,7 +297,8 @@ export function MarketingConnectedAccountsCard({
                       northStar ? "text-[#6B6255]" : "text-slate-500"
                     }`}
                   >
-                    Page connected (read-only). Publishing is not enabled yet.
+                    Page connected. Reconnect if you have not granted publish
+                    permissions yet.
                   </p>
                 ) : null}
               </li>

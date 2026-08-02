@@ -1,16 +1,19 @@
 import "server-only";
 
 import { createHash } from "crypto";
-import { encryptIntegrationSecret } from "@/lib/integrations/crypto";
+import {
+  decryptIntegrationSecret,
+  encryptIntegrationSecret,
+} from "@/lib/integrations/crypto";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 /**
- * Service-role-only writes for marketing_connected_account_secrets.
+ * Service-role-only read/write for marketing_connected_account_secrets.
  *
  * RLS/GRANT (migration 090): authenticated and anon have no privileges;
  * only service_role may read/write. Never call this from Client Components
- * or expose decrypted tokens through Server Actions / Route Handlers.
+ * or return decrypted tokens to the browser.
  */
 
 type MarketingConnectedAccountSecretsClient = ReturnType<
@@ -108,4 +111,78 @@ export async function upsertMarketingConnectedAccountSecret(
   }
 
   return {};
+}
+
+export type GetMarketingConnectedAccountAccessTokenResult = {
+  accessToken?: string;
+  error?: string;
+};
+
+/**
+ * Loads and decrypts a Page/user access token for server-side Graph calls.
+ * Service-role only — callers must already authorize the company/user and
+ * must never return the plaintext token to clients.
+ */
+export async function getMarketingConnectedAccountAccessToken(
+  connectedAccountId: string,
+): Promise<GetMarketingConnectedAccountAccessTokenResult> {
+  const normalizedId = connectedAccountId.trim();
+
+  if (!normalizedId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await marketingConnectedAccountSecretsTable(supabase)
+    .select("access_token_encrypted")
+    .eq("connected_account_id", normalizedId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "[getMarketingConnectedAccountAccessToken] lookup failed:",
+      {
+        connectedAccountId: normalizedId,
+        code: error.code,
+        message: error.message,
+      },
+    );
+    return {
+      error:
+        mapDatabaseError(error) ??
+        "Failed to load connected account secret.",
+    };
+  }
+
+  const encrypted = (
+    data as { access_token_encrypted?: string | null } | null
+  )?.access_token_encrypted?.trim();
+
+  if (!encrypted) {
+    return {
+      error:
+        "No access token is stored for this connected account. Reconnect Facebook.",
+    };
+  }
+
+  try {
+    const accessToken = decryptIntegrationSecret(encrypted).trim();
+    if (!accessToken) {
+      return { error: "Stored access token is empty. Reconnect Facebook." };
+    }
+
+    return { accessToken };
+  } catch (decryptError) {
+    console.error(
+      "[getMarketingConnectedAccountAccessToken] decrypt failed:",
+      {
+        connectedAccountId: normalizedId,
+        error: decryptError,
+      },
+    );
+    return {
+      error:
+        "Failed to decrypt the stored access token. Check INTEGRATIONS_ENCRYPTION_KEY, then reconnect Facebook.",
+    };
+  }
 }

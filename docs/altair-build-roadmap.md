@@ -22,7 +22,7 @@ Living tracker for the Mission Control / workspace UI redesign.
 | 12 | Expenses | `/expenses` | Not started | Receipts and categories |
 | 13 | Price Book | `/price-book` | Not started | Services / parts catalog |
 | 14 | Labor & payroll | `/time` | Not started | Time review (+ `/time-clock`) |
-| 15 | Marketing | `/marketing` | Not started | Redesign chrome still North Star. Progress: Facebook Page Connect OAuth (`pages_show_list` + encrypted secrets via service_role; callback + Hub UI; no publish yet); founder screenshot upload (Storage bucket + migration `126`, action/UI on draft form); local-dev founder screenshot capture control (API route + Playwright spawn, platform-admin only, never in production builds) |
+| 15 | Marketing | `/marketing` | Not started | Redesign chrome still North Star. Progress: Facebook Page Connect OAuth (publish scopes + encrypted secrets via service_role; IG business account id persisted; founder Post Now for Facebook/Instagram); founder screenshot upload (Storage bucket + migration `126`, action/UI on draft form); local-dev founder screenshot capture control (API route + Playwright spawn, platform-admin only, never in production builds) |
 | 16 | Network / Community | `/network` | Not started | Referrals and community |
 | 17 | Feedback | `/alpha-tracker` | Not started | Alpha feedback tracker |
 | 18 | Settings | `/settings` | Not started | Company configuration |

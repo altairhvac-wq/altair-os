@@ -25,11 +25,13 @@ import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marke
 import { MarketingFounderDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingFounderDraftAiGenerator";
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
 import { FounderScreenshotUploadControl } from "@/shared/components/marketing-hub/FounderScreenshotUploadControl";
+import { MarketingFounderPublishControls } from "@/shared/components/marketing-hub/MarketingFounderPublishControls";
 import {
   FOUNDER_MARKETING_SCREENSHOT_OPTIONS,
   isPreviewableScreenshotReference,
   isStaleFounderScreenshotCatalogPath,
 } from "@/shared/components/marketing-hub/founder-marketing-screenshots";
+import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type {
   MarketingChannel,
   MarketingPost,
@@ -54,6 +56,7 @@ type MarketingPostDraftFormProps = {
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
   showFounderMarketing?: boolean;
+  connectedAccounts?: MarketingConnectedAccount[];
   onSuccess: () => void;
   onCancel: () => void;
   onRecurringCreated?: () => void;
@@ -535,6 +538,7 @@ export function MarketingPostDraftForm({
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
   showFounderMarketing = false,
+  connectedAccounts = [],
   onSuccess,
   onCancel,
   onRecurringCreated,
@@ -606,6 +610,13 @@ export function MarketingPostDraftForm({
   const showFounderScreenshot =
     showFounderMarketing &&
     isFounderMarketingSourceType(rewriteSourceType);
+  const showFounderPublish =
+    isEditMode &&
+    post != null &&
+    showFounderMarketing &&
+    isFounderMarketingSourceType(post.sourceType) &&
+    post.status !== "posted" &&
+    post.status !== "archived";
   const selectedFounderScreenshotOption = FOUNDER_MARKETING_SCREENSHOT_OPTIONS.find(
     (option) => option.path === formData.founderScreenshotReference.trim(),
   );
@@ -929,7 +940,7 @@ export function MarketingPostDraftForm({
                 ? post.status === "archived"
                   ? "This post is archived and can't be edited. Reuse it to create a new draft, or copy the text if you still need it."
                   : "This post is posted and can't be edited here. Reuse it to create a new draft, or copy the text if you still need it."
-                : "Update the draft, preview how it reads, then copy or mark it posted manually when ready."
+                : "Update the draft, preview how it reads, then post now, copy, or mark it posted manually when ready."
               : draftStarter
                 ? "This draft starter prefills the form. Edit anything you need, then save when ready."
                 : "Write the post copy your team can copy and post manually."}
@@ -1568,6 +1579,15 @@ export function MarketingPostDraftForm({
                           {formData.founderScreenshotReference.trim()}
                         </span>
                       </p>
+                    ) : null}
+                    {showFounderPublish ? (
+                      <MarketingFounderPublishControls
+                        post={post}
+                        connectedAccounts={connectedAccounts}
+                        northStar={northStar}
+                        disabled={isActionPending}
+                        onPublished={onSuccess}
+                      />
                     ) : null}
                     {canMarkPosted ? (
                       <button

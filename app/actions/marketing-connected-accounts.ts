@@ -37,7 +37,7 @@ async function assertFacebookConnectManager() {
 }
 
 /**
- * Starts Facebook Page Connect (pages_show_list + public_profile only).
+ * Starts Facebook Page Connect with publish scopes (Pages + Instagram Content Publishing).
  * Redirects to Meta's consent screen on success.
  */
 export async function startFacebookOAuthConnectAction(

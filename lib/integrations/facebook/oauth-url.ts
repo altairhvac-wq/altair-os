@@ -2,10 +2,17 @@ import "server-only";
 
 import { getFacebookOAuthConfig } from "./env";
 
-/** Default scopes for Facebook Page connect-only V1 (no posting yet). */
+/**
+ * Facebook Login scopes for Page connect + publish (Facebook + Instagram Content Publishing).
+ * Not the Instagram Login `instagram_business_*` family.
+ */
 export const FACEBOOK_CONNECT_SCOPES = [
-  "pages_show_list",
   "public_profile",
+  "pages_show_list",
+  "pages_read_engagement",
+  "pages_manage_posts",
+  "instagram_basic",
+  "instagram_content_publish",
 ] as const;
 
 export type FacebookConnectScope = (typeof FACEBOOK_CONNECT_SCOPES)[number];
