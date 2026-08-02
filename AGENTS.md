@@ -81,6 +81,8 @@ npm run capture:founder-auth
 npm run capture:founder-screenshots
 ```
 
+In local development (`NODE_ENV=development`), platform admins also get a Marketing Hub control that spawns the same capture script (optional `BASE_URL` for localhost or a preview host). For non-localhost targets, refresh auth for that host first: `BASE_URL=<url> npm run capture:founder-auth`. The control is never shown in production builds.
+
 ## Checks and tests
 
 Run linting:

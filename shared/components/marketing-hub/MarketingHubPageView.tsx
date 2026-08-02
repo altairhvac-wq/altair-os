@@ -19,6 +19,7 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
+import { FounderScreenshotCaptureControl } from "@/shared/components/marketing-hub/FounderScreenshotCaptureControl";
 import { MarketingConnectedAccountsCard } from "@/shared/components/marketing-hub/MarketingConnectedAccountsCard";
 import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
@@ -52,8 +53,11 @@ type MarketingHubPageViewProps = {
   connectedAccounts: MarketingConnectedAccount[];
   companyName: string;
   showFounderMarketing?: boolean;
+  showFounderScreenshotCapture?: boolean;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
+  canManageConnectedAccounts?: boolean;
+  connectedAccountsFlash?: { tone: "success" | "error"; message: string } | null;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -99,6 +103,7 @@ type MarketingPostTemplateIdeasProps = {
   northStar: boolean;
   disabled: boolean;
   showFounderMarketing?: boolean;
+  showFounderScreenshotCapture?: boolean;
   onUseTemplate: (template: MarketingPostTemplate) => void;
   onUseFounderTemplate: (template: MarketingFounderTemplate) => void;
   onCreateFromCompletedJob: () => void;
@@ -109,6 +114,7 @@ function MarketingPostTemplateIdeas({
   northStar,
   disabled,
   showFounderMarketing = false,
+  showFounderScreenshotCapture = false,
   onUseTemplate,
   onUseFounderTemplate,
   onCreateFromCompletedJob,
@@ -289,6 +295,13 @@ function MarketingPostTemplateIdeas({
               </li>
             ))}
           </ul>
+
+          {showFounderScreenshotCapture ? (
+            <FounderScreenshotCaptureControl
+              northStar={northStar}
+              disabled={disabled}
+            />
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -300,8 +313,11 @@ export function MarketingHubPageView({
   connectedAccounts,
   companyName,
   showFounderMarketing = false,
+  showFounderScreenshotCapture = false,
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
+  canManageConnectedAccounts = false,
+  connectedAccountsFlash = null,
 }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
@@ -490,6 +506,8 @@ export function MarketingHubPageView({
               <MarketingConnectedAccountsCard
                 accounts={connectedAccounts}
                 northStar={northStar}
+                canManageConnectedAccounts={canManageConnectedAccounts}
+                flashMessage={connectedAccountsFlash}
               />
 
               <div
@@ -561,6 +579,7 @@ export function MarketingHubPageView({
                   northStar={northStar}
                   disabled={isFormOpen}
                   showFounderMarketing={showFounderMarketing}
+                  showFounderScreenshotCapture={showFounderScreenshotCapture}
                   onUseTemplate={handleUseTemplate}
                   onUseFounderTemplate={handleUseFounderTemplate}
                   onCreateFromCompletedJob={handleOpenCompletedJobPicker}
@@ -611,6 +630,7 @@ export function MarketingHubPageView({
                       northStar={northStar}
                       disabled={isFormOpen}
                       showFounderMarketing={showFounderMarketing}
+                      showFounderScreenshotCapture={showFounderScreenshotCapture}
                       onUseTemplate={handleUseTemplate}
                       onUseFounderTemplate={handleUseFounderTemplate}
                       onCreateFromCompletedJob={handleOpenCompletedJobPicker}

@@ -4,14 +4,16 @@
  * Not for production, not exposed to end users, and not for customer companies.
  *
  * Prerequisites:
- *   1. npm run dev
+ *   1. npm run dev (or a reachable BASE_URL such as a Vercel preview)
  *   2. Founder auth storage state at .playwright/founder-auth.json
  *      Create it with: node scripts/save-founder-playwright-auth.mjs
+ *      For non-localhost targets: BASE_URL=<url> npm run capture:founder-auth
  *      Or refresh automatically when Supabase CLI is linked (local dev only).
  *
  * Usage:
  *   node scripts/capture-founder-marketing-screenshots.mjs
  *   BASE_URL=http://localhost:3000 node scripts/capture-founder-marketing-screenshots.mjs
+ *   FOUNDER_CAPTURE_JSON=1 …  (machine-readable progress for the local Marketing Hub button)
  *
  * Output:
  *   public/marketing/screenshots/social/*-full-page.png (1600×900 viewport)
@@ -28,8 +30,133 @@ const ENV_PATH = path.join(ROOT, ".env.local");
 const AUTH_PATH = path.join(ROOT, ".playwright", "founder-auth.json");
 const OUTPUT_DIR = path.join(ROOT, "public", "marketing", "screenshots", "social");
 const BASE_URL = process.env.BASE_URL?.trim() || "http://localhost:3000";
+const JSON_MODE = process.env.FOUNDER_CAPTURE_JSON === "1";
 const FOUNDER_EMAIL = "altairhvac@gmail.com";
 const SUPABASE_PROJECT_REF = "acsmgzkbvstrbggsukyx";
+
+/**
+ * @param {{ type: string; [key: string]: unknown }} event
+ */
+function emitEvent(event) {
+  if (!JSON_MODE) {
+    return;
+  }
+
+  process.stdout.write(`${JSON.stringify(event)}\n`);
+}
+
+/**
+ * @param {string} message
+ */
+function log(message) {
+  if (JSON_MODE) {
+    emitEvent({ type: "log", message });
+    return;
+  }
+
+  console.log(message);
+}
+
+/**
+ * @param {string} message
+ */
+function logError(message) {
+  if (JSON_MODE) {
+    emitEvent({ type: "log", message });
+    return;
+  }
+
+  console.error(message);
+}
+
+/**
+ * @param {string} code
+ * @param {string} message
+ */
+function failWithCode(code, message) {
+  emitEvent({ type: "error", code, message });
+  if (!JSON_MODE) {
+    console.error(message);
+  }
+  process.exit(1);
+}
+
+function getBaseHostname() {
+  try {
+    return new URL(BASE_URL).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {string} cookieDomain
+ * @param {string} hostname
+ */
+function cookieDomainMatchesHost(cookieDomain, hostname) {
+  const domain = cookieDomain.replace(/^\./, "").toLowerCase();
+  return hostname === domain || hostname.endsWith(`.${domain}`);
+}
+
+function readAuthState() {
+  if (!fs.existsSync(AUTH_PATH)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(AUTH_PATH, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function authDomainMatchesBaseUrl() {
+  const hostname = getBaseHostname();
+  if (!hostname) {
+    return false;
+  }
+
+  const auth = readAuthState();
+  const cookies = Array.isArray(auth?.cookies) ? auth.cookies : [];
+  if (cookies.length === 0) {
+    return false;
+  }
+
+  return cookies.some(
+    (cookie) =>
+      typeof cookie?.domain === "string" &&
+      cookieDomainMatchesHost(cookie.domain, hostname),
+  );
+}
+
+function describeAuthDomains() {
+  const auth = readAuthState();
+  const cookies = Array.isArray(auth?.cookies) ? auth.cookies : [];
+  const domains = [
+    ...new Set(
+      cookies
+        .map((cookie) =>
+          typeof cookie?.domain === "string"
+            ? cookie.domain.replace(/^\./, "")
+            : null,
+        )
+        .filter(Boolean),
+    ),
+  ];
+
+  return domains.length > 0 ? domains.join(", ") : "(none)";
+}
+
+function authDomainMismatchMessage() {
+  const hostname = getBaseHostname() ?? BASE_URL;
+  return [
+    `Founder Playwright auth is for ${describeAuthDomains()}, but BASE_URL targets ${hostname}.`,
+    "Cookies are domain-scoped, so localhost auth will not work on a preview/prod host.",
+    `Refresh auth for that host first: BASE_URL=${BASE_URL} npm run capture:founder-auth`,
+    "Then re-run capture (or use the Marketing Hub button again).",
+    "Magic-link auto-refresh can also work when Supabase CLI is linked and the redirect URL is allowlisted.",
+  ].join(" ");
+}
 
 const VIEWPORT = { width: 1600, height: 900 };
 
@@ -259,7 +386,8 @@ async function refreshFounderAuthViaMagicLink() {
   try {
     await page.goto(callbackUrl, { waitUntil: "networkidle", timeout: 60_000 });
     await context.storageState({ path: AUTH_PATH });
-    console.log("Refreshed founder auth via Supabase magic link.");
+    log("Refreshed founder auth via Supabase magic link.");
+    emitEvent({ type: "status", message: "Refreshed founder auth via magic link." });
     return true;
   } finally {
     await browser.close();
@@ -268,14 +396,36 @@ async function refreshFounderAuthViaMagicLink() {
 
 async function ensureFounderAuth() {
   const session = readStoredSession();
-  if (isSessionFresh(session)) {
+  const domainOk = authDomainMatchesBaseUrl();
+
+  if (isSessionFresh(session) && domainOk) {
+    emitEvent({ type: "status", message: "Founder auth is ready." });
     return;
   }
 
-  console.log("Founder auth missing or expired — attempting refresh...");
+  if (!domainOk && fs.existsSync(AUTH_PATH)) {
+    log("Founder auth domain does not match BASE_URL — attempting refresh...");
+    emitEvent({
+      type: "status",
+      message: "Auth domain mismatch — attempting magic-link refresh…",
+    });
+  } else {
+    log("Founder auth missing or expired — attempting refresh...");
+    emitEvent({
+      type: "status",
+      message: "Founder auth missing or expired — attempting refresh…",
+    });
+  }
+
   const refreshed = await refreshFounderAuthViaMagicLink();
-  if (!refreshed) {
-    assertAuthFile();
+  if (refreshed && authDomainMatchesBaseUrl()) {
+    return;
+  }
+
+  assertAuthFile();
+
+  if (!authDomainMatchesBaseUrl()) {
+    failWithCode("AUTH_DOMAIN_MISMATCH", authDomainMismatchMessage());
   }
 }
 
@@ -351,7 +501,15 @@ async function waitForRouteReady(page, capture) {
  */
 async function captureFullPageScreenshot(page, capture) {
   const url = `${BASE_URL}${capture.route}`;
-  console.log(`Capturing ${capture.id} from ${url}`);
+  log(`Capturing ${capture.id} from ${url}`);
+  emitEvent({
+    type: "page",
+    id: capture.id,
+    label: capture.label,
+    route: capture.route,
+    output: capture.output,
+    status: "started",
+  });
 
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await waitForRouteReady(page, capture);
@@ -359,7 +517,10 @@ async function captureFullPageScreenshot(page, capture) {
   const currentUrl = page.url();
   if (currentUrl.includes("/login")) {
     throw new Error(
-      `Auth required for ${capture.route}. Create ${path.relative(ROOT, AUTH_PATH)} with node scripts/save-founder-playwright-auth.mjs`,
+      `Auth required for ${capture.route}. ` +
+        (authDomainMatchesBaseUrl()
+          ? `Create ${path.relative(ROOT, AUTH_PATH)} with BASE_URL=${BASE_URL} npm run capture:founder-auth`
+          : authDomainMismatchMessage()),
     );
   }
 
@@ -387,7 +548,7 @@ async function captureFullPageScreenshot(page, capture) {
   });
 
   const dimensions = readPngDimensions(outputPath);
-  console.log(
+  log(
     `  → ${path.relative(ROOT, outputPath)} (${dimensions?.width ?? "?"}x${dimensions?.height ?? "?"})`,
   );
 
@@ -399,17 +560,22 @@ function assertAuthFile() {
     return;
   }
 
-  console.error("");
-  console.error("Missing founder Playwright auth state.");
-  console.error("");
-  console.error("1. Start the app: npm run dev");
-  console.error("2. Save auth: node scripts/save-founder-playwright-auth.mjs");
-  console.error("3. Re-run: npm run capture:founder-screenshots");
-  console.error("");
-  process.exit(1);
+  failWithCode(
+    "AUTH_MISSING",
+    [
+      "Missing founder Playwright auth state.",
+      "1. Start the app: npm run dev",
+      `2. Save auth: BASE_URL=${BASE_URL} npm run capture:founder-auth`,
+      "3. Re-run: npm run capture:founder-screenshots",
+    ].join(" "),
+  );
 }
 
 function printSummary(results) {
+  if (JSON_MODE) {
+    return;
+  }
+
   console.log("");
   console.log("Capture summary:");
   console.log(
@@ -429,8 +595,18 @@ function printSummary(results) {
 }
 
 async function main() {
+  if (!getBaseHostname()) {
+    failWithCode("INVALID_BASE_URL", `Invalid BASE_URL: ${BASE_URL}`);
+  }
+
+  emitEvent({ type: "status", message: `Starting capture against ${BASE_URL}` });
   await ensureFounderAuth();
   assertAuthFile();
+
+  if (!authDomainMatchesBaseUrl()) {
+    failWithCode("AUTH_DOMAIN_MISMATCH", authDomainMismatchMessage());
+  }
+
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
   const browser = await chromium.launch({ headless: true });
@@ -442,7 +618,7 @@ async function main() {
   await installFeedbackHiding(context);
   const page = await context.newPage();
 
-  /** @type {Array<{ label: string; route: string; output: string; ok: boolean; dimensions: { width: number; height: number } | null; notes: string }>} */
+  /** @type {Array<{ id: string; label: string; route: string; output: string; ok: boolean; dimensions: { width: number; height: number } | null; notes: string }>} */
   const results = [];
 
   try {
@@ -455,24 +631,47 @@ async function main() {
             ? "viewport match"
             : "unexpected dimensions";
 
-        results.push({
+        const result = {
+          id: capture.id,
           label: capture.label,
           route: capture.route,
           output: capture.output,
           ok: true,
           dimensions: outcome.dimensions,
           notes: dimensionNote,
+        };
+        results.push(result);
+        emitEvent({
+          type: "page",
+          id: capture.id,
+          label: capture.label,
+          route: capture.route,
+          output: capture.output,
+          status: "ok",
+          notes: dimensionNote,
+          dimensions: outcome.dimensions,
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`  ✗ ${capture.id}: ${message}`);
+        logError(`  ✗ ${capture.id}: ${message}`);
         results.push({
+          id: capture.id,
           label: capture.label,
           route: capture.route,
           output: capture.output,
           ok: false,
           dimensions: null,
           notes: message,
+        });
+        emitEvent({
+          type: "page",
+          id: capture.id,
+          label: capture.label,
+          route: capture.route,
+          output: capture.output,
+          status: "failed",
+          notes: message,
+          dimensions: null,
         });
       }
     }
@@ -483,15 +682,24 @@ async function main() {
   printSummary(results);
 
   const successCount = results.filter((result) => result.ok).length;
-  console.log("");
-  console.log(`Founder marketing screenshots captured: ${successCount}/${results.length} succeeded.`);
+  emitEvent({
+    type: "summary",
+    successCount,
+    total: results.length,
+    results,
+  });
+  log("");
+  log(`Founder marketing screenshots captured: ${successCount}/${results.length} succeeded.`);
 
   if (successCount === 0) {
-    process.exit(1);
+    failWithCode(
+      "ALL_CAPTURES_FAILED",
+      "No screenshots were captured. Check auth, BASE_URL reachability, and page readiness.",
+    );
   }
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+  const message = error instanceof Error ? error.message : String(error);
+  failWithCode("CAPTURE_CRASHED", message);
 });

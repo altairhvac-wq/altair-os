@@ -87,3 +87,21 @@ export function isPreviewableScreenshotReference(value: string): boolean {
     return false;
   }
 }
+
+/** True for old local catalog paths that are no longer in the quick-pick list. */
+export function isStaleFounderScreenshotCatalogPath(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  if (isFounderMarketingScreenshotPath(trimmed)) {
+    return false;
+  }
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return false;
+  }
+
+  return trimmed.startsWith("/marketing/screenshots");
+}

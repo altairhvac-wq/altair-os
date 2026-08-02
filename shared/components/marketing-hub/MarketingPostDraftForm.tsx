@@ -24,9 +24,11 @@ import type {
 import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingCompletedJobDraftAiGenerator";
 import { MarketingFounderDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingFounderDraftAiGenerator";
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
+import { FounderScreenshotUploadControl } from "@/shared/components/marketing-hub/FounderScreenshotUploadControl";
 import {
   FOUNDER_MARKETING_SCREENSHOT_OPTIONS,
   isPreviewableScreenshotReference,
+  isStaleFounderScreenshotCatalogPath,
 } from "@/shared/components/marketing-hub/founder-marketing-screenshots";
 import type {
   MarketingChannel,
@@ -610,8 +612,7 @@ export function MarketingPostDraftForm({
   const founderScreenshotPath = formData.founderScreenshotReference.trim();
   const hasStaleFounderScreenshotPath =
     showFounderScreenshot &&
-    founderScreenshotPath.length > 0 &&
-    !selectedFounderScreenshotOption;
+    isStaleFounderScreenshotCatalogPath(founderScreenshotPath);
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -1182,7 +1183,7 @@ export function MarketingPostDraftForm({
                     : "border-amber-200/70 bg-amber-50/30"
                 }`}
               >
-                <label className="block text-sm">
+                <div className="block text-sm">
                   <span
                     className={`font-medium ${
                       northStar ? "text-[#17130E]" : "text-slate-700"
@@ -1197,60 +1198,93 @@ export function MarketingPostDraftForm({
                       (optional)
                     </span>
                   </span>
-                  <select
-                    value={
-                      selectedFounderScreenshotOption?.path ??
-                      formData.founderScreenshotReference.trim()
-                    }
-                    onChange={(event) => {
-                      updateField(
-                        "founderScreenshotReference",
-                        event.target.value,
-                      );
-                    }}
-                    disabled={isReadOnly}
-                    className={inputClassName}
-                  >
-                    <option value="">
-                      Choose a product screenshot (optional)
-                    </option>
-                    {FOUNDER_MARKETING_SCREENSHOT_OPTIONS.map((option) => (
-                      <option key={option.id} value={option.path}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={formData.founderScreenshotReference}
-                    onChange={(event) =>
-                      updateField(
-                        "founderScreenshotReference",
-                        event.target.value,
-                      )
-                    }
-                    autoComplete="off"
-                    disabled={isReadOnly}
-                    className={`${inputClassName} mt-3`}
-                    placeholder="/marketing/screenshots/marketing-dispatch.png"
-                  />
                   <p
                     className={`mt-1.5 text-xs leading-relaxed ${
                       northStar ? "text-[#6B6255]" : "text-slate-500"
                     }`}
                   >
-                    Add a product screenshot reference for the post. You can
-                    copy this with the final post when sharing manually. Use a
-                    social-ready screenshot where the app fills the image.
+                    Upload a social-ready product screenshot, or quick-pick one
+                    already in Altair. Leave empty for a text-only update post.
                     Full-page screenshots may look tiny on Facebook.
                   </p>
-                  {founderScreenshotPath.length > 0 ? (
-                    <p
-                      className={`mt-2 break-all font-mono text-xs leading-relaxed ${
-                        northStar ? "text-[#17130E]" : "text-slate-700"
+
+                  {!isReadOnly ? (
+                    <div className="mt-3">
+                      <FounderScreenshotUploadControl
+                        disabled={isActionPending}
+                        northStar={northStar}
+                        onUploaded={(publicUrl) =>
+                          updateField("founderScreenshotReference", publicUrl)
+                        }
+                      />
+                    </div>
+                  ) : null}
+
+                  <label className="mt-4 block text-sm">
+                    <span
+                      className={`text-xs font-medium ${
+                        northStar ? "text-[#6B6255]" : "text-slate-500"
                       }`}
                     >
-                      Selected image: {founderScreenshotPath}
-                    </p>
+                      Or quick-pick an existing screenshot
+                    </span>
+                    <select
+                      value={
+                        selectedFounderScreenshotOption?.path ??
+                        (founderScreenshotPath.startsWith("http")
+                          ? "__uploaded__"
+                          : "")
+                      }
+                      onChange={(event) => {
+                        const nextValue = event.target.value;
+                        if (nextValue === "__uploaded__") {
+                          return;
+                        }
+                        updateField(
+                          "founderScreenshotReference",
+                          nextValue,
+                        );
+                      }}
+                      disabled={isReadOnly || isActionPending}
+                      className={inputClassName}
+                    >
+                      {founderScreenshotPath.startsWith("http") ? (
+                        <option value="__uploaded__">
+                          Uploaded screenshot (current)
+                        </option>
+                      ) : (
+                        <option value="">None — text-only post</option>
+                      )}
+                      {FOUNDER_MARKETING_SCREENSHOT_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.path}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {founderScreenshotPath.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <p
+                        className={`break-all font-mono text-xs leading-relaxed ${
+                          northStar ? "text-[#17130E]" : "text-slate-700"
+                        }`}
+                      >
+                        Selected image: {founderScreenshotPath}
+                      </p>
+                      {!isReadOnly ? (
+                        <button
+                          type="button"
+                          disabled={isActionPending}
+                          onClick={() =>
+                            updateField("founderScreenshotReference", "")
+                          }
+                          className="admin-btn-secondary text-xs"
+                        >
+                          Clear
+                        </button>
+                      ) : null}
+                    </div>
                   ) : null}
                   {hasStaleFounderScreenshotPath ? (
                     <p
@@ -1260,12 +1294,11 @@ export function MarketingPostDraftForm({
                           : "border-amber-200 bg-amber-50 text-amber-800"
                       }`}
                     >
-                      This draft uses an older screenshot path. Reselect Reports
-                      workspace or Leads workspace from the picker to use the
-                      current Facebook-ready card.
+                      This draft uses an older screenshot path. Reselect from
+                      the quick-pick list, or upload a new screenshot.
                     </p>
                   ) : null}
-                </label>
+                </div>
               </div>
             ) : null}
 
