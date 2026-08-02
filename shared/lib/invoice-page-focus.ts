@@ -17,15 +17,8 @@ export type InvoiceListStatusFilter = InvoiceStatus | "all" | "unpaid";
 export type InvoicePageFocusState = {
   focus: InvoicePageFocus | null;
   statusFilter: InvoiceListStatusFilter;
-  banner: {
-    title: string;
-    description: string;
-    clearHref: string;
-  } | null;
   jobClearHref: string;
-  highlightedSummaryLabels: Array<"Unpaid" | "Overdue" | "Paid">;
   sectionEyebrow: string | null;
-  sectionDescription: string | null;
 };
 
 const VALID_FOCUS_PARAMS = new Set(["cash-flow"]);
@@ -105,40 +98,6 @@ function resolveStatusFilter(statusParam: string | undefined): InvoiceListStatus
   return "all";
 }
 
-function resolveBannerCopy(
-  focus: InvoicePageFocus | null,
-  statusFilter: InvoiceListStatusFilter,
-): Pick<InvoicePageFocusState, "banner">["banner"] {
-  if (statusFilter === "overdue") {
-    return {
-      title: "Overdue collection follow-up",
-      description:
-        "Review past-due invoices and follow up with customers to protect cash flow.",
-      clearHref: "",
-    };
-  }
-
-  if (statusFilter === "unpaid") {
-    return {
-      title: "Open invoices awaiting payment",
-      description:
-        "Sent and partially paid invoices with an outstanding balance — prioritize follow-up on the largest balances.",
-      clearHref: "",
-    };
-  }
-
-  if (focus === "cash-flow") {
-    return {
-      title: "Cash flow collection view",
-      description:
-        "Overdue and unpaid invoices are prioritized below. Clear the view to return to the full invoice list.",
-      clearHref: "",
-    };
-  }
-
-  return null;
-}
-
 export function parseInvoicePageSearchParams(input: {
   status?: string;
   focus?: string;
@@ -152,50 +111,18 @@ export function parseInvoicePageSearchParams(input: {
       : null;
 
   const statusFilter = resolveStatusFilter(input.status);
-
-  const cashFlowClearHref = buildInvoicesHref(input, {
-    includeFocusQuery: false,
-  });
   const jobClearHref = buildInvoicesHref(input, { includeJobId: false });
-
-  const bannerTemplate = resolveBannerCopy(focus, statusFilter);
-  const banner = bannerTemplate
-    ? { ...bannerTemplate, clearHref: cashFlowClearHref }
-    : null;
-
-  const highlightedSummaryLabels: InvoicePageFocusState["highlightedSummaryLabels"] =
-    [];
-
-  if (focus === "cash-flow" || statusFilter === "unpaid") {
-    highlightedSummaryLabels.push("Unpaid");
-  }
-
-  if (focus === "cash-flow" || statusFilter === "overdue") {
-    highlightedSummaryLabels.push("Overdue");
-  }
 
   const sectionEyebrow =
     focus === "cash-flow" || statusFilter === "overdue" || statusFilter === "unpaid"
       ? "Cash flow"
       : null;
 
-  const sectionDescription =
-    statusFilter === "overdue"
-      ? "Past-due invoices needing collection follow-up"
-      : statusFilter === "unpaid"
-        ? "Open balances awaiting customer payment"
-        : focus === "cash-flow"
-          ? "Prioritizing overdue and unpaid balances for collections"
-          : null;
-
   return {
     focus,
     statusFilter,
-    banner,
     jobClearHref,
-    highlightedSummaryLabels,
     sectionEyebrow,
-    sectionDescription,
   };
 }
 

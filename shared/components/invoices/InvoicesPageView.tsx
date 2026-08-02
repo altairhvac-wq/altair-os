@@ -57,7 +57,7 @@ import {
   type InvoiceListStatusFilter,
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
-import { prepareInvoicesForListView } from "@/shared/lib/invoice-workflow-list";
+import { buildInvoicesGlanceStats } from "@/shared/lib/invoices/invoices-glance-stats";
 import {
   MasterListPageLayout,
   MasterPageSurface,
@@ -70,16 +70,17 @@ import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFil
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { InvoiceBatchSelectionBar } from "./InvoiceBatchSelectionBar";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
-import { InvoiceQueueTabs } from "./InvoiceQueueTabs";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
 import { InvoicesEmptyState } from "./InvoicesEmptyState";
+import { InvoicesStatStrip } from "./InvoicesStatStrip";
 import { InvoicesTable } from "./InvoicesTable";
 import {
-  countInvoicesForWorkQueue,
   filterInvoicesForWorkQueue,
+  resolveDefaultInvoiceWorkQueue,
   sortInvoicesForWorkQueue,
   type InvoiceWorkQueue,
 } from "./invoice-work-queues";
+import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import {
   buildInvoiceSearchFields,
   rankAndSortRecords,
@@ -89,6 +90,7 @@ type PanelMode = "create" | "empty";
 
 type InvoicesPageViewProps = {
   initialInvoices: Invoice[];
+  initialPayments: InvoicePayment[];
   customers: Customer[];
   jobs: Job[];
   serviceItems: ServiceItem[];
@@ -158,6 +160,7 @@ function filterInvoices(
 
 export function InvoicesPageView({
   initialInvoices,
+  initialPayments,
   customers,
   jobs,
   serviceItems,
@@ -174,9 +177,31 @@ export function InvoicesPageView({
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>("needs-action");
-  const [statusFilter, setStatusFilter] =
-    useState<InvoiceListStatusFilter>(initialStatusFilter);
+  const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>(() =>
+    resolveDefaultInvoiceWorkQueue(
+      initialStatusFilter,
+      invoicePageFocus?.focus ?? null,
+    ),
+  );
+  const [statusFilter, setStatusFilter] = useState<InvoiceListStatusFilter>(
+    () => {
+      // Deep-link status that maps to a header pill is expressed by the queue;
+      // keep secondary filter only for unpaid / past void|cancelled splits.
+      const queue = resolveDefaultInvoiceWorkQueue(
+        initialStatusFilter,
+        invoicePageFocus?.focus ?? null,
+      );
+      if (
+        initialStatusFilter === "unpaid" ||
+        ((initialStatusFilter === "void" ||
+          initialStatusFilter === "cancelled") &&
+          queue === "past")
+      ) {
+        return initialStatusFilter;
+      }
+      return "all";
+    },
+  );
   const [lifecycleFilter, setLifecycleFilter] =
     useState<InvoiceLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
@@ -223,23 +248,28 @@ export function InvoicesPageView({
   }, [lifecycleFilter, workQueue, statusFilter]);
 
   const prioritizeCashFlow =
-    invoicePageFocus?.focus === "cash-flow" || workQueue === "needs-action";
+    invoicePageFocus?.focus === "cash-flow" ||
+    workQueue === "overdue" ||
+    statusFilter === "unpaid";
 
-  const queueCounts = useMemo(
+  const glanceStats = useMemo(
     () =>
-      ({
-        "needs-action": countInvoicesForWorkQueue(invoices, "needs-action"),
-        drafts: countInvoicesForWorkQueue(invoices, "drafts"),
-        "all-active": countInvoicesForWorkQueue(invoices, "all-active"),
-        past: countInvoicesForWorkQueue(invoices, "past"),
-      }) satisfies Record<InvoiceWorkQueue, number>,
-    [invoices],
+      buildInvoicesGlanceStats({
+        invoices,
+        payments: initialPayments,
+      }),
+    [invoices, initialPayments],
   );
 
-  const queueScopedInvoices = useMemo(
-    () => filterInvoicesForWorkQueue(invoices, workQueue),
-    [invoices, workQueue],
-  );
+  const queueScopedInvoices = useMemo(() => {
+    // Archived / recently deleted / voided lifecycle are reached via the
+    // lifecycle filter; status pills only scope the active book.
+    if (lifecycleFilter !== "active") {
+      return invoices;
+    }
+
+    return filterInvoicesForWorkQueue(invoices, workQueue);
+  }, [invoices, lifecycleFilter, workQueue]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -250,65 +280,55 @@ export function InvoicesPageView({
     [jobs],
   );
 
-  const filteredInvoiceResult = useMemo(
-    () =>
-      filterInvoices(
-        queueScopedInvoices,
-        deferredSearch,
-        statusFilter,
-        lifecycleFilter,
-        customersById,
-        jobsForSearchById,
-        initialJobId,
-        prioritizeCashFlow,
-      ),
-    [
+  const filteredInvoiceResult = useMemo(() => {
+    // Past pill surfaces voided lifecycle rows while the lifecycle control
+    // remains on Active (status pills own the active book; Past is the exception).
+    const effectiveLifecycleFilter: InvoiceLifecycleState =
+      lifecycleFilter === "active" && workQueue === "past"
+        ? "voided"
+        : lifecycleFilter;
+
+    return filterInvoices(
       queueScopedInvoices,
       deferredSearch,
       statusFilter,
-      lifecycleFilter,
+      effectiveLifecycleFilter,
       customersById,
       jobsForSearchById,
       initialJobId,
       prioritizeCashFlow,
-    ],
-  );
+    );
+  }, [
+    queueScopedInvoices,
+    deferredSearch,
+    statusFilter,
+    lifecycleFilter,
+    workQueue,
+    customersById,
+    jobsForSearchById,
+    initialJobId,
+    prioritizeCashFlow,
+  ]);
   const filteredInvoices = filteredInvoiceResult.items;
   const searchMatchReasons = filteredInvoiceResult.matchReasons;
 
   const invoiceListPresentation = useMemo(() => {
-    if (workQueue === "needs-action") {
-      return {
-        sections: [
-          {
-            id: "needs-action",
-            label: "",
-            items: sortInvoicesForCashFlowFocus(filteredInvoices),
-          },
-        ],
-        showSectionHeaders: false,
-      };
-    }
+    const items =
+      workQueue === "overdue" || prioritizeCashFlow
+        ? sortInvoicesForCashFlowFocus(filteredInvoices)
+        : sortInvoicesForWorkQueue(filteredInvoices, workQueue);
 
-    if (workQueue === "drafts" || workQueue === "past") {
-      return {
-        sections: [
-          {
-            id: workQueue,
-            label: "",
-            items: sortInvoicesForWorkQueue(filteredInvoices, workQueue),
-          },
-        ],
-        showSectionHeaders: false,
-      };
-    }
-
-    return prepareInvoicesForListView(
-      filteredInvoices,
-      statusFilter,
-      prioritizeCashFlow,
-    );
-  }, [filteredInvoices, prioritizeCashFlow, statusFilter, workQueue]);
+    return {
+      sections: [
+        {
+          id: workQueue,
+          label: "",
+          items,
+        },
+      ],
+      showSectionHeaders: false,
+    };
+  }, [filteredInvoices, prioritizeCashFlow, workQueue]);
 
   const jobsById = useMemo(() => buildJobsByIdForBatchSend(jobs), [jobs]);
 
@@ -572,6 +592,15 @@ export function InvoicesPageView({
     });
   }
 
+  function handleQueueChange(queue: InvoiceWorkQueue) {
+    setWorkQueue(queue);
+    setStatusFilter("all");
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
   function handleSelectInvoice(invoice: Invoice) {
     router.push(`/invoices/${invoice.id}`);
   }
@@ -633,6 +662,19 @@ export function InvoicesPageView({
       subtitle={subtitle}
       eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
       density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoInvoices ? undefined : (
+          <InvoicesStatStrip
+            stats={glanceStats}
+            activeQueue={workQueue}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
       banners={
         (initialJobId && initialJobLabel) ||
         lifecycleMessage ||
@@ -696,11 +738,7 @@ export function InvoicesPageView({
         ) : undefined
       }
       className={northStar ? lt.pageCanvas : undefined}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "workspace"}
@@ -716,30 +754,13 @@ export function InvoicesPageView({
           }
         >
         {!hasNoInvoices ? (
-          <div
-            className={
-              northStar
-                ? lt.viewTabsBand
-                : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-            }
-          >
-            <InvoiceQueueTabs
-              activeQueue={workQueue}
-              onQueueChange={setWorkQueue}
-              counts={queueCounts}
-              northStar={northStar}
-            />
-          </div>
-        ) : null}
-
-        {!hasNoInvoices ? (
           <InvoiceSearchFilterBar
             search={search}
             statusFilter={statusFilter}
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredInvoices.length}
-            showStatusFilter={workQueue === "all-active" || workQueue === "past"}
+            showStatusFilter={workQueue === "past"}
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageInvoices}

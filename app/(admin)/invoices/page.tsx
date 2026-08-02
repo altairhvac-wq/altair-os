@@ -4,6 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listDeletedInvoices } from "@/lib/database/queries/invoices";
+import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
@@ -44,12 +45,13 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     create,
   });
 
-  const [invoices, deletedInvoices, customers, jobs, serviceItems] =
+  const [invoices, deletedInvoices, payments, customers, jobs, serviceItems] =
     await Promise.all([
     listInvoicesWithBillingSync(companyContext.company.id, companyContext.company.timezone, {
       includeArchived: true,
     }),
     listDeletedInvoices(companyContext.company.id),
+    listInvoicePayments(companyContext.company.id),
     listCustomers(companyContext.company.id),
     listJobs(companyContext.company.id),
     listActiveServiceItems(companyContext.company.id),
@@ -101,6 +103,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
   return (
     <InvoicesPageView
       initialInvoices={[...invoices, ...deletedInvoices]}
+      initialPayments={payments}
       customers={customers}
       jobs={jobs}
       serviceItems={serviceItems}

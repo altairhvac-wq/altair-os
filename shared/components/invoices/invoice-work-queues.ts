@@ -1,83 +1,108 @@
 import { getInvoiceLifecycleState } from "@/shared/lib/invoice-lifecycle";
 import {
-  hasInvoiceUnpaidBalance,
+  roundCurrency,
   type Invoice,
+  type InvoiceStatus,
 } from "@/shared/types/invoice";
 
+/**
+ * Header filter pills for the Invoices list.
+ * Primary status pills and Past are active-lifecycle only. Archived / recently
+ * deleted stay on the lifecycle filter (queue scoping is skipped there).
+ */
 export type InvoiceWorkQueue =
-  | "needs-action"
-  | "drafts"
-  | "all-active"
+  | "draft"
+  | "sent"
+  | "partially_paid"
+  | "overdue"
+  | "paid"
   | "past";
 
 export const INVOICE_WORK_QUEUE_ORDER: readonly InvoiceWorkQueue[] = [
-  "needs-action",
-  "drafts",
-  "all-active",
+  "draft",
+  "sent",
+  "partially_paid",
+  "overdue",
+  "paid",
   "past",
 ];
 
 export const INVOICE_WORK_QUEUE_LABELS: Record<InvoiceWorkQueue, string> = {
-  "needs-action": "Needs action",
-  drafts: "Drafts",
-  "all-active": "All active",
+  draft: "Draft",
+  sent: "Sent",
+  partially_paid: "Partially paid",
+  overdue: "Overdue",
+  paid: "Paid",
   past: "Past",
 };
 
-/** Active invoices with balance due that are not drafts. */
-export function isInvoiceNeedsAction(invoice: Invoice): boolean {
-  if (getInvoiceLifecycleState(invoice) !== "active") {
-    return false;
-  }
+const PAST_ACTIVE_STATUSES = new Set<InvoiceStatus>(["void", "cancelled"]);
 
-  if (invoice.status === "draft" || invoice.status === "paid") {
-    return false;
-  }
-
-  return (
-    invoice.status === "overdue" ||
-    invoice.status === "sent" ||
-    invoice.status === "partially_paid" ||
-    hasInvoiceUnpaidBalance(invoice)
-  );
+function isActiveInvoiceRecord(invoice: Invoice): boolean {
+  return getInvoiceLifecycleState(invoice) === "active";
 }
 
 /** Active draft invoices waiting to be finished or sent. */
 export function isInvoiceDraftQueue(invoice: Invoice): boolean {
+  return isActiveInvoiceRecord(invoice) && invoice.status === "draft";
+}
+
+/** Active sent invoices awaiting payment. */
+export function isInvoiceSentQueue(invoice: Invoice): boolean {
+  return isActiveInvoiceRecord(invoice) && invoice.status === "sent";
+}
+
+/** Active partially paid invoices with remaining balance. */
+export function isInvoicePartiallyPaidQueue(invoice: Invoice): boolean {
+  return isActiveInvoiceRecord(invoice) && invoice.status === "partially_paid";
+}
+
+/** Active overdue invoices. */
+export function isInvoiceOverdueQueue(invoice: Invoice): boolean {
+  return isActiveInvoiceRecord(invoice) && invoice.status === "overdue";
+}
+
+/** Active paid invoices. */
+export function isInvoicePaidQueue(invoice: Invoice): boolean {
+  return isActiveInvoiceRecord(invoice) && invoice.status === "paid";
+}
+
+/**
+ * Void + cancelled folded like Estimates Past.
+ * Invoice void/cancelled rows live in the voided lifecycle (not active).
+ */
+export function isInvoicePastQueue(invoice: Invoice): boolean {
   return (
-    getInvoiceLifecycleState(invoice) === "active" &&
-    invoice.status === "draft"
+    getInvoiceLifecycleState(invoice) === "voided" &&
+    PAST_ACTIVE_STATUSES.has(invoice.status)
   );
 }
 
-/** Active invoices that are not archived, deleted, or voided. */
-export function isInvoiceAllActiveQueue(invoice: Invoice): boolean {
-  return getInvoiceLifecycleState(invoice) === "active";
-}
-
-/** Paid, voided, archived, deleted, and other closed billing records. */
-export function isInvoicePastQueue(invoice: Invoice): boolean {
-  const lifecycle = getInvoiceLifecycleState(invoice);
-
-  if (lifecycle !== "active") {
-    return true;
+export function matchesInvoiceWorkQueue(
+  invoice: Invoice,
+  queue: InvoiceWorkQueue,
+): boolean {
+  switch (queue) {
+    case "draft":
+      return isInvoiceDraftQueue(invoice);
+    case "sent":
+      return isInvoiceSentQueue(invoice);
+    case "partially_paid":
+      return isInvoicePartiallyPaidQueue(invoice);
+    case "overdue":
+      return isInvoiceOverdueQueue(invoice);
+    case "paid":
+      return isInvoicePaidQueue(invoice);
+    case "past":
+      return isInvoicePastQueue(invoice);
   }
-
-  return invoice.status === "paid";
 }
 
 export function filterInvoicesForWorkQueue(
   invoices: Invoice[],
   queue: InvoiceWorkQueue,
 ): Invoice[] {
-  const predicate = {
-    "needs-action": isInvoiceNeedsAction,
-    drafts: isInvoiceDraftQueue,
-    "all-active": isInvoiceAllActiveQueue,
-    past: isInvoicePastQueue,
-  }[queue];
-
-  return invoices.filter(predicate);
+  return invoices.filter((invoice) => matchesInvoiceWorkQueue(invoice, queue));
 }
 
 export function countInvoicesForWorkQueue(
@@ -87,11 +112,29 @@ export function countInvoicesForWorkQueue(
   return filterInvoicesForWorkQueue(invoices, queue).length;
 }
 
+/** Outstanding balance owed for a status queue (not invoice total). */
+export function sumBalanceDueForWorkQueue(
+  invoices: Invoice[],
+  queue: InvoiceWorkQueue,
+): number {
+  return roundCurrency(
+    filterInvoicesForWorkQueue(invoices, queue).reduce(
+      (sum, invoice) =>
+        sum + (Number.isFinite(invoice.balanceDue) ? invoice.balanceDue : 0),
+      0,
+    ),
+  );
+}
+
 function compareInvoiceRecency(left: Invoice, right: Invoice): number {
   const leftTime = Date.parse(left.updatedAt ?? left.createdAt);
   const rightTime = Date.parse(right.updatedAt ?? right.createdAt);
 
-  if (Number.isFinite(leftTime) && Number.isFinite(rightTime) && leftTime !== rightTime) {
+  if (
+    Number.isFinite(leftTime) &&
+    Number.isFinite(rightTime) &&
+    leftTime !== rightTime
+  ) {
     return rightTime - leftTime;
   }
 
@@ -102,11 +145,20 @@ export function sortInvoicesForWorkQueue(
   invoices: Invoice[],
   queue: InvoiceWorkQueue,
 ): Invoice[] {
-  const sorted = [...invoices];
+  void queue;
+  return [...invoices].sort(compareInvoiceRecency);
+}
 
-  if (queue === "drafts" || queue === "past") {
-    return sorted.sort(compareInvoiceRecency);
-  }
-
-  return sorted;
+export function resolveDefaultInvoiceWorkQueue(
+  statusFilter?: InvoiceStatus | "all" | "unpaid",
+  focus?: "cash-flow" | null,
+): InvoiceWorkQueue {
+  if (statusFilter === "draft") return "draft";
+  if (statusFilter === "sent") return "sent";
+  if (statusFilter === "partially_paid") return "partially_paid";
+  if (statusFilter === "overdue") return "overdue";
+  if (statusFilter === "paid") return "paid";
+  if (statusFilter === "void" || statusFilter === "cancelled") return "past";
+  if (statusFilter === "unpaid" || focus === "cash-flow") return "overdue";
+  return "draft";
 }

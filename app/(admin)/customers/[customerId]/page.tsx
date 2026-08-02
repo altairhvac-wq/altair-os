@@ -4,13 +4,13 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById, getCustomerDeleteDependencies, getCustomerOperationalStats } from "@/lib/database/queries/customers";
 import { mergeCustomerOperationalStats } from "@/shared/lib/customers/customer-operational-stats";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
-import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/operational-activities";
 import { listRecentExpensesForCustomer } from "@/lib/database/queries/expenses";
 import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-attachments";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { listInvoicePaymentsForCustomer } from "@/lib/database/queries/invoice-payments";
+import { listInvoicesByCustomerWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import {
@@ -69,9 +69,10 @@ export default async function CustomerDetailPage({
         )
       : Promise.resolve([]),
     canViewBillingData
-      ? listInvoicesByCustomer(
+      ? listInvoicesByCustomerWithBillingSync(
           companyContext.company.id,
           customerId,
+          companyContext.company.timezone,
           CUSTOMER_360_RECORD_LIMIT,
         )
       : Promise.resolve([]),
@@ -122,6 +123,7 @@ export default async function CustomerDetailPage({
         canAccessDispatch: canAccessOperationalJobsArea(companyContext),
       },
     },
+    companyContext.company.timezone,
   );
 
   return (
