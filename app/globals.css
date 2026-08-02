@@ -2096,6 +2096,33 @@ a[href] {
   }
 }
 
+/* Dispatch Mapbox board — dark chrome for popups / controls (job pins only) */
+.dispatch-map-root .dispatch-map-popup .mapboxgl-popup-content {
+  background: var(--altair-graphite);
+  border: 1px solid var(--altair-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  padding: 0.55rem 0.7rem;
+  color: var(--altair-paper);
+}
+
+.dispatch-map-root .dispatch-map-popup .mapboxgl-popup-tip {
+  border-top-color: var(--altair-graphite);
+}
+
+.dispatch-map-root .mapboxgl-ctrl-group {
+  background: var(--altair-graphite);
+  border: 1px solid var(--altair-border);
+}
+
+.dispatch-map-root .mapboxgl-ctrl-group button + button {
+  border-top-color: var(--altair-border);
+}
+
+.dispatch-map-root .mapboxgl-ctrl-icon {
+  filter: invert(1) brightness(1.2);
+}
+
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .dispatch-north-star-filter-bar select {
   border: 1px solid var(--north-star-work-border-strong);

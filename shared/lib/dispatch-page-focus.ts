@@ -79,7 +79,7 @@ function resolveBannerCopy(
     return {
       title: "Today's dispatch board",
       description:
-        "Review technician lanes and today's scheduled jobs. Clear this view to return to the standard dispatch layout.",
+        "Review technician columns and start-time markers for today's jobs. Clear this view to return to the standard dispatch layout.",
       clearHref: "/dispatch",
     };
   }
@@ -137,7 +137,7 @@ export function parseDispatchPageSearchParams(input: {
     highlightedSummaryLabels.push("Scheduled Today");
     boardEyebrow = "Today's board";
     boardDescription =
-      "Technician lanes with horizontally scrollable job cards";
+      "Technician columns on today's time axis — markers show start time only";
   }
 
   if (focus === "overload") {
@@ -145,7 +145,7 @@ export function parseDispatchPageSearchParams(input: {
     emphasizeBoard = true;
     boardEyebrow = "Workload pressure";
     boardDescription =
-      "Compare technician lanes with workload in the Workload sheet";
+      "Overloaded technicians are highlighted on today's time grid";
   }
 
   const bannerTemplate = resolveBannerCopy(focus, overloadedTechnicianIds);

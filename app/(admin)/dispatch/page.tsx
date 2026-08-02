@@ -4,6 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
+import { listActiveTechnicianTimeEntries } from "@/lib/database/queries/time-entries";
 import { DispatchPageView } from "@/shared/components/dispatch/DispatchPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
@@ -11,6 +12,7 @@ import {
   enrichDispatchPageFocusState,
   parseDispatchPageSearchParams,
 } from "@/shared/lib/dispatch-page-focus";
+import { attachTechnicianTimeStates } from "@/shared/lib/dispatch-technician-time-state";
 
 type DispatchPageProps = {
   searchParams: Promise<{
@@ -49,21 +51,29 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
   const techniciansPromise = access.canViewTechnicianRoster
     ? listTechnicians(companyContext.company.id, companyContext, jobs)
     : Promise.resolve([]);
+  const activeTimeEntriesPromise = access.canViewTechnicianRoster
+    ? listActiveTechnicianTimeEntries(companyContext.company.id)
+    : Promise.resolve([]);
   const billingSummariesPromise = canViewBillingData
     ? listJobBillingSummariesForJobs(
         companyContext.company.id,
         jobs.map((job) => job.id),
       )
     : Promise.resolve({ estimatesByJobId: {}, invoicesByJobId: {} });
-  const [technicians, billingSummaries] = await Promise.all([
+  const [technicians, activeTimeEntries, billingSummaries] = await Promise.all([
     techniciansPromise,
+    activeTimeEntriesPromise,
     billingSummariesPromise,
   ]);
+  const techniciansWithTimeState = attachTechnicianTimeStates(
+    technicians,
+    activeTimeEntries,
+  );
 
   return (
     <DispatchPageView
       initialJobs={jobs}
-      technicians={technicians}
+      technicians={techniciansWithTimeState}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
       canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
       canManageCustomers={access.canManageCustomers}

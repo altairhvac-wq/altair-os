@@ -20,11 +20,12 @@ Do not hardcode new hex values or introduce a second token vocabulary for a page
 - Classes: `altairMcCardClass`, `altairMcTileClass`, `altairMcListClass`, `altairMcMetricLabelClass`, `altairMcMetricValueClass`, etc.
 - Surfaces use `--surface-section` / `--surface-tile` / `--surface-card` with `border-altair-border`.
 
-**Reports dark elevated** — Reports only:
+**Reports dark elevated** — Reports (and Dispatch board, deliberate exception):
 
 - Tokens: `shared/design-system/components/report-surface.ts`
 - Classes: `altairReportCardClass`, `altairReportTileClass`, `altairReportMetric*Class`, range/action chrome.
 - Background is Graphite (`bg-altair-graphite`) — do not invent a parallel dark hex.
+- Dispatch additionally uses a dark Ink canvas wrapper and saturated priority chip fills for Gantt readability; keep that exception scoped to `/dispatch`.
 
 **Reports icon chips only** — `shared/design-system/components/report-icon-tints.ts`:
 

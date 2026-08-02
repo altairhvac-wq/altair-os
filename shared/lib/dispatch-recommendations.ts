@@ -65,7 +65,8 @@ const REASON_COPY: Record<ReasonKey, string> = {
   same_zip: "Closest service area (ZIP)",
 };
 
-function isAssignableTechnician(technician: Technician): boolean {
+/** Same roster filter as dashboard assignableTechnicians / job assignment. */
+export function isAssignableTechnician(technician: Technician): boolean {
   return technician.role === COMPANY_ROLE_LABELS.technician;
 }
 

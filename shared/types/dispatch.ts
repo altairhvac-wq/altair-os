@@ -4,6 +4,7 @@ import {
   isSameCalendarDayInTimeZone,
 } from "@/shared/lib/datetime";
 import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
+import type { TechnicianTimeState } from "@/shared/types/time-entry";
 
 export type DispatchJobStatus =
   | "scheduled"
@@ -23,6 +24,8 @@ export type Technician = {
   role: string;
   initials: string;
   status: TechnicianStatus;
+  /** Live time-clock state when loaded for the dispatch board. */
+  timeState?: TechnicianTimeState;
   specialty: string;
   specialties: string[];
   phone: string;
@@ -56,6 +59,108 @@ export type DispatchSummary = {
   unassigned: number;
   completed: number;
 };
+
+/** KPI row metrics for the dispatch command board. */
+export type DispatchBoardMetrics = {
+  jobsToday: number;
+  inProgress: number;
+  completed: number;
+  /** null when no completed jobs have arrived_at (nothing to score). */
+  onTimePercent: number | null;
+  onTimeCount: number;
+  onTimeEligibleCount: number;
+};
+
+const DISPATCH_PRIORITY_RANK: Record<DispatchJobPriority, number> = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
+};
+
+export function compareDispatchJobsByPriorityThenStart(
+  a: DispatchJob,
+  b: DispatchJob,
+): number {
+  const priorityDiff =
+    DISPATCH_PRIORITY_RANK[a.priority] - DISPATCH_PRIORITY_RANK[b.priority];
+  if (priorityDiff !== 0) {
+    return priorityDiff;
+  }
+
+  const aMs = Date.parse(a.scheduledDate);
+  const bMs = Date.parse(b.scheduledDate);
+  const aValid = !Number.isNaN(aMs);
+  const bValid = !Number.isNaN(bMs);
+
+  if (aValid && bValid && aMs !== bMs) {
+    return aMs - bMs;
+  }
+  if (aValid !== bValid) {
+    return aValid ? -1 : 1;
+  }
+  return a.jobNumber.localeCompare(b.jobNumber);
+}
+
+export function sortDispatchJobsByPriorityThenStart(
+  jobs: DispatchJob[],
+): DispatchJob[] {
+  return [...jobs].sort(compareDispatchJobsByPriorityThenStart);
+}
+
+/**
+ * On-time rate for completed jobs with a recorded arrival.
+ * Jobs missing arrived_at are excluded from the denominator (not counted late).
+ * On time = arrived_at <= scheduled_at.
+ */
+export function getDispatchOnTimeMetrics(jobs: DispatchJob[]): {
+  onTimePercent: number | null;
+  onTimeCount: number;
+  onTimeEligibleCount: number;
+} {
+  let onTimeCount = 0;
+  let onTimeEligibleCount = 0;
+
+  for (const job of jobs) {
+    if (job.status !== "completed" || !job.arrivedAt) {
+      continue;
+    }
+
+    const arrivedMs = Date.parse(job.arrivedAt);
+    const scheduledMs = Date.parse(job.scheduledDate);
+    if (Number.isNaN(arrivedMs) || Number.isNaN(scheduledMs)) {
+      continue;
+    }
+
+    onTimeEligibleCount += 1;
+    if (arrivedMs <= scheduledMs) {
+      onTimeCount += 1;
+    }
+  }
+
+  return {
+    onTimeCount,
+    onTimeEligibleCount,
+    onTimePercent:
+      onTimeEligibleCount === 0
+        ? null
+        : Math.round((onTimeCount / onTimeEligibleCount) * 100),
+  };
+}
+
+export function getDispatchBoardMetrics(jobs: DispatchJob[]): DispatchBoardMetrics {
+  const counts = getOperationalDayJobCounts(jobs);
+  const onTime = getDispatchOnTimeMetrics(jobs);
+
+  return {
+    jobsToday: counts.activeTotal,
+    inProgress: counts.onSiteOrWorking,
+    completed: counts.completed,
+    onTimePercent: onTime.onTimePercent,
+    onTimeCount: onTime.onTimeCount,
+    onTimeEligibleCount: onTime.onTimeEligibleCount,
+  };
+}
 
 export const DISPATCH_STATUS_OPTIONS: {
   value: DispatchJobStatus | "all";

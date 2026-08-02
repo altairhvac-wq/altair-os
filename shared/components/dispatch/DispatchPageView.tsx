@@ -4,32 +4,30 @@ import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from
 import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   filterDispatchJobs,
+  getDispatchBoardMetrics,
   hasAssignedJobTechnician,
   type DispatchJob,
   type DispatchJobStatus,
   type Technician,
 } from "@/shared/types/dispatch";
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
+import { isAssignableTechnician } from "@/shared/lib/dispatch-recommendations";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import { canUpdateJobWorkflowStatus } from "@/lib/database/access-control";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useIsBelowLg } from "@/shared/components/mobile/use-mobile-viewport";
 import { DispatchBoard } from "./DispatchBoard";
-import { DispatchDashboardHeader } from "./DispatchDashboardHeader";
 import { DispatchDetailsPanel } from "./DispatchDetailsPanel";
 import { MobileSheet, MobileSheetPanel } from "@/shared/components/ui/mobile-sheet";
 import { DispatchEmptyState } from "./DispatchEmptyState";
 import { DispatchFocusBanner } from "./DispatchFocusBanner";
-import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
-import { UnassignedJobsModal } from "./UnassignedJobsModal";
+import { DispatchStatStrip } from "./DispatchStatStrip";
+import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 import {
   MasterContentStack,
   MasterPageCanvas,
-  MasterPageSurface,
   MasterShellPage,
   masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt, northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
@@ -99,42 +97,38 @@ export function DispatchPageView({
     });
   }, [initialJobs]);
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<DispatchJobStatus | "all">(
-    "all",
-  );
-  const [technicianFilter, setTechnicianFilter] = useState<string>(
-    dispatchPageFocus?.initialTechnicianFilter ?? "all",
-  );
+  /** Deep-link focus can still scope the board (e.g. unassigned); no UI filter bar. */
+  const technicianFilter =
+    dispatchPageFocus?.initialTechnicianFilter ?? "all";
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignFeedback, setAssignFeedback] = useState<{
     jobId: string;
     type: "success" | "error";
     message: string;
   } | null>(null);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
-  const [showAllTechnicians, setShowAllTechnicians] = useState(false);
   const [, startTransition] = useTransition();
   const isBelowLg = useIsBelowLg();
-  const northStar = isNorthStarShellEnabled();
+
+  /** Board lanes + assign dropdown — Technician role only (not Owner/Dispatcher/Office). */
+  const assignableTechnicians = useMemo(
+    () => technicians.filter(isAssignableTechnician),
+    [technicians],
+  );
 
   const filteredJobs = useMemo(
     () =>
       filterDispatchJobs(
         jobs,
         technicians,
-        search,
-        statusFilter,
+        "",
+        "all",
         technicianFilter,
       ),
-    [jobs, technicians, search, statusFilter, technicianFilter],
+    [jobs, technicians, technicianFilter],
   );
 
-  const unassignedJobs = useMemo(
-    () => filteredJobs.filter((job) => !job.technicianId),
-    [filteredJobs],
-  );
+  const boardMetrics = useMemo(() => getDispatchBoardMetrics(jobs), [jobs]);
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
   const selectedTechnician = selectedJob?.technicianId
@@ -145,7 +139,6 @@ export function DispatchPageView({
   const handleSelectJob = useCallback((job: DispatchJob) => {
     setSelectedJobId(job.id);
     setAssignFeedback(null);
-    setShowUnassignedModal(false);
   }, []);
 
   const handleClosePanel = useCallback(() => {
@@ -253,18 +246,6 @@ export function DispatchPageView({
   const hasNoJobs = jobs.length === 0;
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
-  const handleOpenUnassigned = useCallback(() => {
-    setShowUnassignedModal(true);
-  }, []);
-
-  const handleCloseUnassignedModal = useCallback(() => {
-    setShowUnassignedModal(false);
-  }, []);
-
-  const handleToggleShowAllTechnicians = useCallback(() => {
-    setShowAllTechnicians((current) => !current);
-  }, []);
-
   const isAssignmentBusyForSelected =
     selectedJob !== null && pendingJobId === selectedJob.id;
   const isOtherAssignmentPending =
@@ -286,206 +267,116 @@ export function DispatchPageView({
       : null;
 
   const boardTitle =
-    dispatchPageFocus?.boardEyebrow ?? "Today's scheduled jobs";
+    dispatchPageFocus?.boardEyebrow ?? "Today's operations board";
   const boardSubtitle =
     dispatchPageFocus?.boardDescription ??
-    "Technician lanes with horizontally scrollable job cards";
+    "Map pins · technician rows · unassigned queue on the left";
 
   const boardEmphasisClass = dispatchPageFocus?.emphasizeBoard
-    ? northStar
-      ? dt.boardEmphasisRing
-      : "ring-1 ring-cyan-500/20"
+    ? dm.boardEmphasisRing
     : "";
 
-  const dispatchBoardContent = (
-    <>
-      {northStar ? <div className={dt.boardSurfaceTopAccent} aria-hidden /> : null}
-      <div
-        className={
-          northStar
-            ? dt.boardHeader
-            : "admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3"
-        }
-      >
-        <div className="min-w-0">
-          <h2
-            className={
-              northStar
-                ? dt.boardHeaderTitle
-                : "admin-heading-section sm:text-base"
-            }
-          >
-            {boardTitle}
-          </h2>
-          <p
-            className={
-              northStar
-                ? dt.boardHeaderSubtitle
-                : "admin-text-helper mt-0.5 hidden sm:block"
-            }
-          >
-            {boardSubtitle}
-          </p>
-        </div>
-        {unassignedJobs.length > 0 ? (
-          <button
-            type="button"
-            onClick={handleOpenUnassigned}
-            className={
-              northStar
-                ? dt.boardUnassignedButton
-                : "admin-panel-action admin-panel-action-warning min-h-9 gap-1.5 px-2.5 py-1.5"
-            }
-          >
-            Unassigned
-            <span
-              className={
-                northStar
-                  ? dt.boardUnassignedBadge
-                  : "rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
-              }
-            >
-              {unassignedJobs.length}
-            </span>
-          </button>
-        ) : null}
-      </div>
-
-      <div
-        className={
-          northStar
-            ? dt.boardBody
-            : "min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain bg-white p-2 sm:p-3"
-        }
-      >
-        {hasNoJobs ? (
-          <DispatchEmptyState
-            variant="no-jobs"
-            canDispatchJobs={canDispatchJobs}
-            northStar={northStar}
-          />
-        ) : hasNoResults ? (
-          <DispatchEmptyState variant="no-results" northStar={northStar} />
-        ) : (
-          <DispatchBoard
-            jobs={filteredJobs}
-            technicians={technicians}
-            technicianFilter={technicianFilter}
-            selectedJobId={selectedJobId}
-            pendingJobId={pendingJobId}
-            hideEmptyTechnicianLanes
-            showAllTechnicians={showAllTechnicians}
-            onSelectJob={handleSelectJob}
-            onToggleShowAllTechnicians={handleToggleShowAllTechnicians}
-            highlightUnassignedPanel={
-              dispatchPageFocus?.highlightUnassignedPanel ?? false
-            }
-            northStar={northStar}
-          />
-        )}
-      </div>
-    </>
-  );
+  const detailsPanel = selectedJob ? (
+    <DispatchDetailsPanel
+      job={selectedJob}
+      technician={selectedTechnician}
+      technicians={assignableTechnicians}
+      canDispatchJobs={canDispatchJobs}
+      canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
+      canManageCustomers={canManageCustomers}
+      canViewBilling={canViewBilling}
+      aiFeaturesEnabled={aiFeaturesEnabled}
+      billingContext={{
+        estimates: billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
+        invoices: billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
+      }}
+      assignError={selectedAssignError}
+      assignSuccess={selectedAssignSuccess}
+      isAssignmentBusy={isAssignmentBusyForSelected}
+      isOtherAssignmentPending={isOtherAssignmentPending}
+      lockBodyScroll={false}
+      onClose={handleClosePanel}
+      onAssign={handleAssign}
+      onUnassign={canDispatchJobs ? handleUnassign : undefined}
+      onStatusUpdated={handleStatusUpdated}
+    />
+  ) : null;
 
   return (
     <MasterShellPage
       fillViewport
       density="compact"
-      className={northStar ? `${lt.pageCanvas} ${dt.pageCanvas}` : undefined}
+      className="h-[calc(100dvh-7rem)] min-h-0 overflow-hidden max-md:h-auto max-md:min-h-0 max-md:overflow-visible"
     >
-      <MasterPageCanvas width="wide" className="min-h-0 flex-1">
-        <MasterContentStack
-          density="compact"
-          scrollable
-          className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden"
+      <MasterPageCanvas width="wide" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-md:overflow-visible">
+        <div
+          className={`${dm.pageCanvas} flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden p-2 max-md:overflow-visible sm:p-3`}
         >
-          <DispatchDashboardHeader northStar={northStar} />
-
-          {dispatchPageFocus?.banner ? (
-            <DispatchFocusBanner
-              title={dispatchPageFocus.banner.title}
-              description={dispatchPageFocus.banner.description}
-              clearHref={dispatchPageFocus.banner.clearHref}
-              northStar={northStar}
-            />
-          ) : null}
-
-          {!hasNoJobs ? (
-            <DispatchSearchFilterBar
-              search={search}
-              statusFilter={statusFilter}
-              technicianFilter={technicianFilter}
-              technicians={technicians}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              onTechnicianFilterChange={setTechnicianFilter}
-              resultCount={filteredJobs.length}
-              unassignedCount={unassignedJobs.length}
-              onOpenUnassigned={handleOpenUnassigned}
-              compact={!isBelowLg}
-              northStar={northStar}
-            />
-          ) : null}
-
-          <div className={masterWorkbenchRowClass}>
-        {northStar ? (
-          <div
-            className={`${dt.boardSurface} max-w-full lg:flex-1 ${boardEmphasisClass}`}
+          <MasterContentStack
+            density="compact"
+            scrollable
+            className="min-h-0 min-w-0 max-w-full flex-1 overflow-hidden max-md:overflow-visible"
           >
-            {dispatchBoardContent}
-          </div>
-        ) : (
-          <MasterPageSurface
-            variant="panel"
-            className={`max-w-full lg:flex-1 ${boardEmphasisClass}`}
-          >
-            {dispatchBoardContent}
-          </MasterPageSurface>
-        )}
+            <div
+              className={`${masterWorkbenchRowClass} min-h-0 flex-1 overflow-hidden max-md:flex-none max-md:overflow-visible`}
+            >
+              <div
+                className={`${dm.boardSurface} max-w-full ${boardEmphasisClass}`}
+              >
+                <div className={dm.boardHeader}>
+                  <div className="min-w-0">
+                    <h1 className={dm.boardHeaderTitle}>{boardTitle}</h1>
+                    <p className={dm.boardHeaderSubtitle}>{boardSubtitle}</p>
+                  </div>
+                  <DispatchStatStrip metrics={boardMetrics} />
+                </div>
 
-        {selectedJob ? (
-          <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
-            <DispatchDetailsPanel
-              job={selectedJob}
-              technician={selectedTechnician}
-              technicians={technicians}
-              canDispatchJobs={canDispatchJobs}
-              canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
-              canManageCustomers={canManageCustomers}
-              canViewBilling={canViewBilling}
-              aiFeaturesEnabled={aiFeaturesEnabled}
-              billingContext={{
-                estimates:
-                  billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
-                invoices:
-                  billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
-              }}
-              assignError={selectedAssignError}
-              assignSuccess={selectedAssignSuccess}
-              isAssignmentBusy={isAssignmentBusyForSelected}
-              isOtherAssignmentPending={isOtherAssignmentPending}
-              northStar={northStar}
-              lockBodyScroll={false}
-              onClose={handleClosePanel}
-              onAssign={handleAssign}
-              onUnassign={canDispatchJobs ? handleUnassign : undefined}
-              onStatusUpdated={handleStatusUpdated}
-            />
-          </div>
-        ) : null}
-          </div>
-        </MasterContentStack>
+                {dispatchPageFocus?.banner ? (
+                  <div className="shrink-0 px-3 pt-2 sm:px-4">
+                    <DispatchFocusBanner
+                      title={dispatchPageFocus.banner.title}
+                      description={dispatchPageFocus.banner.description}
+                      clearHref={dispatchPageFocus.banner.clearHref}
+                    />
+                  </div>
+                ) : null}
+
+                <div className={dm.boardBody}>
+                  {hasNoJobs ? (
+                    <DispatchEmptyState
+                      variant="no-jobs"
+                      canDispatchJobs={canDispatchJobs}
+                    />
+                  ) : hasNoResults && technicianFilter !== "unassigned" ? (
+                    <DispatchEmptyState variant="no-results" />
+                  ) : (
+                    <DispatchBoard
+                      jobs={filteredJobs}
+                      technicians={assignableTechnicians}
+                      technicianFilter={technicianFilter}
+                      selectedJobId={selectedJobId}
+                      pendingJobId={pendingJobId}
+                      onSelectJob={handleSelectJob}
+                      highlightUnassignedPanel={
+                        dispatchPageFocus?.highlightUnassignedPanel ?? false
+                      }
+                      overloadedTechnicianIds={
+                        dispatchPageFocus?.overloadedTechnicianIds ?? []
+                      }
+                    />
+                  )}
+                </div>
+              </div>
+
+              {selectedJob ? (
+                <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
+                  {detailsPanel}
+                </div>
+              ) : null}
+            </div>
+          </MasterContentStack>
+        </div>
       </MasterPageCanvas>
-
-      {showUnassignedModal ? (
-        <UnassignedJobsModal
-          jobs={unassignedJobs}
-          selectedJobId={selectedJobId}
-          onSelectJob={handleSelectJob}
-          onClose={handleCloseUnassignedModal}
-          northStar={northStar}
-        />
-      ) : null}
 
       {selectedJob && isBelowLg ? (
         <MobileSheet
@@ -498,41 +389,9 @@ export function DispatchPageView({
           <MobileSheetPanel
             maxWidth="lg"
             maxHeight="90"
-            unstyled
-            className={
-              northStar
-                ? dt.detailMobileSheetPanel
-                : "flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto"
-            }
+            className="flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto"
           >
-            <div className="flex min-h-0 flex-1 flex-col">
-              <DispatchDetailsPanel
-              job={selectedJob}
-              technician={selectedTechnician}
-              technicians={technicians}
-              canDispatchJobs={canDispatchJobs}
-              canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
-              canManageCustomers={canManageCustomers}
-              canViewBilling={canViewBilling}
-              aiFeaturesEnabled={aiFeaturesEnabled}
-              billingContext={{
-                estimates:
-                  billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
-                invoices:
-                  billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
-              }}
-              assignError={selectedAssignError}
-              assignSuccess={selectedAssignSuccess}
-              isAssignmentBusy={isAssignmentBusyForSelected}
-              isOtherAssignmentPending={isOtherAssignmentPending}
-              northStar={northStar}
-              lockBodyScroll={false}
-              onClose={handleClosePanel}
-              onAssign={handleAssign}
-              onUnassign={canDispatchJobs ? handleUnassign : undefined}
-              onStatusUpdated={handleStatusUpdated}
-            />
-            </div>
+            <div className="flex min-h-0 flex-1 flex-col">{detailsPanel}</div>
           </MobileSheetPanel>
         </MobileSheet>
       ) : null}

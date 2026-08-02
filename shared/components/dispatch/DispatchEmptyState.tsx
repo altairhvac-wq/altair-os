@@ -1,17 +1,14 @@
-import { Radio, SearchX, Wrench } from "lucide-react";
-import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
-import { Button } from "@/shared/design-system/components";
+import { Radio, SearchX } from "lucide-react";
+import { EmptyState } from "@/shared/design-system/components";
 
 type DispatchEmptyStateProps = {
   variant: "no-results" | "no-jobs";
   canDispatchJobs?: boolean;
-  northStar?: boolean;
 };
 
 export function DispatchEmptyState({
   variant,
   canDispatchJobs = false,
-  northStar = false,
 }: DispatchEmptyStateProps) {
   const title =
     variant === "no-jobs" ? "Nothing to dispatch yet" : "No jobs on board";
@@ -22,61 +19,29 @@ export function DispatchEmptyState({
         : "Scheduled jobs for today will appear here when your team assigns work."
       : "Try adjusting your search or filters to find matching dispatch jobs.";
 
-  if (northStar) {
-    return (
-      <div className="flex min-h-[10rem] items-center justify-center py-6 sm:min-h-[12rem] sm:py-8">
-        <div className={dt.emptyState}>
-          <div className={dt.emptyStateIcon}>
-            {variant === "no-results" ? (
-              <SearchX className="h-6 w-6" />
-            ) : (
-              <Radio className="h-6 w-6" />
-            )}
-          </div>
-
-          <h3 className={dt.emptyStateTitle}>{title}</h3>
-
-          <p className={dt.emptyStateDescription}>{description}</p>
-
-          {variant === "no-jobs" && canDispatchJobs ? (
-            <Button
-              href="/jobs"
-              className="mt-5"
-              leadingIcon={<Wrench className="h-4 w-4" />}
-            >
-              Schedule a job
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="admin-empty-wrap">
-      <div className="admin-empty-state w-full max-w-md text-center">
-        <div className="admin-empty-icon mx-auto">
-          {variant === "no-results" ? (
-            <SearchX className="h-6 w-6 text-slate-400" />
+    <div className="flex min-h-[10rem] items-center justify-center py-6 sm:min-h-[12rem] sm:py-8">
+      <EmptyState
+        title={title}
+        description={description}
+        tone="neutral"
+        className="border-altair-border/60 bg-white/[0.04] text-altair-paper shadow-none [&_h3]:text-altair-paper [&_p]:text-altair-ink-muted [&_.rounded-xl]:border-altair-border [&_.rounded-xl]:bg-white/[0.06] [&_.rounded-xl]:text-altair-ink-muted"
+        icon={
+          variant === "no-results" ? (
+            <SearchX className="h-6 w-6" />
           ) : (
-            <Radio className="h-6 w-6 text-slate-400" />
-          )}
-        </div>
-
-        <h3 className="admin-heading-section mt-3 text-base">{title}</h3>
-
-        <p className="admin-text-muted mt-1.5 text-sm">{description}</p>
-
-        {variant === "no-jobs" && canDispatchJobs ? (
-          <Button
-            href="/jobs"
-            className="mt-4"
-            leadingIcon={<Wrench className="h-4 w-4" />}
-          >
-            Schedule a job
-          </Button>
-        ) : null}
-      </div>
+            <Radio className="h-6 w-6" />
+          )
+        }
+        action={
+          variant === "no-jobs" && canDispatchJobs
+            ? {
+                label: "Schedule a job",
+                href: "/jobs",
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

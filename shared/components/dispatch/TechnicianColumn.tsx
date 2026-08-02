@@ -1,6 +1,11 @@
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
-import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { TECHNICIAN_TIME_STATE_DOT_CLASS } from "@/shared/lib/dispatch-technician-time-state";
+import {
+  formatTechnicianTimeState,
+  type TechnicianTimeState,
+} from "@/shared/types/time-entry";
+import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 import { DispatchJobCard } from "./DispatchJobCard";
 
 type TechnicianColumnProps = {
@@ -9,27 +14,19 @@ type TechnicianColumnProps = {
   selectedJobId: string | null;
   pendingJobId?: string | null;
   nextJobTime?: string | null;
-  northStar?: boolean;
+  /** Legacy card lane, or horizontal Gantt time-track host. */
+  layout?: "cards" | "time-track";
+  trackWidthPx?: number;
+  trackHeightPx?: number;
+  /** Time-track body (hour lines + positioned blocks). */
+  children?: ReactNode;
+  emphasized?: boolean;
   onSelectJob: (job: DispatchJob) => void;
 };
 
-const statusDot: Record<Technician["status"], string> = {
-  available: "bg-emerald-500",
-  on_job: "bg-[#C9A44D]",
-  off_duty: "bg-[#6B6255]",
-};
-
-const northStarStatusDot: Record<Technician["status"], string> = {
-  available: "bg-emerald-400",
-  on_job: "bg-[#D6BE78]",
-  off_duty: "bg-[#8A6324]/60",
-};
-
-const statusLabel: Record<Technician["status"], string> = {
-  available: "Available",
-  on_job: "On job",
-  off_duty: "Off duty",
-};
+function resolveTimeState(technician: Technician): TechnicianTimeState {
+  return technician.timeState ?? "off_clock";
+}
 
 export const TechnicianColumn = memo(function TechnicianColumn({
   technician,
@@ -37,123 +34,94 @@ export const TechnicianColumn = memo(function TechnicianColumn({
   selectedJobId,
   pendingJobId = null,
   nextJobTime = null,
-  northStar = false,
+  layout = "cards",
+  trackWidthPx,
+  trackHeightPx,
+  children,
+  emphasized = false,
   onSelectJob,
 }: TechnicianColumnProps) {
-  const dots = northStar ? northStarStatusDot : statusDot;
+  const timeState = resolveTimeState(technician);
+  const timeStateLabel = formatTechnicianTimeState(timeState);
+
+  const identity = (
+    <header className={dm.laneHeader}>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <div className={dm.laneHeaderAvatar} aria-hidden>
+          {technician.initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <h3 className={`${dm.laneHeaderName} flex-1`} title={technician.name}>
+              {technician.name}
+            </h3>
+            <span className={dm.laneHeaderCount}>{jobs.length}</span>
+          </div>
+          <p className={dm.laneHeaderRole} title={technician.role}>
+            {technician.role}
+          </p>
+          <div className="mt-px flex min-w-0 items-center gap-1">
+            <span
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${TECHNICIAN_TIME_STATE_DOT_CLASS[timeState]}`}
+              title={timeStateLabel}
+              aria-hidden
+            />
+            <span className={`${dm.laneHeaderStatusLabel} truncate`}>
+              {timeStateLabel}
+            </span>
+            {nextJobTime ? (
+              <span className={`${dm.laneHeaderNextJob} truncate`}>
+                · Next {nextJobTime}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
+  if (layout === "time-track") {
+    return (
+      <section
+        className={`${dm.lane} ${emphasized ? "ring-2 ring-altair-warning/35" : ""}`}
+        style={{
+          height: trackHeightPx,
+          minHeight: trackHeightPx,
+        }}
+        aria-label={`${technician.name} schedule, ${timeStateLabel}`}
+      >
+        {identity}
+        <div
+          className={dm.laneTrack}
+          style={{
+            width: trackWidthPx,
+            minWidth: trackWidthPx,
+            height: trackHeightPx,
+            minHeight: trackHeightPx,
+          }}
+        >
+          {children}
+          {jobs.length === 0 ? (
+            <div className={dm.laneEmptyOverlay}>
+              <p className={dm.laneEmptyPill}>No jobs scheduled</p>
+            </div>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section
-      className={
-        northStar
-          ? dt.lane
-          : "admin-dispatch-lane min-w-0 max-w-full overflow-hidden sm:rounded-2xl"
-      }
-    >
+    <section className={`${dm.lane} !max-w-full w-full min-w-0`}>
       <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
-        <header
-          className={
-            northStar
-              ? dt.laneHeader
-              : "admin-dispatch-lane-header flex shrink-0 items-center gap-2 border-b px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48"
-          }
-        >
-          <div className="flex items-center gap-2 sm:w-full sm:gap-2.5">
-            <div
-              className={
-                northStar
-                  ? dt.laneHeaderAvatar
-                  : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs font-bold text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-xl"
-              }
-            >
-              {technician.initials}
-            </div>
-            <div className="min-w-0 flex-1 sm:w-full">
-              <h3
-                className={
-                  northStar
-                    ? dt.laneHeaderName
-                    : "truncate text-sm font-bold tracking-tight text-slate-900"
-                }
-              >
-                {technician.name}
-              </h3>
-              <p
-                className={
-                  northStar
-                    ? dt.laneHeaderRole
-                    : "truncate text-[11px] text-slate-500"
-                }
-              >
-                {technician.role}
-              </p>
-            </div>
-          </div>
-          <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:w-full sm:justify-between">
-            <div className="flex items-center gap-1.5">
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${dots[technician.status]}`}
-              />
-              <span
-                className={
-                  northStar
-                    ? dt.laneHeaderStatusLabel
-                    : "text-[11px] font-medium text-slate-600"
-                }
-              >
-                {statusLabel[technician.status]}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {nextJobTime ? (
-                <span
-                  className={
-                    northStar
-                      ? dt.laneHeaderNextJob
-                      : "hidden text-[10px] font-medium text-slate-500 sm:inline"
-                  }
-                >
-                  Next {nextJobTime}
-                </span>
-              ) : null}
-              <span
-                className={
-                  northStar
-                    ? dt.laneHeaderCount
-                    : "rounded-full bg-slate-100/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-slate-700"
-                }
-              >
-                {jobs.length}
-              </span>
-            </div>
-          </div>
-        </header>
-
+        <div className="sm:w-44 sm:shrink-0 lg:w-48">{identity}</div>
         <div
-          className={
-            northStar
-              ? dt.laneJobWell
-              : "flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-white p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2"
-          }
+          className="flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-white/[0.02] p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2"
           data-no-pull-refresh
         >
           {jobs.length === 0 ? (
-            <div
-              className={
-                northStar
-                  ? dt.laneEmptyWell
-                  : "flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200/90 bg-white/80 px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3"
-              }
-            >
-              <p
-                className={
-                  northStar
-                    ? dt.laneEmptyText
-                    : "text-[11px] font-medium text-slate-500"
-                }
-              >
-                No assigned jobs
-              </p>
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-altair-border px-3 py-2.5 text-center">
+              <p className={dm.laneEmptyText}>No jobs scheduled</p>
             </div>
           ) : (
             jobs.map((job) => (
@@ -162,7 +130,6 @@ export const TechnicianColumn = memo(function TechnicianColumn({
                 job={job}
                 compact
                 hideTechnician
-                northStar={northStar}
                 isSelected={selectedJobId === job.id}
                 isAssigning={pendingJobId === job.id}
                 onSelect={onSelectJob}

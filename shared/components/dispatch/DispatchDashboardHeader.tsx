@@ -1,32 +1,14 @@
-import { MasterPageHeader } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 
-type DispatchDashboardHeaderProps = {
-  northStar?: boolean;
-};
-
-export function DispatchDashboardHeader({
-  northStar = false,
-}: DispatchDashboardHeaderProps) {
-  if (northStar) {
-    return (
-      <MasterPageHeader
-        title="Dispatch"
-        subtitle="Assign technicians and manage today's board."
-        density="compact"
-        surfaceVariant="northStar"
-        className={`north-star-dispatch-page-header ${lt.pageHeader}`}
-        titleClassName={lt.pageHeaderTitle}
-        subtitleClassName={lt.pageHeaderSubtitle}
-      />
-    );
-  }
-
+export function DispatchDashboardHeader() {
   return (
-    <MasterPageHeader
-      density="compact"
-      title="Dispatch"
-      subtitle="Assign technicians and manage today's board."
-    />
+    <header className="hidden shrink-0 md:block">
+      <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+        <h1 className={dm.headerTitle}>Dispatch</h1>
+        <p className={dm.headerSubtitle}>
+          Operations board — assign technicians and run today&apos;s schedule.
+        </p>
+      </div>
+    </header>
   );
 }

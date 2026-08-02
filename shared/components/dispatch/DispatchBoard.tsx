@@ -2,9 +2,8 @@
 
 import { memo, useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
-import { formatDispatchTime } from "@/shared/types/dispatch";
-import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
-import { TechnicianColumn } from "./TechnicianColumn";
+import { DispatchMapPanel } from "./DispatchMapPanel";
+import { DispatchTimeGrid } from "./DispatchTimeGrid";
 import { UnassignedJobsPanel } from "./UnassignedJobsPanel";
 
 type DispatchBoardProps = {
@@ -13,12 +12,9 @@ type DispatchBoardProps = {
   technicianFilter: string;
   selectedJobId: string | null;
   pendingJobId: string | null;
-  hideEmptyTechnicianLanes: boolean;
-  showAllTechnicians: boolean;
   onSelectJob: (job: DispatchJob) => void;
-  onToggleShowAllTechnicians: () => void;
   highlightUnassignedPanel?: boolean;
-  northStar?: boolean;
+  overloadedTechnicianIds?: string[];
 };
 
 function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> {
@@ -34,18 +30,8 @@ function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> 
   return grouped;
 }
 
-function sortTechniciansByWorkload(
-  technicians: Technician[],
-  grouped: Map<string, DispatchJob[]>,
-): Technician[] {
-  return [...technicians].sort((a, b) => {
-    const countDiff =
-      (grouped.get(b.id)?.length ?? 0) - (grouped.get(a.id)?.length ?? 0);
-    if (countDiff !== 0) {
-      return countDiff;
-    }
-    return a.name.localeCompare(b.name);
-  });
+function sortTechniciansByName(technicians: Technician[]): Technician[] {
+  return [...technicians].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export const DispatchBoard = memo(function DispatchBoard({
@@ -54,12 +40,9 @@ export const DispatchBoard = memo(function DispatchBoard({
   technicianFilter,
   selectedJobId,
   pendingJobId,
-  hideEmptyTechnicianLanes,
-  showAllTechnicians,
   onSelectJob,
-  onToggleShowAllTechnicians,
   highlightUnassignedPanel = false,
-  northStar = false,
+  overloadedTechnicianIds = [],
 }: DispatchBoardProps) {
   const unassignedJobs = useMemo(
     () => jobs.filter((job) => !job.technicianId),
@@ -68,115 +51,54 @@ export const DispatchBoard = memo(function DispatchBoard({
   const grouped = useMemo(() => groupJobsByTechnician(jobs), [jobs]);
 
   const sortedTechnicians = useMemo(
-    () => sortTechniciansByWorkload(technicians, grouped),
-    [technicians, grouped],
+    () => sortTechniciansByName(technicians),
+    [technicians],
   );
 
   const visibleTechnicians = useMemo(() => {
-    let list =
-      technicianFilter === "all" || technicianFilter === "unassigned"
-        ? sortedTechnicians
-        : sortedTechnicians.filter((tech) => tech.id === technicianFilter);
-
-    if (
-      hideEmptyTechnicianLanes &&
-      !showAllTechnicians &&
-      technicianFilter === "all"
-    ) {
-      list = list.filter((tech) => (grouped.get(tech.id)?.length ?? 0) > 0);
+    if (technicianFilter === "all" || technicianFilter === "unassigned") {
+      return sortedTechnicians;
     }
+    return sortedTechnicians.filter((tech) => tech.id === technicianFilter);
+  }, [sortedTechnicians, technicianFilter]);
 
-    return list;
-  }, [
-    grouped,
-    hideEmptyTechnicianLanes,
-    showAllTechnicians,
-    sortedTechnicians,
-    technicianFilter,
-  ]);
-
-  const hiddenEmptyTechnicianCount = useMemo(() => {
-    if (!hideEmptyTechnicianLanes || showAllTechnicians || technicianFilter !== "all") {
-      return 0;
-    }
-
-    return sortedTechnicians.filter(
-      (tech) => (grouped.get(tech.id)?.length ?? 0) === 0,
-    ).length;
-  }, [
-    grouped,
-    hideEmptyTechnicianLanes,
-    showAllTechnicians,
-    sortedTechnicians,
-    technicianFilter,
-  ]);
-
-  const showUnassignedInline =
-    technicianFilter === "unassigned" ||
-    (technicianFilter === "all" && unassignedJobs.length > 0);
+  const showUnassignedSidebar =
+    technicianFilter === "unassigned" || technicianFilter === "all";
   const showTechnicianColumns = technicianFilter !== "unassigned";
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col gap-2 sm:gap-3">
-      {showUnassignedInline ? (
+    <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col gap-2 overflow-hidden max-md:overflow-visible md:h-full lg:flex-row lg:items-stretch lg:gap-2.5">
+      {showUnassignedSidebar ? (
         <UnassignedJobsPanel
           jobs={unassignedJobs}
           selectedJobId={selectedJobId}
           pendingJobId={pendingJobId}
           onSelectJob={onSelectJob}
           emphasized={highlightUnassignedPanel}
-          northStar={northStar}
+          expanded={!showTechnicianColumns}
         />
       ) : null}
 
-      {hiddenEmptyTechnicianCount > 0 ? (
-        <button
-          type="button"
-          onClick={onToggleShowAllTechnicians}
-          className={
-            northStar
-              ? dt.laneToggleButtonDashed
-              : "self-start rounded-lg border border-dashed border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:text-xs"
-          }
-        >
-          Show {hiddenEmptyTechnicianCount} technician
-          {hiddenEmptyTechnicianCount === 1 ? "" : "s"} with no jobs today
-        </button>
-      ) : showAllTechnicians && hideEmptyTechnicianLanes && technicianFilter === "all" ? (
-        <button
-          type="button"
-          onClick={onToggleShowAllTechnicians}
-          className={
-            northStar
-              ? dt.laneToggleButton
-              : "self-start rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:text-xs"
-          }
-        >
-          Hide empty technician lanes
-        </button>
-      ) : null}
+      <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2.5 overflow-hidden max-md:overflow-visible">
+        <DispatchMapPanel
+          jobs={jobs}
+          selectedJobId={selectedJobId}
+          onSelectJob={onSelectJob}
+        />
 
-      {showTechnicianColumns
-        ? visibleTechnicians.map((technician) => {
-            const techJobs = grouped.get(technician.id) ?? [];
-            const nextJob = techJobs[0];
-
-            return (
-              <TechnicianColumn
-                key={technician.id}
-                technician={technician}
-                jobs={techJobs}
-                selectedJobId={selectedJobId}
-                pendingJobId={pendingJobId}
-                nextJobTime={
-                  nextJob ? formatDispatchTime(nextJob.scheduledDate) : null
-                }
-                northStar={northStar}
-                onSelectJob={onSelectJob}
-              />
-            );
-          })
-        : null}
+        {showTechnicianColumns ? (
+          <div className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden max-md:min-h-[20rem] md:min-h-0">
+            <DispatchTimeGrid
+              technicians={visibleTechnicians}
+              jobsByTechnician={grouped}
+              selectedJobId={selectedJobId}
+              pendingJobId={pendingJobId}
+              overloadedTechnicianIds={overloadedTechnicianIds}
+              onSelectJob={onSelectJob}
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 });
