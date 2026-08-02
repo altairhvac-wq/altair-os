@@ -30,6 +30,11 @@ export type EstimateDocumentData = Pick<
   | "customerName"
   | "customerEmail"
   | "customerPhone"
+  | "customerAddress"
+  | "customerAddressLine2"
+  | "customerCity"
+  | "customerState"
+  | "customerZip"
   | "status"
   | "lineItems"
   | "subtotal"
@@ -110,8 +115,6 @@ export function EstimateDocumentSection({
   const hideSignatureOnScreen = signatureScreenVisibility === "print-only";
   const includePrintFooter = showPrintFooter ?? showFooter ?? true;
   const printOnlyBlockClass = `${estimatePrintOnlyBlockClass} hidden print:block print:break-inside-avoid`;
-  const showTaxBreakdown =
-    (estimate.taxRate ?? 0) > 0 || (estimate.tax ?? 0) > 0;
   const sectionStackGap = northStar
     ? "mt-2.5 sm:mt-3 print:mt-2"
     : "mt-3 sm:mt-4 print:mt-2";
@@ -215,22 +218,20 @@ export function EstimateDocumentSection({
           />
         </div>
 
-        {showTaxBreakdown ? (
-          <div className="estimate-totals-block mt-1.5 flex justify-end sm:mt-2 print:mt-1.5">
-            <div className="w-full max-w-md print:max-w-[220px]">
-              <BillingTotalsSummary
-                subtotal={estimate.subtotal}
-                taxRate={estimate.taxRate}
-                taxAmount={estimate.tax ?? 0}
-                total={estimate.total}
-                documentStyle="estimate"
-                hideTotal
-                compactSubtotal
-                northStar={northStar}
-              />
-            </div>
+        <div className="estimate-totals-block mt-1.5 flex justify-end sm:mt-2 print:mt-1.5">
+          <div className="w-full max-w-md print:max-w-[220px]">
+            <BillingTotalsSummary
+              subtotal={estimate.subtotal}
+              taxRate={estimate.taxRate}
+              taxAmount={estimate.tax ?? 0}
+              total={estimate.total}
+              documentStyle="estimate"
+              hideTotal
+              compactSubtotal
+              northStar={northStar}
+            />
           </div>
-        ) : null}
+        </div>
       </div>
 
       {estimate.notes ? (

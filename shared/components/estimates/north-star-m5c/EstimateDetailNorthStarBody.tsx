@@ -8,7 +8,7 @@ import { NorthStarAdminEstimateDocument } from "./NorthStarAdminEstimateDocument
 import { EstimateSignatureCaptureAction } from "@/shared/components/estimates/EstimateSignatureCaptureAction";
 import { EstimateStatusActions } from "@/shared/components/estimates/EstimateStatusActions";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { altairMcGridGapClass } from "@/shared/design-system/components";
 import { EstimateDetailNorthStarHeader } from "./EstimateDetailNorthStarHeader";
 import { EstimateDetailNorthStarSideRail } from "./EstimateDetailNorthStarSideRail";
 
@@ -78,50 +78,8 @@ export function EstimateDetailNorthStarBody({
 }: EstimateDetailNorthStarBodyProps) {
   const isOverlay = presentation === "overlay";
 
-  const documentSection = (
-    <NorthStarAdminEstimateDocument
-      estimate={estimate}
-      company={company}
-      signature={signature}
-      companyTimeZone={companyTimeZone}
-      logoUrl={company.logoUrl}
-    />
-  );
-
-  const activitySection = (
-    <div className="no-print">
-      <EstimateActivityTimeline activities={activities} northStar />
-    </div>
-  );
-
-  const sideRail = (
-    <EstimateDetailNorthStarSideRail
-      estimate={estimate}
-      linkedInvoice={linkedInvoice}
-      canManageCustomers={canManageCustomers}
-    />
-  );
-
-  const workspace = (
-    <>
-      <div className="flex flex-col gap-2.5 lg:hidden">
-        <div className="no-print space-y-2.5">{sideRail}</div>
-        {documentSection}
-        {activitySection}
-      </div>
-
-      <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
-        <div className={dt.workspaceMain}>
-          {documentSection}
-          {activitySection}
-        </div>
-        <aside className={dt.workspaceSide}>{sideRail}</aside>
-      </div>
-    </>
-  );
-
   return (
-    <>
+    <div className={`flex flex-col ${altairMcGridGapClass}`}>
       <EstimateDetailNorthStarHeader
         estimate={estimate}
         canManageEstimates={canManageEstimates}
@@ -132,7 +90,38 @@ export function EstimateDetailNorthStarBody({
         variant={isOverlay ? "overlay" : "page"}
       />
 
-      {workspace}
+      {/*
+        Single document instance (critical for print/PDF). Side rail first on
+        mobile; document + activity left / rail right on desktop.
+      */}
+      <div
+        className={`flex flex-col ${altairMcGridGapClass} lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start`}
+      >
+        <aside
+          className={`no-print order-1 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-2`}
+        >
+          <EstimateDetailNorthStarSideRail
+            estimate={estimate}
+            linkedInvoice={linkedInvoice}
+            canManageCustomers={canManageCustomers}
+          />
+        </aside>
+
+        <div
+          className={`order-2 flex min-w-0 flex-col ${altairMcGridGapClass} lg:order-1`}
+        >
+          <NorthStarAdminEstimateDocument
+            estimate={estimate}
+            company={company}
+            signature={signature}
+            companyTimeZone={companyTimeZone}
+            logoUrl={company.logoUrl}
+          />
+          <div className="no-print">
+            <EstimateActivityTimeline activities={activities} northStar />
+          </div>
+        </div>
+      </div>
 
       {canCaptureSignature ? (
         <EstimateSignatureCaptureAction
@@ -151,6 +140,6 @@ export function EstimateDetailNorthStarBody({
         lastEmailSentMessage={lastEmailSentMessage}
         variant={isOverlay ? "overlay-footer" : "sticky"}
       />
-    </>
+    </div>
   );
 }

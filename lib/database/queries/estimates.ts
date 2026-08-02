@@ -38,6 +38,11 @@ type CustomerSummary = {
   name: string;
   email?: string;
   phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
 };
 
 type JobSummary = {
@@ -61,7 +66,7 @@ const ESTIMATE_LIST_SELECT = `
 
 const ESTIMATE_DETAIL_SELECT = `
   *,
-  customers(name, email, phone),
+  customers(name, email, phone, address_line1, address_line2, city, state, postal_code),
   jobs(job_number),
   estimate_line_items(*)
 `;
@@ -177,6 +182,11 @@ function mapEstimateRowToEstimateDetail(
     ...estimate,
     customerEmail: row.customers?.email || undefined,
     customerPhone: row.customers?.phone || undefined,
+    customerAddress: row.customers?.address_line1?.trim() || undefined,
+    customerAddressLine2: row.customers?.address_line2?.trim() || undefined,
+    customerCity: row.customers?.city?.trim() || undefined,
+    customerState: row.customers?.state?.trim() || undefined,
+    customerZip: row.customers?.postal_code?.trim() || undefined,
   };
 }
 

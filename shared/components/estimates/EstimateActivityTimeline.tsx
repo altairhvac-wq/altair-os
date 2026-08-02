@@ -19,9 +19,10 @@ import {
 } from "@/shared/types/estimate-activity";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import {
-  northStarDetailTokens as dt,
-  northStarEstimateDocumentTokens as edt,
-} from "@/shared/design-system/north-star/tokens";
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 
 type EstimateActivityTimelineProps = {
   activities: EstimateActivity[];
@@ -50,63 +51,35 @@ const ACTIVITY_ICON_STYLES: Record<EstimateActivityType, string> = {
   estimate_converted: "bg-violet-50 text-violet-700 ring-violet-600/15",
 };
 
-const NORTH_STAR_ACTIVITY_ICON_STYLES: Record<EstimateActivityType, string> = {
-  estimate_created: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
-  status_changed: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
-  estimate_sent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
-  estimate_email_resent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
+const MC_ACTIVITY_ICON_STYLES: Record<EstimateActivityType, string> = {
+  estimate_created: "bg-altair-stone text-altair-ink-on-paper ring-altair-border",
+  status_changed: "bg-altair-stone text-altair-ink-on-paper-secondary ring-altair-border",
+  estimate_sent: "bg-altair-stone text-altair-brass ring-altair-border",
+  estimate_email_resent: "bg-altair-stone text-altair-brass ring-altair-border",
   estimate_approved: "bg-emerald-50 text-emerald-800 ring-emerald-600/15",
   estimate_declined: "bg-rose-50 text-rose-800 ring-rose-600/15",
-  estimate_cancelled: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
-  estimate_converted: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
+  estimate_cancelled: "bg-altair-stone text-altair-ink-on-paper-secondary ring-altair-border",
+  estimate_converted: "bg-altair-stone text-altair-brass ring-altair-border",
 };
 
 export function EstimateActivityTimeline({
   activities,
   northStar = false,
 }: EstimateActivityTimelineProps) {
-  const sectionClass = northStar ? dt.compactSectionSurface : adminCardSectionClass;
-
-  return (
-    <section className={sectionClass}>
-      <div className="flex items-center gap-2.5">
-        <div
-          className={
-            northStar
-              ? dt.sectionIconWrap
-              : "flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200"
-          }
-        >
-          <History className={northStar ? "h-4 w-4" : "h-4 w-4 text-slate-500"} />
-        </div>
-        <div>
-          <h2
-            className={
-              northStar
-                ? `text-sm font-bold ${edt.ivoryPrimary}`
-                : "text-xs font-semibold uppercase tracking-wide text-slate-500"
-            }
-          >
-            Activity
-          </h2>
-          <p className={northStar ? `text-[11px] ${edt.ivoryMuted}` : "text-sm text-slate-600"}>
-            Status changes and customer responses for this estimate
-          </p>
-        </div>
-      </div>
-
+  const list = (
+    <>
       {activities.length === 0 ? (
         <div
           className={
             northStar
-              ? `mt-5 ${dt.emptyState}`
+              ? "rounded-lg border border-dashed border-altair-border bg-[var(--surface-tile)] px-4 py-8 text-center"
               : "mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center"
           }
         >
           <p
             className={
               northStar
-                ? `text-sm font-medium ${edt.ivorySecondary}`
+                ? "text-sm font-medium text-altair-ink-on-paper"
                 : "text-sm font-medium text-slate-700"
             }
           >
@@ -115,7 +88,7 @@ export function EstimateActivityTimeline({
           <p
             className={
               northStar
-                ? `mt-1 text-xs ${edt.ivoryMuted}`
+                ? "mt-1 text-xs text-altair-ink-on-paper-muted"
                 : "mt-1 text-xs text-slate-500"
             }
           >
@@ -123,12 +96,12 @@ export function EstimateActivityTimeline({
           </p>
         </div>
       ) : (
-        <ol className="mt-5 space-y-0">
+        <ol className={northStar ? "space-y-0" : "mt-5 space-y-0"}>
           {activities.map((activity, index) => {
             const Icon = ACTIVITY_ICONS[activity.eventType] ?? History;
             const iconStyle = northStar
-              ? (NORTH_STAR_ACTIVITY_ICON_STYLES[activity.eventType] ??
-                "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]")
+              ? (MC_ACTIVITY_ICON_STYLES[activity.eventType] ??
+                "bg-altair-stone text-altair-ink-on-paper-secondary ring-altair-border")
               : (ACTIVITY_ICON_STYLES[activity.eventType] ??
                 "bg-slate-100 text-slate-600 ring-slate-500/15");
             const details = formatEstimateActivityDetails(activity);
@@ -141,7 +114,7 @@ export function EstimateActivityTimeline({
                     aria-hidden="true"
                     className={
                       northStar
-                        ? "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-[rgba(138,99,36,0.18)]"
+                        ? "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-altair-border"
                         : "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-slate-200"
                     }
                   />
@@ -158,7 +131,7 @@ export function EstimateActivityTimeline({
                     <p
                       className={
                         northStar
-                          ? `text-sm font-semibold ${edt.ivoryPrimary}`
+                          ? "text-sm font-semibold text-altair-ink-on-paper"
                           : "text-sm font-semibold text-slate-900"
                       }
                     >
@@ -168,7 +141,7 @@ export function EstimateActivityTimeline({
                       dateTime={activity.createdAt}
                       className={
                         northStar
-                          ? `shrink-0 text-xs ${edt.ivoryMuted}`
+                          ? "shrink-0 text-xs text-altair-ink-on-paper-muted"
                           : "shrink-0 text-xs text-slate-400"
                       }
                     >
@@ -180,7 +153,7 @@ export function EstimateActivityTimeline({
                     <p
                       className={
                         northStar
-                          ? `mt-1 text-sm ${edt.ivorySecondary}`
+                          ? "mt-1 text-sm text-altair-ink-on-paper-secondary"
                           : "mt-1 text-sm text-slate-600"
                       }
                     >
@@ -194,7 +167,7 @@ export function EstimateActivityTimeline({
                       <p
                         className={
                           northStar
-                            ? `mt-1.5 text-xs ${edt.ivoryMuted}`
+                            ? "mt-1.5 text-xs text-altair-ink-on-paper-muted"
                             : "mt-1.5 text-xs text-slate-500"
                         }
                       >
@@ -208,6 +181,39 @@ export function EstimateActivityTimeline({
           })}
         </ol>
       )}
+    </>
+  );
+
+  if (northStar) {
+    return (
+      <section className="scroll-mt-6 space-y-2">
+        <SectionHeader title="Activity" />
+        <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+          <p className="mb-3 text-xs text-altair-ink-on-paper-muted">
+            Status changes and customer responses for this estimate
+          </p>
+          {list}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className={adminCardSectionClass}>
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
+          <History className="h-4 w-4 text-slate-500" />
+        </div>
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Activity
+          </h2>
+          <p className="text-sm text-slate-600">
+            Status changes and customer responses for this estimate
+          </p>
+        </div>
+      </div>
+      {list}
     </section>
   );
 }

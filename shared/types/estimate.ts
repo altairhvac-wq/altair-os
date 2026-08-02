@@ -63,6 +63,11 @@ export const ESTIMATE_LIFECYCLE_FILTER_OPTIONS: {
 export type EstimateDetail = Estimate & {
   customerEmail?: string;
   customerPhone?: string;
+  customerAddress?: string;
+  customerAddressLine2?: string;
+  customerCity?: string;
+  customerState?: string;
+  customerZip?: string;
 };
 
 export type EstimateLineItemFormData = {

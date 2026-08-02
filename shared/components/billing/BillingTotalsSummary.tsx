@@ -75,7 +75,8 @@ export function BillingTotalsSummary({
   const isInvoiceStyle = documentStyle === "invoice";
   const isEstimateStyle = documentStyle === "estimate";
   const isPremiumStyle = isInvoiceStyle || isEstimateStyle;
-  const showTax = taxRate > 0 || taxAmount > 0;
+  // Estimates always show Tax (honest $0); invoices keep hiding empty tax rows.
+  const showTax = isEstimateStyle || taxRate > 0 || taxAmount > 0;
   const showPaymentSummary =
     amountPaid > 0 || (balanceDue > 0 && !hideBalanceDue);
   const showBalanceInTotals = balanceDue > 0 && !hideBalanceDue;

@@ -14,7 +14,11 @@ import {
   estimatePrintSignatureClass,
 } from "@/shared/lib/billing-document-style";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
-import { northStarEstimateDocumentTokens as edt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcMetricLabelClass,
+} from "@/shared/design-system/components";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 
 type NorthStarAdminEstimateDocumentProps = {
@@ -27,6 +31,26 @@ type NorthStarAdminEstimateDocumentProps = {
 
 const printOnlyBlockClass = `${estimatePrintOnlyBlockClass} hidden print:block print:break-inside-avoid`;
 
+function formatBillingAddress(estimate: EstimateDocumentData): string[] {
+  const lines: string[] = [];
+  const line1 = estimate.customerAddress?.trim();
+  const line2 = estimate.customerAddressLine2?.trim();
+  if (line1) lines.push(line1);
+  if (line2) lines.push(line2);
+
+  const cityStateZip = [
+    estimate.customerCity?.trim(),
+    [estimate.customerState?.trim(), estimate.customerZip?.trim()]
+      .filter(Boolean)
+      .join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  if (cityStateZip) lines.push(cityStateZip);
+  return lines;
+}
+
 export function NorthStarAdminEstimateDocument({
   estimate,
   company,
@@ -34,13 +58,7 @@ export function NorthStarAdminEstimateDocument({
   companyTimeZone,
   logoUrl,
 }: NorthStarAdminEstimateDocumentProps) {
-  const customerEmail = estimate.customerEmail?.trim();
-  const customerPhone = estimate.customerPhone?.trim();
-  const customerContactLine = [customerEmail, customerPhone]
-    .filter(Boolean)
-    .join(" · ");
-  const showTaxBreakdown =
-    (estimate.taxRate ?? 0) > 0 || (estimate.tax ?? 0) > 0;
+  const billingAddressLines = formatBillingAddress(estimate);
 
   const totalHero = (
     <EstimateTotalHero total={estimate.total} northStar />
@@ -49,7 +67,7 @@ export function NorthStarAdminEstimateDocument({
   return (
     <section
       id="estimate-document"
-      className={edt.documentSurface}
+      className={`${altairMcCardClass} ${altairMcCardPadClass} estimate-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none`}
       data-north-star-admin-estimate-document="true"
     >
       <div className="order-1">
@@ -57,7 +75,7 @@ export function NorthStarAdminEstimateDocument({
       </div>
 
       <div
-        className={`order-2 mt-2.5 grid grid-cols-[minmax(0,1fr)_minmax(0,42%)] items-start gap-2 sm:mt-3 sm:grid-cols-1 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_min(100%,280px)] lg:items-stretch lg:gap-4 print:grid-cols-[1fr_200px] print:gap-4`}
+        className="order-2 mt-2.5 grid grid-cols-[minmax(0,1fr)_minmax(0,42%)] items-start gap-2 sm:mt-3 sm:grid-cols-1 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_min(100%,280px)] lg:items-stretch lg:gap-4 print:grid-cols-[1fr_200px] print:gap-4"
       >
         <EstimateIdentityCard
           estimateNumber={estimate.estimateNumber}
@@ -68,26 +86,28 @@ export function NorthStarAdminEstimateDocument({
         {totalHero}
       </div>
 
-      <div className="order-3 mt-2 border-t border-[rgba(138,99,36,0.12)] pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:pt-1.5">
-        <p className={edt.documentSectionLabel}>Bill to</p>
+      <div className="order-3 mt-2 border-t border-altair-border pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:border-slate-200 print:pt-1.5">
+        <p className={`${altairMcMetricLabelClass} print:text-slate-600`}>Bill to</p>
         <div className="mt-0.5 min-w-0 print:mt-0.5">
-          <p className="break-words text-sm font-semibold leading-tight text-[#17130E] print:text-sm">
+          <p className="break-words text-sm font-semibold leading-tight text-altair-ink-on-paper print:text-sm print:text-slate-900">
             <DemoDisplayName>{estimate.customerName}</DemoDisplayName>
           </p>
-          {customerContactLine ? (
-            <p className="mt-0.5 text-xs leading-tight text-[#4F4638]">
-              {customerContactLine}
-            </p>
+          {billingAddressLines.length > 0 ? (
+            <div className="mt-0.5 space-y-0.5 text-xs leading-tight text-altair-ink-on-paper-secondary print:text-slate-600">
+              {billingAddressLines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
           ) : null}
         </div>
       </div>
 
       <div className="order-5 mt-2.5 flex min-h-0 flex-1 flex-col sm:mt-3 print:order-4 print:mt-2 print:flex-none">
         <div>
-          <h3 className={edt.documentSectionLabel}>Proposed services</h3>
-          <div
-            className={`estimate-line-items mt-1 sm:mt-1.5 ${edt.documentLineItemsTable}`}
-          >
+          <h3 className={`${altairMcMetricLabelClass} print:text-slate-600`}>
+            Proposed services
+          </h3>
+          <div className="estimate-line-items estimate-north-star-line-items mt-1 sm:mt-1.5">
             <BillingLineItemsList
               items={estimate.lineItems}
               documentLabel="estimate"
@@ -98,26 +118,24 @@ export function NorthStarAdminEstimateDocument({
           </div>
         </div>
 
-        {showTaxBreakdown ? (
-          <div className="estimate-totals-block mt-auto flex justify-end pt-4 sm:pt-6 print:mt-1.5 print:pt-2">
-            <div className="w-full max-w-md print:max-w-[220px]">
-              <BillingTotalsSummary
-                subtotal={estimate.subtotal}
-                taxRate={estimate.taxRate}
-                taxAmount={estimate.tax ?? 0}
-                total={estimate.total}
-                documentStyle="estimate"
-                hideTotal
-                compactSubtotal
-                northStar
-              />
-            </div>
+        <div className="estimate-totals-block mt-auto flex justify-end pt-4 sm:pt-6 print:mt-1.5 print:pt-2">
+          <div className="w-full max-w-md print:max-w-[220px]">
+            <BillingTotalsSummary
+              subtotal={estimate.subtotal}
+              taxRate={estimate.taxRate}
+              taxAmount={estimate.tax ?? 0}
+              total={estimate.total}
+              documentStyle="estimate"
+              hideTotal
+              compactSubtotal
+              northStar
+            />
           </div>
-        ) : null}
+        </div>
       </div>
 
       {estimate.notes ? (
-        <div className="order-6 mt-2.5 border-t border-[rgba(138,99,36,0.12)] pt-2.5 sm:mt-3 sm:pt-3 print:order-5 print:mt-2 print:pt-2">
+        <div className="order-6 mt-2.5 border-t border-altair-border pt-2.5 sm:mt-3 sm:pt-3 print:order-5 print:mt-2 print:border-slate-200 print:pt-2">
           <InvoiceNotesBlock notes={estimate.notes} northStar />
         </div>
       ) : null}

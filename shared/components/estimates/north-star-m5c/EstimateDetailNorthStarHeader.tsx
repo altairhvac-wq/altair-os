@@ -1,12 +1,12 @@
-import { formatDate } from "@/shared/types/customer";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import { EstimateSignatureCaptureAction } from "@/shared/components/estimates/EstimateSignatureCaptureAction";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { EstimateStatusActions } from "@/shared/components/estimates/EstimateStatusActions";
 import {
-  northStarDetailTokens as dt,
-} from "@/shared/design-system/north-star/tokens";
-import { formatEstimateRelationshipLine } from "@/shared/lib/documents/relationship-labels";
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 
 type EstimateDetailNorthStarHeaderProps = {
@@ -45,7 +45,7 @@ function EstimateDetailNorthStarCommandPlate({
   }
 
   return (
-    <div className={`${dt.commandPlate} no-print hidden sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2`}>
+    <div className="no-print flex flex-wrap items-center justify-end gap-2">
       {showCaptureInPlate ? (
         <EstimateSignatureCaptureAction
           estimate={estimate}
@@ -92,39 +92,24 @@ export function EstimateDetailNorthStarHeader({
     return commandPlate;
   }
 
+  // Dates / customer live on the printable document + side rail — keep header
+  // to identity (number + status) and actions only.
   return (
-    <>
-      <div className={`${dt.heroShell} no-print`}>
-        <div aria-hidden="true" className={dt.heroAccentRail} />
-
-        <div className="min-w-0">
-          <p className={dt.heroEyebrow}>Estimate</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h1 className={dt.heroTitle}>{estimate.estimateNumber}</h1>
-            <EstimateStatusBadge status={estimate.status} />
+    <section className="no-print space-y-2">
+      <SectionHeader title="Estimate" />
+      <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className="flex flex-wrap items-start justify-between gap-2.5">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg font-bold tracking-tight text-altair-ink-on-paper sm:text-xl">
+                {estimate.estimateNumber}
+              </h1>
+              <EstimateStatusBadge status={estimate.status} />
+            </div>
           </div>
-
-          <div className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
-            <span>
-              {formatEstimateRelationshipLine({
-                jobNumber: estimate.jobNumber,
-                customerName: estimate.customerName,
-              })}
-            </span>
-          </div>
-          <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
-            <span>Created {formatDate(estimate.createdAt)}</span>
-            {estimate.validUntil ? (
-              <>
-                <span className="text-[#8A6324]">·</span>
-                <span>Valid until {formatDate(estimate.validUntil)}</span>
-              </>
-            ) : null}
-          </div>
+          <div className="hidden sm:block">{commandPlate}</div>
         </div>
       </div>
-
-      {commandPlate}
-    </>
+    </section>
   );
 }

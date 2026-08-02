@@ -40,10 +40,7 @@ import {
   MasterPageCanvas,
   masterDetailOverlayBodyInsetClass,
 } from "@/shared/design-system/shell";
-import {
-  northStarDetailTokens as dt,
-  northStarEstimateDocumentTokens as edt,
-} from "@/shared/design-system/north-star/tokens";
+import { northStarEstimateDocumentTokens as edt } from "@/shared/design-system/north-star/tokens";
 
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
@@ -123,12 +120,19 @@ function NorthStarEstimateDetailPageView({
 
   const pageBackLink = (
     <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <Link href="/estimates" className={dt.backLink}>
-        <ArrowLeft className="h-4 w-4 shrink-0" />
+      <Link
+        href="/estimates"
+        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+      >
+        <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
         Back to estimates
       </Link>
-      <button type="button" onClick={handlePrint} className={dt.secondaryAction}>
-        <Printer className="h-4 w-4" />
+      <button
+        type="button"
+        onClick={handlePrint}
+        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone"
+      >
+        <Printer className="h-3.5 w-3.5" />
         Print / Save PDF
       </button>
     </div>
@@ -137,7 +141,7 @@ function NorthStarEstimateDetailPageView({
   return (
     <MasterDetailPageLayout
       backLink={pageBackLink}
-      className={`${dt.pageCanvas} overflow-x-hidden print:max-w-none print:pb-0`}
+      className="overflow-x-hidden print:max-w-none print:pb-0"
       canvasWidth="detailWide"
     >
       {body}
