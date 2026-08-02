@@ -93,6 +93,7 @@ export function mapMembershipToTeamMemberProfile(
     | "available_for_dispatch"
     | "emergency_on_call"
     | "certifications"
+    | "member_share_code"
   > & {
     profile:
       | Pick<

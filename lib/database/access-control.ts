@@ -400,6 +400,7 @@ export function canManageExpenseReceipt(
 export type AdminNavHref =
   | "/"
   | "/dispatch"
+  | "/technicians"
   | "/customers"
   | "/leads"
   | "/marketing"
@@ -418,6 +419,7 @@ export type AdminNavHref =
 const ADMIN_NAV_HREF_SET = new Set<string>([
   "/",
   "/dispatch",
+  "/technicians",
   "/customers",
   "/leads",
   "/marketing",
@@ -451,6 +453,8 @@ export function canAccessAdminNavItem(
     case "/dispatch":
     case "/jobs":
       return canAccessOperationalJobsArea(context);
+    case "/technicians":
+      return canManageTeamMembers(context);
     case "/customers":
     case "/leads":
       return access.canManageCustomers;
@@ -489,6 +493,7 @@ export function getAccessibleAdminNavHrefs(
   const hrefs: AdminNavHref[] = [
     "/",
     "/dispatch",
+    "/technicians",
     "/customers",
     "/leads",
     "/marketing",
@@ -583,6 +588,10 @@ export function canAccessAppRedirectPath(
 
   if (path.startsWith("/dispatch") || path.startsWith("/jobs")) {
     return canAccessOperationalJobsArea(context);
+  }
+
+  if (path.startsWith("/technicians")) {
+    return canManageTeamMembers(context);
   }
 
   if (path.startsWith("/customers") || path.startsWith("/leads")) {

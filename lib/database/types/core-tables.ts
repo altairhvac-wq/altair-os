@@ -159,6 +159,8 @@ export type CompanyMembershipRow = {
   available_for_dispatch: boolean;
   emergency_on_call: boolean;
   certifications: string[];
+  /** Plaintext referral/share code (e.g. MIKE-A3F2). Not a secret. */
+  member_share_code: string | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -195,6 +197,7 @@ export type CompanyMembershipInsert = Omit<
   | "available_for_dispatch"
   | "emergency_on_call"
   | "certifications"
+  | "member_share_code"
 > & {
   id?: UUID;
   created_at?: Timestamp;
@@ -205,6 +208,7 @@ export type CompanyMembershipInsert = Omit<
   available_for_dispatch?: boolean;
   emergency_on_call?: boolean;
   certifications?: string[];
+  member_share_code?: string | null;
 };
 
 export type CompanyUpdate = Partial<

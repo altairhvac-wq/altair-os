@@ -7,6 +7,7 @@ import {
   CreditCard,
   DollarSign,
   FileText,
+  HardHat,
   LayoutDashboard,
   Megaphone,
   Network,
@@ -43,6 +44,12 @@ export const adminNavItems: NavItem[] = [
     href: "/dispatch",
     icon: Truck,
     description: "Schedule and assign field work",
+  },
+  {
+    label: "Technicians",
+    href: "/technicians",
+    icon: HardHat,
+    description: "Field roster, time-clock status, and share codes",
   },
   {
     label: "Customers",
@@ -187,7 +194,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "work",
     label: "Work",
-    hrefs: ["/jobs", "/dispatch", "/estimates", "/price-book"],
+    hrefs: ["/jobs", "/dispatch", "/technicians", "/estimates", "/price-book"],
   },
   {
     id: "money",
@@ -252,6 +259,7 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/",
   "/jobs",
   "/dispatch",
+  "/technicians",
   "/customers",
   "/invoices",
   "/payments",
@@ -285,6 +293,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/leads",
   "/marketing",
   "/dispatch",
+  "/technicians",
   "/estimates",
   "/price-book",
   "/invoices",

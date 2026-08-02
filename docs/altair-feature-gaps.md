@@ -7,9 +7,11 @@ Companion docs: [`.cursor/rules/altair-design-system.mdc`](../.cursor/rules/alta
 | Gap | Status | Notes / code anchors |
 |-----|--------|----------------------|
 | Technician photos | Placeholder / incomplete | Field photo UX exists in places (`TechnicianPhotoSheet`, job attachment upload paths), but do not treat technician photo capture as a finished, universally reliable product feature. Legacy `/tech` still uses “coming soon” toasts (`TechnicianDashboardView`). Do not invent photo counts or fake galleries. |
-| Technician ratings | Not built | No technician star/score model. Do not show fabricated ratings on team, jobs, or dispatch. |
+| Reviews collection system | Not built | No end-to-end path to request, collect, store, or aggregate customer reviews for technicians or the company. `/technicians` shows an honest “No reviews yet” empty state only — do not invent stars, averages, or review counts. Related: no technician star/score model on team, jobs, or dispatch. |
+| PTO / leave tracking | Not built | No PTO, time-off, or leave-balance model. Do not invent availability-from-PTO, leave calendars, or remaining-days metrics on `/technicians`, team profile, or dispatch. |
+| Referral attribution | Not built | `member_share_code` on `company_memberships` (migration `125`) is display/copy only on `/technicians` and team profile. Do not claim lead/customer attribution, conversion counts, or “referred by” linkage from codes until tracking ships. Distinct from Network/Community B2B `network_referrals`. |
 | Customer memberships | Not built | No customer loyalty / membership-tier product. Do not confuse with `company_memberships` (team access). |
-| Customer reviews | Not built | No review ingestion or display product. Community docs explicitly avoid public star-rating behavior. |
+| Customer reviews | Not built | No review ingestion or display product. Community docs explicitly avoid public star-rating behavior. Overlaps Reviews collection system above for technician roster UI. |
 | Real CLV model | Not built | Reports “lifetime revenue” is **all-time payments collected** (`sumCollectedRevenue` / `invoice_payments`), labeled as not a CLV model (`CustomerHealthCard`, `ReportCustomerHealth`). Do not present that total as modeled CLV. |
 | Customer response-time tracking | Not built | No SLA / first-response / reply-time metrics. Do not invent averages. |
 | Inbound call tracking | Not built | No call log, telephony integration, or missed-call pipeline. |

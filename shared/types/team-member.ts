@@ -14,6 +14,8 @@ export type TeamMember = {
   createdAt: string;
   reportsToMemberId: string | null;
   technicianSpecialties: string[];
+  /** Plaintext referral/share code when present (technicians). */
+  memberShareCode: string | null;
 };
 
 export type CompanyProfileSummary = {
@@ -117,12 +119,14 @@ export function mapMembershipToTeamMember(
         >
       | null;
     invite_email?: string | null;
+    member_share_code?: string | null;
   },
 ): TeamMember | null {
   const technicianSpecialties = normalizeTechnicianSpecialties(
     membership.technician_specialties,
   );
   const inviteEmail = membership.invite_email?.trim();
+  const memberShareCode = membership.member_share_code?.trim() || null;
 
   if (membership.user_id) {
     const profileEmail = membership.profile?.email?.trim();
@@ -141,6 +145,7 @@ export function mapMembershipToTeamMember(
       createdAt: membership.created_at,
       reportsToMemberId: membership.reports_to_member_id,
       technicianSpecialties,
+      memberShareCode,
     };
   }
 
@@ -156,6 +161,7 @@ export function mapMembershipToTeamMember(
       createdAt: membership.created_at,
       reportsToMemberId: membership.reports_to_member_id,
       technicianSpecialties,
+      memberShareCode,
     };
   }
 

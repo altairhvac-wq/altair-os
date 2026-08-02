@@ -22,6 +22,7 @@ import {
   isValidEmail,
   normalizeEmail,
 } from "@/shared/lib/email-validation";
+import { generateUniqueMemberShareCode } from "@/shared/lib/member-share-code";
 
 type MembershipProfileRow = {
   id: string;
@@ -34,6 +35,7 @@ type MembershipProfileRow = {
   joined_at: string | null;
   reports_to_member_id: string | null;
   technician_specialties: string[];
+  member_share_code: string | null;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -41,7 +43,7 @@ type MembershipProfileRow = {
 };
 
 const MEMBERSHIP_PROFILE_SELECT =
-  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, technician_specialties, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)";
+  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, technician_specialties, member_share_code, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)";
 
 export type ListCompanyMembersResult = {
   members: TeamMember[];
@@ -139,6 +141,117 @@ export async function listCompanyMembers(
   }
 
   return fetchCompanyMemberRoster(companyId);
+}
+
+async function listCompanyShareCodes(companyId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select("member_share_code")
+    .eq("company_id", companyId)
+    .not("member_share_code", "is", null);
+
+  if (error) {
+    console.error("[listCompanyShareCodes] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as { member_share_code: string | null }[])
+    .map((row) => row.member_share_code?.trim() ?? "")
+    .filter(Boolean);
+}
+
+async function assignMemberShareCode(
+  companyId: string,
+  membershipId: string,
+  name: string,
+): Promise<string | null> {
+  const existingCodes = await listCompanyShareCodes(companyId);
+  const supabase = await createClient();
+
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const code = generateUniqueMemberShareCode(name, existingCodes);
+    if (!code) {
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from("company_memberships")
+      .update({ member_share_code: code })
+      .eq("company_id", companyId)
+      .eq("id", membershipId)
+      .is("member_share_code", null)
+      .select("member_share_code")
+      .maybeSingle();
+
+    if (!error && data?.member_share_code) {
+      return data.member_share_code;
+    }
+
+    if (error?.code === "23505") {
+      existingCodes.push(code);
+      continue;
+    }
+
+    if (error) {
+      console.error("[assignMemberShareCode] update failed:", {
+        companyId,
+        membershipId,
+        code: error.code,
+        message: error.message,
+      });
+      return null;
+    }
+
+    // Row already had a code (race) — re-read.
+    const membership = await getCompanyMembershipById(companyId, membershipId);
+    return membership?.member_share_code?.trim() || null;
+  }
+
+  return null;
+}
+
+/**
+ * Ensure every technician-role member has a plaintext share code.
+ * Safe to call on page load; only fills null codes.
+ */
+export async function ensureTechnicianMemberShareCodes(
+  companyId: string,
+  members: TeamMember[],
+): Promise<TeamMember[]> {
+  const techniciansNeedingCodes = members.filter(
+    (member) => member.role === "technician" && !member.memberShareCode,
+  );
+
+  if (techniciansNeedingCodes.length === 0) {
+    return members;
+  }
+
+  const assigned = new Map<string, string>();
+
+  for (const member of techniciansNeedingCodes) {
+    const code = await assignMemberShareCode(
+      companyId,
+      member.id,
+      member.name,
+    );
+    if (code) {
+      assigned.set(member.id, code);
+    }
+  }
+
+  if (assigned.size === 0) {
+    return members;
+  }
+
+  return members.map((member) => {
+    const code = assigned.get(member.id);
+    return code ? { ...member, memberShareCode: code } : member;
+  });
 }
 
 export async function countActiveCompanyOwners(
@@ -269,17 +382,25 @@ export async function updateMemberRole(
 
   const row = data as MembershipProfileRow;
 
-  if (!row.profile) {
+  if (!row.profile && row.status !== "invited") {
     return { error: "Updated membership could not be loaded." };
   }
 
-  const member = mapMembershipToTeamMember({
+  let member = mapMembershipToTeamMember({
     ...row,
     profile: row.profile,
+    invite_email: row.invite_email,
   });
 
   if (!member) {
     return { error: "Updated membership could not be loaded." };
+  }
+
+  if (newRole === "technician" && !member.memberShareCode) {
+    const code = await assignMemberShareCode(companyId, membershipId, member.name);
+    if (code) {
+      member = { ...member, memberShareCode: code };
+    }
   }
 
   return {
@@ -791,9 +912,7 @@ export async function createTeamInvite(
       joined_at: null,
       reports_to_member_id: null,
     })
-    .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id",
-    )
+    .select(MEMBERSHIP_PROFILE_SELECT)
     .single();
 
   if (error) {
@@ -823,7 +942,7 @@ export async function createTeamInvite(
   }
 
   const row = data as MembershipProfileRow;
-  const member = mapMembershipToTeamMember({
+  let member = mapMembershipToTeamMember({
     ...row,
     profile: null,
     invite_email: row.invite_email,
@@ -832,6 +951,13 @@ export async function createTeamInvite(
 
   if (!member) {
     return { error: "Invitation was created but could not be loaded." };
+  }
+
+  if (role === "technician" && !member.memberShareCode) {
+    const code = await assignMemberShareCode(companyId, member.id, member.name);
+    if (code) {
+      member = { ...member, memberShareCode: code };
+    }
   }
 
   return { member };

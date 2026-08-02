@@ -16,6 +16,7 @@ import {
   shouldShowMemberSpecialties,
   TeamMemberSpecialtiesField,
 } from "@/shared/components/settings/TeamMemberSpecialtiesField";
+import { CopyMemberShareCodeButton } from "@/shared/components/technicians/CopyMemberShareCodeButton";
 import { ProfileMembershipStatusBadge } from "./ProfileMembershipStatusBadge";
 import { TeamMemberActivityCard } from "./TeamMemberActivityCard";
 import { TeamMemberProfitabilityCard } from "./TeamMemberProfitabilityCard";
@@ -293,6 +294,18 @@ function TeamMemberProfileLegacyView({
                 label="Role"
                 value={formatTeamMemberRole(profile.role)}
               />
+              {profile.role === "technician" ? (
+                <InfoRow
+                  label="Share code"
+                  value={
+                    profile.memberShareCode ? (
+                      <CopyMemberShareCodeButton code={profile.memberShareCode} />
+                    ) : (
+                      "—"
+                    )
+                  }
+                />
+              ) : null}
               <InfoRow label="Start Date" value={formatDate(startDate)} />
               <InfoRow
                 label="Status"

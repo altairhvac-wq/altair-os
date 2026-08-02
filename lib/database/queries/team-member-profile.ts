@@ -5,6 +5,9 @@ import { listEstimates } from "@/lib/database/queries/estimates";
 import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
 import { listInvoices } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
+import {
+  ensureTechnicianMemberShareCodes,
+} from "@/lib/database/queries/memberships";
 import { listCompanyJobLaborEntries } from "@/lib/database/queries/time-entries";
 import {
   assertTeamMemberProfileEditAccess,
@@ -54,6 +57,7 @@ type MembershipProfileRow = {
   available_for_dispatch: boolean;
   emergency_on_call: boolean;
   certifications: string[];
+  member_share_code: string | null;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -67,7 +71,7 @@ type MembershipProfileRow = {
 };
 
 const TEAM_MEMBER_PROFILE_SELECT =
-  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, technician_specialties, labor_cost_rate_cents, member_notes, available_for_dispatch, emergency_on_call, certifications, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(id, email, full_name, phone, avatar_url)";
+  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, technician_specialties, labor_cost_rate_cents, member_notes, available_for_dispatch, emergency_on_call, certifications, member_share_code, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(id, email, full_name, phone, avatar_url)";
 
 type MemberRoleActor = {
   userId: string;
@@ -333,13 +337,26 @@ export async function getTeamMemberProfilePageData(
       status: row.status,
     });
 
-  const profile = mapMembershipToTeamMemberProfile(row, {
+  let profile = mapMembershipToTeamMemberProfile(row, {
     includeLaborCostRate: canViewProfitability,
     includeMemberNotes: canViewNotes,
   });
 
   if (!profile) {
     return null;
+  }
+
+  if (
+    profile.role === "technician" &&
+    !profile.memberShareCode &&
+    hasCompanyPermission(context.role, "manageUsers")
+  ) {
+    const [ensured] = await ensureTechnicianMemberShareCodes(companyId, [
+      profile,
+    ]);
+    if (ensured?.memberShareCode) {
+      profile = { ...profile, memberShareCode: ensured.memberShareCode };
+    }
   }
 
   const workSummaryRange = options?.workSummaryRange ?? "30d";
