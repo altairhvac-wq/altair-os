@@ -42,23 +42,19 @@ import type { JobMaterial } from "@/shared/types/job-material";
 import { JobLifecycleControl } from "@/shared/components/jobs/JobLifecycleControl";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
-import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
+import type {
+  JobProfitabilityLabor,
+  JobProfitabilitySnapshot,
+} from "@/shared/types/job-profitability";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
 import { MasterDetailPageLayout } from "@/shared/design-system/shell";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcGridGapClass,
+} from "@/shared/design-system/components";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import {
-  JOB_DETAIL_ACTIVITY_ANCHOR,
-  JOB_DETAIL_SCOPE_ANCHOR,
-} from "@/shared/lib/jobs/job-detail-anchors";
-import { jobDetailBodyTextClass } from "@/shared/components/jobs/job-detail-section-styles";
-import {
-  JobDetailMoneyPath,
-  JobDetailNorthStarContentSection,
   JobDetailNorthStarHeader,
-  JobDetailSectionCommandPlate,
-  JobDetailSideRailCustomerCard,
-  JobDetailSideRailDispatchCard,
+  JobDetailTabbedWorkspace,
 } from "@/shared/components/jobs/north-star-m4b";
 import type {
   JobEstimateSummary,
@@ -76,6 +72,8 @@ type JobDetailPageViewProps = {
   expenses: Expense[];
   materials: JobMaterial[];
   profitability: JobProfitabilitySnapshot | null;
+  laborSummary: JobProfitabilityLabor;
+  laborCostRate: number | null;
   serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
@@ -120,6 +118,8 @@ type SharedWorkspaceProps = {
   expenses: Expense[];
   materials: JobMaterial[];
   profitability: JobProfitabilitySnapshot | null;
+  laborSummary: JobProfitabilityLabor;
+  laborCostRate: number | null;
   serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
@@ -438,188 +438,6 @@ function LegacyJobDetailBody({
   );
 }
 
-function NorthStarMainColumn({
-  job,
-  activities,
-  attachments,
-  expenses,
-  materials,
-  profitability,
-  serviceItems,
-  canUpdateStatus,
-  canEditJob,
-  deleteDependencies,
-  canLogMaterials,
-  canViewFinancials,
-  canViewBilling,
-  operationalInconsistencies,
-  billingContext,
-  aiFeaturesEnabled,
-}: SharedWorkspaceProps) {
-  const activityDescription = canViewBilling
-    ? "Job workflow, estimates, and billing events"
-    : "Job workflow and field events";
-
-  return (
-    <>
-      <JobDetailNorthStarContentSection
-        title="Work scope"
-        subtitle="Description and notes for this job"
-        anchor={JOB_DETAIL_SCOPE_ANCHOR}
-      >
-        <div className="grid gap-3 lg:grid-cols-2">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
-              Description
-            </p>
-            <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>
-              {job.description?.trim()
-                ? job.description
-                : "No description provided."}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
-              Notes
-            </p>
-            <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>
-              {job.notes?.trim() ? job.notes : "No notes on file."}
-            </p>
-          </div>
-        </div>
-      </JobDetailNorthStarContentSection>
-
-      <JobSummaryAiAssistant
-        jobId={job.id}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-      />
-
-      {operationalInconsistencies.length > 0 ? (
-        <JobOperationalRecoverySection
-          jobId={job.id}
-          entries={operationalInconsistencies}
-        />
-      ) : null}
-
-      <JobMaterialsSection
-        jobId={job.id}
-        materials={materials}
-        serviceItems={serviceItems}
-        canLogMaterials={canLogMaterials}
-        canViewMaterialCosts={canViewFinancials}
-        northStar
-      />
-
-      <JobAttachmentsSection
-        jobId={job.id}
-        attachments={attachments}
-        canUpload={canUpdateStatus}
-        northStar
-      />
-
-      <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} northStar />
-
-      {canViewFinancials ? (
-        <JobDetailMoneyPath
-          estimates={billingContext?.estimates ?? []}
-          invoices={billingContext?.invoices ?? []}
-          profitability={profitability}
-          canViewBilling={canViewBilling}
-        />
-      ) : null}
-
-      {canViewFinancials && profitability ? (
-        <>
-          <JobReviewChecklistSection
-            jobId={job.id}
-            jobStatus={job.status}
-            customerId={job.customerId}
-            snapshot={profitability}
-            invoices={billingContext?.invoices ?? []}
-          />
-
-          <JobProfitabilitySection
-            jobId={job.id}
-            jobStatus={job.status}
-            snapshot={profitability}
-            northStar
-          />
-        </>
-      ) : null}
-
-      <OperationalActivityTimeline
-        activities={activities}
-        canViewBilling={canViewBilling}
-        title="History"
-        sectionId={JOB_DETAIL_ACTIVITY_ANCHOR}
-        sectionClassName="scroll-mt-6"
-        northStar
-        compact
-        description={activityDescription}
-        emptyDescription={
-          canViewBilling
-            ? "Status changes, assignments, estimates, and invoices will appear here."
-            : "Status changes, assignments, and field updates will appear here."
-        }
-      />
-
-      <JobLifecycleControl
-        job={job}
-        deleteDependencies={deleteDependencies}
-        canManage={canEditJob}
-        northStar
-      />
-    </>
-  );
-}
-
-function NorthStarJobDetailBody(props: SharedWorkspaceProps) {
-  // Single DOM tree: mobile stacks customer/dispatch first; desktop places
-  // them in the side column without duplicating section anchors.
-  return (
-    <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start lg:gap-2.5">
-      <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-        <JobDetailSideRailCustomerCard
-          customerId={props.job.customerId}
-          customerName={props.job.customerName}
-          customerCompany={props.customerCompany}
-          customerEmail={props.customerEmail}
-          customerPhone={props.customerPhone}
-          serviceAddress={props.job.serviceAddress}
-          city={props.job.city}
-          state={props.job.state}
-          zip={props.job.zip}
-          canManageCustomers={props.canManageCustomers}
-        />
-      </div>
-
-      <div className="min-w-0 lg:col-start-2 lg:row-start-2">
-        <JobDetailSideRailDispatchCard
-          job={props.job}
-          scheduledLabel={props.scheduledLabel}
-          technicians={props.technicians}
-          canAssignTechnician={props.canAssignTechnician}
-        />
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-1 lg:row-span-3 lg:row-start-1">
-        <NorthStarMainColumn {...props} />
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-2 lg:row-start-3">
-        <JobCustomerEquipmentSection
-          customerId={props.job.customerId}
-          jobId={props.job.id}
-          equipment={props.equipment}
-          canViewCustomerProfile={props.canManageCustomers}
-          northStar
-          compact
-        />
-      </div>
-    </div>
-  );
-}
-
 export function JobDetailPageView({
   job,
   customers,
@@ -630,6 +448,8 @@ export function JobDetailPageView({
   expenses,
   materials,
   profitability,
+  laborSummary,
+  laborCostRate,
   serviceItems,
   canUpdateStatus,
   canAssignTechnician,
@@ -648,8 +468,6 @@ export function JobDetailPageView({
   const customerCompany = job.customerCompany?.trim();
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
   const northStar = isNorthStarShellEnabled();
-  const showEquipmentNav = equipment.length > 0;
-  const showBillingNav = canViewFinancials;
 
   const workspaceProps: SharedWorkspaceProps = {
     job,
@@ -661,6 +479,8 @@ export function JobDetailPageView({
     expenses,
     materials,
     profitability,
+    laborSummary,
+    laborCostRate,
     serviceItems,
     canUpdateStatus,
     canAssignTechnician,
@@ -679,40 +499,29 @@ export function JobDetailPageView({
     customerCompany,
   };
 
+  const backToJobsLink = (
+    <Link
+      href="/jobs"
+      className={
+        northStar
+          ? "inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+          : "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+      }
+    >
+      <ArrowLeft className={northStar ? "h-3.5 w-3.5" : "h-4 w-4"} />
+      Back to jobs
+    </Link>
+  );
+
   return (
     <MasterDetailPageLayout
-      className={northStar ? dt.pageCanvas : undefined}
       canvasWidth={northStar ? "detailWide" : "detail"}
-      backLink={
-        <Link
-          href="/jobs"
-          className={
-            northStar
-              ? dt.backLink
-              : "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-          }
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to jobs
-        </Link>
-      }
+      backLink={northStar ? undefined : backToJobsLink}
     >
       <JobDetailHashScroll />
 
       {northStar ? (
-        <>
-          <JobDetailNorthStarHeader
-            job={job}
-            customers={customers}
-            scheduledLabel={scheduledLabel}
-            canUpdateStatus={canUpdateStatus}
-            canEditJob={canEditJob}
-            canManageCustomers={canManageCustomers}
-            aiFeaturesEnabled={aiFeaturesEnabled}
-            canCreateEstimate={canViewBilling}
-            canViewBilling={canViewBilling}
-            billingContext={billingContext}
-          />
+        <div className={`flex flex-col ${altairMcGridGapClass}`}>
           <JobWorkflowOverview
             job={job}
             customers={customers}
@@ -728,13 +537,21 @@ export function JobDetailPageView({
             canAssignTechnician={canAssignTechnician}
             aiFeaturesEnabled={aiFeaturesEnabled}
             northStar
+            placement="topBar"
+            leading={backToJobsLink}
           />
-          <JobDetailSectionCommandPlate
-            showBilling={showBillingNav}
-            showEquipment={showEquipmentNav}
+          <JobDetailNorthStarHeader
+            job={job}
+            customers={customers}
+            canUpdateStatus={canUpdateStatus}
+            canEditJob={canEditJob}
+            aiFeaturesEnabled={aiFeaturesEnabled}
+            canCreateEstimate={canViewBilling}
+            canViewBilling={canViewBilling}
+            billingContext={billingContext}
           />
-          <NorthStarJobDetailBody {...workspaceProps} />
-        </>
+          <JobDetailTabbedWorkspace {...workspaceProps} />
+        </div>
       ) : (
         <LegacyJobDetailBody {...workspaceProps} />
       )}

@@ -2,7 +2,7 @@
 
 import { RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { reopenCompletedJobAction } from "@/app/actions/jobs";
 import { formatJobStatus, type JobStatus } from "@/shared/types/job";
 import {
@@ -17,6 +17,8 @@ type ReopenCompletedJobControlProps = {
   canReopenJob: boolean;
   reopenSnapshot: ReopenTargetJobSnapshot;
   disabled?: boolean;
+  /** Compact header action instead of a full explainer card. */
+  variant?: "card" | "inline";
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
@@ -26,6 +28,7 @@ export function ReopenCompletedJobControl({
   canReopenJob,
   reopenSnapshot,
   disabled = false,
+  variant = "card",
   onStatusUpdated,
 }: ReopenCompletedJobControlProps) {
   const router = useRouter();
@@ -35,11 +38,8 @@ export function ReopenCompletedJobControl({
 
   const targetStatus = resolveReopenTargetStatus(reopenSnapshot);
   const isVisible = canReopenJob && canReopenCompletedJob(status);
-
-  useEffect(() => {
-    setError(null);
-    setSuccessMessage(null);
-  }, [status]);
+  const targetLabel = formatJobStatus(targetStatus);
+  const reopenTitle = `Reopen as an operational correction. Returns the job to ${targetLabel}. Completion notes are kept.`;
 
   if (!isVisible) {
     return null;
@@ -69,6 +69,35 @@ export function ReopenCompletedJobControl({
     });
   }
 
+  if (variant === "inline") {
+    return (
+      <div className="inline-flex max-w-full flex-col items-start gap-1">
+        <button
+          type="button"
+          onClick={handleReopen}
+          disabled={disabled || isPending}
+          title={reopenTitle}
+          aria-label={reopenTitle}
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-sky-300/80 bg-sky-50/80 px-2.5 text-xs font-semibold text-sky-900 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <RotateCcw className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {isPending ? "Reopening…" : "Reopen"}
+        </button>
+        <p className="text-[11px] leading-snug text-altair-ink-on-paper-muted">
+          Returns to {targetLabel}
+        </p>
+        {error ? (
+          <p className="break-words text-xs text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {successMessage ? (
+          <p className="text-xs text-emerald-700">{successMessage}</p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-dashed border-sky-200 bg-sky-50/60 p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-sky-800">
@@ -78,7 +107,7 @@ export function ReopenCompletedJobControl({
         Use this when work must continue after completion. This is an operational
         correction, not a normal status change. Completion notes are kept for
         history. The job returns to{" "}
-        <span className="font-semibold">{formatJobStatus(targetStatus)}</span>.
+        <span className="font-semibold">{targetLabel}</span>.
       </p>
 
       <button

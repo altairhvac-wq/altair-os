@@ -11,7 +11,12 @@ import {
   formatJobProfitabilityCurrency,
   type JobProfitabilitySnapshot,
 } from "@/shared/types/job-profitability";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcMetricLabelClass,
+} from "@/shared/design-system/components";
+import { altairCanvasInkLinkClass } from "@/shared/design-system/foundation";
 
 type JobDetailMoneyPathProps = {
   estimates: JobEstimateSummary[];
@@ -21,7 +26,9 @@ type JobDetailMoneyPathProps = {
 };
 
 function StageMeta({ children }: { children: ReactNode }) {
-  return <p className={dt.ivoryCardMuted}>{children}</p>;
+  return (
+    <p className="mt-1 text-xs text-altair-ink-on-paper-muted">{children}</p>
+  );
 }
 
 function StageAmount({
@@ -33,20 +40,28 @@ function StageAmount({
 }) {
   return (
     <div className="min-w-0">
-      <p className={dt.metricLabel}>{label}</p>
-      <p className={`${dt.metricValue} text-base`}>{value}</p>
+      <p className={altairMcMetricLabelClass}>{label}</p>
+      <p className="mt-0.5 text-sm font-bold tabular-nums text-altair-ink-on-paper">
+        {value}
+      </p>
     </div>
   );
 }
 
 function ViewLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className={`${dt.opportunityLink} mt-2 min-h-9`}>
+    <Link
+      href={href}
+      className={`mt-2 inline-flex min-h-9 items-center gap-0.5 text-[11px] font-semibold ${altairCanvasInkLinkClass}`}
+    >
       {label}
       <ArrowRight className="h-3 w-3" aria-hidden="true" />
     </Link>
   );
 }
+
+const stageCardClass =
+  "rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 py-2";
 
 export function JobDetailMoneyPath({
   estimates,
@@ -69,35 +84,41 @@ export function JobDetailMoneyPath({
       data-job-section={JOB_DETAIL_BILLING_ANCHOR}
       tabIndex={-1}
       aria-labelledby="job-detail-money-path-heading"
-      className={`${dt.compactSectionSurface} scroll-mt-6`}
+      className={`${altairMcCardClass} ${altairMcCardPadClass} scroll-mt-6`}
     >
       <div className="flex items-start gap-2.5">
-        <div className={dt.sectionIconWrap}>
-          <CircleDollarSign className="h-4 w-4" aria-hidden="true" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-stone ring-1 ring-altair-border">
+          <CircleDollarSign
+            className="h-4 w-4 text-altair-ink-on-paper-secondary"
+            aria-hidden="true"
+          />
         </div>
         <div className="min-w-0">
-          <h2 id="job-detail-money-path-heading" className={dt.sectionTitle}>
+          <h2
+            id="job-detail-money-path-heading"
+            className="text-sm font-bold tracking-tight text-altair-ink-on-paper"
+          >
             Money path
           </h2>
-          <p className={dt.sectionSubtitle}>
+          <p className="mt-0.5 text-xs text-altair-ink-on-paper-muted">
             Estimate → Invoice → Payment
           </p>
         </div>
       </div>
 
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <div className={dt.innerCard}>
-          <p className={dt.metricLabel}>Estimate</p>
+        <div className={stageCardClass}>
+          <p className={altairMcMetricLabelClass}>Estimate</p>
           {estimate.present ? (
             <>
-              <p className={`mt-1 ${dt.ivoryCardPrimary}`}>
+              <p className="mt-1 text-sm font-semibold text-altair-ink-on-paper">
                 {estimate.documentNumber}
               </p>
-              <p className={`mt-0.5 ${dt.ivoryCardSecondary}`}>
+              <p className="mt-0.5 text-xs text-altair-ink-on-paper-secondary">
                 {estimate.statusLabel}
               </p>
               {estimate.total != null ? (
-                <p className={`mt-1 ${dt.metricValue}`}>
+                <p className="mt-1 text-sm font-bold tabular-nums text-altair-ink-on-paper">
                   {formatJobProfitabilityCurrency(estimate.total)}
                 </p>
               ) : null}
@@ -110,7 +131,9 @@ export function JobDetailMoneyPath({
             </>
           ) : (
             <>
-              <p className={`mt-1 ${dt.ivoryCardPrimary}`}>Not created</p>
+              <p className="mt-1 text-sm font-semibold text-altair-ink-on-paper">
+                Not created
+              </p>
               <StageMeta>
                 Optional — jobs may invoice without an estimate.
               </StageMeta>
@@ -118,18 +141,18 @@ export function JobDetailMoneyPath({
           )}
         </div>
 
-        <div className={dt.innerCard}>
-          <p className={dt.metricLabel}>Invoice</p>
+        <div className={stageCardClass}>
+          <p className={altairMcMetricLabelClass}>Invoice</p>
           {invoice.present ? (
             <>
-              <p className={`mt-1 ${dt.ivoryCardPrimary}`}>
+              <p className="mt-1 text-sm font-semibold text-altair-ink-on-paper">
                 {invoice.documentNumber}
               </p>
-              <p className={`mt-0.5 ${dt.ivoryCardSecondary}`}>
+              <p className="mt-0.5 text-xs text-altair-ink-on-paper-secondary">
                 {invoice.statusLabel}
               </p>
               {invoice.total != null ? (
-                <p className={`mt-1 ${dt.metricValue}`}>
+                <p className="mt-1 text-sm font-bold tabular-nums text-altair-ink-on-paper">
                   {formatJobProfitabilityCurrency(invoice.total)}
                 </p>
               ) : null}
@@ -144,7 +167,9 @@ export function JobDetailMoneyPath({
             </>
           ) : (
             <>
-              <p className={`mt-1 ${dt.ivoryCardPrimary}`}>Not created</p>
+              <p className="mt-1 text-sm font-semibold text-altair-ink-on-paper">
+                Not created
+              </p>
               <StageMeta>No invoice linked to this job yet.</StageMeta>
             </>
           )}
@@ -152,11 +177,13 @@ export function JobDetailMoneyPath({
 
         <div
           className={
-            payment.outstanding > 0 ? dt.metricCardHighlight : dt.innerCard
+            payment.outstanding > 0
+              ? "rounded-lg border border-altair-warning/35 bg-altair-warning-surface px-2.5 py-2"
+              : stageCardClass
           }
         >
-          <p className={dt.metricLabel}>Payment</p>
-          <p className={`mt-1 ${dt.ivoryCardSecondary}`}>
+          <p className={altairMcMetricLabelClass}>Payment</p>
+          <p className="mt-1 text-xs text-altair-ink-on-paper-secondary">
             {payment.statusLabel}
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2">

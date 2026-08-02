@@ -111,7 +111,7 @@ export function JobMaterialsSection({
                 key={material.id}
                 className={
                   northStar
-                    ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3"
+                    ? "rounded-lg border border-altair-border bg-[var(--surface-tile)] px-4 py-3"
                     : "rounded-xl border border-slate-200 bg-white px-4 py-3"
                 }
               >

@@ -1,9 +1,14 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { JobNextActionCard } from "@/shared/components/jobs/JobNextActionCard";
 import { JobWorkflowDocumentHost } from "@/shared/components/jobs/JobWorkflowDocumentHost";
 import { JobWorkflowTimeline } from "@/shared/components/jobs/JobWorkflowTimeline";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 import type { JobWorkflowDocument } from "@/shared/lib/jobs/job-workflow-documents";
 import type {
   JobEstimateSummary,
@@ -63,6 +68,9 @@ type JobWorkflowOverviewProps = {
   canAssignTechnician: boolean;
   aiFeaturesEnabled?: boolean;
   northStar?: boolean;
+  /** Compact top bar with optional leading control (e.g. Back to jobs). */
+  placement?: "stacked" | "topBar";
+  leading?: ReactNode;
 };
 
 export function JobWorkflowOverview({
@@ -80,10 +88,13 @@ export function JobWorkflowOverview({
   canAssignTechnician,
   aiFeaturesEnabled = false,
   northStar = false,
+  placement = "stacked",
+  leading,
 }: JobWorkflowOverviewProps) {
   const [status, setStatus] = useState(job.status);
   const [document, setDocument] = useState<JobWorkflowDocument | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const topBar = northStar && placement === "topBar";
 
   useEffect(() => {
     setStatus((current) =>
@@ -160,56 +171,104 @@ export function JobWorkflowOverview({
 
   const jobDetail = job as JobDetail;
 
+  const timeline = (
+    <JobWorkflowTimeline
+      stages={workflow.progress.stages}
+      progress={workflow.progress}
+      destinationContext={destinationContext}
+      northStar={northStar}
+      compact={northStar && !topBar}
+      inline={topBar}
+      onOpenDocument={(next, trigger) => {
+        triggerRef.current = trigger;
+        setDocument(next);
+      }}
+    />
+  );
+
+  const nextAction = (
+    <JobNextActionCard
+      workflow={workflow}
+      jobId={job.id}
+      customerId={job.customerId}
+      status={status}
+      serviceAddress={job.serviceAddress}
+      city={job.city}
+      state={job.state}
+      zip={job.zip}
+      canUpdateStatus={canUpdateStatus}
+      aiFeaturesEnabled={aiFeaturesEnabled}
+      northStar={northStar}
+      compact={northStar && !topBar}
+      inline={topBar}
+      onStatusUpdated={setStatus}
+      onOpenDocument={(next) => {
+        triggerRef.current = null;
+        setDocument(next);
+      }}
+    />
+  );
+
+  const documentHost = (
+    <JobWorkflowDocumentHost
+      job={jobDetail}
+      customers={customers}
+      technicians={technicians}
+      serviceItems={serviceItems}
+      equipment={equipment}
+      materials={materials}
+      attachments={attachments}
+      estimates={billingContext?.estimates ?? []}
+      invoices={billingContext?.invoices ?? []}
+      canEditJob={canEditJob}
+      canAssignTechnician={canAssignTechnician}
+      canUpdateStatus={canUpdateStatus}
+      canViewBilling={canViewBilling}
+      aiFeaturesEnabled={aiFeaturesEnabled}
+      northStar={northStar}
+      document={document}
+      onDocumentChange={setDocument}
+      triggerElementRef={triggerRef}
+    />
+  );
+
+  if (topBar) {
+    return (
+      <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+            {leading}
+            <div className="min-w-0 max-w-full flex-1 overflow-x-auto">
+              {timeline}
+            </div>
+          </div>
+          <div className="shrink-0">{nextAction}</div>
+        </div>
+        {documentHost}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex flex-col ${northStar ? "gap-2.5" : "gap-2"}`}>
-      <JobWorkflowTimeline
-        stages={workflow.progress.stages}
-        progress={workflow.progress}
-        destinationContext={destinationContext}
-        northStar={northStar}
-        onOpenDocument={(next, trigger) => {
-          triggerRef.current = trigger;
-          setDocument(next);
-        }}
-      />
-      <JobNextActionCard
-        workflow={workflow}
-        jobId={job.id}
-        customerId={job.customerId}
-        status={status}
-        serviceAddress={job.serviceAddress}
-        city={job.city}
-        state={job.state}
-        zip={job.zip}
-        canUpdateStatus={canUpdateStatus}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-        northStar={northStar}
-        onStatusUpdated={setStatus}
-        onOpenDocument={(next) => {
-          triggerRef.current = null;
-          setDocument(next);
-        }}
-      />
-      <JobWorkflowDocumentHost
-        job={jobDetail}
-        customers={customers}
-        technicians={technicians}
-        serviceItems={serviceItems}
-        equipment={equipment}
-        materials={materials}
-        attachments={attachments}
-        estimates={billingContext?.estimates ?? []}
-        invoices={billingContext?.invoices ?? []}
-        canEditJob={canEditJob}
-        canAssignTechnician={canAssignTechnician}
-        canUpdateStatus={canUpdateStatus}
-        canViewBilling={canViewBilling}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-        northStar={northStar}
-        document={document}
-        onDocumentChange={setDocument}
-        triggerElementRef={triggerRef}
-      />
+      {northStar ? (
+        <div
+          className={`${altairMcCardClass} ${altairMcCardPadClass} py-2.5 sticky top-0 z-20`}
+        >
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-4">
+            <div className="min-w-0 flex-1 overflow-hidden">{timeline}</div>
+            <div className="w-full shrink-0 border-t border-altair-border pt-2.5 lg:w-auto lg:min-w-[16rem] lg:max-w-sm lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+              {nextAction}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {timeline}
+          {nextAction}
+        </>
+      )}
+      {documentHost}
     </div>
   );
 }

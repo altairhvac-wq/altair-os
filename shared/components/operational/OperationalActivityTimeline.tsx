@@ -27,7 +27,10 @@ import type {
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 
 type OperationalActivityTimelineProps = {
   activities: OperationalActivity[];
@@ -246,9 +249,7 @@ export function OperationalActivityTimeline({
   const sectionClass = bare
     ? ""
     : northStar
-      ? compact
-        ? dt.compactSectionSurface
-        : dt.sectionSurface
+      ? `${altairMcCardClass} ${altairMcCardPadClass}`
       : adminCardSectionClass;
   const displayedActivities = compact
     ? visibleActivities.slice(0, COMPACT_ACTIVITY_LIMIT)
@@ -257,16 +258,16 @@ export function OperationalActivityTimeline({
     ? Math.max(0, visibleActivities.length - COMPACT_ACTIVITY_LIMIT)
     : 0;
   const entryLabelClass = northStar
-    ? "text-sm font-medium text-[#17130E]"
+    ? "text-sm font-medium text-altair-ink-on-paper"
     : "text-sm font-medium text-slate-900";
   const entryTimestampClass = northStar
-    ? "shrink-0 text-[11px] text-[#6B6255]"
+    ? "shrink-0 text-[11px] text-altair-ink-on-paper-muted"
     : "shrink-0 text-[11px] text-slate-400";
   const entryDetailsClass = northStar
-    ? "mt-0.5 text-xs text-[#4F4638]"
+    ? "mt-0.5 text-xs text-altair-ink-on-paper-secondary"
     : "mt-0.5 text-xs text-slate-600";
   const entryAttributionClass = northStar
-    ? "mt-0.5 text-[11px] text-[#6B6255]"
+    ? "mt-0.5 text-[11px] text-altair-ink-on-paper-muted"
     : "mt-0.5 text-[11px] text-slate-400";
 
   return (
@@ -281,23 +282,35 @@ export function OperationalActivityTimeline({
           <div
             className={
               northStar
-                ? dt.sectionIconWrap
+                ? "flex h-9 w-9 items-center justify-center rounded-lg bg-altair-stone ring-1 ring-altair-border"
                 : "flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200"
             }
           >
-            <History className={northStar ? "h-4 w-4" : "h-4 w-4 text-slate-500"} />
+            <History
+              className={
+                northStar
+                  ? "h-4 w-4 text-altair-ink-on-paper-secondary"
+                  : "h-4 w-4 text-slate-500"
+              }
+            />
           </div>
           <div>
             <h2
               className={
                 northStar
-                  ? dt.sectionTitle
+                  ? "text-sm font-bold tracking-tight text-altair-ink-on-paper"
                   : "text-xs font-semibold uppercase tracking-wide text-slate-500"
               }
             >
               {title}
             </h2>
-            <p className={northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-600"}>
+            <p
+              className={
+                northStar
+                  ? "text-xs text-altair-ink-on-paper-muted"
+                  : "text-sm text-slate-600"
+              }
+            >
               {description}
             </p>
           </div>
@@ -308,14 +321,14 @@ export function OperationalActivityTimeline({
         <div
           className={
             northStar
-              ? `${bare ? "" : "mt-5"} ${dt.emptyState}`
+              ? `${bare ? "" : "mt-5"} rounded-lg border border-dashed border-altair-border bg-[var(--surface-tile)] px-4 py-8 text-center`
               : `${bare ? "" : "mt-5"} rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center`
           }
         >
           <p
             className={
               northStar
-                ? "text-sm font-medium text-[#4F4638]"
+                ? "text-sm font-medium text-altair-ink-on-paper"
                 : "text-sm font-medium text-slate-700"
             }
           >
@@ -324,7 +337,7 @@ export function OperationalActivityTimeline({
           <p
             className={
               northStar
-                ? "mt-1 text-xs text-[#6B6255]"
+                ? "mt-1 text-xs text-altair-ink-on-paper-muted"
                 : "mt-1 text-xs text-slate-500"
             }
           >
@@ -350,7 +363,7 @@ export function OperationalActivityTimeline({
                     aria-hidden="true"
                     className={
                       northStar
-                        ? "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-[rgba(138,99,36,0.18)]"
+                        ? "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-altair-border"
                         : "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-slate-200"
                     }
                   />
@@ -378,7 +391,13 @@ export function OperationalActivityTimeline({
         </ol>
       )}
       {hiddenActivityCount > 0 ? (
-        <p className={northStar ? dt.truncatedHint : "mt-2 text-xs text-slate-500"}>
+        <p
+          className={
+            northStar
+              ? "mt-2 text-xs font-medium text-altair-ink-on-paper-muted"
+              : "mt-2 text-xs text-slate-500"
+          }
+        >
           Showing {displayedActivities.length} of {visibleActivities.length} events
         </p>
       ) : null}

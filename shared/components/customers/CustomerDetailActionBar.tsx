@@ -18,8 +18,11 @@ type CustomerDetailActionBarProps = {
   compact?: boolean;
 };
 
-const actionClass =
+/** Shared chrome-row action button used on Customer Profile (and Job Detail top bar). */
+export const customerDetailChromeActionClass =
   "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50";
+
+const actionClass = customerDetailChromeActionClass;
 
 function resolveRecordPaymentHref(invoices: Invoice[]): string | null {
   const unpaidInvoice = invoices.find(

@@ -3,20 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import {
-  Calendar,
-  MapPin,
-  Pencil,
-  Truck,
-  User,
-} from "lucide-react";
+import { Pencil, Truck } from "lucide-react";
 import { updateJobAction } from "@/app/actions/jobs";
-import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { JobForm, jobToFormData } from "@/shared/components/jobs/JobForm";
 import { JobPriorityBadge } from "@/shared/components/jobs/JobPriorityBadge";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { ReopenCompletedJobControl } from "@/shared/components/jobs/ReopenCompletedJobControl";
+import {
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type {
   JobEstimateSummary,
@@ -29,10 +27,8 @@ import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 type JobDetailNorthStarHeaderProps = {
   job: JobDetail;
   customers: Customer[];
-  scheduledLabel: string;
   canUpdateStatus: boolean;
   canEditJob: boolean;
-  canManageCustomers: boolean;
   aiFeaturesEnabled?: boolean;
   canCreateEstimate?: boolean;
   canViewBilling?: boolean;
@@ -70,16 +66,15 @@ const workflowControlsProps = (
     assignedTechnicianId: props.job.assignedTechnicianId,
   },
   layout: "header" as const,
+  reopenVariant: "none" as const,
   onStatusUpdated,
 });
 
 export function JobDetailNorthStarHeader({
   job,
   customers,
-  scheduledLabel,
   canUpdateStatus,
   canEditJob,
-  canManageCustomers,
   aiFeaturesEnabled = false,
   canCreateEstimate,
   canViewBilling,
@@ -135,10 +130,8 @@ export function JobDetailNorthStarHeader({
     {
       job,
       customers,
-      scheduledLabel,
       canUpdateStatus,
       canEditJob,
-      canManageCustomers,
       aiFeaturesEnabled,
       canCreateEstimate,
       canViewBilling,
@@ -148,18 +141,16 @@ export function JobDetailNorthStarHeader({
     handleStatusUpdated,
   );
 
-  const isAssigned = Boolean(job.assignedTechnicianId);
-  const locationLine = `${job.serviceAddress}, ${job.city}, ${job.state} ${job.zip}`;
-
   if (isEditing) {
     return (
-      <div className={dt.heroShell}>
-        <div aria-hidden="true" className={dt.heroAccentRail} />
-        <div className="space-y-4">
+      <section className="space-y-2">
+        <SectionHeader title="Edit job" />
+        <div className={`${altairMcCardClass} ${altairMcCardPadClass} space-y-4`}>
           <div>
-            <p className={dt.heroEyebrow}>Edit job</p>
-            <h1 className={`mt-1 ${dt.heroTitle}`}>{job.jobNumber}</h1>
-            <p className={`mt-1 ${dt.heroMeta}`}>
+            <h1 className="text-lg font-bold tracking-tight text-altair-ink-on-paper sm:text-xl">
+              {job.jobNumber}
+            </h1>
+            <p className="mt-1 text-xs text-altair-ink-on-paper-muted">
               Update schedule, service address, and job details
             </p>
           </div>
@@ -175,73 +166,63 @@ export function JobDetailNorthStarHeader({
             lockStatus
           />
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className={dt.heroShell}>
-      <div aria-hidden="true" className={dt.heroAccentRail} />
+    <section className="space-y-2">
+      <SectionHeader title="Job" />
+      <div className={`${altairMcCardClass} ${altairMcCardPadClass} space-y-2.5`}>
+        <JobWorkflowControls {...sharedWorkflowProps} section="banners" />
 
-      <JobWorkflowControls {...sharedWorkflowProps} section="banners" />
-
-      <div className="mt-2.5 flex flex-wrap items-start justify-between gap-2.5">
-        <div className="min-w-0 flex-1">
-          <p className={dt.heroEyebrow}>Job command center</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h1 className={dt.heroTitle}>{job.jobNumber}</h1>
-            <JobStatusBadge status={status} />
-            <JobPriorityBadge priority={job.priority} />
+        <div className="flex flex-wrap items-start justify-between gap-2.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg font-bold tracking-tight text-altair-ink-on-paper sm:text-xl">
+                {job.jobNumber}
+              </h1>
+              <JobStatusBadge status={status} />
+              <JobPriorityBadge priority={job.priority} />
+            </div>
+            <p className="mt-1 text-sm font-semibold text-altair-ink-on-paper-secondary">
+              {job.jobType}
+            </p>
           </div>
-          <p className={`mt-1 text-base font-semibold tracking-tight text-[#F3EBDD] sm:text-lg`}>
-            {job.jobType}
-          </p>
-        </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
-          {canEditJob ? (
-            <button
-              type="button"
-              onClick={handleEditClick}
-              className={dt.tertiaryAction}
+          <div className="flex shrink-0 flex-wrap items-start gap-2">
+            {canEditJob ? (
+              <button
+                type="button"
+                onClick={handleEditClick}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit job
+              </button>
+            ) : null}
+            <Link
+              href="/dispatch"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone"
             >
-              <Pencil className="h-4 w-4" />
-              Edit job
-            </button>
-          ) : null}
-          <Link href="/dispatch" className={dt.tertiaryAction}>
-            <Truck className="h-4 w-4" />
-            Open dispatch
-          </Link>
+              <Truck className="h-3.5 w-3.5" />
+              Open dispatch
+            </Link>
+            <ReopenCompletedJobControl
+              jobId={job.id}
+              status={status}
+              canReopenJob={canEditJob}
+              reopenSnapshot={{
+                workStartedAt: job.workStartedAt,
+                arrivedAt: job.arrivedAt,
+                assignedTechnicianId: job.assignedTechnicianId,
+              }}
+              variant="inline"
+              onStatusUpdated={handleStatusUpdated}
+            />
+          </div>
         </div>
       </div>
-
-      <div className={`${dt.metaStrip} space-y-1.5`}>
-        <div className={dt.metaRow}>
-          <Calendar className={dt.metaIcon} />
-          <span className="font-medium text-[#F3EBDD]">{scheduledLabel}</span>
-          <span className="text-[#8A6324]" aria-hidden="true">
-            ·
-          </span>
-          <User className={dt.metaIcon} />
-          <span className={isAssigned ? "text-[#F3EBDD]" : "text-[#D6BE78]"}>
-            {isAssigned ? job.assignedTechnician : "Unassigned"}
-          </span>
-        </div>
-        <div className={dt.metaRow}>
-          <MapPin className={dt.metaIcon} />
-          <span className="min-w-0 truncate">{locationLine}</span>
-        </div>
-        <div className={dt.metaRow}>
-          <User className={dt.metaIcon} />
-          <CustomerNameLink
-            customerId={job.customerId}
-            customerName={job.customerName}
-            canManageCustomers={canManageCustomers}
-            linkClassName="font-medium text-[#F3EBDD] transition-colors hover:text-[#FFF9EA]"
-          />
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

@@ -3,6 +3,8 @@
  * Presentation-only — does not mutate job state.
  */
 
+import { dispatchJobDetailSectionSelect } from "@/shared/lib/jobs/job-detail-tabs";
+
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return false;
@@ -63,20 +65,34 @@ export type ScrollJobDetailSectionOptions = {
   behavior?: ScrollBehavior;
 };
 
+function focusJobDetailSection(
+  element: HTMLElement,
+  focus: boolean | undefined,
+): void {
+  if (!focus) {
+    return;
+  }
+
+  const previousTabIndex = element.getAttribute("tabindex");
+  if (previousTabIndex === null) {
+    element.setAttribute("tabindex", "-1");
+  }
+  element.focus({ preventScroll: true });
+  if (previousTabIndex === null) {
+    const restore = () => {
+      element.removeAttribute("tabindex");
+      element.removeEventListener("blur", restore);
+    };
+    element.addEventListener("blur", restore);
+  }
+}
+
 export function scrollToJobDetailSection(
   sectionId: string,
   options: ScrollJobDetailSectionOptions = {},
 ): boolean {
-  const element = findJobDetailSectionElement(sectionId);
-  if (!element) {
-    return false;
-  }
-
-  const behavior =
-    options.behavior ??
-    (prefersReducedMotion() ? "auto" : "smooth");
-
-  element.scrollIntoView({ behavior, block: "start" });
+  // Let tab panels mount before measuring/scrolling.
+  dispatchJobDetailSectionSelect(sectionId);
 
   if (options.updateHash !== false) {
     const nextHash = `#${sectionId}`;
@@ -85,20 +101,38 @@ export function scrollToJobDetailSection(
     }
   }
 
-  if (options.focus) {
-    const previousTabIndex = element.getAttribute("tabindex");
-    if (previousTabIndex === null) {
-      element.setAttribute("tabindex", "-1");
+  const behavior =
+    options.behavior ??
+    (prefersReducedMotion() ? "auto" : "smooth");
+
+  const tryScroll = (): boolean => {
+    const element = findJobDetailSectionElement(sectionId);
+    if (!element) {
+      return false;
     }
-    element.focus({ preventScroll: true });
-    if (previousTabIndex === null) {
-      const restore = () => {
-        element.removeAttribute("tabindex");
-        element.removeEventListener("blur", restore);
-      };
-      element.addEventListener("blur", restore);
-    }
+
+    element.scrollIntoView({ behavior, block: "start" });
+    focusJobDetailSection(element, options.focus);
+    return true;
+  };
+
+  if (tryScroll()) {
+    return true;
   }
+
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  // Tab switch may need a paint before the panel exists.
+  window.requestAnimationFrame(() => {
+    if (tryScroll()) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      tryScroll();
+    });
+  });
 
   return true;
 }

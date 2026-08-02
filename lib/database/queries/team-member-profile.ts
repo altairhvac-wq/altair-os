@@ -144,6 +144,41 @@ async function listTechnicianLaborCostRates(
   return rates;
 }
 
+/** Hourly labor cost rate in dollars, or null when unset. */
+export async function getTechnicianLaborCostRate(
+  companyId: string,
+  userId: string,
+): Promise<number | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select("labor_cost_rate_cents")
+    .eq("company_id", companyId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getTechnicianLaborCostRate] query failed:", {
+      companyId,
+      userId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (
+    data?.labor_cost_rate_cents == null ||
+    data.labor_cost_rate_cents < 0
+  ) {
+    return null;
+  }
+
+  return data.labor_cost_rate_cents / 100;
+}
+
 function mapWorkSummary(
   summary: MemberWorkSummary,
   periodLabel: string,

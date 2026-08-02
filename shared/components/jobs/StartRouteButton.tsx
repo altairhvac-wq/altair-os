@@ -32,6 +32,8 @@ type StartRouteButtonProps = {
   zip: string;
   canUpdateStatus?: boolean;
   layout?: "inline" | "block";
+  /** Override link button class (e.g. customer chrome action). */
+  className?: string;
   /** Use technician field tokens in block layout (mobile job detail). */
   fieldStyled?: boolean;
   /**
@@ -58,6 +60,7 @@ export function StartRouteButton({
   zip,
   canUpdateStatus = false,
   layout = "inline",
+  className,
   fieldStyled = false,
   fieldSecondary = false,
   heroPrimary = false,
@@ -161,21 +164,22 @@ export function StartRouteButton({
   }
 
   const linkClassName =
-    heroPrimary && !isEnRoute
+    className ??
+    (heroPrimary && !isEnRoute
       ? technicianFieldHomeHeroPrimaryActionClass
       : heroSecondary
-    ? technicianFieldHomeHeroRouteActionClass
-    : fieldStyled
-    ? isEnRoute || fieldSecondary
-      ? technicianFieldStartRouteSecondaryClass
-      : technicianFieldPrimaryActionClass
-    : isEnRoute
-      ? layout === "block"
-        ? buttonClassName("secondary", "sm", "w-full touch-manipulation")
-        : buttonClassName("secondary", "md", "w-full sm:w-auto")
-      : layout === "block"
-        ? buttonClassName("secondary", "sm", "w-full touch-manipulation")
-        : buttonClassName("primary", "md", "w-full sm:w-auto");
+        ? technicianFieldHomeHeroRouteActionClass
+        : fieldStyled
+          ? isEnRoute || fieldSecondary
+            ? technicianFieldStartRouteSecondaryClass
+            : technicianFieldPrimaryActionClass
+          : isEnRoute
+            ? layout === "block"
+              ? buttonClassName("secondary", "sm", "w-full touch-manipulation")
+              : buttonClassName("secondary", "md", "w-full sm:w-auto")
+            : layout === "block"
+              ? buttonClassName("secondary", "sm", "w-full touch-manipulation")
+              : buttonClassName("primary", "md", "w-full sm:w-auto"));
 
   const showEnRouteHint = isEnRoute && !fieldStyled && layout !== "block";
   const showScheduledHint =

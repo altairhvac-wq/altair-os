@@ -4,6 +4,7 @@ export { JobDetailNorthStarLoadingState } from "./JobDetailNorthStarLoadingState
 export { JobDetailMoneyPath } from "./JobDetailMoneyPath";
 export { JobDetailSectionNav } from "./JobDetailSectionNav";
 export { JobDetailSectionCommandPlate } from "./JobDetailSectionCommandPlate";
+export { JobDetailTabbedWorkspace } from "./JobDetailTabbedWorkspace";
 export { JobDetailSideRailBillingCard } from "./JobDetailSideRailBillingCard";
 export { JobDetailSideRailCustomerCard } from "./JobDetailSideRailCustomerCard";
 export { JobDetailSideRailDispatchCard } from "./JobDetailSideRailDispatchCard";

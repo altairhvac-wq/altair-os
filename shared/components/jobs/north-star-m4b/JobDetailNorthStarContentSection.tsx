@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  SectionHeader,
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 
 type JobDetailNorthStarContentSectionProps = {
   title: string;
@@ -14,18 +18,21 @@ export function JobDetailNorthStarContentSection({
   subtitle,
   anchor,
   children,
-  compact = false,
 }: JobDetailNorthStarContentSectionProps) {
   return (
     <section
       id={anchor}
       data-job-section={anchor}
       tabIndex={anchor ? -1 : undefined}
-      className={`${compact ? dt.compactSectionSurface : dt.sectionSurface} scroll-mt-6`}
+      className="scroll-mt-6 space-y-2"
     >
-      <h2 className={dt.sectionTitle}>{title}</h2>
-      {subtitle ? <p className={dt.sectionSubtitle}>{subtitle}</p> : null}
-      <div className="mt-2">{children}</div>
+      <SectionHeader title={title} />
+      <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+        {subtitle ? (
+          <p className="mb-2 text-xs text-altair-ink-on-paper-muted">{subtitle}</p>
+        ) : null}
+        {children}
+      </div>
     </section>
   );
 }

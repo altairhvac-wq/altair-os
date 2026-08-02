@@ -62,6 +62,8 @@ type JobWorkflowActionsProps = {
   aiFeaturesEnabled?: boolean;
   layout?: "row" | "stack";
   primarySize?: "default" | "hero";
+  /** Override primary action button class (e.g. customer chrome action). */
+  primaryClassName?: string;
   showMobileHint?: boolean;
   shortHints?: boolean;
   competingSheetActive?: boolean;
@@ -77,6 +79,7 @@ export function JobWorkflowActions({
   aiFeaturesEnabled = false,
   layout = "row",
   primarySize = "default",
+  primaryClassName,
   showMobileHint = true,
   shortHints = false,
   competingSheetActive = false,
@@ -134,9 +137,10 @@ export function JobWorkflowActions({
         disabled={workflowActionsDisabled}
         className={
           isPrimary
-            ? isCompact
-              ? heroPrimaryClass
-              : buttonClassName("primary", "md", "w-full sm:w-auto")
+            ? primaryClassName ??
+              (isCompact
+                ? heroPrimaryClass
+                : buttonClassName("primary", "md", "w-full sm:w-auto"))
             : buttonClassName("destructive", "sm", "w-full sm:w-auto")
         }
       >

@@ -13,6 +13,8 @@ type JobBusinessActionGuideProps = {
   /** Softer field-detail styling without heavy borders. */
   fieldSoft?: boolean;
   disabled?: boolean;
+  /** Override CTA button/link classes (e.g. customer chrome action). */
+  actionClassName?: string;
   onFieldEstimateClick?: () => void;
   /** Continue an existing draft estimate (Finish/Send) without creating a new one. */
   onFieldFinishEstimateClick?: (estimateId: string) => void;
@@ -93,6 +95,7 @@ export function JobBusinessActionGuide({
   presentation = "full",
   fieldSoft = false,
   disabled = false,
+  actionClassName,
   onFieldEstimateClick,
   onFieldFinishEstimateClick,
   onFieldApproveClick,
@@ -113,6 +116,10 @@ export function JobBusinessActionGuide({
   const useFieldApproveHandler =
     onFieldApproveClick && action.id === "approve_estimate_on_site";
   const useOfficeCtaHandler = Boolean(onOfficeCtaClick) && action.kind === "cta";
+  const resolvedCtaClass =
+    actionClassName ?? ctaClassName(compact, action.kind === "cta" ? action.emphasize : false);
+  const resolvedSecondaryClass =
+    actionClassName ?? secondaryLinkClassName(compact);
 
   if (action.kind === "status") {
     return (
@@ -129,10 +136,7 @@ export function JobBusinessActionGuide({
         {action.secondary ? (
           <Link
             href={action.secondary.href}
-            className={withDisabledLinkClass(
-              secondaryLinkClassName(compact),
-              disabled,
-            )}
+            className={withDisabledLinkClass(resolvedSecondaryClass, disabled)}
             aria-disabled={disabled || undefined}
             tabIndex={disabled ? -1 : undefined}
             onClick={preventLinkWhenDisabled(disabled)}
@@ -159,7 +163,7 @@ export function JobBusinessActionGuide({
           type="button"
           onClick={onFieldApproveClick}
           disabled={disabled}
-          className={ctaClassName(compact, action.emphasize)}
+          className={resolvedCtaClass}
         >
           {ctaLabel}
         </button>
@@ -168,7 +172,7 @@ export function JobBusinessActionGuide({
           type="button"
           onClick={() => onFieldFinishEstimateClick(finishEstimateId)}
           disabled={disabled}
-          className={ctaClassName(compact, action.emphasize)}
+          className={resolvedCtaClass}
         >
           {ctaLabel}
         </button>
@@ -177,7 +181,7 @@ export function JobBusinessActionGuide({
           type="button"
           onClick={onFieldEstimateClick}
           disabled={disabled}
-          className={ctaClassName(compact, action.emphasize)}
+          className={resolvedCtaClass}
         >
           {ctaLabel}
         </button>
@@ -186,24 +190,23 @@ export function JobBusinessActionGuide({
           type="button"
           onClick={() => onOfficeCtaClick(action)}
           disabled={disabled}
-          className={ctaClassName(compact, action.emphasize)}
+          className={resolvedCtaClass}
         >
           {ctaLabel}
         </button>
       ) : action.href ? (
         <Link
           href={action.href}
-          className={withDisabledLinkClass(
-            ctaClassName(compact, action.emphasize),
-            disabled,
-          )}
+          className={withDisabledLinkClass(resolvedCtaClass, disabled)}
           aria-disabled={disabled || undefined}
           tabIndex={disabled ? -1 : undefined}
           onClick={preventLinkWhenDisabled(disabled)}
         >
           <span className="inline-flex items-center gap-1.5">
             {ctaLabel}
-            {!compact ? <ExternalLink className="h-3.5 w-3.5" aria-hidden /> : null}
+            {!compact && !actionClassName ? (
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            ) : null}
           </span>
         </Link>
       ) : null}
@@ -213,10 +216,7 @@ export function JobBusinessActionGuide({
       {action.secondary ? (
         <Link
           href={action.secondary.href}
-          className={withDisabledLinkClass(
-            secondaryLinkClassName(compact),
-            disabled,
-          )}
+          className={withDisabledLinkClass(resolvedSecondaryClass, disabled)}
           aria-disabled={disabled || undefined}
           tabIndex={disabled ? -1 : undefined}
           onClick={preventLinkWhenDisabled(disabled)}

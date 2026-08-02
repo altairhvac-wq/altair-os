@@ -17,10 +17,13 @@ import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment
 import { getJobById, getJobDeleteDependencies } from "@/lib/database/queries/jobs";
 import { listJobBillingSummariesForJob } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
+import { getTechnicianLaborCostRate } from "@/lib/database/queries/team-member-profile";
+import { listJobLaborEntriesForJob } from "@/lib/database/queries/time-entries";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
 import { getJobOperationalInconsistencies } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { computeJobProfitability } from "@/shared/types/job-profitability";
 
 type JobDetailPageProps = {
   params: Promise<{ jobId: string }>;
@@ -82,8 +85,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     jobId,
   );
 
-  const [profitability, operationalInconsistencies, billingContext] =
-    await Promise.all([
+  const [
+    profitability,
+    operationalInconsistencies,
+    billingContext,
+    laborCostRate,
+    laborEntriesFallback,
+  ] = await Promise.all([
     canViewFinancials
       ? getJobProfitabilitySnapshot(companyContext.company.id, jobId, {
           expenses,
@@ -98,7 +106,26 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           includeInvoices: canViewBillingData,
         })
       : Promise.resolve(null),
+    canViewFinancials && job.assignedTechnicianId
+      ? getTechnicianLaborCostRate(
+          companyContext.company.id,
+          job.assignedTechnicianId,
+        )
+      : Promise.resolve(null),
+    canViewFinancials
+      ? Promise.resolve(null)
+      : listJobLaborEntriesForJob(companyContext.company.id, jobId),
   ]);
+
+  const laborSummary =
+    profitability?.labor ??
+    computeJobProfitability({
+      invoices: [],
+      estimates: [],
+      expenses: [],
+      materials: [],
+      laborEntries: laborEntriesFallback ?? [],
+    }).labor;
 
   return (
     <JobDetailPageView
@@ -111,6 +138,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       expenses={expenses}
       materials={materials}
       profitability={profitability}
+      laborSummary={laborSummary}
+      laborCostRate={laborCostRate}
       serviceItems={serviceItems}
       canUpdateStatus={
         companyContext.permissions.dispatchJobs ||

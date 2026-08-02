@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo } from "react";
 import {
   JOB_DETAIL_ACTIVITY_ANCHOR,
   JOB_DETAIL_ATTACHMENTS_ANCHOR,
@@ -9,22 +9,22 @@ import {
   JOB_DETAIL_MATERIALS_ANCHOR,
   JOB_DETAIL_SCOPE_ANCHOR,
 } from "@/shared/lib/jobs/job-detail-anchors";
-import { scrollToJobDetailSection } from "@/shared/lib/jobs/job-detail-scroll";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
-import { useJobDetailActiveSection } from "@/shared/components/jobs/useJobDetailActiveSection";
+import type { JobDetailTabId } from "@/shared/lib/jobs/job-detail-tabs";
 
 type JobDetailSectionNavProps = {
+  activeTab: JobDetailTabId;
+  onTabChange: (tabId: JobDetailTabId) => void;
   showBilling: boolean;
   showEquipment: boolean;
 };
 
 type NavItem = {
-  id: string;
+  id: JobDetailTabId;
   label: string;
 };
 
 const BASE_ITEMS: NavItem[] = [
-  { id: JOB_DETAIL_SCOPE_ANCHOR, label: "Scope" },
+  { id: JOB_DETAIL_SCOPE_ANCHOR, label: "Description" },
   { id: JOB_DETAIL_EQUIPMENT_ANCHOR, label: "Equipment" },
   { id: JOB_DETAIL_MATERIALS_ANCHOR, label: "Materials" },
   { id: JOB_DETAIL_ATTACHMENTS_ANCHOR, label: "Photos" },
@@ -33,6 +33,8 @@ const BASE_ITEMS: NavItem[] = [
 ];
 
 export function JobDetailSectionNav({
+  activeTab,
+  onTabChange,
   showBilling,
   showEquipment,
 }: JobDetailSectionNavProps) {
@@ -50,40 +52,34 @@ export function JobDetailSectionNav({
     [showBilling, showEquipment],
   );
 
-  const sectionIds = useMemo(() => items.map((item) => item.id), [items]);
-  const [clickedId, setClickedId] = useState<string | null>(null);
-  const activeId = useJobDetailActiveSection(sectionIds, clickedId);
-
-  function handleNavClick(
-    event: MouseEvent<HTMLAnchorElement>,
-    sectionId: string,
-  ) {
-    event.preventDefault();
-    setClickedId(sectionId);
-    scrollToJobDetailSection(sectionId, { updateHash: true, focus: true });
-    window.setTimeout(() => setClickedId(null), 800);
-  }
-
   return (
-    <nav aria-label="Job sections" className={dt.sectionNav}>
+    <div
+      role="tablist"
+      aria-label="Job sections"
+      className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5"
+    >
       {items.map((item) => {
-        const isActive = activeId === item.id;
+        const isActive = activeTab === item.id;
         return (
-          <a
+          <button
             key={item.id}
-            href={`#${item.id}`}
-            onClick={(event) => handleNavClick(event, item.id)}
-            aria-current={isActive ? "location" : undefined}
-            className={`${dt.sectionNavLink} ${
+            type="button"
+            role="tab"
+            id={`job-detail-tab-${item.id}`}
+            aria-selected={isActive}
+            aria-controls={`job-detail-panel-${item.id}`}
+            tabIndex={isActive ? 0 : -1}
+            onClick={() => onTabChange(item.id)}
+            className={`inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-1 ${
               isActive
-                ? "bg-[rgba(201,164,77,0.16)] text-[#17130E] shadow-[inset_0_-2px_0_0_#B88A2E]"
-                : ""
+                ? "bg-altair-stone text-altair-ink-on-paper shadow-[inset_0_-2px_0_0_var(--altair-brass)]"
+                : "text-altair-ink-on-paper-secondary hover:bg-altair-stone/70 hover:text-altair-ink-on-paper"
             }`}
           >
             {item.label}
-          </a>
+          </button>
         );
       })}
-    </nav>
+    </div>
   );
 }

@@ -38,6 +38,8 @@ type JobWorkflowControlsProps = {
   canCorrectStatus?: boolean;
   canReopenJob?: boolean;
   reopenSnapshot?: ReopenTargetJobSnapshot;
+  /** How to render reopen on completed jobs. `none` when the host mounts it elsewhere. */
+  reopenVariant?: "card" | "inline" | "none";
   layout?: "header" | "stack";
   section?: JobWorkflowControlsSection;
   /** Technician field detail: Start Route leads when scheduled; softer billing presentation. */
@@ -102,6 +104,7 @@ export function JobWorkflowControls({
   canCorrectStatus = false,
   canReopenJob = false,
   reopenSnapshot,
+  reopenVariant = "card",
   layout = "header",
   section = "full",
   fieldActionFirst = false,
@@ -189,26 +192,42 @@ export function JobWorkflowControls({
     );
   }
 
+  function renderReopenControl() {
+    if (reopenVariant === "none") {
+      return null;
+    }
+
+    return (
+      <ReopenCompletedJobControl
+        jobId={jobId}
+        status={status}
+        canReopenJob={canReopenJob}
+        reopenSnapshot={
+          reopenSnapshot ?? {
+            workStartedAt: undefined,
+            arrivedAt: undefined,
+            assignedTechnicianId: undefined,
+          }
+        }
+        variant={reopenVariant}
+        onStatusUpdated={handleStatusUpdated}
+      />
+    );
+  }
+
   function renderBannersSection() {
     if (isTerminalJobStatus(status)) {
       if (status === "completed") {
+        const reopen = renderReopenControl();
+        const guide = renderBusinessGuide("status");
+        if (!reopen && !guide) {
+          return null;
+        }
+
         return (
           <div className={stackClassName}>
-            <JobWorkflowTerminalState status={status} compact={isCompact} />
-            {renderBusinessGuide("status")}
-            <ReopenCompletedJobControl
-              jobId={jobId}
-              status={status}
-              canReopenJob={canReopenJob}
-              reopenSnapshot={
-                reopenSnapshot ?? {
-                  workStartedAt: undefined,
-                  arrivedAt: undefined,
-                  assignedTechnicianId: undefined,
-                }
-              }
-              onStatusUpdated={handleStatusUpdated}
-            />
+            {guide}
+            {reopen}
           </div>
         );
       }
@@ -326,19 +345,7 @@ export function JobWorkflowControls({
           <div className={stackClassName}>
             <JobWorkflowTerminalState status={status} compact={isCompact} />
             {renderBusinessGuide("full")}
-            <ReopenCompletedJobControl
-              jobId={jobId}
-              status={status}
-              canReopenJob={canReopenJob}
-              reopenSnapshot={
-                reopenSnapshot ?? {
-                  workStartedAt: undefined,
-                  arrivedAt: undefined,
-                  assignedTechnicianId: undefined,
-                }
-              }
-              onStatusUpdated={handleStatusUpdated}
-            />
+            {renderReopenControl()}
           </div>
         );
       }

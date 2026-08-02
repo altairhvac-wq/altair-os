@@ -1,24 +1,34 @@
 "use client";
 
 import { JobDetailSectionNav } from "./JobDetailSectionNav";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
+import type { JobDetailTabId } from "@/shared/lib/jobs/job-detail-tabs";
 
 type JobDetailSectionCommandPlateProps = {
+  activeTab: JobDetailTabId;
+  onTabChange: (tabId: JobDetailTabId) => void;
   showBilling: boolean;
   showEquipment: boolean;
 };
 
 /**
- * Section jump plate only. Workflow CTAs live on JobNextActionCard;
- * waiting/terminal banners stay on JobDetailNorthStarHeader.
+ * Tab plate for Job Detail panels. Workflow CTAs live on JobNextActionCard;
+ * waiting/terminal banners stay on the job header.
  */
 export function JobDetailSectionCommandPlate({
+  activeTab,
+  onTabChange,
   showBilling,
   showEquipment,
 }: JobDetailSectionCommandPlateProps) {
   return (
-    <div className={dt.commandPlate}>
+    <div className={`${altairMcCardClass} ${altairMcCardPadClass} py-2.5`}>
       <JobDetailSectionNav
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         showBilling={showBilling}
         showEquipment={showEquipment}
       />

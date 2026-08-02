@@ -20,6 +20,11 @@ import {
   jobDetailSectionTitleClass,
   resolveJobDetailSectionClass,
 } from "@/shared/components/jobs/job-detail-section-styles";
+import {
+  adminSegmentedControlClass,
+  adminSegmentedItemActiveClass,
+  adminSegmentedItemClass,
+} from "@/shared/design-system/shell/tokens";
 
 type JobWorkflowTimelineProps = {
   stages: CanonicalWorkflowStage[];
@@ -30,6 +35,10 @@ type JobWorkflowTimelineProps = {
     trigger: HTMLElement | null,
   ) => void;
   northStar?: boolean;
+  /** Strip outer card chrome when embedded in a combined workflow row. */
+  compact?: boolean;
+  /** Denser dots/labels for the Job Detail top bar. Implies compact chrome. */
+  inline?: boolean;
   className?: string;
 };
 
@@ -43,6 +52,7 @@ const STATE_LABEL: Record<CanonicalWorkflowStageState, string> = {
 function stageMarkerClass(
   state: CanonicalWorkflowStageState,
   northStar: boolean,
+  inline = false,
 ): string {
   switch (state) {
     case "complete":
@@ -50,8 +60,13 @@ function stageMarkerClass(
         ? "border-[rgba(16,185,129,0.45)] bg-emerald-500 text-white"
         : "border-emerald-600 bg-emerald-600 text-white dark:border-emerald-400 dark:bg-emerald-500";
     case "current":
-      return northStar
-        ? "border-[#C9A44D] bg-gradient-to-b from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.28)]"
+      if (northStar) {
+        return inline
+          ? "border-[#C9A44D] bg-gradient-to-b from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]"
+          : "border-[#C9A44D] bg-gradient-to-b from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.28)]";
+      }
+      return inline
+        ? "border-cyan-700 bg-cyan-600 text-white ring-1 ring-cyan-500/30 dark:border-cyan-300 dark:bg-cyan-500 dark:ring-cyan-400/30"
         : "border-cyan-700 bg-cyan-600 text-white ring-2 ring-cyan-500/30 dark:border-cyan-300 dark:bg-cyan-500 dark:ring-cyan-400/30";
     case "skipped":
       return northStar
@@ -108,15 +123,18 @@ function connectorClass(
 function StageMarker({
   state,
   northStar,
+  inline = false,
 }: {
   state: CanonicalWorkflowStageState;
   northStar: boolean;
+  inline?: boolean;
 }) {
-  const iconClass = "h-3 w-3";
+  const iconClass = inline ? "h-2.5 w-2.5" : "h-3 w-3";
+  const sizeClass = inline ? "h-3.5 w-3.5 border" : "h-5 w-5 border-2";
 
   return (
     <span
-      className={`relative z-[1] flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${stageMarkerClass(state, northStar)}`}
+      className={`relative z-[1] flex shrink-0 items-center justify-center rounded-full ${sizeClass} ${stageMarkerClass(state, northStar, inline)}`}
       aria-hidden="true"
     >
       {state === "complete" ? (
@@ -124,9 +142,15 @@ function StageMarker({
       ) : state === "skipped" ? (
         <Minus className={iconClass} strokeWidth={2.5} />
       ) : state === "current" ? (
-        <Circle className="h-2 w-2 fill-current" strokeWidth={0} />
+        <Circle
+          className={inline ? "h-1.5 w-1.5 fill-current" : "h-2 w-2 fill-current"}
+          strokeWidth={0}
+        />
       ) : (
-        <Circle className="h-1.5 w-1.5" strokeWidth={2} />
+        <Circle
+          className={inline ? "h-1 w-1" : "h-1.5 w-1.5"}
+          strokeWidth={2}
+        />
       )}
     </span>
   );
@@ -144,10 +168,36 @@ function destinationOpenLabel(destination: JobWorkflowStageDestination): string 
   return `Open ${destination.label}`;
 }
 
+function stageSegmentClass(state: CanonicalWorkflowStageState): string {
+  switch (state) {
+    case "current":
+      return adminSegmentedItemActiveClass;
+    case "complete":
+      return "text-slate-800";
+    case "skipped":
+      return "text-slate-400 line-through decoration-slate-300";
+    default:
+      return "text-slate-400";
+  }
+}
+
+function StageSegmentLabel({ stage }: { stage: CanonicalWorkflowStage }) {
+  return (
+    <>
+      {stage.state === "complete" ? (
+        <Check className="h-3 w-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+      ) : null}
+      <span>{stage.label}</span>
+      <span className="sr-only">{STATE_LABEL[stage.state]}</span>
+    </>
+  );
+}
+
 function StageControl({
   stage,
   destination,
   northStar,
+  inline = false,
   explanationId,
   onExplain,
   onOpenDocument,
@@ -155,6 +205,7 @@ function StageControl({
   stage: CanonicalWorkflowStage;
   destination: JobWorkflowStageDestination;
   northStar: boolean;
+  inline?: boolean;
   explanationId: string;
   onExplain: (reason: string) => void;
   onOpenDocument?: (
@@ -163,6 +214,48 @@ function StageControl({
   ) => void;
 }) {
   const accessibleName = `${stage.label}, ${STATE_LABEL[stage.state]}`;
+
+  if (inline) {
+    const segmentClass = `${adminSegmentedItemClass} !flex-none inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${stageSegmentClass(stage.state)}`;
+
+    if (destination.kind === "locked") {
+      return (
+        <button
+          type="button"
+          className={`${segmentClass} cursor-default`}
+          aria-label={`${accessibleName}. ${destination.reason}`}
+          aria-describedby={explanationId}
+          onClick={() => onExplain(destination.reason)}
+        >
+          <StageSegmentLabel stage={stage} />
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className={segmentClass}
+        aria-label={`${accessibleName}. ${destinationOpenLabel(destination)}`}
+        onClick={(event) => {
+          if (destination.kind === "section") {
+            scrollToJobDetailSection(destination.sectionId, {
+              updateHash: true,
+              focus: true,
+            });
+            return;
+          }
+
+          if (destination.kind === "document") {
+            onOpenDocument?.(destination.document, event.currentTarget);
+          }
+        }}
+      >
+        <StageSegmentLabel stage={stage} />
+      </button>
+    );
+  }
+
   const interactiveClass = `group flex w-[4.75rem] shrink-0 flex-col items-center gap-1 rounded-md px-0.5 py-0.5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 sm:w-auto sm:min-w-[4.5rem] sm:max-w-[5.5rem] ${
     northStar
       ? "focus-visible:ring-[#C9A44D]"
@@ -225,11 +318,14 @@ export function JobWorkflowTimeline({
   destinationContext,
   onOpenDocument,
   northStar = false,
+  compact = false,
+  inline = false,
   className,
 }: JobWorkflowTimelineProps) {
   const listRef = useRef<HTMLOListElement>(null);
   const [lockedReason, setLockedReason] = useState<string | null>(null);
   const explanationId = "job-workflow-stage-explanation";
+  const isCompact = compact || inline;
 
   useEffect(() => {
     const list = listRef.current;
@@ -270,28 +366,110 @@ export function JobWorkflowTimeline({
     jobStatus: "scheduled",
   };
 
+  const shellClass = isCompact
+    ? "min-w-0"
+    : `${resolveJobDetailSectionClass(northStar, true)} py-2.5 sm:py-3`;
+
+  if (inline) {
+    return (
+      <section
+        aria-labelledby={titleId}
+        className={`${shellClass} ${className ?? ""}`}
+      >
+        <h2 id={titleId} className="sr-only">
+          Workflow
+          {currentStage ? ` · ${currentStage.label}` : ""}
+        </h2>
+        {progress ? (
+          <span className="sr-only">
+            {progress.percent}% complete, {progress.completedCount} of{" "}
+            {progress.totalCount} stages
+          </span>
+        ) : null}
+
+        <ol
+          ref={listRef}
+          className={`${adminSegmentedControlClass} !flex min-w-0 max-w-full flex-1 overflow-x-auto`}
+          aria-label="Job workflow progress"
+        >
+          {stages.map((stage) => {
+            const destination = resolveJobWorkflowStageDestination(
+              stage,
+              context,
+            );
+
+            return (
+              <li
+                key={stage.id}
+                className="flex shrink-0"
+                aria-current={stage.state === "current" ? "step" : undefined}
+              >
+                <StageControl
+                  stage={stage}
+                  destination={destination}
+                  northStar={northStar}
+                  inline
+                  explanationId={explanationId}
+                  onExplain={setLockedReason}
+                  onOpenDocument={onOpenDocument}
+                />
+              </li>
+            );
+          })}
+        </ol>
+
+        {lockedReason ? (
+          <p
+            id={explanationId}
+            className="mt-1 text-[10px] text-slate-600"
+            role="status"
+            aria-live="polite"
+          >
+            {lockedReason}
+          </p>
+        ) : (
+          <span id={explanationId} className="sr-only" />
+        )}
+      </section>
+    );
+  }
+
   return (
     <section
       aria-labelledby={titleId}
-      className={`${resolveJobDetailSectionClass(northStar, true)} py-2.5 sm:py-3 ${className ?? ""}`}
+      className={`${shellClass} ${className ?? ""}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
         <div className="min-w-0">
-          <h2 id={titleId} className={jobDetailSectionTitleClass(northStar)}>
+          <h2
+            id={titleId}
+            className={
+              isCompact
+                ? "text-xs font-bold tracking-tight text-altair-ink-on-paper"
+                : jobDetailSectionTitleClass(northStar)
+            }
+          >
             Workflow
+            {isCompact && currentStage ? (
+              <span className="ml-1 font-medium text-altair-ink-on-paper-muted">
+                · {currentStage.label}
+              </span>
+            ) : null}
           </h2>
-          <p className={`${jobDetailSectionSubtitleClass(northStar)} mt-0`}>
-            {currentStage ? (
-              <>
-                Stage:{" "}
-                <span className="font-semibold text-inherit">
-                  {currentStage.label}
-                </span>
-              </>
-            ) : (
-              "Job journey map"
-            )}
-          </p>
+          {!isCompact ? (
+            <p className={`${jobDetailSectionSubtitleClass(northStar)} mt-0`}>
+              {currentStage ? (
+                <>
+                  Stage:{" "}
+                  <span className="font-semibold text-inherit">
+                    {currentStage.label}
+                  </span>
+                </>
+              ) : (
+                "Job journey map"
+              )}
+            </p>
+          ) : null}
         </div>
         {progress ? (
           <p
@@ -306,12 +484,15 @@ export function JobWorkflowTimeline({
 
       <ol
         ref={listRef}
-        className="mt-2.5 flex items-start gap-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`${isCompact ? "mt-1.5" : "mt-2.5"} flex items-start gap-0 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       >
         {stages.map((stage, index) => {
           const isLast = index === stages.length - 1;
           const prev = index > 0 ? stages[index - 1] : null;
-          const destination = resolveJobWorkflowStageDestination(stage, context);
+          const destination = resolveJobWorkflowStageDestination(
+            stage,
+            context,
+          );
 
           return (
             <li

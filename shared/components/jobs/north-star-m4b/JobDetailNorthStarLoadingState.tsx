@@ -4,40 +4,51 @@ import {
   MasterPageCanvas,
   MasterShellPage,
 } from "@/shared/design-system/shell";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+  altairMcGridGapClass,
+} from "@/shared/design-system/components";
 
-function Skeleton({
-  className,
-  dark = false,
-}: {
-  className?: string;
-  dark?: boolean;
-}) {
+function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={`north-star-skeleton ${dark ? "north-star-skeleton-dark" : ""} ${className ?? ""}`}
+      className={`animate-pulse rounded-md bg-altair-stone ${className ?? ""}`}
     />
   );
 }
 
 function DesktopLoadingSkeleton() {
   return (
-    <MasterShellPage density="default" className={dt.pageCanvas}>
+    <MasterShellPage density="default">
       <MasterPageCanvas width="detailWide">
         <MasterContentStack density="default">
-          <Skeleton dark className="h-5 w-28" />
-
-          <div className={`${dt.heroShell} space-y-4`}>
-            <div aria-hidden="true" className={dt.heroAccentRail} />
-            <div className="space-y-2">
-              <Skeleton dark className="h-2.5 w-24" />
-              <Skeleton dark className="h-7 w-40 max-w-full" />
-              <Skeleton dark className="h-4 w-56 max-w-full" />
+          <div className="flex items-center gap-3 rounded-lg border border-altair-border bg-[var(--surface-card)] px-2.5 py-1.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3.5 w-28" />
+            <div className="flex flex-1 gap-1">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-3.5 w-3.5 rounded-full" />
+              ))}
             </div>
-            <Skeleton dark className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-8 w-28 rounded-lg" />
           </div>
 
-          <div className={dt.commandPlate}>
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass} space-y-2`}>
+            <Skeleton className="h-2.5 w-10" />
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-40 max-w-full" />
+                <Skeleton className="h-4 w-36 max-w-full" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-9 w-20 rounded-lg" />
+                <Skeleton className="h-9 w-28 rounded-lg" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
             <div className="flex gap-2">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="h-8 w-16 rounded-lg" />
@@ -45,15 +56,17 @@ function DesktopLoadingSkeleton() {
             </div>
           </div>
 
-          <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
-            <div className={dt.workspaceMain}>
+          <div
+            className={`hidden lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] ${altairMcGridGapClass}`}
+          >
+            <div className={`flex flex-col ${altairMcGridGapClass}`}>
               {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-32 w-full rounded-[1rem]" />
+                <Skeleton key={index} className="h-32 w-full rounded-lg" />
               ))}
             </div>
-            <div className={dt.workspaceSide}>
+            <div className={`flex flex-col ${altairMcGridGapClass}`}>
               {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-28 w-full rounded-[1rem]" />
+                <Skeleton key={index} className="h-28 w-full rounded-lg" />
               ))}
             </div>
           </div>

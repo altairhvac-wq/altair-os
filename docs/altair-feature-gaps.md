@@ -17,6 +17,8 @@ Companion docs: [`.cursor/rules/altair-design-system.mdc`](../.cursor/rules/alta
 | Auto-generated insights engine | Not built | AI summary cards / operational insight helpers may exist for scoped summaries; there is no autonomous insights engine that invents priorities or narratives without traced inputs. Do not fabricate insight strings. |
 | Business Score (composite grade) | **Paused** | Composite “Business Score” grade is paused pending an explicit rubric decision. Operational health heuristics elsewhere must not be rebranded as a Business Score without that decision. |
 | Native lead value / amount tracking | Not built | Leads have **Source** (attribution channel) but no reliable monetary value field. Do not show a Value / pipeline-amount column from fragile estimate linkage. Needs either a first-class value/amount on `leads`, or a real `lead_id` FK on estimates (or equivalent durable join) before UI can surface lead value honestly. |
+| Job field-tasks checklist | Not built | No first-class per-job task / checklist model for field work. Do not invent Tasks UI, fake completion counts, or placeholder checklists on Job Details. |
+| Job estimated / scheduled duration | Not built | No durable estimated or scheduled duration field wired for Job Details. Do not invent Est. Duration / schedule-length metrics from guesses or mock values. |
 
 ## How to use this list
 
