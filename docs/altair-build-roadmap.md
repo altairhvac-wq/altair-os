@@ -2,7 +2,7 @@
 
 Living tracker for the 16-panel Mission Control / workspace UI redesign.
 
-**Surface system:** Dashboard, Customers, Customer Profile, Leads, and Jobs use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
+**Surface system:** Dashboard, Customers, Customer Profile, Leads, Jobs, and Estimates use MC v2 light paper (`shared/design-system/components/mc-surface.ts`). Reports uses dark elevated chrome (`report-surface.ts`) plus categorical icon-chip tints (`report-icon-tints.ts`). See `.cursor/rules/altair-design-system.mdc`.
 
 **Related:** Feature gaps that must not be faked → [`altair-feature-gaps.md`](./altair-feature-gaps.md). Broader product inventory → [`product/ALTair_BRAIN.md`](./product/ALTair_BRAIN.md).
 
@@ -14,7 +14,7 @@ Living tracker for the 16-panel Mission Control / workspace UI redesign.
 | 4 | Customer Profile | `/customers/[customerId]` | **Done** | Detail / 360; payment-ledger Total Spent |
 | 5 | Dispatch | `/dispatch` | Not started | Schedule / assign board |
 | 6 | Jobs | `/jobs` | **Done** | List: header status glance pills (`JobsStatStrip`); thinned filter bar + More filters; All Jobs Type column; Today day-at-a-glance (`JobScheduleRow`, schedule sort + Now/gap markers); assignee as first name + last initial. **Job Details** (`/jobs/[jobId]`): condensed MC v2 header; Customer Profile–matched workflow chrome row (back + segmented progress + Next command); real tab gating (`JobDetailTabbedWorkspace` / `job-detail-tabs`); Job Description card + Job Summary sidebar (parts from `job_materials`, closed labor hours; labor $ only when `labor_cost_rate` set); no Tasks / Est. Duration (see feature gaps); money path / office review / profitability / history + customer/dispatch rails kept |
-| 7 | Estimates | `/estimates` | Not started | List + document surfaces |
+| 7 | Estimates | `/estimates` | **Done** | List: header status glance pills (`EstimatesStatStrip`); removed `EstimateQueueTabs` / `EstimateSummaryCards`; Date column on table |
 | 8 | Invoices | `/invoices` | Not started | Billing list + detail |
 | 9 | Leads | `/leads` | **Done** | Header filter pills + MC v2 list (Customers pattern); no Value column (see feature gaps) |
 | 10 | Expenses | `/expenses` | Not started | Receipts and categories |

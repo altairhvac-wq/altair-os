@@ -1,82 +1,96 @@
 import { getEstimateLifecycleState } from "@/shared/lib/estimate-lifecycle";
-import { getEstimateWorkflowGroup } from "@/shared/lib/estimate-workflow-list";
-import type { Estimate } from "@/shared/types/estimate";
+import type { Estimate, EstimateStatus } from "@/shared/types/estimate";
 
+/**
+ * Header filter pills for the Estimates list.
+ * Primary status pills and Past are active-lifecycle only. Archived / recently
+ * deleted stay on the lifecycle filter (queue scoping is skipped there).
+ */
 export type EstimateWorkQueue =
-  | "needs-action"
-  | "drafts"
+  | "draft"
   | "sent"
+  | "approved"
+  | "declined"
   | "past";
 
 export const ESTIMATE_WORK_QUEUE_ORDER: readonly EstimateWorkQueue[] = [
-  "needs-action",
-  "drafts",
+  "draft",
   "sent",
+  "approved",
+  "declined",
   "past",
 ];
 
 export const ESTIMATE_WORK_QUEUE_LABELS: Record<EstimateWorkQueue, string> = {
-  "needs-action": "Needs action",
-  drafts: "Drafts",
+  draft: "Draft",
   sent: "Sent",
+  approved: "Approved",
+  declined: "Declined",
   past: "Past",
 };
 
-const PAST_ACTIVE_STATUSES = new Set<string>([
-  "approved",
-  "declined",
+const PAST_ACTIVE_STATUSES = new Set<EstimateStatus>([
   "converted",
   "cancelled",
 ]);
 
-/** Active estimates that still need finishing, sending, or follow-up. */
-export function isEstimateNeedsActionQueue(estimate: Estimate): boolean {
-  if (getEstimateLifecycleState(estimate) !== "active") {
-    return false;
-  }
-
-  return getEstimateWorkflowGroup(estimate.status) === "needs_action";
+function isActiveEstimateRecord(estimate: Estimate): boolean {
+  return getEstimateLifecycleState(estimate) === "active";
 }
 
 /** Active draft estimates waiting to be finished or sent. */
 export function isEstimateDraftQueue(estimate: Estimate): boolean {
-  return (
-    getEstimateLifecycleState(estimate) === "active" &&
-    estimate.status === "draft"
-  );
+  return isActiveEstimateRecord(estimate) && estimate.status === "draft";
 }
 
 /** Active sent estimates awaiting customer response. */
 export function isEstimateSentQueue(estimate: Estimate): boolean {
+  return isActiveEstimateRecord(estimate) && estimate.status === "sent";
+}
+
+/** Active approved estimates not yet converted. */
+export function isEstimateApprovedQueue(estimate: Estimate): boolean {
+  return isActiveEstimateRecord(estimate) && estimate.status === "approved";
+}
+
+/** Active declined estimates. */
+export function isEstimateDeclinedQueue(estimate: Estimate): boolean {
+  return isActiveEstimateRecord(estimate) && estimate.status === "declined";
+}
+
+/** Active converted + cancelled — closed outcomes folded like Leads Past. */
+export function isEstimatePastQueue(estimate: Estimate): boolean {
   return (
-    getEstimateLifecycleState(estimate) === "active" &&
-    estimate.status === "sent"
+    isActiveEstimateRecord(estimate) &&
+    PAST_ACTIVE_STATUSES.has(estimate.status)
   );
 }
 
-/** Approved, declined, converted, cancelled, archived, deleted, and other closed records. */
-export function isEstimatePastQueue(estimate: Estimate): boolean {
-  const lifecycle = getEstimateLifecycleState(estimate);
-
-  if (lifecycle !== "active") {
-    return true;
+export function matchesEstimateWorkQueue(
+  estimate: Estimate,
+  queue: EstimateWorkQueue,
+): boolean {
+  switch (queue) {
+    case "draft":
+      return isEstimateDraftQueue(estimate);
+    case "sent":
+      return isEstimateSentQueue(estimate);
+    case "approved":
+      return isEstimateApprovedQueue(estimate);
+    case "declined":
+      return isEstimateDeclinedQueue(estimate);
+    case "past":
+      return isEstimatePastQueue(estimate);
   }
-
-  return PAST_ACTIVE_STATUSES.has(estimate.status);
 }
 
 export function filterEstimatesForWorkQueue(
   estimates: Estimate[],
   queue: EstimateWorkQueue,
 ): Estimate[] {
-  const predicate = {
-    "needs-action": isEstimateNeedsActionQueue,
-    drafts: isEstimateDraftQueue,
-    sent: isEstimateSentQueue,
-    past: isEstimatePastQueue,
-  }[queue];
-
-  return estimates.filter(predicate);
+  return estimates.filter((estimate) =>
+    matchesEstimateWorkQueue(estimate, queue),
+  );
 }
 
 export function countEstimatesForWorkQueue(
@@ -84,6 +98,16 @@ export function countEstimatesForWorkQueue(
   queue: EstimateWorkQueue,
 ): number {
   return filterEstimatesForWorkQueue(estimates, queue).length;
+}
+
+export function sumEstimatesForWorkQueue(
+  estimates: Estimate[],
+  queue: EstimateWorkQueue,
+): number {
+  return filterEstimatesForWorkQueue(estimates, queue).reduce(
+    (sum, estimate) => sum + (Number.isFinite(estimate.total) ? estimate.total : 0),
+    0,
+  );
 }
 
 function compareEstimateRecency(left: Estimate, right: Estimate): number {
@@ -105,11 +129,10 @@ export function sortEstimatesForWorkQueue(
   estimates: Estimate[],
   queue: EstimateWorkQueue,
 ): Estimate[] {
-  const sorted = [...estimates];
+  void queue;
+  return [...estimates].sort(compareEstimateRecency);
+}
 
-  if (queue === "drafts" || queue === "sent" || queue === "past") {
-    return sorted.sort(compareEstimateRecency);
-  }
-
-  return sorted;
+export function resolveDefaultEstimateWorkQueue(): EstimateWorkQueue {
+  return "draft";
 }

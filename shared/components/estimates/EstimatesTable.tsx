@@ -40,6 +40,12 @@ function handleEstimateLinkClick(event: MouseEvent<HTMLAnchorElement>) {
   event.stopPropagation();
 }
 
+/** Sent date when present (estimate_sent); otherwise created date for drafts. */
+function getEstimateListDate(estimate: Estimate): string {
+  const sentAt = estimate.sentAt?.trim();
+  return sentAt || estimate.createdAt;
+}
+
 type EstimatesTableProps = {
   sections: BillingWorkflowListSection<Estimate>[];
   showSectionHeaders: boolean;
@@ -80,7 +86,7 @@ export function EstimatesTable({
     [selectedIds, selectionEnabled, visibleEstimates],
   );
 
-  const tableColumnCount = selectionEnabled ? 7 : 6;
+  const tableColumnCount = selectionEnabled ? 6 : 5;
 
   return (
     <>
@@ -129,18 +135,13 @@ export function EstimatesTable({
               <AltairTableHead
                 className={`hidden md:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
               >
-                Line items
-              </AltairTableHead>
-              <AltairTableHead
-                className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
-              >
-                Valid until
-              </AltairTableHead>
-              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
-                Total
+                Date
               </AltairTableHead>
               <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Status
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Amount
               </AltairTableHead>
             </AltairTableRow>
           </AltairTableHeader>
@@ -157,12 +158,11 @@ export function EstimatesTable({
                   />
                 ) : null}
                 {section.items.map((estimate) => {
-                  const lineItemCount =
-                    estimate.lineItemCount ?? estimate.lineItems.length;
                   const isSelectable =
                     selectionEnabled &&
                     canSelectEstimateForBulkLifecycle(estimate);
                   const isSelected = selectedIds?.has(estimate.id) ?? false;
+                  const listDate = getEstimateListDate(estimate);
 
                   return (
                     <AltairTableRow
@@ -240,19 +240,13 @@ export function EstimatesTable({
                       </AltairTableCell>
                       <AltairTableCell
                         className={`hidden md:table-cell ${
-                          northStar ? "estimate-north-star-meta-cell" : "text-slate-600"
-                        }`}
-                      >
-                        {lineItemCount} {lineItemCount === 1 ? "item" : "items"}
-                      </AltairTableCell>
-                      <AltairTableCell
-                        className={`hidden lg:table-cell ${
                           northStar ? "estimate-north-star-date-cell" : "text-slate-600"
                         }`}
                       >
-                        {estimate.validUntil
-                          ? formatDate(estimate.validUntil)
-                          : "—"}
+                        {formatDate(listDate)}
+                      </AltairTableCell>
+                      <AltairTableCell>
+                        <EstimateStatusBadge status={estimate.status} />
                       </AltairTableCell>
                       <AltairTableCell
                         className={
@@ -260,9 +254,6 @@ export function EstimatesTable({
                         }
                       >
                         {formatCurrency(estimate.total)}
-                      </AltairTableCell>
-                      <AltairTableCell>
-                        <EstimateStatusBadge status={estimate.status} />
                       </AltairTableCell>
                     </AltairTableRow>
                   );

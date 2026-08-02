@@ -56,22 +56,19 @@ import {
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import { buildEstimatesGlanceStats } from "@/shared/lib/estimates/estimates-glance-stats";
 import { EstimateBatchSelectionBar } from "./EstimateBatchSelectionBar";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
-import { EstimateQueueTabs } from "./EstimateQueueTabs";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
+import { EstimatesStatStrip } from "./EstimatesStatStrip";
 import { EstimatesTable } from "./EstimatesTable";
 import {
-  countEstimatesForWorkQueue,
   filterEstimatesForWorkQueue,
+  resolveDefaultEstimateWorkQueue,
   sortEstimatesForWorkQueue,
   type EstimateWorkQueue,
 } from "./estimate-work-queues";
-import {
-  prepareEstimatesForListView,
-  sortEstimatesForWorkflow,
-} from "@/shared/lib/estimate-workflow-list";
 import {
   buildEstimateSearchFields,
   rankAndSortRecords,
@@ -163,7 +160,9 @@ export function EstimatesPageView({
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>("needs-action");
+  const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>(() =>
+    resolveDefaultEstimateWorkQueue(),
+  );
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
   );
@@ -202,21 +201,20 @@ export function EstimatesPageView({
     [jobs],
   );
 
-  const queueCounts = useMemo(
-    () =>
-      ({
-        "needs-action": countEstimatesForWorkQueue(estimates, "needs-action"),
-        drafts: countEstimatesForWorkQueue(estimates, "drafts"),
-        sent: countEstimatesForWorkQueue(estimates, "sent"),
-        past: countEstimatesForWorkQueue(estimates, "past"),
-      }) satisfies Record<EstimateWorkQueue, number>,
+  const glanceStats = useMemo(
+    () => buildEstimatesGlanceStats({ estimates }),
     [estimates],
   );
 
-  const queueScopedEstimates = useMemo(
-    () => filterEstimatesForWorkQueue(estimates, workQueue),
-    [estimates, workQueue],
-  );
+  const queueScopedEstimates = useMemo(() => {
+    // Archived / recently deleted are reached via the lifecycle filter;
+    // status pills only scope the active book.
+    if (lifecycleFilter !== "active") {
+      return estimates;
+    }
+
+    return filterEstimatesForWorkQueue(estimates, workQueue);
+  }, [estimates, lifecycleFilter, workQueue]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -261,35 +259,19 @@ export function EstimatesPageView({
   const filteredEstimates = filteredEstimateResult.items;
   const searchMatchReasons = filteredEstimateResult.matchReasons;
 
-  const estimateListPresentation = useMemo(() => {
-    if (workQueue === "needs-action") {
-      return {
-        sections: [
-          {
-            id: "needs-action",
-            label: "",
-            items: sortEstimatesForWorkflow(filteredEstimates),
-          },
-        ],
-        showSectionHeaders: false,
-      };
-    }
-
-    if (workQueue === "drafts" || workQueue === "sent" || workQueue === "past") {
-      return {
-        sections: [
-          {
-            id: workQueue,
-            label: "",
-            items: sortEstimatesForWorkQueue(filteredEstimates, workQueue),
-          },
-        ],
-        showSectionHeaders: false,
-      };
-    }
-
-    return prepareEstimatesForListView(filteredEstimates, statusFilter);
-  }, [filteredEstimates, statusFilter, workQueue]);
+  const estimateListPresentation = useMemo(
+    () => ({
+      sections: [
+        {
+          id: workQueue,
+          label: "",
+          items: sortEstimatesForWorkQueue(filteredEstimates, workQueue),
+        },
+      ],
+      showSectionHeaders: false,
+    }),
+    [filteredEstimates, workQueue],
+  );
 
   const visibleEstimates = useMemo(
     () =>
@@ -538,6 +520,13 @@ export function EstimatesPageView({
     });
   }
 
+  function handleQueueChange(queue: EstimateWorkQueue) {
+    setWorkQueue(queue);
+    setStatusFilter("all");
+    clearBatchSendFeedback();
+    clearLifecycleFeedback();
+  }
+
   function handleSelectEstimate(estimate: Estimate) {
     router.push(`/estimates/${estimate.id}`);
   }
@@ -600,6 +589,19 @@ export function EstimatesPageView({
       title="Estimates"
       subtitle={subtitle}
       density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoEstimates ? undefined : (
+          <EstimatesStatStrip
+            stats={glanceStats}
+            activeQueue={workQueue}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
       primaryAction={
         canManageEstimates ? (
           <button
@@ -652,11 +654,6 @@ export function EstimatesPageView({
         ) : undefined
       }
       className={northStar ? lt.pageCanvas : undefined}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "workspace"}
@@ -671,23 +668,6 @@ export function EstimatesPageView({
             northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
           }
         >
-        {!hasNoEstimates ? (
-          <div
-            className={
-              northStar
-                ? lt.viewTabsBand
-                : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-            }
-          >
-            <EstimateQueueTabs
-              activeQueue={workQueue}
-              onQueueChange={setWorkQueue}
-              counts={queueCounts}
-              northStar={northStar}
-            />
-          </div>
-        ) : null}
-
         {!hasNoEstimates ? (
           <EstimateSearchFilterBar
             search={search}
