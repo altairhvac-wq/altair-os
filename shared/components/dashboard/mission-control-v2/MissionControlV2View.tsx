@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { KpiSparkline } from "@/shared/components/charts/KpiSparkline";
-import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
+import { JobScheduleRow } from "@/shared/components/jobs/JobScheduleRow";
 import {
   SectionHeader,
   altairMcCardClass,
@@ -383,42 +383,15 @@ function ScheduleCard({ rows }: { rows: MissionControlV2ScheduleRow[] }) {
             </p>
           </div>
         ) : (
-          <ul>
+          <ul className="divide-y divide-altair-border/60">
             {rows.map((row) => (
               <li key={row.id}>
-                <div
-                  className={`${altairMcListRowClass} flex flex-wrap items-center gap-3 border-b border-altair-border/60 last:border-b-0 sm:flex-nowrap`}
-                >
-                  <time className="w-16 shrink-0 text-xs font-semibold tabular-nums text-altair-ink-on-paper-muted sm:w-[4.5rem] sm:text-sm">
-                    {row.time}
-                  </time>
-                  <div className="min-w-0 flex-1">
-                    {row.href ? (
-                      <Link
-                        href={row.href}
-                        className="block truncate text-sm font-semibold text-altair-ink-on-paper transition-colors hover:text-altair-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-                      >
-                        {row.title}
-                      </Link>
-                    ) : (
-                      <p className="truncate text-sm font-semibold text-altair-ink-on-paper">
-                        {row.title}
-                      </p>
-                    )}
-                    <p className="truncate text-xs text-altair-ink-on-paper-muted">
-                      {row.address}
-                    </p>
-                  </div>
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-altair-paper-subtle text-[10px] font-semibold text-altair-ink-on-paper-secondary">
-                      {row.assigneeInitials}
-                    </span>
-                    <span className="hidden max-w-[6.5rem] truncate text-xs text-altair-ink-on-paper-secondary sm:inline">
-                      {row.assigneeName}
-                    </span>
-                  </div>
-                  <JobStatusBadge status={row.status} className="shrink-0" />
-                </div>
+                <JobScheduleRow
+                  row={{
+                    ...row,
+                    isUnassigned: row.assigneeName === "Unassigned",
+                  }}
+                />
               </li>
             ))}
           </ul>
