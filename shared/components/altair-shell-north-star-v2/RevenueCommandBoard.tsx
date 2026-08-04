@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, DollarSign, Receipt, Target } from "lucide-react";
 import type { MoneyStage } from "@/shared/components/dashboard/north-star-v2/sample-data";
 import { missionZoneClass, missionEyebrowClass } from "./mission-tokens";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const stageEmphasisStyles = {
   positive: "from-emerald-500/80 to-emerald-600/60",
@@ -41,7 +42,7 @@ export function RevenueCommandBoard({
             <h2 className="mt-1 text-lg font-semibold text-white">Cash pipeline</h2>
           </div>
           <Link
-            href="/invoices"
+            href={buildSalesHubHref("invoices")}
             className="shrink-0 text-xs font-medium text-cyan-400/80 transition-colors hover:text-cyan-300"
           >
             Billing
@@ -54,7 +55,7 @@ export function RevenueCommandBoard({
             return (
               <Link
                 key={stage.id}
-                href="/invoices"
+                href={buildSalesHubHref("invoices")}
                 className="group flex items-center gap-3 rounded-xl bg-slate-950/40 px-3.5 py-3 ring-1 ring-slate-800/35 transition-all hover:bg-slate-900/50 hover:ring-slate-700/45"
               >
                 <div className="min-w-0 flex-1">

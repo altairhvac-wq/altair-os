@@ -10,6 +10,7 @@ import {
   CUSTOMER_DETAIL_PAYMENTS_ANCHOR,
   CUSTOMER_DETAIL_360_ANCHOR,
 } from "@/shared/lib/customers/customer-detail-anchors";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export {
   CUSTOMER_DETAIL_ACTIVITY_ANCHOR,
@@ -43,20 +44,18 @@ export function createEstimateForCustomerHref(
   customerId: string,
   options?: { jobId?: string },
 ): string {
-  const params = new URLSearchParams({
+  return buildSalesHubHref("estimates", {
     customerId,
     create: "1",
+    jobId: options?.jobId?.trim() || undefined,
   });
-
-  if (options?.jobId?.trim()) {
-    params.set("jobId", options.jobId.trim());
-  }
-
-  return `/estimates?${params.toString()}`;
 }
 
 export function createInvoiceForCustomerHref(customerId: string): string {
-  return `/invoices?customerId=${encodeURIComponent(customerId)}&create=1`;
+  return buildSalesHubHref("invoices", {
+    customerId,
+    create: "1",
+  });
 }
 
 export function customerExpensesHref(customerId: string): string {

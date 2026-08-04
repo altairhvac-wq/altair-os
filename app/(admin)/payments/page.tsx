@@ -1,42 +1,19 @@
 import { redirect } from "next/navigation";
-import { canViewBilling } from "@/lib/database/access-control";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
-  getPaymentsThisMonthSummary,
-  getPaymentsThisWeekSummary,
-  listInvoicePayments,
-} from "@/lib/database/queries/invoice-payments";
-import { PaymentsPageView } from "@/shared/components/payments/PaymentsPageView";
-import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+  buildSalesHubHrefFromPaymentsParams,
+  flattenSearchParamRecord,
+} from "@/shared/lib/sales/sales-hub";
 
-export default async function PaymentsPage() {
-  const companyContext = await getActiveCompanyContext();
+type PaymentsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-  if (!companyContext) {
-    redirect("/setup");
-  }
-
-  if (!canViewBilling(companyContext)) {
-    return (
-      <UnauthorizedAccessView description="Payment records are limited to billing and admin roles." />
-    );
-  }
-
-  const companyId = companyContext.company.id;
-  const timeZone = companyContext.company.timezone;
-
-  const [payments, thisWeek, thisMonth] = await Promise.all([
-    listInvoicePayments(companyId),
-    getPaymentsThisWeekSummary(companyId, timeZone),
-    getPaymentsThisMonthSummary(companyId, timeZone),
-  ]);
-
-  return (
-    <PaymentsPageView
-      payments={payments}
-      thisWeek={thisWeek}
-      thisMonth={thisMonth}
-      canManageCustomers={companyContext.permissions.manageCustomers}
-    />
+/** Legacy /payments list route — redirects into Sales hub Payments tab. */
+export default async function PaymentsPage({
+  searchParams,
+}: PaymentsPageProps) {
+  const params = await searchParams;
+  redirect(
+    buildSalesHubHrefFromPaymentsParams(flattenSearchParamRecord(params)),
   );
 }

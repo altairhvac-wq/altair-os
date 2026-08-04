@@ -11,6 +11,7 @@ import {
   isValidOfficeReviewQueueJobId,
   safeBuildQueueActionHref,
 } from "@/shared/types/office-review-queue";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export type JobEstimateSummary = {
   id: string;
@@ -138,7 +139,7 @@ function buildCreateInvoiceHref(
     params.customerId = customerId;
   }
 
-  return safeBuildQueueActionHref("/invoices", params);
+  return buildSalesHubHref("invoices", params);
 }
 
 /**

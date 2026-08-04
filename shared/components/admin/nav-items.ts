@@ -5,9 +5,7 @@ import {
   Bug,
   CalendarDays,
   Clock,
-  CreditCard,
   DollarSign,
-  FileText,
   HardHat,
   LayoutDashboard,
   Megaphone,
@@ -76,28 +74,16 @@ export const adminNavItems: NavItem[] = [
     description: "Jobs list and day-to-day field work",
   },
   {
-    label: "Estimates",
-    href: "/estimates",
-    icon: FileText,
-    description: "Create and send customer estimates",
+    label: "Sales",
+    href: "/sales",
+    icon: Receipt,
+    description: "Estimates, invoices, and collected payments",
   },
   {
     label: "Price Book",
     href: "/price-book",
     icon: BookOpen,
     description: "Manage reusable services and parts for estimates",
-  },
-  {
-    label: "Invoices",
-    href: "/invoices",
-    icon: Receipt,
-    description: "Billing and payment tracking",
-  },
-  {
-    label: "Payments",
-    href: "/payments",
-    icon: CreditCard,
-    description: "Collected payments ledger",
   },
   {
     label: "Expenses",
@@ -159,6 +145,17 @@ export function isTeamHubPath(pathname: string): boolean {
   return pathname === "/team" || pathname.startsWith("/team/");
 }
 
+/** Sales hub list + legacy estimate/invoice/payment list redirects. */
+export function isSalesHubPath(pathname: string): boolean {
+  return (
+    pathname === "/sales" ||
+    pathname.startsWith("/sales/") ||
+    pathname === "/estimates" ||
+    pathname === "/invoices" ||
+    pathname === "/payments"
+  );
+}
+
 /** Shared active-path matching for admin nav links (desktop, mobile, sidebar). */
 export function isAdminNavItemActive(pathname: string, href: string): boolean {
   if (href === "/") {
@@ -171,6 +168,20 @@ export function isAdminNavItemActive(pathname: string, href: string): boolean {
 
   if (href === "/team" && isTeamHubPath(pathname)) {
     return true;
+  }
+
+  if (href === "/sales") {
+    if (isSalesHubPath(pathname)) {
+      return true;
+    }
+
+    // Detail routes stay under /estimates/[id] and /invoices/[id].
+    if (
+      pathname.startsWith("/estimates/") ||
+      pathname.startsWith("/invoices/")
+    ) {
+      return true;
+    }
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -198,18 +209,17 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "work",
     label: "Work",
-    hrefs: [
-      "/work",
-      "/dispatch",
-      "/team",
-      "/estimates",
-      "/price-book",
-    ],
+    hrefs: ["/work", "/dispatch", "/team", "/price-book"],
+  },
+  {
+    id: "sales",
+    label: "Sales",
+    hrefs: ["/sales"],
   },
   {
     id: "money",
     label: "Money",
-    hrefs: ["/invoices", "/payments", "/expenses", "/time"],
+    hrefs: ["/expenses", "/time"],
   },
   {
     id: "relationships",
@@ -270,9 +280,7 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/dispatch",
   "/team",
   "/customers",
-  "/invoices",
-  "/payments",
-  "/estimates",
+  "/sales",
   "/expenses",
   "/reports",
   "/marketing",
@@ -301,10 +309,8 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/marketing",
   "/dispatch",
   "/team",
-  "/estimates",
+  "/sales",
   "/price-book",
-  "/invoices",
-  "/payments",
   "/expenses",
   "/reports",
   "/network",
@@ -324,12 +330,15 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
 
     // Labor & payroll still gates on company time-entry access (/time-clock).
     // Team hub gates on /team (technicians OR time-clock access).
+    // Sales hub gates on billing access (same as legacy estimates/invoices/payments).
     const permissionHref =
       item.href === "/time"
         ? "/time-clock"
         : item.href === "/team"
           ? "/team"
-          : item.href;
+          : item.href === "/sales"
+            ? "/sales"
+            : item.href;
 
     if (!isAdminNavHref(permissionHref)) {
       return false;
@@ -443,6 +452,18 @@ export function getNavItemForPath(
 
     if (teamItem) {
       return teamItem;
+    }
+  }
+
+  if (
+    isSalesHubPath(pathname) ||
+    pathname.startsWith("/estimates/") ||
+    pathname.startsWith("/invoices/")
+  ) {
+    const salesItem = adminNavItems.find((item) => item.href === "/sales");
+
+    if (salesItem) {
+      return salesItem;
     }
   }
 

@@ -1,3 +1,5 @@
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
+
 export type OperatingSignal = {
   label: string;
   emphasis?: "neutral" | "attention" | "positive";
@@ -65,7 +67,7 @@ export const northStarSampleData: NorthStarSampleData = {
     "Billing follow-up is the highest-leverage move today — crews are on track, but cash is waiting on three overdue invoices.",
   primaryAction: {
     label: "Review overdue invoices",
-    href: "/invoices?status=overdue",
+    href: buildSalesHubHref("invoices", { status: "overdue" }),
   },
   secondaryAction: {
     label: "Open dispatch",

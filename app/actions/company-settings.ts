@@ -53,6 +53,7 @@ function revalidateCompanySettingsPaths() {
   revalidatePath("/settings/documents");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
+  revalidatePath("/sales");
 }
 
 export async function updateCompanyBillingDefaultsAction(

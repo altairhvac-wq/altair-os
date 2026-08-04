@@ -15,6 +15,7 @@ export function revalidateJobOperationalPages(jobId?: string): void {
 }
 
 export function revalidateEstimateOperationalPages(estimateId?: string): void {
+  revalidatePath("/sales");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
   revalidateOperationalDashboard();
@@ -24,7 +25,9 @@ export function revalidateEstimateOperationalPages(estimateId?: string): void {
 }
 
 export function revalidateInvoiceOperationalPages(invoiceId?: string): void {
+  revalidatePath("/sales");
   revalidatePath("/invoices");
+  revalidatePath("/payments");
   revalidateOperationalDashboard();
   if (invoiceId) {
     revalidatePath(`/invoices/${invoiceId}`);
@@ -38,6 +41,7 @@ export function revalidateExpenseOperationalPages(): void {
 
 export function revalidateServiceItemOperationalPages(): void {
   revalidatePath("/price-book");
+  revalidatePath("/sales");
   revalidatePath("/estimates");
   revalidateOperationalDashboard();
 }

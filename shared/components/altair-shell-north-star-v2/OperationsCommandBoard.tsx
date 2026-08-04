@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { JobInMotion, MoneyStage, TechnicianPresence } from "@/shared/components/dashboard/north-star-v2/sample-data";
 import type { ActionQueueItem, OfficeQueueItem, SystemConnection } from "./sample-data";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   missionOperatingBoardClass,
   missionBoardHeaderClass,
@@ -139,7 +140,10 @@ export function OperationsCommandBoard({
                 <h3 className={`mt-1 ${missionWorkspaceSubheadingClass}`}>Blockers on jobs & billing</h3>
                 <p className="text-xs text-slate-600">Clear these to protect schedule and cash</p>
               </div>
-              <Link href="/invoices?status=overdue" className={`shrink-0 ${missionLinkClass}`}>
+              <Link
+                href={buildSalesHubHref("invoices", { status: "overdue" })}
+                className={`shrink-0 ${missionLinkClass}`}
+              >
                 View all
               </Link>
             </div>
@@ -150,7 +154,7 @@ export function OperationsCommandBoard({
               const style = urgencyStyles[item.urgency];
               return (
                 <li key={item.id}>
-                  <Link href="/invoices" className={`group block ${missionRowClass}`}>
+                  <Link href={buildSalesHubHref("invoices")} className={`group block ${missionRowClass}`}>
                     <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -298,7 +302,7 @@ export function OperationsCommandBoard({
                 <h3 className={`mt-1 ${missionWorkspaceSubheadingClass}`}>Completed work → cash</h3>
                 <p className="text-xs text-slate-600">Invoice pipeline · what crews earned today</p>
               </div>
-              <Link href="/invoices" className={`shrink-0 ${missionLinkClass}`}>
+              <Link href={buildSalesHubHref("invoices")} className={`shrink-0 ${missionLinkClass}`}>
                 Billing
               </Link>
             </div>
@@ -310,7 +314,7 @@ export function OperationsCommandBoard({
               return (
                 <Link
                   key={stage.id}
-                  href="/invoices"
+                    href={buildSalesHubHref("invoices")}
                   className={`group flex items-center gap-3 ${missionRowClass}`}
                 >
                   <div className="min-w-0 flex-1">

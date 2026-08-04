@@ -1,6 +1,12 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -89,6 +95,13 @@ type EstimatesPageViewProps = {
   createInitialData?: Partial<EstimateFormData>;
   initialLeadId?: string;
   aiFeaturesEnabled?: boolean;
+  /**
+   * When true, omit MasterListPageLayout — Sales hub hosts page chrome.
+   * Stat strip renders above the list inside the panel.
+   */
+  embedded?: boolean;
+  /** Hub registers New Estimate header action against this handler. */
+  onRegisterCreateHandler?: (handler: () => void) => void;
 };
 
 function filterEstimates(
@@ -156,6 +169,8 @@ export function EstimatesPageView({
   createInitialData,
   initialLeadId,
   aiFeaturesEnabled = false,
+  embedded = false,
+  onRegisterCreateHandler,
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
@@ -195,6 +210,27 @@ export function EstimatesPageView({
   const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
     useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!onRegisterCreateHandler) {
+      return;
+    }
+
+    onRegisterCreateHandler(() => {
+      if (!canManageEstimates || customers.length === 0) {
+        return;
+      }
+
+      router.refresh();
+      setPanelMode("create");
+      setCreateError(null);
+    });
+  }, [
+    onRegisterCreateHandler,
+    canManageEstimates,
+    customers.length,
+    router,
+  ]);
 
   const batchJobsById = useMemo(
     () => buildJobsByIdForEstimateBatchSend(jobs),
@@ -584,77 +620,42 @@ export function EstimatesPageView({
 
   const northStar = isNorthStarShellEnabled();
 
-  return (
-    <MasterListPageLayout
-      title="Estimates"
-      subtitle={subtitle}
-      density="compact"
-      headerSurfaceVariant="default"
-      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
-      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
-      headerClassName="py-1.5"
-      headerCenter={
-        hasNoEstimates ? undefined : (
-          <EstimatesStatStrip
-            stats={glanceStats}
-            activeQueue={workQueue}
-            onFilterQueue={handleQueueChange}
-          />
-        )
-      }
-      primaryAction={
-        canManageEstimates ? (
-          <button
-            type="button"
-            onClick={handleNewEstimate}
-            disabled={customers.length === 0}
-            className={
-              northStar
-                ? `north-star-estimates-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
-                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
-            }
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New Estimate
-          </button>
-        ) : undefined
-      }
-      banners={
-        lifecycleMessage || batchSendMessage ? (
-          <>
-            {lifecycleMessage ? (
-              <SettingsAlertBanner tone={lifecycleTone}>
-                <div>
-                  <p>{lifecycleMessage}</p>
-                  {lifecycleFailureDetails?.length ? (
-                    <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                      {lifecycleFailureDetails.map((detail) => (
-                        <li key={detail}>{detail}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              </SettingsAlertBanner>
-            ) : null}
-            {batchSendMessage ? (
-              <SettingsAlertBanner tone={batchSendTone}>
-                <div>
-                  <p>{batchSendMessage}</p>
-                  {batchSendFailureDetails?.length ? (
-                    <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                      {batchSendFailureDetails.map((detail) => (
-                        <li key={detail}>{detail}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              </SettingsAlertBanner>
-            ) : null}
-          </>
-        ) : undefined
-      }
-      className={northStar ? lt.pageCanvas : undefined}
-    >
+  const banners =
+    lifecycleMessage || batchSendMessage ? (
+      <>
+        {lifecycleMessage ? (
+          <SettingsAlertBanner tone={lifecycleTone}>
+            <div>
+              <p>{lifecycleMessage}</p>
+              {lifecycleFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {lifecycleFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : null}
+        {batchSendMessage ? (
+          <SettingsAlertBanner tone={batchSendTone}>
+            <div>
+              <p>{batchSendMessage}</p>
+              {batchSendFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {batchSendFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : null}
+      </>
+    ) : null;
+
+  const panelBody = (
+    <>
       <MasterPageSurface
         variant={northStar ? "northStarList" : "workspace"}
         className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
@@ -669,31 +670,42 @@ export function EstimatesPageView({
           }
         >
         {!hasNoEstimates ? (
-          <EstimateSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            resultCount={filteredEstimates.length}
-            showStatusFilter={workQueue === "past"}
-            lifecycleFilter={lifecycleFilter}
-            onLifecycleFilterChange={setLifecycleFilter}
-            showLifecycleFilter={canManageEstimates}
-            northStar={northStar}
-            batchSelectAllControl={
-              selectionEnabled &&
-              visibleSelectionState &&
-              visibleSelectionState.selectableCount > 0 &&
-              !hasNoResults
-                ? {
-                    selectableCount: visibleSelectionState.selectableCount,
-                    allEligibleSelected: visibleSelectionState.allSelected,
-                    onCheckAll: () => handleToggleAllVisibleSelection(true),
-                    onClearSelection: handleClearSelection,
-                  }
-                : undefined
-            }
-          />
+          <>
+            {embedded ? (
+              <div className="border-b border-altair-border/70 px-1 pb-2 sm:px-0">
+                <EstimatesStatStrip
+                  stats={glanceStats}
+                  activeQueue={workQueue}
+                  onFilterQueue={handleQueueChange}
+                />
+              </div>
+            ) : null}
+            <EstimateSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              resultCount={filteredEstimates.length}
+              showStatusFilter={workQueue === "past"}
+              lifecycleFilter={lifecycleFilter}
+              onLifecycleFilterChange={setLifecycleFilter}
+              showLifecycleFilter={canManageEstimates}
+              northStar={northStar}
+              batchSelectAllControl={
+                selectionEnabled &&
+                visibleSelectionState &&
+                visibleSelectionState.selectableCount > 0 &&
+                !hasNoResults
+                  ? {
+                      selectableCount: visibleSelectionState.selectableCount,
+                      allEligibleSelected: visibleSelectionState.allSelected,
+                      onCheckAll: () => handleToggleAllVisibleSelection(true),
+                      onClearSelection: handleClearSelection,
+                    }
+                  : undefined
+              }
+            />
+          </>
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
@@ -934,6 +946,57 @@ export function EstimatesPageView({
         aiFeaturesEnabled={aiFeaturesEnabled}
         canDraftDescription={canManageEstimates}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {banners ? <div className="mb-2 space-y-2">{banners}</div> : null}
+        {panelBody}
+      </>
+    );
+  }
+
+  return (
+    <MasterListPageLayout
+      title="Estimates"
+      subtitle={subtitle}
+      density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoEstimates ? undefined : (
+          <EstimatesStatStrip
+            stats={glanceStats}
+            activeQueue={workQueue}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
+      primaryAction={
+        canManageEstimates ? (
+          <button
+            type="button"
+            onClick={handleNewEstimate}
+            disabled={customers.length === 0}
+            className={
+              northStar
+                ? `north-star-estimates-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
+            }
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Estimate
+          </button>
+        ) : undefined
+      }
+      banners={banners ?? undefined}
+      className={northStar ? lt.pageCanvas : undefined}
+    >
+      {panelBody}
     </MasterListPageLayout>
   );
 }

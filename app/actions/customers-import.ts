@@ -39,6 +39,7 @@ function revalidateCustomerPaths() {
   revalidatePath("/work");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
+  revalidatePath("/sales");
 }
 
 async function importCustomersFromCsvRows(

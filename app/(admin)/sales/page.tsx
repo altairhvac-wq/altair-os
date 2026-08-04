@@ -1,0 +1,223 @@
+import { redirect } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
+import { canViewBilling } from "@/lib/database/access-control";
+import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
+import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
+import { listCustomers } from "@/lib/database/queries/customers";
+import {
+  listDeletedEstimates,
+  listEstimates,
+} from "@/lib/database/queries/estimates";
+import {
+  getPaymentsThisMonthSummary,
+  getPaymentsThisWeekSummary,
+  listInvoicePayments,
+} from "@/lib/database/queries/invoice-payments";
+import {
+  listDeletedInvoices,
+  listInvoiceDocumentRefs,
+} from "@/lib/database/queries/invoices";
+import { listJobs } from "@/lib/database/queries/jobs";
+import { listActiveServiceItems } from "@/lib/database/queries/service-items";
+import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
+import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { SalesHubPageView } from "@/shared/components/sales/SalesHubPageView";
+import {
+  getEstimateCreateInitialData,
+  getInvoiceCreateInitialData,
+} from "@/shared/lib/company-billing-defaults";
+import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
+import { resolveSalesHubTab } from "@/shared/lib/sales/sales-hub";
+
+type SalesPageProps = {
+  searchParams: Promise<{
+    tab?: string;
+    customerId?: string;
+    create?: string;
+    leadId?: string;
+    jobId?: string;
+    status?: string;
+    focus?: string;
+  }>;
+};
+
+/** Sales hub — Estimates, Invoices, and Payments list panels. */
+export default async function SalesPage({ searchParams }: SalesPageProps) {
+  const companyContext = await getActiveCompanyContext();
+
+  if (!companyContext) {
+    redirect("/setup");
+  }
+
+  if (!canViewBilling(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Sales records are limited to billing and admin roles." />
+    );
+  }
+
+  const params = await searchParams;
+  const activeTab = resolveSalesHubTab(params.tab);
+
+  if (
+    activeTab === "estimates" &&
+    shouldShowAlphaComingSoon("/estimates")
+  ) {
+    return (
+      <ComingSoonView
+        title="Estimates temporarily unavailable"
+        description="Estimate creation and customer approvals are being finalized. Use jobs and invoices in the meantime."
+      />
+    );
+  }
+
+  const {
+    customerId,
+    create,
+    leadId,
+    jobId,
+    status,
+    focus,
+  } = params;
+
+  const companyId = companyContext.company.id;
+  const timeZone = companyContext.company.timezone;
+  const pageFocus = parseInvoicePageSearchParams({
+    status,
+    focus,
+    customerId,
+    jobId,
+    create,
+  });
+
+  const [
+    estimates,
+    deletedEstimates,
+    invoices,
+    deletedInvoices,
+    paymentsLedger,
+    paymentsThisWeek,
+    paymentsThisMonth,
+    customers,
+    jobs,
+    serviceItems,
+    invoiceDocumentRefs,
+  ] = await Promise.all([
+    listEstimates(companyId, { includeArchived: true }),
+    listDeletedEstimates(companyId),
+    listInvoicesWithBillingSync(companyId, timeZone, {
+      includeArchived: true,
+    }),
+    listDeletedInvoices(companyId),
+    listInvoicePayments(companyId),
+    getPaymentsThisWeekSummary(companyId, timeZone),
+    getPaymentsThisMonthSummary(companyId, timeZone),
+    listCustomers(companyId),
+    listJobs(companyId),
+    listActiveServiceItems(companyId),
+    listInvoiceDocumentRefs(companyId),
+  ]);
+
+  const preselectedCustomer = customerId
+    ? customers.find((customer) => customer.id === customerId)
+    : undefined;
+
+  const estimatePreselectedJob =
+    jobId && preselectedCustomer
+      ? jobs.find(
+          (job) =>
+            job.id === jobId && job.customerId === preselectedCustomer.id,
+        )
+      : undefined;
+
+  const billingDefaults = getCompanyBillingDefaultsFromRow(
+    companyContext.company,
+  );
+
+  const estimatesCreateInitialData = getEstimateCreateInitialData(
+    billingDefaults,
+    timeZone,
+    preselectedCustomer
+      ? {
+          customerId: preselectedCustomer.id,
+          ...(estimatePreselectedJob
+            ? { jobId: estimatePreselectedJob.id }
+            : {}),
+        }
+      : undefined,
+  );
+
+  const invoicePreselectedJob = jobId
+    ? jobs.find((job) => job.id === jobId)
+    : undefined;
+
+  const customerJobMismatch = Boolean(
+    preselectedCustomer &&
+      invoicePreselectedJob &&
+      preselectedCustomer.id !== invoicePreselectedJob.customerId,
+  );
+
+  const validJob = customerJobMismatch
+    ? undefined
+    : invoicePreselectedJob &&
+        (!preselectedCustomer ||
+          invoicePreselectedJob.customerId === preselectedCustomer.id)
+      ? invoicePreselectedJob
+      : undefined;
+
+  const invoiceCustomer = customerJobMismatch
+    ? preselectedCustomer
+    : preselectedCustomer ??
+      (validJob
+        ? customers.find((customer) => customer.id === validJob.customerId)
+        : undefined);
+
+  const shouldOpenInvoiceCreate =
+    create === "1" && Boolean(invoiceCustomer ?? validJob);
+
+  const invoicesCreateInitialData = getInvoiceCreateInitialData(
+    billingDefaults,
+    timeZone,
+    invoiceCustomer || validJob
+      ? {
+          customerId: invoiceCustomer?.id ?? validJob!.customerId,
+          jobId: validJob?.id ?? "",
+        }
+      : undefined,
+  );
+
+  return (
+    <SalesHubPageView
+      estimates={[...estimates, ...deletedEstimates]}
+      invoices={[...invoices, ...deletedInvoices]}
+      invoicePayments={paymentsLedger}
+      paymentsLedger={paymentsLedger}
+      paymentsThisWeek={paymentsThisWeek}
+      paymentsThisMonth={paymentsThisMonth}
+      customers={customers}
+      jobs={jobs}
+      serviceItems={serviceItems}
+      invoiceDocumentRefs={invoiceDocumentRefs}
+      canManageBilling={companyContext.permissions.manageBilling}
+      canManageCustomers={companyContext.permissions.manageCustomers}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
+      estimatesCreateInitialData={estimatesCreateInitialData}
+      invoicesCreateInitialData={invoicesCreateInitialData}
+      estimatesInitialPanelMode={
+        create === "1" && preselectedCustomer && activeTab === "estimates"
+          ? "create"
+          : "empty"
+      }
+      invoicesInitialPanelMode={
+        shouldOpenInvoiceCreate && activeTab === "invoices" ? "create" : "empty"
+      }
+      initialLeadId={leadId}
+      initialJobId={validJob?.id}
+      initialJobLabel={validJob?.jobNumber}
+      initialInvoiceCreateMode={create === "1"}
+      invoicePageFocus={pageFocus}
+      invoicesInitialStatusFilter={pageFocus.statusFilter}
+    />
+  );
+}

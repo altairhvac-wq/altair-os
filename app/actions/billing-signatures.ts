@@ -28,9 +28,11 @@ function revalidateBillingSignaturePaths(
 ) {
   if (entityType === "estimate") {
     revalidatePath("/estimates");
+    revalidatePath("/sales");
     revalidatePath(`/estimates/${entityId}`);
   } else {
     revalidatePath("/invoices");
+    revalidatePath("/sales");
     revalidatePath(`/invoices/${entityId}`);
   }
 

@@ -147,6 +147,7 @@ async function runBulkCustomerLifecycleAction(
     revalidatePath("/work");
     revalidatePath("/estimates");
     revalidatePath("/invoices");
+    revalidatePath("/sales");
   }
 
   return {

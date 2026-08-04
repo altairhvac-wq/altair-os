@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Clock, FileText, Inbox } from "lucide-react";
 import type { ActionQueueItem, OfficeQueueItem } from "./sample-data";
 import { usePaletteTokens } from "./palette-context";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const urgencyStyles = {
   now: {
@@ -48,7 +49,10 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>Blockers on jobs & billing</h3>
             <p className={t.lightSurfaceMuted}>Clear these to protect schedule and cash</p>
           </div>
-          <Link href="/invoices?status=overdue" className={`shrink-0 ${t.link}`}>
+          <Link
+            href={buildSalesHubHref("invoices", { status: "overdue" })}
+            className={`shrink-0 ${t.link}`}
+          >
             View all
           </Link>
         </div>
@@ -60,7 +64,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
           const soonBadge = `${style.badge} ${t.soonBadge} ring-1 ${t.soonBadgeRing}`;
           return (
             <li key={item.id}>
-              <Link href="/invoices" className={`group block ${t.row}`}>
+              <Link href={buildSalesHubHref("invoices")} className={`group block ${t.row}`}>
                 <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

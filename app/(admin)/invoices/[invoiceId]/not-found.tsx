@@ -1,5 +1,6 @@
 import { Receipt } from "lucide-react";
 import { Button } from "@/shared/design-system/components";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export default function InvoiceNotFound() {
   return (
@@ -14,7 +15,7 @@ export default function InvoiceNotFound() {
         This invoice may have been removed or you may not have access to view
         it.
       </p>
-      <Button href="/invoices" className="mt-6">
+      <Button href={buildSalesHubHref("invoices")} className="mt-6">
         Back to invoices
       </Button>
     </div>

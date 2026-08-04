@@ -37,6 +37,7 @@ import { NetworkReferralAttribution } from "@/shared/components/leads/NetworkRef
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { shouldPromptConvertOnWon } from "@/shared/lib/leads/lead-conversion";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type { LeadActivity } from "@/shared/types/lead-activity";
 import {
   formatLeadName,
@@ -200,12 +201,13 @@ export function LeadDetailPanel({
         onLeadUpdated(result.lead);
       }
 
-      const params = new URLSearchParams({
-        customerId: result.customerId,
-        create: "1",
-        leadId: lead.id,
-      });
-      router.push(`/estimates?${params.toString()}`);
+      router.push(
+        buildSalesHubHref("estimates", {
+          customerId: result.customerId,
+          create: "1",
+          leadId: lead.id,
+        }),
+      );
     });
   }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DollarSign, Receipt, Target } from "lucide-react";
 import type { MoneyStage } from "@/shared/components/dashboard/north-star-v2/sample-data";
 import { usePaletteTokens } from "./palette-context";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const stageEmphasisStyles = {
   positive: "from-emerald-500 to-emerald-600",
@@ -36,7 +37,7 @@ export function ColorLabMoneyColumn({
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>Completed work → cash</h3>
             <p className={t.lightSurfaceMuted}>Invoice pipeline · what crews earned today</p>
           </div>
-          <Link href="/invoices" className={`shrink-0 ${t.link}`}>
+          <Link href={buildSalesHubHref("invoices")} className={`shrink-0 ${t.link}`}>
             Billing
           </Link>
         </div>
@@ -46,7 +47,11 @@ export function ColorLabMoneyColumn({
         {moneyStages.map((stage) => {
           const emphasis = stage.emphasis ?? "neutral";
           return (
-            <Link key={stage.id} href="/invoices" className={`group flex items-center gap-3 ${t.row}`}>
+            <Link
+              key={stage.id}
+              href={buildSalesHubHref("invoices")}
+              className={`group flex items-center gap-3 ${t.row}`}
+            >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className={t.lightCardValue}>{stage.label}</span>

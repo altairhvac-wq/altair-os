@@ -1,5 +1,6 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
 import { buildLeadPipelineHref } from "@/shared/lib/customers/customers-hub";
 import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
@@ -208,7 +209,7 @@ const QUEUE_PRESENTATION: Record<
   overdue_invoice: {
     completionTitle: "Overdue invoices processed",
     completionSubtitle: "No overdue invoices remain in this preview.",
-    relatedHref: "/invoices?focus=overdue",
+    relatedHref: buildSalesHubHref("invoices", { focus: "overdue" }),
     relatedLabel: "View all overdue",
     icon: "dollar",
     iconClassName: "bg-rose-100 text-rose-700",
@@ -217,7 +218,10 @@ const QUEUE_PRESENTATION: Record<
     completionTitle: "Unpaid invoices followed up",
     completionSubtitle:
       "No sent invoices past the follow-up threshold remain in this preview.",
-    relatedHref: "/invoices?focus=cash-flow&status=unpaid",
+    relatedHref: buildSalesHubHref("invoices", {
+      focus: "cash-flow",
+      status: "unpaid",
+    }),
     relatedLabel: "View unpaid invoices",
     icon: "dollar",
     iconClassName: "bg-amber-100 text-amber-700",
@@ -233,7 +237,7 @@ const QUEUE_PRESENTATION: Record<
   unsent_estimate: {
     completionTitle: "All estimates sent",
     completionSubtitle: "No draft estimates waiting to send in this preview.",
-    relatedHref: "/estimates",
+    relatedHref: buildSalesHubHref("estimates"),
     relatedLabel: "View all estimates",
     icon: "clipboard",
     iconClassName: "bg-cyan-100 text-cyan-700",
@@ -242,7 +246,7 @@ const QUEUE_PRESENTATION: Record<
     completionTitle: "Sent estimates followed up",
     completionSubtitle:
       "No sent estimates past the recovery threshold remain in this preview.",
-    relatedHref: "/estimates",
+    relatedHref: buildSalesHubHref("estimates"),
     relatedLabel: "View all estimates",
     icon: "clipboard",
     iconClassName: "bg-amber-100 text-amber-700",
@@ -251,7 +255,7 @@ const QUEUE_PRESENTATION: Record<
     completionTitle: "Accepted estimates scheduled",
     completionSubtitle:
       "No accepted estimates waiting for scheduling remain in this preview.",
-    relatedHref: "/estimates?status=approved",
+    relatedHref: buildSalesHubHref("estimates", { status: "approved" }),
     relatedLabel: "View approved estimates",
     icon: "briefcase",
     iconClassName: "bg-cyan-100 text-cyan-700",
@@ -311,8 +315,7 @@ export function getOperationalResolutionQueuePresentation(
 }
 
 function buildCreateInvoiceHref(jobId: string): string {
-  const params = new URLSearchParams({ create: "1", jobId });
-  return `/invoices?${params.toString()}`;
+  return buildSalesHubHref("invoices", { create: "1", jobId });
 }
 
 function buildUnassignedJobItems(

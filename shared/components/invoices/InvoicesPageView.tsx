@@ -58,6 +58,7 @@ import {
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
 import { buildInvoicesGlanceStats } from "@/shared/lib/invoices/invoices-glance-stats";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   MasterListPageLayout,
   MasterPageSurface,
@@ -103,6 +104,13 @@ type InvoicesPageViewProps = {
   initialCreateMode?: boolean;
   initialStatusFilter?: InvoiceListStatusFilter;
   invoicePageFocus?: InvoicePageFocusState;
+  /**
+   * When true, omit MasterListPageLayout — Sales hub hosts page chrome.
+   * Stat strip renders above the list inside the panel.
+   */
+  embedded?: boolean;
+  /** Hub registers New Invoice header action against this handler. */
+  onRegisterCreateHandler?: (handler: () => void) => void;
 };
 
 function filterInvoices(
@@ -173,6 +181,8 @@ export function InvoicesPageView({
   initialCreateMode = false,
   initialStatusFilter = "all",
   invoicePageFocus,
+  embedded = false,
+  onRegisterCreateHandler,
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
@@ -234,6 +244,27 @@ export function InvoicesPageView({
   const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
     useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!onRegisterCreateHandler) {
+      return;
+    }
+
+    onRegisterCreateHandler(() => {
+      if (!canManageInvoices || customers.length === 0) {
+        return;
+      }
+
+      router.refresh();
+      setPanelMode("create");
+      setCreateError(null);
+    });
+  }, [
+    onRegisterCreateHandler,
+    canManageInvoices,
+    customers.length,
+    router,
+  ]);
 
   useEffect(() => {
     setInvoices(initialInvoices);
@@ -656,90 +687,53 @@ export function InvoicesPageView({
 
   const northStar = isNorthStarShellEnabled();
 
-  return (
-    <MasterListPageLayout
-      title="Invoices"
-      subtitle={subtitle}
-      eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
-      density="compact"
-      headerSurfaceVariant="default"
-      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
-      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
-      headerClassName="py-1.5"
-      headerCenter={
-        hasNoInvoices ? undefined : (
-          <InvoicesStatStrip
-            stats={glanceStats}
-            activeQueue={workQueue}
-            onFilterQueue={handleQueueChange}
-          />
-        )
-      }
-      banners={
-        (initialJobId && initialJobLabel) ||
-        lifecycleMessage ||
-        batchSendMessage
-          ? (
-              <>
-                {initialJobId && initialJobLabel ? (
-                  <JobContextFilterBanner
-                    jobLabel={initialJobLabel}
-                    clearHref={invoicePageFocus?.jobClearHref ?? "/invoices"}
-                    variant={initialCreateMode ? "create" : "filter"}
-                  />
-                ) : null}
-                {lifecycleMessage ? (
-                  <SettingsAlertBanner tone={lifecycleTone}>
-                    <div>
-                      <p>{lifecycleMessage}</p>
-                      {lifecycleFailureDetails?.length ? (
-                        <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                          {lifecycleFailureDetails.map((detail) => (
-                            <li key={detail}>{detail}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </div>
-                  </SettingsAlertBanner>
-                ) : null}
-                {batchSendMessage ? (
-                  <SettingsAlertBanner tone={batchSendTone}>
-                    <div>
-                      <p>{batchSendMessage}</p>
-                      {batchSendFailureDetails?.length ? (
-                        <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                          {batchSendFailureDetails.map((detail) => (
-                            <li key={detail}>{detail}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </div>
-                  </SettingsAlertBanner>
-                ) : null}
-              </>
-            )
-          : undefined
-      }
-      primaryAction={
-        canManageInvoices ? (
-          <button
-            type="button"
-            onClick={handleNewInvoice}
-            disabled={customers.length === 0}
-            className={
-              northStar
-                ? `north-star-invoices-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
-                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
+  const banners =
+    (initialJobId && initialJobLabel) ||
+    lifecycleMessage ||
+    batchSendMessage ? (
+      <>
+        {initialJobId && initialJobLabel ? (
+          <JobContextFilterBanner
+            jobLabel={initialJobLabel}
+            clearHref={
+              invoicePageFocus?.jobClearHref ?? buildSalesHubHref("invoices")
             }
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New Invoice
-          </button>
-        ) : undefined
-      }
-      className={northStar ? lt.pageCanvas : undefined}
-      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
-    >
+            variant={initialCreateMode ? "create" : "filter"}
+          />
+        ) : null}
+        {lifecycleMessage ? (
+          <SettingsAlertBanner tone={lifecycleTone}>
+            <div>
+              <p>{lifecycleMessage}</p>
+              {lifecycleFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {lifecycleFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : null}
+        {batchSendMessage ? (
+          <SettingsAlertBanner tone={batchSendTone}>
+            <div>
+              <p>{batchSendMessage}</p>
+              {batchSendFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {batchSendFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : null}
+      </>
+    ) : null;
+
+  const panelBody = (
+    <>
       <MasterPageSurface
         variant={northStar ? "northStarList" : "workspace"}
         className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
@@ -754,31 +748,42 @@ export function InvoicesPageView({
           }
         >
         {!hasNoInvoices ? (
-          <InvoiceSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            resultCount={filteredInvoices.length}
-            showStatusFilter={workQueue === "past"}
-            lifecycleFilter={lifecycleFilter}
-            onLifecycleFilterChange={setLifecycleFilter}
-            showLifecycleFilter={canManageInvoices}
-            northStar={northStar}
-            batchSelectAllControl={
-              selectionEnabled &&
-              visibleSelectionState &&
-              visibleSelectionState.selectableCount > 0 &&
-              !hasNoResults
-                ? {
-                    selectableCount: visibleSelectionState.selectableCount,
-                    allEligibleSelected: visibleSelectionState.allSelected,
-                    onCheckAll: () => handleToggleAllVisibleSelection(true),
-                    onClearSelection: handleClearSelection,
-                  }
-                : undefined
-            }
-          />
+          <>
+            {embedded ? (
+              <div className="border-b border-altair-border/70 px-1 pb-2 sm:px-0">
+                <InvoicesStatStrip
+                  stats={glanceStats}
+                  activeQueue={workQueue}
+                  onFilterQueue={handleQueueChange}
+                />
+              </div>
+            ) : null}
+            <InvoiceSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              resultCount={filteredInvoices.length}
+              showStatusFilter={workQueue === "past"}
+              lifecycleFilter={lifecycleFilter}
+              onLifecycleFilterChange={setLifecycleFilter}
+              showLifecycleFilter={canManageInvoices}
+              northStar={northStar}
+              batchSelectAllControl={
+                selectionEnabled &&
+                visibleSelectionState &&
+                visibleSelectionState.selectableCount > 0 &&
+                !hasNoResults
+                  ? {
+                      selectableCount: visibleSelectionState.selectableCount,
+                      allEligibleSelected: visibleSelectionState.allSelected,
+                      onCheckAll: () => handleToggleAllVisibleSelection(true),
+                      onClearSelection: handleClearSelection,
+                    }
+                  : undefined
+              }
+            />
+          </>
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
@@ -1034,6 +1039,59 @@ export function InvoicesPageView({
         isSubmitting={isPending}
         createInitialData={createInitialData}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {banners ? <div className="mb-2 space-y-2">{banners}</div> : null}
+        {panelBody}
+      </>
+    );
+  }
+
+  return (
+    <MasterListPageLayout
+      title="Invoices"
+      subtitle={subtitle}
+      eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
+      density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoInvoices ? undefined : (
+          <InvoicesStatStrip
+            stats={glanceStats}
+            activeQueue={workQueue}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
+      banners={banners ?? undefined}
+      primaryAction={
+        canManageInvoices ? (
+          <button
+            type="button"
+            onClick={handleNewInvoice}
+            disabled={customers.length === 0}
+            className={
+              northStar
+                ? `north-star-invoices-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
+            }
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Invoice
+          </button>
+        ) : undefined
+      }
+      className={northStar ? lt.pageCanvas : undefined}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+    >
+      {panelBody}
     </MasterListPageLayout>
   );
 }

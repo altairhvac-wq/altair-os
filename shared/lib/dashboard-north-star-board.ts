@@ -14,6 +14,7 @@ import {
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   formatLeadEstimateReadyDescription,
   formatLeadEstimateReadyTitle,
@@ -392,7 +393,7 @@ function buildActionRows(
       severity: money.staleSentEstimateCount >= 5 ? "critical" : "warning",
       kind: "queue",
       queueType: "stale_sent_estimate",
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
     });
   }
 
@@ -446,7 +447,7 @@ function buildActionRows(
       severity: money.unsentEstimateCount >= 5 ? "critical" : "warning",
       kind: "queue",
       queueType: "unsent_estimate",
-      href: "/estimates",
+      href: buildSalesHubHref("estimates"),
     });
   }
 
@@ -543,7 +544,7 @@ function buildMoneyRows(
       severity: "warning",
       kind: "queue",
       queueType: "unsent_estimate",
-      href: "/estimates",
+      href: buildSalesHubHref("estimates"),
     });
   }
 

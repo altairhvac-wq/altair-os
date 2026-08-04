@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DollarSign, Receipt, Target } from "lucide-react";
 import type { MoneyStage } from "@/shared/components/dashboard/north-star-v2/sample-data";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   v3ColumnHeaderClass,
   v3EyebrowLightClass,
@@ -36,7 +37,7 @@ export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: Mon
             <h3 className={`mt-1 ${v3WorkspaceSubheadingClass}`}>Completed work → cash</h3>
             <p className="text-xs text-[rgba(41,34,24,0.65)]">Invoice pipeline · what crews earned today</p>
           </div>
-          <Link href="/invoices" className={`shrink-0 ${v3LinkClass}`}>
+          <Link href={buildSalesHubHref("invoices")} className={`shrink-0 ${v3LinkClass}`}>
             Billing
           </Link>
         </div>
@@ -46,7 +47,11 @@ export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: Mon
         {moneyStages.map((stage) => {
           const emphasis = stage.emphasis ?? "neutral";
           return (
-            <Link key={stage.id} href="/invoices" className={`group flex items-center gap-3 ${v3RowClass}`}>
+            <Link
+              key={stage.id}
+              href={buildSalesHubHref("invoices")}
+              className={`group flex items-center gap-3 ${v3RowClass}`}
+            >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold text-[#3D3428] group-hover:text-[#292218]">

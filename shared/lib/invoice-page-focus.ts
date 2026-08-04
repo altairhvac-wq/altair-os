@@ -3,12 +3,22 @@ import {
   type Invoice,
   type InvoiceStatus,
 } from "@/shared/types/invoice";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
-export const INVOICE_PAGE_CASH_FLOW_HREF = "/invoices?focus=cash-flow";
-export const INVOICE_PAGE_OVERDUE_HREF =
-  "/invoices?focus=cash-flow&status=overdue";
-export const INVOICE_PAGE_UNPAID_HREF = "/invoices?focus=cash-flow&status=unpaid";
-export const INVOICE_PAGE_DRAFT_HREF = "/invoices?status=draft";
+export const INVOICE_PAGE_CASH_FLOW_HREF = buildSalesHubHref("invoices", {
+  focus: "cash-flow",
+});
+export const INVOICE_PAGE_OVERDUE_HREF = buildSalesHubHref("invoices", {
+  focus: "cash-flow",
+  status: "overdue",
+});
+export const INVOICE_PAGE_UNPAID_HREF = buildSalesHubHref("invoices", {
+  focus: "cash-flow",
+  status: "unpaid",
+});
+export const INVOICE_PAGE_DRAFT_HREF = buildSalesHubHref("invoices", {
+  status: "draft",
+});
 
 export type InvoicePageFocus = "cash-flow";
 
@@ -35,38 +45,37 @@ function buildInvoicesHref(
   input: InvoicePageHrefInput,
   options?: { includeJobId?: boolean; includeFocusQuery?: boolean },
 ): string {
-  const params = new URLSearchParams();
   const includeJobId = options?.includeJobId !== false;
   const includeFocusQuery = options?.includeFocusQuery !== false;
+  const params: Record<string, string | undefined> = {};
 
   if (input.customerId) {
-    params.set("customerId", input.customerId);
+    params.customerId = input.customerId;
   }
 
   if (includeJobId && input.jobId) {
-    params.set("jobId", input.jobId);
+    params.jobId = input.jobId;
   }
 
   if (input.create === "1") {
-    params.set("create", "1");
+    params.create = "1";
   }
 
   if (includeFocusQuery) {
     const statusFilter = resolveStatusFilter(input.status);
 
     if (statusFilter === "unpaid" || statusFilter === "overdue") {
-      params.set("status", statusFilter);
+      params.status = statusFilter;
     } else if (statusFilter !== "all") {
-      params.set("status", statusFilter);
+      params.status = statusFilter;
     }
 
     if (input.focus && VALID_FOCUS_PARAMS.has(input.focus)) {
-      params.set("focus", input.focus);
+      params.focus = input.focus;
     }
   }
 
-  const query = params.toString();
-  return query ? `/invoices?${query}` : "/invoices";
+  return buildSalesHubHref("invoices", params);
 }
 
 function resolveStatusFilter(statusParam: string | undefined): InvoiceListStatusFilter {

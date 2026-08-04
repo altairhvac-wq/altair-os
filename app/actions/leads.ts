@@ -69,6 +69,7 @@ function revalidateLeadPaths() {
   revalidatePath("/leads");
   revalidatePath("/");
   revalidatePath("/estimates");
+  revalidatePath("/sales");
   revalidatePath("/network");
 }
 

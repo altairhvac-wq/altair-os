@@ -7,6 +7,7 @@ import {
   PulseCard,
   WorkspaceSection,
 } from "@/shared/design-system/components";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const softCard =
   "border-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.03)]";
@@ -129,7 +130,7 @@ export default function CommandCenterV1Page() {
               title="3 invoices are overdue."
               description="Customers have not responded to payment reminders sent last week."
               meta="Oldest: 12 days past due"
-              action={{ label: "Review invoices", href: "/invoices?status=overdue" }}
+              action={{ label: "Review invoices", href: buildSalesHubHref("invoices", { status: "overdue" }) }}
               className={softCard}
             />
             <PriorityCard
@@ -138,7 +139,7 @@ export default function CommandCenterV1Page() {
               title="Estimate follow-up due on 3 quotes."
               description="Sent estimates with no response in over 7 days — a brief check-in often moves quotes forward."
               meta="$6,400 awaiting response"
-              action={{ label: "Review estimates", href: "/estimates?status=sent" }}
+              action={{ label: "Review estimates", href: buildSalesHubHref("estimates", { status: "sent" }) }}
               className={softCard}
             />
           </div>
@@ -234,7 +235,7 @@ export default function CommandCenterV1Page() {
               title="Estimate recovery opportunity"
               insight="Three sent estimates totaling $6,400 have had no response in over a week."
               recommendation="A brief check-in with these customers often moves stalled quotes forward."
-              action={{ label: "Review estimates", href: "/estimates?status=sent" }}
+              action={{ label: "Review estimates", href: buildSalesHubHref("estimates", { status: "sent" }) }}
               className={`${softCard} bg-white/70 backdrop-blur-[1px]`}
             />
             <InsightCard

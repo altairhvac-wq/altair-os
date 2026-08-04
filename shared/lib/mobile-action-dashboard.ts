@@ -15,6 +15,7 @@ import {
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   formatLeadEstimateReadyDescription,
   formatLeadEstimateReadyTitle,
@@ -443,7 +444,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       ),
       category: "money-actions",
       queueType: "unsent_estimate",
-      href: "/estimates",
+      href: buildSalesHubHref("estimates"),
       panelId: "cash-flow",
       canFix: access.canViewBilling,
     });
@@ -462,7 +463,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       ),
       category: "money-actions",
       queueType: "stale_sent_estimate",
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
       panelId: "cash-flow",
       canFix: access.canViewBilling,
     });

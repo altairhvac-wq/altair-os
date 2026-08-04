@@ -1,4 +1,5 @@
 import { INVOICE_PAGE_UNPAID_HREF } from "@/shared/lib/invoice-page-focus";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
 
@@ -70,7 +71,7 @@ export function buildDashboardWorkflowRail(
       label: "Quote",
       value: quotePressure,
       meta: quotePressure > 0 ? "need movement" : "queue clear",
-      href: "/estimates",
+      href: buildSalesHubHref("estimates"),
       state: pressureState(quotePressure),
     });
 
@@ -80,7 +81,7 @@ export function buildDashboardWorkflowRail(
       label: "Schedule",
       value: schedulingPressure,
       meta: schedulingPressure > 0 ? "approved to schedule" : "queue clear",
-      href: "/estimates?status=approved",
+      href: buildSalesHubHref("estimates", { status: "approved" }),
       state: pressureState(schedulingPressure, 3),
     });
   }
@@ -138,7 +139,7 @@ export function buildDashboardWorkflowRail(
       href:
         data.completedWorkAwaitingInvoicing.count > 0
           ? "/reports?queue=invoicing"
-          : "/invoices?status=draft",
+          : buildSalesHubHref("invoices", { status: "draft" }),
       state: pressureState(billingPressure),
     });
 

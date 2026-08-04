@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import { Button } from "@/shared/design-system/components";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export default function EstimateNotFound() {
   return (
@@ -14,7 +15,7 @@ export default function EstimateNotFound() {
         This estimate may have been removed or you may not have access to view
         it.
       </p>
-      <Button href="/estimates" className="mt-6">
+      <Button href={buildSalesHubHref("estimates")} className="mt-6">
         Back to estimates
       </Button>
     </div>

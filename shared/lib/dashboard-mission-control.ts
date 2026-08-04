@@ -7,6 +7,7 @@ import {
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   DISPATCH_PAGE_TODAY_HREF,
   DISPATCH_PAGE_UNASSIGNED_HREF,
@@ -179,7 +180,7 @@ function buildMissionCriticalItems(data: DashboardData): MissionCriticalItem[] {
         estimatesWaiting === 0
           ? "No sent estimates are waiting on customer approval."
           : `${estimatesWaiting} sent ${pluralize(estimatesWaiting, "estimate")} past the follow-up threshold.`,
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
       severity:
         estimatesWaiting >= 3 ? "critical" : estimatesWaiting > 0 ? "warning" : "healthy",
     });
@@ -444,7 +445,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       id: "new-estimate",
       label: "New Estimate",
       shortLabel: "Estimate",
-      href: "/estimates?create=1",
+      href: buildSalesHubHref("estimates", { create: "1" }),
       description: "Send a quote",
       icon: FileText,
     });
@@ -452,7 +453,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       id: "create-invoice",
       label: "Create Invoice",
       shortLabel: "Invoice",
-      href: "/invoices?create=1",
+      href: buildSalesHubHref("invoices", { create: "1" }),
       description: "Bill completed work",
       icon: Receipt,
     });

@@ -41,6 +41,7 @@ import {
   buildMissionControlContent,
   type MissionControlQuickAction,
 } from "@/shared/lib/dashboard-mission-control";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import { buildMissionControlV2ActivityRows } from "@/shared/lib/dashboard-mission-control-v2-activity";
 import { buildMissionControlV2BusinessHealthStats } from "@/shared/lib/dashboard-mission-control-v2-business-health";
 import { buildMissionControlV2GlanceStats } from "@/shared/lib/dashboard-mission-control-v2-glance";
@@ -305,7 +306,7 @@ const SAMPLE_QUICK_ACTIONS: MissionControlQuickAction[] = [
     id: "new-estimate",
     label: "New Estimate",
     shortLabel: "Estimate",
-    href: "/estimates?create=1",
+    href: buildSalesHubHref("estimates", { create: "1" }),
     description: "Send a quote",
     icon: FileText,
   },
@@ -313,7 +314,7 @@ const SAMPLE_QUICK_ACTIONS: MissionControlQuickAction[] = [
     id: "create-invoice",
     label: "Create Invoice",
     shortLabel: "Invoice",
-    href: "/invoices?create=1",
+    href: buildSalesHubHref("invoices", { create: "1" }),
     description: "Bill completed work",
     icon: Receipt,
   },

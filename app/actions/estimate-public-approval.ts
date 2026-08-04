@@ -46,6 +46,7 @@ export async function submitPublicEstimateApprovalAction(
 
   if (result.estimateId) {
     revalidatePath("/estimates");
+    revalidatePath("/sales");
     revalidatePath(`/estimates/${result.estimateId}`);
     revalidatePath("/dispatch");
     revalidatePath("/work");

@@ -3,9 +3,7 @@ import {
   BookOpen,
   Briefcase,
   Clock,
-  CreditCard,
   DollarSign,
-  FileText,
   LayoutDashboard,
   Network,
   Receipt,
@@ -43,16 +41,18 @@ export const colorLabNavGroups: ColorLabNavGroup[] = [
     items: [
       { label: "Work", href: "/work", icon: Briefcase },
       { label: "Dispatch", href: "/dispatch", icon: Truck },
-      { label: "Estimates", href: "/estimates", icon: FileText },
       { label: "Price Book", href: "/price-book", icon: BookOpen },
     ],
+  },
+  {
+    id: "sales",
+    label: "Sales",
+    items: [{ label: "Sales", href: "/sales", icon: Receipt }],
   },
   {
     id: "money",
     label: "Money",
     items: [
-      { label: "Invoices", href: "/invoices", icon: Receipt },
-      { label: "Payments", href: "/payments", icon: CreditCard },
       { label: "Expenses", href: "/expenses", icon: DollarSign },
       { label: "Labor & payroll", href: "/time", icon: Clock },
     ],

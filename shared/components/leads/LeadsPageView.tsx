@@ -31,6 +31,7 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
 import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type { LeadActivity } from "@/shared/types/lead-activity";
 import {
   formatLeadName,
@@ -256,12 +257,13 @@ export function LeadsPageView({
           );
         }
 
-        const params = new URLSearchParams({
-          customerId: result.customerId,
-          create: "1",
-          leadId: lead.id,
-        });
-        router.push(`/estimates?${params.toString()}`);
+        router.push(
+          buildSalesHubHref("estimates", {
+            customerId: result.customerId,
+            create: "1",
+            leadId: lead.id,
+          }),
+        );
       });
       return;
     }

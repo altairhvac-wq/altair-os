@@ -1,5 +1,6 @@
 import type { Estimate } from "@/shared/types/estimate";
 import type { JobStatus } from "@/shared/types/job";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export type AcceptedEstimateJobSchedulingContext = {
   status: JobStatus;
@@ -164,6 +165,6 @@ export function formatAcceptedEstimateSchedulingDescription(
   return `${count} accepted ${pluralize(count, "estimate")} need scheduling or conversion`;
 }
 
-export function formatAcceptedEstimateSchedulingListHref(count: number): string {
-  return count === 1 ? "/estimates?status=approved" : "/estimates?status=approved";
+export function formatAcceptedEstimateSchedulingListHref(_count: number): string {
+  return buildSalesHubHref("estimates", { status: "approved" });
 }

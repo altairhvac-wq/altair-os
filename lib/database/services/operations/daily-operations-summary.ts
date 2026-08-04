@@ -29,6 +29,7 @@ import type { Invoice } from "@/shared/types/invoice";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { TimeEntry } from "@/shared/types/time-entry";
 import type { CompanyOperationalDatasets } from "@/lib/database/services/operations/company-operational-datasets";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const REPORT_OPTIONS = { dateRange: "all" as const satisfies ProfitabilityReportDateRange };
 
@@ -221,7 +222,7 @@ function buildHighlights(input: {
       category: "revenue",
       count: input.todayPaymentCount,
       message: `${input.todayPaymentCount} ${pluralize(input.todayPaymentCount, "payment")} collected today.`,
-      href: "/invoices",
+      href: buildSalesHubHref("payments"),
     });
   }
 

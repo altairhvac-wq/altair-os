@@ -24,6 +24,7 @@ import {
   buildReportSectionMeta,
   formatCompletedWorkInvoiceStatus,
 } from "@/shared/types/reports";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 /** Days threshold for the existing queue "aging" group (non-critical, 7+ days). */
 export const OFFICE_REVIEW_QUEUE_AGING_DAYS = 7;
@@ -827,8 +828,8 @@ function buildCreateInvoiceAction(
     params.customerId = customerId;
   }
 
-  const href = safeBuildQueueActionHref("/invoices", params);
-  if (!href) {
+  const href = buildSalesHubHref("invoices", params);
+  if (!isValidQueueActionHref(href)) {
     return null;
   }
 
@@ -972,8 +973,8 @@ export function resolvePrimaryQueueAction(
     }
 
     if (kinds.includes("invoice_balance_mismatch")) {
-      const invoiceHref = safeBuildQueueActionHref("/invoices", { jobId });
-      if (invoiceHref) {
+      const invoiceHref = buildSalesHubHref("invoices", { jobId });
+      if (isValidQueueActionHref(invoiceHref)) {
         return {
           id: "open_job",
           label: "Review invoices",

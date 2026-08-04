@@ -5,6 +5,7 @@ import type {
   PriorityAction,
   TechnicianPresence,
 } from "@/shared/components/dashboard/north-star-v2/sample-data";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export type MissionInsight = {
   id: string;
@@ -114,14 +115,14 @@ export const missionControlSampleData: MissionControlSampleData = {
     {
       id: "overdue",
       label: "Collect overdue invoices",
-      href: "/invoices?status=overdue",
+      href: buildSalesHubHref("invoices", { status: "overdue" }),
       leverage: "primary",
       metric: "$3,840 · 3 accounts past due",
     },
     {
       id: "ready-invoice",
       label: "Invoice completed jobs",
-      href: "/invoices?status=ready",
+      href: buildSalesHubHref("invoices", { status: "ready" }),
       leverage: "secondary",
       metric: "$4,200 · Miller, Parkview, Chen",
     },
@@ -135,7 +136,7 @@ export const missionControlSampleData: MissionControlSampleData = {
     {
       id: "estimates",
       label: "Revive quiet quotes",
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
       leverage: "tertiary",
       metric: "$6,400 · 3 HVAC estimates",
     },
@@ -146,7 +147,7 @@ export const missionControlSampleData: MissionControlSampleData = {
     detail:
       "Miller Home closed this morning — that's $640 ready to invoice. 3 overdue accounts are slowing the pipeline. Clear AR first, then send ready invoices before crew dispatch.",
     action: "Open billing queue",
-    href: "/invoices",
+    href: buildSalesHubHref("invoices"),
     confidence: "high",
   },
   actionQueue: [

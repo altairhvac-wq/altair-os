@@ -74,6 +74,8 @@ export async function recordInvoicePaymentAction(
   }
 
   revalidateInvoiceOperationalPages(invoiceId);
+  revalidatePath("/payments");
+  revalidatePath("/sales");
   revalidatePath("/reports");
   revalidatePath("/customers");
   revalidatePath(`/customers/${invoice.customerId}`);

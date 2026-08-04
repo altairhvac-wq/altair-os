@@ -23,6 +23,7 @@ import {
   type CompletedWorkReviewSeverity,
 } from "@/shared/types/reports";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export type JobReviewChecklistItemId =
   | "invoice_exists"
@@ -233,7 +234,7 @@ function buildOfficeReviewActions(
     invoiceActions.push({
       id: "create_invoice",
       label: "Create invoice",
-      href: safeBuildQueueActionHref("/invoices", invoiceParams) ?? "",
+      href: buildSalesHubHref("invoices", invoiceParams),
       external: true,
     });
   } else if (activeInvoice) {

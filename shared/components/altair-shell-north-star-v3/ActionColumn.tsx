@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Clock, FileText, Inbox } from "lucide-react";
 import type { ActionQueueItem, OfficeQueueItem } from "./sample-data";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   v3ColumnHeaderClass,
   v3ColumnRailClass,
@@ -53,7 +54,10 @@ export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
             <h3 className={`mt-1 ${v3WorkspaceSubheadingClass}`}>Blockers on jobs & billing</h3>
             <p className="text-xs text-[rgba(41,34,24,0.65)]">Clear these to protect schedule and cash</p>
           </div>
-          <Link href="/invoices?status=overdue" className={`shrink-0 ${v3LinkClass}`}>
+          <Link
+            href={buildSalesHubHref("invoices", { status: "overdue" })}
+            className={`shrink-0 ${v3LinkClass}`}
+          >
             View all
           </Link>
         </div>
@@ -64,7 +68,7 @@ export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
           const style = urgencyStyles[item.urgency];
           return (
             <li key={item.id}>
-              <Link href="/invoices" className={`group block ${v3RowClass}`}>
+              <Link href={buildSalesHubHref("invoices")} className={`group block ${v3RowClass}`}>
                 <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

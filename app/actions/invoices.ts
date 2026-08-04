@@ -203,6 +203,7 @@ export async function createInvoiceAction(
         }),
       ]);
       revalidatePath("/estimates");
+      revalidatePath("/sales");
       revalidatePath(`/estimates/${linkedEstimateId}`);
     } else {
       console.error(
@@ -234,6 +235,7 @@ export async function createInvoiceAction(
   }
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath(`/invoices/${invoice.id}`);
   if (invoice.jobId) {
     revalidatePath(`/work/${invoice.jobId}`);
@@ -335,6 +337,7 @@ export async function convertEstimateToInvoiceAction(
 
   revalidatePath("/invoices");
   revalidatePath("/estimates");
+  revalidatePath("/sales");
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath(`/invoices/${invoice.id}`);
   if (invoice.jobId) {
@@ -516,6 +519,7 @@ export async function sendInvoiceAction(
   });
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath(`/customers/${invoice.customerId}`);
 
@@ -615,6 +619,7 @@ export async function batchSendInvoicesAction(
   }
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
 
   return {
     results,
@@ -747,6 +752,7 @@ export async function resendInvoiceEmailAction(
   });
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath(`/customers/${currentInvoice.customerId}`);
 
@@ -804,6 +810,7 @@ export async function voidInvoiceAction(
   });
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath(`/customers/${invoice.customerId}`);
 
@@ -857,6 +864,7 @@ export async function updateInvoiceAction(
   });
 
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath(`/customers/${invoice.customerId}`);
 

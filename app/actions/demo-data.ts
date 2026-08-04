@@ -105,6 +105,7 @@ export async function seedDemoDataAction(
   revalidatePath("/dispatch");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath("/reports");
   revalidatePath("/time");
   revalidatePath("/technician");
@@ -141,6 +142,7 @@ export async function clearDemoDataAction(
   revalidatePath("/dispatch");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
+  revalidatePath("/sales");
   revalidatePath("/reports");
   revalidatePath("/time");
   revalidatePath("/technician");

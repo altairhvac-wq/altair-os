@@ -233,6 +233,7 @@ export async function updateJobStatusAction(
         autoInvoiceResult.outcome === "already_exists"
       ) {
         revalidatePath("/invoices");
+        revalidatePath("/sales");
         if (autoInvoiceResult.invoiceId) {
           revalidatePath(`/invoices/${autoInvoiceResult.invoiceId}`);
         }

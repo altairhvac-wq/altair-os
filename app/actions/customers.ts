@@ -60,6 +60,7 @@ function revalidateCustomerPaths(customerId?: string) {
   revalidatePath("/work");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
+  revalidatePath("/sales");
 
   if (customerId) {
     revalidatePath(`/customers/${customerId}`);

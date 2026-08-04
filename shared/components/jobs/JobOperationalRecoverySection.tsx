@@ -9,6 +9,7 @@ import {
   isValidQueueActionHref,
   safeBuildQueueActionHref,
 } from "@/shared/types/office-review-queue";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 type JobOperationalRecoverySectionProps = {
   jobId: string;
@@ -31,7 +32,7 @@ function resolveRecoveryHref(
     case "invoice_balance_mismatch":
       return entry.invoiceId
         ? safeBuildQueueActionHref(`/invoices/${encodeURIComponent(entry.invoiceId)}`)
-        : safeBuildQueueActionHref("/invoices", { jobId });
+        : buildSalesHubHref("invoices", { jobId });
     default:
       return safeBuildQueueActionHref(`/work/${encodeURIComponent(jobId)}`);
   }
@@ -80,7 +81,8 @@ export function JobOperationalRecoverySection({
                 href != null &&
                 (href.startsWith("/dispatch") ||
                   href.startsWith("/time") ||
-                  href.startsWith("/invoices"));
+                  href.startsWith("/invoices") ||
+                  href.startsWith("/sales"));
 
               return (
                 <li

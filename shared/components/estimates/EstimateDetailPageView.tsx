@@ -41,6 +41,7 @@ import {
   masterDetailOverlayBodyInsetClass,
 } from "@/shared/design-system/shell";
 import { northStarEstimateDocumentTokens as edt } from "@/shared/design-system/north-star/tokens";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
@@ -121,7 +122,7 @@ function NorthStarEstimateDetailPageView({
   const pageBackLink = (
     <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Link
-        href="/estimates"
+        href={buildSalesHubHref("estimates")}
         className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
       >
         <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
@@ -198,7 +199,7 @@ function LegacyEstimateDetailPageView({
   const pageBackLink = (
     <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Link
-        href="/estimates"
+        href={buildSalesHubHref("estimates")}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4 shrink-0" />

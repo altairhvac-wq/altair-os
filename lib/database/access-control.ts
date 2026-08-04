@@ -408,6 +408,7 @@ export type AdminNavHref =
   | "/marketing"
   | "/work"
   | "/jobs"
+  | "/sales"
   | "/estimates"
   | "/price-book"
   | "/invoices"
@@ -430,6 +431,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/marketing",
   "/work",
   "/jobs",
+  "/sales",
   "/estimates",
   "/price-book",
   "/invoices",
@@ -472,6 +474,7 @@ export function canAccessAdminNavItem(
       return access.canManageCustomers;
     case "/marketing":
       return permissions.dispatchJobs;
+    case "/sales":
     case "/estimates":
     case "/price-book":
     case "/invoices":
@@ -517,6 +520,10 @@ export function getAccessibleAdminNavHrefs(
     "/work",
     // /jobs remains a valid AdminNavHref for redirects/deep links, but is no
     // longer a standalone sidebar entry — the Jobs list lives under Work.
+    "/sales",
+    // /estimates, /invoices, and /payments remain valid AdminNavHrefs for
+    // redirects/deep links, but are no longer standalone sidebar entries —
+    // those lists live under Sales.
     "/estimates",
     "/price-book",
     "/invoices",
@@ -629,6 +636,7 @@ export function canAccessAppRedirectPath(
   }
 
   if (
+    path.startsWith("/sales") ||
     path.startsWith("/estimates") ||
     path.startsWith("/price-book") ||
     path.startsWith("/invoices") ||

@@ -47,6 +47,7 @@ import {
   northStarDetailTokens as dt,
   northStarInvoiceDocumentTokens as idt,
 } from "@/shared/design-system/north-star/tokens";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
@@ -138,7 +139,7 @@ function NorthStarInvoiceDetailPageView({
 
   const pageBackLink = (
     <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <Link href="/invoices" className={dt.backLink}>
+      <Link href={buildSalesHubHref("invoices")} className={dt.backLink}>
         <ArrowLeft className="h-4 w-4 shrink-0" />
         Back to invoices
       </Link>
@@ -211,7 +212,7 @@ function LegacyInvoiceDetailPageView({
   const pageBackLink = (
     <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Link
-        href="/invoices"
+        href={buildSalesHubHref("invoices")}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4 shrink-0" />

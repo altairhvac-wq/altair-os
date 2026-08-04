@@ -8,6 +8,7 @@ import type {
   PriorityAction,
   TechnicianPresence,
 } from "@/shared/components/dashboard/north-star-v2/sample-data";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export type OperationalHealthMetric = {
   id: string;
@@ -117,14 +118,14 @@ export const shellNorthStarSampleData: ShellNorthStarSampleData = {
     {
       id: "overdue",
       label: "Review overdue invoices",
-      href: "/invoices?status=overdue",
+      href: buildSalesHubHref("invoices", { status: "overdue" }),
       leverage: "primary",
       metric: "$3,840 · 3 past due",
     },
     {
       id: "ready-invoice",
       label: "Send ready invoices",
-      href: "/invoices?status=ready",
+      href: buildSalesHubHref("invoices", { status: "ready" }),
       leverage: "secondary",
       metric: "$4,200 · 3 jobs",
     },
@@ -138,7 +139,7 @@ export const shellNorthStarSampleData: ShellNorthStarSampleData = {
     {
       id: "estimates",
       label: "Follow up estimates",
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
       leverage: "tertiary",
       metric: "$6,400 · 3 quotes",
     },
@@ -405,7 +406,7 @@ export const shellNorthStarSampleData: ShellNorthStarSampleData = {
       id: "rec-1",
       title: "Send 3 ready invoices before noon",
       detail: "$4,200 in billing waiting · highest leverage",
-      href: "/invoices?status=ready",
+      href: buildSalesHubHref("invoices", { status: "ready" }),
       priority: "high",
     },
     {
@@ -426,7 +427,7 @@ export const shellNorthStarSampleData: ShellNorthStarSampleData = {
       id: "rec-4",
       title: "Follow up Parkview HOA estimate",
       detail: "Viewed but no response · 3 days",
-      href: "/estimates",
+      href: buildSalesHubHref("estimates"),
       priority: "medium",
     },
   ],

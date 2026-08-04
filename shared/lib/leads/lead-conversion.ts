@@ -1,5 +1,6 @@
 import type { CustomerFormData } from "@/shared/types/customer";
 import { formatLeadName, isLeadClosed, type Lead } from "@/shared/types/lead";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 export function buildCustomerFormDataFromLead(lead: Lead): CustomerFormData {
   const name =
@@ -44,13 +45,11 @@ export function getLeadEstimateHref(lead: Lead): string | null {
     return null;
   }
 
-  const params = new URLSearchParams({
+  return buildSalesHubHref("estimates", {
     customerId: lead.convertedCustomerId,
     create: "1",
     leadId: lead.id,
   });
-
-  return `/estimates?${params.toString()}`;
 }
 
 export function summarizeLeadForConversion(lead: Lead): string {

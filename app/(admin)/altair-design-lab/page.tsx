@@ -17,6 +17,7 @@ import {
   Textarea,
   WorkspaceSection,
 } from "@/shared/design-system/components";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 type LabSectionProps = {
   name: string;
@@ -120,7 +121,7 @@ export default function AltairDesignLabPage() {
               title="3 invoices are overdue."
               description="Customers have not responded to payment reminders sent last week."
               meta="Oldest: 12 days past due"
-              action={{ label: "Review invoices", href: "/invoices?status=overdue" }}
+              action={{ label: "Review invoices", href: buildSalesHubHref("invoices", { status: "overdue" }) }}
             />
             <PriorityCard
               eyebrow="Estimates"
@@ -128,7 +129,7 @@ export default function AltairDesignLabPage() {
               title="Estimate follow-up due on 3 quotes."
               description="Sent estimates with no response in over 7 days — a brief check-in often moves quotes forward."
               meta="$6,400 awaiting response"
-              action={{ label: "Review estimates", href: "/estimates?status=sent" }}
+              action={{ label: "Review estimates", href: buildSalesHubHref("estimates", { status: "sent" }) }}
             />
           </div>
         </WorkspaceSection>
@@ -220,7 +221,7 @@ export default function AltairDesignLabPage() {
               title="Estimate follow-ups could recover stalled revenue."
               insight="Three sent estimates have had no response in over a week."
               recommendation="A brief check-in with these customers often moves stalled quotes forward."
-              action={{ label: "Review estimates", href: "/estimates?status=sent" }}
+              action={{ label: "Review estimates", href: buildSalesHubHref("estimates", { status: "sent" }) }}
             />
             <InsightCard
               eyebrow="Technician performance"
@@ -245,7 +246,7 @@ export default function AltairDesignLabPage() {
             title="Send 2 draft invoices before end of day."
             description="Completed jobs are waiting for office review and billing."
             meta="Oldest draft: 3 days"
-            action={{ label: "Review drafts", href: "/invoices?status=draft" }}
+            action={{ label: "Review drafts", href: buildSalesHubHref("invoices", { status: "draft" }) }}
           />
           <ActionCard
             eyebrow="Dispatch"

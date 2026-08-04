@@ -1,5 +1,6 @@
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { canAccessAppRedirectPath } from "@/lib/database/access-control";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type {
   OnboardingChecklist,
   OnboardingChecklistItem,
@@ -88,7 +89,7 @@ export function buildOnboardingChecklist(
       title: "Create your first invoice",
       description:
         "Send an estimate, turn it into an invoice, and record a payment.",
-      href: "/invoices",
+      href: buildSalesHubHref("invoices"),
       completed: snapshot.estimateCount > 0 && snapshot.invoiceCount > 0,
       optional: true,
       tip: "Open any job to create an estimate, then invoice when ready.",

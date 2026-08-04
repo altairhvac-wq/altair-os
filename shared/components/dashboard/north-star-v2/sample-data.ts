@@ -1,3 +1,5 @@
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
+
 export type OperatingSignal = {
   label: string;
   value: string;
@@ -107,14 +109,14 @@ export const northStarV2SampleData: NorthStarV2SampleData = {
     {
       id: "overdue",
       label: "Review overdue invoices",
-      href: "/invoices?status=overdue",
+      href: buildSalesHubHref("invoices", { status: "overdue" }),
       leverage: "primary",
       metric: "$3,840 · 3 past due",
     },
     {
       id: "ready-invoice",
       label: "Send ready invoices",
-      href: "/invoices?status=ready",
+      href: buildSalesHubHref("invoices", { status: "ready" }),
       leverage: "secondary",
       metric: "$4,200 · 3 jobs",
     },
@@ -128,7 +130,7 @@ export const northStarV2SampleData: NorthStarV2SampleData = {
     {
       id: "estimates",
       label: "Follow up estimates",
-      href: "/estimates?status=sent",
+      href: buildSalesHubHref("estimates", { status: "sent" }),
       leverage: "tertiary",
       metric: "$6,400 · 3 quotes",
     },

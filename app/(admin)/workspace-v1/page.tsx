@@ -8,6 +8,7 @@ import {
 import { AtmosphereBackground } from "@/shared/design-system/signature/AtmosphereBackground";
 import { HorizonDivider } from "@/shared/design-system/signature/HorizonDivider";
 import { MomentumStrip } from "@/shared/design-system/signature/MomentumStrip";
+import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 
 const softCard =
   "border-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.03)]";
@@ -44,8 +45,8 @@ const continueWorking = [
 ];
 
 const needsAttention = [
-  { label: "2 overdue invoices", tone: "danger" as const, href: "/invoices?status=overdue" },
-  { label: "3 stale estimates", tone: "warning" as const, href: "/estimates?status=stale" },
+  { label: "2 overdue invoices", tone: "danger" as const, href: buildSalesHubHref("invoices", { status: "overdue" }) },
+  { label: "3 stale estimates", tone: "warning" as const, href: buildSalesHubHref("estimates", { status: "stale" }) },
   { label: "1 unscheduled job", tone: "info" as const, href: "/work?status=unscheduled" },
 ];
 
@@ -53,8 +54,7 @@ const quickAccess = [
   { label: "Customers", href: "/customers" },
   { label: "Jobs", href: "/work" },
   { label: "Lead Pipeline", href: "/customers?tab=pipeline" },
-  { label: "Invoices", href: "/invoices" },
-  { label: "Estimates", href: "/estimates" },
+  { label: "Sales", href: buildSalesHubHref("estimates") },
   { label: "Expenses", href: "/expenses" },
 ];
 

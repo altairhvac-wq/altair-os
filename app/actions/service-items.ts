@@ -20,6 +20,7 @@ export type ServiceItemActionResult = {
 function revalidateServiceItemPaths() {
   revalidatePath("/price-book");
   revalidatePath("/estimates");
+  revalidatePath("/sales");
 }
 
 export async function createServiceItemAction(
