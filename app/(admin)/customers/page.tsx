@@ -103,7 +103,12 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       initialCreateLead={params.create === "1" && activeTab === "pipeline"}
       initialLeadStatusFilter={params.status}
       initialLeadFollowUpDue={params.filter === "follow_up_due"}
-      initialLeadListFilter={params.queue}
+      initialLeadListFilter={
+        activeTab === "pipeline" ? params.queue : undefined
+      }
+      initialCustomerWorkQueue={
+        activeTab === "customers" ? params.queue : undefined
+      }
     />
   );
 }

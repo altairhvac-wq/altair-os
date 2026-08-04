@@ -1,7 +1,5 @@
-import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import {
   MissionControlV2View,
-  type MissionControlV2KpiCard,
 } from "@/shared/components/dashboard/mission-control-v2";
 import {
   MasterPageCanvas,
@@ -16,10 +14,7 @@ type OperationalDashboardViewProps = {
   userDisplayName: string;
   onboardingChecklist?: OnboardingChecklist;
   demoDataStatus?: DemoDataStatus | null;
-  companyName?: string;
   companyTimeZone?: string;
-  billingAccess?: CompanyBillingAccess;
-  kpiCards?: MissionControlV2KpiCard[];
 };
 
 export function OperationalDashboardView({
@@ -27,23 +22,17 @@ export function OperationalDashboardView({
   userDisplayName,
   onboardingChecklist,
   demoDataStatus,
-  companyName,
   companyTimeZone,
-  billingAccess,
-  kpiCards,
 }: OperationalDashboardViewProps) {
   return (
-    <MasterShellPage density="compact">
+    <MasterShellPage density="compact" stackGapClassName="gap-0">
       <MasterPageCanvas width="wide">
         <MissionControlV2View
           data={data}
           userDisplayName={userDisplayName}
           onboardingChecklist={onboardingChecklist}
           demoDataStatus={demoDataStatus}
-          companyName={companyName}
           companyTimeZone={companyTimeZone}
-          billingAccess={billingAccess}
-          kpiCards={kpiCards}
         />
       </MasterPageCanvas>
     </MasterShellPage>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Clock3, History } from "lucide-react";
 import {
   clockInAction,
@@ -99,6 +100,8 @@ export function TimeClockFoundationView({
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionError, setCorrectionError] = useState<string | null>(null);
   const shiftHistoryHeadingRef = useRef<HTMLHeadingElement>(null);
+  const searchParams = useSearchParams();
+  const focusEntryId = searchParams.get("entry");
 
   useEffect(() => {
     // Server actions can refresh route props without remounting this client view.
@@ -107,6 +110,13 @@ export function TimeClockFoundationView({
     setEntries(initialEntries);
     setActiveEntries(initialActiveEntries);
   }, [initialActiveEntries, initialEntries, initialOpenEntry]);
+
+  useEffect(() => {
+    if (!focusEntryId) return;
+    const node = document.getElementById(`time-entry-${focusEntryId}`);
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusEntryId, entries]);
 
   useEffect(() => {
     if (!entries.some((entry) => entry.status === "open")) {
@@ -350,8 +360,18 @@ export function TimeClockFoundationView({
                 const showCorrect = canCorrectEntry(entry);
                 const stale = isStaleOpenShift(entry.clockInAt, now);
 
+                const isFocused = focusEntryId === entry.id;
+
                 return (
-                  <li key={entry.id} className={altairMcListRowClass}>
+                  <li
+                    id={`time-entry-${entry.id}`}
+                    key={entry.id}
+                    className={`${altairMcListRowClass} scroll-mt-24 ${
+                      isFocused
+                        ? "bg-altair-brass/10 ring-2 ring-inset ring-altair-brass/40"
+                        : ""
+                    }`}
+                  >
                     <div className="grid gap-2 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] md:items-center md:gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-altair-ink-on-paper">

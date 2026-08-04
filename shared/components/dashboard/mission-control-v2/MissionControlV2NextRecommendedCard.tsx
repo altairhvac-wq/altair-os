@@ -19,7 +19,7 @@ import { missionControlV2SampleData } from "./sample-data";
 function NextRecommendedCaughtUp() {
   return (
     <div
-      className={`flex flex-1 flex-col rounded-lg border ${altairMcCardPadClass} ${altairSemanticSurfaceClass.success}`}
+      className={`h-auto rounded-none border border-[var(--north-star-border)] ${altairMcCardPadClass} ${altairSemanticSurfaceClass.success}`}
     >
       <div className="flex items-start gap-3">
         <CheckCircle2
@@ -49,9 +49,9 @@ export function MissionControlV2NextRecommendedCard({
 
   if (!checklist) {
     return (
-      <section className="flex h-full min-w-0 flex-col gap-3">
+      <section className="flex h-auto min-w-0 flex-col gap-3 self-start">
         <SectionHeader title="Next recommended" />
-        <div className={`flex flex-1 flex-col ${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className={`h-auto ${altairMcCardClass} ${altairMcCardPadClass}`}>
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-altair-brass/15 text-altair-brass">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -78,12 +78,12 @@ export function MissionControlV2NextRecommendedCard({
   const progressPercent = getOnboardingProgressPercent(checklist);
 
   return (
-    <section className="flex h-full min-w-0 flex-col gap-3">
+    <section className="flex h-auto min-w-0 flex-col gap-3 self-start">
       <SectionHeader title="Next recommended" />
       {showCaughtUp ? (
         <NextRecommendedCaughtUp />
       ) : (
-        <div className={`flex flex-1 flex-col ${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className={`h-auto ${altairMcCardClass} ${altairMcCardPadClass}`}>
           <Link
             href={nextStep.href}
             className="flex items-start gap-3 rounded-md transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"

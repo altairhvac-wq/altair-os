@@ -17,6 +17,13 @@ export const CUSTOMERS_HUB_TAB_LABELS: Record<CustomersHubTabId, string> = {
   archived: "Archived",
 };
 
+/** Book queues that can be deep-linked via ?queue= (excludes Past). */
+const CUSTOMERS_BOOK_QUEUE_PARAMS = new Set([
+  "active",
+  "needs-info",
+  "inactive",
+]);
+
 export function isCustomersHubTabId(value: string): value is CustomersHubTabId {
   return (CUSTOMERS_HUB_TAB_IDS as readonly string[]).includes(value);
 }
@@ -49,6 +56,21 @@ export function buildLeadPipelineHref(
   }
 
   return `/customers?${search.toString()}`;
+}
+
+/** Canonical Customers book deep-link (optional work-queue filter). */
+export function buildCustomersBookHref(params?: {
+  queue?: string | null;
+}): string {
+  const search = new URLSearchParams();
+  const queue = params?.queue;
+
+  if (queue && CUSTOMERS_BOOK_QUEUE_PARAMS.has(queue)) {
+    search.set("queue", queue);
+  }
+
+  const query = search.toString();
+  return query ? `/customers?${query}` : "/customers";
 }
 
 /** Map legacy `/leads` query params onto the Customers hub pipeline tab. */

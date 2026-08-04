@@ -1,50 +1,39 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
-  Bell,
+  AlertTriangle,
   Briefcase,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   CreditCard,
   FileText,
   History,
-  Plus,
   Receipt,
-  Rocket,
-  Search,
-  UserPlus,
   Users,
   type LucideIcon,
 } from "lucide-react";
-import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
-import { KpiSparkline } from "@/shared/components/charts/KpiSparkline";
 import { JobScheduleRow } from "@/shared/components/jobs/JobScheduleRow";
 import {
   SectionHeader,
-  altairMcCardClass,
   altairMcCardPadClass,
   altairMcGridGapClass,
   altairMcListClass,
   altairMcListRowClass,
-  altairMcMetricLabelClass,
-  altairMcMetricValueClass,
-  altairMcTileClass,
 } from "@/shared/design-system/components";
 import {
-  altairCanvasInkClass,
   altairCanvasInkLinkClass,
   altairCanvasInkMutedClass,
-  altairCanvasInkSecondaryClass,
   altairSemanticIndicatorClass,
   altairSemanticSurfaceClass,
+  altairSemanticValueClass,
 } from "@/shared/design-system/foundation";
 import {
-  buildMissionControlContent,
-  type MissionControlQuickAction,
-} from "@/shared/lib/dashboard-mission-control";
-import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
+  buildDashboardExceptionBuckets,
+  type DashboardExceptionBucket,
+} from "@/shared/lib/dashboard-exception-board";
 import { buildMissionControlV2ActivityRows } from "@/shared/lib/dashboard-mission-control-v2-activity";
-import { buildMissionControlV2BusinessHealthStats } from "@/shared/lib/dashboard-mission-control-v2-business-health";
-import { buildMissionControlV2GlanceStats } from "@/shared/lib/dashboard-mission-control-v2-glance";
 import {
   buildMissionControlV2ScheduleRows,
   MISSION_CONTROL_V2_SCHEDULE_FULL_HREF,
@@ -53,53 +42,24 @@ import {
 import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
-import { getTeamMemberInitials } from "@/shared/types/team-member";
 import { MissionControlV2NextRecommendedCard } from "./MissionControlV2NextRecommendedCard";
 import {
   missionControlV2SampleData,
   type MissionControlV2ActivityRow,
-  type MissionControlV2GlanceStat,
-  type MissionControlV2KpiCard,
   type MissionControlV2ScheduleRow,
 } from "./sample-data";
-import {
-  getMissionControlUpgradeCardModel,
-  type MissionControlUpgradeCardModel,
-} from "./upgrade-card-model";
 
 export type MissionControlV2ViewProps = {
   /** Live dashboard payload — when set, section mappers run unless overridden. */
   data?: DashboardData;
   userDisplayName?: string;
   demoDataStatus?: DemoDataStatus | null;
-  /** Company display name for the greeting; falls back to the user first name. */
-  companyName?: string;
   companyTimeZone?: string;
-  /**
-   * Real "Today at a glance" stats from getDashboardData.
-   * When omitted with live `data`, built from the mapper; else sample placeholders.
-   */
-  glanceStats?: MissionControlV2GlanceStat[];
-  /**
-   * Real "Business health" stats from getDashboardData / cash-flow cards.
-   * When omitted with live `data`, built from the mapper; else sample placeholders.
-   */
-  businessHealthStats?: MissionControlV2GlanceStat[];
-  /**
-   * Primary create shortcuts from buildMissionControlContent (same as legacy MC).
-   * When omitted with live `data`, built from content; else sample placeholders.
-   */
-  primaryQuickActions?: MissionControlQuickAction[];
   /**
    * Onboarding checklist for "Next recommended" (same source as DashboardActivationHero).
    * When omitted, sample placeholders are used for layout review.
    */
   onboardingChecklist?: OnboardingChecklist;
-  /**
-   * Same CompanyBillingAccess the shell subscription banner uses.
-   * When omitted, the Upgrade card falls back to sample placeholder copy.
-   */
-  billingAccess?: CompanyBillingAccess;
   /**
    * Real "Today's schedule" rows from getDashboardData operations.todayJobs.
    * When omitted with live `data`, built from the mapper; else sample placeholders.
@@ -110,161 +70,12 @@ export type MissionControlV2ViewProps = {
    * When omitted with live `data`, built from the mapper; else sample placeholders.
    */
   activityRows?: MissionControlV2ActivityRow[];
-  /**
-   * Real bottom KPI strip (jobs completed, avg. ticket, estimate close rate).
-   * When omitted, sample placeholders are used for layout review.
-   */
-  kpiCards?: MissionControlV2KpiCard[];
 };
 
-function getTimeOfDayGreeting(reference = new Date()): string {
-  const hour = reference.getHours();
-  if (hour < 12) {
-    return "Good morning";
-  }
-  if (hour < 17) {
-    return "Good afternoon";
-  }
-  return "Good evening";
-}
-
-function getGreetingName(
-  companyName: string | undefined,
-  userDisplayName: string | undefined,
-): string {
-  const company = companyName?.trim();
-  if (company) {
-    return company;
-  }
-
-  const trimmed = userDisplayName?.trim();
-  if (!trimmed) {
-    return "there";
-  }
-
-  const first = trimmed.split(/\s+/)[0] ?? trimmed;
-  return first.charAt(0).toUpperCase() + first.slice(1);
-}
-
-function formatDateLabel(reference = new Date()): string {
-  return reference.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function TopBar({
-  greeting,
-  dateLabel,
-  userName,
-  userInitials,
-  notificationCount,
-}: {
-  greeting: string;
-  dateLabel: string;
-  userName: string;
-  userInitials: string;
-  notificationCount: number;
-}) {
-  return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-      <div className="min-w-0">
-        <h1
-          className={`text-2xl font-bold tracking-tight sm:text-3xl ${altairCanvasInkClass}`}
-        >
-          {greeting}
-        </h1>
-        <p className={`mt-1 text-sm ${altairCanvasInkMutedClass}`}>{dateLabel}</p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-2.5">
-        <label className="relative min-w-0 flex-1 sm:w-56 sm:flex-none">
-          <span className="sr-only">Search</span>
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-altair-ink-on-paper-muted"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            placeholder="Search…"
-            readOnly
-            className="h-10 w-full rounded-lg border border-altair-border bg-altair-paper py-2 pl-9 pr-10 text-sm text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-          />
-          <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-altair-border bg-altair-paper-subtle px-1.5 py-0.5 text-[10px] font-medium text-altair-ink-on-paper-muted sm:inline">
-            /
-          </kbd>
-        </label>
-
-        <button
-          type="button"
-          aria-label="Quick create"
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-altair-brass text-altair-graphite transition hover:bg-altair-brass-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/50"
-        >
-          <Plus className="h-5 w-5" aria-hidden="true" />
-        </button>
-
-        <button
-          type="button"
-          aria-label={
-            notificationCount > 0
-              ? `Notifications, ${notificationCount} unread`
-              : "Notifications"
-          }
-          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-altair-border bg-altair-paper text-altair-ink-on-paper-secondary transition hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-          {notificationCount > 0 ? (
-            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-altair-danger px-1 text-[10px] font-bold leading-none text-altair-paper">
-              {notificationCount}
-            </span>
-          ) : null}
-        </button>
-
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-altair-border bg-altair-paper py-1.5 pl-1.5 pr-2.5 text-altair-ink-on-paper transition hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-          aria-haspopup="menu"
-          aria-label={`Account menu for ${userName}`}
-        >
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-altair-graphite text-[10px] font-semibold text-altair-paper">
-            {userInitials}
-          </span>
-          <span className="hidden max-w-[8rem] truncate text-sm font-medium sm:inline">
-            {userName}
-          </span>
-          <ChevronDown
-            className="hidden h-4 w-4 text-altair-ink-on-paper-muted sm:block"
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-    </header>
-  );
-}
-
-function StatGrid({ stats }: { stats: MissionControlV2GlanceStat[] }) {
-  return (
-    <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        {stats.map((stat) => (
-          <div key={stat.id} className="min-w-0">
-            <p className={altairMcMetricLabelClass}>{stat.label}</p>
-            <p className={altairMcMetricValueClass}>{stat.value}</p>
-            <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-altair-ink-on-paper-muted">
-              {stat.detail}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function NeedsAttentionClear() {
+function ExceptionBoardClear() {
   return (
     <div
-      className={`rounded-lg border ${altairMcCardPadClass} ${altairSemanticSurfaceClass.success}`}
+      className={`rounded-none border border-[var(--north-star-border)] ${altairMcCardPadClass} ${altairSemanticSurfaceClass.success}`}
     >
       <div className="flex items-start gap-3">
         <CheckCircle2
@@ -276,7 +87,8 @@ function NeedsAttentionClear() {
             Everything is running smoothly
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-altair-success-foreground/80">
-            No overdue jobs, billing gaps, or dispatch pressure detected.
+            No payments, invoices, dispatch, estimates, leads, team, or
+            customers need attention right now.
           </p>
         </div>
       </div>
@@ -284,129 +96,242 @@ function NeedsAttentionClear() {
   );
 }
 
-/** Layout-only fallback when primaryQuickActions is not passed. */
-const SAMPLE_QUICK_ACTIONS: MissionControlQuickAction[] = [
-  {
-    id: "new-customer",
-    label: "New Customer",
-    shortLabel: "Customer",
-    href: "/customers",
-    description: "Add a customer profile",
-    icon: UserPlus,
-  },
-  {
-    id: "new-job",
-    label: "New Job",
-    shortLabel: "Job",
-    href: "/work?create=1",
-    description: "Schedule field work",
-    icon: Briefcase,
-  },
-  {
-    id: "new-estimate",
-    label: "New Estimate",
-    shortLabel: "Estimate",
-    href: buildSalesHubHref("estimates", { create: "1" }),
-    description: "Send a quote",
-    icon: FileText,
-  },
-  {
-    id: "create-invoice",
-    label: "Create Invoice",
-    shortLabel: "Invoice",
-    href: buildSalesHubHref("invoices", { create: "1" }),
-    description: "Bill completed work",
-    icon: Receipt,
-  },
-];
+function ExceptionBucketCard({ bucket }: { bucket: DashboardExceptionBucket }) {
+  const surfaceClass = altairSemanticSurfaceClass[bucket.tone];
+  const valueClass = altairSemanticValueClass[bucket.tone];
+  const hasItems = bucket.items.length > 0;
 
-function QuickActionsCard({
-  actions,
-}: {
-  actions: MissionControlQuickAction[];
-}) {
-  return (
-    <section className="flex h-full min-w-0 flex-col gap-3">
-      <SectionHeader title="Quick actions" />
-      <div className={`flex flex-1 flex-col ${altairMcCardClass} ${altairMcCardPadClass}`}>
-        {actions.length > 0 ? (
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="Quick actions"
+  const header = (
+    <div className="flex items-start gap-3">
+      <AlertTriangle
+        className={`mt-0.5 h-4 w-4 shrink-0 ${valueClass}`}
+        aria-hidden="true"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <p className={`text-sm font-semibold ${valueClass}`}>{bucket.title}</p>
+          <p
+            className={`text-lg font-black leading-none tabular-nums ${valueClass}`}
           >
-            {actions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.id}
-                  href={action.href}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:bg-altair-brass/10 hover:text-altair-ink-on-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-                >
-                  <Icon
-                    className="h-3.5 w-3.5 text-altair-brass"
-                    aria-hidden="true"
-                  />
-                  <span>+ {action.shortLabel ?? action.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-xs leading-relaxed text-altair-ink-on-paper-muted">
-            No create actions available for your role.
+            {bucket.count}
           </p>
+        </div>
+        <p className={`mt-0.5 text-xs leading-relaxed opacity-80 ${valueClass}`}>
+          {bucket.detail}
+        </p>
+      </div>
+      {hasItems ? (
+        <ChevronDown
+          className={`mt-0.5 h-4 w-4 shrink-0 opacity-70 transition-transform group-open:rotate-180 ${valueClass}`}
+          aria-hidden="true"
+        />
+      ) : (
+        <ChevronRight
+          className={`mt-0.5 h-4 w-4 shrink-0 opacity-70 ${valueClass}`}
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+
+  if (!hasItems) {
+    return (
+      <Link
+        href={bucket.href}
+        className={`block rounded-none border border-[var(--north-star-border)] ${altairMcCardPadClass} ${surfaceClass} transition-colors hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+      >
+        {header}
+      </Link>
+    );
+  }
+
+  return (
+    <details
+      className={`group rounded-none border border-[var(--north-star-border)] ${surfaceClass}`}
+    >
+      <summary
+        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+      >
+        {header}
+      </summary>
+      <div className="border-t border-[var(--north-star-border)]/50 px-3 pb-3 pt-1 sm:px-4">
+        <ul className="divide-y divide-[var(--north-star-border)]/40">
+          {bucket.items.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                className="flex items-start justify-between gap-3 py-2 transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+              >
+                <div className="min-w-0">
+                  <p className={`text-sm font-medium ${valueClass}`}>
+                    {item.label}
+                  </p>
+                  {item.detail ? (
+                    <p
+                      className={`mt-0.5 text-xs leading-relaxed opacity-75 ${valueClass}`}
+                    >
+                      {item.detail}
+                    </p>
+                  ) : null}
+                </div>
+                <ChevronRight
+                  className={`mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60 ${valueClass}`}
+                  aria-hidden="true"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {bucket.count > bucket.items.length ? (
+          <Link
+            href={bucket.href}
+            className={`mt-1 inline-flex text-xs font-medium underline-offset-2 hover:underline ${valueClass}`}
+          >
+            View all {bucket.count}
+          </Link>
+        ) : (
+          <Link
+            href={bucket.href}
+            className={`mt-1 inline-flex text-xs font-medium underline-offset-2 hover:underline ${valueClass}`}
+          >
+            Open {bucket.title.toLowerCase()}
+          </Link>
         )}
       </div>
-    </section>
+    </details>
   );
 }
 
-function ScheduleCard({ rows }: { rows: MissionControlV2ScheduleRow[] }) {
+function ExceptionBoard({ buckets }: { buckets: DashboardExceptionBucket[] }) {
+  if (buckets.length === 0) {
+    return <ExceptionBoardClear />;
+  }
+
   return (
-    <section className="flex min-w-0 flex-col gap-3">
-      <SectionHeader
-        title="Today's schedule"
-        action={{
-          label: "View full schedule",
-          href: MISSION_CONTROL_V2_SCHEDULE_FULL_HREF,
-        }}
-      />
-      <div className={altairMcListClass}>
-        {rows.length === 0 ? (
-          <div className={altairMcListRowClass}>
-            <p className="text-sm font-semibold text-altair-ink-on-paper">
-              No jobs scheduled today
-            </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-muted">
-              Jobs on today&apos;s board will show up here once they&apos;re
-              scheduled.
+    <div
+      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      role="list"
+      aria-label="Needs attention"
+    >
+      {buckets.map((bucket) => (
+        <div key={bucket.id} role="listitem">
+          <ExceptionBucketCard bucket={bucket} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InformationalBucketShell({
+  title,
+  count,
+  detail,
+  icon: Icon,
+  footerHref,
+  footerLabel,
+  children,
+}: {
+  title: string;
+  count: number;
+  detail: string;
+  icon: LucideIcon;
+  footerHref?: string;
+  footerLabel?: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="group rounded-none border border-[var(--north-star-border)] bg-[var(--surface-card)]">
+      <summary
+        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+      >
+        <div className="flex items-start gap-3">
+          <Icon
+            className="mt-0.5 h-4 w-4 shrink-0 text-altair-ink-on-paper-secondary"
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <p className="text-sm font-semibold text-altair-ink-on-paper">
+                {title}
+              </p>
+              <p className="text-lg font-black leading-none tabular-nums text-altair-ink-on-paper">
+                {count}
+              </p>
+            </div>
+            <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-secondary">
+              {detail}
             </p>
           </div>
-        ) : (
-          <ul className="divide-y divide-altair-border/60">
-            {rows.map((row) => (
-              <li key={row.id}>
-                <JobScheduleRow
-                  row={{
-                    ...row,
-                    isUnassigned: row.assigneeName === "Unassigned",
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className={`border-t border-altair-border/60 ${altairMcListRowClass}`}>
+          <ChevronDown
+            className="mt-0.5 h-4 w-4 shrink-0 text-altair-ink-on-paper-muted opacity-70 transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </div>
+      </summary>
+      <div className="border-t border-[var(--north-star-border)]/50">
+        {children}
+        {footerHref && footerLabel ? (
+          <div
+            className={`border-t border-altair-border/60 ${altairMcListRowClass}`}
+          >
+            <Link
+              href={footerHref}
+              className={`text-xs font-medium underline-offset-2 transition hover:underline sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
+            >
+              {footerLabel}
+            </Link>
+          </div>
+        ) : null}
+      </div>
+    </details>
+  );
+}
+
+function ScheduleBucketCard({ rows }: { rows: MissionControlV2ScheduleRow[] }) {
+  return (
+    <InformationalBucketShell
+      title="Today's schedule"
+      count={rows.length}
+      detail={
+        rows.length === 0
+          ? "No jobs on today's board yet"
+          : `${rows.length} ${rows.length === 1 ? "job" : "jobs"} previewed for today`
+      }
+      icon={CalendarDays}
+      footerHref={MISSION_CONTROL_V2_SCHEDULE_FULL_HREF}
+      footerLabel="View full schedule"
+    >
+      {rows.length === 0 ? (
+        <div className={altairMcListRowClass}>
+          <p className="text-sm font-semibold text-altair-ink-on-paper">
+            No jobs scheduled today
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-muted">
+            Jobs on today&apos;s board will show up here once they&apos;re
+            scheduled.
+          </p>
           <Link
             href={MISSION_CONTROL_V2_SCHEDULE_JOBS_HREF}
-            className={`text-xs font-medium underline-offset-2 transition hover:underline sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
+            className={`mt-2 inline-flex text-xs font-medium underline-offset-2 hover:underline ${altairCanvasInkLinkClass}`}
           >
             View all jobs
           </Link>
         </div>
-      </div>
-    </section>
+      ) : (
+        <ul className={`divide-y divide-altair-border/60 ${altairMcListClass}`}>
+          {rows.map((row) => (
+            <li key={row.id}>
+              <JobScheduleRow
+                row={{
+                  ...row,
+                  isUnassigned: row.assigneeName === "Unassigned",
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </InformationalBucketShell>
   );
 }
 
@@ -435,22 +360,30 @@ function resolveActivityIcon(row: MissionControlV2ActivityRow): LucideIcon {
   }
 }
 
-function ActivityCard({ rows }: { rows: MissionControlV2ActivityRow[] }) {
+function ActivityBucketCard({ rows }: { rows: MissionControlV2ActivityRow[] }) {
   return (
-    <section className="flex min-w-0 flex-col gap-3">
-      <SectionHeader title="Recent activity" />
-      <ol className={altairMcListClass}>
-        {rows.length === 0 ? (
-          <li className={altairMcListRowClass}>
-            <p className="text-sm font-semibold text-altair-ink-on-paper">
-              No recent activity yet
-            </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-muted">
-              Invoice, job, and customer events will appear here as work happens.
-            </p>
-          </li>
-        ) : (
-          rows.map((row) => {
+    <InformationalBucketShell
+      title="Recent activity"
+      count={rows.length}
+      detail={
+        rows.length === 0
+          ? "No recent events yet"
+          : `${rows.length} recent ${rows.length === 1 ? "event" : "events"}`
+      }
+      icon={History}
+    >
+      {rows.length === 0 ? (
+        <div className={altairMcListRowClass}>
+          <p className="text-sm font-semibold text-altair-ink-on-paper">
+            No recent activity yet
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-muted">
+            Invoice, job, and customer events will appear here as work happens.
+          </p>
+        </div>
+      ) : (
+        <ol className={altairMcListClass}>
+          {rows.map((row) => {
             const Icon = resolveActivityIcon(row);
             const indicatorTone =
               row.tone === "neutral"
@@ -507,165 +440,29 @@ function ActivityCard({ rows }: { rows: MissionControlV2ActivityRow[] }) {
                 )}
               </li>
             );
-          })
-        )}
-      </ol>
-    </section>
-  );
-}
-
-function KpiCard({ kpi }: { kpi: MissionControlV2KpiCard }) {
-  return (
-    <div className={altairMcTileClass}>
-      <p className={altairMcMetricLabelClass}>{kpi.label}</p>
-      <p className={altairMcMetricValueClass}>{kpi.value}</p>
-      <p
-        className={`mt-1 text-[11px] leading-snug ${
-          kpi.comparisonPositive
-            ? "text-altair-success-foreground"
-            : altairCanvasInkSecondaryClass
-        }`}
-      >
-        {kpi.comparison}
-      </p>
-      <KpiSparkline values={kpi.sparkline} />
-    </div>
-  );
-}
-
-function UpgradeCardBody({
-  model,
-}: {
-  model: MissionControlUpgradeCardModel;
-}) {
-  const iconWrapClass =
-    model.emphasis === "cta"
-      ? "bg-altair-brass text-altair-graphite"
-      : "bg-altair-brass/15 text-altair-brass";
-  const cardChromeClass =
-    model.emphasis === "cta"
-      ? "rounded-lg border border-altair-brass/25 bg-[var(--surface-section)]"
-      : `${altairMcCardClass}`;
-
-  const content = (
-    <div className="flex items-start gap-3">
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${iconWrapClass}`}
-      >
-        <Rocket className="h-4 w-4" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-altair-ink-on-paper">
-          {model.headline}
-        </p>
-        {model.description ? (
-          <p className="mt-0.5 text-xs leading-relaxed text-altair-ink-on-paper-secondary">
-            {model.description}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-
-  return (
-    <div className={`flex flex-1 flex-col ${cardChromeClass} ${altairMcCardPadClass}`}>
-      {model.href ? (
-        <Link
-          href={model.href}
-          className="rounded-md transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
-        >
-          {content}
-        </Link>
-      ) : (
-        content
+          })}
+        </ol>
       )}
-    </div>
-  );
-}
-
-function UpgradeCard({
-  billingAccess,
-}: {
-  billingAccess?: CompanyBillingAccess;
-}) {
-  if (!billingAccess) {
-    const sample = missionControlV2SampleData.promo;
-    return (
-      <section className="flex h-full min-w-0 flex-col gap-3">
-        <SectionHeader title="Upgrade" />
-        <UpgradeCardBody
-          model={{
-            variant: "explore_pro",
-            sectionTitle: "Upgrade",
-            headline: sample.headline,
-            description: sample.subtext,
-            href: "/pricing",
-            emphasis: "cta",
-          }}
-        />
-      </section>
-    );
-  }
-
-  const model = getMissionControlUpgradeCardModel(billingAccess);
-
-  return (
-    <section className="flex h-full min-w-0 flex-col gap-3">
-      <SectionHeader title={model.sectionTitle} />
-      <UpgradeCardBody model={model} />
-    </section>
+    </InformationalBucketShell>
   );
 }
 
 /**
  * Mission Control v2 — live owner dashboard.
- * Glance, business health, quick actions, next recommended, Upgrade, today's
- * schedule, recent activity, and the KPI strip accept real data; Needs
- * attention and top-bar chrome (search / notifications) still use placeholders
- * where not yet wired.
+ * Exception board (management-by-exception buckets) is the primary surface.
+ * Schedule / activity are informational bucket cards after exceptions.
+ * Next recommended stays as secondary activation context.
  */
 export function MissionControlV2View({
   data,
-  userDisplayName,
   demoDataStatus,
-  companyName,
   companyTimeZone,
-  glanceStats,
-  businessHealthStats,
-  primaryQuickActions,
   onboardingChecklist,
-  billingAccess,
   scheduleRows,
   activityRows,
-  kpiCards,
 }: MissionControlV2ViewProps = {}) {
   const sample = missionControlV2SampleData;
-  const isLive = Boolean(data);
-  const missionControl = data
-    ? buildMissionControlContent(data, userDisplayName ?? "User")
-    : null;
-
-  const greetingName = getGreetingName(companyName, userDisplayName);
-  const greeting = `${getTimeOfDayGreeting()}, ${greetingName}`;
-  const dateLabel = isLive ? formatDateLabel() : sample.dateLabel;
-  const userName = userDisplayName?.trim() || sample.userName;
-  const userInitials = userDisplayName?.trim()
-    ? getTeamMemberInitials(userDisplayName)
-    : sample.userInitials;
-  const notificationCount = isLive ? 0 : sample.notificationCount;
-
-  const resolvedGlanceStats =
-    glanceStats ??
-    (data ? buildMissionControlV2GlanceStats(data) : sample.glanceStats);
-  const resolvedBusinessHealthStats =
-    businessHealthStats ??
-    (data
-      ? buildMissionControlV2BusinessHealthStats(data)
-      : sample.businessHealthStats);
-  const resolvedQuickActions =
-    primaryQuickActions ??
-    missionControl?.primaryQuickActions ??
-    SAMPLE_QUICK_ACTIONS;
+  const exceptionBuckets = data ? buildDashboardExceptionBuckets(data) : [];
   const resolvedScheduleRows =
     scheduleRows ??
     (data
@@ -674,76 +471,50 @@ export function MissionControlV2View({
   const resolvedActivityRows =
     activityRows ??
     (data ? buildMissionControlV2ActivityRows(data) : sample.activity);
-  const resolvedKpiCards = kpiCards ?? sample.kpis;
   const showSampleDataDiscovery = Boolean(
     demoDataStatus?.canSetupDemoData && !demoDataStatus.hasDemoData,
   );
 
   return (
-    <div className="space-y-3">
-      <TopBar
-        greeting={greeting}
-        dateLabel={dateLabel}
-        userName={userName}
-        userInitials={userInitials}
-        notificationCount={notificationCount}
-      />
-
-      {showSampleDataDiscovery ? (
-        <p className={`text-sm ${altairCanvasInkMutedClass}`}>
-          Need example data?{" "}
-          <Link
-            href="/settings/company"
-            className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
+    <div className="mc-dashboard-greige-trial flex min-w-0 flex-col">
+      <div className="mc-dashboard-content-well flex flex-col bg-[var(--north-star-content-well)]">
+        {showSampleDataDiscovery ? (
+          <p
+            className={`border-b border-[var(--north-star-border)] px-4 py-3 text-sm sm:px-5 ${altairCanvasInkMutedClass}`}
           >
-            Load it from Settings
-          </Link>
-          .
-        </p>
-      ) : null}
+            Need example data?{" "}
+            <Link
+              href="/settings/company"
+              className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
+            >
+              Load it from Settings
+            </Link>
+            .
+          </p>
+        ) : null}
 
-      {/* Row: Today at a glance · Business health · Needs attention (~2fr 2fr 1.5fr) */}
-      <div
-        className={`grid grid-cols-1 items-start md:grid-cols-2 lg:grid-cols-[2fr_2fr_1.5fr] ${altairMcGridGapClass}`}
-      >
-        <section className="flex min-w-0 flex-col gap-3">
-          <SectionHeader title="Today at a glance" />
-          <StatGrid stats={resolvedGlanceStats} />
-        </section>
+        {/* Exception board — severity-ranked buckets only when they need attention */}
+        <div className="border-b border-[var(--north-star-border)] px-4 py-3 sm:px-5">
+          <section className="flex min-w-0 flex-col gap-2">
+            <SectionHeader title="Needs attention" />
+            <ExceptionBoard buckets={exceptionBuckets} />
+          </section>
+        </div>
 
-        <section className="flex min-w-0 flex-col gap-3">
-          <SectionHeader title="Business health" />
-          <StatGrid stats={resolvedBusinessHealthStats} />
-        </section>
+        {/* Informational buckets — schedule / activity, not in critical order */}
+        <div className="border-b border-[var(--north-star-border)] px-4 py-3 sm:px-5">
+          <div
+            className={`grid grid-cols-1 items-start lg:grid-cols-2 ${altairMcGridGapClass}`}
+          >
+            <ScheduleBucketCard rows={resolvedScheduleRows} />
+            <ActivityBucketCard rows={resolvedActivityRows} />
+          </div>
+        </div>
 
-        <section className="flex min-w-0 flex-col gap-3 self-start md:col-span-2 lg:col-span-1">
-          <SectionHeader title="Needs attention" />
-          <NeedsAttentionClear />
-        </section>
-      </div>
-
-      {/* Row: Quick actions · Next recommended · Promo — stretch so card bodies match height */}
-      <div
-        className={`grid grid-cols-1 items-stretch md:grid-cols-2 lg:grid-cols-3 ${altairMcGridGapClass}`}
-      >
-        <QuickActionsCard actions={resolvedQuickActions} />
-        <MissionControlV2NextRecommendedCard checklist={onboardingChecklist} />
-        <UpgradeCard billingAccess={billingAccess} />
-      </div>
-
-      {/* Row: Today's schedule (wider) · Recent activity (narrower) */}
-      <div
-        className={`grid grid-cols-1 items-start lg:grid-cols-[minmax(0,2fr)_minmax(0,1.15fr)] ${altairMcGridGapClass}`}
-      >
-        <ScheduleCard rows={resolvedScheduleRows} />
-        <ActivityCard rows={resolvedActivityRows} />
-      </div>
-
-      {/* Bottom KPI strip — three month-level metrics */}
-      <div className={`grid grid-cols-1 sm:grid-cols-3 ${altairMcGridGapClass}`}>
-        {resolvedKpiCards.map((kpi) => (
-          <KpiCard key={kpi.id} kpi={kpi} />
-        ))}
+        {/* Next recommended — unchanged */}
+        <div className="px-4 py-3 sm:px-5">
+          <MissionControlV2NextRecommendedCard checklist={onboardingChecklist} />
+        </div>
       </div>
     </div>
   );

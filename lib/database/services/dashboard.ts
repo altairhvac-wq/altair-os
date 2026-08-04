@@ -1,11 +1,15 @@
 import {
+  canViewCompanyTimeEntries,
   getCompanyAccessScope,
   type CompanyAccessScope,
 } from "@/lib/database/access-control";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import { listCustomers } from "@/lib/database/queries/customers";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listLeads } from "@/lib/database/queries/leads";
+import { listCompanyCardFailureAttentionAttempts } from "@/lib/database/queries/payment-attempts";
+import { listCompanyPaymentDisputes } from "@/lib/database/queries/payment-disputes";
 import {
   buildLeadDashboardAttentionPreview,
   selectLeadsNewNeedingFirstContact,
@@ -52,10 +56,15 @@ import {
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import {
   listActiveTechnicianTimeEntries,
+  listOpenClockEntriesForCompany,
   mapEntryTypeToTimeState,
 } from "@/lib/database/queries/time-entries";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
+import { isOpenPaymentDisputeStatus } from "@/lib/payments";
+import { filterCustomersForWorkQueue } from "@/shared/components/customers/customer-work-queues";
+import { filterLeadsForListFilter } from "@/shared/components/leads/lead-work-queues";
+import { getOverloadedTechnicianIds } from "@/shared/lib/dispatch-page-focus";
 import { buildOperationalHealthReportFromOfficeQueue } from "@/shared/types/operational-health-report";
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
 import type { DashboardData } from "@/shared/types/dashboard";
@@ -71,6 +80,7 @@ import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolutio
 import { resolveReportDateBounds } from "@/shared/types/reports";
 import { buildReportSectionMeta } from "@/shared/types/reports";
 import { buildDashboardWorkflowReminderPreview } from "@/shared/lib/workflow-reminder-display";
+import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
 import type { Estimate } from "@/shared/types/estimate";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
@@ -94,6 +104,9 @@ const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const ACCEPTED_ESTIMATES_SCHEDULING_LIMIT = 10;
 const LEAD_ATTENTION_DASHBOARD_LIMIT = 10;
 const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
+const CUSTOMERS_NEEDING_INFO_DASHBOARD_LIMIT = 10;
+const STALE_OPEN_SHIFTS_DASHBOARD_LIMIT = 10;
+const PAYMENT_ATTENTION_DASHBOARD_LIMIT = 10;
 /** Match Reports default lead pipeline period. */
 const DASHBOARD_LEAD_PIPELINE_DATE_RANGE = "30d" as const;
 
@@ -112,6 +125,23 @@ const EMPTY_ACCEPTED_ESTIMATES_SCHEDULING: DashboardData["acceptedEstimatesNeedi
     count: 0,
     estimates: [],
   };
+
+const EMPTY_CUSTOMERS_NEEDING_INFO: DashboardData["customersNeedingInfo"] = {
+  count: 0,
+  customers: [],
+};
+
+const EMPTY_STALE_OPEN_SHIFTS: DashboardData["staleOpenShifts"] = {
+  count: 0,
+  shifts: [],
+};
+
+const EMPTY_PAYMENT_ATTENTION: DashboardData["paymentAttention"] = {
+  cardFailureCount: 0,
+  openDisputeCount: 0,
+  cardFailures: [],
+  openDisputes: [],
+};
 
 const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
   totalLeads: 0,
@@ -379,6 +409,8 @@ export async function getDashboardData(
     )
     .slice(0, UNASSIGNED_JOBS_DASHBOARD_LIMIT);
 
+  const canViewTimeEntries = canViewCompanyTimeEntries(context);
+
   const [
     technicians,
     activeTimeEntries,
@@ -397,6 +429,10 @@ export async function getDashboardData(
     officeReviewQueueReport,
     leads,
     workflowRemindersLoad,
+    customers,
+    openClockEntries,
+    paymentDisputes,
+    cardFailureAttempts,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -449,6 +485,18 @@ export async function getDashboardData(
     access.canViewBilling
       ? getDashboardWorkflowRemindersForCompany(companyId)
       : Promise.resolve({ reminders: [], totalActiveCount: 0 }),
+    access.canManageCustomers
+      ? listCustomers(companyId)
+      : Promise.resolve([]),
+    canViewTimeEntries
+      ? listOpenClockEntriesForCompany(companyId)
+      : Promise.resolve([]),
+    access.canViewBilling
+      ? listCompanyPaymentDisputes(companyId, { limit: 50 })
+      : Promise.resolve([]),
+    access.canViewBilling
+      ? listCompanyCardFailureAttentionAttempts(companyId, { limit: 50 })
+      : Promise.resolve([]),
   ]);
 
   const leadPipelineDateBounds = resolveReportDateBounds(
@@ -472,6 +520,13 @@ export async function getDashboardData(
         timeZone: context.company.timezone,
       })
     : [];
+  const leadsNeedingContactQueueAll = access.canManageCustomers
+    ? filterLeadsForListFilter(
+        leads,
+        "needs-contact",
+        context.company.timezone,
+      )
+    : [];
   const leadsReadyForEstimateAll = access.canManageCustomers
     ? selectLeadsReadyForEstimatePreparation(leads, {
         timeZone: context.company.timezone,
@@ -489,6 +544,34 @@ export async function getDashboardData(
         ),
       ).length
     : 0;
+  const customersNeedingInfoAll = access.canManageCustomers
+    ? filterCustomersForWorkQueue(customers, "needs-info")
+    : [];
+  const staleOpenShiftsAll = canViewTimeEntries
+    ? buildShiftTimeTrackingSummary({
+        openClockEntries,
+        todayTimeEntries: [],
+        timeZone: context.company.timezone,
+      }).staleOpenShifts
+    : [];
+  const openDisputesAll = access.canViewBilling
+    ? paymentDisputes.filter((dispute) =>
+        isOpenPaymentDisputeStatus(dispute.status),
+      )
+    : [];
+  const cardFailureCount = access.canViewBilling
+    ? cardFailureAttempts.length
+    : 0;
+  const openDisputeCount = openDisputesAll.length;
+  const technicianNameById = new Map(
+    technicians.map((technician) => [technician.id, technician.name]),
+  );
+  const overloadedTechnicians = access.canViewTechnicianRoster
+    ? getOverloadedTechnicianIds(todayJobs).map((technicianId) => ({
+        id: technicianId,
+        name: technicianNameById.get(technicianId) ?? "Technician",
+      }))
+    : [];
 
   const invoiceSummary = access.canViewBilling
     ? getInvoiceSummary(invoices)
@@ -573,6 +656,8 @@ export async function getDashboardData(
         },
     operations: {
       ...todayOperationsSummary,
+      overloadedTechnicianCount: overloadedTechnicians.length,
+      overloadedTechnicians,
       todayJobs: todayJobs.slice(0, TODAY_JOBS_LIMIT),
       unassignedJobs,
     },
@@ -736,6 +821,14 @@ export async function getDashboardData(
             .map(buildLeadDashboardAttentionPreview),
         }
       : EMPTY_LEAD_ATTENTION,
+    leadsNeedingContactQueue: access.canManageCustomers
+      ? {
+          count: leadsNeedingContactQueueAll.length,
+          leads: leadsNeedingContactQueueAll
+            .slice(0, LEAD_ATTENTION_DASHBOARD_LIMIT)
+            .map(buildLeadDashboardAttentionPreview),
+        }
+      : EMPTY_LEAD_ATTENTION,
     leadsReadyForEstimate: access.canManageCustomers
       ? {
           count: leadsReadyForEstimateAll.length,
@@ -744,6 +837,48 @@ export async function getDashboardData(
             .map(buildLeadDashboardAttentionPreview),
         }
       : EMPTY_LEAD_ATTENTION,
+    customersNeedingInfo: access.canManageCustomers
+      ? {
+          count: customersNeedingInfoAll.length,
+          customers: customersNeedingInfoAll
+            .slice(0, CUSTOMERS_NEEDING_INFO_DASHBOARD_LIMIT)
+            .map((customer) => ({
+              id: customer.id,
+              name: customer.name,
+            })),
+        }
+      : EMPTY_CUSTOMERS_NEEDING_INFO,
+    staleOpenShifts: canViewTimeEntries
+      ? {
+          count: staleOpenShiftsAll.length,
+          shifts: staleOpenShiftsAll.slice(0, STALE_OPEN_SHIFTS_DASHBOARD_LIMIT),
+        }
+      : EMPTY_STALE_OPEN_SHIFTS,
+    paymentAttention: access.canViewBilling
+      ? {
+          cardFailureCount,
+          openDisputeCount,
+          cardFailures: cardFailureAttempts
+            .slice(0, PAYMENT_ATTENTION_DASHBOARD_LIMIT)
+            .map((attempt) => ({
+              id: attempt.id,
+              invoiceId: attempt.invoice_id,
+              invoiceNumber: attempt.invoiceNumber,
+              amount: attempt.amount,
+              lastCardFailureAt: attempt.last_card_failure_at,
+            })),
+          openDisputes: openDisputesAll
+            .slice(0, PAYMENT_ATTENTION_DASHBOARD_LIMIT)
+            .map((dispute) => ({
+              id: dispute.id,
+              amount: dispute.amount,
+              status: dispute.status,
+              reason: dispute.reason,
+              invoiceId: dispute.invoice_id,
+              invoiceNumber: dispute.invoiceNumber,
+            })),
+        }
+      : EMPTY_PAYMENT_ATTENTION,
     leadFollowUp: access.canManageCustomers
       ? {
           count: leadPipelineMetrics.followUpsDue,

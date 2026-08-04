@@ -5,6 +5,7 @@ import {
   formatTechnicianTimeState,
   type TechnicianTimeState,
 } from "@/shared/types/time-entry";
+import { dispatchTechnicianLaneDomId } from "@/shared/lib/dispatch-page-focus";
 import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 import { DispatchJobCard } from "./DispatchJobCard";
 
@@ -21,6 +22,8 @@ type TechnicianColumnProps = {
   /** Time-track body (hour lines + positioned blocks). */
   children?: ReactNode;
   emphasized?: boolean;
+  /** Stronger highlight when deep-linked via ?technicianId=. */
+  focused?: boolean;
   onSelectJob: (job: DispatchJob) => void;
 };
 
@@ -39,10 +42,12 @@ export const TechnicianColumn = memo(function TechnicianColumn({
   trackHeightPx,
   children,
   emphasized = false,
+  focused = false,
   onSelectJob,
 }: TechnicianColumnProps) {
   const timeState = resolveTimeState(technician);
   const timeStateLabel = formatTechnicianTimeState(timeState);
+  const laneDomId = dispatchTechnicianLaneDomId(technician.id);
 
   const identity = (
     <header className={dm.laneHeader}>
@@ -83,7 +88,14 @@ export const TechnicianColumn = memo(function TechnicianColumn({
   if (layout === "time-track") {
     return (
       <section
-        className={`${dm.lane} ${emphasized ? "ring-2 ring-altair-warning/35" : ""}`}
+        id={laneDomId}
+        className={`${dm.lane} scroll-mt-24 ${
+          focused
+            ? "ring-2 ring-altair-brass/55"
+            : emphasized
+              ? "ring-2 ring-altair-warning/35"
+              : ""
+        }`}
         style={{
           height: trackHeightPx,
           minHeight: trackHeightPx,

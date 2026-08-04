@@ -17,6 +17,11 @@ import type { OperationalHealthReport } from "@/shared/types/operational-health-
 import type { CompletedWorkAwaitingInvoicingEntry, CompletedWorkReviewEntry, StalledJobEntry } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 
+export type DashboardOverloadedTechnicianPreview = {
+  id: string;
+  name: string;
+};
+
 export type DashboardOperationsSummary = {
   scheduledToday: number;
   dispatched: number;
@@ -28,6 +33,11 @@ export type DashboardOperationsSummary = {
   totalJobsToday: number;
   /** Technicians with two or more active jobs on today's board. */
   overloadedTechnicianCount: number;
+  /**
+   * Overloaded technicians derived from today's jobs (same rule as
+   * getOverloadedTechnicianIds). Names resolved from the loaded roster.
+   */
+  overloadedTechnicians: DashboardOverloadedTechnicianPreview[];
   todayJobs: DispatchJob[];
   /** Unassigned jobs on today's board (preview for mobile action sheets). */
   unassignedJobs: DispatchJob[];
@@ -272,6 +282,55 @@ export type DashboardWorkflowRemindersSnapshot = {
   reminders: DashboardWorkflowReminderPreview[];
 };
 
+export type DashboardCustomerNeedsInfoPreview = {
+  id: string;
+  name: string;
+};
+
+export type DashboardCustomersNeedingInfoSnapshot = {
+  count: number;
+  customers: DashboardCustomerNeedsInfoPreview[];
+};
+
+export type DashboardStaleOpenShiftPreview = {
+  id: string;
+  technicianName: string;
+  startedAt: string;
+  elapsedHours: number;
+};
+
+export type DashboardStaleOpenShiftsSnapshot = {
+  count: number;
+  shifts: DashboardStaleOpenShiftPreview[];
+};
+
+export type DashboardPaymentCardFailurePreview = {
+  id: string;
+  invoiceId: string;
+  invoiceNumber: string | null;
+  amount: number;
+  lastCardFailureAt: string | null;
+};
+
+export type DashboardPaymentDisputePreview = {
+  id: string;
+  amount: number;
+  status: string;
+  reason: string | null;
+  invoiceId: string | null;
+  invoiceNumber: string | null;
+};
+
+export type DashboardPaymentAttentionSnapshot = {
+  /** Attempts matching isCardFailureAttentionEligible. */
+  cardFailureCount: number;
+  /** Disputes with open/unresolved Stripe status. */
+  openDisputeCount: number;
+  /** Preview rows for exception-board drill-down (capped). */
+  cardFailures: DashboardPaymentCardFailurePreview[];
+  openDisputes: DashboardPaymentDisputePreview[];
+};
+
 export type DashboardData = {
   access: CompanyAccessScope;
   analytics: DashboardAnalyticsSnapshot;
@@ -288,9 +347,20 @@ export type DashboardData = {
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
   acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimatesNeedingSchedulingSnapshot;
   newLeadsNeedingContact: DashboardLeadAttentionSnapshot;
+  /**
+   * Pipeline "needs contact" queue: status===new OR nextFollowUpAt ≤ today.
+   * Broader than newLeadsNeedingContact (first-contact only).
+   */
+  leadsNeedingContactQueue: DashboardLeadAttentionSnapshot;
   leadsReadyForEstimate: DashboardLeadAttentionSnapshot;
   leadFollowUp: DashboardLeadFollowUpSnapshot;
   leadPipelineSummary: DashboardLeadPipelineSummary;
+  /** Active customers missing email/phone/address (needs-info queue). */
+  customersNeedingInfo: DashboardCustomersNeedingInfoSnapshot;
+  /** Open clock shifts stale ≥ 12h. */
+  staleOpenShifts: DashboardStaleOpenShiftsSnapshot;
+  /** Card failures + open payment disputes for the Payments bucket. */
+  paymentAttention: DashboardPaymentAttentionSnapshot;
   workflowReminders: DashboardWorkflowRemindersSnapshot;
   operationalInsights: DailyOperationsSummary;
   operationalHealth: OperationalHealthReport;

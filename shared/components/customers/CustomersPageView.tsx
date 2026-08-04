@@ -47,6 +47,7 @@ import {
   filterCustomersForWorkQueue,
   resolveCustomerBulkLifecycleFilter,
   resolveDefaultCustomerWorkQueue,
+  resolveInitialCustomerWorkQueue,
   type CustomerWorkQueue,
 } from "./customer-work-queues";
 
@@ -69,6 +70,8 @@ type CustomersPageViewProps = {
   lifecycleScope?: CustomersLifecycleScope;
   /** Hub registers New Customer header action against this handler. */
   onRegisterCreateHandler?: (handler: () => void) => void;
+  /** Deep-link work queue from ?queue= (book scope only). */
+  initialWorkQueue?: string | null;
 };
 
 function filterCustomersBySearch(
@@ -100,6 +103,7 @@ export function CustomersPageView({
   embedded = false,
   lifecycleScope = "book",
   onRegisterCreateHandler,
+  initialWorkQueue = null,
 }: CustomersPageViewProps) {
   const isArchivedScope = lifecycleScope === "archived";
   const [customers, setCustomers] = useState(initialCustomers);
@@ -111,7 +115,9 @@ export function CustomersPageView({
   const [search, setSearch] = useState("");
   const timeZone = useCompanyTimezone();
   const [workQueue, setWorkQueue] = useState<CustomerWorkQueue>(() =>
-    resolveDefaultCustomerWorkQueue(),
+    isArchivedScope
+      ? resolveDefaultCustomerWorkQueue()
+      : resolveInitialCustomerWorkQueue(initialWorkQueue),
   );
   const [pastLifecycleFilter, setPastLifecycleFilter] = useState<
     "archived" | "deleted"

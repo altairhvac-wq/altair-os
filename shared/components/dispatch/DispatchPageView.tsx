@@ -379,6 +379,9 @@ export function DispatchPageView({
                       overloadedTechnicianIds={
                         dispatchPageFocus?.overloadedTechnicianIds ?? []
                       }
+                      focusTechnicianId={
+                        dispatchPageFocus?.focusTechnicianId ?? null
+                      }
                     />
                   )}
                 </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import { formatDispatchTime } from "@/shared/types/dispatch";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { dispatchTechnicianLaneDomId } from "@/shared/lib/dispatch-page-focus";
 import {
   buildDispatchHourMarks,
   getLaneTrackHeightPx,
@@ -23,6 +24,7 @@ type DispatchTimeGridProps = {
   selectedJobId: string | null;
   pendingJobId: string | null;
   overloadedTechnicianIds?: string[];
+  focusTechnicianId?: string | null;
   onSelectJob: (job: DispatchJob) => void;
 };
 
@@ -32,6 +34,7 @@ export const DispatchTimeGrid = memo(function DispatchTimeGrid({
   selectedJobId,
   pendingJobId,
   overloadedTechnicianIds = [],
+  focusTechnicianId = null,
   onSelectJob,
 }: DispatchTimeGridProps) {
   const timeZone = useCompanyTimezone();
@@ -39,6 +42,15 @@ export const DispatchTimeGrid = memo(function DispatchTimeGrid({
     () => new Set(overloadedTechnicianIds),
     [overloadedTechnicianIds],
   );
+
+  useEffect(() => {
+    if (!focusTechnicianId) return;
+    const node = document.getElementById(
+      dispatchTechnicianLaneDomId(focusTechnicianId),
+    );
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, [focusTechnicianId, technicians]);
 
   const allAssignedJobs = useMemo(() => {
     const jobs: DispatchJob[] = [];
@@ -147,7 +159,11 @@ export const DispatchTimeGrid = memo(function DispatchTimeGrid({
               layout="time-track"
               trackWidthPx={dayWindow.trackWidthPx}
               trackHeightPx={trackHeightPx}
-              emphasized={overloaded.has(technician.id)}
+              emphasized={
+                overloaded.has(technician.id) ||
+                focusTechnicianId === technician.id
+              }
+              focused={focusTechnicianId === technician.id}
               onSelectJob={onSelectJob}
             >
               {hourMarks.map((mark) =>

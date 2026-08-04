@@ -124,6 +124,9 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
     unassignedToday: 2,
     totalJobsToday: 8,
     overloadedTechnicianCount: 1,
+    overloadedTechnicians: [
+      { id: "tech-demo-1", name: "Alex Rivera" },
+    ],
     todayJobs: [
       {
         id: "job-demo-2001",
@@ -535,6 +538,72 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         createdAt: "2026-06-24T08:00:00.000Z",
         sourceLabel: "Website",
         openHref: "/leads?selected=lead-demo-new-1",
+      },
+    ],
+  },
+  leadsNeedingContactQueue: {
+    count: 2,
+    leads: [
+      {
+        id: "lead-demo-new-1",
+        firstName: "Jordan",
+        lastName: "Lee",
+        phone: "555-0203",
+        email: "jordan@example.com",
+        status: "new",
+        createdAt: "2026-06-24T08:00:00.000Z",
+        sourceLabel: "Website",
+        openHref: "/customers?tab=pipeline&selected=lead-demo-new-1",
+      },
+      {
+        id: "lead-demo-followup-1",
+        firstName: "Casey",
+        lastName: "Nguyen",
+        phone: "555-0205",
+        email: "casey@example.com",
+        status: "contacted",
+        createdAt: "2026-06-21T08:00:00.000Z",
+        sourceLabel: "Referral",
+        nextFollowUpAt: "2026-06-22T14:00:00.000Z",
+        openHref: "/customers?tab=pipeline&selected=lead-demo-followup-1",
+      },
+    ],
+  },
+  customersNeedingInfo: {
+    count: 1,
+    customers: [{ id: "cust-demo-needs-info", name: "Harbor Cafe" }],
+  },
+  staleOpenShifts: {
+    count: 1,
+    shifts: [
+      {
+        id: "time-entry-stale-1",
+        technicianName: "Alex Rivera",
+        startedAt: "2026-06-23T07:00:00.000Z",
+        elapsedHours: 14.5,
+      },
+    ],
+  },
+  paymentAttention: {
+    cardFailureCount: 1,
+    openDisputeCount: 1,
+    cardFailures: [
+      {
+        id: "attempt-demo-1",
+        invoiceId: "inv-demo-1",
+        invoiceNumber: "INV-1001",
+        amount: 420,
+        lastCardFailureAt: "2026-06-24T12:00:00.000Z",
+      },
+    ],
+    openDisputes: [
+      {
+        id: "dispute-demo-1",
+        amount: 180,
+        status: "needs_response",
+        reason: "product_not_received",
+        invoiceId: "inv-demo-2",
+        invoiceNumber: "INV-1002",
       },
     ],
   },

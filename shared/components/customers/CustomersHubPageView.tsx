@@ -41,6 +41,8 @@ type CustomersHubPageViewProps = {
   initialLeadStatusFilter?: string;
   initialLeadFollowUpDue?: boolean;
   initialLeadListFilter?: string;
+  /** Customers book work-queue deep link (?queue=needs-info). */
+  initialCustomerWorkQueue?: string;
 };
 
 function hubSubtitle(tab: CustomersHubTabId): string {
@@ -68,6 +70,7 @@ export function CustomersHubPageView({
   initialLeadStatusFilter,
   initialLeadFollowUpDue = false,
   initialLeadListFilter,
+  initialCustomerWorkQueue,
 }: CustomersHubPageViewProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -86,12 +89,14 @@ export function CustomersHubPageView({
         params.set("tab", tab);
       }
 
+      // Queue means different things on book vs pipeline — clear on tab change.
+      params.delete("queue");
+
       if (tab !== "pipeline") {
         params.delete("selected");
         params.delete("create");
         params.delete("status");
         params.delete("filter");
-        params.delete("queue");
       }
 
       const query = params.toString();
@@ -180,6 +185,7 @@ export function CustomersHubPageView({
           canManageCustomers={canManageCustomers}
           embedded
           lifecycleScope="book"
+          initialWorkQueue={initialCustomerWorkQueue}
           onRegisterCreateHandler={registerCustomerCreateHandler}
         />
       ) : null}

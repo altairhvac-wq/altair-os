@@ -20,6 +20,7 @@ type DispatchPageProps = {
   searchParams: Promise<{
     focus?: string;
     date?: string;
+    technicianId?: string;
   }>;
 };
 
@@ -36,7 +37,7 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
     );
   }
 
-  const { focus, date } = await searchParams;
+  const { focus, date, technicianId } = await searchParams;
   const timeZone = companyContext.company.timezone;
   const boardDateOnly = parseDateOnlySearchParam(date);
   const todayDateOnly = getDateOnlyInTimeZone(new Date(), timeZone);
@@ -52,7 +53,7 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
         (job) => job.technicianId === companyContext.user.id,
       );
   const pageFocus = enrichDispatchPageFocusState(
-    parseDispatchPageSearchParams({ focus }),
+    parseDispatchPageSearchParams({ focus, technicianId }),
     jobs,
   );
   const canViewBillingData = canViewBilling(companyContext);

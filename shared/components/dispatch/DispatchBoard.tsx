@@ -15,6 +15,7 @@ type DispatchBoardProps = {
   onSelectJob: (job: DispatchJob) => void;
   highlightUnassignedPanel?: boolean;
   overloadedTechnicianIds?: string[];
+  focusTechnicianId?: string | null;
 };
 
 function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> {
@@ -43,6 +44,7 @@ export const DispatchBoard = memo(function DispatchBoard({
   onSelectJob,
   highlightUnassignedPanel = false,
   overloadedTechnicianIds = [],
+  focusTechnicianId = null,
 }: DispatchBoardProps) {
   const unassignedJobs = useMemo(
     () => jobs.filter((job) => !job.technicianId),
@@ -94,6 +96,7 @@ export const DispatchBoard = memo(function DispatchBoard({
               selectedJobId={selectedJobId}
               pendingJobId={pendingJobId}
               overloadedTechnicianIds={overloadedTechnicianIds}
+              focusTechnicianId={focusTechnicianId}
               onSelectJob={onSelectJob}
             />
           </div>

@@ -95,6 +95,28 @@ export function resolveDefaultCustomerWorkQueue(): CustomerWorkQueue {
   return "active";
 }
 
+const CUSTOMER_WORK_QUEUE_SET = new Set<CustomerWorkQueue>(
+  CUSTOMER_WORK_QUEUE_ORDER,
+);
+
+export function isCustomerWorkQueue(value: string): value is CustomerWorkQueue {
+  return CUSTOMER_WORK_QUEUE_SET.has(value as CustomerWorkQueue);
+}
+
+export function resolveInitialCustomerWorkQueue(
+  initialQueue?: string | null,
+): CustomerWorkQueue {
+  if (
+    initialQueue &&
+    isCustomerWorkQueue(initialQueue) &&
+    initialQueue !== "past"
+  ) {
+    return initialQueue;
+  }
+
+  return resolveDefaultCustomerWorkQueue();
+}
+
 export function resolveCustomerBulkLifecycleFilter(
   workQueue: CustomerWorkQueue,
   pastLifecycleFilter: "archived" | "deleted",

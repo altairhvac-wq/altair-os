@@ -4,6 +4,22 @@ export const DISPATCH_PAGE_UNASSIGNED_HREF = "/dispatch?focus=unassigned";
 export const DISPATCH_PAGE_TODAY_HREF = "/dispatch?focus=today";
 export const DISPATCH_PAGE_OVERLOAD_HREF = "/dispatch?focus=overload";
 
+export function buildDispatchOverloadHref(technicianId?: string): string {
+  if (!technicianId) {
+    return DISPATCH_PAGE_OVERLOAD_HREF;
+  }
+
+  const search = new URLSearchParams({
+    focus: "overload",
+    technicianId,
+  });
+  return `/dispatch?${search.toString()}`;
+}
+
+export function dispatchTechnicianLaneDomId(technicianId: string): string {
+  return `dispatch-tech-${technicianId}`;
+}
+
 export type DispatchPageFocus = "unassigned" | "today" | "overload";
 
 export type DispatchSummaryHighlightLabel =
@@ -27,6 +43,8 @@ export type DispatchPageFocusState = {
   boardEyebrow: string | null;
   boardDescription: string | null;
   overloadedTechnicianIds: string[];
+  /** Optional single-lane focus from ?technicianId= (scroll/emphasize). */
+  focusTechnicianId: string | null;
 };
 
 const VALID_FOCUS_PARAMS = new Set<DispatchPageFocus>([
@@ -107,6 +125,7 @@ function resolveBannerCopy(
 
 export function parseDispatchPageSearchParams(input: {
   focus?: string;
+  technicianId?: string;
 }): DispatchPageFocusState {
   const focus =
     input.focus && VALID_FOCUS_PARAMS.has(input.focus as DispatchPageFocus)
@@ -114,6 +133,10 @@ export function parseDispatchPageSearchParams(input: {
       : null;
 
   const overloadedTechnicianIds: string[] = [];
+  const focusTechnicianId =
+    typeof input.technicianId === "string" && input.technicianId.trim()
+      ? input.technicianId.trim()
+      : null;
 
   const highlightedSummaryLabels: DispatchSummaryHighlightLabel[] = [];
   let initialTechnicianFilter: DispatchPageFocusState["initialTechnicianFilter"] =
@@ -164,6 +187,7 @@ export function parseDispatchPageSearchParams(input: {
     boardEyebrow,
     boardDescription,
     overloadedTechnicianIds,
+    focusTechnicianId: focus === "overload" ? focusTechnicianId : null,
   };
 }
 
@@ -182,6 +206,7 @@ export function enrichDispatchPageFocusState(
   return {
     ...state,
     overloadedTechnicianIds,
+    focusTechnicianId: state.focusTechnicianId,
     banner: bannerTemplate
       ? { ...bannerTemplate, clearHref: "/dispatch" }
       : null,
