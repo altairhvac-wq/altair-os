@@ -87,7 +87,7 @@ function HealthBanner({
 
   return (
     <div
-      className={`flex min-w-0 items-start gap-3 rounded-lg border px-3 py-3 sm:px-4 ${
+      className={`flex min-w-0 items-start gap-3 rounded-none border px-3 py-3 sm:px-4 ${
         healthy
           ? "border-emerald-200 bg-emerald-50/80"
           : "border-amber-200 bg-amber-50/80"

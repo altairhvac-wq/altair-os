@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
@@ -12,7 +13,6 @@ import { getNavItemForPath } from "./nav-items";
 import { AdminNavSkeleton } from "./AdminNavSkeleton";
 import { AdminShellContentLoadingState } from "./AdminShellContentLoadingState";
 import { AdminQuickNavDrawer } from "./AdminQuickNavDrawer";
-import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
 import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
@@ -20,7 +20,6 @@ import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
 import { SidebarNav } from "./SidebarNav";
 
@@ -32,6 +31,7 @@ type AdminShellProps = {
   unreadNotificationCount?: number;
   showPlatformAdminNav?: boolean;
   hideDemoPrefixes?: boolean;
+  billingAccess?: CompanyBillingAccess | null;
 };
 
 export function AdminShell({
@@ -42,6 +42,7 @@ export function AdminShell({
   unreadNotificationCount = 0,
   showPlatformAdminNav = false,
   hideDemoPrefixes = false,
+  billingAccess = null,
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
@@ -56,7 +57,6 @@ export function AdminShell({
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
   const isMobileDashboard = isMobile && pathname === "/";
-  const northStarShell = isNorthStarShellEnabled();
   const showMobileDestinationNav = !hideAdminNavigation;
   const current = getNavItemForPath(pathname, navigationContext, {
     includePlatformAdmin: showPlatformAdminNav,
@@ -69,21 +69,15 @@ export function AdminShell({
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
-      <div
-        className={`admin-canvas admin-shell-canvas flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden ${
-          northStarShell ? "admin-north-star-shell md:flex-row" : ""
-        }`}
-      >
-      {northStarShell ? (
-        hideAdminNavigation ? (
-          <AdminNavSkeleton variant="desktop-sidebar" />
-        ) : (
-          <SidebarNav
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-        )
-      ) : null}
+      <div className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden md:flex-row">
+      {hideAdminNavigation ? (
+        <AdminNavSkeleton variant="desktop-sidebar" />
+      ) : (
+        <SidebarNav
+          companyContext={navigationContext}
+          showPlatformAdminNav={showPlatformAdminNav}
+        />
+      )}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="admin-top-shell no-print">
@@ -100,17 +94,8 @@ export function AdminShell({
           showQuickNav={showMobileDestinationNav}
           quickNavOpen={quickNavOpen}
           onQuickNavOpenChange={setQuickNavOpen}
+          billingAccess={billingAccess}
         />
-        {!northStarShell ? (
-          hideAdminNavigation ? (
-            <AdminNavSkeleton variant="desktop" />
-          ) : (
-            <DesktopNav
-              companyContext={navigationContext}
-              showPlatformAdminNav={showPlatformAdminNav}
-            />
-          )
-        ) : null}
       </div>
 
       {showMobileDestinationNav ? (

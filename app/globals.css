@@ -21,21 +21,14 @@
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.018);
   --shadow-panel: 0 1px 3px rgb(15 23 42 / 0.02);
   --shadow-sticky: 0 -2px 10px -4px rgb(15 23 42 / 0.05);
-  --shell-navy-base: #071827;
-  --shell-navy-mid: #0b1f33;
-  --shell-navy-highlight: #102a43;
-  --shell-navy-shine: rgb(255 255 255 / 0.07);
-  --shell-navy-border: rgb(255 255 255 / 0.08);
-  --shell-navy-text: #f1f5f9;
-  --shell-navy-text-muted: #94a3b8;
-  --shell-nav-surface: #f0f5f9;
-  --shell-nav-border: rgb(186 203 220 / 0.75);
-  --shell-nav-divider: rgb(15 23 42 / 0.08);
-  --north-star-root: #070b10;
-  --north-star-sidebar: #0b1118;
-  --north-star-topbar: #0e141d;
-  --north-star-panel: #101a28;
-  --north-star-border: #223044;
+  --north-star-root: #555f48;
+  --north-star-sidebar: #4a5540;
+  --north-star-topbar: #5d6850;
+  --north-star-panel: #6a755c;
+  --north-star-border: #838f68;
+  /* Two-tone canvas — header/section strip vs main content well */
+  --north-star-header-strip: #4a5540;
+  --north-star-content-well: #414a35;
   --north-star-bronze: #8a6324;
   --north-star-brass: #b88a2e;
   --north-star-gold: #c9a44d;
@@ -46,7 +39,8 @@
   --north-star-text-secondary: #4f4638;
   --north-star-text-muted: #64748b;
   --north-star-text-light: #f3ebdd;
-  --north-star-text-light-muted: #c9bfae;
+  /* Lightened for olive-graphite chrome (~5:1 link / ~4:1 icon on #4a5540) */
+  --north-star-text-light-muted: #d6cdb9;
   --north-star-graphite-base: var(--north-star-sidebar);
   --north-star-graphite-mid: var(--north-star-topbar);
   --north-star-graphite-border: var(--north-star-border);
@@ -54,10 +48,10 @@
   --north-star-brass-ring: rgb(201 164 77 / 0.28);
   --north-star-sidebar-width: 14.5rem;
   --north-star-sidebar-label: var(--north-star-gold);
-  --north-star-sidebar-link: #c9bfae;
+  --north-star-sidebar-link: #d6cdb9;
   --north-star-sidebar-link-hover: var(--north-star-text-light);
   --north-star-sidebar-link-active: var(--north-star-ivory-strong);
-  --north-star-sidebar-icon: #8e826f;
+  --north-star-sidebar-icon: #c4b9a4;
   --north-star-sidebar-icon-hover: var(--north-star-champagne);
   --north-star-sidebar-icon-active: var(--north-star-champagne);
 }
@@ -903,13 +897,15 @@ a[href] {
   }
 }
 
-/* North Star shell scope — premium palette overrides legacy admin chrome when flag is on */
+/* North Star shell scope — olive-graphite chrome (always applied by AdminShell) */
 .admin-north-star-shell {
-  --north-star-root: #070b10;
-  --north-star-sidebar: #0b1118;
-  --north-star-topbar: #0e141d;
-  --north-star-panel: #101a28;
-  --north-star-border: #223044;
+  --north-star-root: #555f48;
+  --north-star-sidebar: #4a5540;
+  --north-star-topbar: #5d6850;
+  --north-star-panel: #6a755c;
+  --north-star-border: #838f68;
+  --north-star-header-strip: #4a5540;
+  --north-star-content-well: #414a35;
   --north-star-bronze: #8a6324;
   --north-star-brass: #b88a2e;
   --north-star-gold: #c9a44d;
@@ -920,7 +916,7 @@ a[href] {
   --north-star-text-secondary: #4f4638;
   --north-star-text-muted: var(--north-star-work-text-muted);
   --north-star-text-light: #f3ebdd;
-  --north-star-text-light-muted: #c9bfae;
+  --north-star-text-light-muted: #d6cdb9;
   --north-star-work-surface: #e8edf3;
   --north-star-work-band: #dce3ec;
   --north-star-work-row: #ffffff;
@@ -990,82 +986,48 @@ a[href] {
     );
 }
 
-/* Premium navy header + light nav band — authenticated desktop chrome only */
+/* Admin header — CSS owns surface (mobile light / desktop NS olive-graphite) */
+.admin-premium-header {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid rgb(226 232 240 / 0.9);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.04);
+}
+
+.admin-premium-header::before,
+.admin-premium-header::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.admin-premium-header::before {
+  inset: 0;
+  z-index: 0;
+  background: none;
+}
+
+.admin-premium-header::after {
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  z-index: 1;
+  background: none;
+}
+
+.admin-premium-header > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Authenticated desktop chrome — North Star olive-graphite */
 @media (min-width: 768px) {
   .admin-top-shell {
     position: relative;
     flex-shrink: 0;
   }
 
-  .admin-premium-header {
-    position: relative;
-    isolation: isolate;
-    border-bottom: 1px solid var(--shell-nav-divider) !important;
-    background: linear-gradient(
-      180deg,
-      var(--shell-navy-highlight) 0%,
-      var(--shell-navy-mid) 38%,
-      var(--shell-navy-base) 100%
-    ) !important;
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.04) inset,
-      0 1px 3px rgb(0 0 0 / 0.14) !important;
-  }
-
-  .admin-premium-header::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(
-        ellipse 72% 55% at 18% -8%,
-        var(--shell-navy-shine) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        ellipse 42% 38% at 82% 0%,
-        rgb(56 189 248 / 0.06) 0%,
-        transparent 52%
-      );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .admin-premium-header::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgb(255 255 255 / 0.14) 48%,
-      transparent 100%
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .admin-premium-header > * {
-    position: relative;
-    z-index: 2;
-  }
-
-  .admin-premium-nav {
-    border-top: 1px solid rgb(255 255 255 / 0.05) !important;
-    border-bottom: 1px solid var(--shell-nav-border) !important;
-    background: linear-gradient(
-      180deg,
-      rgb(248 250 252 / 0.98) 0%,
-      var(--shell-nav-surface) 100%
-    ) !important;
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.65) inset,
-      0 1px 3px rgb(15 23 42 / 0.04) !important;
-  }
-
-  /* North Star shell — hard-reset chrome (flag-gated via .admin-north-star-shell) */
   .admin-north-star-shell.admin-canvas,
   .admin-north-star-shell.admin-shell-canvas {
     background-color: var(--north-star-root);
@@ -1073,7 +1035,54 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-shell-main {
-    background-color: var(--north-star-root);
+    /* Content well — darker than header strip / root mid-tone */
+    background-color: var(--north-star-content-well);
+    /* Flush content to chrome — kill picture-frame gutters on desktop */
+    padding: 0;
+  }
+
+  /*
+   * MC v2 page header band — sharp two-tone strip (not a floating paper card).
+   * Covers MasterListPageLayout hubs (Customers, Team, Work, Sales, etc.).
+   */
+  .admin-north-star-shell .admin-page-header {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--north-star-border);
+    background: var(--north-star-header-strip);
+    box-shadow: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .admin-north-star-shell .admin-page-header h1,
+  .admin-north-star-shell .admin-page-header .admin-heading-page {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-page-header .admin-text-helper,
+  .admin-north-star-shell .admin-page-header .admin-heading-eyebrow {
+    color: var(--north-star-text-light-muted);
+  }
+
+  /* Hub titles often pass ink-on-paper utilities — flip them on the dark strip */
+  .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-muted,
+  .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-secondary {
+    color: var(--north-star-text-light-muted);
+  }
+
+  /* Keep hub segmented tabs sharp on the header strip */
+  .admin-north-star-shell .admin-page-header .admin-segmented-control {
+    border-radius: 0;
+    border-color: var(--north-star-border);
+  }
+
+  .admin-north-star-shell .admin-page-header .admin-segmented-item {
+    border-radius: 0;
   }
 
   .admin-north-star-sidebar {
@@ -1081,7 +1090,7 @@ a[href] {
     width: var(--north-star-sidebar-width);
     border-right: 1px solid var(--north-star-border);
     background: var(--north-star-sidebar);
-    box-shadow: inset -1px 0 0 rgb(201 164 77 / 0.06);
+    box-shadow: inset -1px 0 0 rgb(201 164 77 / 0.1);
   }
 
   .admin-north-star-sidebar::before {
@@ -1093,16 +1102,16 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(201 164 77 / 0.28) 50%,
+      rgb(201 164 77 / 0.36) 50%,
       transparent 100%
     );
     pointer-events: none;
   }
 
   .admin-north-star-shell .admin-premium-header {
-    border-bottom: 1px solid rgb(201 164 77 / 0.22) !important;
-    background: var(--north-star-topbar) !important;
-    box-shadow: none !important;
+    border-bottom: 1px solid rgb(201 164 77 / 0.32);
+    background: var(--north-star-topbar);
+    box-shadow: none;
   }
 
   .admin-north-star-shell .admin-premium-header::before {
@@ -1123,7 +1132,7 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(201 164 77 / 0.18) 48%,
+      rgb(201 164 77 / 0.28) 48%,
       transparent 100%
     );
   }
@@ -1415,11 +1424,20 @@ a[href] {
 }
 
 .admin-north-star-shell .north-star-list-surface {
-  border-radius: 1rem;
-  border: 1px solid var(--north-star-work-border);
+  border-radius: 0;
+  border: 1px solid var(--north-star-border);
   background-color: var(--north-star-work-surface);
   color: var(--north-star-work-text);
   box-shadow: none;
+}
+
+/* MC v2 — sharp paper plates on olive canvas (all viewports) */
+.admin-north-star-shell .altair-surface-workspace,
+.admin-north-star-shell .admin-card,
+.admin-north-star-shell .admin-panel,
+.admin-north-star-shell .admin-section-surface {
+  border-radius: 0;
+  border-color: var(--north-star-border);
 }
 
 .admin-north-star-shell .job-north-star-view-tabs button {
@@ -3121,6 +3139,74 @@ a[href] {
 
   .admin-north-star-shell .altair-canvas-ink-link:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--north-star-gold) 55%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Dashboard content-well trial (Mission Control only).
+ * Scoped via .mc-dashboard-greige-trial — does not change Customers/Team/Work/Sales/Settings.
+ *
+ * Tokens:
+ *   content well  #e2e4e1  neutral cool-grey (deeper than washed pale; not warm ivory)
+ *   hairline      #7c8662  warm olive, one step deeper than MC v2 #838f68 so the grid
+ *                 still reads ~3:1 on the cooler well (was ~3:1 on warm #f0efe9)
+ *   header strip  olive #4a5540 (chrome bridge — unchanged; light-on-dark ink)
+ */
+.admin-north-star-shell .admin-shell-main:has(.mc-dashboard-greige-trial) {
+  --north-star-content-well: #e2e4e1;
+  --north-star-border: #7c8662;
+  background-color: var(--north-star-content-well);
+}
+
+/* Light greige content well → dark canvas ink (override shell light-on-olive flip) */
+@media (min-width: 768px) {
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink {
+    color: var(--altair-ink-on-paper);
+  }
+
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink-secondary {
+    color: var(--altair-ink-on-paper-secondary);
+  }
+
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink-muted {
+    color: var(--altair-ink-on-paper-muted);
+  }
+
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink-link {
+    color: var(--altair-ink-on-paper-secondary);
+    text-decoration-color: color-mix(
+      in srgb,
+      var(--altair-ink-on-paper-muted) 70%,
+      transparent
+    );
+  }
+
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink-link:hover {
+    color: var(--altair-ink-on-paper);
+    text-decoration-color: var(--altair-ink-on-paper-muted);
+  }
+
+  .admin-north-star-shell
+    .mc-dashboard-greige-trial
+    .mc-dashboard-content-well
+    .altair-canvas-ink-link:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--altair-brass) 55%, transparent);
     outline-offset: 2px;
   }
 }

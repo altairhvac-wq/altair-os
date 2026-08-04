@@ -157,9 +157,9 @@ function SettingsNavLinks({
                 href={item.href}
                 title={item.description}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 sm:px-3 ${
+                className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-none px-2.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 sm:px-3 ${
                   active
-                    ? "bg-[var(--surface-card)] text-altair-ink shadow-sm ring-1 ring-altair-border"
+                    ? "bg-[var(--surface-card)] text-altair-ink shadow-sm ring-1 ring-[var(--north-star-border)]"
                     : "text-altair-ink-secondary hover:bg-[var(--surface-tile)] hover:text-altair-ink"
                 }`}
               >
@@ -187,11 +187,8 @@ export function SettingsNavigation({ showSystemCheck }: SettingsNavigationProps)
   })).filter((group) => group.items.length > 0);
 
   return (
-    <nav
-      aria-label="Settings categories"
-      className="border-b border-altair-border pb-3"
-    >
-      <div className="flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg border border-altair-border bg-[var(--surface-section)] p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Settings categories">
+      <div className="flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-none border border-[var(--north-star-border)] bg-[var(--surface-section)] p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <SettingsNavLinks groups={groups} pathname={pathname} />
       </div>
     </nav>

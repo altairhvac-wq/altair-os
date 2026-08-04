@@ -30,11 +30,11 @@ export function SettingsWorkspacePage({
 }: SettingsWorkspacePageProps) {
   return (
     <article className="min-w-0">
-      <header className="border-b border-altair-border pb-4">
-        <h1 className="text-xl font-bold tracking-tight text-altair-ink sm:text-2xl">
+      <header className="border-b border-[var(--north-star-border)] pb-4">
+        <h1 className="text-xl font-bold tracking-tight text-altair-ink-on-paper sm:text-2xl">
           {title}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-altair-ink-secondary">
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-altair-ink-on-paper-secondary">
           {description}
         </p>
       </header>

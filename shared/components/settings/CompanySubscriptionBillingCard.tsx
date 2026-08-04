@@ -195,7 +195,7 @@ export function CompanySubscriptionBillingCard({
     : "text-sm font-medium text-altair-ink";
   const fieldClass = northStar
     ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
-    : "mt-1 w-full min-h-10 rounded-lg border border-altair-border bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
+    : "mt-1 w-full min-h-10 rounded-none border border-[var(--north-star-border)] bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
   const primaryButtonClass = buttonClassName("primary", "md");
   const secondaryButtonClass = buttonClassName("secondary", "md");
   const dividerBorderClass = northStar
@@ -203,7 +203,7 @@ export function CompanySubscriptionBillingCard({
     : "border-altair-border";
   const planSectionClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFFDF8] p-3 sm:p-4"
-    : "rounded-lg border border-altair-border bg-[var(--surface-tile)] p-3 sm:p-4";
+    : "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] p-3 sm:p-4";
   const iconClass = northStar
     ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFF3D6] text-[#9C7424]"
     : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-brass/10 text-altair-brass";

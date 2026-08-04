@@ -109,14 +109,14 @@ export function TechniciansPageView({
           />
         ) : (
           <div className={altairMcListClass}>
-            <div className="hidden border-b border-altair-border px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted sm:grid sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1fr)] sm:gap-3">
+            <div className="hidden border-b border-[var(--north-star-border)] px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted sm:grid sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1fr)] sm:gap-3">
               <span>Name</span>
               <span>Role</span>
               <span>Status</span>
               <span>Rating</span>
               <span>Share code</span>
             </div>
-            <ul className="divide-y divide-altair-border">
+            <ul className="divide-y divide-[var(--north-star-border)]">
               {technicians.map((technician) => (
                 <li key={technician.id} className={altairMcListRowClass}>
                   <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-3">

@@ -34,7 +34,9 @@ export default async function AdminLayout({
     redirect("/technician");
   }
 
-  await requireCompanyBillingAppAccess(companyContext.company.id);
+  const billingAccess = await requireCompanyBillingAppAccess(
+    companyContext.company.id,
+  );
 
   const [notifications, unreadNotificationCount] = await Promise.all([
     getUserNotifications(companyContext.company.id, companyContext.user.id, {
@@ -57,6 +59,7 @@ export default async function AdminLayout({
       unreadNotificationCount={unreadNotificationCount}
       showPlatformAdminNav={showPlatformAdminNav}
       hideDemoPrefixes={hideDemoPrefixes}
+      billingAccess={billingAccess}
     >
       {children}
     </AdminShell>

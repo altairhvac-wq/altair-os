@@ -61,7 +61,7 @@ function ViewLink({ href, label }: { href: string; label: string }) {
 }
 
 const stageCardClass =
-  "rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 py-2";
+  "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] px-2.5 py-2";
 
 export function JobDetailMoneyPath({
   estimates,

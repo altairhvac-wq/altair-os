@@ -159,7 +159,7 @@ export function PaymentSettingsCard({
 
   const noticeClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
-    : "rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
+    : "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
 
   const subtleNoticeClass = northStar
     ? "text-xs text-[#64748B] sm:text-sm"

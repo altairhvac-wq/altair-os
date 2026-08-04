@@ -48,7 +48,13 @@ export function MasterListPageLayout({
   const isCompact = density === "compact";
 
   return (
-    <MasterShellPage fillViewport density={density} className={className}>
+    <MasterShellPage
+      fillViewport
+      density={density}
+      /* Flush header strip to content well — hairline via header border-bottom */
+      stackGapClassName="gap-0"
+      className={className}
+    >
       {banners}
 
       <MasterPageHeader

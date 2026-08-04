@@ -116,9 +116,11 @@ export {
 } from "./WorkspaceSection";
 
 export {
+  altairMcBorderClass,
   altairMcCardClass,
   altairMcCardPadClass,
   altairMcGridGapClass,
+  altairMcHairlineGridClass,
   altairMcListClass,
   altairMcListRowClass,
   altairMcMetricLabelClass,

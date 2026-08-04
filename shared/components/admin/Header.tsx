@@ -6,17 +6,20 @@ import {
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { logoutAction } from "@/app/actions/auth";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderScheduleCalendar";
+import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import { buildNotificationAccess } from "@/shared/types/notification";
 import type { Notification } from "@/shared/types/notification";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 
 type HeaderProps = {
   title: string;
@@ -32,6 +35,8 @@ type HeaderProps = {
   showQuickNav?: boolean;
   quickNavOpen?: boolean;
   onQuickNavOpenChange?: (open: boolean) => void;
+  /** Compact trial / billing badge near the account chrome. */
+  billingAccess?: CompanyBillingAccess | null;
 };
 
 function getInitials(fullName: string | null, email: string | undefined) {
@@ -50,6 +55,35 @@ function getInitials(fullName: string | null, email: string | undefined) {
   return (email?.slice(0, 2) ?? "U").toUpperCase();
 }
 
+function getTimeOfDayGreeting(reference = new Date()): string {
+  const hour = reference.getHours();
+  if (hour < 12) {
+    return "Good morning";
+  }
+  if (hour < 17) {
+    return "Good afternoon";
+  }
+  return "Good evening";
+}
+
+function getGreetingName(
+  companyName: string | undefined,
+  userDisplayName: string | undefined,
+): string {
+  const company = companyName?.trim();
+  if (company) {
+    return company;
+  }
+
+  const trimmed = userDisplayName?.trim();
+  if (!trimmed) {
+    return "there";
+  }
+
+  const first = trimmed.split(/\s+/)[0] ?? trimmed;
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
 export function Header({
   title,
   description,
@@ -63,6 +97,7 @@ export function Header({
   showQuickNav = false,
   quickNavOpen = false,
   onQuickNavOpenChange,
+  billingAccess = null,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -81,14 +116,26 @@ export function Header({
     canViewAssignedJobs: companyContext.permissions.viewAssignedJobs,
   });
   const isMobile = useMobileViewport();
-  const northStarChrome = isNorthStarShellEnabled() && !isMobile;
+  /* Desktop chrome is always North Star; mobile keeps light tone for child controls */
+  const northStarChrome = !isMobile;
   const chromeTone = isMobile ? "light" : "dark";
   const showMobileQuickNav =
     showQuickNav && typeof onQuickNavOpenChange === "function";
   const showScheduleCalendar = canAccessOperationalJobsArea(companyContext);
+  const timeZone = useCompanyTimezone();
+  const greetingName = getGreetingName(
+    companyContext.company.name,
+    displayName,
+  );
+  const greeting = `${getTimeOfDayGreeting()}, ${greetingName}`;
+  const dateLabel = formatDateInTimeZone(new Date(), timeZone, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
+    <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         {showMobileQuickNav ? (
           <div className="md:hidden">
@@ -98,25 +145,39 @@ export function Header({
             />
           </div>
         ) : null}
-        <div className="min-w-0 md:hidden">
-          <div className="flex min-w-0 items-center gap-2">
+
+        <div className="min-w-0">
+          <p
+            className={`truncate text-sm font-bold tracking-tight sm:text-base ${
+              northStarChrome ? "" : "text-slate-900 md:text-slate-50"
+            }`}
+          >
+            {greeting}
+          </p>
+          <div className="mt-0.5 flex min-w-0 items-center gap-1">
             <p
-              className={`truncate text-base font-bold tracking-tight sm:text-lg ${
-                northStarChrome ? "" : "text-slate-900 md:text-slate-50"
-              }`}
-            >
-              {title}
-            </p>
-          </div>
-          {description ? (
-            <p
-              className={`hidden truncate text-sm sm:block ${
+              className={`truncate text-xs leading-none sm:text-[13px] ${
                 northStarChrome ? "" : "text-slate-500 md:text-slate-400"
               }`}
             >
-              {description}
+              {dateLabel}
             </p>
-          ) : null}
+            {showScheduleCalendar ? (
+              <HeaderScheduleCalendar
+                tone={chromeTone}
+                triggerClassName={
+                  northStarChrome
+                    ? "north-star-header-calendar -m-1 p-1"
+                    : "-m-1 p-1"
+                }
+              />
+            ) : null}
+          </div>
+          {/* Keep mobile page title available to screen readers for orientation */}
+          <p className="sr-only md:hidden">
+            {title}
+            {description ? `. ${description}` : ""}
+          </p>
         </div>
       </div>
 
@@ -132,14 +193,6 @@ export function Header({
         >
           <Search className="h-5 w-5" />
         </button>
-        {showScheduleCalendar ? (
-          <HeaderScheduleCalendar
-            tone={chromeTone}
-            triggerClassName={
-              northStarChrome ? "north-star-header-calendar" : undefined
-            }
-          />
-        ) : null}
         <NotificationBell
           initialNotifications={notifications}
           initialUnreadCount={unreadNotificationCount}
@@ -174,6 +227,13 @@ export function Header({
               onViewModeChange={onViewModeChange}
               tone={chromeTone}
               className={northStarChrome ? "north-star-view-switcher" : ""}
+            />
+          ) : null}
+          {billingAccess ? (
+            <SubscriptionBillingBanner
+              access={billingAccess}
+              canManageBilling={billingAccess.canManageBilling}
+              className="max-w-[9.5rem] sm:max-w-[14rem]"
             />
           ) : null}
           <div

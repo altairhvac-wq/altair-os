@@ -14,11 +14,13 @@ Do not hardcode new hex values or introduce a second token vocabulary for a page
 
 ## Surface registers (do not mix)
 
-**Mission Control v2 light paper** — Dashboard, Customers, Customer Profile:
+**Mission Control v2 light paper** — Dashboard, Customers, Customer Profile, hubs, Settings:
 
 - Tokens: `shared/design-system/components/mc-surface.ts`
 - Classes: `altairMcCardClass`, `altairMcTileClass`, `altairMcListClass`, `altairMcMetricLabelClass`, `altairMcMetricValueClass`, etc.
-- Surfaces use `--surface-section` / `--surface-tile` / `--surface-card` with `border-altair-border`.
+- Sharp corners (`rounded-none`); warm hairline `border-[var(--north-star-border)]` (`#838f68`).
+- Two-tone canvas: `--north-star-header-strip` vs `--north-star-content-well` (shell + page header bands).
+- Surfaces use `--surface-section` / `--surface-tile` / `--surface-card` on the olive content well.
 
 **Reports dark elevated** — Reports (and Dispatch board, deliberate exception):
 
