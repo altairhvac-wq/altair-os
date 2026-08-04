@@ -19,7 +19,13 @@ Never paste secret values into tickets, chat, or this doc.
 ## Stripe Dashboard reminder
 
 - Webhook destination must be for **Connected accounts** (not only “Your account”).
-- Subscribed events must include `checkout.session.completed`.
+- Subscribed events must include:
+  - `checkout.session.completed` (successful invoice checkout recording)
+  - `payment_intent.payment_failed` (card decline telemetry on `payment_attempts`)
+  - `charge.dispute.created` (persist dispute / inquiry on `payment_disputes`)
+  - `charge.dispute.updated` (status / evidence lifecycle updates on `payment_disputes`)
+  - `charge.dispute.closed` (terminal won / lost / warning_closed on `payment_disputes`)
+  - `account.updated` (Connect account status sync — handled in code; subscribe if not already)
 - An old “Your account” webhook should **not** point at the same URL with the wrong signing secret.
 - Endpoint URL should be the Altair payments webhook route (e.g. `/api/webhooks/payments`).
 
@@ -72,6 +78,44 @@ Never paste secret values into tickets, chat, or this doc.
 3. Confirm Altair invoice payment row source/provider is Stripe.
 4. Confirm invoice amount paid / balance due / status updated.
 
+## Card decline / payment_intent.payment_failed test
+
+1. Confirm Connected-accounts webhook includes `payment_intent.payment_failed`.
+2. Open a public invoice Pay Now Checkout on a connected Express account.
+3. Submit Stripe test decline card `4000 0000 0000 9995` (generic decline).
+4. Confirm:
+   - Matching `payment_attempts` row increments `card_failure_count`
+   - `last_card_failure_code` / `last_card_failure_message` populated
+   - Attempt `status` remains `active` (customer can still retry / succeed)
+   - `payment_provider_events` for the Stripe event id is `processed`
+5. Optionally retry with `4242 4242 4242 4242` and confirm the same attempt can still complete successfully (single decline is noise for attention; Dashboard wiring comes later).
+
+Local helper (no real card required for code/DB shape checks):
+
+```bash
+node scripts/verify-payment-intent-failed-handler.mjs
+```
+
+## Dispute / charge.dispute.* test
+
+1. Confirm Connected-accounts webhook includes `charge.dispute.created`, `charge.dispute.updated`, and `charge.dispute.closed`.
+2. Create a test dispute on a connected Express account charge (Stripe Dashboard → Payments → select payment → dispute, or Stripe test helpers for disputes).
+3. Confirm:
+   - One `payment_disputes` row for the Stripe dispute id (`du_…`)
+   - `connected_account_id` matches the Express account (`event.account`)
+   - `provider_payment_intent_id` / invoice linkage populated when the PaymentIntent maps to an Altair invoice payment
+   - `status` / `reason` / `evidence_due_by` reflect the Stripe Dispute object
+   - Billing → Customer payments (`/settings/subscription#payment-disputes`) lists the dispute
+   - `payment_provider_events` for the Stripe event id is `processed`
+4. When the dispute closes (or an update changes status), confirm the same `payment_disputes` row upserts (no duplicate) with the new status.
+5. Dashboard Payments bucket is wired: open disputes (`isOpenPaymentDisputeStatus`) + card failures (`isCardFailureAttentionEligible`), deep-linked to Billing (`#payment-disputes` / `#payment-card-failures`).
+
+Local helper (code/DB shape checks; no live dispute required):
+
+```bash
+node scripts/verify-charge-dispute-handler.mjs
+```
+
 ## Duplicate webhook / idempotency test
 
 1. After a successful Stripe payment is recorded, resend the same `checkout.session.completed` event from Stripe Dashboard (or wait for Stripe retry if a prior attempt failed after recording).
@@ -85,7 +129,7 @@ Never paste secret values into tickets, chat, or this doc.
 Safe checks only (no secrets, no full payloads, no card data):
 
 1. Confirm `STRIPE_WEBHOOK_SECRET` matches the Connected accounts endpoint signing secret in Stripe.
-2. Confirm webhook is Connected accounts destination and includes `checkout.session.completed`.
+2. Confirm webhook is Connected accounts destination and includes `checkout.session.completed`, `payment_intent.payment_failed`, and the three `charge.dispute.*` events above.
 3. Check Vercel/function logs for:
    - signature verification failed
    - missing connected account context

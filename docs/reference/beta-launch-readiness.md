@@ -113,7 +113,7 @@ Large issues above are **report-only** for this pass — do not expand scope mid
 Operational requirements (no secrets in this doc):
 
 1. **Connected accounts webhook must be active** for the Altair payments endpoint.
-2. Event **`checkout.session.completed`** must be selected on that webhook.
+2. Events **`checkout.session.completed`**, **`payment_intent.payment_failed`**, **`charge.dispute.created`**, **`charge.dispute.updated`**, and **`charge.dispute.closed`** must be selected on that webhook (`account.updated` as well if not already subscribed).
 3. **`STRIPE_WEBHOOK_SECRET`** in the deploy environment must match the **connected-account** webhook destination signing secret.
 4. Do **not** point an old “Your account” (platform) webhook at the same URL with a different/wrong secret — signature verification will fail and invoice status will not update.
 5. After Connect onboarding, confirm Settings shows charges enabled / online payments enabled as expected.

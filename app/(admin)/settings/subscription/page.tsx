@@ -5,6 +5,8 @@ import {
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
+import { listCompanyCardFailureAttentionAttempts } from "@/lib/database/queries/payment-attempts";
+import { listCompanyPaymentDisputes } from "@/lib/database/queries/payment-disputes";
 import {
   isStripeConnectOnboardingConfigured,
   isStripeTestMode,
@@ -15,12 +17,18 @@ import {
   type CompanySubscriptionBillingSummary,
 } from "@/lib/saas-billing";
 import { CompanySubscriptionBillingCard } from "@/shared/components/settings/CompanySubscriptionBillingCard";
+import {
+  PaymentCardFailuresCard,
+  type PaymentCardFailureListViewItem,
+} from "@/shared/components/settings/PaymentCardFailuresCard";
+import { PaymentDisputesCard } from "@/shared/components/settings/PaymentDisputesCard";
 import { PaymentSettingsCard } from "@/shared/components/settings/PaymentSettingsCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   SettingsWorkspacePage,
   SettingsWorkspaceSection,
 } from "@/shared/components/settings/SettingsWorkspacePage";
+import type { PaymentDisputeListViewItem } from "@/shared/types/settings/payment-disputes";
 import {
   buildStripePaymentSettingsSummary,
   type PaymentSetupReturnNotice,
@@ -77,6 +85,70 @@ async function loadStripePaymentSettingsSafely(companyId: string): Promise<{
   }
 }
 
+async function loadPaymentDisputesSafely(companyId: string): Promise<{
+  disputes: PaymentDisputeListViewItem[];
+  error?: string;
+}> {
+  try {
+    const rows = await listCompanyPaymentDisputes(companyId, { limit: 25 });
+    return {
+      disputes: rows.map((row) => ({
+        id: row.id,
+        providerDisputeId: row.provider_dispute_id,
+        amount: row.amount,
+        currency: row.currency,
+        reason: row.reason,
+        status: row.status,
+        evidenceDueBy: row.evidence_due_by,
+        providerCreatedAt: row.provider_created_at,
+        createdAt: row.created_at,
+        invoiceId: row.invoice_id,
+        invoiceNumber: row.invoiceNumber,
+        providerPaymentIntentId: row.provider_payment_intent_id,
+      })),
+    };
+  } catch (error) {
+    console.error("[SubscriptionSettingsPage] disputes load failed:", error);
+    return {
+      disputes: [],
+      error:
+        "We couldn't load payment disputes. Refresh the page or try again in a moment.",
+    };
+  }
+}
+
+async function loadCardFailuresSafely(companyId: string): Promise<{
+  attempts: PaymentCardFailureListViewItem[];
+  error?: string;
+}> {
+  try {
+    const rows = await listCompanyCardFailureAttentionAttempts(companyId, {
+      limit: 25,
+    });
+    return {
+      attempts: rows.map((row) => ({
+        id: row.id,
+        invoiceId: row.invoice_id,
+        invoiceNumber: row.invoiceNumber,
+        amount: row.amount,
+        currency: row.currency,
+        status: row.status,
+        cardFailureCount: row.card_failure_count,
+        lastCardFailureAt: row.last_card_failure_at,
+        lastCardFailureCode: row.last_card_failure_code,
+        lastCardFailureMessage: row.last_card_failure_message,
+      })),
+    };
+  } catch (error) {
+    console.error("[SubscriptionSettingsPage] card failures load failed:", error);
+    return {
+      attempts: [],
+      error:
+        "We couldn't load card payment failures. Refresh the page or try again in a moment.",
+    };
+  }
+}
+
 export default async function SubscriptionSettingsPage({
   searchParams,
 }: {
@@ -90,15 +162,28 @@ export default async function SubscriptionSettingsPage({
 
   const params = await searchParams;
   const canViewPaymentSettings = companyContext.permissions.manageBilling;
-  const [billingResult, paymentResult] = await Promise.all([
-    loadSubscriptionBillingSafely(companyContext.company.id),
-    canViewPaymentSettings
-      ? loadStripePaymentSettingsSafely(companyContext.company.id)
-      : Promise.resolve({
-          summary: null as StripePaymentSettingsSummary | null,
-          error: undefined as string | undefined,
-        }),
-  ]);
+  const [billingResult, paymentResult, disputesResult, cardFailuresResult] =
+    await Promise.all([
+      loadSubscriptionBillingSafely(companyContext.company.id),
+      canViewPaymentSettings
+        ? loadStripePaymentSettingsSafely(companyContext.company.id)
+        : Promise.resolve({
+            summary: null as StripePaymentSettingsSummary | null,
+            error: undefined as string | undefined,
+          }),
+      canViewPaymentSettings
+        ? loadPaymentDisputesSafely(companyContext.company.id)
+        : Promise.resolve({
+            disputes: [] as PaymentDisputeListViewItem[],
+            error: undefined as string | undefined,
+          }),
+      canViewPaymentSettings
+        ? loadCardFailuresSafely(companyContext.company.id)
+        : Promise.resolve({
+            attempts: [] as PaymentCardFailureListViewItem[],
+            error: undefined as string | undefined,
+          }),
+    ]);
   const paymentSetupNotice: PaymentSetupReturnNotice | null =
     params.payments === "return" || params.payments === "refresh"
       ? params.payments
@@ -135,20 +220,32 @@ export default async function SubscriptionSettingsPage({
           ) : null}
 
           {canViewPaymentSettings ? (
-            <PaymentSettingsCard
-              stripeAccount={paymentResult.summary}
-              companyTimezone={companyContext.company.timezone}
-              canStartStripeSetup={canStartStripeConnectOnboarding(
-                companyContext,
-              )}
-              canManageOnlineCheckout={canManageOnlineCheckout(companyContext)}
-              canRefreshStripeStatus={canRefreshStripePaymentAccountStatus(
-                companyContext,
-              )}
-              stripeOnboardingConfigured={isStripeConnectOnboardingConfigured()}
-              stripeTestMode={isStripeTestMode()}
-              paymentSetupNotice={paymentSetupNotice}
-            />
+            <div className="space-y-4">
+              <PaymentSettingsCard
+                stripeAccount={paymentResult.summary}
+                companyTimezone={companyContext.company.timezone}
+                canStartStripeSetup={canStartStripeConnectOnboarding(
+                  companyContext,
+                )}
+                canManageOnlineCheckout={canManageOnlineCheckout(companyContext)}
+                canRefreshStripeStatus={canRefreshStripePaymentAccountStatus(
+                  companyContext,
+                )}
+                stripeOnboardingConfigured={isStripeConnectOnboardingConfigured()}
+                stripeTestMode={isStripeTestMode()}
+                paymentSetupNotice={paymentSetupNotice}
+              />
+              <PaymentDisputesCard
+                disputes={disputesResult.disputes}
+                companyTimezone={companyContext.company.timezone}
+                loadError={disputesResult.error ?? null}
+              />
+              <PaymentCardFailuresCard
+                attempts={cardFailuresResult.attempts}
+                companyTimezone={companyContext.company.timezone}
+                loadError={cardFailuresResult.error ?? null}
+              />
+            </div>
           ) : (
             <p className="text-sm text-altair-ink-secondary">
               Customer payment settings are limited to roles with billing access.

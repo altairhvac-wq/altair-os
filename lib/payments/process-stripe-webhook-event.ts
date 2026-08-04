@@ -26,12 +26,34 @@ import {
   stripeUnixTimestampToDateOnly,
 } from "@/lib/payments/stripe-checkout";
 import {
+  findLatestPaymentAttemptForInvoice,
   findPaymentAttemptByCheckoutSessionId,
+  findPaymentAttemptById,
+  findPaymentAttemptByPaymentIntentId,
   markPaymentAttemptCompleted,
+  recordPaymentAttemptCardFailure,
 } from "@/lib/payments/payment-attempts-service";
 import { recordPaymentReconciliationAtomic } from "@/lib/payments/payment-reconciliation-service";
 import type { PaymentAttemptRecord } from "@/lib/payments/payment-attempts";
 import type { PaymentReconciliationReasonCode } from "@/lib/payments/payment-reconciliations";
+import {
+  findInvoicePaymentByPaymentIntentId,
+  parsePaymentDisputeStatus,
+  resolvePaymentIntentIdFromDispute,
+  sanitizeDisputeReason,
+  stripeDisputeAmountToCurrency,
+  stripeEvidenceDueByToIso,
+  upsertPaymentDispute,
+} from "@/lib/payments/payment-disputes-service";
+import { isOpenPaymentDisputeStatus } from "@/lib/payments/payment-disputes";
+import {
+  CHECKOUT_METADATA_PROVIDER,
+  CHECKOUT_METADATA_PURPOSE,
+  isAltairInvoicePaymentIntentMetadata,
+  isCardFailureAttentionEligible,
+  readPaymentIntentMetadata,
+  type CardFailureDetails,
+} from "@/lib/payments/payment-intent-failure";
 import {
   isInvoiceBalanceConsistent,
   roundCurrency,
@@ -44,8 +66,6 @@ export type ProcessStripeWebhookEventResult =
   | { processed: false; ignored: false; retryable: true; error: string };
 
 const NO_MATCHING_ACCOUNT_MESSAGE = "No matching company payment account";
-const CHECKOUT_METADATA_PURPOSE = "invoice_payment";
-const CHECKOUT_METADATA_PROVIDER = "stripe";
 
 function sanitizeProcessingError(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -83,6 +103,63 @@ function extractCheckoutSessionFromEvent(
   }
 
   return session as Stripe.Checkout.Session;
+}
+
+function extractPaymentIntentFromEvent(
+  event: Stripe.Event,
+): Stripe.PaymentIntent | null {
+  if (event.type !== "payment_intent.payment_failed") {
+    return null;
+  }
+
+  const paymentIntent = event.data.object;
+
+  if (!paymentIntent || typeof paymentIntent !== "object" || !("id" in paymentIntent)) {
+    return null;
+  }
+
+  return paymentIntent as Stripe.PaymentIntent;
+}
+
+const CHARGE_DISPUTE_EVENT_TYPES = new Set([
+  "charge.dispute.created",
+  "charge.dispute.updated",
+  "charge.dispute.closed",
+]);
+
+function isChargeDisputeEventType(
+  eventType: string,
+): eventType is
+  | "charge.dispute.created"
+  | "charge.dispute.updated"
+  | "charge.dispute.closed" {
+  return CHARGE_DISPUTE_EVENT_TYPES.has(eventType);
+}
+
+function extractDisputeFromEvent(event: Stripe.Event): Stripe.Dispute | null {
+  if (!isChargeDisputeEventType(event.type)) {
+    return null;
+  }
+
+  const dispute = event.data.object;
+
+  if (!dispute || typeof dispute !== "object" || !("id" in dispute)) {
+    return null;
+  }
+
+  return dispute as Stripe.Dispute;
+}
+
+function extractCardFailureDetailsFromPaymentIntent(
+  paymentIntent: Stripe.PaymentIntent,
+): CardFailureDetails {
+  const lastError = paymentIntent.last_payment_error;
+
+  return {
+    code: lastError?.code ?? null,
+    message: lastError?.message ?? null,
+    declineCode: lastError?.decline_code ?? null,
+  };
 }
 
 function readCheckoutSessionMetadata(
@@ -267,6 +344,318 @@ async function ignoreCheckoutSessionEvent(
   });
   await markProviderEventIgnored(supabase, providerEventId, reason, companyId);
   return { processed: false, ignored: true };
+}
+
+async function ignorePaymentIntentFailedEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  reason: string,
+  companyId: string | null = null,
+): Promise<ProcessStripeWebhookEventResult> {
+  console.info("[stripe-webhook] payment_intent.payment_failed ignored", {
+    eventId: providerEventId,
+    reason,
+    hasCompanyId: Boolean(companyId),
+  });
+  await markProviderEventIgnored(supabase, providerEventId, reason, companyId);
+  return { processed: false, ignored: true };
+}
+
+async function ignoreChargeDisputeEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  reason: string,
+  companyId: string | null = null,
+): Promise<ProcessStripeWebhookEventResult> {
+  console.info("[stripe-webhook] charge.dispute ignored", {
+    eventId: providerEventId,
+    reason,
+    hasCompanyId: Boolean(companyId),
+  });
+  await markProviderEventIgnored(supabase, providerEventId, reason, companyId);
+  return { processed: false, ignored: true };
+}
+
+/**
+ * Express + direct charges: dispute events arrive on the Connected-accounts
+ * webhook with event.account set. Tenant is resolved from company_payment_accounts
+ * via that connected account id (not from dispute metadata).
+ */
+async function processChargeDisputeEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  event: Stripe.Event,
+  dispute: Stripe.Dispute,
+): Promise<ProcessStripeWebhookEventResult> {
+  const connectedAccountId = extractConnectedAccountId(event);
+
+  if (!connectedAccountId) {
+    // Direct-charge Connect disputes must carry event.account. Missing account
+    // is a configuration / delivery problem — fail so Stripe retries.
+    throw new Error(
+      `${event.type} missing connected account (event.account) for Express direct-charge dispute`,
+    );
+  }
+
+  const accountRow = await findStripeCompanyPaymentAccountByProviderAccountId(
+    supabase,
+    connectedAccountId,
+  );
+
+  if (!accountRow) {
+    return ignoreChargeDisputeEvent(
+      supabase,
+      providerEventId,
+      NO_MATCHING_ACCOUNT_MESSAGE,
+    );
+  }
+
+  const companyId = accountRow.company_id;
+  const status = parsePaymentDisputeStatus(dispute.status);
+  const { paymentIntentId, chargeId } = await resolvePaymentIntentIdFromDispute({
+    paymentIntent: dispute.payment_intent,
+    charge: dispute.charge,
+    connectedAccountId,
+  });
+
+  let invoicePaymentId: string | null = null;
+  let invoiceId: string | null = null;
+  let paymentAttemptId: string | null = null;
+
+  if (paymentIntentId) {
+    const invoicePayment = await findInvoicePaymentByPaymentIntentId(
+      supabase,
+      companyId,
+      paymentIntentId,
+    );
+    if (invoicePayment) {
+      invoicePaymentId = invoicePayment.id;
+      invoiceId = invoicePayment.invoice_id;
+    }
+
+    const attempt = await findPaymentAttemptByPaymentIntentId(
+      supabase,
+      paymentIntentId,
+    );
+    if (attempt && attempt.company_id === companyId) {
+      paymentAttemptId = attempt.id;
+      if (!invoiceId) {
+        invoiceId = attempt.invoice_id;
+      }
+    }
+  }
+
+  const amount = stripeDisputeAmountToCurrency(dispute.amount ?? 0);
+  const evidenceDueBy = stripeEvidenceDueByToIso(
+    dispute.evidence_details?.due_by,
+  );
+  const providerCreatedAt =
+    typeof dispute.created === "number" && dispute.created > 0
+      ? new Date(dispute.created * 1000).toISOString()
+      : null;
+
+  console.info("[stripe-webhook] charge.dispute received", {
+    eventId: providerEventId,
+    eventType: event.type,
+    disputeId: dispute.id,
+    connectedAccountId,
+    companyId,
+    status,
+    hasPaymentIntentId: Boolean(paymentIntentId),
+    hasInvoicePaymentId: Boolean(invoicePaymentId),
+    hasInvoiceId: Boolean(invoiceId),
+    openAttention: isOpenPaymentDisputeStatus(status),
+  });
+
+  const record = await upsertPaymentDispute(supabase, {
+    companyId,
+    invoiceId,
+    invoicePaymentId,
+    paymentAttemptId,
+    providerDisputeId: dispute.id,
+    providerChargeId: chargeId,
+    providerPaymentIntentId: paymentIntentId,
+    connectedAccountId,
+    amount,
+    currency: dispute.currency ?? "usd",
+    reason: sanitizeDisputeReason(dispute.reason),
+    status,
+    evidenceDueBy,
+    providerCreatedAt,
+  });
+
+  console.info("[stripe-webhook] payment dispute persisted", {
+    eventId: providerEventId,
+    eventType: event.type,
+    paymentDisputeId: record.id,
+    disputeId: record.provider_dispute_id,
+    invoiceId: record.invoice_id,
+    status: record.status,
+  });
+
+  await markProviderEventProcessed(supabase, providerEventId, companyId);
+  return { processed: true, ignored: false };
+}
+
+/**
+ * Resolve the payment attempt for a failed PaymentIntent using the same
+ * authoritative-link preference as checkout.session.completed:
+ * PaymentIntent id → payment_attempt_id metadata → company/invoice metadata.
+ */
+async function resolvePaymentAttemptForFailedPaymentIntent(
+  supabase: SupabaseClient<Database>,
+  paymentIntent: Stripe.PaymentIntent,
+): Promise<PaymentAttemptRecord | null> {
+  const metadata = readPaymentIntentMetadata(
+    paymentIntent.metadata as Record<string, string> | null,
+  );
+
+  const byPaymentIntent = await findPaymentAttemptByPaymentIntentId(
+    supabase,
+    paymentIntent.id,
+  );
+  if (byPaymentIntent) {
+    return byPaymentIntent;
+  }
+
+  if (metadata.paymentAttemptId) {
+    const byAttemptId = await findPaymentAttemptById(
+      supabase,
+      metadata.paymentAttemptId,
+    );
+    if (byAttemptId) {
+      return byAttemptId;
+    }
+  }
+
+  if (
+    isAltairInvoicePaymentIntentMetadata(metadata) &&
+    metadata.companyId &&
+    metadata.invoiceId
+  ) {
+    return findLatestPaymentAttemptForInvoice(
+      supabase,
+      metadata.companyId,
+      metadata.invoiceId,
+    );
+  }
+
+  return null;
+}
+
+async function processPaymentIntentPaymentFailedEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  event: Stripe.Event,
+  paymentIntent: Stripe.PaymentIntent,
+): Promise<ProcessStripeWebhookEventResult> {
+  const metadata = readPaymentIntentMetadata(
+    paymentIntent.metadata as Record<string, string> | null,
+  );
+  const connectedAccountId = extractConnectedAccountId(event);
+  const failure = extractCardFailureDetailsFromPaymentIntent(paymentIntent);
+
+  console.info("[stripe-webhook] payment_intent.payment_failed received", {
+    eventId: providerEventId,
+    paymentIntentId: paymentIntent.id,
+    hasEventAccount: Boolean(connectedAccountId),
+    hasCompanyId: Boolean(metadata.companyId),
+    hasInvoiceId: Boolean(metadata.invoiceId),
+    hasPaymentAttemptId: Boolean(metadata.paymentAttemptId),
+    purpose: metadata.purpose,
+    provider: metadata.provider,
+    failureCode: failure.code,
+    declineCode: failure.declineCode,
+  });
+
+  const attempt = await resolvePaymentAttemptForFailedPaymentIntent(
+    supabase,
+    paymentIntent,
+  );
+
+  if (!attempt) {
+    // Connected accounts can emit unrelated PaymentIntents. Only hard-fail when
+    // the PI presents itself as one of Altair's invoice-payment intents.
+    if (isAltairInvoicePaymentIntentMetadata(metadata)) {
+      throw new Error(
+        "Altair payment_intent.payment_failed has no matching payment attempt record",
+      );
+    }
+
+    return ignorePaymentIntentFailedEvent(
+      supabase,
+      providerEventId,
+      "No matching payment attempt for payment_intent.payment_failed",
+      metadata.companyId,
+    );
+  }
+
+  if (
+    metadata.companyId &&
+    metadata.invoiceId &&
+    (attempt.company_id !== metadata.companyId ||
+      attempt.invoice_id !== metadata.invoiceId)
+  ) {
+    throw new Error(
+      "payment_intent.payment_failed payment attempt does not match PaymentIntent metadata",
+    );
+  }
+
+  if (metadata.paymentAttemptId && attempt.id !== metadata.paymentAttemptId) {
+    throw new Error(
+      "payment_intent.payment_failed payment attempt id does not match PaymentIntent metadata",
+    );
+  }
+
+  if (attempt.status === "completed") {
+    console.info(
+      "[stripe-webhook] payment_intent.payment_failed on completed attempt ignored as already paid",
+      {
+        eventId: providerEventId,
+        paymentAttemptId: attempt.id,
+        paymentIntentId: paymentIntent.id,
+      },
+    );
+    await markProviderEventProcessed(
+      supabase,
+      providerEventId,
+      attempt.company_id,
+    );
+    return { processed: true, ignored: false };
+  }
+
+  const updated = await recordPaymentAttemptCardFailure(supabase, {
+    attempt,
+    paymentIntentId: paymentIntent.id,
+    failure,
+    failedAt: new Date((event.created ?? Math.floor(Date.now() / 1000)) * 1000),
+  });
+
+  if (!updated) {
+    // Lost a race with checkout.session.completed marking the attempt completed.
+    await markProviderEventProcessed(
+      supabase,
+      providerEventId,
+      attempt.company_id,
+    );
+    return { processed: true, ignored: false };
+  }
+
+  console.info("[stripe-webhook] payment attempt card failure persisted", {
+    eventId: providerEventId,
+    paymentAttemptId: updated.id,
+    invoiceId: updated.invoice_id,
+    paymentIntentId: paymentIntent.id,
+    cardFailureCount: updated.card_failure_count,
+    attentionEligible: isCardFailureAttentionEligible(updated),
+  });
+
+  await markProviderEventProcessed(
+    supabase,
+    providerEventId,
+    updated.company_id,
+  );
+  return { processed: true, ignored: false };
 }
 
 /**
@@ -675,6 +1064,46 @@ export async function processStripeWebhookEvent(
         providerEventId,
         event,
         session,
+      );
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+      const paymentIntent = extractPaymentIntentFromEvent(event);
+
+      if (!paymentIntent) {
+        await markProviderEventIgnored(
+          supabase,
+          providerEventId,
+          "Invalid Stripe payment_intent.payment_failed payload",
+        );
+        return { processed: false, ignored: true };
+      }
+
+      return await processPaymentIntentPaymentFailedEvent(
+        supabase,
+        providerEventId,
+        event,
+        paymentIntent,
+      );
+    }
+
+    if (isChargeDisputeEventType(event.type)) {
+      const dispute = extractDisputeFromEvent(event);
+
+      if (!dispute) {
+        await markProviderEventIgnored(
+          supabase,
+          providerEventId,
+          `Invalid Stripe ${event.type} payload`,
+        );
+        return { processed: false, ignored: true };
+      }
+
+      return await processChargeDisputeEvent(
+        supabase,
+        providerEventId,
+        event,
+        dispute,
       );
     }
 

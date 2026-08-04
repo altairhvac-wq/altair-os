@@ -79,6 +79,18 @@ export async function createStripeInvoiceCheckoutSession(
     throw new Error("Invoice balance must be greater than zero.");
   }
 
+  // Mirror session metadata onto the PaymentIntent so payment_intent.payment_failed
+  // can resolve the owning payment attempt without an extra Checkout Session lookup.
+  const checkoutMetadata: Record<string, string> = {
+    company_id: companyId,
+    invoice_id: invoice.id,
+    provider: "stripe",
+    purpose: "invoice_payment",
+    ...(options.paymentAttemptId
+      ? { payment_attempt_id: options.paymentAttemptId }
+      : {}),
+  };
+
   const session = await stripe.checkout.sessions.create(
     {
       mode: "payment",
@@ -107,14 +119,9 @@ export async function createStripeInvoiceCheckoutSession(
       ...(options.expiresAtUnixSeconds
         ? { expires_at: options.expiresAtUnixSeconds }
         : {}),
-      metadata: {
-        company_id: companyId,
-        invoice_id: invoice.id,
-        provider: "stripe",
-        purpose: "invoice_payment",
-        ...(options.paymentAttemptId
-          ? { payment_attempt_id: options.paymentAttemptId }
-          : {}),
+      metadata: checkoutMetadata,
+      payment_intent_data: {
+        metadata: checkoutMetadata,
       },
     },
     {

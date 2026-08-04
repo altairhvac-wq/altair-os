@@ -27,6 +27,11 @@ export type PaymentAttemptRecord = {
   provider_account_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
+  /** Linked Stripe payment_intent.payment_failed count (card declines). */
+  card_failure_count: number;
+  last_card_failure_at: Timestamp | null;
+  last_card_failure_code: string | null;
+  last_card_failure_message: string | null;
   expires_at: Timestamp;
   completed_at: Timestamp | null;
   invalidated_at: Timestamp | null;
@@ -45,6 +50,10 @@ export type PaymentAttemptRecordInsert = {
   provider_account_id?: string | null;
   stripe_checkout_session_id?: string | null;
   stripe_payment_intent_id?: string | null;
+  card_failure_count?: number;
+  last_card_failure_at?: Timestamp | null;
+  last_card_failure_code?: string | null;
+  last_card_failure_message?: string | null;
   expires_at: Timestamp;
   completed_at?: Timestamp | null;
   invalidated_at?: Timestamp | null;

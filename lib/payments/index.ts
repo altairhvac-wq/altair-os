@@ -30,6 +30,11 @@ export type {
   PaymentAttemptRecordInsert,
   PaymentAttemptStatus,
 } from "./payment-attempts";
+export {
+  CARD_FAILURE_ATTENTION_MIN_COUNT,
+  isCardFailureAttentionEligible,
+  shouldPersistCardFailureForAttempt,
+} from "./payment-intent-failure";
 export type {
   PaymentReconciliationProvider,
   PaymentReconciliationReasonCode,
@@ -37,3 +42,14 @@ export type {
   PaymentReconciliationRecordInsert,
   PaymentReconciliationStatus,
 } from "./payment-reconciliations";
+export {
+  isOpenPaymentDisputeStatus,
+  isPaymentDisputeStatus,
+  PAYMENT_DISPUTE_STATUSES,
+} from "./payment-disputes";
+export type {
+  PaymentDisputeProvider,
+  PaymentDisputeRecord,
+  PaymentDisputeRecordInsert,
+  PaymentDisputeStatus,
+} from "./payment-disputes";

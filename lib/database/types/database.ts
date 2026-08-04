@@ -45,6 +45,8 @@ import type {
   PaymentAttemptRow,
   PaymentProviderEventInsert,
   PaymentProviderEventRow,
+  PaymentDisputeInsert,
+  PaymentDisputeRow,
   PaymentReconciliationInsert,
   PaymentReconciliationRow,
   PlatformAutomationRunInsert,
@@ -1041,6 +1043,41 @@ export type Database = {
             columns: ["provider_event_id"];
             isOneToOne: true;
             referencedRelation: "payment_provider_events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_disputes: {
+        Row: PaymentDisputeRow;
+        Insert: PaymentDisputeInsert;
+        Update: Partial<PaymentDisputeInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "payment_disputes_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_disputes_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_disputes_invoice_payment_id_fkey";
+            columns: ["invoice_payment_id"];
+            isOneToOne: false;
+            referencedRelation: "invoice_payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_disputes_payment_attempt_id_fkey";
+            columns: ["payment_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_attempts";
             referencedColumns: ["id"];
           },
         ];

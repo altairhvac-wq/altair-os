@@ -62,6 +62,12 @@ import type {
   PaymentReconciliationStatus,
 } from "@/lib/payments/payment-reconciliations";
 import type {
+  PaymentDisputeProvider,
+  PaymentDisputeRecord,
+  PaymentDisputeRecordInsert,
+  PaymentDisputeStatus,
+} from "@/lib/payments/payment-disputes";
+import type {
   CompanyBillingAccountInsert,
   CompanyBillingAccountRow,
   CompanySubscriptionInsert,
@@ -85,6 +91,10 @@ export type {
 };
 export type PaymentReconciliationRow = PaymentReconciliationRecord;
 export type PaymentReconciliationInsert = PaymentReconciliationRecordInsert;
+
+export type { PaymentDisputeProvider, PaymentDisputeStatus };
+export type PaymentDisputeRow = PaymentDisputeRecord;
+export type PaymentDisputeInsert = PaymentDisputeRecordInsert;
 
 export type {
   PlatformAutomationRunRow,

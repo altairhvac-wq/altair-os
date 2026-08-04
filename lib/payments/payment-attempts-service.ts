@@ -14,13 +14,19 @@ import type {
   PaymentAttemptRecord,
   PaymentAttemptStatus,
 } from "@/lib/payments/payment-attempts";
+import {
+  resolveCardFailureCode,
+  sanitizeCardFailureMessage,
+  shouldPersistCardFailureForAttempt,
+  type CardFailureDetails,
+} from "@/lib/payments/payment-intent-failure";
 
 /** Stripe Checkout Sessions we create expire this long after creation (Stripe minimum is 30 minutes). */
 const PAYMENT_ATTEMPT_TTL_MS = 30 * 60 * 1000;
 const AMOUNT_EPSILON = 0.005;
 
 const PAYMENT_ATTEMPT_SELECT =
-  "id, company_id, invoice_id, status, amount, currency, provider, provider_account_id, stripe_checkout_session_id, stripe_payment_intent_id, expires_at, completed_at, invalidated_at, created_at, updated_at";
+  "id, company_id, invoice_id, status, amount, currency, provider, provider_account_id, stripe_checkout_session_id, stripe_payment_intent_id, card_failure_count, last_card_failure_at, last_card_failure_code, last_card_failure_message, expires_at, completed_at, invalidated_at, created_at, updated_at";
 
 function mapPaymentAttemptRow(row: Record<string, unknown>): PaymentAttemptRecord {
   return {
@@ -36,6 +42,12 @@ function mapPaymentAttemptRow(row: Record<string, unknown>): PaymentAttemptRecor
       (row.stripe_checkout_session_id as string | null) ?? null,
     stripe_payment_intent_id:
       (row.stripe_payment_intent_id as string | null) ?? null,
+    card_failure_count: Number(row.card_failure_count) || 0,
+    last_card_failure_at: (row.last_card_failure_at as string | null) ?? null,
+    last_card_failure_code:
+      (row.last_card_failure_code as string | null) ?? null,
+    last_card_failure_message:
+      (row.last_card_failure_message as string | null) ?? null,
     expires_at: row.expires_at as string,
     completed_at: (row.completed_at as string | null) ?? null,
     invalidated_at: (row.invalidated_at as string | null) ?? null,
@@ -77,6 +89,40 @@ async function findActivePaymentAttempt(
 }
 
 /**
+ * Company-scoped attempts that have recorded at least one card failure.
+ * Callers should apply isCardFailureAttentionEligible for Dashboard attention.
+ */
+export async function listPaymentAttemptsWithCardFailuresForCompany(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  options?: { limit?: number },
+): Promise<PaymentAttemptRecord[]> {
+  const limit = Math.min(Math.max(options?.limit ?? 50, 1), 100);
+
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .select(PAYMENT_ATTEMPT_SELECT)
+    .eq("company_id", companyId)
+    .gt("card_failure_count", 0)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error(
+      "[listPaymentAttemptsWithCardFailuresForCompany] query failed:",
+      {
+        companyId,
+        code: error.code,
+        message: error.message,
+      },
+    );
+    return [];
+  }
+
+  return (data ?? []).map((row) => mapPaymentAttemptRow(row));
+}
+
+/**
  * Resolve a payment attempt by the Stripe Checkout Session id it owns.
  * Used by the webhook (Rule 5) as the authoritative lookup instead of session metadata.
  */
@@ -98,6 +144,140 @@ export async function findPaymentAttemptByCheckoutSessionId(
       message: error.message,
     });
     return null;
+  }
+
+  return data ? mapPaymentAttemptRow(data) : null;
+}
+
+/**
+ * Resolve a payment attempt by Stripe PaymentIntent id (card-failure webhook path).
+ */
+export async function findPaymentAttemptByPaymentIntentId(
+  supabase: SupabaseClient<Database>,
+  paymentIntentId: string,
+): Promise<PaymentAttemptRecord | null> {
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .select(PAYMENT_ATTEMPT_SELECT)
+    .eq("provider", "stripe")
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findPaymentAttemptByPaymentIntentId] query failed:", {
+      paymentIntentId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  return data ? mapPaymentAttemptRow(data) : null;
+}
+
+export async function findPaymentAttemptById(
+  supabase: SupabaseClient<Database>,
+  attemptId: string,
+): Promise<PaymentAttemptRecord | null> {
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .select(PAYMENT_ATTEMPT_SELECT)
+    .eq("id", attemptId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findPaymentAttemptById] query failed:", {
+      attemptId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  return data ? mapPaymentAttemptRow(data) : null;
+}
+
+/**
+ * Most recent attempt for a company/invoice — fallback when PI metadata carries
+ * invoice identity but stripe_payment_intent_id was not linked at session create.
+ */
+export async function findLatestPaymentAttemptForInvoice(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  invoiceId: string,
+): Promise<PaymentAttemptRecord | null> {
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .select(PAYMENT_ATTEMPT_SELECT)
+    .eq("company_id", companyId)
+    .eq("invoice_id", invoiceId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findLatestPaymentAttemptForInvoice] query failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  return data ? mapPaymentAttemptRow(data) : null;
+}
+
+export type RecordPaymentAttemptCardFailureInput = {
+  attempt: PaymentAttemptRecord;
+  paymentIntentId: string;
+  failure: CardFailureDetails;
+  failedAt?: Date;
+};
+
+/**
+ * Persist a Stripe card/payment failure onto the attempt without closing it.
+ * Status stays active so the customer can still succeed on the same Checkout session.
+ */
+export async function recordPaymentAttemptCardFailure(
+  supabase: SupabaseClient<Database>,
+  input: RecordPaymentAttemptCardFailureInput,
+): Promise<PaymentAttemptRecord | null> {
+  const { attempt, paymentIntentId, failure } = input;
+
+  if (!shouldPersistCardFailureForAttempt(attempt.status)) {
+    return attempt;
+  }
+
+  const failedAt = (input.failedAt ?? new Date()).toISOString();
+  const nextCount = attempt.card_failure_count + 1;
+
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .update({
+      card_failure_count: nextCount,
+      last_card_failure_at: failedAt,
+      last_card_failure_code: resolveCardFailureCode(failure),
+      last_card_failure_message: sanitizeCardFailureMessage(failure.message),
+      ...(attempt.stripe_payment_intent_id
+        ? {}
+        : { stripe_payment_intent_id: paymentIntentId }),
+    })
+    .eq("id", attempt.id)
+    .neq("status", "completed")
+    .select(PAYMENT_ATTEMPT_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[recordPaymentAttemptCardFailure] update failed:", {
+      attemptId: attempt.id,
+      paymentIntentId,
+      code: error.code,
+      message: error.message,
+    });
+    throw new Error("Failed to persist payment attempt card failure");
   }
 
   return data ? mapPaymentAttemptRow(data) : null;

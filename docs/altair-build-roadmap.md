@@ -23,6 +23,7 @@ Source: the 16-panel reference sheet (dark/brass visual language) covering the w
 
 ## Also in progress (not part of the 16-panel set)
 
+- **Payment failure & dispute tracking** — ✅ Done. Migration 127 adds card-failure columns on `payment_attempts`; migration 128 adds `payment_disputes`. Webhooks handle `payment_intent.payment_failed` plus `charge.dispute.created/updated/closed`. Card failures are gated by `isCardFailureAttentionEligible` (noise rule) so soft declines don't spam the board. Review UX lives on `/settings/subscription` at `#payment-disputes` / `#payment-card-failures`.
 - **Marketing (founder-only automation)** — 🔄 In progress. Real Facebook OAuth Connect flow, founder screenshot upload/capture tooling, comparison screenshot tool. Post Now (Facebook/Instagram publish) is code-complete but blocked on Meta app console config (needs correct use cases added, real domain instead of localhost, "Ready for testing" status on pages_manage_posts/instagram_basic/instagram_content_publish before retrying Connect).
 - **Homepage hero (unrelated to this project)** — found uncommitted/unwired during commit audit. Left uncommitted deliberately, status unknown, needs confirmation whether it's active work or safe to clean up.
 - **Reports** — 🔄 In progress. Dark report-surface conversion done for all sections. Remaining: visual tiering, sparklines on Tier 1 cards, Operations Snapshot 4-column merge, Recommended Actions section (real records only), Business Score/health-grade rubric (paused pending a dedicated scoring conversation).
