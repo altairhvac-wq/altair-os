@@ -139,7 +139,10 @@ export function NetworkReferralCard({
         {direction === "received" && referral.targetLeadId ? (
           <div>
             <p className={fieldLabelClass}>Lead pipeline</p>
-            <Link href={`/leads?selected=${referral.targetLeadId}`} className={leadLinkClass}>
+            <Link
+              href={`/customers?tab=pipeline&selected=${referral.targetLeadId}`}
+              className={leadLinkClass}
+            >
               View lead
             </Link>
           </div>

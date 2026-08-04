@@ -55,7 +55,7 @@ export function buildDashboardWorkflowRail(
         leadPressure > 0
           ? `${leadPressure} follow-up${leadPressure === 1 ? "" : "s"} due`
           : `${data.leadPipelineSummary.totalLeads} in pipeline`,
-      href: "/leads",
+      href: "/customers?tab=pipeline",
       state: pressureState(leadPressure, 3),
     });
   }

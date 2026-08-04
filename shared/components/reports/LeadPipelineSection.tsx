@@ -136,7 +136,7 @@ export function LeadPipelineSection({
               Try a wider date range or add a new lead to see pipeline metrics.
             </p>
             <Link
-              href="/leads"
+              href="/customers?tab=pipeline&create=1"
               className="mt-3 inline-flex text-xs font-semibold text-altair-brass-interactive transition-colors hover:text-altair-brass"
             >
               Create Lead
@@ -254,7 +254,7 @@ export function LeadPipelineSection({
             Try a wider date range or add a new lead to see pipeline metrics.
           </p>
           <Link
-            href="/leads"
+            href="/customers?tab=pipeline&create=1"
             className="mt-3 inline-flex text-xs font-semibold text-cyan-700 hover:text-cyan-800"
           >
             Create Lead

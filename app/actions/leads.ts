@@ -65,9 +65,9 @@ export type LeadActionResult = {
 };
 
 function revalidateLeadPaths() {
+  revalidatePath("/customers");
   revalidatePath("/leads");
   revalidatePath("/");
-  revalidatePath("/customers");
   revalidatePath("/estimates");
   revalidatePath("/network");
 }

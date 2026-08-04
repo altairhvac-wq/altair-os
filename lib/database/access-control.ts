@@ -499,7 +499,8 @@ export function getAccessibleAdminNavHrefs(
     "/schedule",
     "/technicians",
     "/customers",
-    "/leads",
+    // /leads remains a valid AdminNavHref for redirects/deep links, but is no
+    // longer a standalone sidebar entry — Lead Pipeline lives under Customers.
     "/marketing",
     "/jobs",
     "/estimates",

@@ -52,7 +52,7 @@ const needsAttention = [
 const quickAccess = [
   { label: "Customers", href: "/customers" },
   { label: "Jobs", href: "/jobs" },
-  { label: "Leads", href: "/leads" },
+  { label: "Lead Pipeline", href: "/customers?tab=pipeline" },
   { label: "Invoices", href: "/invoices" },
   { label: "Estimates", href: "/estimates" },
   { label: "Expenses", href: "/expenses" },

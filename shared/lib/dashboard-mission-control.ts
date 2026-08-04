@@ -343,7 +343,7 @@ function buildTodaysOperationsCards(data: DashboardData): MissionControlOperatio
           ? "Follow-ups due today or overdue"
           : "Lead follow-ups are clear",
       icon: Phone,
-      href: "/leads",
+      href: "/customers?tab=pipeline&filter=follow_up_due",
       tone: leadPipelineSummary.followUpsDue > 0 ? "warning" : "success",
     });
   }

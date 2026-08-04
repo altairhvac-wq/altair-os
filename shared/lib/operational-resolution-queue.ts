@@ -1,6 +1,7 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
+import { buildLeadPipelineHref } from "@/shared/lib/customers/customers-hub";
 import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
 import {
   formatLeadEstimateReadyQueueTitle,
@@ -272,7 +273,7 @@ const QUEUE_PRESENTATION: Record<
   lead_follow_up: {
     completionTitle: "Lead follow-ups complete",
     completionSubtitle: "No overdue lead follow-ups remain in this preview.",
-    relatedHref: "/leads",
+    relatedHref: "/customers?tab=pipeline",
     relatedLabel: "Open leads",
     icon: "users",
     iconClassName: "bg-cyan-100 text-cyan-700",
@@ -557,7 +558,7 @@ function buildLeadFollowUpItems(
       ? `Due ${lead.nextFollowUpAt.slice(0, 10)}`
       : undefined,
     severity: "warning",
-    openHref: `/leads?selected=${lead.id}`,
+    openHref: buildLeadPipelineHref({ selected: lead.id }),
     lead,
     primaryAction: {
       kind: "open_lead",

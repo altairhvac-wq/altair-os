@@ -157,12 +157,12 @@ export function DashboardCompactLeadPipelineSection({
       <CompactSectionShell
         eyebrow="Sales"
         title="Lead Pipeline"
-        href="/leads?create=1"
+        href="/customers?tab=pipeline&create=1"
         linkLabel="Create Lead"
       >
         <p className="text-xs text-slate-500">No leads yet</p>
         <Link
-          href="/leads?create=1"
+          href="/customers?tab=pipeline&create=1"
           className="mt-2 inline-flex text-xs font-semibold text-cyan-700 hover:text-cyan-800"
         >
           Create Lead
@@ -175,28 +175,32 @@ export function DashboardCompactLeadPipelineSection({
     <CompactSectionShell
       eyebrow="Sales"
       title="Lead Pipeline"
-      href="/leads"
+      href="/customers?tab=pipeline"
       linkLabel="All leads"
     >
       <p className="mb-2 text-[11px] text-slate-500">
         Lead activity created in the last 30 days.
       </p>
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-        <MiniMetric label="Total leads" value={summary.totalLeads} href="/leads" />
+        <MiniMetric
+          label="Total leads"
+          value={summary.totalLeads}
+          href="/customers?tab=pipeline"
+        />
         <MiniMetric
           label="Follow-ups due"
           value={summary.followUpsDue}
-          href="/leads?filter=follow_up_due"
+          href="/customers?tab=pipeline&filter=follow_up_due"
         />
         <MiniMetric
           label="Won leads"
           value={summary.wonLeads}
-          href="/leads?status=won"
+          href="/customers?tab=pipeline&status=won"
         />
         <MiniMetric
           label="Lost leads"
           value={summary.lostLeads}
-          href="/leads?status=lost"
+          href="/customers?tab=pipeline&status=lost"
         />
       </div>
     </CompactSectionShell>

@@ -83,7 +83,7 @@ export function ColorLabMoneyColumn({
         </Link>
 
         <Link
-          href="/leads"
+          href="/customers?tab=pipeline"
           className={`group block border-l-2 ${t.moneyLeadBorder} ${t.surfaceInset} transition-all hover:opacity-95`}
         >
           <div className="flex items-center gap-1.5">

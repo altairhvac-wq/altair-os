@@ -99,7 +99,7 @@ export function RevenueCommandBoard({
           </Link>
 
           <Link
-            href="/leads"
+            href="/customers?tab=pipeline"
             className="group rounded-xl bg-gradient-to-br from-violet-950/40 to-slate-950/60 p-3 ring-1 ring-violet-500/15 transition-all hover:ring-violet-500/30"
           >
             <div className="flex items-center gap-1.5">

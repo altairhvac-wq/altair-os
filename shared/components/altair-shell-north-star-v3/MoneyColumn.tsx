@@ -78,7 +78,7 @@ export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: Mon
         </Link>
 
         <Link
-          href="/leads"
+          href="/customers?tab=pipeline"
           className={`group block border-l-2 border-l-[#B8943F] ${v3SurfaceInsetClass} transition-all hover:border-[rgba(184,148,63,0.28)]`}
         >
           <div className="flex items-center gap-1.5">

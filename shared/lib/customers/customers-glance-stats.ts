@@ -16,19 +16,34 @@ export type CustomersGlanceStat = {
   filterQueue?: CustomerWorkQueue;
 };
 
+/** Lifecycle-active book queues — excludes Past (Archived hub tab). */
+export const CUSTOMER_BOOK_QUEUE_ORDER: readonly CustomerWorkQueue[] = [
+  "active",
+  "needs-info",
+  "inactive",
+];
+
 /**
  * Builds compact glance stats for the Customers list header.
  * Queue filter counts use the same predicates as the former work-queue tabs.
  * New This Month uses company-timezone calendar month vs date-only createdAt.
+ *
+ * Pass `queues` to limit which work-queue pills appear (e.g. book tab omits
+ * Past — Archived lives on its own hub tab). Inactive remains a book queue.
  */
 export function buildCustomersGlanceStats(input: {
   customers: ReadonlyArray<Customer>;
   timeZone: string;
   reference?: Date;
+  queues?: readonly CustomerWorkQueue[];
+  /** When false, omit Total / New This Month (Archived tab). Default true. */
+  includeSummaryStats?: boolean;
 }): CustomersGlanceStat[] {
   const { customers, timeZone } = input;
   const reference = input.reference ?? new Date();
   const currentMonth = getDateOnlyInTimeZone(reference, timeZone).slice(0, 7);
+  const queues = input.queues ?? CUSTOMER_WORK_QUEUE_ORDER;
+  const includeSummaryStats = input.includeSummaryStats !== false;
 
   const totalCustomers = customers.length;
   let newThisMonth = 0;
@@ -42,25 +57,27 @@ export function buildCustomersGlanceStats(input: {
   const queueDetails: Record<CustomerWorkQueue, string> = {
     active: "Complete profiles marked active",
     "needs-info": "Missing contact or service address",
-    inactive: "Marked inactive",
+    inactive: "Marked inactive — still in the customer book",
     past: "Archived or recently deleted",
   };
 
-  const queueStats: CustomersGlanceStat[] = CUSTOMER_WORK_QUEUE_ORDER.map(
-    (queue) => {
-      const count = countCustomersForWorkQueue([...customers], queue);
-      return {
-        id: queue,
-        label: CUSTOMER_WORK_QUEUE_LABELS[queue],
-        value: String(count),
-        detail:
-          count === 0
-            ? `No ${CUSTOMER_WORK_QUEUE_LABELS[queue].toLowerCase()} customers`
-            : queueDetails[queue],
-        filterQueue: queue,
-      };
-    },
-  );
+  const queueStats: CustomersGlanceStat[] = queues.map((queue) => {
+    const count = countCustomersForWorkQueue([...customers], queue);
+    return {
+      id: queue,
+      label: CUSTOMER_WORK_QUEUE_LABELS[queue],
+      value: String(count),
+      detail:
+        count === 0
+          ? `No ${CUSTOMER_WORK_QUEUE_LABELS[queue].toLowerCase()} customers`
+          : queueDetails[queue],
+      filterQueue: queue,
+    };
+  });
+
+  if (!includeSummaryStats) {
+    return queueStats;
+  }
 
   return [
     {

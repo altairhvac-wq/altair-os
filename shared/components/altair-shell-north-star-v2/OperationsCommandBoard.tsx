@@ -349,7 +349,7 @@ export function OperationsCommandBoard({
             </Link>
 
             <Link
-              href="/leads"
+              href="/customers?tab=pipeline"
               className="group rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/60 to-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all hover:border-violet-300/80"
             >
               <div className="flex items-center gap-1.5">

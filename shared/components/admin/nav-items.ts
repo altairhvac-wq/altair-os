@@ -15,7 +15,6 @@ import {
   Receipt,
   Settings,
   Shield,
-  Target,
   Truck,
   Users,
   type LucideIcon,
@@ -62,13 +61,7 @@ export const adminNavItems: NavItem[] = [
     label: "Customers",
     href: "/customers",
     icon: Users,
-    description: "Manage customer profiles and locations",
-  },
-  {
-    label: "Leads",
-    href: "/leads",
-    icon: Target,
-    description: "Track opportunities before they become customers",
+    description: "Customers, lead pipeline, and archived records",
   },
   {
     label: "Marketing",
@@ -218,7 +211,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "relationships",
     label: "Relationships",
-    hrefs: ["/customers", "/leads", "/marketing", "/network"],
+    hrefs: ["/customers", "/marketing", "/network"],
   },
   {
     id: "company",
@@ -278,7 +271,6 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/invoices",
   "/payments",
   "/estimates",
-  "/leads",
   "/expenses",
   "/reports",
   "/marketing",
@@ -304,7 +296,6 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/",
   "/jobs",
   "/customers",
-  "/leads",
   "/marketing",
   "/dispatch",
   "/schedule",

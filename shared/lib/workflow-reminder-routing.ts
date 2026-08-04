@@ -1,4 +1,5 @@
 import type { WorkflowReminderSourceEntityType } from "@/lib/database/types/enums";
+import { buildLeadPipelineHref } from "@/shared/lib/customers/customers-hub";
 
 export function buildWorkflowReminderSourceHref(input: {
   sourceEntityType: WorkflowReminderSourceEntityType;
@@ -10,7 +11,7 @@ export function buildWorkflowReminderSourceHref(input: {
     case "estimate":
       return `/estimates/${input.sourceEntityId}`;
     case "lead":
-      return `/leads?selected=${input.sourceEntityId}`;
+      return buildLeadPipelineHref({ selected: input.sourceEntityId });
     case "job":
       return `/jobs/${input.sourceEntityId}`;
   }

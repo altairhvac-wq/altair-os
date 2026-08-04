@@ -11,7 +11,6 @@ import {
   Receipt,
   Settings,
   Shield,
-  Target,
   Truck,
   Users,
   type LucideIcon,
@@ -63,7 +62,6 @@ export const v3NavGroups: V3NavGroup[] = [
     label: "Relationships",
     items: [
       { label: "Customers", href: "/customers", icon: Users },
-      { label: "Leads", href: "/leads", icon: Target },
       { label: "Community", href: "/network", icon: Network },
     ],
   },

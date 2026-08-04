@@ -24,7 +24,9 @@ import {
   resolveInitialLeadListFilter,
   type LeadListFilter,
 } from "@/shared/components/leads/lead-work-queues";
+import { LeadPipelineMetricsHeader } from "@/shared/components/customers/LeadPipelineMetricsHeader";
 import { buildLeadsGlanceStats } from "@/shared/lib/leads/leads-glance-stats";
+import { buildLeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
 import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
@@ -38,6 +40,7 @@ import {
   type LeadSortField,
   type LeadStatus,
 } from "@/shared/types/lead";
+import { customerMissionClasses as cm } from "@/shared/components/customers/customer-list-presentation";
 
 type PanelMode = "detail" | "create" | "empty";
 
@@ -52,6 +55,13 @@ type LeadsPageViewProps = {
   initialStatusFilter?: LeadStatus;
   initialFollowUpDue?: boolean;
   initialListFilter?: LeadListFilter;
+  /**
+   * When true, omit MasterListPageLayout — Customers hub hosts page chrome.
+   * Shows MC v2 pipeline metrics above the working lead list.
+   */
+  embedded?: boolean;
+  /** Hub registers New Lead header action against this handler. */
+  onRegisterCreateHandler?: (handler: () => void) => void;
 };
 
 function filterLeads(
@@ -98,10 +108,17 @@ export function LeadsPageView({
   initialStatusFilter,
   initialFollowUpDue = false,
   initialListFilter,
+  embedded = false,
+  onRegisterCreateHandler,
 }: LeadsPageViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [leads, setLeads] = useState(initialLeads);
+  const [leadsProp, setLeadsProp] = useState(initialLeads);
+  if (initialLeads !== leadsProp) {
+    setLeadsProp(initialLeads);
+    setLeads(initialLeads);
+  }
   const [search, setSearch] = useState("");
   const [listFilter, setListFilter] = useState<LeadListFilter>(() =>
     resolveInitialLeadListFilter(
@@ -124,12 +141,9 @@ export function LeadsPageView({
     if (initialSelectedId) return "detail";
     return "empty";
   });
-
-  useEffect(() => {
-    setLeads(initialLeads);
-  }, [initialLeads]);
-
-  useEffect(() => {
+  const [selectedProp, setSelectedProp] = useState(initialSelectedId);
+  if (initialSelectedId !== selectedProp) {
+    setSelectedProp(initialSelectedId);
     if (
       initialSelectedId &&
       initialLeads.some((lead) => lead.id === initialSelectedId)
@@ -137,7 +151,19 @@ export function LeadsPageView({
       setSelectedId(initialSelectedId);
       setPanelMode("detail");
     }
-  }, [initialLeads, initialSelectedId]);
+  }
+
+  useEffect(() => {
+    if (!onRegisterCreateHandler) {
+      return;
+    }
+
+    onRegisterCreateHandler(() => {
+      setSelectedId(null);
+      setPanelMode("create");
+      setCreateError(null);
+    });
+  }, [onRegisterCreateHandler]);
 
   const glanceStats = useMemo(
     () =>
@@ -145,6 +171,11 @@ export function LeadsPageView({
         leads,
         timeZone,
       }),
+    [leads, timeZone],
+  );
+
+  const pipelineMetrics = useMemo(
+    () => buildLeadPipelineMetrics(leads, undefined, timeZone),
     [leads, timeZone],
   );
 
@@ -243,56 +274,42 @@ export function LeadsPageView({
   const hasNoResults = !hasNoLeads && filteredLeads.length === 0;
   const northStar = isNorthStarShellEnabled();
 
-  return (
-    <MasterListPageLayout
-      title="Leads"
-      subtitle="Contact, qualify, and convert new opportunities."
-      density="compact"
-      headerSurfaceVariant="default"
-      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
-      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
-      headerClassName="py-1.5"
-      headerCenter={
-        hasNoLeads ? undefined : (
-          <LeadsStatStrip
-            stats={glanceStats}
-            activeQueue={listFilter}
-            onFilterQueue={handleQueueChange}
-          />
-        )
-      }
-      primaryAction={
-        <Button
-          size="sm"
-          onClick={handleCreateLead}
-          leadingIcon={<Plus className="h-3.5 w-3.5" />}
-        >
-          New Lead
-        </Button>
-      }
-      banners={
-        createError ? (
-          <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
-        ) : undefined
-      }
-    >
+  const panelBody = (
+    <>
       <MasterPageSurface
         variant="workspace"
         className={masterListPageSurfaceClass}
       >
+        {embedded ? (
+          <div className="space-y-3 border-b border-altair-border/70 px-1 pb-3 sm:px-0">
+            <LeadPipelineMetricsHeader metrics={pipelineMetrics} />
+          </div>
+        ) : null}
+
         {!hasNoLeads ? (
-          <LeadSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            sortField={sortField}
-            listFilter={listFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onSortFieldChange={setSortField}
-            onListFilterChange={handleQueueChange}
-            resultCount={filteredLeads.length}
-            showStatusFilter={listFilter === "past"}
-          />
+          <div className={cm.filterRegion}>
+            {embedded ? (
+              <div className="border-b border-altair-border/70 px-1 pb-2 sm:px-0">
+                <LeadsStatStrip
+                  stats={glanceStats}
+                  activeQueue={listFilter}
+                  onFilterQueue={handleQueueChange}
+                />
+              </div>
+            ) : null}
+            <LeadSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              sortField={sortField}
+              listFilter={listFilter}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              onSortFieldChange={setSortField}
+              onListFilterChange={handleQueueChange}
+              resultCount={filteredLeads.length}
+              showStatusFilter={listFilter === "past"}
+            />
+          </div>
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
@@ -328,6 +345,56 @@ export function LeadsPageView({
         onLeadUpdated={handleLeadUpdated}
         northStar={northStar}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {createError ? (
+          <div className="mb-2">
+            <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
+          </div>
+        ) : null}
+        {panelBody}
+      </>
+    );
+  }
+
+  return (
+    <MasterListPageLayout
+      title="Leads"
+      subtitle="Contact, qualify, and convert new opportunities."
+      density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
+      headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"
+      headerClassName="py-1.5"
+      headerCenter={
+        hasNoLeads ? undefined : (
+          <LeadsStatStrip
+            stats={glanceStats}
+            activeQueue={listFilter}
+            onFilterQueue={handleQueueChange}
+          />
+        )
+      }
+      primaryAction={
+        <Button
+          size="sm"
+          onClick={handleCreateLead}
+          leadingIcon={<Plus className="h-3.5 w-3.5" />}
+        >
+          New Lead
+        </Button>
+      }
+      banners={
+        createError ? (
+          <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
+        ) : undefined
+      }
+    >
+      {panelBody}
     </MasterListPageLayout>
   );
 }

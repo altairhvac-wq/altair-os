@@ -78,7 +78,7 @@ export function buildOnboardingChecklist(
       title: "Add your first lead",
       description:
         "Track prospects in the Lead Pipeline before they become customers.",
-      href: "/leads",
+      href: "/customers?tab=pipeline",
       completed: snapshot.leadCount > 0,
       optional: true,
       tip: "Leads stay separate until you convert or send an estimate.",

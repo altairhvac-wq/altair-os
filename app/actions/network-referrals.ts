@@ -38,6 +38,7 @@ export type NetworkReferralActionResult = {
 
 function revalidateNetworkPaths() {
   revalidatePath("/network");
+  revalidatePath("/customers");
   revalidatePath("/leads");
 }
 

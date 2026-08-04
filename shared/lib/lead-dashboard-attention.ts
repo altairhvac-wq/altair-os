@@ -2,6 +2,7 @@ import {
   filterLeadsForWorkQueue,
   isLeadPastQueue,
 } from "@/shared/components/leads/lead-work-queues";
+import { buildLeadPipelineHref } from "@/shared/lib/customers/customers-hub";
 import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
 import {
   formatLeadName,
@@ -23,8 +24,12 @@ export type LeadDashboardAttentionPreview = {
   openHref: string;
 };
 
-export const LEADS_NEEDS_CONTACT_QUEUE_HREF = "/leads?queue=needs-contact";
-export const LEADS_QUALIFIED_QUEUE_HREF = "/leads?queue=qualified";
+export const LEADS_NEEDS_CONTACT_QUEUE_HREF = buildLeadPipelineHref({
+  queue: "needs-contact",
+});
+export const LEADS_QUALIFIED_QUEUE_HREF = buildLeadPipelineHref({
+  queue: "qualified",
+});
 
 /** Active leads that have not been contacted yet. */
 export function isLeadNewNeedingFirstContact(lead: Lead): boolean {
@@ -92,7 +97,7 @@ export function buildLeadDashboardAttentionPreview(
     createdAt: lead.createdAt,
     sourceLabel: formatLeadSource(lead.source),
     nextFollowUpAt: lead.nextFollowUpAt,
-    openHref: `/leads?selected=${lead.id}`,
+    openHref: buildLeadPipelineHref({ selected: lead.id }),
   };
 }
 
