@@ -3,6 +3,7 @@ import {
   BookOpen,
   Briefcase,
   Bug,
+  CalendarDays,
   Clock,
   CreditCard,
   DollarSign,
@@ -43,7 +44,13 @@ export const adminNavItems: NavItem[] = [
     label: "Dispatch",
     href: "/dispatch",
     icon: Truck,
-    description: "Schedule and assign field work",
+    description: "Day board — assign and run field work",
+  },
+  {
+    label: "Schedule",
+    href: "/schedule",
+    icon: CalendarDays,
+    description: "Week overview linking into the dispatch day board",
   },
   {
     label: "Technicians",
@@ -194,7 +201,14 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "work",
     label: "Work",
-    hrefs: ["/jobs", "/dispatch", "/technicians", "/estimates", "/price-book"],
+    hrefs: [
+      "/jobs",
+      "/dispatch",
+      "/schedule",
+      "/technicians",
+      "/estimates",
+      "/price-book",
+    ],
   },
   {
     id: "money",
@@ -253,12 +267,12 @@ export function getGroupedAdminNavItems(
 /**
  * Left-to-right mobile bottom-rail order (workflow-first).
  * Permission filtering still decides which destinations appear.
- * There is no separate Schedule destination — Dispatch is the schedule surface.
  */
 export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/",
   "/jobs",
   "/dispatch",
+  "/schedule",
   "/technicians",
   "/customers",
   "/invoices",
@@ -293,6 +307,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/leads",
   "/marketing",
   "/dispatch",
+  "/schedule",
   "/technicians",
   "/estimates",
   "/price-book",

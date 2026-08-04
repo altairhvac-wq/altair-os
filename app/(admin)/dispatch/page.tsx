@@ -8,6 +8,8 @@ import { listActiveTechnicianTimeEntries } from "@/lib/database/queries/time-ent
 import { DispatchPageView } from "@/shared/components/dispatch/DispatchPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
+import { parseDateOnlySearchParam } from "@/shared/lib/date-only-search-param";
+import { getDateOnlyInTimeZone, parseDateInput } from "@/shared/lib/datetime";
 import {
   enrichDispatchPageFocusState,
   parseDispatchPageSearchParams,
@@ -17,6 +19,7 @@ import { attachTechnicianTimeStates } from "@/shared/lib/dispatch-technician-tim
 type DispatchPageProps = {
   searchParams: Promise<{
     focus?: string;
+    date?: string;
   }>;
 };
 
@@ -33,10 +36,15 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
     );
   }
 
-  const { focus } = await searchParams;
+  const { focus, date } = await searchParams;
+  const timeZone = companyContext.company.timezone;
+  const boardDateOnly = parseDateOnlySearchParam(date);
+  const todayDateOnly = getDateOnlyInTimeZone(new Date(), timeZone);
+  const reference = boardDateOnly ? parseDateInput(boardDateOnly) : undefined;
   const access = getCompanyAccessScope(companyContext);
   const allJobs = await listDispatchJobsForToday(companyContext.company.id, {
-    timeZone: companyContext.company.timezone,
+    reference,
+    timeZone,
   });
   const jobs = access.canViewAllJobs
     ? allJobs
@@ -82,6 +90,9 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
       billingSummaries={billingSummaries}
       currentUserId={companyContext.user.id}
       dispatchPageFocus={pageFocus}
+      boardDateOnly={boardDateOnly ?? todayDateOnly}
+      isBoardToday={!boardDateOnly || boardDateOnly === todayDateOnly}
+      timeZone={timeZone}
     />
   );
 }

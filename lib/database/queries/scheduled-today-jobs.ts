@@ -81,15 +81,24 @@ export async function fetchOperationalDayJobRows<
   };
 }
 
-/** Week board query: scheduled work Mon–Sun plus today's carryover and completions. */
-export async function fetchOperationalWeekJobRows<
+export type FetchOperationalRangeJobsOptions = FetchOperationalDayJobsOptions & {
+  /** Inclusive ISO start for `scheduled_at` window. */
+  rangeStart: string;
+  /** Inclusive ISO end for `scheduled_at` window. */
+  rangeEnd: string;
+};
+
+/**
+ * Scheduled work in an arbitrary company-TZ range, plus today's carryover and
+ * completions (same operational membership pattern as the week board).
+ */
+export async function fetchOperationalRangeJobRows<
   T extends { id: string; scheduled_at: string },
 >(
   select: string,
-  options: FetchOperationalDayJobsOptions,
+  options: FetchOperationalRangeJobsOptions,
 ): Promise<{ rows: T[]; error: Error | null }> {
   const supabase = await createClient();
-  const { start: weekStart, end: weekEnd } = getOperationalWeekBounds(options);
   const { start: todayStart, end: todayEnd } = getScheduledTodayBounds(options);
 
   const baseQuery = () => {
@@ -111,11 +120,11 @@ export async function fetchOperationalWeekJobRows<
     return query;
   };
 
-  const [scheduledWeekResult, carryoverResult, completedTodayResult] =
+  const [scheduledRangeResult, carryoverResult, completedTodayResult] =
     await Promise.all([
       baseQuery()
-        .gte("scheduled_at", weekStart)
-        .lte("scheduled_at", weekEnd)
+        .gte("scheduled_at", options.rangeStart)
+        .lte("scheduled_at", options.rangeEnd)
         .order("scheduled_at", { ascending: true }),
       baseQuery()
         .in("status", [...ACTIVE_CARRYOVER_JOB_STATUSES])
@@ -128,7 +137,7 @@ export async function fetchOperationalWeekJobRows<
     ]);
 
   const queryError =
-    scheduledWeekResult.error ??
+    scheduledRangeResult.error ??
     carryoverResult.error ??
     completedTodayResult.error;
 
@@ -140,7 +149,7 @@ export async function fetchOperationalWeekJobRows<
   }
 
   const rows = [
-    ...(scheduledWeekResult.data ?? []),
+    ...(scheduledRangeResult.data ?? []),
     ...(carryoverResult.data ?? []),
     ...(completedTodayResult.data ?? []),
   ] as unknown as T[];
@@ -149,4 +158,19 @@ export async function fetchOperationalWeekJobRows<
     rows: dedupeJobRowsById(rows),
     error: null,
   };
+}
+
+/** Week board query: scheduled work Mon–Sun plus today's carryover and completions. */
+export async function fetchOperationalWeekJobRows<
+  T extends { id: string; scheduled_at: string },
+>(
+  select: string,
+  options: FetchOperationalDayJobsOptions,
+): Promise<{ rows: T[]; error: Error | null }> {
+  const { start, end } = getOperationalWeekBounds(options);
+  return fetchOperationalRangeJobRows<T>(select, {
+    ...options,
+    rangeStart: start,
+    rangeEnd: end,
+  });
 }

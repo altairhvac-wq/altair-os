@@ -31,6 +31,7 @@ export {
   mapJobRowToDispatchJob,
   unassignJobFromTechnician,
 } from "./dispatch";
+export { listScheduleMonthJobs, listScheduleWeekJobs } from "./schedule";
 export {
   createJob,
   getJobById,

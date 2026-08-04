@@ -13,6 +13,7 @@ import {
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
 import { isAssignableTechnician } from "@/shared/lib/dispatch-recommendations";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 import { canUpdateJobWorkflowStatus } from "@/lib/database/access-control";
 import { useIsBelowLg } from "@/shared/components/mobile/use-mobile-viewport";
 import { DispatchBoard } from "./DispatchBoard";
@@ -40,6 +41,10 @@ type DispatchPageViewProps = {
   billingSummaries: JobBillingSummariesByJobId;
   currentUserId: string;
   dispatchPageFocus?: DispatchPageFocusState;
+  /** Operational day shown on the board (`YYYY-MM-DD` in company timezone). */
+  boardDateOnly?: string;
+  isBoardToday?: boolean;
+  timeZone?: string;
 };
 
 export function DispatchPageView({
@@ -53,6 +58,9 @@ export function DispatchPageView({
   billingSummaries,
   currentUserId,
   dispatchPageFocus,
+  boardDateOnly,
+  isBoardToday = true,
+  timeZone,
 }: DispatchPageViewProps) {
   function canUpdateJobWorkflow(job: DispatchJob): boolean {
     return canUpdateJobWorkflowStatus(
@@ -266,8 +274,16 @@ export function DispatchPageView({
       ? assignFeedback.message
       : null;
 
+  const defaultBoardTitle =
+    isBoardToday || !boardDateOnly
+      ? "Today's operations board"
+      : `Operations board · ${formatDateInTimeZone(boardDateOnly, timeZone, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })}`;
   const boardTitle =
-    dispatchPageFocus?.boardEyebrow ?? "Today's operations board";
+    dispatchPageFocus?.boardEyebrow ?? defaultBoardTitle;
   const boardSubtitle =
     dispatchPageFocus?.boardDescription ??
     "Map pins · technician rows · unassigned queue on the left";
