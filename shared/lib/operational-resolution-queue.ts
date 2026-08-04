@@ -330,7 +330,7 @@ function buildUnassignedJobItems(
     subtitle: job.customerName,
     meta: job.status,
     severity: "warning",
-    openHref: `/jobs/${job.id}`,
+    openHref: `/work/${job.id}`,
     job,
     primaryAction: {
       kind: "assign_technician",
@@ -368,7 +368,7 @@ function buildReadyToInvoiceItems(
       subtitle: entry.customerName,
       meta: revenueHint,
       severity: "warning",
-      openHref: `/jobs/${entry.jobId}`,
+      openHref: `/work/${entry.jobId}`,
       entry,
       primaryAction: {
         kind: "create_invoice",
@@ -497,7 +497,7 @@ function buildNeedsReviewItems(
       subtitle: entry.customerName,
       meta: reasonPreview,
       severity: entry.severity === "critical" ? "critical" : "warning",
-      openHref: `/jobs/${entry.jobId}`,
+      openHref: `/work/${entry.jobId}`,
       entry,
       primaryAction: {
         kind: "open_record",
@@ -525,7 +525,7 @@ function buildStalledJobItems(
       subtitle: entry.customerName,
       meta: `${inactivityThresholdDays}+ days without job activity`,
       severity,
-      openHref: `/jobs/${entry.jobId}`,
+      openHref: `/work/${entry.jobId}`,
       entry,
       primaryAction: {
         kind: "open_record",

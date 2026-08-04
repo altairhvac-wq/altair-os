@@ -108,7 +108,7 @@ export function buildJobsPageHref(
   }
 
   const query = params.toString();
-  return query ? `/jobs?${query}` : "/jobs";
+  return query ? `/work?${query}` : "/work";
 }
 
 const DISPATCH_SUMMARY_CARD_FILTER_MAP: Record<

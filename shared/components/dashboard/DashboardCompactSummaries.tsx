@@ -353,7 +353,7 @@ export function DashboardCompactTodaySection({
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Link
-                      href={`/jobs/${job.id}`}
+                      href={`/work/${job.id}`}
                       className="text-xs font-bold text-slate-900 transition-colors hover:text-cyan-700"
                     >
                       {job.jobNumber}

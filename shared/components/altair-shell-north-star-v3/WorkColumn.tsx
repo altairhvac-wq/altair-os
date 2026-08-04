@@ -62,7 +62,7 @@ export function WorkColumn({ jobs, technicians }: WorkColumnProps) {
           const status = jobStatusStyles[job.status];
           return (
             <li key={job.id}>
-              <Link href="/jobs" className={`group flex items-center gap-3 ${v3RowClass}`}>
+              <Link href="/work" className={`group flex items-center gap-3 ${v3RowClass}`}>
                 <span className="w-10 shrink-0 text-sm font-semibold tabular-nums text-[rgba(41,34,24,0.65)]">
                   {job.time}
                 </span>

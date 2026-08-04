@@ -79,7 +79,7 @@ export async function recordInvoicePaymentAction(
   revalidatePath(`/customers/${invoice.customerId}`);
 
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
 
   return { payment, invoice };

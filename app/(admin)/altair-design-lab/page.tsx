@@ -112,7 +112,7 @@ export default function AltairDesignLabPage() {
               title="2 jobs are stalled."
               description="No activity in over 3 days — crews may be waiting on parts or customer approval."
               meta="Oldest: 5 days inactive"
-              action={{ label: "Review stalled jobs", href: "/jobs?focus=stalled" }}
+              action={{ label: "Review stalled jobs", href: "/work?focus=stalled" }}
             />
             <PriorityCard
               eyebrow="Billing"
@@ -415,7 +415,7 @@ export default function AltairDesignLabPage() {
         <EmptyState
           title="No stalled jobs right now."
           description="When jobs go inactive for several days, they will appear here for office review."
-          action={{ label: "View all jobs", href: "/jobs" }}
+          action={{ label: "View all jobs", href: "/work" }}
           secondaryAction={{ label: "Open dispatch", href: "/dispatch" }}
           tone="neutral"
         />

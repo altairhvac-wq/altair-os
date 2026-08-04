@@ -239,7 +239,7 @@ async function buildTeamMemberActivity(
       type: "assigned_job",
       label: job.jobNumber,
       detail: `${formatJobStatus(job.status)} · ${job.customerName}`,
-      href: `/jobs/${job.id}`,
+      href: `/work/${job.id}`,
       occurredAt: job.scheduledDate,
     });
   }
@@ -250,7 +250,7 @@ async function buildTeamMemberActivity(
       type: "completed_job",
       label: job.jobNumber,
       detail: `Completed · ${job.customerName}`,
-      href: `/jobs/${job.id}`,
+      href: `/work/${job.id}`,
       occurredAt: job.completedAt ?? job.scheduledDate,
     });
   }
@@ -276,7 +276,7 @@ async function buildTeamMemberActivity(
       type: "time_entry",
       label: entry.jobNumber ?? "Time entry",
       detail: `${entry.durationMinutes ?? 0} min labor`,
-      href: entry.jobId ? `/jobs/${entry.jobId}` : undefined,
+      href: entry.jobId ? `/work/${entry.jobId}` : undefined,
       occurredAt: entry.startedAt,
     });
   }

@@ -130,7 +130,7 @@ export async function bulkAssignJobsAction(
   }
 
   if (successCount > 0) {
-    revalidatePath("/jobs");
+    revalidatePath("/work");
     revalidatePath("/dispatch");
     revalidatePath("/technician");
   }
@@ -268,7 +268,7 @@ export async function bulkUpdateJobStatusAction(
   }
 
   if (successCount > 0) {
-    revalidatePath("/jobs");
+    revalidatePath("/work");
     revalidatePath("/dispatch");
     revalidatePath("/technician");
   }

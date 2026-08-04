@@ -406,6 +406,7 @@ export type AdminNavHref =
   | "/customers"
   | "/leads"
   | "/marketing"
+  | "/work"
   | "/jobs"
   | "/estimates"
   | "/price-book"
@@ -427,6 +428,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/customers",
   "/leads",
   "/marketing",
+  "/work",
   "/jobs",
   "/estimates",
   "/price-book",
@@ -456,6 +458,7 @@ export function canAccessAdminNavItem(
       return true;
     case "/dispatch":
     case "/schedule":
+    case "/work":
     case "/jobs":
       return canAccessOperationalJobsArea(context);
     case "/team":
@@ -511,7 +514,9 @@ export function getAccessibleAdminNavHrefs(
     // /leads remains a valid AdminNavHref for redirects/deep links, but is no
     // longer a standalone sidebar entry — Lead Pipeline lives under Customers.
     "/marketing",
-    "/jobs",
+    "/work",
+    // /jobs remains a valid AdminNavHref for redirects/deep links, but is no
+    // longer a standalone sidebar entry — the Jobs list lives under Work.
     "/estimates",
     "/price-book",
     "/invoices",
@@ -609,6 +614,7 @@ export function canAccessAppRedirectPath(
   if (
     path.startsWith("/dispatch") ||
     path.startsWith("/schedule") ||
+    path.startsWith("/work") ||
     path.startsWith("/jobs")
   ) {
     return canAccessOperationalJobsArea(context);

@@ -9,7 +9,7 @@ import {
   useTransition,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Truck } from "lucide-react";
 import {
   bulkArchiveJobsAction,
   bulkCancelJobsAction,
@@ -434,7 +434,7 @@ export function JobsPageView({
   );
 
   function handleSelectJob(job: Job) {
-    router.push(`/jobs/${job.id}`);
+    router.push(`/work/${job.id}`);
   }
 
   function clearBulkActionFeedback() {
@@ -784,7 +784,7 @@ export function JobsPageView({
         );
       }
       setPanelMode("empty");
-      router.push(`/jobs/${result.job.id}`);
+      router.push(`/work/${result.job.id}`);
     });
   }
 
@@ -941,7 +941,7 @@ export function JobsPageView({
 
   return (
     <MasterListPageLayout
-      title="Jobs"
+      title="Work"
       subtitle="See what is happening, what needs attention, and what comes next."
       density="compact"
       headerSurfaceVariant="default"
@@ -960,6 +960,17 @@ export function JobsPageView({
             allCount={activeAllCount}
           />
         )
+      }
+      secondaryAction={
+        <Button
+          href="/dispatch"
+          size="sm"
+          variant="secondary"
+          leadingIcon={<Truck className="h-3.5 w-3.5" />}
+        >
+          <span className="hidden sm:inline">Open Dispatch board</span>
+          <span className="sm:hidden">Dispatch</span>
+        </Button>
       }
       primaryAction={
         canDispatchJobs ? (

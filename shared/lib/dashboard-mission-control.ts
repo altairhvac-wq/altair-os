@@ -290,7 +290,7 @@ function buildTodaysOperationsCards(data: DashboardData): MissionControlOperatio
       value: String(analytics.openJobs),
       trend: "Active backlog",
       icon: Briefcase,
-      href: "/jobs",
+      href: "/work",
       tone: "info",
     });
   }
@@ -328,7 +328,7 @@ function buildTodaysOperationsCards(data: DashboardData): MissionControlOperatio
       value: String(operations.completedToday),
       trend: `${operations.inProgress} in progress now`,
       icon: Clock,
-      href: "/jobs",
+      href: "/work",
       tone: operations.completedToday > 0 ? "success" : "neutral",
     });
   }
@@ -433,7 +433,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       id: "new-job",
       label: "New Job",
       shortLabel: "Job",
-      href: "/jobs?create=1",
+      href: "/work?create=1",
       description: "Schedule field work",
       icon: Briefcase,
     });

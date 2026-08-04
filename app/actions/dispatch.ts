@@ -44,9 +44,9 @@ export async function assignJobAction(
   }
 
   revalidatePath("/dispatch");
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/technician");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
 
   return { job };
 }
@@ -75,9 +75,9 @@ export async function unassignJobAction(
   }
 
   revalidatePath("/dispatch");
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/technician");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
 
   return { job };
 }

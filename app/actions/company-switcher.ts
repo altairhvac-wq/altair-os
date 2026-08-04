@@ -16,7 +16,7 @@ function revalidateCompanySwitcherPaths() {
   revalidatePath("/settings");
   revalidatePath("/dispatch", "layout");
   revalidatePath("/reports", "layout");
-  revalidatePath("/jobs", "layout");
+  revalidatePath("/work", "layout");
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
 }

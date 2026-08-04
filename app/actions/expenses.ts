@@ -56,7 +56,7 @@ function revalidateExpensePaths(input: {
     revalidatePath(`/expenses?selected=${input.expenseId}`);
   }
   if (input.jobId) {
-    revalidatePath(`/jobs/${input.jobId}`);
+    revalidatePath(`/work/${input.jobId}`);
   }
   if (input.customerId) {
     revalidatePath(`/customers/${input.customerId}`);

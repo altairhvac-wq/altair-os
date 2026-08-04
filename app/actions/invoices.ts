@@ -236,7 +236,7 @@ export async function createInvoiceAction(
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoice.id}`);
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
   return { invoice };
 }
@@ -338,7 +338,7 @@ export async function convertEstimateToInvoiceAction(
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath(`/invoices/${invoice.id}`);
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
 
   return { invoice };
@@ -520,7 +520,7 @@ export async function sendInvoiceAction(
   revalidatePath(`/customers/${invoice.customerId}`);
 
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
 
   const emailDelivery = toBillingEmailDelivery(emailResult);
@@ -751,7 +751,7 @@ export async function resendInvoiceEmailAction(
   revalidatePath(`/customers/${currentInvoice.customerId}`);
 
   if (currentInvoice.jobId) {
-    revalidatePath(`/jobs/${currentInvoice.jobId}`);
+    revalidatePath(`/work/${currentInvoice.jobId}`);
   }
 
   const emailDelivery = toBillingEmailDelivery(emailResult);
@@ -808,7 +808,7 @@ export async function voidInvoiceAction(
   revalidatePath(`/customers/${invoice.customerId}`);
 
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
 
   return { invoice };
@@ -861,7 +861,7 @@ export async function updateInvoiceAction(
   revalidatePath(`/customers/${invoice.customerId}`);
 
   if (invoice.jobId) {
-    revalidatePath(`/jobs/${invoice.jobId}`);
+    revalidatePath(`/work/${invoice.jobId}`);
   }
 
   return { invoice };

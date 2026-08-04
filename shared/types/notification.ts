@@ -112,7 +112,7 @@ export function getNotificationHref(
       if (access?.canViewJobs === false) {
         return null;
       }
-      return `/jobs/${notification.entityId}`;
+      return `/work/${notification.entityId}`;
     case "estimate":
       if (access?.canViewBilling === false) {
         return null;

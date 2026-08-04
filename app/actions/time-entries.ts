@@ -36,7 +36,7 @@ function revalidateTimePaths(jobId?: string) {
   revalidatePath("/technician");
   revalidatePath("/tech/time");
   if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/work/${jobId}`);
   }
 }
 

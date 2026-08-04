@@ -66,7 +66,7 @@ export function resolveAcceptedEstimateSchedulingHref(estimate: {
   jobId?: string;
 }): string {
   if (estimate.jobId) {
-    return `/jobs/${estimate.jobId}`;
+    return `/work/${estimate.jobId}`;
   }
 
   return `/estimates/${estimate.id}`;

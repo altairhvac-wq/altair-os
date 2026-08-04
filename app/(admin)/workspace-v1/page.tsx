@@ -25,33 +25,33 @@ const continueWorking = [
     job: "AC replacement",
     status: "Estimate awaiting approval",
     tone: "info" as const,
-    href: "/jobs/sample-smith",
+    href: "/work/sample-smith",
   },
   {
     customer: "Johnson Property",
     job: "Maintenance agreement",
     status: "Invoice awaiting payment",
     tone: "warning" as const,
-    href: "/jobs/sample-johnson",
+    href: "/work/sample-johnson",
   },
   {
     customer: "Westside Retail",
     job: "Technician dispatched",
     status: "Waiting on completion",
     tone: "neutral" as const,
-    href: "/jobs/sample-westside",
+    href: "/work/sample-westside",
   },
 ];
 
 const needsAttention = [
   { label: "2 overdue invoices", tone: "danger" as const, href: "/invoices?status=overdue" },
   { label: "3 stale estimates", tone: "warning" as const, href: "/estimates?status=stale" },
-  { label: "1 unscheduled job", tone: "info" as const, href: "/jobs?status=unscheduled" },
+  { label: "1 unscheduled job", tone: "info" as const, href: "/work?status=unscheduled" },
 ];
 
 const quickAccess = [
   { label: "Customers", href: "/customers" },
-  { label: "Jobs", href: "/jobs" },
+  { label: "Jobs", href: "/work" },
   { label: "Lead Pipeline", href: "/customers?tab=pipeline" },
   { label: "Invoices", href: "/invoices" },
   { label: "Estimates", href: "/estimates" },
@@ -113,7 +113,7 @@ export default function WorkspaceV1Page() {
             title="Workspace"
             description="Resume the work that matters most today."
             primaryAction={{ label: "Continue working", href: "#continue-working" }}
-            secondaryAction={{ label: "View all jobs", href: "/jobs" }}
+            secondaryAction={{ label: "View all jobs", href: "/work" }}
             className="border-0 bg-white/55 p-8 shadow-[0_4px_32px_rgba(15,23,42,0.05)] backdrop-blur-[2px] sm:p-10 lg:p-12"
           />
           <div className="relative z-10 -mt-2 px-8 sm:px-10 lg:px-12">

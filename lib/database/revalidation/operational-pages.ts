@@ -5,12 +5,12 @@ export function revalidateOperationalDashboard(): void {
 }
 
 export function revalidateJobOperationalPages(jobId?: string): void {
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/dispatch");
   revalidatePath("/time");
   revalidateOperationalDashboard();
   if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/work/${jobId}`);
   }
 }
 

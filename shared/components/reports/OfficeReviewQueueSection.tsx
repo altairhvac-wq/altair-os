@@ -888,7 +888,7 @@ function QueueItemRow({
 }) {
   const hasValidJobLink = isValidOfficeReviewQueueJobId(item.jobId);
   const jobHref = hasValidJobLink
-    ? `/jobs/${encodeURIComponent(item.jobId)}`
+    ? `/work/${encodeURIComponent(item.jobId)}`
     : null;
 
   return (
@@ -1188,7 +1188,7 @@ function QueueBatchPreviewModal({
                   return (
                     <li key={jobId}>
                       <Link
-                        href={`/jobs/${encodeURIComponent(jobId)}`}
+                        href={`/work/${encodeURIComponent(jobId)}`}
                         className="flex min-h-9 items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs font-semibold text-emerald-900 transition-colors hover:bg-emerald-100/70"
                       >
                         <span className="truncate">

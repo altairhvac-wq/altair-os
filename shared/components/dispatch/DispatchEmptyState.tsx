@@ -37,7 +37,7 @@ export function DispatchEmptyState({
           variant === "no-jobs" && canDispatchJobs
             ? {
                 label: "Schedule a job",
-                href: "/jobs",
+                href: "/work",
               }
             : undefined
         }

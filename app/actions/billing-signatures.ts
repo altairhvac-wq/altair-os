@@ -39,7 +39,7 @@ function revalidateBillingSignaturePaths(
   }
 
   if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/work/${jobId}`);
   }
 }
 

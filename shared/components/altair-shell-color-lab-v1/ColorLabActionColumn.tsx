@@ -103,7 +103,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
             return (
               <li key={item.id}>
                 <Link
-                  href="/jobs"
+                  href="/work"
                   className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors ${t.officeHover}`}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-300" aria-hidden="true" />

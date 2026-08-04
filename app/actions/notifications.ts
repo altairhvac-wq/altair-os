@@ -19,7 +19,7 @@ export type NotificationActionResult = {
 
 function revalidateNotificationPaths() {
   revalidatePath("/", "layout");
-  revalidatePath("/jobs", "layout");
+  revalidatePath("/work", "layout");
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
   revalidatePath("/tech/notifications");

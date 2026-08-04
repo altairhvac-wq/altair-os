@@ -12,6 +12,7 @@ import { JobOperationalRecoverySection } from "@/shared/components/jobs/JobOpera
 import { JobProfitabilitySection } from "@/shared/components/jobs/JobProfitabilitySection";
 import { JobReviewChecklistSection } from "@/shared/components/jobs/JobReviewChecklistSection";
 import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
+import { JobTimeTrackingSection } from "@/shared/components/jobs/JobTimeTrackingSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import { JobDetailMoneyPath } from "./JobDetailMoneyPath";
 import { JobDetailNorthStarContentSection } from "./JobDetailNorthStarContentSection";
@@ -32,6 +33,7 @@ import {
   JOB_DETAIL_EQUIPMENT_ANCHOR,
   JOB_DETAIL_MATERIALS_ANCHOR,
   JOB_DETAIL_SCOPE_ANCHOR,
+  JOB_DETAIL_TIME_TRACKING_ANCHOR,
 } from "@/shared/lib/jobs/job-detail-anchors";
 import {
   JOB_DETAIL_SECTION_SELECT_EVENT,
@@ -53,6 +55,7 @@ import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
 import type { ServiceItem } from "@/shared/types/service-item";
 import type { Technician } from "@/shared/types/dispatch";
+import type { TimeEntry } from "@/shared/types/time-entry";
 
 export type JobDetailTabbedWorkspaceProps = {
   job: JobDetail;
@@ -62,6 +65,7 @@ export type JobDetailTabbedWorkspaceProps = {
   attachments: JobAttachment[];
   expenses: Expense[];
   materials: JobMaterial[];
+  laborEntries: TimeEntry[];
   profitability: JobProfitabilitySnapshot | null;
   laborSummary: JobProfitabilityLabor;
   laborCostRate: number | null;
@@ -118,6 +122,7 @@ export function JobDetailTabbedWorkspace({
   attachments,
   expenses,
   materials,
+  laborEntries,
   profitability,
   laborSummary,
   laborCostRate,
@@ -341,6 +346,17 @@ export function JobDetailTabbedWorkspace({
               ) : null}
             </TabPanel>
           ) : null}
+
+          <TabPanel
+            tabId={JOB_DETAIL_TIME_TRACKING_ANCHOR}
+            activeTab={activeTab}
+          >
+            <JobTimeTrackingSection
+              jobId={job.id}
+              laborEntries={laborEntries}
+              northStar
+            />
+          </TabPanel>
 
           <TabPanel tabId={JOB_DETAIL_ACTIVITY_ANCHOR} activeTab={activeTab}>
             <OperationalActivityTimeline

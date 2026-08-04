@@ -103,7 +103,7 @@ export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
             return (
               <li key={item.id}>
                 <Link
-                  href="/jobs"
+                  href="/work"
                   className="group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-[#EFEAE2]/80"
                 >
                   <Icon

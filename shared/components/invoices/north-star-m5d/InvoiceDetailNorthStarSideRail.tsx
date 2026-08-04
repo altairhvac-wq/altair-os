@@ -105,7 +105,7 @@ export function InvoiceDetailNorthStarSideRail({
           <SectionHeader title="Related job" />
           <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
             <Link
-              href={`/jobs/${invoice.jobId}`}
+              href={`/work/${invoice.jobId}`}
               className={`inline-flex items-center gap-1.5 text-xs font-semibold ${altairCanvasInkLinkClass}`}
             >
               <Briefcase className="h-3.5 w-3.5 shrink-0" />

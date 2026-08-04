@@ -2,12 +2,9 @@
 
 import { useMemo } from "react";
 import {
-  JOB_DETAIL_ACTIVITY_ANCHOR,
-  JOB_DETAIL_ATTACHMENTS_ANCHOR,
   JOB_DETAIL_BILLING_ANCHOR,
   JOB_DETAIL_EQUIPMENT_ANCHOR,
-  JOB_DETAIL_MATERIALS_ANCHOR,
-  JOB_DETAIL_SCOPE_ANCHOR,
+  JOB_DETAIL_SECTION_NAV_ITEMS,
 } from "@/shared/lib/jobs/job-detail-anchors";
 import type { JobDetailTabId } from "@/shared/lib/jobs/job-detail-tabs";
 
@@ -18,20 +15,6 @@ type JobDetailSectionNavProps = {
   showEquipment: boolean;
 };
 
-type NavItem = {
-  id: JobDetailTabId;
-  label: string;
-};
-
-const BASE_ITEMS: NavItem[] = [
-  { id: JOB_DETAIL_SCOPE_ANCHOR, label: "Description" },
-  { id: JOB_DETAIL_EQUIPMENT_ANCHOR, label: "Equipment" },
-  { id: JOB_DETAIL_MATERIALS_ANCHOR, label: "Materials" },
-  { id: JOB_DETAIL_ATTACHMENTS_ANCHOR, label: "Photos" },
-  { id: JOB_DETAIL_BILLING_ANCHOR, label: "Billing" },
-  { id: JOB_DETAIL_ACTIVITY_ANCHOR, label: "History" },
-];
-
 export function JobDetailSectionNav({
   activeTab,
   onTabChange,
@@ -40,7 +23,7 @@ export function JobDetailSectionNav({
 }: JobDetailSectionNavProps) {
   const items = useMemo(
     () =>
-      BASE_ITEMS.filter((item) => {
+      JOB_DETAIL_SECTION_NAV_ITEMS.filter((item) => {
         if (item.id === JOB_DETAIL_EQUIPMENT_ANCHOR) {
           return showEquipment;
         }

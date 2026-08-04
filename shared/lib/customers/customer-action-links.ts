@@ -36,7 +36,7 @@ export function customerDetailSectionHref(
 }
 
 export function createJobForCustomerHref(customerId: string): string {
-  return `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
+  return `/work?customerId=${encodeURIComponent(customerId)}&create=1`;
 }
 
 export function createEstimateForCustomerHref(

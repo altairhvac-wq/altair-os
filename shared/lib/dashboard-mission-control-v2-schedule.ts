@@ -12,7 +12,7 @@ import {
 export const MISSION_CONTROL_V2_SCHEDULE_PREVIEW_LIMIT = 5;
 
 export const MISSION_CONTROL_V2_SCHEDULE_FULL_HREF = DISPATCH_PAGE_TODAY_HREF;
-export const MISSION_CONTROL_V2_SCHEDULE_JOBS_HREF = "/jobs";
+export const MISSION_CONTROL_V2_SCHEDULE_JOBS_HREF = "/work";
 
 type AssigneeLookup = {
   name: string;
@@ -67,7 +67,7 @@ function mapJobToScheduleRow(
     assigneeName: assignee.name,
     assigneeInitials: assignee.initials,
     status: job.status,
-    href: `/jobs/${job.id}`,
+    href: `/work/${job.id}`,
   };
 }
 

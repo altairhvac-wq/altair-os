@@ -479,7 +479,7 @@ export function CustomerDetailTabs({
                     {jobFiles.map((attachment) => (
                       <Link
                         key={attachment.id}
-                        href={`/jobs/${attachment.jobId}`}
+                        href={`/work/${attachment.jobId}`}
                         className="w-36 shrink-0 overflow-hidden rounded-lg border border-altair-border bg-[var(--surface-card)] transition-colors hover:border-altair-border-strong"
                       >
                         <div className="aspect-square bg-altair-paper-subtle">

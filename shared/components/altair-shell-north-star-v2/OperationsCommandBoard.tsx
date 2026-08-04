@@ -191,7 +191,7 @@ export function OperationsCommandBoard({
                 return (
                   <li key={item.id}>
                     <Link
-                      href="/jobs"
+                      href="/work"
                       className="group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-slate-100/90"
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500 group-hover:text-slate-700" aria-hidden="true" />
@@ -233,7 +233,7 @@ export function OperationsCommandBoard({
               return (
                 <li key={job.id}>
                   <Link
-                    href="/jobs"
+                    href="/work"
                     className={`group flex items-center gap-3 ${missionRowClass}`}
                   >
                     <span className="w-10 shrink-0 text-sm font-semibold tabular-nums text-slate-600">

@@ -1,116 +1,15 @@
 import { redirect } from "next/navigation";
-import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/access-control";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCustomers } from "@/lib/database/queries/customers";
 import {
-  listAssignedJobs,
-  listDeletedJobs,
-  listJobs,
-  listJobsForOperationalDay,
-} from "@/lib/database/queries/jobs";
-import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
-import { listTechnicians } from "@/lib/database/queries/technicians";
-import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
-import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import { parseJobsPageSearchParams } from "@/shared/lib/jobs-page-filters";
-import type { JobFormData } from "@/shared/types/job";
+  buildWorkHubHrefFromJobsParams,
+  flattenSearchParamRecord,
+} from "@/shared/lib/work/work-hub";
 
 type JobsPageProps = {
-  searchParams: Promise<{
-    customerId?: string;
-    create?: string;
-    status?: string;
-    view?: string;
-    unassigned?: string;
-    priority?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/** Legacy /jobs route — redirects into the Work hub, preserving query params. */
 export default async function JobsPage({ searchParams }: JobsPageProps) {
-  const companyContext = await getActiveCompanyContext();
-
-  if (!companyContext) {
-    redirect("/setup");
-  }
-
-  if (!canAccessOperationalJobsArea(companyContext)) {
-    return (
-      <UnauthorizedAccessView description="Job records are limited to roles that can view or manage jobs." />
-    );
-  }
-
-  const { customerId, create, status, view, unassigned, priority } =
-    await searchParams;
-  const pageFilters = parseJobsPageSearchParams({
-    status,
-    view,
-    unassigned,
-    priority,
-  });
-
-  const canViewAll = canViewAllJobs(companyContext);
-
-  const canDispatchJobs = companyContext.permissions.dispatchJobs;
-
-  const [jobs, deletedJobs, todayJobs, customers, technicians] = await Promise.all([
-    canViewAll
-      ? listJobs(companyContext.company.id, { includeArchived: true })
-      : listAssignedJobs(
-          companyContext.company.id,
-          companyContext.user.id,
-        ),
-    canViewAll
-      ? listDeletedJobs(companyContext.company.id)
-      : Promise.resolve([]),
-    listJobsForOperationalDay(companyContext.company.id, {
-      timeZone: companyContext.company.timezone,
-      assignedTechnicianId: canViewAll
-        ? undefined
-        : companyContext.user.id,
-    }),
-    canViewAll ? listCustomers(companyContext.company.id) : Promise.resolve([]),
-    canDispatchJobs
-      ? listTechnicians(companyContext.company.id, companyContext)
-      : Promise.resolve([]),
-  ]);
-
-  const allJobsForBilling = [...jobs, ...deletedJobs, ...todayJobs];
-  const billingSummaries = await listJobBillingSummariesForJobs(
-    companyContext.company.id,
-    allJobsForBilling.map((job) => job.id),
-  );
-
-  const preselectedCustomer = customerId
-    ? customers.find((customer) => customer.id === customerId)
-    : undefined;
-
-  const createInitialData: Partial<JobFormData> | undefined =
-    preselectedCustomer
-      ? {
-          customerId: preselectedCustomer.id,
-          serviceAddress: preselectedCustomer.address,
-          city: preselectedCustomer.city,
-          state: preselectedCustomer.state,
-          zip: preselectedCustomer.zip,
-        }
-      : undefined;
-
-  return (
-    <JobsPageView
-      initialJobs={[...jobs, ...deletedJobs]}
-      initialTodayJobs={todayJobs}
-      companyTimeZone={companyContext.company.timezone}
-      customers={customers}
-      technicians={technicians}
-      canDispatchJobs={canDispatchJobs}
-      canManageCustomers={companyContext.permissions.manageCustomers}
-      initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
-      createInitialData={createInitialData}
-      initialViewTab={pageFilters.viewTab}
-      initialStatusFilter={pageFilters.statusFilter}
-      initialPriorityFilter={pageFilters.priorityFilter}
-      initialUnassignedOnly={pageFilters.unassignedOnly}
-      billingSummaries={billingSummaries}
-    />
-  );
+  const params = await searchParams;
+  redirect(buildWorkHubHrefFromJobsParams(flattenSearchParamRecord(params)));
 }

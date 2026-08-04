@@ -104,7 +104,7 @@ export function ActionQueueBoard({ items, officeQueue }: ActionQueueBoardProps) 
               return (
                 <li key={item.id}>
                   <Link
-                    href="/jobs"
+                    href="/work"
                     className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-xs transition-colors hover:bg-slate-950/40"
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0 text-slate-600 group-hover:text-slate-400" aria-hidden="true" />

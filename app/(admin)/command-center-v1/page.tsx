@@ -120,7 +120,7 @@ export default function CommandCenterV1Page() {
               title="2 jobs are stalled."
               description="No activity in over 3 days — crews may be waiting on parts or customer approval."
               meta="Oldest: 5 days inactive"
-              action={{ label: "Review stalled jobs", href: "/jobs?focus=stalled" }}
+              action={{ label: "Review stalled jobs", href: "/work?focus=stalled" }}
               className={softCard}
             />
             <PriorityCard

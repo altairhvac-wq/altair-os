@@ -69,7 +69,7 @@ export async function createJobAction(
     customerId: job.customerId,
   });
 
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   return { job };
 }
 
@@ -98,9 +98,9 @@ export async function updateJobAction(
     return { error: error ?? "We couldn't save job changes. Try again." };
   }
 
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/dispatch");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 
   return { job };
@@ -256,7 +256,7 @@ export async function updateJobStatusAction(
     }
   }
 
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/dispatch");
   revalidatePath("/technician");
   revalidatePath("/tech/time");
@@ -264,7 +264,7 @@ export async function updateJobStatusAction(
   revalidatePath("/team");
   revalidatePath("/time-clock");
   revalidatePath("/reports");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 
   if (error) {
@@ -330,12 +330,12 @@ export async function correctJobStatusAction(
     jobNumber: job.jobNumber,
   });
 
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/dispatch");
   revalidatePath("/technician");
   revalidatePath("/tech/time");
   revalidatePath("/time");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 
   return { job };
@@ -405,10 +405,10 @@ export async function reopenCompletedJobAction(
     dispatchReactivated,
   });
 
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/dispatch");
   revalidatePath("/technician");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/work/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 
   return { job };

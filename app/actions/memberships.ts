@@ -176,7 +176,7 @@ export async function acceptInviteAction(
   revalidatePath("/settings");
   revalidatePath("/dispatch", "layout");
   revalidatePath("/reports", "layout");
-  revalidatePath("/jobs", "layout");
+  revalidatePath("/work", "layout");
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
 
@@ -470,7 +470,7 @@ async function runMemberStatusAction(
   revalidatePath("/", "layout");
   revalidatePath("/dispatch", "layout");
   revalidatePath("/reports", "layout");
-  revalidatePath("/jobs", "layout");
+  revalidatePath("/work", "layout");
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
 

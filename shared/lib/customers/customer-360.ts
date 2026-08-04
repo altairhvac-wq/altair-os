@@ -467,7 +467,7 @@ function buildOpportunities(input: {
       severity: unassignedCount > 0 ? "warning" : "info",
       href: useDispatchLink
         ? DISPATCH_PAGE_UNASSIGNED_HREF
-        : `/jobs/${primary.id}`,
+        : `/work/${primary.id}`,
       actionLabel: useDispatchLink ? "Open dispatch" : "View job",
     });
   }

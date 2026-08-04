@@ -41,7 +41,7 @@ export const missionNavGroups: MissionNavGroup[] = [
     id: "work",
     label: "Work",
     items: [
-      { label: "Jobs", href: "/jobs", icon: Briefcase },
+      { label: "Work", href: "/work", icon: Briefcase },
       { label: "Dispatch", href: "/dispatch", icon: Truck },
       { label: "Estimates", href: "/estimates", icon: FileText },
       { label: "Price Book", href: "/price-book", icon: BookOpen },

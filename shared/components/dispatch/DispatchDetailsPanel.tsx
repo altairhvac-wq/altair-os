@@ -552,7 +552,7 @@ export function DispatchDetailsPanel({
           ) : null}
 
           <div className={footerDividerClass}>
-            <Link href={`/jobs/${job.id}`} className={footerLinkClass}>
+            <Link href={`/work/${job.id}`} className={footerLinkClass}>
               View full job details
             </Link>
           </div>

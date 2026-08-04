@@ -13,7 +13,7 @@ export function buildWorkflowReminderSourceHref(input: {
     case "lead":
       return buildLeadPipelineHref({ selected: input.sourceEntityId });
     case "job":
-      return `/jobs/${input.sourceEntityId}`;
+      return `/work/${input.sourceEntityId}`;
   }
 }
 

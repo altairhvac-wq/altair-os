@@ -106,7 +106,7 @@ export function CustomerJobsSection({
           {visibleJobs.map((job) => (
             <li key={job.id} className="py-2.5 first:pt-0 last:pb-0">
               <Link
-                href={`/jobs/${job.id}`}
+                href={`/work/${job.id}`}
                 className={
                   northStar
                     ? `flex flex-wrap items-start justify-between gap-3 ${dt.listRowHover}`

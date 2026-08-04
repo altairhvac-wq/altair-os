@@ -70,7 +70,7 @@ const CUSTOMER_B = "cus_company_b";
 const PROTECTED_PATHS = [
   "/",
   "/customers",
-  "/jobs",
+  "/work",
   "/settings",
   "/technician",
   "/tech",

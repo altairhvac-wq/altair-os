@@ -33,7 +33,7 @@ function revalidateAttachmentPaths(input: {
   jobId: string;
   customerId?: string | null;
 }) {
-  revalidatePath(`/jobs/${input.jobId}`);
+  revalidatePath(`/work/${input.jobId}`);
   if (input.customerId) {
     revalidatePath(`/customers/${input.customerId}`);
   }

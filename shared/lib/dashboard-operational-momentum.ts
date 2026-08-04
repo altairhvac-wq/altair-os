@@ -236,7 +236,7 @@ function resolvePrimaryHref(input: OperationalMomentumInput): string {
     case "invoicing_backlog":
       return "/reports?queue=invoicing";
     case "pipeline_flow":
-      return "/jobs";
+      return "/work";
     case "office_queue":
     case "workflow_readiness":
     case "cleanup_velocity":

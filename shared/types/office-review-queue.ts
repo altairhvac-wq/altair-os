@@ -797,7 +797,7 @@ function buildOpenJobAction(jobId: string): OfficeReviewQueueAction | null {
   }
 
   const href = safeBuildQueueActionHref(
-    `/jobs/${encodeURIComponent(jobId)}`,
+    `/work/${encodeURIComponent(jobId)}`,
   );
   if (!href) {
     return null;
@@ -882,7 +882,7 @@ function buildViewProfitabilityAction(jobId: string): OfficeReviewQueueAction | 
   }
 
   const href = safeBuildQueueActionHref(
-    `/jobs/${encodeURIComponent(jobId)}${jobProfitabilityHeadingAnchor(jobId)}`,
+    `/work/${encodeURIComponent(jobId)}${jobProfitabilityHeadingAnchor(jobId)}`,
   );
   if (!href) {
     return null;

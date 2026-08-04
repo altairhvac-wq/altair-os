@@ -36,7 +36,7 @@ export type CustomerEquipmentListActionResult = {
 function revalidateEquipmentPaths(customerId: string, jobId?: string | null) {
   revalidatePath(`/customers/${customerId}`);
   if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/work/${jobId}`);
   }
   revalidatePath("/technician");
 }

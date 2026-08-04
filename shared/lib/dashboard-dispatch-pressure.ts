@@ -306,7 +306,7 @@ function resolveDrillDownLinks(
     });
   }
 
-  links.push({ label: "All jobs", href: "/jobs" });
+  links.push({ label: "All jobs", href: "/work" });
   links.push({ label: "Operational reports", href: "/reports" });
 
   return links;

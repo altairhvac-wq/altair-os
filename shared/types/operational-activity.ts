@@ -712,7 +712,7 @@ export function getOperationalActivityHref(
   access?: { canViewBilling?: boolean; canManageCustomers?: boolean },
 ): string | null {
   if (activity.jobId) {
-    return `/jobs/${activity.jobId}`;
+    return `/work/${activity.jobId}`;
   }
 
   if (activity.estimateId) {

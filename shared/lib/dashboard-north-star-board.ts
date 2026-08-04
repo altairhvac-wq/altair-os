@@ -236,7 +236,7 @@ function buildWorkJobRow(
     customer: canManageCustomers ? job.customerName : "Customer",
     detail: `${job.jobType} · ${technicianLabel} · ${location}`,
     status: formatDispatchStatus(job.status),
-    href: `/jobs/${job.id}`,
+    href: `/work/${job.id}`,
   };
 }
 
@@ -254,7 +254,7 @@ function buildOfficeFollowUps(data: DashboardData): NorthStarBoardOfficeFollowUp
     id: item.jobId,
     title: `${item.jobNumber} · ${item.customerName}`,
     meta: `${OFFICE_KIND_LABELS[item.kind]} · ${item.agingLabel}`,
-    href: `/jobs/${item.jobId}`,
+    href: `/work/${item.jobId}`,
   }));
 }
 

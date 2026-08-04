@@ -34,7 +34,7 @@ export function CustomerRecentPhotosSection({
         {attachments.map((attachment) => (
           <Link
             key={attachment.id}
-            href={`/jobs/${attachment.jobId}`}
+            href={`/work/${attachment.jobId}`}
             className={`${northStar ? `${dt.photoCard} ${dt.photoCardHover}` : "w-36 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-cyan-300"}`}
           >
             <div className="aspect-square bg-slate-100">

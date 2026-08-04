@@ -41,7 +41,7 @@ Run this checklist after each production or preview deploy that matters for inte
 
 ## Job creation
 
-- [ ] Navigate to `/jobs`
+- [ ] Navigate to `/work`
 - [ ] Create a job linked to the test customer
 - [ ] Job appears in jobs list with expected status
 - [ ] Open job detail — workflow controls load without error

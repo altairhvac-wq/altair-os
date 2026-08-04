@@ -152,7 +152,7 @@ export function JobsTable({
                   <AltairTablePrimaryCell
                     primary={
                       <Link
-                        href={`/jobs/${job.id}`}
+                        href={`/work/${job.id}`}
                         onClick={handleJobLinkClick}
                         className={`${jm.primaryText} ${jobNumberLinkFocusClass}`}
                       >

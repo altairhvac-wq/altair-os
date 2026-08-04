@@ -47,6 +47,7 @@ import type {
   JobProfitabilitySnapshot,
 } from "@/shared/types/job-profitability";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
+import type { TimeEntry } from "@/shared/types/time-entry";
 import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 import {
   altairMcGridGapClass,
@@ -61,6 +62,7 @@ import type {
   JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
 import { JobWorkflowOverview } from "@/shared/components/jobs/JobWorkflowOverview";
+import { JobTimeTrackingSection } from "@/shared/components/jobs/JobTimeTrackingSection";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -71,6 +73,7 @@ type JobDetailPageViewProps = {
   attachments: JobAttachment[];
   expenses: Expense[];
   materials: JobMaterial[];
+  laborEntries: TimeEntry[];
   profitability: JobProfitabilitySnapshot | null;
   laborSummary: JobProfitabilityLabor;
   laborCostRate: number | null;
@@ -117,6 +120,7 @@ type SharedWorkspaceProps = {
   attachments: JobAttachment[];
   expenses: Expense[];
   materials: JobMaterial[];
+  laborEntries: TimeEntry[];
   profitability: JobProfitabilitySnapshot | null;
   laborSummary: JobProfitabilityLabor;
   laborCostRate: number | null;
@@ -150,6 +154,7 @@ function LegacyJobDetailBody({
   attachments,
   expenses,
   materials,
+  laborEntries,
   profitability,
   serviceItems,
   canUpdateStatus,
@@ -413,6 +418,8 @@ function LegacyJobDetailBody({
         canViewMaterialCosts={canViewFinancials}
       />
 
+      <JobTimeTrackingSection jobId={job.id} laborEntries={laborEntries} />
+
       <OperationalActivityTimeline
         activities={activities}
         canViewBilling={canViewBilling}
@@ -447,6 +454,7 @@ export function JobDetailPageView({
   attachments,
   expenses,
   materials,
+  laborEntries,
   profitability,
   laborSummary,
   laborCostRate,
@@ -478,6 +486,7 @@ export function JobDetailPageView({
     attachments,
     expenses,
     materials,
+    laborEntries,
     profitability,
     laborSummary,
     laborCostRate,
@@ -501,7 +510,7 @@ export function JobDetailPageView({
 
   const backToJobsLink = (
     <Link
-      href="/jobs"
+      href="/work"
       className={
         northStar
           ? "inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
@@ -509,7 +518,7 @@ export function JobDetailPageView({
       }
     >
       <ArrowLeft className={northStar ? "h-3.5 w-3.5" : "h-4 w-4"} />
-      Back to jobs
+      Back to Work
     </Link>
   );
 

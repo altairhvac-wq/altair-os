@@ -146,7 +146,7 @@ async function hideChrome(page) {
 }
 
 async function gotoJobs(page, query = "") {
-  const url = query ? `${BASE}/jobs?${query}` : `${BASE}/jobs`;
+  const url = query ? `${BASE}/work?${query}` : `${BASE}/work`;
   await page.goto(url, {
     waitUntil: "networkidle",
     timeout: 90_000,
@@ -265,7 +265,7 @@ async function main() {
   });
   const loadingPage = await context.newPage();
   await loadingPage.setViewportSize({ width: 1728, height: 1117 });
-  const navPromise = loadingPage.goto(`${BASE}/jobs`, {
+  const navPromise = loadingPage.goto(`${BASE}/work`, {
     waitUntil: "commit",
     timeout: 90_000,
   });

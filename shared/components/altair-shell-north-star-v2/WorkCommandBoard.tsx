@@ -62,7 +62,7 @@ export function WorkCommandBoard({ jobs, technicians }: WorkCommandBoardProps) {
               return (
                 <li key={job.id}>
                   <Link
-                    href="/jobs"
+                    href="/work"
                     className="group flex items-center gap-3 rounded-xl bg-slate-950/40 px-3.5 py-3 ring-1 ring-slate-800/35 transition-all hover:bg-slate-900/50 hover:ring-slate-700/45"
                   >
                     <span className="w-10 shrink-0 text-sm font-semibold tabular-nums text-slate-500">

@@ -70,10 +70,10 @@ export const adminNavItems: NavItem[] = [
     description: "Draft and track company marketing posts",
   },
   {
-    label: "Jobs",
-    href: "/jobs",
+    label: "Work",
+    href: "/work",
     icon: Briefcase,
-    description: "Track active and completed jobs",
+    description: "Jobs list and day-to-day field work",
   },
   {
     label: "Estimates",
@@ -199,7 +199,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
     id: "work",
     label: "Work",
     hrefs: [
-      "/jobs",
+      "/work",
       "/dispatch",
       "/team",
       "/estimates",
@@ -266,7 +266,7 @@ export function getGroupedAdminNavItems(
  */
 export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/",
-  "/jobs",
+  "/work",
   "/dispatch",
   "/team",
   "/customers",
@@ -285,7 +285,7 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
 
 /** @deprecated Prefer MOBILE_ADMIN_BOTTOM_RAIL_ORDER — More overflow is removed. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
-  ["/", "/jobs", "/dispatch", "/customers"],
+  ["/", "/work", "/dispatch", "/customers"],
   [],
 ] as const;
 
@@ -296,7 +296,7 @@ export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =
 /** Left-to-right desktop tab order (workflow-first, admin items last). */
 export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/",
-  "/jobs",
+  "/work",
   "/customers",
   "/marketing",
   "/dispatch",

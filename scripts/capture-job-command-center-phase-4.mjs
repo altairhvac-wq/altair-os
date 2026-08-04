@@ -177,7 +177,7 @@ async function hideChrome(page) {
 }
 
 async function gotoJob(page, jobId) {
-  const url = `${BASE}/jobs/${jobId}`;
+  const url = `${BASE}/work/${jobId}`;
   await page.goto(url, { waitUntil: "networkidle", timeout: 90_000 });
   await page.waitForTimeout(800);
   await hideChrome(page);
@@ -794,7 +794,7 @@ async function main() {
   });
   const techPage = await techContext.newPage();
   await techPage.goto(
-    `${BASE}/jobs/${KNOWN.financialDeniedJob.id}`,
+    `${BASE}/work/${KNOWN.financialDeniedJob.id}`,
     { waitUntil: "networkidle", timeout: 90_000 },
   );
   await techPage.waitForTimeout(800);
@@ -804,7 +804,7 @@ async function main() {
     techOfficeUrl.includes("/technician") ||
     (await techPage.getByText(/you can only open jobs assigned to you/i).count()) >
       0 ||
-    !techOfficeUrl.includes(`/jobs/${KNOWN.financialDeniedJob.id}`);
+    !techOfficeUrl.includes(`/work/${KNOWN.financialDeniedJob.id}`);
   const moneyPathOnTechOffice =
     (await techPage.locator("#job-detail-billing").count()) > 0;
   report.screenshots.push(

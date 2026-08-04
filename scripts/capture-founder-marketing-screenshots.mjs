@@ -214,7 +214,7 @@ const CAPTURES = [
   {
     id: "jobs-workspace",
     label: "Jobs workspace",
-    route: "/jobs",
+    route: "/work",
     output: "jobs-full-page.png",
     // Mission Control list: admin-page-header + job-mission-* (not north-star-jobs-*).
     anchor: ".admin-page-header h1, .north-star-page-header h1",

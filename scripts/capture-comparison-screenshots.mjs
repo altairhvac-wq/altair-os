@@ -56,7 +56,7 @@ const OUTPUT_WIDTH = Math.max(
 const DEFAULT_ROUTES = [
   "/",
   "/customers",
-  "/jobs",
+  "/work",
   "/leads",
   "/reports?range=30d",
 ];

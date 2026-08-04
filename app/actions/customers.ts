@@ -57,7 +57,7 @@ export type CustomerLifecycleActionResult = {
 
 function revalidateCustomerPaths(customerId?: string) {
   revalidatePath("/customers");
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
 

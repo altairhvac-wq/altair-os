@@ -55,7 +55,7 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
           const status = jobStatusStyles[job.status];
           return (
             <li key={job.id}>
-              <Link href="/jobs" className={`group flex items-center gap-3 ${t.row}`}>
+              <Link href="/work" className={`group flex items-center gap-3 ${t.row}`}>
                 <span className={`w-10 shrink-0 tabular-nums ${t.lightSurfaceSecondary} font-semibold`}>
                   {job.time}
                 </span>

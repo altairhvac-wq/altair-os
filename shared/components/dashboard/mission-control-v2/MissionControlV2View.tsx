@@ -297,7 +297,7 @@ const SAMPLE_QUICK_ACTIONS: MissionControlQuickAction[] = [
     id: "new-job",
     label: "New Job",
     shortLabel: "Job",
-    href: "/jobs?create=1",
+    href: "/work?create=1",
     description: "Schedule field work",
     icon: Briefcase,
   },

@@ -11,6 +11,7 @@ import {
   JOB_DETAIL_MATERIALS_ANCHOR,
   JOB_DETAIL_SCOPE_ANCHOR,
   JOB_DETAIL_SECTION_NAV_ITEMS,
+  JOB_DETAIL_TIME_TRACKING_ANCHOR,
 } from "@/shared/lib/jobs/job-detail-anchors";
 
 export const JOB_DETAIL_SECTION_SELECT_EVENT = "altair:job-detail-section";
@@ -21,6 +22,7 @@ export type JobDetailTabId =
   | typeof JOB_DETAIL_MATERIALS_ANCHOR
   | typeof JOB_DETAIL_ATTACHMENTS_ANCHOR
   | typeof JOB_DETAIL_BILLING_ANCHOR
+  | typeof JOB_DETAIL_TIME_TRACKING_ANCHOR
   | typeof JOB_DETAIL_ACTIVITY_ANCHOR;
 
 export type JobDetailSectionSelectDetail = {

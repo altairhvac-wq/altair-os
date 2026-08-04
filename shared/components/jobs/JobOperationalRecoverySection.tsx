@@ -33,7 +33,7 @@ function resolveRecoveryHref(
         ? safeBuildQueueActionHref(`/invoices/${encodeURIComponent(entry.invoiceId)}`)
         : safeBuildQueueActionHref("/invoices", { jobId });
     default:
-      return safeBuildQueueActionHref(`/jobs/${encodeURIComponent(jobId)}`);
+      return safeBuildQueueActionHref(`/work/${encodeURIComponent(jobId)}`);
   }
 }
 

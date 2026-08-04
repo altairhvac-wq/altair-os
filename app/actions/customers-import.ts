@@ -36,7 +36,7 @@ export type ImportCustomersFromCsvActionResult = {
 
 function revalidateCustomerPaths() {
   revalidatePath("/customers");
-  revalidatePath("/jobs");
+  revalidatePath("/work");
   revalidatePath("/estimates");
   revalidatePath("/invoices");
 }

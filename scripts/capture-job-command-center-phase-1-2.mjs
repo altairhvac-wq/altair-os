@@ -188,7 +188,7 @@ async function hideChrome(page) {
 }
 
 async function gotoJob(page, jobId) {
-  const url = `${BASE}/jobs/${jobId}`;
+  const url = `${BASE}/work/${jobId}`;
   await page.goto(url, { waitUntil: "networkidle", timeout: 90_000 });
   await page.waitForTimeout(800);
   await hideChrome(page);
@@ -561,7 +561,7 @@ async function main() {
     viewport: { width: 390, height: 844 },
   });
   const techPage = await techContext.newPage();
-  await techPage.goto(`${BASE}/jobs/${SCENARIO_JOBS.financialDeniedJob.id}`, {
+  await techPage.goto(`${BASE}/work/${SCENARIO_JOBS.financialDeniedJob.id}`, {
     waitUntil: "networkidle",
     timeout: 90_000,
   });
@@ -571,7 +571,7 @@ async function main() {
     techOfficeUrl.includes("/technician") ||
     (await techPage.getByText(/you can only open jobs assigned to you/i).count()) >
       0 ||
-    !techOfficeUrl.includes(`/jobs/${SCENARIO_JOBS.financialDeniedJob.id}`);
+    !techOfficeUrl.includes(`/work/${SCENARIO_JOBS.financialDeniedJob.id}`);
 
   // 10 Technician overlay smoke
   // Ensure an assigned job falls in the technician operational week for overlay open.
@@ -672,7 +672,7 @@ async function main() {
   const financialPass = redirectedFromOffice;
   report.financialPermission = {
     role: "technician",
-    attemptedRoute: `/jobs/${SCENARIO_JOBS.financialDeniedJob.id}`,
+    attemptedRoute: `/work/${SCENARIO_JOBS.financialDeniedJob.id}`,
     landed: techOfficeUrl,
     officeJobDetailBlocked: redirectedFromOffice,
     note: "Technician role lacks manageBilling/dispatchJobs/manageCompany; office layout redirects technicians away from North Star Job Detail, so prohibited financial sections are not reachable.",

@@ -60,7 +60,7 @@ export function buildOnboardingChecklist(
       title: "Schedule your first job",
       description:
         "Put work on the board, then estimate and invoice from that job.",
-      href: "/jobs",
+      href: "/work",
       completed: snapshot.jobCount > 0,
       tip: "A simple job is enough to walk dispatch and the money path.",
     },

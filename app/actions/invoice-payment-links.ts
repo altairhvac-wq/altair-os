@@ -427,7 +427,7 @@ export async function sendInvoicePaymentLinkEmailAction(input: {
   revalidatePath(`/invoices/${input.invoiceId.trim()}`);
 
   if (input.jobId?.trim()) {
-    revalidatePath(`/jobs/${input.jobId.trim()}`);
+    revalidatePath(`/work/${input.jobId.trim()}`);
   }
 
   const emailDelivery = toBillingEmailDelivery(emailResult);
@@ -507,7 +507,7 @@ export async function sendInvoicePaymentLinkSmsAction(input: {
   revalidatePath(`/invoices/${input.invoiceId.trim()}`);
 
   if (input.jobId?.trim()) {
-    revalidatePath(`/jobs/${input.jobId.trim()}`);
+    revalidatePath(`/work/${input.jobId.trim()}`);
   }
 
   return {

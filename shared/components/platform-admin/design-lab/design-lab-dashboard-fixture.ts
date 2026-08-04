@@ -494,7 +494,7 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         approvedAt: "2026-06-23T14:00:00.000Z",
         jobId: "job-demo-1010",
         jobNumber: "JOB-DEMO-1010",
-        openHref: "/jobs/job-demo-1010",
+        openHref: "/work/job-demo-1010",
       },
     ],
   },

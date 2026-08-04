@@ -1,13 +1,13 @@
 /**
  * Capture Mission Control homepage validation shots.
- * Desktop 1440×1000, Mobile 390×844 → docs/altair/homepage-phase1-final/
+ * Desktop 1440×1000, Mobile 390×844 → docs/marketing/homepage-phase1-final/
  */
 import fs from "fs";
 import path from "path";
 import { chromium } from "playwright";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const OUT_DIR = path.join(ROOT, "docs", "altair", "homepage-phase1-final");
+const OUT_DIR = path.join(ROOT, "docs", "marketing", "homepage-final-polish");
 const BASE = process.env.BASE_URL?.trim() || "http://localhost:3000";
 
 fs.mkdirSync(OUT_DIR, { recursive: true });

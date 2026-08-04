@@ -159,7 +159,7 @@ export async function createEstimateAction(
   revalidatePath("/customers");
   revalidatePath("/leads");
   if (estimate.jobId) {
-    revalidatePath(`/jobs/${estimate.jobId}`);
+    revalidatePath(`/work/${estimate.jobId}`);
   }
   return { estimate };
 }
@@ -315,7 +315,7 @@ export async function createFieldEstimateFromJobAction(
 
   revalidatePath("/estimates");
   revalidatePath("/technician");
-  revalidatePath(`/jobs/${permission.jobId}`);
+  revalidatePath(`/work/${permission.jobId}`);
 
   return { estimate };
 }
@@ -411,7 +411,7 @@ export async function updateFieldEstimateFromJobAction(
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath("/technician");
-  revalidatePath(`/jobs/${permission.jobId}`);
+  revalidatePath(`/work/${permission.jobId}`);
 
   return { estimate };
 }
@@ -635,7 +635,7 @@ export async function updateEstimateStatusAction(
     revalidatePath("/dispatch");
     if (estimate.jobId) {
       revalidatePath("/technician");
-      revalidatePath(`/jobs/${estimate.jobId}`);
+      revalidatePath(`/work/${estimate.jobId}`);
     }
   }
 
@@ -857,7 +857,7 @@ export async function resendEstimateEmailAction(
   revalidatePath(`/estimates/${estimateId}`);
 
   if (currentEstimate.jobId) {
-    revalidatePath(`/jobs/${currentEstimate.jobId}`);
+    revalidatePath(`/work/${currentEstimate.jobId}`);
   }
 
   const emailDelivery = toBillingEmailDelivery(emailResult);
@@ -1004,7 +1004,7 @@ export async function approveEstimateOnSiteAction(
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath("/technician");
   revalidatePath("/dispatch");
-  revalidatePath(`/jobs/${estimate.jobId}`);
+  revalidatePath(`/work/${estimate.jobId}`);
 
   return { estimate };
 }

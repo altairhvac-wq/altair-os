@@ -317,7 +317,7 @@ function LegacyEstimateDetailPageView({
                 Related job
               </h2>
               <Link
-                href={`/jobs/${estimate.jobId}`}
+                href={`/work/${estimate.jobId}`}
                 className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
               >
                 <Briefcase className="h-4 w-4 shrink-0" />
