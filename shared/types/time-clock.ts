@@ -12,6 +12,8 @@ export type TimeClockEntry = {
   userName: string;
   clockInAt: string;
   clockOutAt?: string;
+  /** Stored closed duration when present; open shifts omit this. */
+  durationMinutes?: number;
   status: TimeClockShiftStatus;
   notes?: string;
   createdAt: string;

@@ -1,6 +1,10 @@
 "use client";
 
 import { Loader2, LogIn, LogOut } from "lucide-react";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components";
 
 export type CompactTimeClockToggleAction = "clock_in" | "clock_out";
 
@@ -25,14 +29,16 @@ export function CompactTimeClockBar({
 
   return (
     <section
-      className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-4"
+      className={`${altairMcCardClass} ${altairMcCardPadClass}`}
       aria-busy={isPending}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900">{statusLabel}</p>
+          <p className="text-sm font-semibold text-altair-ink-on-paper">
+            {statusLabel}
+          </p>
           {subtext ? (
-            <p className="mt-0.5 break-words text-xs leading-5 text-slate-500">
+            <p className="mt-0.5 break-words text-xs leading-5 text-altair-ink-on-paper-muted">
               {subtext}
             </p>
           ) : null}
@@ -43,10 +49,10 @@ export function CompactTimeClockBar({
             type="button"
             onClick={onToggle}
             disabled={isPending}
-            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
+            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
               isClockOut
-                ? "bg-slate-900 hover:bg-slate-800"
-                : "bg-emerald-600 hover:bg-emerald-700"
+                ? "bg-altair-ink-on-paper hover:bg-altair-ink"
+                : "bg-altair-success hover:bg-altair-success/90"
             }`}
           >
             {isPending ? (
@@ -72,7 +78,7 @@ export function CompactTimeClockBar({
         <p
           role="alert"
           aria-live="assertive"
-          className="mt-3 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700"
+          className="mt-3 rounded-lg border border-altair-danger/20 bg-altair-danger-surface px-2.5 py-2 text-xs text-altair-danger-foreground"
         >
           {error}
         </p>

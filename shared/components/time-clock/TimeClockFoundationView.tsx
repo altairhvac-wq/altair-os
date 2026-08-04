@@ -1,22 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { ArrowLeft, History } from "lucide-react";
+import { Clock3, History } from "lucide-react";
 import {
   clockInAction,
   clockOutAction,
   correctOpenShiftAction,
 } from "@/app/actions/time-clock";
 import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
+import { TimeClockStatStrip } from "@/shared/components/time-clock/TimeClockStatStrip";
 import {
-  MasterContentStack,
-  MasterPageCanvas,
+  EmptyState,
+  SectionHeader,
+  StatusPill,
+  altairMcListClass,
+  altairMcListRowClass,
+} from "@/shared/design-system/components";
+import {
   MasterPageHeader,
-  MasterPageSurface,
-  MasterShellPage,
   adminFormInputClass,
-  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 import {
   MobileSheet,
@@ -28,34 +30,52 @@ import {
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import type { TechnicianTimeStatusCounts } from "@/shared/lib/technicians/technician-roster-time-status";
+import { resolveShiftRowStatus } from "@/shared/lib/time-tracking/shift-row-status";
+import { isStaleOpenShift } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
+import type { ReportTimeTrackingSummary } from "@/shared/types/reports-page";
 import type { TimeClockEntry } from "@/shared/types/time-clock";
 import {
   formatDateTime,
   formatDuration,
   getElapsedMinutes,
 } from "@/shared/types/time-clock";
+import {
+  formatDurationMinutes,
+  type TimeEntry,
+} from "@/shared/types/time-entry";
 
 type TimeClockFoundationViewProps = {
   initialOpenEntry: TimeClockEntry | null;
   initialEntries: TimeClockEntry[];
+  activeEntries: TimeEntry[];
+  statusCounts: TechnicianTimeStatusCounts;
+  timeTracking: ReportTimeTrackingSummary;
+  showRosterCounts: boolean;
   currentUserId: string;
   currentUserName: string;
   canViewCompanyEntries: boolean;
   canCorrectEntries: boolean;
 };
 
-const MISSED_CLOCK_OUT_THRESHOLD_MS = 12 * 60 * 60 * 1000;
+function formatShiftDuration(entry: TimeClockEntry, now: number): string {
+  if (entry.clockOutAt) {
+    if (entry.durationMinutes != null) {
+      return formatDurationMinutes(entry.durationMinutes);
+    }
+    return formatDuration(entry.clockInAt, entry.clockOutAt);
+  }
 
-function isLikelyMissedClockOut(entry: TimeClockEntry, now: number): boolean {
-  return (
-    entry.status === "open" &&
-    now - Date.parse(entry.clockInAt) >= MISSED_CLOCK_OUT_THRESHOLD_MS
-  );
+  return formatDurationMinutes(getElapsedMinutes(entry.clockInAt, now));
 }
 
 export function TimeClockFoundationView({
   initialOpenEntry,
   initialEntries,
+  activeEntries: initialActiveEntries,
+  statusCounts,
+  timeTracking,
+  showRosterCounts,
   currentUserId,
   currentUserName,
   canViewCompanyEntries,
@@ -63,10 +83,13 @@ export function TimeClockFoundationView({
 }: TimeClockFoundationViewProps) {
   const [openEntry, setOpenEntry] = useState(initialOpenEntry);
   const [entries, setEntries] = useState(initialEntries);
+  const [activeEntries, setActiveEntries] = useState(initialActiveEntries);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState(() => Date.now());
-  const [correctingEntryId, setCorrectingEntryId] = useState<string | null>(null);
+  const [correctingEntryId, setCorrectingEntryId] = useState<string | null>(
+    null,
+  );
   const [correctionEndedAt, setCorrectionEndedAt] = useState("");
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionError, setCorrectionError] = useState<string | null>(null);
@@ -77,7 +100,8 @@ export function TimeClockFoundationView({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenEntry(initialOpenEntry);
     setEntries(initialEntries);
-  }, [initialEntries, initialOpenEntry]);
+    setActiveEntries(initialActiveEntries);
+  }, [initialActiveEntries, initialEntries, initialOpenEntry]);
 
   useEffect(() => {
     if (!entries.some((entry) => entry.status === "open")) {
@@ -93,15 +117,7 @@ export function TimeClockFoundationView({
       return null;
     }
 
-    const minutes = getElapsedMinutes(openEntry.clockInAt, now);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    if (hours === 0) {
-      return `${remainingMinutes}m active`;
-    }
-
-    return `${hours}h ${remainingMinutes}m active`;
+    return `${formatDurationMinutes(getElapsedMinutes(openEntry.clockInAt, now))} active`;
   }, [now, openEntry]);
 
   function upsertEntry(entry: TimeClockEntry) {
@@ -148,6 +164,15 @@ export function TimeClockFoundationView({
         if (result.entry) {
           setOpenEntry(null);
           upsertEntry(result.entry);
+          setActiveEntries((previous) =>
+            previous.filter(
+              (active) =>
+                !(
+                  active.technicianId === result.entry!.userId &&
+                  !active.endedAt
+                ),
+            ),
+          );
         }
       } catch {
         setError("Could not clock out. Check your connection and try again.");
@@ -156,9 +181,7 @@ export function TimeClockFoundationView({
   }
 
   function beginCorrection(entry: TimeClockEntry) {
-    const localNow = new Date(
-      now - new Date(now).getTimezoneOffset() * 60_000,
-    )
+    const localNow = new Date(now - new Date(now).getTimezoneOffset() * 60_000)
       .toISOString()
       .slice(0, 16);
     setCorrectingEntryId(entry.id);
@@ -205,6 +228,15 @@ export function TimeClockFoundationView({
         if (result.entry) {
           upsertEntry(result.entry);
           if (openEntry?.id === result.entry.id) setOpenEntry(null);
+          setActiveEntries((previous) =>
+            previous.filter(
+              (active) =>
+                !(
+                  active.technicianId === result.entry!.userId &&
+                  !active.endedAt
+                ),
+            ),
+          );
         }
         setCorrectingEntryId(null);
         setCorrectionEndedAt("");
@@ -227,215 +259,159 @@ export function TimeClockFoundationView({
     visibleEntries.find((entry) => entry.id === correctingEntryId) ?? null;
   const correctionFormId = "missed-clock-out-correction-form";
 
+  function canCorrectEntry(entry: TimeClockEntry): boolean {
+    if (entry.status !== "open") return false;
+    if (canCorrectEntries) return true;
+    return (
+      entry.userId === currentUserId && isStaleOpenShift(entry.clockInAt, now)
+    );
+  }
+
   return (
-    <MasterShellPage density="compact">
-      <MasterPageCanvas width="standard">
-        <MasterContentStack density="compact">
-          <Link
-            href="/time"
-            className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to Labor &amp; Payroll
-          </Link>
+    <div className="space-y-4">
+      <MasterPageHeader
+        title="Time Clock"
+        subtitle="Shift history, live crew status, and missed clock-out corrections"
+        density="compact"
+        surfaceVariant="northStar"
+      />
 
-          <MasterPageHeader
-            title="Shift clock & exceptions"
-            subtitle="Clock in or out for shift exceptions, review open shifts, and correct missed clock-outs. Job labor remains tied to Start work and Complete work."
-            density="compact"
+      <TimeClockStatStrip
+        statusCounts={statusCounts}
+        timeTracking={timeTracking}
+        showRosterCounts={showRosterCounts}
+      />
+
+      <CompactTimeClockBar
+        statusLabel={
+          openEntry ? (activeDurationLabel ?? "Clocked in") : "Not clocked in"
+        }
+        subtext={
+          openEntry
+            ? `${currentUserName} · Since ${formatDateTime(openEntry.clockInAt)}`
+            : `${currentUserName} · Clock in or out for your own shift`
+        }
+        toggleAction={openEntry ? "clock_out" : "clock_in"}
+        isPending={isPending}
+        error={error}
+        onToggle={openEntry ? runClockOut : runClockIn}
+      />
+
+      <section className="space-y-2">
+        <SectionHeader
+          title="Shift history"
+          action={
+            visibleEntries.length > 0
+              ? {
+                  label: `${visibleEntries.length} shift${visibleEntries.length === 1 ? "" : "s"}`,
+                }
+              : undefined
+          }
+        />
+        <h2
+          ref={shiftHistoryHeadingRef}
+          tabIndex={-1}
+          className="sr-only outline-none"
+        >
+          Shift history
+        </h2>
+
+        {visibleEntries.length === 0 ? (
+          <EmptyState
+            title="No shifts yet"
+            description="Clock in to start a shift. Closed and open company shifts will show up here."
+            icon={<Clock3 className="h-6 w-6" />}
           />
-
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <Link
-              href="/reports"
-              className="inline-flex min-h-11 items-center rounded-lg px-2 font-semibold text-cyan-700 transition-colors hover:bg-white hover:text-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
-            >
-              Open payroll report
-            </Link>
-          </div>
-
-          <CompactTimeClockBar
-            statusLabel={openEntry ? activeDurationLabel ?? "Clocked in" : "Not clocked in"}
-            subtext={
-              openEntry
-                ? `${currentUserName} · Since ${formatDateTime(openEntry.clockInAt)}`
-                : `${currentUserName} · Manual clock in/out for shift exceptions`
-            }
-            toggleAction={openEntry ? "clock_out" : "clock_in"}
-            isPending={isPending}
-            error={error}
-            onToggle={openEntry ? runClockOut : runClockIn}
-          />
-
-          <MasterPageSurface variant="card">
-            <div className={masterPanelHeaderClass}>
-              <h2
-                ref={shiftHistoryHeadingRef}
-                tabIndex={-1}
-                className="text-sm font-semibold text-slate-900 outline-none"
-              >
-                Shift history
-              </h2>
-              <p className="text-xs text-slate-500">
-                {canViewCompanyEntries ? "Company shift clock entries" : "Your shift clock entries"} ·{" "}
-                {visibleEntries.length} entr{visibleEntries.length === 1 ? "y" : "ies"}
-              </p>
+        ) : (
+          <div className={altairMcListClass}>
+            <div className="hidden border-b border-altair-border px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] md:gap-3">
+              {canViewCompanyEntries ? <span>Technician</span> : <span>Shift</span>}
+              <span>Clock in</span>
+              <span>Clock out</span>
+              <span>Duration</span>
+              <span>Status</span>
+              <span>Review</span>
             </div>
 
-            {visibleEntries.length === 0 ? (
-              <p className="px-4 py-8 text-sm text-slate-500">
-                No time entries yet. Clock in to start your first shift.
-              </p>
-            ) : (
-              <>
-                <ul className="divide-y divide-slate-100 md:hidden">
-                  {visibleEntries.map((entry) => (
-                    <li key={entry.id} className="space-y-3 px-4 py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">
-                            {canViewCompanyEntries
-                              ? entry.userName
-                              : "Shift entry"}
-                          </p>
-                          <p className="mt-0.5 text-xs text-slate-500">
-                            Clocked in {formatDateTime(entry.clockInAt)}
-                          </p>
-                        </div>
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            entry.status === "open"
-                              ? isLikelyMissedClockOut(entry, now)
-                                ? "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200"
-                                : "bg-cyan-50 text-cyan-800 ring-1 ring-inset ring-cyan-200"
-                              : "bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200"
-                          }`}
-                        >
-                          {entry.status === "open" ? "Open" : "Closed"}
-                        </span>
+            <ul className="divide-y divide-altair-border">
+              {visibleEntries.map((entry) => {
+                const rowStatus = resolveShiftRowStatus(
+                  entry,
+                  activeEntries,
+                  now,
+                );
+                const showCorrect = canCorrectEntry(entry);
+                const stale = isStaleOpenShift(entry.clockInAt, now);
+
+                return (
+                  <li key={entry.id} className={altairMcListRowClass}>
+                    <div className="grid gap-2 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] md:items-center md:gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-altair-ink-on-paper">
+                          {canViewCompanyEntries
+                            ? entry.userName
+                            : "Your shift"}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-altair-ink-on-paper-muted md:hidden">
+                          In {formatDateTime(entry.clockInAt)}
+                        </p>
                       </div>
 
-                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-slate-50 px-3 py-3">
-                        <div>
-                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                            Clock out
-                          </dt>
-                          <dd className="mt-0.5 text-sm text-slate-800">
-                            {entry.clockOutAt
-                              ? formatDateTime(entry.clockOutAt)
-                              : "Not recorded"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                            Duration
-                          </dt>
-                          <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-900">
-                            {formatDuration(entry.clockInAt, entry.clockOutAt)}
-                          </dd>
-                        </div>
-                      </dl>
+                      <p className="hidden text-sm text-altair-ink-on-paper-secondary md:block">
+                        {formatDateTime(entry.clockInAt)}
+                      </p>
 
-                      {canCorrectEntries && entry.status === "open" ? (
-                        <button
-                          type="button"
-                          onClick={() => beginCorrection(entry)}
-                          className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                            isLikelyMissedClockOut(entry, now)
-                              ? "border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 focus-visible:ring-rose-500/30"
-                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-cyan-500/30"
-                          }`}
-                        >
-                          {isLikelyMissedClockOut(entry, now)
-                            ? "Correct missed clock-out"
-                            : "Review open shift"}
-                        </button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                      <p className="text-sm text-altair-ink-on-paper-secondary">
+                        <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted md:hidden">
+                          Out
+                        </span>
+                        {entry.clockOutAt
+                          ? formatDateTime(entry.clockOutAt)
+                          : "—"}
+                      </p>
 
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="min-w-full divide-y divide-slate-100">
-                    <thead className="bg-white">
-                      <tr>
-                        {canViewCompanyEntries ? (
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Employee
-                          </th>
-                        ) : null}
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Clock in
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Clock out
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <p className="text-sm font-semibold tabular-nums text-altair-ink-on-paper">
+                        <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted md:hidden">
                           Duration
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Status
-                        </th>
-                        {canCorrectEntries ? (
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Review
-                          </th>
-                        ) : null}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {visibleEntries.map((entry) => (
-                        <tr key={entry.id}>
-                          {canViewCompanyEntries ? (
-                            <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                              {entry.userName}
-                            </td>
-                          ) : null}
-                          <td className="px-4 py-3 text-sm text-slate-700">
-                            {formatDateTime(entry.clockInAt)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-700">
-                            {entry.clockOutAt
-                              ? formatDateTime(entry.clockOutAt)
-                              : "—"}
-                          </td>
-                          <td className="px-4 py-3 text-sm tabular-nums text-slate-700">
-                            {formatDuration(entry.clockInAt, entry.clockOutAt)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-700">
-                            {entry.status === "open" ? "Open" : "Closed"}
-                          </td>
-                          {canCorrectEntries ? (
-                            <td className="px-4 py-3 text-sm">
-                              {entry.status === "open" ? (
-                                <button
-                                  type="button"
-                                  onClick={() => beginCorrection(entry)}
-                                  className={`inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                                    isLikelyMissedClockOut(entry, now)
-                                      ? "text-rose-700 hover:bg-rose-50 hover:text-rose-800 focus-visible:ring-rose-500/30"
-                                      : "text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 focus-visible:ring-cyan-500/30"
-                                  }`}
-                                >
-                                  {isLikelyMissedClockOut(entry, now)
-                                    ? "Correct missed clock-out"
-                                    : "Review open shift"}
-                                </button>
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                          ) : null}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </MasterPageSurface>
-        </MasterContentStack>
-      </MasterPageCanvas>
+                        </span>
+                        {formatShiftDuration(entry, now)}
+                      </p>
+
+                      <div>
+                        <StatusPill tone={rowStatus.tone} size="sm">
+                          {rowStatus.label}
+                        </StatusPill>
+                      </div>
+
+                      <div>
+                        {showCorrect ? (
+                          <button
+                            type="button"
+                            onClick={() => beginCorrection(entry)}
+                            className={`inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 ${
+                              stale
+                                ? "text-altair-danger-foreground hover:bg-altair-danger-surface"
+                                : "text-altair-ink-on-paper hover:bg-[var(--surface-tile)]"
+                            }`}
+                          >
+                            {stale
+                              ? "Correct missed clock-out"
+                              : "Review open shift"}
+                          </button>
+                        ) : (
+                          <span className="hidden text-sm text-altair-ink-on-paper-muted md:inline">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </section>
 
       {correctingEntry ? (
         <MobileSheet
@@ -449,7 +425,7 @@ export function TimeClockFoundationView({
             <MobileSheetHeader
               titleId="missed-clock-out-correction-title"
               title={
-                isLikelyMissedClockOut(correctingEntry, now)
+                isStaleOpenShift(correctingEntry.clockInAt, now)
                   ? "Correct missed clock-out"
                   : "Review open shift"
               }
@@ -458,8 +434,11 @@ export function TimeClockFoundationView({
               closeDisabled={isPending}
               safeAreaTop
               icon={
-                <MobileSheetHeaderIcon className="bg-rose-50 ring-1 ring-rose-200">
-                  <History className="h-4 w-4 text-rose-700" aria-hidden="true" />
+                <MobileSheetHeaderIcon className="bg-altair-danger-surface ring-1 ring-altair-danger/20">
+                  <History
+                    className="h-4 w-4 text-altair-danger-foreground"
+                    aria-hidden="true"
+                  />
                 </MobileSheetHeaderIcon>
               }
             />
@@ -475,14 +454,14 @@ export function TimeClockFoundationView({
                     runCorrection(correctingEntry);
                   }}
                 >
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+                  <div className="rounded-lg border border-altair-warning/20 bg-altair-warning-surface px-3 py-2.5 text-sm text-altair-warning-foreground">
                     Use the time the shift actually ended. This correction and
                     its reason will be recorded for payroll review.
                   </div>
 
                   <label
                     htmlFor="correction-ended-at"
-                    className="block text-sm font-semibold text-slate-800"
+                    className="block text-sm font-semibold text-altair-ink-on-paper"
                   >
                     Actual clock-out time
                     <input
@@ -502,7 +481,7 @@ export function TimeClockFoundationView({
 
                   <label
                     htmlFor="correction-reason"
-                    className="block text-sm font-semibold text-slate-800"
+                    className="block text-sm font-semibold text-altair-ink-on-paper"
                   >
                     Reason for correction
                     <textarea
@@ -520,7 +499,7 @@ export function TimeClockFoundationView({
                       className={`${adminFormInputClass} mt-1.5 min-h-24 resize-y`}
                     />
                   </label>
-                  <p className="-mt-2 text-xs text-slate-500">
+                  <p className="-mt-2 text-xs text-altair-ink-on-paper-muted">
                     Add at least 5 characters so the adjustment has a clear
                     audit trail.
                   </p>
@@ -529,7 +508,7 @@ export function TimeClockFoundationView({
                     <p
                       role="alert"
                       aria-live="assertive"
-                      className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800"
+                      className="rounded-lg border border-altair-danger/20 bg-altair-danger-surface px-3 py-2.5 text-sm text-altair-danger-foreground"
                     >
                       {correctionError}
                     </p>
@@ -548,12 +527,12 @@ export function TimeClockFoundationView({
                 submitDisabled={
                   !correctionEndedAt || correctionReason.trim().length < 5
                 }
-                submitClassName="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-rose-700 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+                submitClassName="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-altair-danger px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-altair-danger/90 disabled:cursor-not-allowed disabled:opacity-60"
               />
             </MobileSheetFooter>
           </MobileSheetPanel>
         </MobileSheet>
       ) : null}
-    </MasterShellPage>
+    </div>
   );
 }

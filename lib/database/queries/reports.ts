@@ -33,7 +33,7 @@ import {
 import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import { summarizeTodayEntries } from "@/shared/types/time-entry";
-import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
+import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
 
 
 const TIME_RELATED_INCONSISTENCY_KINDS = new Set([
@@ -47,7 +47,6 @@ const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
 
 const RECENT_TIME_CLOCK_LIMIT = 10;
 const TIME_CLOCK_FETCH_LIMIT = 100;
-const STALE_OPEN_SHIFT_HOURS = 12;
 
 async function listTechnicianLaborCostRates(
   companyId: string,
@@ -133,50 +132,13 @@ export async function getReportsPageData(
     },
   });
 
-  const now = Date.now();
-  const { start: todayStart, end: todayEnd } = getDayBoundsInTimeZone(
-    options.timeZone,
-  );
-  const todayStartMs = Date.parse(todayStart);
-  const todayEndMs = Date.parse(todayEnd);
-  const clockEntriesForToday = new Map(
-    todayTimeEntries
-      .filter((entry) => entry.entryType === "clock")
-      .map((entry) => [entry.id, entry]),
-  );
-  for (const entry of openClockEntries) {
-    clockEntriesForToday.set(entry.id, entry);
-  }
-  const shiftMinutesToday = [...clockEntriesForToday.values()].reduce(
-    (total, entry) => {
-      const overlapStart = Math.max(Date.parse(entry.startedAt), todayStartMs);
-      const overlapEnd = Math.min(
-        entry.endedAt ? Date.parse(entry.endedAt) : now,
-        todayEndMs,
-      );
-      return total + Math.max(0, Math.round((overlapEnd - overlapStart) / 60_000));
-    },
-    0,
-  );
-  const staleOpenShifts = openClockEntries
-    .map((entry) => ({
-      id: entry.id,
-      technicianName: entry.technicianName,
-      startedAt: entry.startedAt,
-      elapsedHours: Math.max(
-        0,
-        Math.round(((now - Date.parse(entry.startedAt)) / 3_600_000) * 10) / 10,
-      ),
-    }))
-    .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
-
   const withTimeTracking: ReportsPageData = {
     ...report,
-    timeTracking: {
-      shiftHoursToday: roundJobMaterialAmount(shiftMinutesToday / 60),
-      openShiftCount: openClockEntries.length,
-      staleOpenShifts,
-    },
+    timeTracking: buildShiftTimeTrackingSummary({
+      openClockEntries,
+      todayTimeEntries,
+      timeZone: options.timeZone,
+    }),
   };
 
   return attachReportPageSparklines(withTimeTracking, {

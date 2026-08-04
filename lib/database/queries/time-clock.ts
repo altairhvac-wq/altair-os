@@ -27,6 +27,7 @@ function mapClockTimeEntryToTimeClockEntry(entry: TimeEntry): TimeClockEntry {
     userName: entry.technicianName,
     clockInAt: entry.startedAt,
     clockOutAt: entry.endedAt,
+    durationMinutes: entry.durationMinutes,
     status: entry.endedAt ? "closed" : "open",
     notes: entry.notes,
     createdAt: entry.createdAt,
