@@ -7,6 +7,7 @@ import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-paymen
 import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
 import { PaymentsPageView } from "@/shared/components/payments/PaymentsPageView";
+import { EstimatePipelinePageView } from "@/shared/components/sales/EstimatePipelinePageView";
 import { SalesHubTabs } from "@/shared/components/sales/SalesHubTabs";
 import { Button } from "@/shared/design-system/components";
 import { MasterListPageLayout } from "@/shared/design-system/shell";
@@ -56,6 +57,8 @@ function hubSubtitle(tab: SalesHubTabId): string {
       return "Collect money, send invoices, and find past billing records.";
     case "payments":
       return "Collected payments from the invoice ledger.";
+    case "estimate-pipeline":
+      return "Estimate cohorts through linked invoice and payment — not total revenue.";
     case "estimates":
     default:
       return "Finish, send, and follow up on estimates.";
@@ -214,6 +217,14 @@ export function SalesHubPageView({
           thisMonth={paymentsThisMonth}
           canManageCustomers={canManageCustomers}
           embedded
+        />
+      ) : null}
+
+      {activeTab === "estimate-pipeline" ? (
+        <EstimatePipelinePageView
+          estimates={estimates}
+          invoices={invoices}
+          payments={invoicePayments}
         />
       ) : null}
     </MasterListPageLayout>

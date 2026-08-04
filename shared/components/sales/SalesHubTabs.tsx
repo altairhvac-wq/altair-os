@@ -33,7 +33,7 @@ export function SalesHubTabs({ activeTab, onTabChange }: SalesHubTabsProps) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onTabChange(tabId)}
-            className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
+            className={`${adminSegmentedItemClass} whitespace-nowrap sm:px-2.5 sm:py-1.5 ${
               isActive ? adminSegmentedItemActiveClass : ""
             }`}
           >

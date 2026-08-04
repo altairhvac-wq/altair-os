@@ -1,10 +1,15 @@
 /**
- * Sales hub tabs — Estimates, Invoices, Payments.
+ * Sales hub tabs — Estimates, Invoices, Payments, Estimate Pipeline.
  * Legacy `/estimates`, `/invoices`, and `/payments` list routes redirect here.
  * Detail routes (`/estimates/[id]`, `/invoices/[id]`) stay standalone.
  */
 
-export const SALES_HUB_TAB_IDS = ["estimates", "invoices", "payments"] as const;
+export const SALES_HUB_TAB_IDS = [
+  "estimates",
+  "invoices",
+  "payments",
+  "estimate-pipeline",
+] as const;
 
 export type SalesHubTabId = (typeof SALES_HUB_TAB_IDS)[number];
 
@@ -12,6 +17,7 @@ export const SALES_HUB_TAB_LABELS: Record<SalesHubTabId, string> = {
   estimates: "Estimates",
   invoices: "Invoices",
   payments: "Payments",
+  "estimate-pipeline": "Estimate Pipeline",
 };
 
 export const SALES_HUB_DEFAULT_TAB: SalesHubTabId = "estimates";

@@ -43,7 +43,7 @@ type SalesPageProps = {
   }>;
 };
 
-/** Sales hub — Estimates, Invoices, and Payments list panels. */
+/** Sales hub — Estimates, Invoices, Payments, and Estimate Pipeline panels. */
 export default async function SalesPage({ searchParams }: SalesPageProps) {
   const companyContext = await getActiveCompanyContext();
 
