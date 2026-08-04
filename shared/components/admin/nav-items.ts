@@ -197,7 +197,6 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
     hrefs: [
       "/jobs",
       "/dispatch",
-      "/schedule",
       "/technicians",
       "/estimates",
       "/price-book",
@@ -265,7 +264,6 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/",
   "/jobs",
   "/dispatch",
-  "/schedule",
   "/technicians",
   "/customers",
   "/invoices",
@@ -298,7 +296,6 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/customers",
   "/marketing",
   "/dispatch",
-  "/schedule",
   "/technicians",
   "/estimates",
   "/price-book",
@@ -316,6 +313,11 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
   const visibleHrefs = new Set(getAccessibleAdminNavHrefs(context));
 
   return adminNavItems.filter((item) => {
+    // Schedule lives in the header calendar icon — not primary nav.
+    if (item.href === "/schedule") {
+      return false;
+    }
+
     const permissionHref = item.href === "/time" ? "/time-clock" : item.href;
 
     if (!isAdminNavHref(permissionHref)) {

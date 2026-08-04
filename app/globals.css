@@ -1145,6 +1145,15 @@ a[href] {
     color: var(--north-star-champagne);
   }
 
+  .admin-north-star-shell .admin-premium-header .north-star-header-calendar {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-calendar:hover {
+    background-color: rgb(201 164 77 / 0.1);
+    color: var(--north-star-champagne);
+  }
+
   .admin-north-star-shell .admin-premium-header .north-star-header-divider {
     border-color: rgb(201 164 77 / 0.2);
   }

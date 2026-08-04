@@ -1,10 +1,14 @@
 "use client";
 
 import { LogOut, Search } from "lucide-react";
-import { getCompanyAccessScope } from "@/lib/database/access-control";
+import {
+  canAccessOperationalJobsArea,
+  getCompanyAccessScope,
+} from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
+import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderScheduleCalendar";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
@@ -81,6 +85,7 @@ export function Header({
   const chromeTone = isMobile ? "light" : "dark";
   const showMobileQuickNav =
     showQuickNav && typeof onQuickNavOpenChange === "function";
+  const showScheduleCalendar = canAccessOperationalJobsArea(companyContext);
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
@@ -127,6 +132,14 @@ export function Header({
         >
           <Search className="h-5 w-5" />
         </button>
+        {showScheduleCalendar ? (
+          <HeaderScheduleCalendar
+            tone={chromeTone}
+            triggerClassName={
+              northStarChrome ? "north-star-header-calendar" : undefined
+            }
+          />
+        ) : null}
         <NotificationBell
           initialNotifications={notifications}
           initialUnreadCount={unreadNotificationCount}
