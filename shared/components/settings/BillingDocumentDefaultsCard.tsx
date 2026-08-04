@@ -15,6 +15,10 @@ import {
   fieldLabelClass,
   fieldTextareaClass,
 } from "@/shared/design-system/components/field-styles";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components/mc-surface";
 
 type BillingDocumentDefaultsCardProps = {
   initialDefaults: CompanyBillingDefaults;
@@ -223,7 +227,7 @@ export function BillingDocumentDefaultsCard({
       className={
         northStar
           ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
-          : "admin-card min-w-0 p-3 sm:p-4"
+          : `min-w-0 ${altairMcCardClass} ${altairMcCardPadClass}`
       }
     >
       <div className="flex items-start gap-2.5">

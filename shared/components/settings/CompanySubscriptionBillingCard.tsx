@@ -21,6 +21,10 @@ import {
 } from "@/shared/lib/saas-billing-labels";
 import { OPERATIONAL_STATUS_BADGE_BASE } from "@/shared/lib/operational-status-styles";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components/mc-surface";
 
 type CompanySubscriptionBillingCardProps = {
   summary: CompanySubscriptionBillingSummary | null;
@@ -174,34 +178,35 @@ export function CompanySubscriptionBillingCard({
     effectiveSummary.status === "incomplete" ||
     effectiveSummary.status === "paused";
 
-  // Style classes — northStar variants preserved unchanged
   const surfaceClass = northStar
     ? "rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FFFCF5] p-4 sm:p-5"
-    : "rounded-xl border border-slate-200 bg-white p-4 sm:p-5";
+    : `${altairMcCardClass} ${altairMcCardPadClass}`;
   const titleClass = northStar
     ? "text-base font-semibold text-[#17130E]"
-    : "text-base font-semibold text-slate-900";
-  const mutedClass = northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-600";
+    : "text-base font-semibold text-altair-ink";
+  const mutedClass = northStar
+    ? "text-sm text-[#4F4638]"
+    : "text-sm text-altair-ink-secondary";
   const labelClass = northStar
     ? "text-xs font-semibold uppercase tracking-[0.08em] text-[#4F4638]"
-    : "text-xs font-semibold uppercase tracking-[0.08em] text-slate-500";
+    : "text-xs font-semibold uppercase tracking-[0.08em] text-altair-ink-muted";
   const valueClass = northStar
     ? "text-sm font-medium text-[#17130E]"
-    : "text-sm font-medium text-slate-900";
+    : "text-sm font-medium text-altair-ink";
   const fieldClass = northStar
     ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
-    : "mt-1 w-full min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40";
+    : "mt-1 w-full min-h-10 rounded-lg border border-altair-border bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
   const primaryButtonClass = buttonClassName("primary", "md");
   const secondaryButtonClass = buttonClassName("secondary", "md");
   const dividerBorderClass = northStar
     ? "border-[rgba(138,99,36,0.12)]"
-    : "border-slate-100";
+    : "border-altair-border";
   const planSectionClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFFDF8] p-3 sm:p-4"
-    : "rounded-lg border border-slate-100 bg-slate-50 p-3 sm:p-4";
+    : "rounded-lg border border-altair-border bg-[var(--surface-tile)] p-3 sm:p-4";
   const iconClass = northStar
     ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFF3D6] text-[#9C7424]"
-    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700";
+    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-brass/10 text-altair-brass";
 
   function handleStartSubscription() {
     setActionError(null);

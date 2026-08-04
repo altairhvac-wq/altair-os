@@ -1,95 +1,60 @@
-import {
-  formatCompanyStatus,
-  type CompanyProfileSummary,
-} from "@/shared/types/team-member";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
+import type { CompanyProfileSummary } from "@/shared/types/team-member";
 import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
+import { normalizeTradeKey } from "@/shared/lib/trades/trade-options";
+import { CompanyProfileForm } from "./CompanyProfileForm";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import {
   SettingsWorkspacePage,
   SettingsWorkspaceSection,
 } from "./SettingsWorkspacePage";
 
-function buildLocationLabel(profile: CompanyProfileSummary): string | null {
-  const parts = [profile.city, profile.state].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : null;
-}
-
 export function CompanySettingsView({
   companyProfile,
+  canManage,
   demoDataStatus,
   demoDataLoadError,
-  northStar = false,
 }: {
   companyProfile: CompanyProfileSummary;
+  canManage: boolean;
   demoDataStatus?: DemoDataStatus;
   demoDataLoadError?: string;
-  northStar?: boolean;
 }) {
-  const location = buildLocationLabel(companyProfile);
-  const fields = [
-    { label: "Company", value: companyProfile.name },
-    { label: "Status", value: formatCompanyStatus(companyProfile.status) },
-    { label: "Timezone", value: companyProfile.timezone },
-    ...(location ? [{ label: "Location", value: location }] : []),
-    ...(companyProfile.email
-      ? [{ label: "Email", value: companyProfile.email }]
-      : []),
-    ...(companyProfile.phone
-      ? [{ label: "Phone", value: companyProfile.phone }]
-      : []),
-  ];
-
   return (
     <SettingsWorkspacePage
       title="Company"
-      description="Business information, contact details, and company identity."
-      northStar={northStar}
+      description="Business information, contact details, and company address."
     >
       <SettingsWorkspaceSection
         title="Company profile"
-        description="Company information is view-only during the closed beta. Editing will be available here in a future release."
-        northStar={northStar}
+        description="These details appear on invoices, estimates, and workspace identity."
       >
-        <dl
-          className={`divide-y border-y ${
-            northStar
-              ? "divide-[rgba(138,99,36,0.12)] border-[rgba(138,99,36,0.16)]"
-              : "divide-altair-border border-altair-border"
-          }`}
-        >
-          {fields.map((field) => (
-            <div
-              key={field.label}
-              className="grid gap-1 py-3 sm:grid-cols-[10rem_minmax(0,1fr)] sm:items-baseline sm:gap-6"
-            >
-              <dt
-                className={`text-xs font-semibold uppercase tracking-[0.08em] ${
-                  northStar ? "text-[#4F4638]" : "text-altair-ink-muted"
-                }`}
-              >
-                {field.label}
-              </dt>
-              <dd
-                className={`min-w-0 break-words text-sm font-medium ${
-                  northStar ? "text-[#17130E]" : "text-altair-ink"
-                }`}
-              >
-                {field.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <CompanyProfileForm
+          canManage={canManage}
+          initialProfile={{
+            name: companyProfile.name,
+            status: companyProfile.status,
+            trade: normalizeTradeKey(companyProfile.trade),
+            timezone: companyProfile.timezone,
+            phone: companyProfile.phone,
+            email: companyProfile.email,
+            addressLine1: companyProfile.addressLine1,
+            addressLine2: companyProfile.addressLine2,
+            city: companyProfile.city,
+            state: companyProfile.state,
+            postalCode: companyProfile.postalCode,
+            country: companyProfile.country,
+          }}
+        />
       </SettingsWorkspaceSection>
 
-      {(demoDataStatus || demoDataLoadError) ? (
+      {demoDataStatus || demoDataLoadError ? (
         <SettingsWorkspaceSection
           title="Workspace data"
           description="Load or remove sample records used to evaluate Altair workflows."
-          northStar={northStar}
         >
           {demoDataLoadError ? (
-            <SettingsAlertBanner tone="error" northStar={northStar}>
+            <SettingsAlertBanner tone="error">
               {demoDataLoadError}
             </SettingsAlertBanner>
           ) : null}
@@ -99,7 +64,6 @@ export function CompanySettingsView({
                 companyId={companyProfile.id}
                 status={demoDataStatus}
                 variant="settings"
-                northStar={northStar}
               />
             </div>
           ) : null}

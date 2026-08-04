@@ -4,7 +4,6 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
 import { listCompanyMembers } from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   getCompanySubscriptionBillingSummary,
   type CompanySubscriptionBillingSummary,
@@ -385,7 +384,7 @@ function buildAttentionItems(input: {
         id: "payments-not-connected",
         title: "Customer payments are not connected",
         description: "Connect Stripe to collect invoice payments online.",
-        href: "/settings/payments",
+        href: "/settings/subscription#customer-payments",
         tone: "warning",
       });
     } else if (
@@ -397,7 +396,7 @@ function buildAttentionItems(input: {
         id: "payments-requirements",
         title: "Stripe needs more information",
         description: "Finish outstanding requirements to keep payouts healthy.",
-        href: "/settings/payments",
+        href: "/settings/subscription#customer-payments",
         tone: "danger",
       });
     } else if (
@@ -408,7 +407,7 @@ function buildAttentionItems(input: {
         id: "payments-pending",
         title: "Finish Stripe Connect setup",
         description: "Complete onboarding so customers can pay online.",
-        href: "/settings/payments",
+        href: "/settings/subscription#customer-payments",
         tone: "warning",
       });
     } else if (input.payments.status === "disabled") {
@@ -416,7 +415,7 @@ function buildAttentionItems(input: {
         id: "payments-disabled",
         title: "Customer payments are disabled",
         description: "Review Stripe Connect status to restore collection.",
-        href: "/settings/payments",
+        href: "/settings/subscription#customer-payments",
         tone: "danger",
       });
     }
@@ -509,7 +508,9 @@ export default async function SettingsPage({
   }
 
   if (params.payments === "return" || params.payments === "refresh") {
-    redirect(`/settings/payments?payments=${params.payments}`);
+    redirect(
+      `/settings/subscription?payments=${params.payments}#customer-payments`,
+    );
   }
 
   const canViewPayments = companyContext.permissions.manageBilling;
@@ -534,7 +535,6 @@ export default async function SettingsPage({
     buildOnboardingChecklist(onboardingSnapshot),
     companyContext,
   );
-  const northStar = isNorthStarShellEnabled();
   const company = companyContext.company;
   const location = [company.city, company.state].filter(Boolean).join(", ");
   const team = getTeamPresentation(membersResult.members, membersResult.error);
@@ -565,7 +565,7 @@ export default async function SettingsPage({
     },
     {
       id: "team",
-      label: "Team",
+      label: "Users",
       value: team.value,
       meta: team.meta,
       href: "/settings/team",
@@ -574,7 +574,7 @@ export default async function SettingsPage({
     },
     {
       id: "subscription",
-      label: "Altair plan",
+      label: "Billing",
       value: subscription.value,
       meta: subscription.meta,
       href: "/settings/subscription",
@@ -586,7 +586,7 @@ export default async function SettingsPage({
       label: "Customer payments",
       value: payments.value,
       meta: payments.meta,
-      href: "/settings/payments",
+      href: "/settings/subscription#customer-payments",
       tone: payments.tone,
       icon: SETTINGS_OVERVIEW_ICONS.payments,
     },
@@ -604,7 +604,6 @@ export default async function SettingsPage({
 
   return (
     <SettingsOverviewView
-      northStar={northStar}
       companyName={company.name}
       statusCards={statusCards}
       attentionItems={attentionItems}

@@ -11,6 +11,7 @@ import {
   serializeCompanyBillingDefaultsPatch,
   type CompanyBillingDefaults,
 } from "@/shared/lib/company-billing-defaults";
+import type { CompanyProfileEditableFields } from "@/shared/lib/company-profile";
 
 function isRecord(value: unknown): value is Record<string, Json> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -79,4 +80,92 @@ export async function updateCompanyBillingDefaults(
     defaults: parseCompanyBillingDefaults(data.settings),
     error: null,
   };
+}
+
+export async function updateCompanyProfile(
+  companyId: string,
+  context: ActiveCompanyContext,
+  profile: CompanyProfileEditableFields,
+): Promise<{ company: CompanyRow | null; error: string | null }> {
+  const accessError = assertCompanySettingsAccess(context);
+  if (accessError) {
+    return { company: null, error: accessError };
+  }
+
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return { company: null, error: scopeError };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("companies")
+    .update({
+      name: profile.name,
+      trade: profile.trade,
+      timezone: profile.timezone,
+      phone: profile.phone,
+      email: profile.email,
+      address_line1: profile.addressLine1,
+      address_line2: profile.addressLine2,
+      city: profile.city,
+      state: profile.state,
+      postal_code: profile.postalCode,
+      country: profile.country,
+    })
+    .eq("id", companyId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    console.error("[updateCompanyProfile] update failed:", {
+      companyId,
+      code: error?.code,
+      message: error?.message,
+    });
+    return {
+      company: null,
+      error: error ? mapDatabaseError(error) : "Failed to update company profile.",
+    };
+  }
+
+  return { company: data, error: null };
+}
+
+export async function updateCompanyTimezone(
+  companyId: string,
+  context: ActiveCompanyContext,
+  timezone: string,
+): Promise<{ timezone: string | null; error: string | null }> {
+  const accessError = assertCompanySettingsAccess(context);
+  if (accessError) {
+    return { timezone: null, error: accessError };
+  }
+
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return { timezone: null, error: scopeError };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("companies")
+    .update({ timezone })
+    .eq("id", companyId)
+    .select("timezone")
+    .single();
+
+  if (error || !data) {
+    console.error("[updateCompanyTimezone] update failed:", {
+      companyId,
+      code: error?.code,
+      message: error?.message,
+    });
+    return {
+      timezone: null,
+      error: error ? mapDatabaseError(error) : "Failed to update timezone.",
+    };
+  }
+
+  return { timezone: data.timezone, error: null };
 }

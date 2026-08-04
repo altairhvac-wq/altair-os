@@ -22,11 +22,16 @@ export type CompanyProfileSummary = {
   id: string;
   name: string;
   status: string;
+  trade: string | null;
   timezone: string;
   email: string | null;
   phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
   city: string | null;
   state: string | null;
+  postalCode: string | null;
+  country: string;
   memberCount: number;
   currentUserRole: CompanyRole;
 };

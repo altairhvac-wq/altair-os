@@ -8,8 +8,12 @@ import type {
   CompanyProfileSummary,
   TeamMember,
 } from "@/shared/types/team-member";
-import { adminFormInputClass } from "@/shared/lib/admin-density";
-import { adminPanelActionAccentClass, adminPanelActionClass } from "@/shared/design-system/shell";
+import { fieldSearchClass } from "@/shared/design-system/components/field-styles";
+import { altairMcListClass } from "@/shared/design-system/components/mc-surface";
+import {
+  adminPanelActionAccentClass,
+  adminPanelActionClass,
+} from "@/shared/design-system/shell";
 import { CompanyOrgTreeSheet } from "./CompanyOrgTreeSheet";
 import { PendingInvitesCard } from "./PendingInvitesCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -21,7 +25,6 @@ import { TeamInviteForm } from "./TeamInviteForm";
 import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
 import { TeamMembersEmptyState } from "./TeamMembersEmptyState";
 import { TeamMembersTable } from "./TeamMembersTable";
-import { st } from "./north-star-m10/settings-north-star-styles";
 
 type TeamSettingsViewProps = {
   initialMembers: TeamMember[];
@@ -30,6 +33,7 @@ type TeamSettingsViewProps = {
   canManageTeam: boolean;
   pendingInvites?: PendingTeamInvite[];
   membersLoadError?: string;
+  /** @deprecated MC v2 is the settings surface; kept for call-site compatibility. */
   northStar?: boolean;
 };
 
@@ -40,7 +44,6 @@ export function TeamSettingsView({
   canManageTeam,
   pendingInvites = [],
   membersLoadError,
-  northStar = false,
 }: TeamSettingsViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -91,29 +94,17 @@ export function TeamSettingsView({
     setInviteExpanded(false);
   }
 
-  const memberSurfaceClass = northStar
-    ? "overflow-hidden rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
-    : "admin-card overflow-hidden";
-  const toolbarClass = northStar
-    ? "border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4]"
-    : "admin-panel-header";
-
   return (
     <SettingsWorkspacePage
-      title="Team"
+      title="Users"
       description="Manage members, invitations, roles, and reporting lines."
-      northStar={northStar}
     >
       <SettingsWorkspaceSection
         title="Invitations"
         description="Review pending invitations associated with your account."
-        northStar={northStar}
+        card={false}
       >
-        <PendingInvitesCard
-          invites={pendingInvites}
-          variant="settings"
-          northStar={northStar}
-        />
+        <PendingInvitesCard invites={pendingInvites} variant="settings" />
       </SettingsWorkspaceSection>
 
       <SettingsWorkspaceSection
@@ -123,26 +114,14 @@ export function TeamSettingsView({
             ? "Invite teammates, assign roles, and map reporting lines."
             : "View the current team roster and reporting structure."
         }
-        northStar={northStar}
+        card={false}
       >
-        <div className={memberSurfaceClass}>
-          <div
-            className={`${toolbarClass} flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3`}
-          >
+        <div className={altairMcListClass}>
+          <div className="flex flex-col gap-2 border-b border-altair-border bg-[var(--surface-tile)] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
               <div className="min-w-0">
-                <h3
-                  className={`text-sm font-semibold ${
-                    northStar ? "text-[#17130E]" : "text-slate-900"
-                  }`}
-                >
-                  Members
-                </h3>
-                <p
-                  className={`mt-0.5 hidden text-xs sm:block ${
-                    northStar ? "text-[#4F4638]" : "text-slate-600"
-                  }`}
-                >
+                <h3 className="text-sm font-semibold text-altair-ink">Members</h3>
+                <p className="mt-0.5 hidden text-xs text-altair-ink-secondary sm:block">
                   Search and manage workspace access.
                 </p>
               </div>
@@ -150,7 +129,7 @@ export function TeamSettingsView({
                 <button
                   type="button"
                   onClick={() => setOrgTreeOpen(true)}
-                  className={northStar ? st.panelAction : adminPanelActionClass}
+                  className={adminPanelActionClass}
                 >
                   <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="hidden sm:inline">View company tree</span>
@@ -161,11 +140,7 @@ export function TeamSettingsView({
                     type="button"
                     onClick={() => setInviteExpanded((open) => !open)}
                     aria-expanded={inviteExpanded}
-                    className={`${
-                      northStar
-                        ? st.panelActionAccent
-                        : adminPanelActionAccentClass
-                    } md:hidden`}
+                    className={`${adminPanelActionAccentClass} md:hidden`}
                   >
                     <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
                     {inviteExpanded ? "Close" : "Invite member"}
@@ -179,9 +154,7 @@ export function TeamSettingsView({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search members..."
               aria-label="Search team members"
-              className={`${
-                northStar ? st.searchInput : adminFormInputClass
-              } w-full sm:max-w-xs`}
+              className={`${fieldSearchClass} w-full sm:max-w-xs`}
             />
           </div>
 
@@ -194,43 +167,29 @@ export function TeamSettingsView({
                   collapsible
                   expanded={inviteExpanded}
                   onExpandedChange={setInviteExpanded}
-                  northStar={northStar}
                 />
               </div>
               <div className="hidden md:block">
                 <TeamInviteForm
                   currentUserRole={currentUserRole}
                   onMemberInvited={handleMemberInvited}
-                  northStar={northStar}
                 />
               </div>
             </>
           ) : null}
 
           {membersLoadError ? (
-            <SettingsAlertBanner
-              tone="error"
-              northStar={northStar}
-              className="mx-4 mt-4 sm:mx-6"
-            >
+            <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
               {membersLoadError}
             </SettingsAlertBanner>
           ) : null}
           {roleError ? (
-            <SettingsAlertBanner
-              tone="error"
-              northStar={northStar}
-              className="mx-4 mt-4 sm:mx-6"
-            >
+            <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
               {roleError}
             </SettingsAlertBanner>
           ) : null}
           {roleSuccess ? (
-            <SettingsAlertBanner
-              tone="success"
-              northStar={northStar}
-              className="mx-4 mt-4 sm:mx-6"
-            >
+            <SettingsAlertBanner tone="success" className="mx-4 mt-4 sm:mx-6">
               {roleSuccess}
             </SettingsAlertBanner>
           ) : null}
@@ -239,7 +198,6 @@ export function TeamSettingsView({
             <TeamMembersEmptyState
               variant={search.trim() ? "no-results" : "no-members"}
               canManageTeam={canManageTeam}
-              northStar={northStar}
             />
           ) : !membersLoadError ? (
             <>
@@ -259,7 +217,6 @@ export function TeamSettingsView({
                   setRoleSuccess(message);
                   setRoleError(null);
                 }}
-                northStar={northStar}
               />
               <TeamMembersTable
                 members={filteredMembers}
@@ -277,7 +234,6 @@ export function TeamSettingsView({
                   setRoleSuccess(message);
                   setRoleError(null);
                 }}
-                northStar={northStar}
               />
             </>
           ) : null}

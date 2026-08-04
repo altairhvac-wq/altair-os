@@ -11,7 +11,10 @@ import {
 const DEFAULT_TTL_MINUTES = 10;
 const MAX_TTL_MINUTES = 30;
 const MAX_REDIRECT_PATH_LENGTH = 300;
-const MARKETING_REDIRECT_PREFIX = "/marketing";
+const ALLOWED_OAUTH_REDIRECT_PREFIXES = [
+  "/marketing",
+  "/settings/integrations",
+] as const;
 
 // redirectPath is only for internal app redirects after OAuth completes.
 // Provider OAuth codes/tokens must never be stored there.
@@ -52,12 +55,15 @@ export function normalizeMarketingOAuthRedirectPath(
     return null;
   }
 
-  // Strict V1: only /marketing, /marketing?..., /marketing/...
-  if (
-    trimmed !== MARKETING_REDIRECT_PREFIX &&
-    !trimmed.startsWith(`${MARKETING_REDIRECT_PREFIX}/`) &&
-    !trimmed.startsWith(`${MARKETING_REDIRECT_PREFIX}?`)
-  ) {
+  // Strict allowlist: Marketing Hub + Settings Integrations return paths.
+  const allowed = ALLOWED_OAUTH_REDIRECT_PREFIXES.some(
+    (prefix) =>
+      trimmed === prefix ||
+      trimmed.startsWith(`${prefix}/`) ||
+      trimmed.startsWith(`${prefix}?`),
+  );
+
+  if (!allowed) {
     return null;
   }
 

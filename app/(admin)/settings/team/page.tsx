@@ -7,7 +7,6 @@ import {
   resolveUserEmailForInvite,
   type PendingTeamInvite,
 } from "@/lib/database/queries/memberships";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { TeamSettingsView } from "@/shared/components/settings/TeamSettingsView";
 
@@ -52,18 +51,17 @@ export default async function TeamSettingsPage() {
   const pendingInvites = pendingInvitesResult.invites.filter(
     (invite) => invite.companyId !== companyContext.company.id,
   );
-  const northStar = isNorthStarShellEnabled();
 
   return (
     <div className="space-y-4">
       {emailResolution.mismatch ? (
-        <SettingsAlertBanner tone="warning" northStar={northStar}>
+        <SettingsAlertBanner tone="warning">
           Your profile email and sign-in email do not match. Update them to the
           same address before you can view or accept team invitations.
         </SettingsAlertBanner>
       ) : null}
       {pendingInvitesResult.error ? (
-        <SettingsAlertBanner tone="error" northStar={northStar}>
+        <SettingsAlertBanner tone="error">
           {pendingInvitesResult.error}
         </SettingsAlertBanner>
       ) : null}
@@ -75,7 +73,6 @@ export default async function TeamSettingsPage() {
         canManageTeam={canManageTeamMembers(companyContext)}
         pendingInvites={pendingInvites}
         membersLoadError={membersError}
-        northStar={northStar}
       />
     </div>
   );

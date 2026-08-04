@@ -11,6 +11,10 @@ import {
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
+  altairMcCardClass,
+  altairMcCardPadClass,
+} from "@/shared/design-system/components/mc-surface";
+import {
   canEnableOnlineCheckoutAccount,
   CARD_PAYMENTS_DISPLAY_LABELS,
   formatPaymentCapabilityEnabled,
@@ -139,27 +143,27 @@ export function PaymentSettingsCard({
 
   const shellClass = northStar
     ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
-    : "admin-card min-w-0 p-3 sm:p-4";
+    : `min-w-0 ${altairMcCardClass} ${altairMcCardPadClass}`;
 
   const iconWrapClass = northStar
     ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)] sm:flex"
-    : "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 sm:flex";
+    : "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-brass/10 text-altair-brass sm:flex";
 
   const titleClass = northStar
     ? "text-sm font-semibold text-[#17130E] sm:text-base"
-    : "admin-heading-section text-sm sm:text-base";
+    : "text-sm font-semibold text-altair-ink sm:text-base";
 
   const helperClass = northStar
     ? "mt-0.5 text-xs text-[#64748B] sm:text-sm"
-    : "admin-text-helper mt-0.5 text-xs sm:text-sm";
+    : "mt-0.5 text-xs text-altair-ink-secondary sm:text-sm";
 
   const noticeClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
-    : "rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 sm:text-sm";
+    : "rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
 
   const subtleNoticeClass = northStar
     ? "text-xs text-[#64748B] sm:text-sm"
-    : "text-xs text-slate-500 sm:text-sm";
+    : "text-xs text-altair-ink-muted sm:text-sm";
 
   const errorNoticeClass = northStar
     ? "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm"
