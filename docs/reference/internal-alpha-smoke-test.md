@@ -70,7 +70,7 @@ Run this checklist after each production or preview deploy that matters for inte
 
 ## Clock in/out
 
-- [ ] Navigate to `/time-clock` (admin) or `/tech/time` (technician)
+- [ ] Navigate to `/team?tab=time-clock` (admin) or `/tech/time` (technician)
 - [ ] Clock in for a technician/time entry
 - [ ] Clock out — entry shows completed duration/status
 - [ ] Entry visible in time list after refresh

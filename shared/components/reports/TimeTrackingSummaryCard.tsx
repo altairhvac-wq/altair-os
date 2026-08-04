@@ -110,7 +110,7 @@ export function TimeTrackingSummaryCard({
           </p>
         </div>
         <Link
-          href="/time-clock"
+          href="/team?tab=time-clock"
           className="text-sm font-semibold text-cyan-700 hover:text-cyan-800"
         >
           Review shifts

@@ -261,6 +261,7 @@ export async function updateJobStatusAction(
   revalidatePath("/technician");
   revalidatePath("/tech/time");
   revalidatePath("/time");
+  revalidatePath("/team");
   revalidatePath("/time-clock");
   revalidatePath("/reports");
   revalidatePath(`/jobs/${jobId}`);

@@ -30,6 +30,7 @@ export type TimeEntryActionResult = {
 
 function revalidateTimePaths(jobId?: string) {
   revalidatePath("/time");
+  revalidatePath("/team");
   revalidatePath("/time-clock");
   revalidatePath("/reports");
   revalidatePath("/technician");

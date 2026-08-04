@@ -295,7 +295,7 @@ export function ReportsNorthStarView({
               <div className="min-w-0">
                 <SectionHeader
                   title="Shift Time"
-                  action={{ label: "Review shifts", href: "/time-clock" }}
+                  action={{ label: "Review shifts", href: "/team?tab=time-clock" }}
                 />
                 <p
                   className={`mt-1 pl-[14px] text-[11px] ${altairCanvasInkMutedClass}`}

@@ -56,6 +56,10 @@ type TimeClockFoundationViewProps = {
   currentUserName: string;
   canViewCompanyEntries: boolean;
   canCorrectEntries: boolean;
+  /**
+   * When true, omit MasterPageHeader — Team hub hosts page chrome.
+   */
+  embedded?: boolean;
 };
 
 function formatShiftDuration(entry: TimeClockEntry, now: number): string {
@@ -80,6 +84,7 @@ export function TimeClockFoundationView({
   currentUserName,
   canViewCompanyEntries,
   canCorrectEntries,
+  embedded = false,
 }: TimeClockFoundationViewProps) {
   const [openEntry, setOpenEntry] = useState(initialOpenEntry);
   const [entries, setEntries] = useState(initialEntries);
@@ -269,12 +274,14 @@ export function TimeClockFoundationView({
 
   return (
     <div className="space-y-4">
-      <MasterPageHeader
-        title="Time Clock"
-        subtitle="Shift history, live crew status, and missed clock-out corrections"
-        density="compact"
-        surfaceVariant="northStar"
-      />
+      {embedded ? null : (
+        <MasterPageHeader
+          title="Time Clock"
+          subtitle="Shift history, live crew status, and missed clock-out corrections"
+          density="compact"
+          surfaceVariant="northStar"
+        />
+      )}
 
       <TimeClockStatStrip
         statusCounts={statusCounts}

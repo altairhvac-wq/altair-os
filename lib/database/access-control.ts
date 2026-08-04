@@ -401,6 +401,7 @@ export type AdminNavHref =
   | "/"
   | "/dispatch"
   | "/schedule"
+  | "/team"
   | "/technicians"
   | "/customers"
   | "/leads"
@@ -421,6 +422,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/",
   "/dispatch",
   "/schedule",
+  "/team",
   "/technicians",
   "/customers",
   "/leads",
@@ -456,6 +458,10 @@ export function canAccessAdminNavItem(
     case "/schedule":
     case "/jobs":
       return canAccessOperationalJobsArea(context);
+    case "/team":
+      return (
+        canManageTeamMembers(context) || canViewCompanyTimeEntries(context)
+      );
     case "/technicians":
       return canManageTeamMembers(context);
     case "/customers":
@@ -497,7 +503,10 @@ export function getAccessibleAdminNavHrefs(
     "/",
     "/dispatch",
     "/schedule",
-    "/technicians",
+    "/team",
+    // /technicians and /time-clock remain valid AdminNavHrefs for redirects /
+    // deep links / Labor permission gating, but are no longer standalone
+    // sidebar entries — both live under Team.
     "/customers",
     // /leads remains a valid AdminNavHref for redirects/deep links, but is no
     // longer a standalone sidebar entry — Lead Pipeline lives under Customers.
@@ -567,6 +576,12 @@ export function canAccessAppRedirectPath(
 
   if (path.startsWith("/time-clock")) {
     return canViewCompanyTimeEntries(context);
+  }
+
+  if (path === "/team") {
+    return (
+      canManageTeamMembers(context) || canViewCompanyTimeEntries(context)
+    );
   }
 
   if (path.startsWith("/team/")) {

@@ -44,21 +44,28 @@ type TechniciansPageViewProps = {
   technicians: TechnicianRosterRow[];
   statusCounts: TechnicianTimeStatusCounts;
   loadError?: string;
+  /**
+   * When true, omit MasterPageHeader — Team hub hosts page chrome.
+   */
+  embedded?: boolean;
 };
 
 export function TechniciansPageView({
   technicians,
   statusCounts,
   loadError,
+  embedded = false,
 }: TechniciansPageViewProps) {
   return (
     <div className="space-y-4">
-      <MasterPageHeader
-        title="Technicians"
-        subtitle="Field roster, live time-clock status, and share codes"
-        density="compact"
-        surfaceVariant="northStar"
-      />
+      {embedded ? null : (
+        <MasterPageHeader
+          title="Technicians"
+          subtitle="Field roster, live time-clock status, and share codes"
+          density="compact"
+          surfaceVariant="northStar"
+        />
+      )}
 
       {loadError ? (
         <EmptyState

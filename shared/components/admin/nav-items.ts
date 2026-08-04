@@ -52,10 +52,10 @@ export const adminNavItems: NavItem[] = [
     description: "Week overview linking into the dispatch day board",
   },
   {
-    label: "Technicians",
-    href: "/technicians",
+    label: "Team",
+    href: "/team",
     icon: HardHat,
-    description: "Field roster, time-clock status, and share codes",
+    description: "Technicians roster and time clock",
   },
   {
     label: "Customers",
@@ -149,14 +149,14 @@ export function isPlatformAdminPath(pathname: string): boolean {
   return pathname === "/platform" || pathname.startsWith("/platform/");
 }
 
-/** /time (labor review) and /time-clock (shift exceptions) share one nav item. */
+/** /time labor review — Time Clock now lives under Team (?tab=time-clock). */
 export function isLaborPayrollPath(pathname: string): boolean {
-  return (
-    pathname === "/time" ||
-    pathname.startsWith("/time/") ||
-    pathname === "/time-clock" ||
-    pathname.startsWith("/time-clock/")
-  );
+  return pathname === "/time" || pathname.startsWith("/time/");
+}
+
+/** Team hub + member profile routes share one nav item. */
+export function isTeamHubPath(pathname: string): boolean {
+  return pathname === "/team" || pathname.startsWith("/team/");
 }
 
 /** Shared active-path matching for admin nav links (desktop, mobile, sidebar). */
@@ -166,6 +166,10 @@ export function isAdminNavItemActive(pathname: string, href: string): boolean {
   }
 
   if (href === "/time" && isLaborPayrollPath(pathname)) {
+    return true;
+  }
+
+  if (href === "/team" && isTeamHubPath(pathname)) {
     return true;
   }
 
@@ -197,7 +201,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
     hrefs: [
       "/jobs",
       "/dispatch",
-      "/technicians",
+      "/team",
       "/estimates",
       "/price-book",
     ],
@@ -264,7 +268,7 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/",
   "/jobs",
   "/dispatch",
-  "/technicians",
+  "/team",
   "/customers",
   "/invoices",
   "/payments",
@@ -296,7 +300,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/customers",
   "/marketing",
   "/dispatch",
-  "/technicians",
+  "/team",
   "/estimates",
   "/price-book",
   "/invoices",
@@ -318,7 +322,14 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
       return false;
     }
 
-    const permissionHref = item.href === "/time" ? "/time-clock" : item.href;
+    // Labor & payroll still gates on company time-entry access (/time-clock).
+    // Team hub gates on /team (technicians OR time-clock access).
+    const permissionHref =
+      item.href === "/time"
+        ? "/time-clock"
+        : item.href === "/team"
+          ? "/team"
+          : item.href;
 
     if (!isAdminNavHref(permissionHref)) {
       return false;
@@ -424,6 +435,14 @@ export function getNavItemForPath(
 
     if (laborItem) {
       return laborItem;
+    }
+  }
+
+  if (isTeamHubPath(pathname)) {
+    const teamItem = adminNavItems.find((item) => item.href === "/team");
+
+    if (teamItem) {
+      return teamItem;
     }
   }
 

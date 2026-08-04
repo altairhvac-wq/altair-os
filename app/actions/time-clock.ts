@@ -23,6 +23,7 @@ export type TimeClockActionResult = {
 };
 
 function revalidateTimeClockPaths() {
+  revalidatePath("/team");
   revalidatePath("/time-clock");
   revalidatePath("/time");
   revalidatePath("/reports");

@@ -310,7 +310,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
 
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
           <Link
-            href="/time-clock"
+            href="/team?tab=time-clock"
             className="font-semibold text-cyan-700 hover:text-cyan-800"
           >
             Shift exceptions
