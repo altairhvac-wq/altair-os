@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import {
   DESIGN_LAB_COLOR_FIELDS,
-  NORTH_STAR_DESIGN_LAB_DEFAULTS,
-  isValidHexColor,
-  normalizeHexColor,
+  DESIGN_LAB_TOKEN_GROUPS,
+  LIVE_CHROME_DESIGN_LAB_DEFAULTS,
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import { DesignLabColorControl } from "@/shared/components/platform-admin/design-lab/DesignLabColorControl";
 import { DesignLabCompactPreview } from "@/shared/components/platform-admin/design-lab/DesignLabCompactPreview";
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
 import { DesignLabCanvasInspector } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasInspector";
@@ -19,6 +19,8 @@ import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/des
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
 import { DesignLabFullPageCanvas } from "@/shared/components/platform-admin/design-lab/DesignLabFullPageCanvas";
 import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
+import { DesignLabSavedThemesPanel } from "@/shared/components/platform-admin/design-lab/DesignLabSavedThemesPanel";
+import { DesignLabSpotlightProvider } from "@/shared/components/platform-admin/design-lab/DesignLabSpotlight";
 import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
 import {
   type DesignLabEditTargetId,
@@ -35,79 +37,21 @@ import {
 } from "@/shared/components/platform-admin/design-lab/design-lab-contrast";
 import { buildDesignLabThemeExportFromColors } from "@/shared/components/platform-admin/design-lab/design-lab-export";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
+import { DesignLabDimensionControl } from "@/shared/components/platform-admin/design-lab/DesignLabDimensionControl";
+import {
+  DESIGN_LAB_DIMENSION_DEFS,
+  LIVE_DESIGN_LAB_DIMENSION_DEFAULTS,
+  type DesignLabDimensionKey,
+  type DesignLabDimensions,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dimensions";
+import type {
+  DesignLabShine,
+  DesignLabShineMap,
+} from "@/shared/components/platform-admin/design-lab/design-lab-shine";
+import { parseDesignLabThemeTokens } from "@/shared/components/platform-admin/design-lab/design-lab-theme-tokens";
+import type { DesignLabTheme } from "@/shared/types/design-lab-theme";
 
 type PreviewMode = "compact" | "full";
-
-type ColorControlProps = {
-  label: string;
-  helper: string;
-  value: string;
-  onChange: (value: string) => void;
-};
-
-function ColorControl({ label, helper, value, onChange }: ColorControlProps) {
-  const [hexDraft, setHexDraft] = useState(value);
-
-  function commitHex(next: string) {
-    const normalized = normalizeHexColor(next);
-
-    if (normalized) {
-      onChange(normalized);
-      setHexDraft(normalized);
-      return;
-    }
-
-    setHexDraft(value);
-  }
-
-  return (
-    <div className="rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <label className="block text-sm font-semibold text-[#17130E]">
-            {label}
-          </label>
-          <p className="mt-0.5 text-xs leading-snug text-[#6B6255]">{helper}</p>
-        </div>
-        <input
-          type="color"
-          value={value}
-          onChange={(event) => {
-            const next = event.target.value.toUpperCase();
-            onChange(next);
-            setHexDraft(next);
-          }}
-          aria-label={`${label} color picker`}
-          className="h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-[rgba(138,99,36,0.2)] bg-white p-0.5"
-        />
-      </div>
-      <div className="mt-2.5">
-        <label className="sr-only" htmlFor={`hex-${label}`}>
-          {label} hex value
-        </label>
-        <input
-          id={`hex-${label}`}
-          type="text"
-          value={hexDraft}
-          onChange={(event) => setHexDraft(event.target.value)}
-          onBlur={() => commitHex(hexDraft)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commitHex(hexDraft);
-            }
-          }}
-          spellCheck={false}
-          autoComplete="off"
-          className="w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-white px-2.5 py-1.5 font-mono text-xs text-[#17130E] outline-none focus:border-[#B8943F] focus:ring-2 focus:ring-[#B8943F]/20"
-        />
-        {!isValidHexColor(hexDraft) ? (
-          <p className="mt-1 text-[11px] text-[#9A3412]">Use a hex value like #B8943F.</p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 type PreviewModeToggleProps = {
   previewMode: PreviewMode;
@@ -153,11 +97,18 @@ function PreviewModeToggle({ previewMode, onPreviewModeChange }: PreviewModeTogg
 
 type DesignLabCanvasModeProps = {
   colors: DesignLabColors;
+  shines: DesignLabShineMap;
+  dimensions: DesignLabDimensions;
   selection: DesignLabCanvasSelection | null;
   surfaceOverrides: DashboardSurfaceOverrides;
   onSelectGlobal: (id: DesignLabEditTargetId) => void;
   onSelectSurface: (surfaceId: DashboardSurfaceId) => void;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
+  onShineChange: (
+    key: keyof DesignLabColors,
+    shine: DesignLabShine | null,
+  ) => void;
+  onDimensionChange: (key: DesignLabDimensionKey, value: string) => void;
   onSurfaceStyleChange: (
     surfaceId: DashboardSurfaceId,
     field: keyof DashboardSurfaceStyle,
@@ -170,11 +121,15 @@ type DesignLabCanvasModeProps = {
 
 function DesignLabCanvasMode({
   colors,
+  shines,
+  dimensions,
   selection,
   surfaceOverrides,
   onSelectGlobal,
   onSelectSurface,
   onColorChange,
+  onShineChange,
+  onDimensionChange,
   onSurfaceStyleChange,
   onExitCanvas,
   onReset,
@@ -182,7 +137,7 @@ function DesignLabCanvasMode({
 }: DesignLabCanvasModeProps) {
   const [canvasTarget, setCanvasTarget] =
     useState<DesignLabCanvasTarget>("dashboard-replica");
-  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
   const [exportState, setExportState] = useState<"idle" | "success" | "error">("idle");
 
   const readabilityStatus = useMemo(
@@ -207,7 +162,7 @@ function DesignLabCanvasMode({
       }
 
       await navigator.clipboard.writeText(
-        buildDesignLabThemeExportFromColors(colors, surfaceOverrides),
+        buildDesignLabThemeExportFromColors(colors, surfaceOverrides, shines),
       );
       setExportState("success");
       window.setTimeout(() => setExportState("idle"), 2000);
@@ -232,9 +187,16 @@ function DesignLabCanvasMode({
         exportState={exportState}
       />
 
-      <div className="relative min-h-0 flex-1 overflow-auto">
+      <div
+        className={[
+          "relative min-h-0 flex-1 overflow-auto",
+          inspectorOpen ? "pb-[min(42vh,24rem)]" : "pb-14",
+        ].join(" ")}
+      >
         <DesignLabFullPageCanvas
           colors={colors}
+          shines={shines}
+          dimensions={dimensions}
           selection={selection}
           surfaceOverrides={surfaceOverrides}
           onSelectGlobal={handleSelectGlobal}
@@ -248,8 +210,12 @@ function DesignLabCanvasMode({
           onClose={() => setInspectorOpen(false)}
           selection={selection}
           colors={colors}
+          shines={shines}
+          dimensions={dimensions}
           surfaceOverrides={surfaceOverrides}
           onColorChange={onColorChange}
+          onShineChange={onShineChange}
+          onDimensionChange={onDimensionChange}
           onSurfaceStyleChange={onSurfaceStyleChange}
         />
       </div>
@@ -257,13 +223,25 @@ function DesignLabCanvasMode({
   );
 }
 
-export function DesignLabPageView() {
+type DesignLabPageViewProps = {
+  initialThemes?: DesignLabTheme[];
+};
+
+export function DesignLabPageView({
+  initialThemes = [],
+}: DesignLabPageViewProps) {
   const [colors, setColors] = useState<DesignLabColors>(
-    NORTH_STAR_DESIGN_LAB_DEFAULTS,
+    LIVE_CHROME_DESIGN_LAB_DEFAULTS,
+  );
+  const [shines, setShines] = useState<DesignLabShineMap>({});
+  const [dimensions, setDimensions] = useState<DesignLabDimensions>(
+    LIVE_DESIGN_LAB_DIMENSION_DEFAULTS,
   );
   const [activePresetId, setActivePresetId] = useState<string | null>(
-    "north-star-default",
+    "live-chrome",
   );
+  const [loadedThemeId, setLoadedThemeId] = useState<string | null>(null);
+  const [themes, setThemes] = useState<DesignLabTheme[]>(initialThemes);
   const [resetKey, setResetKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compact");
   const [isCanvasMode, setIsCanvasMode] = useState(false);
@@ -281,7 +259,10 @@ export function DesignLabPageView() {
     }
 
     setColors({ ...preset.colors });
+    setShines({});
+    setDimensions(LIVE_DESIGN_LAB_DIMENSION_DEFAULTS);
     setActivePresetId(presetId);
+    setLoadedThemeId(null);
     setResetKey((current) => current + 1);
     setSurfaceOverrides({});
     setCanvasSelection(null);
@@ -292,9 +273,49 @@ export function DesignLabPageView() {
     setActivePresetId(null);
   }
 
+  function updateShine(
+    key: keyof DesignLabColors,
+    shine: DesignLabShine | null,
+  ) {
+    setShines((current) => {
+      const next = { ...current };
+      if (shine) {
+        next[key] = shine;
+      } else {
+        delete next[key];
+      }
+      return next;
+    });
+    setActivePresetId(null);
+  }
+
+  function updateDimension(key: DesignLabDimensionKey, value: string) {
+    setDimensions((current) => ({ ...current, [key]: value }));
+    setActivePresetId(null);
+  }
+
   function resetToDefaults() {
-    setColors(NORTH_STAR_DESIGN_LAB_DEFAULTS);
-    setActivePresetId("north-star-default");
+    setColors(LIVE_CHROME_DESIGN_LAB_DEFAULTS);
+    setShines({});
+    setDimensions(LIVE_DESIGN_LAB_DIMENSION_DEFAULTS);
+    setActivePresetId("live-chrome");
+    setLoadedThemeId(null);
+    setResetKey((current) => current + 1);
+    setSurfaceOverrides({});
+    setCanvasSelection(null);
+  }
+
+  function loadSavedTheme(theme: DesignLabTheme) {
+    const parsed = parseDesignLabThemeTokens(theme.tokens);
+    if (!parsed) {
+      return;
+    }
+
+    setColors(parsed.colors);
+    setShines(parsed.shines);
+    setDimensions(parsed.dimensions);
+    setActivePresetId(null);
+    setLoadedThemeId(theme.id);
     setResetKey((current) => current + 1);
     setSurfaceOverrides({});
     setCanvasSelection(null);
@@ -331,22 +352,29 @@ export function DesignLabPageView() {
     const activePreset = DESIGN_LAB_PRESETS.find((entry) => entry.id === activePresetId);
 
     return (
-      <DesignLabCanvasMode
-        colors={colors}
-        selection={canvasSelection}
-        surfaceOverrides={surfaceOverrides}
-        onSelectGlobal={handleSelectGlobal}
-        onSelectSurface={handleSelectSurface}
-        onColorChange={updateColor}
-        onSurfaceStyleChange={updateSurfaceStyle}
-        onExitCanvas={() => setIsCanvasMode(false)}
-        onReset={resetToDefaults}
-        activePresetName={activePreset?.name ?? null}
-      />
+      <DesignLabSpotlightProvider>
+        <DesignLabCanvasMode
+          colors={colors}
+          shines={shines}
+          dimensions={dimensions}
+          selection={canvasSelection}
+          surfaceOverrides={surfaceOverrides}
+          onSelectGlobal={handleSelectGlobal}
+          onSelectSurface={handleSelectSurface}
+          onColorChange={updateColor}
+          onShineChange={updateShine}
+          onDimensionChange={updateDimension}
+          onSurfaceStyleChange={updateSurfaceStyle}
+          onExitCanvas={() => setIsCanvasMode(false)}
+          onReset={resetToDefaults}
+          activePresetName={activePreset?.name ?? null}
+        />
+      </DesignLabSpotlightProvider>
     );
   }
 
   return (
+    <DesignLabSpotlightProvider>
     <div className="platform-north-star-workspace min-w-0 space-y-4 px-3 pb-16 sm:px-3.5 sm:pb-20 lg:px-5 lg:pb-24">
       <header className="space-y-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
@@ -354,21 +382,44 @@ export function DesignLabPageView() {
         </p>
         <h1 className="text-2xl font-bold text-[#17130E] sm:text-3xl">Design Lab</h1>
         <p className="max-w-2xl text-sm text-[#6B6255]">
-          Founder-only visual controls for Altair. Full-page canvas supports per-surface
-          dashboard overrides in addition to global palette tokens.
+          Founder-only visual controls for Altair. Save company drafts, then explicitly
+          apply one to live product chrome for this company — with a confirmation step
+          and a one-click revert to default.
         </p>
       </header>
 
-      <section className="rounded-[1rem] border border-[rgba(138,99,36,0.16)] bg-[#FBF7EF] px-3.5 py-3 sm:px-4">
-        <h2 className="text-sm font-semibold text-[#17130E]">Preview-only phase</h2>
+      <section className="rounded-none border border-[rgba(138,99,36,0.16)] bg-[#FBF7EF] px-3.5 py-3 sm:px-4">
+        <h2 className="text-sm font-semibold text-[#17130E]">
+          Preview · drafts · promote to live
+        </h2>
         <p className="mt-1 text-xs leading-relaxed text-[#4F4638]">
-          DL-1 is a safe sandbox. Changes here stay in this page and do not affect
-          customer-facing screens, shared tokens, or global CSS.
+          Token keys match live <span className="font-mono">globals.css</span> / shell
+          chrome. Save and Set active only affect Design Lab.{" "}
+          <span className="font-semibold text-[#17130E]">Apply to live product</span>{" "}
+          injects tokens into the real admin shell for this company&apos;s users.
         </p>
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] xl:items-start">
         <aside className="space-y-3">
+          <DesignLabSavedThemesPanel
+            themes={themes}
+            colors={colors}
+            shines={shines}
+            dimensions={dimensions}
+            loadedThemeId={loadedThemeId}
+            onThemesChange={(next) => {
+              setThemes(next);
+              if (
+                loadedThemeId &&
+                !next.some((theme) => theme.id === loadedThemeId)
+              ) {
+                setLoadedThemeId(null);
+              }
+            }}
+            onLoadTheme={loadSavedTheme}
+          />
+
           <div className="space-y-2.5">
             <h2 className="text-sm font-bold text-[#17130E]">Preset palettes</h2>
             <p className="text-xs leading-snug text-[#6B6255]">
@@ -399,17 +450,17 @@ export function DesignLabPageView() {
                       <span className="flex shrink-0 gap-1 pt-0.5">
                         <span
                           className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
-                          style={{ backgroundColor: preset.colors.pageBackground }}
+                          style={{ backgroundColor: preset.colors.northStarSidebar }}
                           aria-hidden
                         />
                         <span
                           className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
-                          style={{ backgroundColor: preset.colors.cardBackground }}
+                          style={{ backgroundColor: preset.colors.northStarGold }}
                           aria-hidden
                         />
                         <span
                           className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
-                          style={{ backgroundColor: preset.colors.primaryButton }}
+                          style={{ backgroundColor: preset.colors.altairPaper }}
                           aria-hidden
                         />
                       </span>
@@ -429,33 +480,59 @@ export function DesignLabPageView() {
           <DesignLabEditTargetPanel
             selectedTargetId={selectedTargetId}
             colors={colors}
+            shines={shines}
             onColorChange={updateColor}
+            onShineChange={updateShine}
           />
 
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-[#17130E]">Color controls</h2>
+            <h2 className="text-sm font-bold text-[#17130E]">Live token controls</h2>
             <button
               type="button"
               onClick={resetToDefaults}
               className="rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#6B6255] transition-colors hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD] hover:text-[#17130E]"
             >
-              Reset to North Star defaults
+              Reset to live chrome
             </button>
           </div>
           <p className="text-xs leading-snug text-[#6B6255]">
-            Adjust values to explore palettes. Only the preview panel on the right
-            updates.
+            Real CSS variable names from today&apos;s product. Use Saved themes above to
+            persist a draft; customer pages stay unchanged.
           </p>
-          <div key={resetKey} className="space-y-2.5">
-            {DESIGN_LAB_COLOR_FIELDS.map(({ key, label, helper }) => (
-              <ColorControl
-                key={key}
-                label={label}
-                helper={helper}
-                value={colors[key]}
-                onChange={(value) => updateColor(key, value)}
-              />
-            ))}
+          <div key={resetKey} className="space-y-4">
+            {DESIGN_LAB_TOKEN_GROUPS.map((group) => {
+              const fields = DESIGN_LAB_COLOR_FIELDS.filter(
+                (field) => field.group === group.id,
+              );
+
+              return (
+                <div key={group.id} className="space-y-2">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-[#8A6324]">
+                      {group.label}
+                    </h3>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[#6B6255]">
+                      {group.helper}
+                    </p>
+                  </div>
+                  <div className="space-y-2.5">
+                    {fields.map(({ key, label, helper, cssVar }) => (
+                      <DesignLabColorControl
+                        key={key}
+                        tokenKey={key}
+                        label={label}
+                        helper={helper}
+                        cssVar={cssVar}
+                        value={colors[key]}
+                        onChange={(value) => updateColor(key, value)}
+                        shine={shines[key] ?? null}
+                        onShineChange={(shine) => updateShine(key, shine)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </aside>
 
@@ -491,27 +568,55 @@ export function DesignLabPageView() {
             {previewMode === "compact" ? (
               <DesignLabCompactPreview
                 colors={colors}
+                shines={shines}
+                dimensions={dimensions}
                 selectedTargetId={selectedTargetId}
                 onSelectTarget={setSelectedTargetId}
               />
             ) : (
               <DesignLabFullPagePreview
                 colors={colors}
+                shines={shines}
+                dimensions={dimensions}
                 selectedTargetId={selectedTargetId}
                 onSelectTarget={setSelectedTargetId}
               />
             )}
           </section>
 
+          <section className="rounded-xl border border-[rgba(138,99,36,0.16)] bg-[#FFF9EA] p-3.5">
+            <h2 className="text-sm font-bold text-[#17130E]">Shape</h2>
+            <p className="mt-0.5 text-xs leading-snug text-[#6B6255]">
+              Corner radius for cards and section plates — primary lever for a less
+              boxy feel.
+            </p>
+            <div className="mt-3 space-y-3">
+              {DESIGN_LAB_DIMENSION_DEFS.map((def) => (
+                <DesignLabDimensionControl
+                  key={def.key}
+                  dimensionKey={def.key}
+                  value={dimensions[def.key]}
+                  onChange={(value) => updateDimension(def.key, value)}
+                />
+              ))}
+            </div>
+          </section>
+
           <DesignLabContrastPanel colors={colors} />
-          <DesignLabExportPanel colors={colors} />
+          <DesignLabExportPanel colors={colors} shines={shines} />
         </div>
       </div>
 
-      <footer className="rounded-[1rem] border border-dashed border-[rgba(138,99,36,0.2)] bg-[#FFF9EA] px-3.5 py-3 text-xs leading-relaxed text-[#6B6255] sm:px-4">
-        Future phases can promote approved values from this lab into shared North
-        Star tokens. DL-1 does not save, publish, or apply themes globally.
+      <footer className="rounded-none border border-dashed border-[rgba(138,99,36,0.2)] bg-[#FFF9EA] px-3.5 py-3 text-xs leading-relaxed text-[#6B6255] sm:px-4">
+        Drafts live in <span className="font-mono">design_lab_themes</span>. Promote sets
+        <span className="font-mono"> is_live</span> for this company; the admin layout
+        injects those CSS variables onto{" "}
+        <span className="font-mono">.admin-north-star-shell</span>. Revert clears the
+        override. Export still emits real CSS variable names from globals.css.
+        Optional <span className="font-mono">--token--shine</span> companions store
+        gradients beside solid base colors.
       </footer>
     </div>
+    </DesignLabSpotlightProvider>
   );
 }

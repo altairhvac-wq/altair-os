@@ -6,8 +6,8 @@
  * `report-surface` register instead. Prefer these over ad-hoc card classes
  * so section chrome stays consistent.
  *
- * Radius: sharp (`rounded-none`) — MC v2 identity is squared paper plates on
- * the olive-graphite canvas, not pill cards. Padding ~14px (`p-3.5`).
+ * Radius: `--radius-section` (Design Lab editable). Defaults keep plates soft
+ * enough to read as cards, not a spreadsheet grid. Padding ~14px (`p-3.5`).
  * Borders use the warm olive hairline (`--north-star-border`).
  */
 
@@ -30,18 +30,18 @@ export const altairMcHairlineGridClass =
 
 /** Surface 1 section card shell (no padding). */
 export const altairMcCardClass =
-  "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-section)]";
+  "rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-section)]";
 
 /** Standard inner padding for MC cards and callouts. */
 export const altairMcCardPadClass = "p-3.5";
 
 /** Surface 3 tile — KPI / metric blocks with padding included. */
 export const altairMcTileClass =
-  "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] p-3.5";
+  "rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-tile)] p-3.5";
 
 /** Surface 2 list container. */
 export const altairMcListClass =
-  "overflow-hidden rounded-none border border-[var(--north-star-border)] bg-[var(--surface-card)]";
+  "overflow-hidden rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-card)]";
 
 /** Surface 4 list row. */
 export const altairMcListRowClass =

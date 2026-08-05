@@ -1,14 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { CheckCircle2, ChevronDown, Circle, Sparkles } from "lucide-react";
 import {
   SectionHeader,
-  altairMcCardClass,
   altairMcCardPadClass,
 } from "@/shared/design-system/components";
-import { altairSemanticSurfaceClass } from "@/shared/design-system/foundation";
 import {
   getNextOnboardingChecklistItem,
   getOnboardingProgressPercent,
@@ -16,21 +15,47 @@ import {
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { missionControlV2SampleData } from "./sample-data";
 
+/** Soft light-card shell matching Dashboard exception / info cards. */
+const NEXT_RECOMMENDED_CARD_CLASS =
+  "rounded-[var(--radius-panel)] border border-altair-border/40 bg-altair-paper shadow-sm";
+
+/** Optimized asset — solid olive fallback keeps the card complete if it fails. */
+const CAUGHT_UP_ILLUSTRATION_SRC =
+  "/images/dashboard/next-recommended-caught-up.webp";
+
 function NextRecommendedCaughtUp() {
+  const [showIllustration, setShowIllustration] = useState(true);
+
   return (
     <div
-      className={`h-auto rounded-none border border-[var(--north-star-border)] ${altairMcCardPadClass} ${altairSemanticSurfaceClass.success}`}
+      className={`relative isolate min-h-[9.75rem] overflow-hidden rounded-[var(--radius-panel)] border border-[var(--north-star-border)]/50 bg-[var(--north-star-content-well)] shadow-sm ${altairMcCardPadClass}`}
     >
-      <div className="flex items-start gap-3">
-        <CheckCircle2
-          className="mt-0.5 h-4 w-4 shrink-0 text-altair-success"
+      {showIllustration ? (
+        <Image
+          src={CAUGHT_UP_ILLUSTRATION_SRC}
+          alt=""
+          width={688}
+          height={384}
           aria-hidden="true"
+          sizes="(max-width: 640px) 80vw, 420px"
+          className="pointer-events-none absolute -bottom-8 -right-10 h-[135%] w-auto max-w-none select-none sm:-bottom-6 sm:-right-4 sm:h-[145%]"
+          onError={() => setShowIllustration(false)}
         />
+      ) : null}
+      {/* Left scrim: readable copy over the art; solid well remains if image is gone. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[72%] bg-gradient-to-r from-[var(--north-star-content-well)] via-[var(--north-star-content-well)]/90 to-transparent"
+      />
+      <div className="relative z-[2] flex max-w-[min(100%,17.5rem)] items-start gap-3 sm:max-w-[19rem]">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-success text-white">
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+        </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-altair-success-foreground">
+          <p className="text-sm font-semibold text-[var(--north-star-text-light)]">
             You&apos;re all caught up!
           </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-altair-success-foreground/80">
+          <p className="mt-0.5 text-xs leading-relaxed text-[var(--north-star-text-light-muted)]">
             Required setup is done — nothing waiting in the onboarding path.
           </p>
         </div>
@@ -51,9 +76,9 @@ export function MissionControlV2NextRecommendedCard({
     return (
       <section className="flex h-auto min-w-0 flex-col gap-3 self-start">
         <SectionHeader title="Next recommended" />
-        <div className={`h-auto ${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className={`h-auto ${NEXT_RECOMMENDED_CARD_CLASS} ${altairMcCardPadClass}`}>
           <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-altair-brass/15 text-altair-brass">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-brass text-white">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -83,12 +108,12 @@ export function MissionControlV2NextRecommendedCard({
       {showCaughtUp ? (
         <NextRecommendedCaughtUp />
       ) : (
-        <div className={`h-auto ${altairMcCardClass} ${altairMcCardPadClass}`}>
+        <div className={`h-auto ${NEXT_RECOMMENDED_CARD_CLASS} ${altairMcCardPadClass}`}>
           <Link
             href={nextStep.href}
-            className="flex items-start gap-3 rounded-md transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+            className="flex items-start gap-3 rounded-lg transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-altair-brass/15 text-altair-brass">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-brass text-white">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
