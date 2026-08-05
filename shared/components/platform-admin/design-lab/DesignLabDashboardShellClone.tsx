@@ -7,12 +7,15 @@ import {
   adminNavItems,
   type NavItem,
 } from "@/shared/components/admin/nav-items";
-import { MissionControlV2View } from "@/shared/components/dashboard/mission-control-v2/MissionControlV2View";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
-import { designLabFixtureDashboardData } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-fixture";
+import { DesignLabMissionControlAdapter } from "@/shared/components/platform-admin/design-lab/DesignLabMissionControlAdapter";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import {
+  LIVE_DESIGN_LAB_DIMENSION_DEFAULTS,
+  type DesignLabDimensions,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dimensions";
 import { designLabPreviewVars } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
 import {
   designLabFillStyle,
@@ -35,6 +38,7 @@ import {
 type DesignLabDashboardShellCloneProps = {
   colors: DesignLabColors;
   shines?: DesignLabShineMap;
+  dimensions?: DesignLabDimensions;
   surfaceOverrides: DashboardSurfaceOverrides;
   selection: DesignLabCanvasSelection | null;
   onSelectGlobal: (id: DesignLabEditTargetId) => void;
@@ -189,10 +193,9 @@ function DesignLabStaticSidebar({
       onSelectTarget={onSelectTarget}
       as="aside"
       aria-label="Desktop navigation"
-      className={`${northStarSidebarClass} flex h-full w-[14.5rem] shrink-0 flex-col self-stretch border-r`}
+      className={`${northStarSidebarClass} flex h-full w-[14.5rem] shrink-0 flex-col self-stretch`}
       style={{
         ...designLabFillStyle("--north-star-sidebar"),
-        borderColor: "var(--north-star-border)",
         color: "var(--north-star-sidebar-link)",
       }}
     >
@@ -271,6 +274,7 @@ function DesignLabStaticSidebar({
 export function DesignLabDashboardShellClone({
   colors,
   shines = {},
+  dimensions = LIVE_DESIGN_LAB_DIMENSION_DEFAULTS,
   surfaceOverrides,
   selection,
   onSelectGlobal,
@@ -287,52 +291,84 @@ export function DesignLabDashboardShellClone({
       selection={selection}
       onSelectSurface={onSelectSurface}
     >
+      {/*
+        Flat sibling editable targets (sidebar / border / topbar / content-well) —
+        same pattern as DesignLabFullPageCanvas. Do not wrap them in chrome-shell:
+        nesting makes the parent :hover outline bleed across child regions.
+        Preview vars stay on .admin-north-star-shell so globals.css shell tokens
+        do not wipe lab edits (same as live AdminShell).
+      */}
       <DesignLabTokenAnchor tokenKey="northStarRoot" className="block min-h-full">
-      <DesignLabEditableTarget
-        targetId="chrome-shell"
-        selectedTargetId={selectedTargetId}
-        onSelectTarget={onSelectGlobal}
-        className="admin-canvas admin-shell-canvas admin-north-star-shell flex min-h-full w-full min-w-0 flex-col md:flex-row"
-        style={{
-          /* Inline preview vars must sit on .admin-north-star-shell itself —
-             that class redefines chrome tokens in globals.css and would otherwise
-             wipe inherited design-lab-preview values (same pattern as live AdminShell). */
-          ...designLabPreviewVars(colors, shines),
-          ...designLabFillStyle("--north-star-root"),
-        }}
-      >
-        <DesignLabStaticSidebar
-          groups={navGroups}
-          selectedTargetId={selectedTargetId}
-          onSelectTarget={onSelectGlobal}
-        />
-
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="admin-top-shell shrink-0">
-            <DesignLabStaticTopbar
+        <div
+          className="admin-canvas admin-shell-canvas admin-north-star-shell flex min-h-full w-full min-w-0 flex-col md:flex-row"
+          style={{
+            ...designLabPreviewVars(colors, shines, dimensions),
+            ...designLabFillStyle("--north-star-root"),
+          }}
+        >
+          <DesignLabTokenAnchor
+            tokenKey="northStarRoot"
+            className="hidden w-1.5 shrink-0 self-stretch md:block"
+          >
+            <DesignLabEditableTarget
+              targetId="chrome-shell"
               selectedTargetId={selectedTargetId}
               onSelectTarget={onSelectGlobal}
+              className="h-full w-full"
+              style={designLabFillStyle("--north-star-root")}
+              aria-label="Page canvas"
             />
-          </div>
+          </DesignLabTokenAnchor>
 
-          <DesignLabTokenAnchor
-            tokenKey="northStarContentWell"
-            className="block min-h-0 flex-1"
-          >
-          <DesignLabEditableTarget
-            targetId="chrome-two-tone"
+          <DesignLabStaticSidebar
+            groups={navGroups}
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectGlobal}
-            className="admin-shell-main min-h-0 flex-1 bg-[var(--north-star-content-well)] px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
-            style={designLabFillStyle("--north-star-content-well")}
+          />
+
+          <DesignLabTokenAnchor
+            tokenKey="northStarBorder"
+            className="hidden w-1 shrink-0 self-stretch md:block"
           >
-            {/* Pass 1: real MC body + static fixture. Click-to-edit / token
-                anchors / surface targets stay on shell chrome only for now. */}
-            <MissionControlV2View data={designLabFixtureDashboardData} />
-          </DesignLabEditableTarget>
+            <DesignLabEditableTarget
+              targetId="chrome-border"
+              selectedTargetId={selectedTargetId}
+              onSelectTarget={onSelectGlobal}
+              className="h-full w-full min-w-px"
+              style={designLabFillStyle("--north-star-border")}
+              aria-label="Chrome border"
+            />
           </DesignLabTokenAnchor>
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="admin-top-shell shrink-0">
+              <DesignLabStaticTopbar
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={onSelectGlobal}
+              />
+            </div>
+
+            <DesignLabTokenAnchor
+              tokenKey="northStarContentWell"
+              className="block min-h-0 flex-1"
+            >
+              <DesignLabEditableTarget
+                targetId="content-well"
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={onSelectGlobal}
+                className="admin-shell-main min-h-0 flex-1 bg-[var(--north-star-content-well)] px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
+                style={designLabFillStyle("--north-star-content-well")}
+              >
+                {/* Real MC section exports wrapped by lab adapter (compose-only
+                    pieces; selection chrome stays outside production MC). */}
+                <DesignLabMissionControlAdapter
+                  selectedTargetId={selectedTargetId}
+                  onSelectTarget={onSelectGlobal}
+                />
+              </DesignLabEditableTarget>
+            </DesignLabTokenAnchor>
+          </div>
         </div>
-      </DesignLabEditableTarget>
       </DesignLabTokenAnchor>
     </DesignLabSurfaceProvider>
   );
