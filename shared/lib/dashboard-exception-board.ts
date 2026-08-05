@@ -3,11 +3,13 @@ import { buildCustomersBookHref } from "@/shared/lib/customers/customers-hub";
 import {
   buildDispatchOverloadHref,
   DISPATCH_PAGE_OVERLOAD_HREF,
+  DISPATCH_PAGE_UNASSIGNED_HREF,
 } from "@/shared/lib/dispatch-page-focus";
 import { INVOICE_PAGE_OVERDUE_HREF } from "@/shared/lib/invoice-page-focus";
 import { LEADS_NEEDS_CONTACT_QUEUE_HREF } from "@/shared/lib/lead-dashboard-attention";
 import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import { buildTeamHubHref } from "@/shared/lib/team/team-hub";
+import { buildWorkJobHref } from "@/shared/lib/work/work-hub";
 import { formatCurrency } from "@/shared/types/customer";
 import type { DashboardData } from "@/shared/types/dashboard";
 
@@ -15,6 +17,7 @@ export type DashboardExceptionBucketId =
   | "payments"
   | "invoices"
   | "dispatch"
+  | "jobs"
   | "estimates"
   | "leads"
   | "team"
@@ -45,6 +48,7 @@ export const DASHBOARD_EXCEPTION_BUCKET_ORDER: readonly DashboardExceptionBucket
     "payments",
     "invoices",
     "dispatch",
+    "jobs",
     "estimates",
     "leads",
     "team",
@@ -199,6 +203,32 @@ export function buildDashboardExceptionBuckets(
         label: technician.name,
         detail: "2+ active jobs today",
         href: buildDispatchOverloadHref(technician.id),
+      })),
+    });
+  }
+
+  if (
+    (access.canViewAllJobs || access.canViewTechnicianRoster) &&
+    operations.unassignedToday > 0
+  ) {
+    const count = operations.unassignedToday;
+    byId.set("jobs", {
+      id: "jobs",
+      title: "Jobs",
+      count,
+      detail:
+        count === 1
+          ? "Unassigned job on today's board"
+          : `${count} unassigned jobs on today's board`,
+      href: DISPATCH_PAGE_UNASSIGNED_HREF,
+      tone: count >= 3 ? "danger" : "warning",
+      items: operations.unassignedJobs.map((job) => ({
+        id: job.id,
+        label: job.jobNumber,
+        detail: [job.customerName, job.jobType.trim() || null]
+          .filter(Boolean)
+          .join(" · "),
+        href: buildWorkJobHref(job.id),
       })),
     });
   }

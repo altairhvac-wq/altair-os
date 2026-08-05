@@ -6,6 +6,7 @@ import {
   assignJobToTechnician,
   unassignJobFromTechnician,
 } from "@/lib/database/queries/dispatch";
+import { revalidateJobOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import type { DispatchJob } from "@/shared/types/dispatch";
 
 export type AssignJobActionResult = {
@@ -43,10 +44,8 @@ export async function assignJobAction(
     return { error: error ?? "Failed to assign job." };
   }
 
-  revalidatePath("/dispatch");
-  revalidatePath("/work");
+  revalidateJobOperationalPages(jobId);
   revalidatePath("/technician");
-  revalidatePath(`/work/${jobId}`);
 
   return { job };
 }
@@ -74,10 +73,8 @@ export async function unassignJobAction(
     return { error: error ?? "Failed to unassign job." };
   }
 
-  revalidatePath("/dispatch");
-  revalidatePath("/work");
+  revalidateJobOperationalPages(jobId);
   revalidatePath("/technician");
-  revalidatePath(`/work/${jobId}`);
 
   return { job };
 }
