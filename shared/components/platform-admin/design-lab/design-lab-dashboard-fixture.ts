@@ -106,7 +106,15 @@ function buildDemoOfficeReviewQueue(): OfficeReviewQueueReport {
 
 const OFFICE_REVIEW_QUEUE = buildDemoOfficeReviewQueue();
 
-export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
+/**
+ * Static Design Lab DashboardData — not live company data.
+ *
+ * Counts are chosen so `buildDashboardExceptionBuckets` returns every bucket
+ * and all three urgency tones (low=1, medium=2–3, high=4+):
+ *   payments 1 (low) · invoices 3 (medium) · dispatch 1 (low) · jobs 2 (medium)
+ *   estimates 1 (low) · leads 2 (medium) · team 4 (high) · customers 5 (high)
+ */
+export const designLabFixtureDashboardData: DashboardData = {
   access: FOUNDER_ACCESS,
   analytics: {
     todayCollectedRevenue: 2840,
@@ -278,8 +286,8 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
   money: {
     unpaidCount: 6,
     unpaidTotal: 12480,
-    overdueCount: 2,
-    overdueTotal: 4280,
+    overdueCount: 3,
+    overdueTotal: 5280,
     paymentsTodayCount: 3,
     paymentsTodayTotal: 2840,
     paymentsYesterdayTotal: 2500,
@@ -321,6 +329,14 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         customerName: "Clearfield Property Group",
         balanceDue: 1800,
         dueDate: "2026-06-12",
+        status: "overdue",
+      },
+      {
+        id: "inv-demo-6",
+        invoiceNumber: "INV-DEMO-1022",
+        customerName: "Roy Residence",
+        balanceDue: 1000,
+        dueDate: "2026-06-14",
         status: "overdue",
       },
     ],
@@ -570,11 +586,17 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
     ],
   },
   customersNeedingInfo: {
-    count: 1,
-    customers: [{ id: "cust-demo-needs-info", name: "Harbor Cafe" }],
+    count: 5,
+    customers: [
+      { id: "cust-demo-needs-info-1", name: "Harbor Cafe" },
+      { id: "cust-demo-needs-info-2", name: "Layton Residence" },
+      { id: "cust-demo-needs-info-3", name: "Ogden Plaza" },
+      { id: "cust-demo-needs-info-4", name: "Northside Dental" },
+      { id: "cust-demo-needs-info-5", name: "Summit Properties" },
+    ],
   },
   staleOpenShifts: {
-    count: 1,
+    count: 4,
     shifts: [
       {
         id: "time-entry-stale-1",
@@ -582,11 +604,30 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         startedAt: "2026-06-23T07:00:00.000Z",
         elapsedHours: 14.5,
       },
+      {
+        id: "time-entry-stale-2",
+        technicianName: "Jordan Lee",
+        startedAt: "2026-06-22T18:00:00.000Z",
+        elapsedHours: 20,
+      },
+      {
+        id: "time-entry-stale-3",
+        technicianName: "Sam Patel",
+        startedAt: "2026-06-22T16:30:00.000Z",
+        elapsedHours: 21.5,
+      },
+      {
+        id: "time-entry-stale-4",
+        technicianName: "Morgan Brooks",
+        startedAt: "2026-06-22T15:00:00.000Z",
+        elapsedHours: 23,
+      },
     ],
   },
   paymentAttention: {
+    // Single card failure → payments bucket count 1 (low urgency).
     cardFailureCount: 1,
-    openDisputeCount: 1,
+    openDisputeCount: 0,
     cardFailures: [
       {
         id: "attempt-demo-1",
@@ -596,16 +637,7 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         lastCardFailureAt: "2026-06-24T12:00:00.000Z",
       },
     ],
-    openDisputes: [
-      {
-        id: "dispute-demo-1",
-        amount: 180,
-        status: "needs_response",
-        reason: "product_not_received",
-        invoiceId: "inv-demo-2",
-        invoiceNumber: "INV-1002",
-      },
-    ],
+    openDisputes: [],
   },
   leadsReadyForEstimate: {
     count: 1,

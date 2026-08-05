@@ -1,26 +1,40 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bell, Database, Search } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import {
   ADMIN_NAV_GROUP_DEFINITIONS,
   adminNavItems,
   type NavItem,
 } from "@/shared/components/admin/nav-items";
-import { DesignLabDashboardReplica } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardReplica";
+import { MissionControlV2View } from "@/shared/components/dashboard/mission-control-v2/MissionControlV2View";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
+import { designLabFixtureDashboardData } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-fixture";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import { designLabPreviewVars } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
 import {
-  DesignLabSurfaceProvider,
-} from "@/shared/components/platform-admin/design-lab/DesignLabSurfaceContext";
+  designLabFillStyle,
+  type DesignLabShineMap,
+} from "@/shared/components/platform-admin/design-lab/design-lab-shine";
+import { DesignLabTokenAnchor } from "@/shared/components/platform-admin/design-lab/DesignLabSpotlight";
+import { DesignLabSurfaceProvider } from "@/shared/components/platform-admin/design-lab/DesignLabSurfaceContext";
 import type { DashboardSurfaceId } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 import type { DashboardSurfaceOverrides } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
-import { northStarSidebarClass } from "@/shared/design-system/shell/tokens";
+import { StatusPill } from "@/shared/design-system/components";
+import {
+  adminNavLinkActiveClass,
+  adminNavLinkClass,
+  northStarSidebarClass,
+  northStarSidebarGroupLabelClass,
+  northStarSidebarLinkActiveClass,
+  northStarSidebarLinkClass,
+} from "@/shared/design-system/shell/tokens";
 
 type DesignLabDashboardShellCloneProps = {
   colors: DesignLabColors;
+  shines?: DesignLabShineMap;
   surfaceOverrides: DashboardSurfaceOverrides;
   selection: DesignLabCanvasSelection | null;
   onSelectGlobal: (id: DesignLabEditTargetId) => void;
@@ -59,38 +73,6 @@ function buildStaticNavGroups(): StaticNavGroup[] {
   return groups;
 }
 
-function DesignLabDemoModeBanner() {
-  return (
-    <section
-      aria-label="Demo data active"
-      className="mb-2 min-w-0 max-w-full overflow-x-clip rounded-lg border border-violet-200/70 bg-violet-50/40 px-2.5 py-2"
-    >
-      <div className="flex min-w-0 items-start gap-2">
-        <Database
-          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-600"
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-violet-700/90">
-                Demo mode
-              </p>
-              <p className="mt-0.5 text-xs font-medium text-slate-700">
-                Sample records are active · loaded Jun 23, 2026. Tagged{" "}
-                <span className="font-semibold text-slate-800">[Demo]</span>.
-              </p>
-            </div>
-            <span className="shrink-0 rounded-md border border-violet-200/80 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700">
-              Clear
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function DesignLabStaticTopbar({
   selectedTargetId,
   onSelectTarget,
@@ -99,6 +81,7 @@ function DesignLabStaticTopbar({
   onSelectTarget: (id: DesignLabEditTargetId) => void;
 }) {
   return (
+    <DesignLabTokenAnchor tokenKey="northStarTopbar" className="block">
     <DesignLabEditableTarget
       targetId="topbar-shell"
       selectedTargetId={selectedTargetId}
@@ -106,48 +89,39 @@ function DesignLabStaticTopbar({
       as="header"
       className="admin-premium-header relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0"
       style={{
-        backgroundColor: "var(--dl-topbar-bg)",
-        backgroundImage: "none",
-        borderColor: "var(--dl-card-border)",
-        color: "var(--dl-topbar-text)",
+        ...designLabFillStyle("--north-star-topbar"),
+        borderColor: "var(--north-star-brass-ring)",
+        color: "var(--north-star-text-light)",
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <h1
-              className="truncate text-base font-bold tracking-tight sm:text-lg"
-              style={{ color: "var(--dl-topbar-text)" }}
-            >
-              Dashboard
-            </h1>
-            <span
-              role="status"
-              className="north-star-header-alpha inline-flex shrink-0 items-center rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.12)] px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-[#E6D092] sm:px-2 sm:text-[11px]"
-            >
-              Preview
-            </span>
-          </div>
           <p
-            className="hidden truncate text-sm sm:block"
-            style={{ color: "var(--dl-sidebar-text)" }}
+            className="truncate text-sm font-bold tracking-tight sm:text-base"
+            style={{ color: "var(--north-star-text-light)" }}
           >
-            Altair HVAC · Design Lab preview shell
+            Good morning, Altair HVAC
+          </p>
+          <p
+            className="mt-0.5 truncate text-xs leading-none sm:text-[13px]"
+            style={{ color: "var(--north-star-text-light-muted)" }}
+          >
+            Tuesday, August 4
           </p>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <span
-          className="north-star-header-search hidden rounded-lg p-2 sm:inline-flex"
-          style={{ color: "var(--dl-sidebar-text)" }}
+          className="north-star-header-search hidden rounded-none p-2 sm:inline-flex"
+          style={{ color: "var(--north-star-text-light-muted)" }}
           aria-hidden="true"
         >
           <Search className="h-5 w-5" />
         </span>
         <span
-          className="north-star-header-bell relative rounded-lg p-2"
-          style={{ color: "var(--dl-sidebar-text)" }}
+          className="north-star-header-bell relative rounded-none p-2"
+          style={{ color: "var(--north-star-text-light-muted)" }}
           aria-hidden="true"
         >
           <Bell className="h-5 w-5" />
@@ -157,25 +131,44 @@ function DesignLabStaticTopbar({
         </span>
         <div className="north-star-header-divider flex items-center gap-2 border-l pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <div className="north-star-company-switcher hidden md:block">
-            <p className="text-xs font-semibold" style={{ color: "var(--dl-topbar-text)" }}>
+            <p
+              className="text-xs font-semibold"
+              style={{ color: "var(--north-star-text-light)" }}
+            >
               Altair HVAC
             </p>
-            <p className="text-[10px]" style={{ color: "var(--dl-sidebar-text)" }}>
-              Demo workspace
+            <p
+              className="text-[10px]"
+              style={{ color: "var(--north-star-text-light-muted)" }}
+            >
+              Sample workspace
             </p>
           </div>
-          <div
-            className="north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
-            title="Jeremiah Founder"
-          >
-            JF
-          </div>
-          <span className="north-star-header-signout rounded-lg px-2 py-1 text-xs font-semibold">
-            Sign out
-          </span>
+          {/* Trial pill lives in header chrome — same placement as live SubscriptionBillingBanner */}
+          <StatusPill tone="info" size="sm" className="max-w-[9.5rem] truncate sm:max-w-[14rem]">
+            Trial ends Aug 18, 2026
+          </StatusPill>
+          <DesignLabTokenAnchor tokenKey="northStarGold" as="span">
+            <DesignLabEditableTarget
+              targetId="brass-ladder"
+              selectedTargetId={selectedTargetId}
+              onSelectTarget={onSelectTarget}
+              className="north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2 ring-[var(--north-star-brass-ring)]"
+              aria-label="Edit brass ladder · avatar"
+              style={{
+                backgroundImage:
+                  "var(--north-star-gold--shine, linear-gradient(180deg, var(--north-star-gold) 0%, var(--north-star-bronze) 100%))",
+                backgroundColor: "var(--north-star-gold)",
+                color: "var(--north-star-text-dark)",
+              }}
+            >
+              JF
+            </DesignLabEditableTarget>
+          </DesignLabTokenAnchor>
         </div>
       </div>
     </DesignLabEditableTarget>
+    </DesignLabTokenAnchor>
   );
 }
 
@@ -189,68 +182,79 @@ function DesignLabStaticSidebar({
   onSelectTarget: (id: DesignLabEditTargetId) => void;
 }) {
   return (
+    <DesignLabTokenAnchor tokenKey="northStarSidebar" className="hidden md:block">
     <DesignLabEditableTarget
       targetId="sidebar-shell"
       selectedTargetId={selectedTargetId}
       onSelectTarget={onSelectTarget}
       as="aside"
       aria-label="Desktop navigation"
-      className={`${northStarSidebarClass} hidden w-[14.5rem] shrink-0 flex-col self-stretch border-r md:flex`}
+      className={`${northStarSidebarClass} flex h-full w-[14.5rem] shrink-0 flex-col self-stretch border-r`}
       style={{
-        backgroundColor: "var(--dl-sidebar-bg)",
-        backgroundImage: "none",
-        borderColor: "var(--dl-card-border)",
-        color: "var(--dl-sidebar-text)",
+        ...designLabFillStyle("--north-star-sidebar"),
+        borderColor: "var(--north-star-border)",
+        color: "var(--north-star-sidebar-link)",
       }}
     >
       <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-7">
           {groups.map((group) => (
             <li key={group.id}>
-              <p
-                className="mb-2.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em]"
-                style={{ color: "var(--dl-sidebar-muted-text)" }}
-              >
-                {group.label}
-              </p>
+              <DesignLabTokenAnchor tokenKey="northStarSidebarLabel" as="span">
+                <DesignLabEditableTarget
+                  targetId="sidebar-states"
+                  selectedTargetId={selectedTargetId}
+                  onSelectTarget={onSelectTarget}
+                  as="p"
+                  className={`${northStarSidebarGroupLabelClass} mb-2.5 px-2.5`}
+                  style={{ color: "var(--north-star-sidebar-label)" }}
+                >
+                  {group.label}
+                </DesignLabEditableTarget>
+              </DesignLabTokenAnchor>
               <ul className="flex flex-col gap-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = item.href === "/";
 
-                  if (isActive) {
-                    return (
-                      <li key={item.href}>
-                        <DesignLabEditableTarget
-                          targetId="sidebar-active-item"
-                          selectedTargetId={selectedTargetId}
-                          onSelectTarget={onSelectTarget}
-                          className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
-                          style={{
-                            backgroundColor: "var(--dl-sidebar-active-bg)",
-                            color: "var(--dl-sidebar-text)",
-                          }}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="admin-north-star-sidebar-rail"
-                          />
-                          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{item.label}</span>
-                        </DesignLabEditableTarget>
-                      </li>
-                    );
-                  }
-
                   return (
                     <li key={item.href}>
-                      <span
-                        className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
-                        style={{ color: "var(--dl-sidebar-text)" }}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        <span className="truncate">{item.label}</span>
-                      </span>
+                      {isActive ? (
+                        <DesignLabEditableTarget
+                          targetId="sidebar-states"
+                          selectedTargetId={selectedTargetId}
+                          onSelectTarget={onSelectTarget}
+                          className={`${adminNavLinkClass} ${adminNavLinkActiveClass} ${northStarSidebarLinkClass} ${northStarSidebarLinkActiveClass} group relative flex items-center gap-3 rounded-none px-3 py-2.5 text-sm font-medium`}
+                          style={{ color: "var(--north-star-sidebar-link-active)" }}
+                        >
+                          <DesignLabTokenAnchor
+                            tokenKey="northStarBrassRail"
+                            as="span"
+                            className="admin-north-star-sidebar-rail"
+                            style={designLabFillStyle("--north-star-brass-rail")}
+                          >
+                            <span className="sr-only">Brass rail</span>
+                          </DesignLabTokenAnchor>
+                          <Icon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                            style={{ color: "var(--north-star-sidebar-icon-active)" }}
+                          />
+                          <span className="truncate">{item.label}</span>
+                        </DesignLabEditableTarget>
+                      ) : (
+                        <span
+                          className={`${adminNavLinkClass} ${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-none px-3 py-2.5 text-sm font-medium`}
+                          style={{ color: "var(--north-star-sidebar-link)" }}
+                        >
+                          <Icon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                            style={{ color: "var(--north-star-sidebar-icon)" }}
+                          />
+                          <span className="truncate">{item.label}</span>
+                        </span>
+                      )}
                     </li>
                   );
                 })}
@@ -260,11 +264,13 @@ function DesignLabStaticSidebar({
         </ul>
       </nav>
     </DesignLabEditableTarget>
+    </DesignLabTokenAnchor>
   );
 }
 
 export function DesignLabDashboardShellClone({
   colors,
+  shines = {},
   surfaceOverrides,
   selection,
   onSelectGlobal,
@@ -281,9 +287,19 @@ export function DesignLabDashboardShellClone({
       selection={selection}
       onSelectSurface={onSelectSurface}
     >
-      <div
+      <DesignLabTokenAnchor tokenKey="northStarRoot" className="block min-h-full">
+      <DesignLabEditableTarget
+        targetId="chrome-shell"
+        selectedTargetId={selectedTargetId}
+        onSelectTarget={onSelectGlobal}
         className="admin-canvas admin-shell-canvas admin-north-star-shell flex min-h-full w-full min-w-0 flex-col md:flex-row"
-        style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+        style={{
+          /* Inline preview vars must sit on .admin-north-star-shell itself —
+             that class redefines chrome tokens in globals.css and would otherwise
+             wipe inherited design-lab-preview values (same pattern as live AdminShell). */
+          ...designLabPreviewVars(colors, shines),
+          ...designLabFillStyle("--north-star-root"),
+        }}
       >
         <DesignLabStaticSidebar
           groups={navGroups}
@@ -299,21 +315,25 @@ export function DesignLabDashboardShellClone({
             />
           </div>
 
+          <DesignLabTokenAnchor
+            tokenKey="northStarContentWell"
+            className="block min-h-0 flex-1"
+          >
           <DesignLabEditableTarget
-            targetId="page-background"
+            targetId="chrome-two-tone"
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectGlobal}
-            className="admin-shell-main min-h-0 flex-1 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
-            style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+            className="admin-shell-main min-h-0 flex-1 bg-[var(--north-star-content-well)] px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
+            style={designLabFillStyle("--north-star-content-well")}
           >
-            <DesignLabDemoModeBanner />
-            <DesignLabDashboardReplica
-              selectedTargetId={selectedTargetId}
-              onSelectTarget={onSelectGlobal}
-            />
+            {/* Pass 1: real MC body + static fixture. Click-to-edit / token
+                anchors / surface targets stay on shell chrome only for now. */}
+            <MissionControlV2View data={designLabFixtureDashboardData} />
           </DesignLabEditableTarget>
+          </DesignLabTokenAnchor>
         </div>
-      </div>
+      </DesignLabEditableTarget>
+      </DesignLabTokenAnchor>
     </DesignLabSurfaceProvider>
   );
 }
