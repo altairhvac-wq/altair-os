@@ -40,8 +40,18 @@ export function TechnicianMobileShell({
 }: TechnicianMobileShellProps) {
   const pathname = usePathname();
   const [quickNavOpen, setQuickNavOpen] = useState(false);
+  // Hydration guard: `redirectPending` is client-derived (owner view-mode
+  // redirect) and can be true on the client's first render while the server
+  // rendered the children — swapping in the loading skeleton during
+  // hydration caused a server/client mismatch. Only honor redirectPending
+  // after mount so the first client render always matches the server.
+  const [mounted, setMounted] = useState(false);
   const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setQuickNavOpen(false);
@@ -94,7 +104,7 @@ export function TechnicianMobileShell({
             <PullToRefresh>
               <TechnicianConnectivityBanner />
               <PwaInstallBanner />
-              {redirectPending ? (
+              {mounted && redirectPending ? (
                 <TechnicianShellContentLoadingState />
               ) : (
                 children

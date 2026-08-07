@@ -1,14 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
 import { useConnectivityStatus } from "@/shared/hooks/useConnectivityStatus";
 
 /**
  * Compact connectivity status for the technician shell.
  * Shows while offline, and briefly after reconnect.
+ *
+ * Connectivity is inherently client-only knowledge (navigator.onLine), so
+ * this renders nothing until after mount — the server cannot know the
+ * device's connection state, and rendering the offline banner during SSR
+ * caused a hydration mismatch against the online client.
  */
 export function TechnicianConnectivityBanner() {
   const { isOffline, justReconnected } = useConnectivityStatus();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   if (!isOffline && !justReconnected) {
     return null;

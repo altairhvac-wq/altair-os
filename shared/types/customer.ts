@@ -153,12 +153,19 @@ export function mapCustomerToFormData(customer: Customer): CustomerFormData {
 }
 
 export function getCustomerInitials(name: string): string {
-  return name
-    .split(" ")
+  // Initials must match the *displayed* name: strip any leading
+  // "[Demo]"-style tag and ignore non-alphanumeric tokens so
+  // "[Demo] Sarah Nguyen" yields "SN", not "[S".
+  const cleaned = name.replace(/^\s*\[[^\]]*\]\s*/, "").trim();
+  const initials = cleaned
+    .split(/\s+/)
+    .map((part) => part.replace(/[^A-Za-z0-9]/g, ""))
+    .filter(Boolean)
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  return initials || cleaned.slice(0, 1).toUpperCase() || "?";
 }
 
 export function formatCurrency(amount: number): string {
