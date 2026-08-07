@@ -126,7 +126,7 @@ export function DispatchMapPanel({
 
   if (loadState.status === "loading") {
     return (
-      <div className={dm.mapFrame}>
+      <div className={dm.mapFrame} data-testid="dispatch-map-panel-loading">
         <div className={dm.mapEmpty}>
           <Loader2 className="h-5 w-5 animate-spin text-altair-brass" />
           <p className="text-sm font-semibold text-altair-paper">
@@ -175,7 +175,7 @@ export function DispatchMapPanel({
   }
 
   return (
-    <div className={dm.mapFrame}>
+    <div className={dm.mapFrame} data-testid="dispatch-map-panel-ready">
       <DispatchMap
         jobs={jobs}
         points={loadState.points}

@@ -8,15 +8,16 @@
  *
  * Radius: `--radius-section` (Design Lab editable). Defaults keep plates soft
  * enough to read as cards, not a spreadsheet grid. Padding ~14px (`p-3.5`).
- * Borders use the warm olive hairline (`--north-star-border`).
+ * Plate borders use `--north-star-plate-border` (independent from chrome
+ * structural hairlines and MC section dividers).
  */
 
-/** Warm olive hairline used between MC structural zones and around plates. */
-export const altairMcBorderClass = "border-[var(--north-star-border)]";
+/** Warm olive hairline around MC plates / cards / tiles / lists. */
+export const altairMcBorderClass = "border-[var(--north-star-plate-border)]";
 
 /**
  * Grid / stack gap between MC plates. Zero gap so adjacent `border` edges
- * meet as a visible hairline grid (warm `--north-star-border`), not whitespace.
+ * meet as a visible hairline grid (warm `--north-star-plate-border`), not whitespace.
  */
 export const altairMcGridGapClass = "gap-0";
 
@@ -26,22 +27,22 @@ export const altairMcGridGapClass = "gap-0";
  * when children are fill-only (no own border).
  */
 export const altairMcHairlineGridClass =
-  "grid gap-px bg-[var(--north-star-border)]";
+  "grid gap-px bg-[var(--north-star-plate-border)]";
 
 /** Surface 1 section card shell (no padding). */
 export const altairMcCardClass =
-  "rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-section)]";
+  "rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-section)]";
 
 /** Standard inner padding for MC cards and callouts. */
 export const altairMcCardPadClass = "p-3.5";
 
 /** Surface 3 tile — KPI / metric blocks with padding included. */
 export const altairMcTileClass =
-  "rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-tile)] p-3.5";
+  "rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3.5";
 
 /** Surface 2 list container. */
 export const altairMcListClass =
-  "overflow-hidden rounded-[var(--radius-section)] border border-[var(--north-star-border)] bg-[var(--surface-card)]";
+  "overflow-hidden rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-card)]";
 
 /** Surface 4 list row. */
 export const altairMcListRowClass =

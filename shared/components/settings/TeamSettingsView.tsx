@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GitBranch, UserPlus } from "lucide-react";
+import { Mail, UserPlus } from "lucide-react";
 import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 import type {
@@ -14,13 +14,9 @@ import {
   adminPanelActionAccentClass,
   adminPanelActionClass,
 } from "@/shared/design-system/shell";
-import { CompanyOrgTreeSheet } from "./CompanyOrgTreeSheet";
 import { PendingInvitesCard } from "./PendingInvitesCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
-import {
-  SettingsWorkspacePage,
-  SettingsWorkspaceSection,
-} from "./SettingsWorkspacePage";
+import { SettingsWorkspacePage } from "./SettingsWorkspacePage";
 import { TeamInviteForm } from "./TeamInviteForm";
 import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
 import { TeamMembersEmptyState } from "./TeamMembersEmptyState";
@@ -37,6 +33,11 @@ type TeamSettingsViewProps = {
   northStar?: boolean;
 };
 
+/**
+ * Users tab — the company tree IS the page. Administrative chrome (invite
+ * form, incoming invitations) lives behind count-badged toolbar buttons so
+ * the first screenful is people, not forms.
+ */
 export function TeamSettingsView({
   initialMembers,
   currentUserId,
@@ -50,7 +51,7 @@ export function TeamSettingsView({
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
   const [inviteExpanded, setInviteExpanded] = useState(false);
-  const [orgTreeOpen, setOrgTreeOpen] = useState(false);
+  const [invitationsOpen, setInvitationsOpen] = useState(false);
   const invitableRoles = useMemo(
     () => getInvitableTeamRoles(currentUserRole),
     [currentUserRole],
@@ -97,154 +98,130 @@ export function TeamSettingsView({
   return (
     <SettingsWorkspacePage
       title="Users"
-      description="Manage members, invitations, roles, and reporting lines."
+      description="Your company tree — click a member to manage them."
     >
-      <SettingsWorkspaceSection
-        title="Invitations"
-        description="Review pending invitations associated with your account."
-        card={false}
-      >
-        <PendingInvitesCard invites={pendingInvites} variant="settings" />
-      </SettingsWorkspaceSection>
-
-      <SettingsWorkspaceSection
-        title="Members and roles"
-        description={
-          canManageTeam
-            ? "Invite teammates, assign roles, and map reporting lines."
-            : "View the current team roster and reporting structure."
-        }
-        card={false}
-      >
-        <div className={altairMcListClass}>
-          <div className="flex flex-col gap-2 border-b border-altair-border bg-[var(--surface-tile)] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
-            <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-altair-ink">Members</h3>
-                <p className="mt-0.5 hidden text-xs text-altair-ink-secondary sm:block">
-                  Search and manage workspace access.
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOrgTreeOpen(true)}
-                  className={adminPanelActionClass}
-                >
-                  <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span className="hidden sm:inline">View company tree</span>
-                  <span className="sm:hidden">Org tree</span>
-                </button>
-                {canInviteMembers ? (
-                  <button
-                    type="button"
-                    onClick={() => setInviteExpanded((open) => !open)}
-                    aria-expanded={inviteExpanded}
-                    className={`${adminPanelActionAccentClass} md:hidden`}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
-                    {inviteExpanded ? "Close" : "Invite member"}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search members..."
-              aria-label="Search team members"
-              className={`${fieldSearchClass} w-full sm:max-w-xs`}
-            />
-          </div>
-
+      <div className={altairMcListClass}>
+        {/* One toolbar: invite + incoming invitations behind buttons, search right. */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-altair-border bg-[var(--surface-tile)] px-3 py-2 sm:px-4">
           {canInviteMembers ? (
-            <>
-              <div className="md:hidden">
-                <TeamInviteForm
-                  currentUserRole={currentUserRole}
-                  onMemberInvited={handleMemberInvited}
-                  collapsible
-                  expanded={inviteExpanded}
-                  onExpandedChange={setInviteExpanded}
-                />
-              </div>
-              <div className="hidden md:block">
-                <TeamInviteForm
-                  currentUserRole={currentUserRole}
-                  onMemberInvited={handleMemberInvited}
-                />
-              </div>
-            </>
+            <button
+              type="button"
+              onClick={() => {
+                setInviteExpanded((open) => !open);
+                setInvitationsOpen(false);
+              }}
+              aria-expanded={inviteExpanded}
+              className={adminPanelActionAccentClass}
+            >
+              <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+              {inviteExpanded ? "Close invite" : "Invite member"}
+            </button>
           ) : null}
 
-          {membersLoadError ? (
-            <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
-              {membersLoadError}
-            </SettingsAlertBanner>
-          ) : null}
-          {roleError ? (
-            <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
-              {roleError}
-            </SettingsAlertBanner>
-          ) : null}
-          {roleSuccess ? (
-            <SettingsAlertBanner tone="success" className="mx-4 mt-4 sm:mx-6">
-              {roleSuccess}
-            </SettingsAlertBanner>
-          ) : null}
-
-          {!membersLoadError && filteredMembers.length === 0 ? (
-            <TeamMembersEmptyState
-              variant={search.trim() ? "no-results" : "no-members"}
-              canManageTeam={canManageTeam}
-            />
-          ) : !membersLoadError ? (
-            <>
-              <TeamMemberMobileCards
-                members={filteredMembers}
-                allMembers={members}
-                currentUserId={currentUserId}
-                currentUserRole={currentUserRole}
-                canManageTeam={canManageTeam}
-                onMemberUpdated={handleMemberUpdated}
-                onMemberRemoved={handleMemberRemoved}
-                onRoleChangeError={(message) => {
-                  setRoleError(message);
-                  setRoleSuccess(null);
-                }}
-                onRoleChangeSuccess={(message) => {
-                  setRoleSuccess(message);
-                  setRoleError(null);
-                }}
-              />
-              <TeamMembersTable
-                members={filteredMembers}
-                allMembers={members}
-                currentUserId={currentUserId}
-                currentUserRole={currentUserRole}
-                canManageTeam={canManageTeam}
-                onMemberUpdated={handleMemberUpdated}
-                onMemberRemoved={handleMemberRemoved}
-                onRoleChangeError={(message) => {
-                  setRoleError(message);
-                  setRoleSuccess(null);
-                }}
-                onRoleChangeSuccess={(message) => {
-                  setRoleSuccess(message);
-                  setRoleError(null);
-                }}
-              />
-            </>
+          {pendingInvites.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setInvitationsOpen((open) => !open);
+                setInviteExpanded(false);
+              }}
+              aria-expanded={invitationsOpen}
+              className={adminPanelActionClass}
+            >
+              <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+              Invitations
+              <span className="ml-0.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-altair-brass/15 px-1.5 py-0.5 text-[10px] font-bold text-altair-brass">
+                {pendingInvites.length}
+              </span>
+            </button>
           ) : null}
 
-          <CompanyOrgTreeSheet
-            open={orgTreeOpen}
-            onClose={() => setOrgTreeOpen(false)}
-            members={members}
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search members..."
+            aria-label="Search team members"
+            className={`${fieldSearchClass} ml-auto w-full sm:w-auto sm:max-w-xs`}
           />
         </div>
-      </SettingsWorkspaceSection>
+
+        {canInviteMembers ? (
+          <TeamInviteForm
+            currentUserRole={currentUserRole}
+            onMemberInvited={handleMemberInvited}
+            collapsible
+            expanded={inviteExpanded}
+            onExpandedChange={setInviteExpanded}
+          />
+        ) : null}
+
+        {invitationsOpen && pendingInvites.length > 0 ? (
+          <div className="border-b border-altair-border px-3 py-3 sm:px-4">
+            <PendingInvitesCard invites={pendingInvites} variant="settings" />
+          </div>
+        ) : null}
+
+        {membersLoadError ? (
+          <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
+            {membersLoadError}
+          </SettingsAlertBanner>
+        ) : null}
+        {roleError ? (
+          <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
+            {roleError}
+          </SettingsAlertBanner>
+        ) : null}
+        {roleSuccess ? (
+          <SettingsAlertBanner tone="success" className="mx-4 mt-4 sm:mx-6">
+            {roleSuccess}
+          </SettingsAlertBanner>
+        ) : null}
+
+        {!membersLoadError && filteredMembers.length === 0 ? (
+          <TeamMembersEmptyState
+            variant={search.trim() ? "no-results" : "no-members"}
+            canManageTeam={canManageTeam}
+          />
+        ) : !membersLoadError ? (
+          <>
+            <TeamMemberMobileCards
+              members={filteredMembers}
+              allMembers={members}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              canManageTeam={canManageTeam}
+              onMemberUpdated={handleMemberUpdated}
+              onMemberRemoved={handleMemberRemoved}
+              onRoleChangeError={(message) => {
+                setRoleError(message);
+                setRoleSuccess(null);
+              }}
+              onRoleChangeSuccess={(message) => {
+                setRoleSuccess(message);
+                setRoleError(null);
+              }}
+            />
+            <TeamMembersTable
+              members={filteredMembers}
+              allMembers={members}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              canManageTeam={canManageTeam}
+              onMemberUpdated={handleMemberUpdated}
+              onMemberRemoved={handleMemberRemoved}
+              onRoleChangeError={(message) => {
+                setRoleError(message);
+                setRoleSuccess(null);
+              }}
+              onRoleChangeSuccess={(message) => {
+                setRoleSuccess(message);
+                setRoleError(null);
+              }}
+            />
+          </>
+        ) : null}
+      </div>
     </SettingsWorkspacePage>
   );
 }

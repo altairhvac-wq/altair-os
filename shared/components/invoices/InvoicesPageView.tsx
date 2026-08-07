@@ -191,6 +191,7 @@ export function InvoicesPageView({
     resolveDefaultInvoiceWorkQueue(
       initialStatusFilter,
       invoicePageFocus?.focus ?? null,
+      initialInvoices,
     ),
   );
   const [statusFilter, setStatusFilter] = useState<InvoiceListStatusFilter>(
@@ -200,6 +201,7 @@ export function InvoicesPageView({
       const queue = resolveDefaultInvoiceWorkQueue(
         initialStatusFilter,
         invoicePageFocus?.focus ?? null,
+        initialInvoices,
       );
       if (
         initialStatusFilter === "unpaid" ||

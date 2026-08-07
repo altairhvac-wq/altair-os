@@ -46,6 +46,7 @@ export default async function DashboardPage() {
       onboardingChecklist={onboardingChecklist}
       demoDataStatus={demoDataStatus}
       companyTimeZone={companyContext.company.timezone}
+      companyContext={companyContext}
     />
   );
 }

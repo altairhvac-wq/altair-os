@@ -159,7 +159,7 @@ export function PaymentSettingsCard({
 
   const noticeClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
-    : "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
+    : "rounded-none border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
 
   const subtleNoticeClass = northStar
     ? "text-xs text-[#64748B] sm:text-sm"
@@ -280,7 +280,27 @@ export function PaymentSettingsCard({
         <p className={subtleNoticeClass}>{PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE}</p>
       </div>
 
-      {isConnected ? (
+      {isConnected &&
+      stripeAccount.status === "active" &&
+      stripeAccount.chargesEnabled &&
+      stripeAccount.payoutsEnabled &&
+      stripeAccount.onlinePaymentsEnabled &&
+      (cardPaymentsDisplayStatus === null ||
+        CARD_PAYMENTS_DISPLAY_LABELS[cardPaymentsDisplayStatus] ===
+          "Card payments active") ? (
+        /* Everything healthy — the seven-row ledger compresses to one line.
+         * The full detail list below renders only when something is off and
+         * the row-by-row read actually matters. */
+        <p
+          className={`mt-3 text-xs ${northStar ? "text-[#4F4638]" : "text-slate-600"}`}
+        >
+          <span className="font-semibold">Stripe active</span> — charges,
+          payouts, card &amp; online payments all enabled
+          {stripeAccount.lastSyncedAt
+            ? ` · synced ${formatLastSyncedAt(stripeAccount.lastSyncedAt, companyTimezone)}`
+            : null}
+        </p>
+      ) : isConnected ? (
         <dl className={detailListClass}>
           <div className="flex items-baseline justify-between gap-3 py-2 first:pt-0">
             <dt

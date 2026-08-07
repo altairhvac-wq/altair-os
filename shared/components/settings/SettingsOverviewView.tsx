@@ -67,13 +67,15 @@ type SettingsOverviewViewProps = {
   showSystemCheck: boolean;
 };
 
+// Semantic tokens only (altair-tokens.ts) — status dots must carry meaning,
+// never ad-hoc palette hexes. Brass rides the shared brand token.
 const TONE_DOT: Record<OverviewTone, string> = {
-  success: "bg-emerald-500",
-  warning: "bg-amber-500",
-  danger: "bg-rose-500",
-  info: "bg-sky-500",
-  neutral: "bg-slate-400",
-  brass: "bg-[#C9A44D]",
+  success: "bg-altair-success",
+  warning: "bg-altair-warning",
+  danger: "bg-altair-danger",
+  info: "bg-altair-information",
+  neutral: "bg-altair-ink-muted",
+  brass: "bg-altair-brass",
 };
 
 function HealthBanner({
@@ -89,15 +91,15 @@ function HealthBanner({
     <div
       className={`flex min-w-0 items-start gap-3 rounded-none border px-3 py-3 sm:px-4 ${
         healthy
-          ? "border-emerald-200 bg-emerald-50/80"
-          : "border-amber-200 bg-amber-50/80"
+          ? "border-altair-success/30 bg-altair-success-surface"
+          : "border-altair-warning/30 bg-altair-warning-surface"
       }`}
     >
       <span
         className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
           healthy
-            ? "bg-emerald-100 text-emerald-700"
-            : "bg-amber-100 text-amber-800"
+            ? "bg-altair-success/15 text-altair-success-foreground"
+            : "bg-altair-warning/15 text-altair-warning-foreground"
         }`}
       >
         {healthy ? (

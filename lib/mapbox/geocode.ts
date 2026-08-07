@@ -26,6 +26,9 @@ type MapboxGeocodeResponse = {
   features?: MapboxGeocodeFeature[];
 };
 
+/** Bounded wait for a single Mapbox call. See the comment on the fetch below. */
+const GEOCODE_TIMEOUT_MS = 8000;
+
 async function fetchMapboxGeocode(
   address: string,
 ): Promise<GeocodedCoordinates | null> {
@@ -41,9 +44,27 @@ async function fetchMapboxGeocode(
   url.searchParams.set("limit", "1");
   url.searchParams.set("types", "address,place,locality,neighborhood,postcode");
 
+  // Bounded timeout: an unbounded fetch here means a network hiccup (proxy,
+  // DNS, IPv6 stall) on the *server* process never resolves or rejects, and
+  // the dispatch map's "Locating job addresses…" spinner never stops — no
+  // error, no fallback, just forever. That is a real robustness gap, not
+  // just a demo-capture nuisance: fail loud after a bounded wait instead,
+  // matching the pipeline's own "loud failure" principle (docs/BUILD_PLAN.md
+  // Stage 4/8). Investigated 2026-08-07: Mapbox itself answers in ~3ms to a
+  // browser request from this machine with the same token, so a hang here
+  // points at the Node dev-server's own outbound network path, not Mapbox
+  // being down or the token being wrong.
+  //
+  // Intentionally left uncaught here (not wrapped in try/catch): a timeout
+  // or network error propagates out of unstable_cache below WITHOUT being
+  // cached — unstable_cache only stores successful returns — so a transient
+  // failure can't poison the 30-day geocode cache with a false "unmappable"
+  // result for this address. geocodeAddresses() catches it per-address and
+  // reports it as unresolved for just this run.
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(GEOCODE_TIMEOUT_MS),
     // Geocode results are stable; Next fetch cache complements unstable_cache.
     next: { revalidate: 60 * 60 * 24 * 30 },
   });
@@ -81,6 +102,9 @@ const cachedGeocodeAddress = unstable_cache(
 /**
  * Forward-geocode a single address with L1 memory + Next data cache.
  * Returns null when Mapbox is unconfigured, the address is empty, or no match.
+ * Throws on a timeout/network error so the cache layer never stores a false
+ * negative — callers that want a best-effort batch should catch per-address
+ * (see geocodeAddresses).
  */
 export async function geocodeAddress(
   address: string,
@@ -101,6 +125,9 @@ export async function geocodeAddress(
 
 /**
  * Geocode many addresses, deduping by normalized form and preserving input keys.
+ * A single address timing out or erroring is treated as unresolved for this
+ * run only — it never takes down the whole batch (and never poisons the
+ * cache; see fetchMapboxGeocode).
  */
 export async function geocodeAddresses(
   addresses: string[],
@@ -119,9 +146,16 @@ export async function geocodeAddresses(
 
   await Promise.all(
     [...uniqueNormalized.entries()].map(async ([normalized, display]) => {
-      const coords = await geocodeAddress(display);
-      if (coords) {
-        results.set(normalized, coords);
+      try {
+        const coords = await geocodeAddress(display);
+        if (coords) {
+          results.set(normalized, coords);
+        }
+      } catch (error) {
+        console.error("[mapbox.geocode] address failed, marking unresolved", {
+          address: display,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }),
   );

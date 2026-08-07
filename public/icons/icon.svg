@@ -1,107 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Altair">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
-    <linearGradient id="plateBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0C0C0C"/>
-      <stop offset="45%" stop-color="#030303"/>
-      <stop offset="100%" stop-color="#000000"/>
+    <linearGradient id="platinumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F2F4"/>
+      <stop offset="55%" stop-color="#C8CDD3"/>
+      <stop offset="100%" stop-color="#71767D"/>
     </linearGradient>
-    <radialGradient id="plateVignette" cx="50%" cy="34%" r="68%">
-      <stop offset="0%" stop-color="#141414" stop-opacity="0.22"/>
-      <stop offset="55%" stop-color="#000000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.72"/>
-    </radialGradient>
-    <linearGradient id="rimGold" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFF8E8"/>
-      <stop offset="12%" stop-color="#F5E6A3"/>
-      <stop offset="35%" stop-color="#E8C86A"/>
-      <stop offset="60%" stop-color="#C9A227"/>
-      <stop offset="100%" stop-color="#5A4208"/>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6A3"/>
+      <stop offset="55%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#9A7209"/>
     </linearGradient>
-    <linearGradient id="rimSheen" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.82"/>
-      <stop offset="28%" stop-color="#FFFFFF" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <linearGradient id="goldGradSolo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF5B7"/>
+      <stop offset="55%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#B8860B"/>
     </linearGradient>
-    <linearGradient id="goldFace" x1="16%" y1="0%" x2="84%" y2="100%">
-      <stop offset="0%" stop-color="#FFFEF5"/>
-      <stop offset="14%" stop-color="#FFF0A8"/>
-      <stop offset="32%" stop-color="#F0D060"/>
-      <stop offset="58%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#6B4F0A"/>
-    </linearGradient>
-    <linearGradient id="goldHot" x1="22%" y1="0%" x2="78%" y2="55%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.72"/>
-      <stop offset="35%" stop-color="#FFF8D8" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="goldBevel" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.78"/>
-      <stop offset="45%" stop-color="#FFF8D0" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="goldShadow" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.58"/>
-    </linearGradient>
-    <linearGradient id="flare" x1="0%" y1="50%" x2="100%" y2="50%">
-      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0"/>
-      <stop offset="40%" stop-color="#F5E6A3" stop-opacity="0.22"/>
-      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="60%" stop-color="#F5E6A3" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
-      <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer>
-        <feFuncA type="linear" slope="0.03"/>
-      </feComponentTransfer>
-    </filter>
-    <filter id="starGlint">
-      <feGaussianBlur stdDeviation="0.75" result="b"/>
-      <feMerge>
-        <feMergeNode in="b"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-
-  <rect width="512" height="512" rx="112" fill="url(#plateBg)"/>
-  <rect width="512" height="512" rx="112" fill="url(#plateVignette)"/>
-  <rect width="512" height="512" rx="112" filter="url(#grain)"/>
-
-  <rect x="2.25" y="2.25" width="507.5" height="507.5" rx="109.75" fill="none" stroke="url(#rimGold)" stroke-width="4.5"/>
-  <rect x="2.25" y="2.25" width="507.5" height="507.5" rx="109.75" fill="none" stroke="url(#rimSheen)" stroke-width="4.5" opacity="0.92"/>
-  <circle cx="432" cy="82" r="6" fill="#FFFFFF" opacity="0.78" filter="url(#starGlint)"/>
-
-  <g id="mark">
-    <g transform="translate(256 198) scale(5.92) translate(-40 -32)">
-      <path fill="url(#goldShadow)" d="M40 8L63 60H55L48 41H32L25 60H17L40 8Z" opacity="0.42"/>
-      <path fill="url(#goldFace)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
-      <path fill="url(#goldBevel)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
-      <path fill="url(#goldHot)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
-      <g transform="translate(40 38) scale(1.12) translate(-40 -38)">
-        <path fill="url(#goldFace)" d="M40 26L43.2 36.5L54 38L43.2 39.5L40 50L36.8 39.5L26 38L36.8 36.5L40 26Z"/>
-        <path fill="url(#goldHot)" d="M40 26L43.2 36.5L54 38L43.2 39.5L40 50L36.8 39.5L26 38L36.8 36.5L40 26Z" opacity="0.55"/>
-        <path fill="none" stroke="url(#goldFace)" stroke-width="1.85" stroke-linecap="round" d="M28 38.5Q40 42.5 52 38.5"/>
-        <circle cx="40" cy="38" r="1.75" fill="#FFFFFF" opacity="1" filter="url(#starGlint)"/>
-        <path fill="#FFFFFF" opacity="0.55" d="M40 35.8L41.1 38L40 40.2L38.9 38Z"/>
-      </g>
-    </g>
+</defs>
+  <g id="gear-ring">
+    <path d="M 100.00,172.00 A 72.00,72.00 0 0 1 100.00,28.00" fill="none" stroke="url(#platinumGrad)" stroke-width="12.00"/>
+    <path d="M 100.00,28.00 A 72.00,72.00 0 0 1 100.00,172.00" fill="none" stroke="url(#goldGrad)" stroke-width="12.00"/>
+    <path d="M 112.87,176.93 L 111.21,191.31 L 88.79,191.31 L 87.13,176.93 Z" fill="url(#platinumGrad)"/><path d="M 85.79,176.69 L 79.30,189.64 L 58.23,181.97 L 61.59,167.89 Z" fill="url(#platinumGrad)"/><path d="M 60.41,167.21 L 49.89,177.16 L 32.72,162.74 L 40.69,150.66 Z" fill="url(#platinumGrad)"/><path d="M 39.81,149.61 L 26.53,155.37 L 15.31,135.95 L 26.94,127.32 Z" fill="url(#platinumGrad)"/><path d="M 26.47,126.04 L 12.02,126.90 L 8.13,104.81 L 22.00,100.68 Z" fill="url(#platinumGrad)"/><path d="M 22.00,99.32 L 8.13,95.19 L 12.02,73.10 L 26.47,73.96 Z" fill="url(#platinumGrad)"/><path d="M 26.94,72.68 L 15.31,64.05 L 26.53,44.63 L 39.81,50.39 Z" fill="url(#platinumGrad)"/><path d="M 40.69,49.34 L 32.72,37.26 L 49.89,22.84 L 60.41,32.79 Z" fill="url(#platinumGrad)"/>
+    <path d="M 139.59,32.79 L 150.11,22.84 L 167.28,37.26 L 159.31,49.34 Z" fill="url(#goldGrad)"/><path d="M 160.19,50.39 L 173.47,44.63 L 184.69,64.05 L 173.06,72.68 Z" fill="url(#goldGrad)"/><path d="M 173.53,73.96 L 187.98,73.10 L 191.87,95.19 L 178.00,99.32 Z" fill="url(#goldGrad)"/><path d="M 178.00,100.68 L 191.87,104.81 L 187.98,126.90 L 173.53,126.04 Z" fill="url(#goldGrad)"/><path d="M 173.06,127.32 L 184.69,135.95 L 173.47,155.37 L 160.19,149.61 Z" fill="url(#goldGrad)"/><path d="M 159.31,150.66 L 167.28,162.74 L 150.11,177.16 L 139.59,167.21 Z" fill="url(#goldGrad)"/><path d="M 138.41,167.89 L 141.77,181.97 L 120.70,189.64 L 114.21,176.69 Z" fill="url(#goldGrad)"/>
   </g>
-
-  <text
-    x="256"
-    y="388"
-    text-anchor="middle"
-    fill="url(#goldFace)"
-    font-family="Georgia, Times New Roman, Palatino Linotype, serif"
-    font-size="52"
-    font-weight="600"
-    letter-spacing="0.32em"
-  >ALTAIR</text>
-
-  <ellipse cx="256" cy="418" rx="132" ry="2.6" fill="url(#flare)"/>
-  <line x1="132" y1="418" x2="380" y2="418" stroke="url(#flare)" stroke-width="1.45" opacity="0.82"/>
-  <circle cx="256" cy="418" r="2.8" fill="#FFFFFF" opacity="0.95" filter="url(#starGlint)"/>
+  <g id="a-monogram">
+    <path d="M 90.19,29.02 L 109.81,38.98 L 45.81,164.98 L 26.19,155.02 Z" fill="url(#platinumGrad)"/>
+    <path d="M 90.19,38.98 L 109.81,29.02 L 173.81,155.02 L 154.19,164.98 Z" fill="url(#goldGrad)"/>
+    <path d="M 44.22,120 L 155.78,120 L 163.91,136 L 36.09,136 Z" fill="url(#goldGrad)"/>
+  </g>
 </svg>

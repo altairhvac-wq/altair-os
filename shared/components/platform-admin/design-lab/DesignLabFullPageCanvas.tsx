@@ -97,13 +97,13 @@ export function DesignLabFullPageCanvas({
           <div className="px-4 py-4">
             <p
               className="text-sm font-bold"
-              style={{ color: "var(--north-star-text-light)" }}
+              style={{ color: "var(--north-star-sidebar-link-active)" }}
             >
               Altair HVAC
             </p>
             <p
               className="mt-0.5 text-[11px]"
-              style={{ color: "var(--north-star-text-light-muted)" }}
+              style={{ color: "var(--north-star-sidebar-link)" }}
             >
               Demo workspace
             </p>
@@ -165,13 +165,13 @@ export function DesignLabFullPageCanvas({
             <div className="min-w-0">
               <p
                 className="truncate text-sm font-semibold"
-                style={{ color: "var(--north-star-text-light)" }}
+                style={{ color: "var(--north-star-topbar-heading)" }}
               >
                 Workspace
               </p>
               <p
                 className="truncate text-[11px]"
-                style={{ color: "var(--north-star-text-light-muted)" }}
+                style={{ color: "var(--north-star-topbar-subcopy)" }}
               >
                 Design Lab canvas · live chrome tokens
               </p>

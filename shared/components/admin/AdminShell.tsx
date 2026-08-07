@@ -22,6 +22,7 @@ import { FounderMarketingDisplayProvider } from "@/shared/components/display/Fou
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
 import { SidebarNav } from "./SidebarNav";
+import { buildDesignLabShineLiveCss } from "@/shared/components/platform-admin/design-lab/design-lab-live-vars";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -32,6 +33,13 @@ type AdminShellProps = {
   showPlatformAdminNav?: boolean;
   hideDemoPrefixes?: boolean;
   billingAccess?: CompanyBillingAccess | null;
+  /**
+   * Optional Design Lab Stage 3 live token overrides. Applied as inline CSS
+   * custom properties on `.admin-north-star-shell` during SSR so the first
+   * paint matches the promoted theme (no default-then-override flash).
+   * May include `--token--shine` companion gradients.
+   */
+  liveThemeStyle?: React.CSSProperties | null;
 };
 
 export function AdminShell({
@@ -43,6 +51,7 @@ export function AdminShell({
   showPlatformAdminNav = false,
   hideDemoPrefixes = false,
   billingAccess = null,
+  liveThemeStyle = null,
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
@@ -66,10 +75,23 @@ export function AdminShell({
     setQuickNavOpen(false);
   }, [pathname]);
 
+  const hasLiveTheme = Boolean(liveThemeStyle);
+
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
-      <div className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden md:flex-row">
+      {hasLiveTheme ? (
+        <style
+          // Shine companions need selector rules (background-image on chrome
+          // planes). Inline CSS vars alone cannot retarget `background:` shorthand.
+          dangerouslySetInnerHTML={{ __html: buildDesignLabShineLiveCss() }}
+        />
+      ) : null}
+      <div
+        className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden md:flex-row"
+        style={liveThemeStyle ?? undefined}
+        data-design-lab-live={hasLiveTheme ? "true" : undefined}
+      >
       {hideAdminNavigation ? (
         <AdminNavSkeleton variant="desktop-sidebar" />
       ) : (
@@ -107,7 +129,7 @@ export function AdminShell({
         </div>
       ) : null}
 
-      <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
+      <main data-testid="admin-shell-main" className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
           {redirectPending ? <AdminShellContentLoadingState /> : children}

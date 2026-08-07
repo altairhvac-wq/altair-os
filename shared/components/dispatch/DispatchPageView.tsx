@@ -323,6 +323,7 @@ export function DispatchPageView({
       fillViewport
       density="compact"
       className="h-[calc(100dvh-7rem)] min-h-0 overflow-hidden max-md:h-auto max-md:min-h-0 max-md:overflow-visible"
+      data-testid="page-dispatch"
     >
       <MasterPageCanvas width="wide" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-md:overflow-visible">
         <div

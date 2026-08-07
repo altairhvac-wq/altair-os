@@ -162,6 +162,7 @@ export function SalesHubPageView({
       title="Sales"
       subtitle={hubSubtitle(activeTab)}
       density="compact"
+      data-testid="page-sales"
       headerSurfaceVariant="default"
       headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:text-lg"
       headerSubtitleClassName="min-w-0 truncate text-[11px] leading-snug text-altair-ink-on-paper-muted"

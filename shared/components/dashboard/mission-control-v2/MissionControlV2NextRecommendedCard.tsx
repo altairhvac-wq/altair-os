@@ -28,7 +28,7 @@ function NextRecommendedCaughtUp() {
 
   return (
     <div
-      className={`relative isolate min-h-[9.75rem] overflow-hidden rounded-[var(--radius-panel)] border border-[var(--north-star-border)]/50 bg-[var(--north-star-content-well)] shadow-sm ${altairMcCardPadClass}`}
+      className={`relative isolate min-h-[9.75rem] overflow-hidden rounded-[var(--radius-panel)] border border-[var(--north-star-plate-border)]/50 bg-[var(--north-star-caught-up-fill)] shadow-sm ${altairMcCardPadClass}`}
     >
       {showIllustration ? (
         <Image
@@ -42,20 +42,20 @@ function NextRecommendedCaughtUp() {
           onError={() => setShowIllustration(false)}
         />
       ) : null}
-      {/* Left scrim: readable copy over the art; solid well remains if image is gone. */}
+      {/* Left scrim: readable copy over the art; solid fill remains if image is gone. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[72%] bg-gradient-to-r from-[var(--north-star-content-well)] via-[var(--north-star-content-well)]/90 to-transparent"
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[72%] bg-gradient-to-r from-[var(--north-star-caught-up-fill)] via-[var(--north-star-caught-up-fill)]/90 to-transparent"
       />
       <div className="relative z-[2] flex max-w-[min(100%,17.5rem)] items-start gap-3 sm:max-w-[19rem]">
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-success text-white">
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[var(--north-star-text-light)]">
+          <p className="text-sm font-semibold text-[var(--north-star-section-title)]">
             You&apos;re all caught up!
           </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-[var(--north-star-text-light-muted)]">
+          <p className="mt-0.5 text-xs leading-relaxed text-[var(--north-star-section-secondary)]">
             Required setup is done — nothing waiting in the onboarding path.
           </p>
         </div>

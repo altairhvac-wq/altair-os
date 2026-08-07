@@ -1,15 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Altair">
-  <rect width="200" height="140" fill="#0A0A0A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200">
   <defs>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="platinumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F2F4"/>
+      <stop offset="55%" stop-color="#C8CDD3"/>
+      <stop offset="100%" stop-color="#71767D"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#F5E6A3"/>
-      <stop offset="42%" stop-color="#D4AF37"/>
+      <stop offset="55%" stop-color="#D4AF37"/>
       <stop offset="100%" stop-color="#9A7209"/>
     </linearGradient>
-  </defs>
-  <g transform="translate(100 44) scale(0.95) translate(-40 -32)">
-    <path fill="url(#gold)" d="M37.5 2h5v20H37.5z M37.5 42h5v20H37.5z M40 29.5h25v5H40z M40 14.5l3.75 11.875 11.875 3.125-11.875 3.125-3.75 11.875-3.75-11.875-11.875-3.125 11.875-3.125z"/>
+    <linearGradient id="goldGradSolo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF5B7"/>
+      <stop offset="55%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+</defs>
+  <rect x="0" y="0" width="600" height="200" rx="18" fill="#0A0A0A"/>
+  <g transform="translate(20,0) scale(0.62)">
+  <g id="gear-ring">
+    <path d="M 100.00,172.00 A 72.00,72.00 0 0 1 100.00,28.00" fill="none" stroke="url(#platinumGrad)" stroke-width="12.00"/>
+    <path d="M 100.00,28.00 A 72.00,72.00 0 0 1 100.00,172.00" fill="none" stroke="url(#goldGrad)" stroke-width="12.00"/>
+    <path d="M 112.87,176.93 L 111.21,191.31 L 88.79,191.31 L 87.13,176.93 Z" fill="url(#platinumGrad)"/><path d="M 85.79,176.69 L 79.30,189.64 L 58.23,181.97 L 61.59,167.89 Z" fill="url(#platinumGrad)"/><path d="M 60.41,167.21 L 49.89,177.16 L 32.72,162.74 L 40.69,150.66 Z" fill="url(#platinumGrad)"/><path d="M 39.81,149.61 L 26.53,155.37 L 15.31,135.95 L 26.94,127.32 Z" fill="url(#platinumGrad)"/><path d="M 26.47,126.04 L 12.02,126.90 L 8.13,104.81 L 22.00,100.68 Z" fill="url(#platinumGrad)"/><path d="M 22.00,99.32 L 8.13,95.19 L 12.02,73.10 L 26.47,73.96 Z" fill="url(#platinumGrad)"/><path d="M 26.94,72.68 L 15.31,64.05 L 26.53,44.63 L 39.81,50.39 Z" fill="url(#platinumGrad)"/><path d="M 40.69,49.34 L 32.72,37.26 L 49.89,22.84 L 60.41,32.79 Z" fill="url(#platinumGrad)"/>
+    <path d="M 139.59,32.79 L 150.11,22.84 L 167.28,37.26 L 159.31,49.34 Z" fill="url(#goldGrad)"/><path d="M 160.19,50.39 L 173.47,44.63 L 184.69,64.05 L 173.06,72.68 Z" fill="url(#goldGrad)"/><path d="M 173.53,73.96 L 187.98,73.10 L 191.87,95.19 L 178.00,99.32 Z" fill="url(#goldGrad)"/><path d="M 178.00,100.68 L 191.87,104.81 L 187.98,126.90 L 173.53,126.04 Z" fill="url(#goldGrad)"/><path d="M 173.06,127.32 L 184.69,135.95 L 173.47,155.37 L 160.19,149.61 Z" fill="url(#goldGrad)"/><path d="M 159.31,150.66 L 167.28,162.74 L 150.11,177.16 L 139.59,167.21 Z" fill="url(#goldGrad)"/><path d="M 138.41,167.89 L 141.77,181.97 L 120.70,189.64 L 114.21,176.69 Z" fill="url(#goldGrad)"/>
   </g>
-  <text x="100" y="108" text-anchor="middle" fill="url(#gold)" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="600" letter-spacing="0.38em">ALTAIR</text>
-  <line x1="72" y1="116" x2="128" y2="116" stroke="url(#gold)" stroke-width="0.75" opacity="0.55"/>
+  <g id="a-monogram">
+    <path d="M 90.19,29.02 L 109.81,38.98 L 45.81,164.98 L 26.19,155.02 Z" fill="url(#platinumGrad)"/>
+    <path d="M 90.19,38.98 L 109.81,29.02 L 173.81,155.02 L 154.19,164.98 Z" fill="url(#goldGrad)"/>
+    <path d="M 44.22,120 L 155.78,120 L 163.91,136 L 36.09,136 Z" fill="url(#goldGrad)"/>
+  </g>
+  </g>
+  <text x="300" y="60" font-family="Michroma, sans-serif" font-size="46" letter-spacing="10" fill="#C8CDD3" text-anchor="middle">ALTAIR</text>
+  <line x1="220" y1="82" x2="380" y2="82" stroke="#D4AF37" stroke-width="1.25"/>
+  <text x="300" y="106" font-family="Inter, sans-serif" font-size="15" letter-spacing="6" fill="#D4AF37" text-anchor="middle">OPERATING SYSTEM</text>
 </svg>

@@ -229,7 +229,9 @@ export function InvoiceDetailActionBar({
   ) : null;
 
   const successBanner = successMessage ? (
-    <SettingsAlertBanner tone="success">{successMessage}</SettingsAlertBanner>
+    <div data-testid="invoice-send-success">
+      <SettingsAlertBanner tone="success">{successMessage}</SettingsAlertBanner>
+    </div>
   ) : null;
 
   const actionsDisabled = workflowBusy;
@@ -320,6 +322,7 @@ export function InvoiceDetailActionBar({
                     : customerEmailBlockReason ?? undefined
                 }
                 className={sendButtonClass}
+                data-testid="invoice-send-button"
               >
                 <Send className="h-4 w-4" />
                 {isPending ? "Sending…" : "Send invoice"}

@@ -672,7 +672,7 @@ export function MissionControlV2View({
       <div className="mc-dashboard-content-well flex flex-col bg-[var(--north-star-content-well)]">
         {showSampleDataDiscovery ? (
           <p
-            className={`border-b border-[var(--north-star-border)] px-4 py-3 text-sm text-altair-paper/70 sm:px-5`}
+            className={`border-b border-[var(--north-star-section-divider)] px-4 py-3 text-sm text-altair-paper/70 sm:px-5`}
           >
             Need example data?{" "}
             <Link
@@ -686,7 +686,7 @@ export function MissionControlV2View({
         ) : null}
 
         {/* Exception board — severity-ranked buckets only when they need attention */}
-        <div className="border-b border-[var(--north-star-border)]/40 px-4 py-4 sm:px-5">
+        <div className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5">
           <MissionControlV2ExceptionCluster
             buckets={exceptionBuckets}
             totalCount={totalAttentionCount}
@@ -695,7 +695,7 @@ export function MissionControlV2View({
         </div>
 
         {/* Informational buckets — schedule / activity, not in critical order */}
-        <div className="border-b border-[var(--north-star-border)]/40 px-4 py-4 sm:px-5">
+        <div className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5">
           <MissionControlV2InformationalCluster
             scheduleRows={resolvedScheduleRows}
             activityRows={resolvedActivityRows}

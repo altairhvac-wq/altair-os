@@ -5,11 +5,13 @@ import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
+import { getLiveDesignLabTheme } from "@/lib/database/queries/design-lab-themes";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
 } from "@/lib/database/services/notifications";
 import { requireCompanyBillingAppAccess } from "@/lib/saas-billing/require-app-access";
+import { buildDesignLabLiveStyleVars } from "@/shared/components/platform-admin/design-lab/design-lab-live-vars";
 
 export default async function AdminLayout({
   children,
@@ -38,18 +40,24 @@ export default async function AdminLayout({
     companyContext.company.id,
   );
 
-  const [notifications, unreadNotificationCount] = await Promise.all([
-    getUserNotifications(companyContext.company.id, companyContext.user.id, {
-      limit: 20,
-    }),
-    getUnreadNotificationCount(
-      companyContext.company.id,
-      companyContext.user.id,
-    ),
-  ]);
+  const [notifications, unreadNotificationCount, liveTheme] =
+    await Promise.all([
+      getUserNotifications(companyContext.company.id, companyContext.user.id, {
+        limit: 20,
+      }),
+      getUnreadNotificationCount(
+        companyContext.company.id,
+        companyContext.user.id,
+      ),
+      getLiveDesignLabTheme(companyContext.company.id),
+    ]);
 
   const showPlatformAdminNav = canAccessPlatformAdmin(user);
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
+  // Fail closed: invalid/empty token maps yield null → default product chrome.
+  const liveThemeStyle = liveTheme
+    ? buildDesignLabLiveStyleVars(liveTheme.tokens)
+    : null;
 
   return (
     <AdminShell
@@ -60,6 +68,7 @@ export default async function AdminLayout({
       showPlatformAdminNav={showPlatformAdminNav}
       hideDemoPrefixes={hideDemoPrefixes}
       billingAccess={billingAccess}
+      liveThemeStyle={liveThemeStyle}
     >
       {children}
     </AdminShell>

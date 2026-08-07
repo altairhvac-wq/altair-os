@@ -526,6 +526,7 @@ export function JobDetailPageView({
     <MasterDetailPageLayout
       canvasWidth={northStar ? "detailWide" : "detail"}
       backLink={northStar ? undefined : backToJobsLink}
+      data-testid="page-job-detail"
     >
       <JobDetailHashScroll />
 

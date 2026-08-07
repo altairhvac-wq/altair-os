@@ -415,7 +415,9 @@ export type AdminNavHref =
   | "/payments"
   | "/expenses"
   | "/time-clock"
+  | "/payroll"
   | "/network"
+  | "/community"
   | "/reports"
   | "/alpha-tracker"
   | "/settings";
@@ -438,7 +440,9 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/payments",
   "/expenses",
   "/time-clock",
+  "/payroll",
   "/network",
+  "/community",
   "/reports",
   "/alpha-tracker",
   "/settings",
@@ -483,8 +487,10 @@ export function canAccessAdminNavItem(
     case "/expenses":
       return true;
     case "/time-clock":
+    case "/payroll":
       return canViewCompanyTimeEntries(context);
     case "/network":
+    case "/community":
       return (
         permissions.dispatchJobs ||
         permissions.manageCompany ||
@@ -529,8 +535,13 @@ export function getAccessibleAdminNavHrefs(
     "/invoices",
     "/payments",
     "/expenses",
+    // /time-clock and /network remain valid AdminNavHrefs for redirects /
+    // deep links, but the sidebar entries are /payroll and /community
+    // (ALTAIR_ARCHITECTURE.md naming law: one id drives route + label).
     "/time-clock",
+    "/payroll",
     "/network",
+    "/community",
     "/reports",
     "/alpha-tracker",
     "/settings",
@@ -581,7 +592,8 @@ export function canAccessAppRedirectPath(
     path.startsWith("/tech/") ||
     path.startsWith("/setup") ||
     path.startsWith("/expenses") ||
-    path.startsWith("/time")
+    path.startsWith("/time") ||
+    path.startsWith("/payroll")
   ) {
     return true;
   }
@@ -653,7 +665,7 @@ export function canAccessAppRedirectPath(
     return context.permissions.dispatchJobs;
   }
 
-  if (path.startsWith("/network")) {
+  if (path.startsWith("/network") || path.startsWith("/community")) {
     const permissions = context.permissions;
     return (
       permissions.dispatchJobs ||

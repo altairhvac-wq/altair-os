@@ -1,8 +1,8 @@
 import {
   Bell,
   Briefcase,
-  CalendarDays,
   Clock,
+  Home,
   Receipt,
   User,
   type LucideIcon,
@@ -21,9 +21,9 @@ export type TechnicianNavItem = {
 export const technicianNavItems: TechnicianNavItem[] = [
   {
     id: "today",
-    label: "Today",
+    label: "Home",
     href: "/technician",
-    icon: CalendarDays,
+    icon: Home,
     enabled: true,
   },
   {
@@ -82,7 +82,7 @@ export function getTechnicianNavItemForPath(
   const match = items.find(
     (item) =>
       item.href === "/technician"
-        ? pathname === "/technician"
+        ? pathname === "/technician" || pathname.startsWith("/technician/")
         : pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 

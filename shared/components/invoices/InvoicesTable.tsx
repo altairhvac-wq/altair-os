@@ -169,6 +169,7 @@ export function InvoicesTable({
                       selected={isSelected}
                       onClick={() => onSelect(invoice)}
                       className={northStar ? lt.tableRow : undefined}
+                      data-testid="invoice-row"
                     >
                       {selectionEnabled ? (
                         <AltairTableCell>

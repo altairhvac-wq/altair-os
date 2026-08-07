@@ -4,7 +4,7 @@ type DesignLabEditableTargetProps = {
   targetId: DesignLabEditTargetId;
   selectedTargetId: DesignLabEditTargetId | null;
   onSelectTarget: (id: DesignLabEditTargetId) => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
   as?: "div" | "button" | "span" | "p" | "h3" | "h4" | "li" | "aside" | "header" | "nav";

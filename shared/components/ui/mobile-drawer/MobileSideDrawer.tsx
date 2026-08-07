@@ -23,6 +23,7 @@ const zIndexClass: Record<40 | 50 | 60, string> = {
 /**
  * Full-height left-edge drawer for mobile quick navigation.
  * Reuses the same portal, scroll-lock, Escape, and focus-trap mechanics as MobileSheet.
+ * Premium dark chrome — matches the mobile launcher wallpaper and brand gold.
  */
 export function MobileSideDrawer({
   open,
@@ -78,13 +79,18 @@ function MobileSideDrawerPanel({
         type="button"
         aria-label="Close quick navigation"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 transition-opacity duration-200 motion-reduce:transition-none"
+        className="absolute inset-0 bg-black/55 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none"
       />
       <div
         ref={panelRef}
         tabIndex={-1}
         data-mobile-sheet-panel
-        className="mobile-side-drawer-panel relative z-10 flex h-full w-[min(88vw,22rem)] max-w-full flex-col overflow-hidden border-r border-slate-200 bg-white shadow-xl outline-none"
+        className="mobile-side-drawer-panel relative z-10 flex h-full w-[min(64vw,14rem)] max-w-full flex-col overflow-hidden border-r border-white/10 shadow-2xl outline-none"
+        style={{
+          backgroundColor: "#161718",
+          backgroundImage:
+            "linear-gradient(170deg, #232426 0%, #161718 55%, #0c0c0d 100%)",
+        }}
       >
         {children}
       </div>

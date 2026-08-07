@@ -1,0 +1,177 @@
+import Link from "next/link";
+import {
+  Bell,
+  CalendarDays,
+  Clock,
+  Receipt,
+  type LucideIcon,
+} from "lucide-react";
+
+/**
+ * Technician home — iOS-homescreen-style launcher.
+ * Two glass widgets (Today / Time clock) over a dark graphite wallpaper,
+ * then an app-icon grid of the technician tools. Every number shown is
+ * real data passed from the server page — no fabricated stats.
+ */
+
+type TechnicianHomeTile = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  chipClass: string;
+};
+
+const HOME_TILES: TechnicianHomeTile[] = [
+  {
+    href: "/technician/schedule",
+    label: "Schedule",
+    icon: CalendarDays,
+    chipClass: "bg-gradient-to-br from-[#e3cb7d] via-[#d4af37] to-[#8a6324]",
+  },
+  {
+    href: "/tech/time",
+    label: "Time",
+    icon: Clock,
+    chipClass: "bg-gradient-to-br from-[#67e8f9] via-[#22d3ee] to-[#0e7490]",
+  },
+  {
+    href: "/tech/receipts",
+    label: "Receipts",
+    icon: Receipt,
+    chipClass: "bg-gradient-to-br from-[#6ee7b7] via-[#34d399] to-[#047857]",
+  },
+  {
+    href: "/tech/notifications",
+    label: "Alerts",
+    icon: Bell,
+    chipClass: "bg-gradient-to-br from-[#fcd34d] via-[#f59e0b] to-[#b45309]",
+  },
+];
+
+type TechnicianHomeScreenProps = {
+  greeting: string;
+  weekdayLabel: string;
+  monthLabel: string;
+  dayOfMonth: number;
+  openJobCount: number;
+  completedTodayCount: number;
+  nextJobTimeLabel: string | null;
+  nextJobCustomerName: string | null;
+  timeStateLabel: string;
+  timeStateDotClass: string;
+  clockedSinceLabel: string | null;
+};
+
+export function TechnicianHomeScreen({
+  greeting,
+  weekdayLabel,
+  monthLabel,
+  dayOfMonth,
+  openJobCount,
+  completedTodayCount,
+  nextJobTimeLabel,
+  nextJobCustomerName,
+  timeStateLabel,
+  timeStateDotClass,
+  clockedSinceLabel,
+}: TechnicianHomeScreenProps) {
+  const openJobsLine =
+    openJobCount === 0 && completedTodayCount === 0
+      ? "Nothing scheduled"
+      : `${openJobCount} open job${openJobCount === 1 ? "" : "s"}${
+          completedTodayCount > 0
+            ? ` · ${completedTodayCount} done`
+            : ""
+        }`;
+
+  return (
+    <div className="-mx-4 -mt-4 -mb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#34353a_0%,#1c1d1f_48%,#0a0a0b_100%)] px-5 pb-[max(8rem,calc(7rem+env(safe-area-inset-bottom,0px)))] pt-6 sm:-mx-5 sm:-mt-5">
+      {/* Greeting */}
+      <header className="px-0.5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">
+          {weekdayLabel}, {monthLabel} {dayOfMonth}
+        </p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
+          {greeting}
+        </h1>
+      </header>
+
+      {/* Widgets */}
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <Link
+          href="/technician/schedule"
+          className="group flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d4af37]">
+            Today
+          </p>
+          <p className="mt-1 text-4xl font-bold tabular-nums leading-none text-white">
+            {dayOfMonth}
+          </p>
+          <div className="mt-auto space-y-0.5 pt-3">
+            <p className="text-[13px] font-semibold text-[#e6e8eb]">
+              {openJobsLine}
+            </p>
+            {nextJobTimeLabel ? (
+              <p className="truncate text-xs text-[#9b9fa6]">
+                Next · {nextJobTimeLabel}
+                {nextJobCustomerName ? ` · ${nextJobCustomerName}` : ""}
+              </p>
+            ) : null}
+          </div>
+        </Link>
+
+        <Link
+          href="/tech/time"
+          className="group flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d4af37]">
+            Time clock
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${timeStateDotClass}`}
+              aria-hidden
+            />
+            <p className="text-lg font-bold leading-tight text-white">
+              {timeStateLabel}
+            </p>
+          </div>
+          <div className="mt-auto pt-3">
+            <p className="text-xs text-[#9b9fa6]">
+              {clockedSinceLabel
+                ? `Since ${clockedSinceLabel}`
+                : "Tap to open the time clock"}
+            </p>
+          </div>
+        </Link>
+      </div>
+
+      {/* App grid */}
+      <nav aria-label="Technician tools" className="mt-8">
+        <ul className="grid grid-cols-4 gap-x-2 gap-y-6">
+          {HOME_TILES.map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <li key={tile.href} className="min-w-0">
+                <Link
+                  href={tile.href}
+                  className="group flex touch-manipulation flex-col items-center gap-1.5 outline-none"
+                >
+                  <span
+                    className={`flex h-16 w-16 items-center justify-center rounded-[1.35rem] ${tile.chipClass} shadow-[0_8px_20px_-8px_rgb(0_0_0_/_0.6)] ring-1 ring-inset ring-white/20 transition-transform group-active:scale-95`}
+                  >
+                    <Icon className="h-7 w-7 text-white drop-shadow-sm" aria-hidden />
+                  </span>
+                  <span className="w-full truncate text-center text-[11px] font-medium text-[#d0d4da]">
+                    {tile.label}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+}

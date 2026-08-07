@@ -17,6 +17,8 @@ export type MasterShellPageProps = {
   /** Fill remaining viewport below admin chrome (list pages) */
   fillViewport?: boolean;
   className?: string;
+  /** Stable hook for Playwright / demo-tool targeting */
+  "data-testid"?: string;
 };
 
 export function MasterShellPage({
@@ -25,9 +27,11 @@ export function MasterShellPage({
   stackGapClassName,
   fillViewport = false,
   className = "",
+  "data-testid": testId,
 }: MasterShellPageProps) {
   return (
     <div
+      data-testid={testId}
       className={`mx-auto flex w-full min-w-0 max-w-full flex-col pb-2 ${stackGapClassName ?? masterShellStackGap[density]} ${fillViewport ? masterShellViewportFillClass : ""} ${className}`}
     >
       {children}

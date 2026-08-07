@@ -127,18 +127,18 @@ export function DesignLabCompactPreview({
                 style={designLabFillStyle("--north-star-topbar")}
               >
                 <DesignLabTokenAnchor
-                  tokenKey="northStarTextLight"
+                  tokenKey="northStarTopbarHeading"
                   as="p"
                   className="text-sm font-bold"
-                  style={{ color: "var(--north-star-text-light)" }}
+                  style={{ color: "var(--north-star-topbar-heading)" }}
                 >
                   Dashboard
                 </DesignLabTokenAnchor>
                 <DesignLabTokenAnchor
-                  tokenKey="northStarTextLightMuted"
+                  tokenKey="northStarTopbarSubcopy"
                   as="p"
                   className="text-xs"
-                  style={{ color: "var(--north-star-text-light-muted)" }}
+                  style={{ color: "var(--north-star-topbar-subcopy)" }}
                 >
                   Live chrome token preview
                 </DesignLabTokenAnchor>
@@ -244,7 +244,7 @@ export function DesignLabCompactPreview({
                     >
                       <p
                         className="text-[10px] font-semibold uppercase tracking-[0.14em]"
-                        style={{ color: "var(--north-star-text-light)" }}
+                        style={{ color: "var(--north-star-topbar-heading)" }}
                       >
                         Chrome panel
                       </p>

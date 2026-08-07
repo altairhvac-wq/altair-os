@@ -1,5 +1,6 @@
 import {
   DESIGN_LAB_COLOR_FIELDS,
+  DESIGN_LAB_CSS_VAR_BY_KEY,
   LIVE_CHROME_DESIGN_LAB_DEFAULTS,
   isValidDesignLabColor,
   normalizeDesignLabColor,
@@ -42,6 +43,53 @@ export function serializeDesignLabTokens(
 }
 
 /**
+ * Seed role-split tokens from legacy bundled vars when a saved theme still
+ * stores `--north-star-text-light` / `--north-star-text-light-muted` /
+ * `--north-star-border` / `--north-star-content-well` only.
+ */
+function applyLegacyTokenMigrations(
+  tokens: Record<string, string>,
+  next: DesignLabColors,
+): number {
+  let seeded = 0;
+
+  const take = (cssVar: string): string | null => {
+    const raw = tokens[cssVar];
+    if (typeof raw !== "string") return null;
+    const normalized = normalizeDesignLabColor(raw);
+    if (!normalized || !isValidDesignLabColor(normalized)) return null;
+    return normalized;
+  };
+
+  const seedIfUnset = (key: keyof DesignLabColors, value: string | null) => {
+    if (!value) return;
+    if (tokens[DESIGN_LAB_CSS_VAR_BY_KEY[key]]) return;
+    next[key] = value;
+    seeded += 1;
+  };
+
+  const legacyLight = take("--north-star-text-light");
+  seedIfUnset("northStarTopbarHeading", legacyLight);
+  seedIfUnset("northStarSectionTitle", legacyLight);
+  seedIfUnset("northStarLinkHover", legacyLight);
+
+  const legacyMuted = take("--north-star-text-light-muted");
+  seedIfUnset("northStarTopbarSubcopy", legacyMuted);
+  seedIfUnset("northStarSectionSecondary", legacyMuted);
+  seedIfUnset("northStarLink", legacyMuted);
+  seedIfUnset("northStarTopbarIcon", legacyMuted);
+
+  const legacyBorder = take("--north-star-border");
+  seedIfUnset("northStarSectionDivider", legacyBorder);
+  seedIfUnset("northStarPlateBorder", legacyBorder);
+
+  const legacyWell = take("--north-star-content-well");
+  seedIfUnset("northStarCaughtUpFill", legacyWell);
+
+  return seeded;
+}
+
+/**
  * Rebuild editor colors from a CSS-var-keyed token map.
  * Unknown keys are ignored; missing keys fall back to live chrome defaults.
  * Shine companions are ignored here — use `parseDesignLabShines`.
@@ -70,6 +118,8 @@ export function parseDesignLabTokens(
     next[key] = normalized;
     matched += 1;
   }
+
+  matched += applyLegacyTokenMigrations(tokens, next);
 
   if (matched === 0) {
     return null;

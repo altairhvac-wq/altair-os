@@ -42,6 +42,7 @@ export function InvoicesStatStrip({
               <dd className="m-0">
                 <button
                   type="button"
+                  data-testid={`invoice-queue-${filterQueue}`}
                   onClick={() => onFilterQueue(filterQueue)}
                   aria-label={ariaLabel}
                   aria-pressed={isActive}

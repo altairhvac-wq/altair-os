@@ -1,12 +1,11 @@
-import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { ColorLabView } from "@/shared/components/altair-shell-color-lab-v1/ColorLabView";
+import { redirect } from "next/navigation";
 
-export default async function AltairShellColorLabV1Page() {
-  const companyContext = await getActiveCompanyContext();
-
-  if (!companyContext) {
-    return null;
-  }
-
-  return <ColorLabView companyContext={companyContext} />;
+/**
+ * Retired shell experiment. Original page archived at
+ * docs/design-archive/concept-altair-shell-color-lab-v1-page.tsx.bak — route neutralized per
+ * ALTAIR_ARCHITECTURE.md §5. Delete this directory (and the matching
+ * shared/components/altair-shell-color-lab-v1/ dir) in the next on-machine cleanup pass.
+ */
+export default function RetiredExperimentPage() {
+  redirect("/");
 }

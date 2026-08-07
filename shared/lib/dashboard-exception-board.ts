@@ -23,7 +23,12 @@ export type DashboardExceptionBucketId =
   | "team"
   | "customers";
 
-export type DashboardExceptionBucketTone = "warning" | "danger" | "info";
+/**
+ * Universal count-based urgency for every needs-attention bucket.
+ * Low = 1 (cream card + calm green), medium = 2–3 (amber tint),
+ * high = 4+ (danger tint). Visual chrome lives in MissionControlV2View.
+ */
+export type DashboardExceptionBucketUrgency = "low" | "medium" | "high";
 
 export type DashboardExceptionBucketItem = {
   id: string;
@@ -38,9 +43,18 @@ export type DashboardExceptionBucket = {
   count: number;
   detail: string;
   href: string;
-  tone: DashboardExceptionBucketTone;
+  /** Derived from count via getExceptionBucketUrgency — not per-bucket criteria. */
+  urgency: DashboardExceptionBucketUrgency;
   items: DashboardExceptionBucketItem[];
 };
+
+export function getExceptionBucketUrgency(
+  count: number,
+): DashboardExceptionBucketUrgency {
+  if (count >= 4) return "high";
+  if (count >= 2) return "medium";
+  return "low";
+}
 
 /** Fixed critical order — empty buckets stay absent; relative order is preserved. */
 export const DASHBOARD_EXCEPTION_BUCKET_ORDER: readonly DashboardExceptionBucketId[] =
@@ -157,7 +171,7 @@ export function buildDashboardExceptionBuckets(
         count: total,
         detail: formatPaymentsDetail(openDisputeCount, cardFailureCount),
         href: paymentsBucketHref(openDisputeCount, cardFailureCount),
-        tone: openDisputeCount > 0 ? "danger" : "warning",
+        urgency: getExceptionBucketUrgency(total),
         items,
       });
     }
@@ -173,7 +187,7 @@ export function buildDashboardExceptionBuckets(
           ? `1 past-due invoice · ${formatCurrency(money.overdueTotal)}`
           : `${money.overdueCount} past-due invoices · ${formatCurrency(money.overdueTotal)}`,
       href: INVOICE_PAGE_OVERDUE_HREF,
-      tone: money.overdueCount >= 5 ? "danger" : "warning",
+      urgency: getExceptionBucketUrgency(money.overdueCount),
       items: money.overdueInvoices.map((invoice) => ({
         id: invoice.id,
         label: invoice.invoiceNumber,
@@ -197,7 +211,7 @@ export function buildDashboardExceptionBuckets(
           ? "Technician has 2+ active jobs today"
           : `${count} technicians have 2+ active jobs today`,
       href: DISPATCH_PAGE_OVERLOAD_HREF,
-      tone: "warning",
+      urgency: getExceptionBucketUrgency(count),
       items: operations.overloadedTechnicians.map((technician) => ({
         id: technician.id,
         label: technician.name,
@@ -221,7 +235,7 @@ export function buildDashboardExceptionBuckets(
           ? "Unassigned job on today's board"
           : `${count} unassigned jobs on today's board`,
       href: DISPATCH_PAGE_UNASSIGNED_HREF,
-      tone: count >= 3 ? "danger" : "warning",
+      urgency: getExceptionBucketUrgency(count),
       items: operations.unassignedJobs.map((job) => ({
         id: job.id,
         label: job.jobNumber,
@@ -248,7 +262,7 @@ export function buildDashboardExceptionBuckets(
         { status: "approved" },
         { forceTab: true },
       ),
-      tone: count >= 3 ? "warning" : "info",
+      urgency: getExceptionBucketUrgency(count),
       items: data.acceptedEstimatesNeedingScheduling.estimates.map(
         (estimate) => ({
           id: estimate.id,
@@ -274,7 +288,7 @@ export function buildDashboardExceptionBuckets(
           ? "Lead needs first contact or follow-up"
           : `${count} leads need contact or follow-up`,
       href: LEADS_NEEDS_CONTACT_QUEUE_HREF,
-      tone: count >= 3 ? "danger" : "warning",
+      urgency: getExceptionBucketUrgency(count),
       items: data.leadsNeedingContactQueue.leads.map((lead) => ({
         id: lead.id,
         label: leadItemLabel(lead),
@@ -295,7 +309,7 @@ export function buildDashboardExceptionBuckets(
           ? "Open shift still clocked in for 12+ hours"
           : `${count} open shifts still clocked in for 12+ hours`,
       href: buildTeamHubHref("time-clock"),
-      tone: "warning",
+      urgency: getExceptionBucketUrgency(count),
       items: data.staleOpenShifts.shifts.map((shift) => ({
         id: shift.id,
         label: shift.technicianName,
@@ -316,7 +330,7 @@ export function buildDashboardExceptionBuckets(
           ? "Customer missing email, phone, or address"
           : `${count} customers missing email, phone, or address`,
       href: buildCustomersBookHref({ queue: "needs-info" }),
-      tone: "info",
+      urgency: getExceptionBucketUrgency(count),
       items: data.customersNeedingInfo.customers.map((customer) => ({
         id: customer.id,
         label: customer.name,

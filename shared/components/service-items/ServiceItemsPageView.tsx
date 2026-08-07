@@ -43,7 +43,7 @@ import {
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
-import { ServiceItemQueueTabs } from "./ServiceItemQueueTabs";
+import { ServiceItemStatStrip } from "./ServiceItemStatStrip";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
 import { ServiceItemsSearchFilterBar } from "./ServiceItemsSearchFilterBar";
 import { ServiceItemsTable } from "./ServiceItemsTable";
@@ -368,6 +368,15 @@ export function ServiceItemsPageView({
       headerSubtitleClassName={
         northStar ? lt.pageHeaderSubtitle : undefined
       }
+      summary={
+        !hasNoItems ? (
+          <ServiceItemStatStrip
+            counts={queueCounts}
+            activeQueue={workQueue}
+            onQueueChange={setWorkQueue}
+          />
+        ) : undefined
+      }
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
@@ -382,23 +391,8 @@ export function ServiceItemsPageView({
             northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
           }
         >
-          {!hasNoItems ? (
-            <div
-              className={
-                northStar
-                  ? lt.viewTabsBand
-                  : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
-              }
-            >
-              <ServiceItemQueueTabs
-                activeQueue={workQueue}
-                onQueueChange={setWorkQueue}
-                counts={queueCounts}
-                northStar={northStar}
-              />
-            </div>
-          ) : null}
-
+          {/* Queue switching moved to ServiceItemStatStrip in the page
+              header (summary slot) — the retired queue-tabs band is gone. */}
           {!hasNoItems ? (
             <ServiceItemsSearchFilterBar
               search={search}

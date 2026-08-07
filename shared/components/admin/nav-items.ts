@@ -2,7 +2,6 @@ import {
   BarChart3,
   BookOpen,
   Briefcase,
-  Bug,
   CalendarDays,
   Clock,
   DollarSign,
@@ -92,14 +91,14 @@ export const adminNavItems: NavItem[] = [
     description: "Receipts, mileage, and expense categories",
   },
   {
-    label: "Labor & payroll",
-    href: "/time",
+    label: "Payroll",
+    href: "/payroll",
     icon: Clock,
     description: "Active technicians, time entries, and payroll review",
   },
   {
     label: "Community",
-    href: "/network",
+    href: "/community",
     icon: Network,
     description: "Business relationships, referrals, and local discovery",
   },
@@ -109,12 +108,10 @@ export const adminNavItems: NavItem[] = [
     icon: BarChart3,
     description: "Revenue and productivity insights",
   },
-  {
-    label: "Feedback",
-    href: "/alpha-tracker",
-    icon: Bug,
-    description: "Report issues and product feedback",
-  },
+  // "Feedback" (/alpha-tracker) was removed from nav: the floating
+  // BetaBugReportButton in AdminShell already provides feedback entry on
+  // every page, and the alpha tracker itself is a legacy destination. The
+  // route stays mounted for deep links.
   {
     label: "Settings",
     href: "/settings",
@@ -135,9 +132,14 @@ export function isPlatformAdminPath(pathname: string): boolean {
   return pathname === "/platform" || pathname.startsWith("/platform/");
 }
 
-/** /time labor review — Time Clock now lives under Team (?tab=time-clock). */
+/** Payroll (canonical /payroll; legacy /time redirects here). Time Clock lives under Team (?tab=time-clock). */
 export function isLaborPayrollPath(pathname: string): boolean {
-  return pathname === "/time" || pathname.startsWith("/time/");
+  return (
+    pathname === "/payroll" ||
+    pathname.startsWith("/payroll/") ||
+    pathname === "/time" ||
+    pathname.startsWith("/time/")
+  );
 }
 
 /** Team hub + member profile routes share one nav item. */
@@ -162,7 +164,7 @@ export function isAdminNavItemActive(pathname: string, href: string): boolean {
     return pathname === "/";
   }
 
-  if (href === "/time" && isLaborPayrollPath(pathname)) {
+  if (href === "/payroll" && isLaborPayrollPath(pathname)) {
     return true;
   }
 
@@ -204,7 +206,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "command",
     label: "Command",
-    hrefs: ["/", "/alpha-tracker", "/reports"],
+    hrefs: ["/", "/reports"],
   },
   {
     id: "work",
@@ -219,12 +221,12 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "money",
     label: "Money",
-    hrefs: ["/expenses", "/time"],
+    hrefs: ["/expenses", "/payroll"],
   },
   {
     id: "relationships",
     label: "Relationships",
-    hrefs: ["/customers", "/marketing", "/network"],
+    hrefs: ["/customers", "/marketing", "/community"],
   },
   {
     id: "company",
@@ -285,9 +287,8 @@ export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
   "/reports",
   "/marketing",
   "/price-book",
-  "/time",
-  "/network",
-  "/alpha-tracker",
+  "/payroll",
+  "/community",
   "/settings",
 ] as const;
 
@@ -313,10 +314,9 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/price-book",
   "/expenses",
   "/reports",
-  "/network",
-  "/alpha-tracker",
+  "/community",
   "/settings",
-  "/time",
+  "/payroll",
 ] as const;
 
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
@@ -328,17 +328,9 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
       return false;
     }
 
-    // Labor & payroll still gates on company time-entry access (/time-clock).
-    // Team hub gates on /team (technicians OR time-clock access).
-    // Sales hub gates on billing access (same as legacy estimates/invoices/payments).
-    const permissionHref =
-      item.href === "/time"
-        ? "/time-clock"
-        : item.href === "/team"
-          ? "/team"
-          : item.href === "/sales"
-            ? "/sales"
-            : item.href;
+    // Permission keys equal routes (ALTAIR_ARCHITECTURE.md §2) — /payroll
+    // and /community are first-class AdminNavHrefs now, so no indirection.
+    const permissionHref = item.href;
 
     if (!isAdminNavHref(permissionHref)) {
       return false;
@@ -440,7 +432,7 @@ export function getNavItemForPath(
   }
 
   if (isLaborPayrollPath(pathname)) {
-    const laborItem = adminNavItems.find((item) => item.href === "/time");
+    const laborItem = adminNavItems.find((item) => item.href === "/payroll");
 
     if (laborItem) {
       return laborItem;

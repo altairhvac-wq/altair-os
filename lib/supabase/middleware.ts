@@ -25,6 +25,8 @@ const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
 const PAYMENT_WEBHOOK_ROUTE = "/api/webhooks/payments";
 const BILLING_WEBHOOK_ROUTE = "/api/webhooks/billing";
 const WORKFLOW_REMINDERS_CRON_ROUTE = "/api/cron/workflow-reminders";
+/** Dev-only fingerprint check for the Altair Demo Tool preflight guard. */
+const DEMO_FINGERPRINT_ROUTE = "/api/demo/fingerprint";
 
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
@@ -74,6 +76,13 @@ function isWorkflowRemindersCronRoute(pathname: string) {
   );
 }
 
+function isDemoFingerprintRoute(pathname: string) {
+  return (
+    pathname === DEMO_FINGERPRINT_ROUTE ||
+    pathname === `${DEMO_FINGERPRINT_ROUTE}/`
+  );
+}
+
 function isPricingRoute(pathname: string) {
   return pathname === PRICING_ROUTE;
 }
@@ -101,7 +110,8 @@ function isPublicRoute(pathname: string) {
     isInvoicePaymentRoute(pathname) ||
     isPaymentWebhookRoute(pathname) ||
     isBillingWebhookRoute(pathname) ||
-    isWorkflowRemindersCronRoute(pathname)
+    isWorkflowRemindersCronRoute(pathname) ||
+    isDemoFingerprintRoute(pathname)
   );
 }
 

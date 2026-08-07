@@ -7,14 +7,19 @@ import {
   getContrastSummary,
 } from "@/shared/components/platform-admin/design-lab/design-lab-export";
 import { evaluateDesignLabContrast } from "@/shared/components/platform-admin/design-lab/design-lab-contrast";
+import type { DesignLabShineMap } from "@/shared/components/platform-admin/design-lab/design-lab-shine";
 
 type DesignLabExportPanelProps = {
   colors: DesignLabColors;
+  shines?: DesignLabShineMap;
 };
 
 type CopyState = "idle" | "success" | "error";
 
-export function DesignLabExportPanel({ colors }: DesignLabExportPanelProps) {
+export function DesignLabExportPanel({
+  colors,
+  shines = {},
+}: DesignLabExportPanelProps) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
 
   const checks = useMemo(() => evaluateDesignLabContrast(colors), [colors]);
@@ -23,8 +28,8 @@ export function DesignLabExportPanel({ colors }: DesignLabExportPanelProps) {
     [checks],
   );
   const exportText = useMemo(
-    () => buildDesignLabThemeExport(colors, contrastSummary),
-    [colors, contrastSummary],
+    () => buildDesignLabThemeExport(colors, contrastSummary, {}, shines),
+    [colors, contrastSummary, shines],
   );
 
   async function handleCopy() {
@@ -55,11 +60,11 @@ export function DesignLabExportPanel({ colors }: DesignLabExportPanelProps) {
       className="overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.16)] shadow-[0_4px_16px_rgba(23,19,14,0.06)]"
     >
       <div className="border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4">
-        <h2 className="text-sm font-semibold text-[#17130E]">Export approved theme</h2>
+        <h2 className="text-sm font-semibold text-[#17130E]">Export live tokens</h2>
         <p className="mt-0.5 text-xs leading-snug text-[#6B6255]">
-          Copy the current preview palette so it can be promoted into Altair&apos;s
-          real design tokens in a later safe phase. Exporting does not save or
-          change customer pages.
+          Emits real CSS custom property names from globals.css (e.g.{" "}
+          <span className="font-mono">--north-star-sidebar</span>). Preview-only —
+          does not save or apply to customer pages.
         </p>
       </div>
 

@@ -21,6 +21,8 @@ export type MasterListPageLayoutProps = {
   headerTitleClassName?: string;
   headerSubtitleClassName?: string;
   headerEyebrowClassName?: string;
+  /** Stable hook for Playwright / demo-tool targeting */
+  "data-testid"?: string;
 };
 
 /**
@@ -44,6 +46,7 @@ export function MasterListPageLayout({
   headerTitleClassName = "",
   headerSubtitleClassName = "",
   headerEyebrowClassName = "",
+  "data-testid": testId,
 }: MasterListPageLayoutProps) {
   const isCompact = density === "compact";
 
@@ -54,6 +57,7 @@ export function MasterListPageLayout({
       /* Flush header strip to content well — hairline via header border-bottom */
       stackGapClassName="gap-0"
       className={className}
+      data-testid={testId}
     >
       {banners}
 

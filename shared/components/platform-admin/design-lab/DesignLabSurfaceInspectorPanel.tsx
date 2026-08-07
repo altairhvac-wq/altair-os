@@ -11,59 +11,7 @@ import {
   type DashboardSurfaceId,
   type DashboardSurfaceStyle,
 } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
-import {
-  isValidHexColor,
-  normalizeHexColor,
-} from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
-
-type SurfaceColorControlProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-};
-
-function SurfaceColorControl({ label, value, onChange }: SurfaceColorControlProps) {
-  return (
-    <div className="rounded-md border border-[rgba(23,19,14,0.08)] bg-[#FBF7EF] p-2">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold text-[#17130E]">{label}</p>
-        <input
-          type="color"
-          value={value}
-          onChange={(event) => onChange(event.target.value.toUpperCase())}
-          aria-label={`${label} color picker`}
-          className="h-7 w-7 shrink-0 cursor-pointer rounded border border-[rgba(138,99,36,0.2)] bg-white p-0.5"
-        />
-      </div>
-      <input
-        type="text"
-        defaultValue={value}
-        key={value}
-        onBlur={(event) => {
-          const normalized = normalizeHexColor(event.target.value);
-          if (normalized) {
-            onChange(normalized);
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            const normalized = normalizeHexColor(event.currentTarget.value);
-            if (normalized) {
-              onChange(normalized);
-            }
-          }
-        }}
-        spellCheck={false}
-        autoComplete="off"
-        className="mt-1.5 w-full rounded border border-[rgba(138,99,36,0.18)] bg-white px-2 py-1 font-mono text-[10px] text-[#17130E] outline-none focus:border-[#B8943F]"
-      />
-      {!isValidHexColor(value) ? (
-        <p className="mt-1 text-[10px] text-[#9A3412]">Use hex like #B8943F.</p>
-      ) : null}
-    </div>
-  );
-}
+import { DesignLabColorControl } from "@/shared/components/platform-admin/design-lab/DesignLabColorControl";
 
 type DesignLabSurfaceInspectorPanelProps = {
   surfaceId: DashboardSurfaceId;
@@ -94,20 +42,26 @@ export function DesignLabSurfaceInspectorPanel({
       </div>
 
       <div className="space-y-1.5">
-        <SurfaceColorControl
+        <DesignLabColorControl
           label="Background"
           value={style.background}
           onChange={(value) => onChange("background", value)}
+          compact
+          showCssVar={false}
         />
-        <SurfaceColorControl
+        <DesignLabColorControl
           label="Text"
           value={style.text}
           onChange={(value) => onChange("text", value)}
+          compact
+          showCssVar={false}
         />
-        <SurfaceColorControl
+        <DesignLabColorControl
           label="Border"
           value={style.border}
           onChange={(value) => onChange("border", value)}
+          compact
+          showCssVar={false}
         />
       </div>
 

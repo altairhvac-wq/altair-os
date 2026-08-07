@@ -195,15 +195,9 @@ export function CompanySubscriptionBillingCard({
     : "text-sm font-medium text-altair-ink";
   const fieldClass = northStar
     ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
-    : "mt-1 w-full min-h-10 rounded-none border border-[var(--north-star-border)] bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
+    : "mt-1 w-full min-h-10 rounded-none border border-[var(--north-star-plate-border)] bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
   const primaryButtonClass = buttonClassName("primary", "md");
   const secondaryButtonClass = buttonClassName("secondary", "md");
-  const dividerBorderClass = northStar
-    ? "border-[rgba(138,99,36,0.12)]"
-    : "border-altair-border";
-  const planSectionClass = northStar
-    ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFFDF8] p-3 sm:p-4"
-    : "rounded-none border border-[var(--north-star-border)] bg-[var(--surface-tile)] p-3 sm:p-4";
   const iconClass = northStar
     ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FFF3D6] text-[#9C7424]"
     : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-brass/10 text-altair-brass";
@@ -284,47 +278,34 @@ export function CompanySubscriptionBillingCard({
         </p>
       ) : null}
 
-      {/* ── Plan summary ───────────────────────────────────────────── */}
-      <div className={`mt-4 ${planSectionClass}`}>
-        <p
-          className={`text-lg font-semibold leading-tight ${northStar ? "text-[#17130E]" : "text-slate-900"}`}
-        >
-          {planLabel}
-        </p>
-
-        {/* Complimentary / beta access */}
-        {effectiveSummary.isComped && !effectiveSummary.hasStripeSubscription ? (
-          <p className={`mt-1 ${mutedClass}`}>
-            Complimentary access — no billing required.
-          </p>
-        ) : null}
-
-        {/* Trialing */}
-        {isTrialing && trialEndLabel ? (
-          <div className="mt-2">
-            <p className={mutedClass}>
-              Trial ends{" "}
+      {/* ── Plan summary — one compact line, no nested box ─────────── */}
+      <div className="mt-3">
+        <p className={`text-sm leading-6 ${mutedClass}`}>
+          <span
+            className={`text-base font-semibold ${northStar ? "text-[#17130E]" : "text-slate-900"}`}
+          >
+            {planLabel}
+          </span>
+          {effectiveSummary.isComped &&
+          !effectiveSummary.hasStripeSubscription ? (
+            <> — complimentary access, no billing required.</>
+          ) : null}
+          {isTrialing && trialEndLabel ? (
+            <>
+              {" — trial ends "}
               <span className={valueClass}>{trialEndLabel}</span>
               {daysLeft != null ? (
-                <span>
+                <span
+                  aria-label={`${daysLeft} ${daysLeft === 1 ? "day" : "days"} remaining`}
+                >
                   {" "}
-                  ·{" "}
-                  <span
-                    className={mutedClass}
-                    aria-label={`${daysLeft} ${daysLeft === 1 ? "day" : "days"} remaining`}
-                  >
-                    {daysLeft} {daysLeft === 1 ? "day" : "days"} remaining
-                  </span>
+                  ({daysLeft} {daysLeft === 1 ? "day" : "days"} left)
                 </span>
               ) : null}
-            </p>
-            <p
-              className={`mt-1 text-xs ${northStar ? "text-[#64748b]" : "text-slate-400"}`}
-            >
-              Billing begins after the trial period ends.
-            </p>
-          </div>
-        ) : null}
+              . Billing begins after the trial.
+            </>
+          ) : null}
+        </p>
 
         {/* Active — renewal */}
         {isActiveNoCancellation && periodEndLabel ? (
@@ -401,7 +382,7 @@ export function CompanySubscriptionBillingCard({
 
       {/* ── Actions ────────────────────────────────────────────────── */}
       {canManageSubscription ? (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           {/* Start-trial checkout form */}
           {canStartCheckout ? (
             <>
@@ -487,10 +468,10 @@ export function CompanySubscriptionBillingCard({
       {/* ── Portal explanation ─────────────────────────────────────── */}
       {canManageSubscription && effectiveSummary.hasStripeSubscription ? (
         <p
-          className={`mt-3 border-t pt-3 text-xs ${dividerBorderClass} ${northStar ? "text-[#64748b]" : "text-slate-400"}`}
+          className={`mt-2 text-xs ${northStar ? "text-[#64748b]" : "text-slate-400"}`}
         >
-          Manage payment methods, billing information, and subscription
-          invoices securely through Stripe.
+          Payment methods, billing info, and subscription invoices are managed
+          securely through Stripe.
         </p>
       ) : null}
     </div>

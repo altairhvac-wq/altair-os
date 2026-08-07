@@ -14,6 +14,8 @@ export type MasterDetailPageLayoutProps = {
   /** Content max width — defaults to detail (`max-w-5xl`) */
   canvasWidth?: MasterPageCanvasWidth;
   className?: string;
+  /** Stable hook for Playwright / demo-tool targeting */
+  "data-testid"?: string;
 };
 
 /**
@@ -27,9 +29,10 @@ export function MasterDetailPageLayout({
   density = "default",
   canvasWidth = "detail",
   className = "",
+  "data-testid": testId,
 }: MasterDetailPageLayoutProps) {
   return (
-    <MasterShellPage density={density} className={className}>
+    <MasterShellPage density={density} className={className} data-testid={testId}>
       {banners}
 
       <MasterPageCanvas width={canvasWidth}>

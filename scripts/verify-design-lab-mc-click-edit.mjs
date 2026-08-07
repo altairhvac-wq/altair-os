@@ -139,14 +139,14 @@ async function main() {
   await shot(page, "design-lab-click-schedule-card");
 
   await clickTarget(
-    "Edit surface hierarchy · Next recommended",
-    "Surface hierarchy",
+    "Edit caught-up fill · Next recommended",
+    "Caught-up fill",
   );
   await shot(page, "design-lab-click-next-recommended");
 
   await clickTarget(
-    "Edit text on chrome · Needs attention",
-    "Text on chrome",
+    "Edit section title · Needs attention",
+    "Section title",
   );
   await shot(page, "design-lab-click-needs-attention-header");
 

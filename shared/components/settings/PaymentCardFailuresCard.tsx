@@ -54,6 +54,20 @@ export function PaymentCardFailuresCard({
   companyTimezone,
   loadError = null,
 }: PaymentCardFailuresCardProps) {
+  // Nothing needing attention → one quiet line instead of a full empty card.
+  if (!loadError && attempts.length === 0) {
+    return (
+      <p
+        id="payment-card-failures"
+        className="flex scroll-mt-24 items-center gap-2 px-1 text-xs text-altair-ink-on-paper-muted"
+      >
+        <CreditCard className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        Card payment failures: none need attention. Repeated declines on
+        checkout links will appear here.
+      </p>
+    );
+  }
+
   return (
     <section
       id="payment-card-failures"
@@ -61,7 +75,7 @@ export function PaymentCardFailuresCard({
       aria-labelledby="payment-card-failures-heading"
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--north-star-border)] bg-[var(--surface-tile)] text-altair-ink-on-paper">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] text-altair-ink-on-paper">
           <CreditCard className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
@@ -96,7 +110,7 @@ export function PaymentCardFailuresCard({
             {attempts.length} needing attention
           </p>
           <ul
-            className={`${altairMcListClass} divide-y divide-[var(--north-star-border)]`}
+            className={`${altairMcListClass} divide-y divide-[var(--north-star-plate-border)]`}
           >
             {attempts.map((attempt) => (
               <li key={attempt.id} className={altairMcListRowClass}>

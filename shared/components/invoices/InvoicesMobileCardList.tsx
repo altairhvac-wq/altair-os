@@ -98,6 +98,7 @@ export function InvoicesMobileCardList({
                     <button
                       type="button"
                       onClick={() => onSelect(invoice)}
+                      data-testid="invoice-row"
                       className={`${
                         northStar
                           ? "flex w-full min-w-0 items-start gap-2.5"

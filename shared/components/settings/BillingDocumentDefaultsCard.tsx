@@ -142,7 +142,7 @@ function CollapsibleNotesField({
         <textarea
           id={`${id}-desktop`}
           name={id}
-          rows={4}
+          rows={2}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
@@ -244,8 +244,8 @@ export function BillingDocumentDefaultsCard({
           <h2
             className={
               northStar
-                ? "text-sm font-semibold text-[#17130E] sm:text-base"
-                : "admin-heading-section text-sm sm:text-base"
+                ? "text-sm font-semibold text-[#17130E]"
+                : "admin-heading-section text-sm"
             }
           >
             Billing Document Defaults
@@ -253,8 +253,8 @@ export function BillingDocumentDefaultsCard({
           <p
             className={
               northStar
-                ? "mt-0.5 hidden text-xs text-[#4F4638] sm:block sm:text-sm"
-                : "admin-text-helper mt-0.5 hidden sm:block"
+                ? "mt-0.5 hidden text-xs text-[#4F4638] sm:block"
+                : "admin-text-helper mt-0.5 hidden text-xs sm:block"
             }
           >
             Default tax rate, payment terms, and notes for new estimates and
@@ -264,8 +264,8 @@ export function BillingDocumentDefaultsCard({
             <p
               className={
                 northStar
-                  ? "mt-2 rounded-lg border border-[rgba(180,83,9,0.22)] bg-[rgba(255,247,237,0.75)] px-2.5 py-1.5 text-xs text-[#9A3412] sm:text-sm"
-                  : "mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-2.5 py-1.5 text-xs text-cyan-900 sm:text-sm"
+                  ? "mt-1.5 rounded-lg border border-[rgba(180,83,9,0.22)] bg-[rgba(255,247,237,0.75)] px-2.5 py-1 text-xs text-[#9A3412]"
+                  : "mt-1.5 rounded-lg border border-cyan-100 bg-cyan-50/60 px-2.5 py-1 text-xs text-cyan-900"
               }
             >
               Review these defaults before creating your first estimate or invoice.
@@ -315,9 +315,9 @@ export function BillingDocumentDefaultsCard({
 
       <form
         onSubmit={handleSubmit}
-        className={`min-w-0 space-y-2.5 sm:space-y-3 ${
+        className={`min-w-0 space-y-2.5 ${
           mobileFormExpanded ? "mt-2.5 block" : "hidden md:block"
-        } sm:mt-4`}
+        } sm:mt-2.5`}
         aria-label="Billing document defaults"
         aria-busy={isPending}
       >

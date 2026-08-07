@@ -1,43 +1,21 @@
 import { redirect } from "next/navigation";
-import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getJobById } from "@/lib/database/queries/jobs";
-import {
-  listActiveTechnicianTimeEntries,
-  listTimeEntries,
-} from "@/lib/database/queries/time-entries";
-import { AdminTimeTrackingView } from "@/shared/components/time-clock/AdminTimeTrackingView";
 
 type TimePageProps = {
-  searchParams: Promise<{ jobId?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/** Legacy /time route — redirects to /payroll, preserving query params. */
 export default async function TimePage({ searchParams }: TimePageProps) {
-  const context = await getActiveCompanyContext();
+  const params = await searchParams;
+  const search = new URLSearchParams();
 
-  if (!context) {
-    redirect("/setup");
+  for (const [key, value] of Object.entries(params)) {
+    const flat = Array.isArray(value) ? value[0] : value;
+    if (flat != null && flat !== "") {
+      search.set(key, flat);
+    }
   }
 
-  const { jobId } = await searchParams;
-  const job = jobId ? await getJobById(context.company.id, jobId) : null;
-
-  const canViewAll = canViewCompanyTimeEntries(context);
-
-  const [entries, activeEntries] = canViewAll
-    ? await Promise.all([
-        listTimeEntries(context.company.id, { limit: 100 }),
-        listActiveTechnicianTimeEntries(context.company.id),
-      ])
-    : [[], []];
-
-  return (
-    <AdminTimeTrackingView
-      entries={entries}
-      activeEntries={activeEntries}
-      canViewAll={canViewAll}
-      initialJobId={job?.id}
-      initialJobLabel={job?.jobNumber}
-    />
-  );
+  const query = search.toString();
+  redirect(query ? `/payroll?${query}` : "/payroll");
 }

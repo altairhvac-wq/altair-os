@@ -70,7 +70,7 @@ export function designLabPreviewVars(
 
 export const DESIGN_LAB_CARD_SURFACE_STYLE: React.CSSProperties = {
   backgroundColor: "var(--surface-card)",
-  borderColor: "var(--north-star-border)",
+  borderColor: "var(--north-star-plate-border)",
   backgroundImage: "var(--surface-card--shine, none)",
 };
 

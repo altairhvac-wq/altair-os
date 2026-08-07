@@ -1312,6 +1312,41 @@ export type AlphaTrackerItemUpdate = Partial<
   >
 >;
 
+/** Design Lab saved theme tokens — keyed by CSS custom property names. */
+export type DesignLabThemeTokens = Record<string, string>;
+
+export type DesignLabThemeRow = {
+  id: UUID;
+  company_id: UUID;
+  name: string;
+  tokens: DesignLabThemeTokens;
+  is_active: boolean;
+  /** Stage 3: injected into live admin chrome when true. */
+  is_live: boolean;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type DesignLabThemeInsert = {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  tokens: DesignLabThemeTokens;
+  is_active?: boolean;
+  is_live?: boolean;
+  created_by?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type DesignLabThemeUpdate = Partial<
+  Omit<
+    DesignLabThemeRow,
+    "id" | "company_id" | "created_by" | "created_at" | "updated_at"
+  >
+>;
+
 export type BetaFeedbackSeverity = "low" | "medium" | "high" | "blocking";
 
 export type BetaFeedbackStatus = "open" | "reviewing" | "fixed" | "ignored";

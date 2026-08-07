@@ -1,35 +1,12 @@
-import { canViewBilling } from "@/lib/database/access-control";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
-import {
-  getUnreadNotificationCount,
-  getUserNotifications,
-} from "@/lib/database/services/notifications";
-import { SettingsNotificationsView } from "@/shared/components/settings/SettingsNotificationsView";
+import { redirect } from "next/navigation";
 
-export default async function NotificationsSettingsPage() {
-  const companyContext = await getActiveCompanyContext();
-
-  if (!companyContext) {
-    return null;
-  }
-
-  const [notifications, unreadCount] = await Promise.all([
-    getUserNotifications(companyContext.company.id, companyContext.user.id, {
-      limit: 20,
-    }),
-    getUnreadNotificationCount(
-      companyContext.company.id,
-      companyContext.user.id,
-    ),
-  ]);
-
-  return (
-    <SettingsNotificationsView
-      notifications={notifications}
-      unreadCount={unreadCount}
-      notificationAccess={{
-        canViewBilling: canViewBilling(companyContext),
-      }}
-    />
-  );
+/**
+ * Retired settings tab (settings IA v2): this page previewed the in-app
+ * notification inbox, which duplicates the header bell — the bell IS the
+ * notifications UI. No configurable notification settings exist yet; when
+ * real per-user notification preferences land, they get a section on the
+ * Company page (or their own tab if they outgrow it).
+ */
+export default function NotificationsSettingsRedirect() {
+  redirect("/settings");
 }

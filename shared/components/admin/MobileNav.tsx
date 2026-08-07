@@ -22,12 +22,14 @@ type MobileNavLinkProps = {
 
 function MobileNavLink({ item, active, linkRef }: MobileNavLinkProps) {
   const Icon = item.icon;
+  const testId = `mobile-nav-link-${item.href === "/" ? "dashboard" : item.href.slice(1).replace(/\//g, "-")}`;
 
   return (
     <Link
       ref={linkRef}
       href={item.href}
       aria-current={active ? "page" : undefined}
+      data-testid={testId}
       className={`${adminNavLinkClass} flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] shrink-0 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-2 pb-2 pt-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-altair-brass ${
         active
           ? `${adminNavLinkActiveClass} text-altair-graphite`
@@ -87,6 +89,13 @@ export function MobileNav({
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
   }, [pathname]);
+
+  // The mobile home ("/") is the iOS-style launcher — its app grid IS the
+  // navigation, so the destination rail is redundant there. Every other
+  // page keeps the rail.
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
     <nav

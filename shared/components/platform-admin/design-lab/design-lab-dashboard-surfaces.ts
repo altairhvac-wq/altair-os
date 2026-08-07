@@ -79,9 +79,9 @@ const METRIC_CHIP_SURFACE_BY_LABEL: Record<string, DashboardSurfaceId> = {
 
 export function defaultSurfaceStyle(colors: DesignLabColors): DashboardSurfaceStyle {
   return {
-    background: colors.cardBackground,
-    text: colors.bodyText,
-    border: colors.cardBorder,
+    background: colors.surfaceCard,
+    text: colors.altairInk,
+    border: colors.northStarBorder,
   };
 }
 

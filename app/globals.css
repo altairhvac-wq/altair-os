@@ -21,37 +21,79 @@
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.018);
   --shadow-panel: 0 1px 3px rgb(15 23 42 / 0.02);
   --shadow-sticky: 0 -2px 10px -4px rgb(15 23 42 / 0.05);
-  --north-star-root: #555f48;
-  --north-star-sidebar: #4a5540;
-  --north-star-topbar: #5d6850;
-  --north-star-panel: #6a755c;
-  --north-star-border: #838f68;
+  /*
+   * Retuned Aug 2026 — the old olive/khaki "North Star" V1 chrome is retired
+   * per BRAND_GUIDELINES.md; these variables now carry the approved Platinum
+   * Circuit identity. Re-tuned a second time same day: the first pass mixed
+   * in the pre-existing "moon graphite" blue-black family, which read too
+   * blue against the reference. Every neutral below is now a pure Black
+   * (#0A0A0A) + Steel (#71767D) mix — zero hue — so the chrome reads as
+   * true black/gray, not blue-black. Ink roles mix Platinum/Steel/White.
+   * Gold roles are unchanged (already derived from Gold Accent #D4AF37).
+   */
+  /* Sidebar/topbar stay true black (#0A0A0A-family) — kept as-is per feedback.
+   * Canvas layers below are lifted with Platinum instead, so the content
+   * area visibly separates from the black frame instead of reading as one
+   * flat mass. Each step is a Black + Platinum mix — still zero extra hue. */
+  --north-star-root: #212122;
+  --north-star-sidebar: #0a0a0a;
+  --north-star-topbar: #131414;
+  --north-star-panel: #303132;
+  /* Chrome / structural hairline (sidebar edge, page-header, Settings strip) */
+  --north-star-border: rgb(200 205 211 / 0.16);
+  /* MC section band dividers (Needs attention / Schedule bands) */
+  --north-star-section-divider: rgb(200 205 211 / 0.12);
+  /* mc-surface plate / card / tile / list borders */
+  --north-star-plate-border: rgb(200 205 211 / 0.14);
   /* Two-tone canvas — header/section strip vs main content well */
-  --north-star-header-strip: #4a5540;
-  --north-star-content-well: #414a35;
-  --north-star-bronze: #8a6324;
-  --north-star-brass: #b88a2e;
-  --north-star-gold: #c9a44d;
-  --north-star-champagne: #e6d092;
-  --north-star-ivory: #fbf7ef;
-  --north-star-ivory-strong: #fff9ea;
-  --north-star-text-dark: #17130e;
-  --north-star-text-secondary: #4f4638;
+  --north-star-header-strip: #0a0a0a;
+  --north-star-content-well: #212122;
+  /* Next Recommended “caught up” card fill — independent from page canvas */
+  --north-star-caught-up-fill: #303132;
+  --north-star-bronze: #9a7209;
+  --north-star-brass: #b8912f;
+  --north-star-gold: #d4af37;
+  --north-star-champagne: #f5e6a3;
+  --north-star-ivory: #fbfbfb;
+  --north-star-ivory-strong: #ffffff;
+  --north-star-text-dark: #101011;
+  --north-star-text-secondary: #292a2c;
   --north-star-text-muted: #64748b;
-  --north-star-text-light: #f3ebdd;
-  /* Lightened for olive-graphite chrome (~5:1 link / ~4:1 icon on #4a5540) */
-  --north-star-text-light-muted: #d6cdb9;
+  /*
+   * Light ink roles (formerly bundled as --north-star-text-light):
+   *   topbar-heading  — Premium header / hub strip / Settings titles
+   *   section-title   — graphite-canvas section titles (.altair-canvas-ink)
+   *   link-hover      — canvas link hover + header sign-out hover
+   * Legacy aliases keep stray refs readable; Design Lab edits the role tokens.
+   */
+  --north-star-topbar-heading: #d0d4da;
+  --north-star-section-title: #d0d4da;
+  --north-star-link-hover: #d0d4da;
+  --north-star-text-light: var(--north-star-section-title);
+  /*
+   * Muted light ink roles (formerly --north-star-text-light-muted):
+   *   topbar-subcopy     — date / switcher helpers / Settings eyebrow
+   *   section-secondary  — .altair-canvas-ink-secondary + caught-up body
+   *   link               — canvas link base (.altair-canvas-ink-link)
+   *   topbar-icon        — header search / bell / calendar / sign-out base
+   */
+  --north-star-topbar-subcopy: #8f949b;
+  --north-star-section-secondary: #8f949b;
+  --north-star-link: #8f949b;
+  --north-star-topbar-icon: #8f949b;
+  --north-star-text-light-muted: var(--north-star-section-secondary);
   --north-star-graphite-base: var(--north-star-sidebar);
   --north-star-graphite-mid: var(--north-star-topbar);
   --north-star-graphite-border: var(--north-star-border);
   --north-star-brass-rail: var(--north-star-gold);
-  --north-star-brass-ring: rgb(201 164 77 / 0.28);
+  --north-star-brass-ring: rgb(212 175 55 / 0.28);
   --north-star-sidebar-width: 14.5rem;
   --north-star-sidebar-label: var(--north-star-gold);
-  --north-star-sidebar-link: #d6cdb9;
-  --north-star-sidebar-link-hover: var(--north-star-text-light);
+  --north-star-sidebar-link: #8f949b;
+  /* Literal — do not alias through text-light / link-hover */
+  --north-star-sidebar-link-hover: #d0d4da;
   --north-star-sidebar-link-active: var(--north-star-ivory-strong);
-  --north-star-sidebar-icon: #c4b9a4;
+  --north-star-sidebar-icon: #878c92;
   --north-star-sidebar-icon-hover: var(--north-star-champagne);
   --north-star-sidebar-icon-active: var(--north-star-champagne);
 }
@@ -89,8 +131,10 @@
   /* Paper Subtle — Paper's palest, quietest register; a resting canvas plane. */
   --altair-paper-subtle: #eef2f6;
 
-  /* Graphite — the operating shell: chrome that asserts Altair's own structure. */
-  --altair-graphite: #1a2029;
+  /* Graphite — the operating shell: chrome that asserts Altair's own structure.
+     Re-tuned Aug 2026 to a neutral Black+Platinum mix — was blue-tinted (#1a2029),
+     visible on Dispatch's operations board; now matches the rest of the chrome. */
+  --altair-graphite: #303132;
 
   /* Ink — text and numerals, at three strengths, on the theme's dominant surface. */
   --altair-ink: #17130e;
@@ -118,9 +162,11 @@
   --altair-border: rgb(100 116 139 / 0.18);
   --altair-border-strong: rgb(148 163 184 / 0.35);
 
-  /* Brass — the one primary command per screen; Brass Interactive — its hover/active state. */
-  --altair-brass: #b88a2e;
-  --altair-brass-interactive: #c9a44d;
+  /* Brass — the one primary command per screen; Brass Interactive — its hover/active state.
+     Retuned Aug 2026 to derive from the locked Platinum Circuit Gold Accent (#D4AF37):
+     a darkened mix for AA-safe contrast on light Paper, and the pure accent for hover. */
+  --altair-brass: #977d2a;
+  --altair-brass-interactive: #d4af37;
 
   /* Status roles — conventional hues, deliberately distinct from Brass. */
   --altair-success: #059669;
@@ -159,7 +205,7 @@
   /* On dark chrome, Paper Subtle is a faint ivory-tinted overlay rather than a flat fill. */
   --altair-paper-subtle: rgb(255 255 255 / 0.06);
 
-  --altair-graphite: #111821;
+  --altair-graphite: #212122;
 
   /* Ink flips to light, warm text for legibility against dark Graphite/Stone chrome. */
   --altair-ink: #f3ebdd;
@@ -174,9 +220,11 @@
   --altair-border: rgb(174 182 194 / 0.18);
   --altair-border-strong: rgb(174 182 194 / 0.35);
 
-  /* Brass runs brighter against the dark field — this is where it does its most important work. */
-  --altair-brass: #c9a44d;
-  --altair-brass-interactive: #e6d092;
+  /* Brass runs brighter against the dark field — this is where it does its most important work.
+     Retuned Aug 2026 to the locked Platinum Circuit Gold Accent (#D4AF37), with a
+     white-mixed highlight for hover — same source hue as the logo and login surfaces. */
+  --altair-brass: #d4af37;
+  --altair-brass-interactive: #e3cb7d;
 
   --altair-success: #34d399;
   --altair-warning: #fbbf24;
@@ -452,7 +500,7 @@ a[href] {
   background: linear-gradient(
     115deg,
     transparent 25%,
-    rgb(230 208 146 / 0.035) 48%,
+    rgb(227 203 125 / 0.035) 48%,
     transparent 70%
   );
   transform: translateX(-100%);
@@ -463,7 +511,7 @@ a[href] {
   background: linear-gradient(
     90deg,
     transparent 5%,
-    rgb(230 208 146 / 0.5) 48%,
+    rgb(227 203 125 / 0.5) 48%,
     transparent 95%
   );
 }
@@ -477,8 +525,8 @@ a[href] {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgb(201 164 77 / 0.18),
-    rgb(230 208 146 / 0.5),
+    rgb(212 175 55 / 0.18),
+    rgb(227 203 125 / 0.5),
     rgb(14 116 144 / 0.28)
   );
 }
@@ -492,11 +540,26 @@ a[href] {
   height: 8px;
   border: 1px solid rgb(255 249 218 / 0.85);
   border-radius: 9999px;
-  background: #e0b84f;
+  background: #dabb55;
   box-shadow:
-    0 0 0 4px rgb(201 164 77 / 0.08),
-    0 0 16px rgb(230 208 146 / 0.9);
+    0 0 0 4px rgb(212 175 55 / 0.08),
+    0 0 16px rgb(227 203 125 / 0.9);
   animation: login-control-loop-signal 8s ease-in-out infinite;
+}
+
+/*
+ * Gear-ring motif — a faint engraved circle echoing the Platinum Circuit logo
+ * mark's gear ring. Purely decorative background texture for brand-moment
+ * surfaces (auth hero, marketing panels) — never used on forms or as a
+ * functional UI element. Kept at very low opacity via the utility applied
+ * alongside this class (e.g. opacity-[0.05]) so it reads as a subtle
+ * "precision instrument" texture, not a loud graphic.
+ */
+.auth-gear-motif {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%23C8CDD3' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='240.0' cy='240.0' r='200'/%3E%3Ccircle cx='240.0' cy='240.0' r='178' stroke-width='1' opacity='0.6'/%3E%3Ccircle cx='240.0' cy='240.0' r='138' stroke-width='1' opacity='0.35'/%3E%3Cline x1='440.0' y1='240.0' x2='454.0' y2='240.0'/%3E%3Cline x1='433.2' y1='291.8' x2='446.7' y2='295.4'/%3E%3Cline x1='413.2' y1='340.0' x2='425.3' y2='347.0'/%3E%3Cline x1='381.4' y1='381.4' x2='391.3' y2='391.3'/%3E%3Cline x1='340.0' y1='413.2' x2='347.0' y2='425.3'/%3E%3Cline x1='291.8' y1='433.2' x2='295.4' y2='446.7'/%3E%3Cline x1='240.0' y1='440.0' x2='240.0' y2='454.0'/%3E%3Cline x1='188.2' y1='433.2' x2='184.6' y2='446.7'/%3E%3Cline x1='140.0' y1='413.2' x2='133.0' y2='425.3'/%3E%3Cline x1='98.6' y1='381.4' x2='88.7' y2='391.3'/%3E%3Cline x1='66.8' y1='340.0' x2='54.7' y2='347.0'/%3E%3Cline x1='46.8' y1='291.8' x2='33.3' y2='295.4'/%3E%3Cline x1='40.0' y1='240.0' x2='26.0' y2='240.0'/%3E%3Cline x1='46.8' y1='188.2' x2='33.3' y2='184.6'/%3E%3Cline x1='66.8' y1='140.0' x2='54.7' y2='133.0'/%3E%3Cline x1='98.6' y1='98.6' x2='88.7' y2='88.7'/%3E%3Cline x1='140.0' y1='66.8' x2='133.0' y2='54.7'/%3E%3Cline x1='188.2' y1='46.8' x2='184.6' y2='33.3'/%3E%3Cline x1='240.0' y1='40.0' x2='240.0' y2='26.0'/%3E%3Cline x1='291.8' y1='46.8' x2='295.4' y2='33.3'/%3E%3Cline x1='340.0' y1='66.8' x2='347.0' y2='54.7'/%3E%3Cline x1='381.4' y1='98.6' x2='391.3' y2='88.7'/%3E%3Cline x1='413.2' y1='140.0' x2='425.3' y2='133.0'/%3E%3Cline x1='433.2' y1='188.2' x2='446.7' y2='184.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
 @keyframes auth-panel-enter {
@@ -532,6 +595,19 @@ a[href] {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes design-lab-spotlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 4px rgba(201, 164, 77, 0.45),
+      0 0 28px rgba(201, 164, 77, 0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(201, 164, 77, 0.28),
+      0 0 24px rgba(201, 164, 77, 0.45);
   }
 }
 
@@ -897,26 +973,37 @@ a[href] {
   }
 }
 
-/* North Star shell scope — olive-graphite chrome (always applied by AdminShell) */
+/* North Star shell scope — Platinum Circuit graphite chrome (always applied by AdminShell) */
 .admin-north-star-shell {
-  --north-star-root: #555f48;
-  --north-star-sidebar: #4a5540;
-  --north-star-topbar: #5d6850;
-  --north-star-panel: #6a755c;
-  --north-star-border: #838f68;
-  --north-star-header-strip: #4a5540;
-  --north-star-content-well: #414a35;
-  --north-star-bronze: #8a6324;
-  --north-star-brass: #b88a2e;
-  --north-star-gold: #c9a44d;
-  --north-star-champagne: #e6d092;
-  --north-star-ivory: #f8fafc;
+  --north-star-root: #212122;
+  --north-star-sidebar: #0a0a0a;
+  --north-star-topbar: #131414;
+  --north-star-panel: #303132;
+  --north-star-border: rgb(200 205 211 / 0.16);
+  --north-star-section-divider: rgb(200 205 211 / 0.12);
+  --north-star-plate-border: rgb(200 205 211 / 0.14);
+  --north-star-header-strip: #0a0a0a;
+  --north-star-content-well: #212122;
+  --north-star-caught-up-fill: #303132;
+  --north-star-bronze: #9a7209;
+  --north-star-brass: #b8912f;
+  --north-star-gold: #d4af37;
+  --north-star-champagne: #f5e6a3;
+  --north-star-ivory: #fbfbfb;
   --north-star-ivory-strong: #ffffff;
-  --north-star-text-dark: #17130e;
-  --north-star-text-secondary: #4f4638;
+  --north-star-text-dark: #101011;
+  --north-star-text-secondary: #292a2c;
   --north-star-text-muted: var(--north-star-work-text-muted);
-  --north-star-text-light: #f3ebdd;
-  --north-star-text-light-muted: #d6cdb9;
+  --north-star-topbar-heading: #d0d4da;
+  --north-star-section-title: #d0d4da;
+  --north-star-link-hover: #d0d4da;
+  --north-star-text-light: var(--north-star-section-title);
+  --north-star-topbar-subcopy: #8f949b;
+  --north-star-section-secondary: #8f949b;
+  --north-star-link: #8f949b;
+  --north-star-topbar-icon: #8f949b;
+  --north-star-text-light-muted: var(--north-star-section-secondary);
+  --north-star-sidebar-link-hover: #d0d4da;
   --north-star-work-surface: #e8edf3;
   --north-star-work-band: #dce3ec;
   --north-star-work-row: #ffffff;
@@ -928,6 +1015,19 @@ a[href] {
   --north-star-work-text-secondary: #4b5563;
   --north-star-work-text-muted: #64748b;
   --north-star-work-placeholder: #6b7280;
+
+  /* Layer 1 — floating page canvas. Re-tuned Aug 2026 from the old "moon
+   * graphite" BLUE-black family to a true neutral Black (#0A0A0A) + Platinum
+   * (#C8CDD3) mix, matching the Platinum Circuit reference exactly — no blue
+   * hue left anywhere in the chrome, and the canvas now visibly lifts off
+   * the black frame instead of reading flat. See ALTAIR_ARCHITECTURE.md —
+   * Shell Layer Model. */
+  --page-canvas-top: #303132;
+  --page-canvas-mid: #212122;
+  --page-canvas-deep: #0a0a0a;
+  --page-canvas-border: rgb(200 205 211 / 0.18);
+  --page-header-top: #131414;
+  --page-header-bottom: #0f0f10;
 }
 
 /*
@@ -1035,10 +1135,116 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-shell-main {
-    /* Content well — darker than header strip / root mid-tone */
-    background-color: var(--north-star-content-well);
-    /* Flush content to chrome — kill picture-frame gutters on desktop */
-    padding: 0;
+    /* One continuous chrome, no middle layer: the shell main paints the
+     * SAME surface as the surrounding chrome (root), so the sidebar and
+     * top bar read as a single frame that curves directly around each
+     * page's floating canvas (e.g. .north-star-list-page-canvas — the
+     * dark "moon graphite" blue panel). The old --north-star-content-well
+     * sage band between chrome and canvas is gone. */
+    background-color: var(--north-star-root);
+    padding: 0.75rem 0.875rem 0.875rem 0.75rem;
+  }
+
+  /* Shell-wide slim scrollbars — sidebar rail, shell main, and nested list
+   * regions all use the same quiet treatment instead of chunky OS bars.
+   * Neutral slate thumb stays visible on both light and dark surfaces. */
+  .admin-north-star-shell * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(100 116 139 / 0.4) transparent;
+  }
+
+  .admin-north-star-shell ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+
+  .admin-north-star-shell ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .admin-north-star-shell ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    background-color: rgb(100 116 139 / 0.4);
+  }
+
+  .admin-north-star-shell ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(100 116 139 / 0.6);
+  }
+
+  .admin-north-star-shell ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* ── L5 density register (Shell Layer Model) ─────────────────────────
+   * THE single density knob for form controls across the signed-in app.
+   * Problem it solves: control sizing/spacing was hand-written as literal
+   * utility classes in hundreds of components (min-h-11, gap-4, text-sm
+   * labels), so "make forms denser" had no one place to happen. This block
+   * owns control geometry at the ELEMENT level — every input, select,
+   * textarea, label, and form gap in the shell obeys it, regardless of
+   * which class system the component uses (canonical field-styles.ts,
+   * legacy admin-form-input, or local one-offs). Declarations carry
+   * !important so the register beats utilities regardless of layering.
+   * Desktop-only: phones keep full 44px touch targets.
+   * NOTE: rendered sizes on Windows at 125% display scaling are 1.25×
+   * these values (2.25rem → 45 device px) — that's the OS, not a bug.
+   * To retune density app-wide, edit THESE numbers — never a component. */
+  .admin-north-star-shell
+    .admin-shell-main
+    :is(
+      input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+      select
+    ) {
+    min-height: 2rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main textarea {
+    min-height: 3rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form label,
+  .admin-north-star-shell .admin-shell-main form label > span:first-child,
+  .admin-north-star-shell .admin-shell-main form legend {
+    font-size: 0.75rem !important;
+    line-height: 1.125rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form :is(h3, h4) {
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form .grid {
+    gap: 0.625rem 0.875rem !important;
+  }
+
+  .admin-north-star-shell
+    .admin-shell-main
+    form
+    :is(.space-y-3, .space-y-4, .space-y-5, .space-y-6)
+    > :not([hidden])
+    ~ :not([hidden]) {
+    margin-top: 0.625rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form :is(.pb-4, .pb-5, .pb-6) {
+    padding-bottom: 0.75rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form :is(.pt-4, .pt-5, .pt-6) {
+    padding-top: 0.75rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form :is(.mt-4, .mt-5, .mt-6) {
+    margin-top: 0.75rem !important;
+  }
+
+  .admin-north-star-shell .admin-shell-main form :is(.mb-4, .mb-5, .mb-6) {
+    margin-bottom: 0.75rem !important;
   }
 
   /*
@@ -1057,22 +1263,22 @@ a[href] {
 
   .admin-north-star-shell .admin-page-header h1,
   .admin-north-star-shell .admin-page-header .admin-heading-page {
-    color: var(--north-star-text-light);
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-page-header .admin-text-helper,
   .admin-north-star-shell .admin-page-header .admin-heading-eyebrow {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-subcopy);
   }
 
   /* Hub titles often pass ink-on-paper utilities — flip them on the dark strip */
   .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper {
-    color: var(--north-star-text-light);
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-muted,
   .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-secondary {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-subcopy);
   }
 
   /* Keep hub segmented tabs sharp on the header strip */
@@ -1138,15 +1344,15 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header h1 {
-    color: var(--north-star-text-light);
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-premium-header p {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-subcopy);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-search {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-icon);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-search:hover {
@@ -1155,7 +1361,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-calendar {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-icon);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-calendar:hover {
@@ -1176,22 +1382,22 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-signout {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-icon);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-signout:hover {
     background-color: rgb(201 164 77 / 0.1);
-    color: var(--north-star-text-light);
+    color: var(--north-star-link-hover);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher p,
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher span {
-    color: var(--north-star-text-light);
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher .text-slate-400,
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher .text-slate-500 {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-subcopy);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher button:hover {
@@ -1205,7 +1411,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-bell {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-icon);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-bell:hover {
@@ -1260,12 +1466,12 @@ a[href] {
 
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher p,
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher span {
-    color: var(--north-star-text-light);
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher .text-slate-400,
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher .text-slate-500 {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-topbar-subcopy);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher button:hover {
@@ -1374,8 +1580,13 @@ a[href] {
     overflow: hidden;
     border-radius: 1.5rem;
     padding: 1rem;
-    border: 1px solid rgb(174 182 194 / 0.18);
-    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    border: 1px solid var(--page-canvas-border);
+    background: linear-gradient(
+      180deg,
+      var(--page-canvas-top) 0%,
+      var(--page-canvas-mid) 18%,
+      var(--page-canvas-deep) 100%
+    );
     box-shadow:
       0 22px 60px rgb(3 7 12 / 0.3),
       inset 0 1px 0 rgb(255 255 255 / 0.08);
@@ -1402,7 +1613,11 @@ a[href] {
   overflow: hidden;
   border-radius: 1.25rem;
   border: 1px solid rgb(214 190 120 / 0.2);
-  background: linear-gradient(180deg, #222b38 0%, #17202b 100%);
+  background: linear-gradient(
+    180deg,
+    var(--page-header-top) 0%,
+    var(--page-header-bottom) 100%
+  );
   box-shadow:
     0 8px 32px -12px rgb(3 7 12 / 0.34),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -2718,8 +2933,13 @@ a[href] {
     overflow: hidden;
     border-radius: 1.5rem;
     padding: 1rem;
-    border: 1px solid rgb(174 182 194 / 0.18);
-    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    border: 1px solid var(--page-canvas-border);
+    background: linear-gradient(
+      180deg,
+      var(--page-canvas-top) 0%,
+      var(--page-canvas-mid) 18%,
+      var(--page-canvas-deep) 100%
+    );
     box-shadow:
       0 22px 60px rgb(3 7 12 / 0.3),
       inset 0 1px 0 rgb(255 255 255 / 0.08);
@@ -3108,23 +3328,23 @@ a[href] {
 
 @media (min-width: 768px) {
   .admin-north-star-shell .altair-canvas-ink {
-    color: var(--north-star-text-light);
+    color: var(--north-star-section-title);
   }
 
   .admin-north-star-shell .altair-canvas-ink-secondary {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-section-secondary);
   }
 
   .admin-north-star-shell .altair-canvas-ink-muted {
     color: color-mix(
       in srgb,
-      var(--north-star-text-light-muted) 88%,
+      var(--north-star-section-secondary) 88%,
       transparent
     );
   }
 
   .admin-north-star-shell .altair-canvas-ink-link {
-    color: var(--north-star-text-light-muted);
+    color: var(--north-star-link);
     text-decoration-color: color-mix(
       in srgb,
       var(--north-star-champagne) 45%,
@@ -3133,7 +3353,7 @@ a[href] {
   }
 
   .admin-north-star-shell .altair-canvas-ink-link:hover {
-    color: var(--north-star-text-light);
+    color: var(--north-star-link-hover);
     text-decoration-color: var(--north-star-gold);
   }
 
@@ -3144,72 +3364,19 @@ a[href] {
 }
 
 /*
- * Dashboard content-well trial (Mission Control only).
- * Scoped via .mc-dashboard-greige-trial — does not change Customers/Team/Work/Sales/Settings.
+ * Dashboard content well (Mission Control only).
+ * Scoped via .mc-dashboard-olive-canvas — does not change Customers/Team/Work/Sales/Settings.
  *
- * Tokens:
- *   content well  #e2e4e1  neutral cool-grey (deeper than washed pale; not warm ivory)
- *   hairline      #7c8662  warm olive, one step deeper than MC v2 #838f68 so the grid
- *                 still reads ~3:1 on the cooler well (was ~3:1 on warm #f0efe9)
- *   header strip  olive #4a5540 (chrome bridge — unchanged; light-on-dark ink)
+ * Canvas and sidebar are independent tokens everywhere (including production):
+ *   content well  → --north-star-content-well (#414a35 by default)
+ *   sidebar       → --north-star-sidebar (#4a5540 by default)
+ * Do not alias content-well to sidebar — Design Lab and live themes edit them
+ * separately. Structural chrome hairline → --north-star-border;
+ * MC section bands → --north-star-section-divider; plates → --north-star-plate-border.
+ *
+ * Section titles use --north-star-section-title (not topbar heading). Nested
+ * light exception / Schedule / Activity paper cards keep ink-on-paper.
  */
-.admin-north-star-shell .admin-shell-main:has(.mc-dashboard-greige-trial) {
-  --north-star-content-well: #e2e4e1;
-  --north-star-border: #7c8662;
-  background-color: var(--north-star-content-well);
-}
-
-/* Light greige content well → dark canvas ink (override shell light-on-olive flip) */
-@media (min-width: 768px) {
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink {
-    color: var(--altair-ink-on-paper);
-  }
-
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink-secondary {
-    color: var(--altair-ink-on-paper-secondary);
-  }
-
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink-muted {
-    color: var(--altair-ink-on-paper-muted);
-  }
-
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink-link {
-    color: var(--altair-ink-on-paper-secondary);
-    text-decoration-color: color-mix(
-      in srgb,
-      var(--altair-ink-on-paper-muted) 70%,
-      transparent
-    );
-  }
-
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink-link:hover {
-    color: var(--altair-ink-on-paper);
-    text-decoration-color: var(--altair-ink-on-paper-muted);
-  }
-
-  .admin-north-star-shell
-    .mc-dashboard-greige-trial
-    .mc-dashboard-content-well
-    .altair-canvas-ink-link:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--altair-brass) 55%, transparent);
-    outline-offset: 2px;
-  }
-}
 
 .altair-surface-section-body {
   padding: 0.75rem;

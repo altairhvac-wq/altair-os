@@ -19,6 +19,21 @@ import {
 } from "@/shared/lib/dashboard-exception-board";
 import { buildMissionControlV2ActivityRows } from "@/shared/lib/dashboard-mission-control-v2-activity";
 import { buildMissionControlV2ScheduleRows } from "@/shared/lib/dashboard-mission-control-v2-schedule";
+import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import { altairMcTileClass } from "@/shared/design-system/components";
+
+/** Force the caught-up olive card so Design Lab can isolate its fill token. */
+const CAUGHT_UP_CHECKLIST = buildOnboardingChecklist({
+  teamMemberCount: 2,
+  hasInvitedOrActiveTeam: true,
+  customerCount: 1,
+  leadCount: 1,
+  jobCount: 1,
+  serviceItemCount: 3,
+  estimateCount: 1,
+  invoiceCount: 1,
+  hasBillingDefaultsConfigured: true,
+});
 
 type DesignLabMissionControlAdapterProps = {
   selectedTargetId: DesignLabEditTargetId | null;
@@ -64,74 +79,119 @@ export function DesignLabMissionControlAdapter({
   return (
     <div className="mc-dashboard-olive-canvas flex min-w-0 flex-col">
       <div className="mc-dashboard-content-well flex flex-col bg-[var(--north-star-content-well)]">
-        <div className="border-b border-[var(--north-star-border)]/40 px-4 py-4 sm:px-5">
-          <section
-            className="flex min-w-0 flex-col gap-3"
-            aria-label="Needs attention cluster"
+        <DesignLabTokenAnchor tokenKey="northStarSectionDivider" className="block">
+          <DesignLabEditableTarget
+            targetId="section-divider"
+            selectedTargetId={selectedTargetId}
+            onSelectTarget={onSelectTarget}
+            className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5"
+            aria-label="Edit section divider · Needs attention band"
           >
-            <DesignLabEditableTarget
-              targetId="text-on-chrome"
-              selectedTargetId={selectedTargetId}
-              onSelectTarget={onSelectTarget}
-              as="div"
-              aria-label="Edit text on chrome · Needs attention"
+            <section
+              className="flex min-w-0 flex-col gap-3"
+              aria-label="Needs attention cluster"
             >
-              <MissionControlV2NeedsAttentionHeader
-                totalCount={totalAttentionCount}
-                viewAllHref={viewAllHref}
-              />
-            </DesignLabEditableTarget>
+              <DesignLabEditableTarget
+                targetId="section-title"
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={onSelectTarget}
+                as="div"
+                aria-label="Edit section title · Needs attention"
+              >
+                <MissionControlV2NeedsAttentionHeader
+                  totalCount={totalAttentionCount}
+                  viewAllHref={viewAllHref}
+                />
+              </DesignLabEditableTarget>
 
-            {exceptionBuckets.length === 0 ? (
-              <DesignLabTokenAnchor tokenKey="altairSuccessSurface" className="block">
+              {/* Isolation chips for link roles (hover ink has no resting region). */}
+              <div className="flex flex-wrap items-center gap-2">
                 <DesignLabEditableTarget
-                  targetId="status-colors"
+                  targetId="link-base"
                   selectedTargetId={selectedTargetId}
                   onSelectTarget={onSelectTarget}
-                  aria-label="Edit status colors · clear board"
+                  as="span"
+                  className="text-xs font-medium underline underline-offset-2"
+                  style={{ color: "var(--north-star-link)" }}
+                  aria-label="Edit link base"
                 >
-                  <MissionControlV2ExceptionBoardClear />
+                  View all
                 </DesignLabEditableTarget>
-              </DesignLabTokenAnchor>
-            ) : (
-              <div
-                className="grid grid-cols-1 gap-3 md:grid-cols-2"
-                role="list"
-                aria-label="Needs attention"
-              >
-                {exceptionBuckets.map((bucket) => {
-                  const urgency =
-                    bucket.urgency ?? getExceptionBucketUrgency(bucket.count);
-                  return (
-                    <div key={bucket.id} role="listitem">
-                      <DesignLabTokenAnchor
-                        tokenKey={URGENCY_SHELL_TOKEN[urgency]}
-                        className="block"
-                      >
-                        <DesignLabEditableTarget
-                          targetId="status-colors"
-                          selectedTargetId={selectedTargetId}
-                          onSelectTarget={onSelectTarget}
-                          aria-label={`Edit status colors · ${bucket.title} (${urgency})`}
-                        >
-                          <DesignLabTokenAnchor
-                            tokenKey={URGENCY_ACCENT_TOKEN[urgency]}
-                            as="span"
-                            className="block"
-                          >
-                            <MissionControlV2ExceptionBucketCard bucket={bucket} />
-                          </DesignLabTokenAnchor>
-                        </DesignLabEditableTarget>
-                      </DesignLabTokenAnchor>
-                    </div>
-                  );
-                })}
+                <DesignLabEditableTarget
+                  targetId="link-hover"
+                  selectedTargetId={selectedTargetId}
+                  onSelectTarget={onSelectTarget}
+                  as="span"
+                  className="text-xs font-medium"
+                  style={{ color: "var(--north-star-link-hover)" }}
+                  aria-label="Edit link hover"
+                >
+                  Link hover
+                </DesignLabEditableTarget>
+                <DesignLabEditableTarget
+                  targetId="section-secondary"
+                  selectedTargetId={selectedTargetId}
+                  onSelectTarget={onSelectTarget}
+                  as="span"
+                  className="text-xs"
+                  style={{ color: "var(--north-star-section-secondary)" }}
+                  aria-label="Edit section secondary"
+                >
+                  Secondary ink
+                </DesignLabEditableTarget>
               </div>
-            )}
-          </section>
-        </div>
 
-        <div className="border-b border-[var(--north-star-border)]/40 px-4 py-4 sm:px-5">
+              {exceptionBuckets.length === 0 ? (
+                <DesignLabTokenAnchor tokenKey="altairSuccessSurface" className="block">
+                  <DesignLabEditableTarget
+                    targetId="status-colors"
+                    selectedTargetId={selectedTargetId}
+                    onSelectTarget={onSelectTarget}
+                    aria-label="Edit status colors · clear board"
+                  >
+                    <MissionControlV2ExceptionBoardClear />
+                  </DesignLabEditableTarget>
+                </DesignLabTokenAnchor>
+              ) : (
+                <div
+                  className="grid grid-cols-1 gap-3 md:grid-cols-2"
+                  role="list"
+                  aria-label="Needs attention"
+                >
+                  {exceptionBuckets.map((bucket) => {
+                    const urgency =
+                      bucket.urgency ?? getExceptionBucketUrgency(bucket.count);
+                    return (
+                      <div key={bucket.id} role="listitem">
+                        <DesignLabTokenAnchor
+                          tokenKey={URGENCY_SHELL_TOKEN[urgency]}
+                          className="block"
+                        >
+                          <DesignLabEditableTarget
+                            targetId="status-colors"
+                            selectedTargetId={selectedTargetId}
+                            onSelectTarget={onSelectTarget}
+                            aria-label={`Edit status colors · ${bucket.title} (${urgency})`}
+                          >
+                            <DesignLabTokenAnchor
+                              tokenKey={URGENCY_ACCENT_TOKEN[urgency]}
+                              as="span"
+                              className="block"
+                            >
+                              <MissionControlV2ExceptionBucketCard bucket={bucket} />
+                            </DesignLabTokenAnchor>
+                          </DesignLabEditableTarget>
+                        </DesignLabTokenAnchor>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </DesignLabEditableTarget>
+        </DesignLabTokenAnchor>
+
+        <div className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5">
           <section aria-label="Informational cluster">
             <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
               <DesignLabTokenAnchor tokenKey="altairPaper" className="block">
@@ -155,18 +215,43 @@ export function DesignLabMissionControlAdapter({
                 </DesignLabEditableTarget>
               </DesignLabTokenAnchor>
             </div>
+
+            <DesignLabTokenAnchor tokenKey="northStarPlateBorder" className="mt-3 block">
+              <DesignLabEditableTarget
+                targetId="plate-border"
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={onSelectTarget}
+                className={altairMcTileClass}
+                aria-label="Edit plate border"
+              >
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                  style={{ color: "var(--north-star-section-secondary)" }}
+                >
+                  Plate border
+                </p>
+                <p
+                  className="mt-0.5 text-sm font-semibold"
+                  style={{ color: "var(--north-star-section-title)" }}
+                >
+                  mc-surface hairline
+                </p>
+              </DesignLabEditableTarget>
+            </DesignLabTokenAnchor>
           </section>
         </div>
 
         <div className="px-4 py-4 sm:px-5">
-          <DesignLabEditableTarget
-            targetId="surface-hierarchy"
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-            aria-label="Edit surface hierarchy · Next recommended"
-          >
-            <MissionControlV2NextRecommendedCard />
-          </DesignLabEditableTarget>
+          <DesignLabTokenAnchor tokenKey="northStarCaughtUpFill" className="block">
+            <DesignLabEditableTarget
+              targetId="caught-up-fill"
+              selectedTargetId={selectedTargetId}
+              onSelectTarget={onSelectTarget}
+              aria-label="Edit caught-up fill · Next recommended"
+            >
+              <MissionControlV2NextRecommendedCard checklist={CAUGHT_UP_CHECKLIST} />
+            </DesignLabEditableTarget>
+          </DesignLabTokenAnchor>
         </div>
       </div>
     </div>

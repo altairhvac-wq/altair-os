@@ -7,7 +7,7 @@ export function revalidateOperationalDashboard(): void {
 export function revalidateJobOperationalPages(jobId?: string): void {
   revalidatePath("/work");
   revalidatePath("/dispatch");
-  revalidatePath("/time");
+  revalidatePath("/payroll");
   revalidateOperationalDashboard();
   if (jobId) {
     revalidatePath(`/work/${jobId}`);

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import type { ReactNode } from "react";
 import { formatDate } from "@/shared/types/customer";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
@@ -16,7 +17,11 @@ import {
   validateMemberSuspension,
 } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
-import { getActiveReportsToOptions } from "@/shared/lib/company-org-tree";
+import {
+  buildCompanyOrgTreeLayout,
+  getActiveReportsToOptions,
+  type CompanyOrgTreeNode,
+} from "@/shared/lib/company-org-tree";
 import {
   formatTeamMemberRole,
   getTeamMemberInitials,
@@ -107,6 +112,9 @@ export function TeamMembersTable({
     useState<ConfirmingAction | null>(null);
   const [pendingRoleChange, setPendingRoleChange] =
     useState<PendingRoleChange | null>(null);
+  const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
+
+  const treeLayout = useMemo(() => buildCompanyOrgTreeLayout(members), [members]);
 
   const activeOwnerCount = useMemo(
     () =>
@@ -289,9 +297,375 @@ export function TeamMembersTable({
     });
   }
 
+  function renderMemberDetails(member: TeamMember): ReactNode {
+    const memberSubject = getMemberSubject(member);
+    const canEditRole =
+      canManageTeam &&
+      canActorEditMemberRole(currentUserRole, currentUserId, memberSubject);
+    const canEditReportsTo =
+      canManageTeam &&
+      canActorEditMemberReportsTo(currentUserRole, currentUserId, memberSubject);
+    const canEditSpecialties =
+      canManageTeam &&
+      canActorEditMemberSpecialties(currentUserRole, currentUserId, memberSubject);
+    const showSpecialties = shouldShowMemberSpecialties(member.role);
+    const reportsToOptions = getActiveReportsToOptions(allMembers, member.id);
+    const canSuspend =
+      canManageTeam &&
+      canActorSuspendMember(
+        currentUserRole,
+        currentUserId,
+        memberSubject,
+        activeOwnerCount,
+      );
+    const canReactivate =
+      canManageTeam &&
+      canActorReactivateMember(currentUserRole, currentUserId, memberSubject);
+    const canCancelInvite = canManageTeam && canActorCancelInvite(memberSubject);
+    const suspendBlockReason = canManageTeam
+      ? validateMemberSuspension({
+          membership: memberSubject,
+          activeOwnerCount,
+          actorUserId: currentUserId,
+          actorRole: currentUserRole,
+        })
+      : null;
+    const reactivateBlockReason = canManageTeam
+      ? validateMemberReactivation({
+          membership: memberSubject,
+          activeOwnerCount,
+          actorUserId: currentUserId,
+          actorRole: currentUserRole,
+        })
+      : null;
+    const isRowPending = isPending && pendingMembershipId === member.id;
+    const isActionLocked = isPending;
+    const isConfirming = confirmingAction?.membershipId === member.id;
+    const confirmingStatusAction = isConfirming ? confirmingAction?.action : null;
+    const roleOptions: CompanyRole[] = (
+      editableRoles as readonly CompanyRole[]
+    ).includes(member.role)
+      ? [...editableRoles]
+      : [...editableRoles, member.role];
+
+    return (
+      <div className="mt-1 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+              Role
+            </p>
+            {canEditRole ? (
+              <select
+                value={member.role}
+                disabled={isActionLocked}
+                onChange={(event) => {
+                  handleRoleChange(member, event.target.value as CompanyRole);
+                }}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
+                aria-label={`Role for ${member.name}`}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role} value={role}>
+                    {formatTeamMemberRole(role)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm font-medium text-slate-700">
+                {formatTeamMemberRole(member.role)}
+              </p>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+              Reports to
+            </p>
+            {canManageTeam && canEditReportsTo ? (
+              <ReportsToSelectorField
+                value={member.reportsToMemberId}
+                options={reportsToOptions}
+                onChange={(nextReportsToMemberId) =>
+                  handleReportsToChange(member, nextReportsToMemberId)
+                }
+                disabled={isActionLocked}
+                compact
+                aria-label={`Reports to for ${member.name}`}
+              />
+            ) : member.reportsToMemberId ? (
+              <p className="text-sm text-slate-600">
+                {allMembers.find((item) => item.id === member.reportsToMemberId)
+                  ?.name ?? "Unknown"}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-400">—</p>
+            )}
+          </div>
+
+          {showSpecialties ? (
+            <div className="min-w-0 sm:col-span-2">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+                Specialties
+              </p>
+              <TeamMemberSpecialtiesField
+                specialties={member.technicianSpecialties}
+                canEdit={canEditSpecialties}
+                disabled={isActionLocked}
+                compact
+                onChange={(nextSpecialties) =>
+                  handleSpecialtiesChange(member, nextSpecialties)
+                }
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-200/70 pt-2.5">
+          <p className="text-xs text-slate-500">
+            <span className="font-medium text-slate-700">
+              {getMemberDateLabel(member)}
+            </span>{" "}
+            · {getMemberDateCaption(member)}
+          </p>
+          <span className="mx-1 h-3 w-px bg-slate-200" aria-hidden="true" />
+          <Link
+            href={`/team/${member.id}`}
+            className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View Profile
+          </Link>
+
+          {canManageTeam ? (
+            <span className="ml-auto flex flex-wrap items-center gap-2">
+              {isConfirming && confirmingStatusAction ? (
+                <>
+                  <span className="text-xs text-slate-600">
+                    {confirmingStatusAction === "suspend"
+                      ? "Suspend access?"
+                      : confirmingStatusAction === "reactivate"
+                        ? "Restore access?"
+                        : "Cancel invite?"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isActionLocked}
+                    onClick={() => setConfirmingAction(null)}
+                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isActionLocked}
+                    onClick={() =>
+                      handleStatusAction(member.id, confirmingStatusAction)
+                    }
+                    className={`inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
+                      confirmingStatusAction === "suspend"
+                        ? "bg-rose-600 hover:bg-rose-700"
+                        : confirmingStatusAction === "reactivate"
+                          ? "bg-emerald-600 hover:bg-emerald-700"
+                          : "bg-slate-600 hover:bg-slate-700"
+                    }`}
+                  >
+                    {isRowPending
+                      ? confirmingStatusAction === "suspend"
+                        ? "Suspending..."
+                        : confirmingStatusAction === "reactivate"
+                          ? "Reactivating..."
+                          : "Cancelling..."
+                      : confirmingStatusAction === "suspend"
+                        ? "Confirm suspend"
+                        : confirmingStatusAction === "reactivate"
+                          ? "Confirm reactivate"
+                          : "Confirm cancel"}
+                  </button>
+                </>
+              ) : member.status === "active" ? (
+                <button
+                  type="button"
+                  disabled={!canSuspend || isActionLocked}
+                  title={suspendBlockReason ?? undefined}
+                  onClick={() => {
+                    if (!canSuspend || isPending) {
+                      return;
+                    }
+
+                    setConfirmingAction({
+                      membershipId: member.id,
+                      action: "suspend",
+                    });
+                  }}
+                  className="inline-flex items-center rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
+                >
+                  Suspend
+                </button>
+              ) : member.status === "suspended" ? (
+                <button
+                  type="button"
+                  disabled={!canReactivate || isActionLocked}
+                  title={reactivateBlockReason ?? undefined}
+                  onClick={() => {
+                    if (!canReactivate || isPending) {
+                      return;
+                    }
+
+                    setConfirmingAction({
+                      membershipId: member.id,
+                      action: "reactivate",
+                    });
+                  }}
+                  className="inline-flex items-center rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
+                >
+                  Reactivate
+                </button>
+              ) : member.status === "invited" ? (
+                <>
+                  <CopyTeamInviteLinkButton
+                    inviteEmail={member.email}
+                    disabled={isActionLocked}
+                  />
+                  <button
+                    type="button"
+                    disabled={!canCancelInvite || isActionLocked}
+                    onClick={() => {
+                      if (!canCancelInvite || isPending) {
+                        return;
+                      }
+
+                      setConfirmingAction({
+                        membershipId: member.id,
+                        action: "cancelInvite",
+                      });
+                    }}
+                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
+                  >
+                    Cancel invite
+                  </button>
+                </>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  function renderNodeCard(member: TeamMember, isRoot: boolean): ReactNode {
+    const isCurrentUser =
+      member.userId !== null && member.userId === currentUserId;
+    const selected = expandedMemberId === member.id;
+
+    return (
+      <button
+        type="button"
+        aria-expanded={selected}
+        onClick={() => setExpandedMemberId(selected ? null : member.id)}
+        className={`flex w-36 flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center shadow-sm transition ${
+          isRoot
+            ? "border-cyan-800 bg-cyan-700"
+            : "border-slate-200 bg-white hover:border-cyan-300 hover:shadow"
+        } ${selected ? "ring-2 ring-altair-brass/60" : ""}`}
+      >
+        {/* Avatar is the drop-in point for employee photos later. */}
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ${
+            isRoot ? "bg-white/20" : "bg-cyan-600"
+          }`}
+        >
+          {getTeamMemberInitials(member.name)}
+        </span>
+        <span className="w-full">
+          <span
+            className={`block truncate text-xs font-bold leading-tight ${
+              isRoot ? "text-white" : "text-slate-900"
+            }`}
+          >
+            {member.name}
+            {isCurrentUser ? " (You)" : ""}
+          </span>
+          <span
+            className={`mt-0.5 block truncate text-[10px] font-medium leading-tight ${
+              isRoot ? "text-cyan-100" : "text-slate-500"
+            }`}
+          >
+            {formatTeamMemberRole(member.role)}
+          </span>
+        </span>
+        {member.status !== "active" ? (
+          <MembershipStatusBadge status={member.status} className="scale-75" />
+        ) : null}
+      </button>
+    );
+  }
+
+  function renderChartNode(node: CompanyOrgTreeNode, isRoot: boolean): ReactNode {
+    return (
+      <div className="flex flex-col items-center">
+        {renderNodeCard(node.member, isRoot)}
+        {node.children.length > 0 ? (
+          <>
+            <div className="h-4 w-px bg-slate-300" aria-hidden="true" />
+            <div className="flex items-start">
+              {node.children.map((child, index) => {
+                const isFirst = index === 0;
+                const isLast = index === node.children.length - 1;
+                const only = node.children.length === 1;
+
+                return (
+                  <div
+                    key={child.member.id}
+                    className="relative flex flex-col items-center px-2"
+                  >
+                    {!only ? (
+                      <span
+                        aria-hidden="true"
+                        className={`absolute top-0 h-px bg-slate-300 ${
+                          isFirst
+                            ? "left-1/2 right-0"
+                            : isLast
+                              ? "left-0 right-1/2"
+                              : "left-0 right-0"
+                        }`}
+                      />
+                    ) : null}
+                    <span className="h-4 w-px bg-slate-300" aria-hidden="true" />
+                    {renderChartNode(child, false)}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
+  }
+
+  const roots = "roots" in treeLayout ? treeLayout.roots : [];
+  const unassignedMembers = "unassigned" in treeLayout ? treeLayout.unassigned : [];
+  // The chart's apex is the owner (plus anyone who actually has reports).
+  // Manager-less members with no reports move to the strip below so the
+  // chart always reads top-down from who runs the company.
+  const chartRoots = roots.filter(
+    (node) => node.member.role === "owner" || node.children.length > 0,
+  );
+  const looseMembers = [
+    ...roots
+      .filter(
+        (node) => node.member.role !== "owner" && node.children.length === 0,
+      )
+      .map((node) => node.member),
+    ...unassignedMembers,
+  ];
+  const hasChart = chartRoots.length > 0;
+  const selectedMember = expandedMemberId
+    ? members.find((member) => member.id === expandedMemberId) ?? null
+    : null;
+
   return (
     <div
-      className={`hidden overflow-x-auto md:block${
+      className={`hidden md:block${
         northStar ? " settings-north-star-team-ledger" : ""
       }`}
     >
@@ -331,317 +705,54 @@ export function TeamMembersTable({
         </div>
       ) : null}
 
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <th className="px-4 py-3 lg:px-6">Member</th>
-            <th className="px-4 py-3">Role</th>
-            <th className="hidden px-4 py-3 lg:table-cell">Specialties</th>
-            {canManageTeam ? (
-              <th className="hidden px-4 py-3 xl:table-cell">Reports to</th>
-            ) : null}
-            <th className="px-4 py-3">Status</th>
-            <th className="hidden px-4 py-3 lg:table-cell">Date</th>
-            <th className="px-4 py-3">Profile</th>
-            {canManageTeam ? <th className="px-4 py-3 lg:px-6">Actions</th> : null}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-50">
-          {members.map((member) => {
-            const isCurrentUser =
-              member.userId !== null && member.userId === currentUserId;
-            const memberSubject = getMemberSubject(member);
-            const canEditRole =
-              canManageTeam &&
-              canActorEditMemberRole(currentUserRole, currentUserId, memberSubject);
-            const canEditReportsTo =
-              canManageTeam &&
-              canActorEditMemberReportsTo(
-                currentUserRole,
-                currentUserId,
-                memberSubject,
-              );
-            const canEditSpecialties =
-              canManageTeam &&
-              canActorEditMemberSpecialties(
-                currentUserRole,
-                currentUserId,
-                memberSubject,
-              );
-            const showSpecialties = shouldShowMemberSpecialties(member.role);
-            const reportsToOptions = getActiveReportsToOptions(
-              allMembers,
-              member.id,
-            );
-            const canSuspend =
-              canManageTeam &&
-              canActorSuspendMember(
-                currentUserRole,
-                currentUserId,
-                memberSubject,
-                activeOwnerCount,
-              );
-            const canReactivate =
-              canManageTeam &&
-              canActorReactivateMember(
-                currentUserRole,
-                currentUserId,
-                memberSubject,
-              );
-            const canCancelInvite =
-              canManageTeam && canActorCancelInvite(memberSubject);
-            const suspendBlockReason = canManageTeam
-              ? validateMemberSuspension({
-                  membership: memberSubject,
-                  activeOwnerCount,
-                  actorUserId: currentUserId,
-                  actorRole: currentUserRole,
-                })
-              : null;
-            const reactivateBlockReason = canManageTeam
-              ? validateMemberReactivation({
-                  membership: memberSubject,
-                  activeOwnerCount,
-                  actorUserId: currentUserId,
-                  actorRole: currentUserRole,
-                })
-              : null;
-            const isRowPending =
-              isPending && pendingMembershipId === member.id;
-            const isActionLocked = isPending;
-            const isConfirming =
-              confirmingAction?.membershipId === member.id;
-            const confirmingStatusAction = isConfirming
-              ? confirmingAction?.action
-              : null;
-            const roleOptions: CompanyRole[] = (
-              editableRoles as readonly CompanyRole[]
-            ).includes(member.role)
-              ? [...editableRoles]
-              : [...editableRoles, member.role];
+      <div className="px-4 py-4 lg:px-6">
+        <div className="overflow-x-auto pb-2">
+          {hasChart ? (
+            <div className="flex min-w-max items-start justify-center gap-10 px-2">
+              {chartRoots.map((node) => (
+                <div key={node.member.id}>{renderChartNode(node, true)}</div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-start justify-center gap-3 px-2">
+              {members.map((member) => (
+                <div key={member.id}>{renderNodeCard(member, false)}</div>
+              ))}
+            </div>
+          )}
+        </div>
 
-            return (
-              <tr key={member.id} className="transition-colors hover:bg-slate-50/80">
-                <td className="px-4 py-3 lg:px-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">
-                      {getTeamMemberInitials(member.name)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">
-                        {member.name}
-                        {isCurrentUser ? (
-                          <span className="ml-2 text-xs font-medium text-slate-500">
-                            (You)
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {member.email}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  {canEditRole ? (
-                    <select
-                      value={member.role}
-                      disabled={isActionLocked}
-                      onChange={(event) => {
-                        handleRoleChange(
-                          member,
-                          event.target.value as CompanyRole,
-                        );
-                      }}
-                      className="min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
-                      aria-label={`Role for ${member.name}`}
-                    >
-                      {roleOptions.map((role) => (
-                        <option key={role} value={role}>
-                          {formatTeamMemberRole(role)}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="font-medium text-slate-700">
-                      {formatTeamMemberRole(member.role)}
-                    </span>
-                  )}
-                </td>
-                <td className="hidden px-4 py-3 lg:table-cell">
-                  {showSpecialties ? (
-                    <TeamMemberSpecialtiesField
-                      specialties={member.technicianSpecialties}
-                      canEdit={canEditSpecialties}
-                      disabled={isActionLocked}
-                      compact
-                      onChange={(nextSpecialties) =>
-                        handleSpecialtiesChange(member, nextSpecialties)
-                      }
-                    />
-                  ) : (
-                    <span className="text-sm text-slate-400">—</span>
-                  )}
-                </td>
-                {canManageTeam ? (
-                  <td className="hidden px-4 py-3 xl:table-cell">
-                    {canEditReportsTo ? (
-                      <ReportsToSelectorField
-                        value={member.reportsToMemberId}
-                        options={reportsToOptions}
-                        onChange={(nextReportsToMemberId) =>
-                          handleReportsToChange(member, nextReportsToMemberId)
-                        }
-                        disabled={isActionLocked}
-                        compact
-                        aria-label={`Reports to for ${member.name}`}
-                      />
-                    ) : member.reportsToMemberId ? (
-                      <span className="text-sm text-slate-600">
-                        {allMembers.find(
-                          (item) => item.id === member.reportsToMemberId,
-                        )?.name ?? "Unknown"}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-slate-400">—</span>
-                    )}
-                  </td>
-                ) : null}
-                <td className="px-4 py-3">
-                  <MembershipStatusBadge status={member.status} />
-                </td>
-                <td className="hidden px-4 py-3 lg:table-cell">
-                  <p className="font-medium text-slate-700">
-                    {getMemberDateLabel(member)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {getMemberDateCaption(member)}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/team/${member.id}`}
-                    className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    View Profile
-                  </Link>
-                </td>
-                {canManageTeam ? (
-                  <td className="px-4 py-3 lg:px-6">
-                    {isConfirming && confirmingStatusAction ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-slate-600">
-                          {confirmingStatusAction === "suspend"
-                            ? "Suspend access?"
-                            : confirmingStatusAction === "reactivate"
-                              ? "Restore access?"
-                              : "Cancel invite?"}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={isActionLocked}
-                          onClick={() => setConfirmingAction(null)}
-                          className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isActionLocked}
-                          onClick={() =>
-                            handleStatusAction(member.id, confirmingStatusAction)
-                          }
-                          className={`inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 ${
-                            confirmingStatusAction === "suspend"
-                              ? "bg-rose-600 hover:bg-rose-700"
-                              : confirmingStatusAction === "reactivate"
-                                ? "bg-emerald-600 hover:bg-emerald-700"
-                                : "bg-slate-600 hover:bg-slate-700"
-                          }`}
-                        >
-                          {isRowPending
-                            ? confirmingStatusAction === "suspend"
-                              ? "Suspending..."
-                              : confirmingStatusAction === "reactivate"
-                                ? "Reactivating..."
-                                : "Cancelling..."
-                            : confirmingStatusAction === "suspend"
-                              ? "Confirm suspend"
-                              : confirmingStatusAction === "reactivate"
-                                ? "Confirm reactivate"
-                                : "Confirm cancel"}
-                        </button>
-                      </div>
-                    ) : member.status === "active" ? (
-                      <button
-                        type="button"
-                        disabled={!canSuspend || isActionLocked}
-                        title={suspendBlockReason ?? undefined}
-                        onClick={() => {
-                          if (!canSuspend || isPending) {
-                            return;
-                          }
+        {hasChart && looseMembers.length > 0 ? (
+          <div className="mt-5 border-t border-slate-100 pt-3">
+            <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Not on the tree yet — click one and set who they report to
+            </p>
+            <div className="flex flex-wrap items-start justify-center gap-3">
+              {looseMembers.map((member) => (
+                <div key={member.id}>{renderNodeCard(member, false)}</div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
-                          setConfirmingAction({
-                            membershipId: member.id,
-                            action: "suspend",
-                          });
-                        }}
-                        className="inline-flex min-h-[44px] items-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
-                      >
-                        Suspend
-                      </button>
-                    ) : member.status === "suspended" ? (
-                      <button
-                        type="button"
-                        disabled={!canReactivate || isActionLocked}
-                        title={reactivateBlockReason ?? undefined}
-                        onClick={() => {
-                          if (!canReactivate || isPending) {
-                            return;
-                          }
-
-                          setConfirmingAction({
-                            membershipId: member.id,
-                            action: "reactivate",
-                          });
-                        }}
-                        className="inline-flex min-h-[44px] items-center rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
-                      >
-                        Reactivate
-                      </button>
-                    ) : member.status === "invited" ? (
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <CopyTeamInviteLinkButton
-                          inviteEmail={member.email}
-                          disabled={isActionLocked}
-                        />
-                        <button
-                          type="button"
-                          disabled={!canCancelInvite || isActionLocked}
-                          onClick={() => {
-                            if (!canCancelInvite || isPending) {
-                              return;
-                            }
-
-                            setConfirmingAction({
-                              membershipId: member.id,
-                              action: "cancelInvite",
-                            });
-                          }}
-                          className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
-                        >
-                          Cancel invite
-                        </button>
-                      </div>
-                    ) : null}
-                  </td>
-                ) : null}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+        {selectedMember ? (
+          <div className="mx-auto mt-4 max-w-2xl">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                Managing {selectedMember.name}
+              </p>
+              <button
+                type="button"
+                onClick={() => setExpandedMemberId(null)}
+                className="text-xs font-semibold text-slate-500 transition hover:text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+            {renderMemberDetails(selectedMember)}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -149,9 +149,17 @@ export function sortInvoicesForWorkQueue(
   return [...invoices].sort(compareInvoiceRecency);
 }
 
+/**
+ * Resolve the landing work queue for the Invoices list.
+ * Explicit statusFilter / focus deep-links always win (even if that queue is empty).
+ * With no explicit filter, land on the first non-empty queue in
+ * INVOICE_WORK_QUEUE_ORDER (excluding "past", which stays explicit-only).
+ * Fall back to "draft" when every queue is empty (new company).
+ */
 export function resolveDefaultInvoiceWorkQueue(
   statusFilter?: InvoiceStatus | "all" | "unpaid",
   focus?: "cash-flow" | null,
+  invoices: Invoice[] = [],
 ): InvoiceWorkQueue {
   if (statusFilter === "draft") return "draft";
   if (statusFilter === "sent") return "sent";
@@ -160,5 +168,13 @@ export function resolveDefaultInvoiceWorkQueue(
   if (statusFilter === "paid") return "paid";
   if (statusFilter === "void" || statusFilter === "cancelled") return "past";
   if (statusFilter === "unpaid" || focus === "cash-flow") return "overdue";
+
+  for (const queue of INVOICE_WORK_QUEUE_ORDER) {
+    if (queue === "past") continue;
+    if (countInvoicesForWorkQueue(invoices, queue) > 0) {
+      return queue;
+    }
+  }
+
   return "draft";
 }

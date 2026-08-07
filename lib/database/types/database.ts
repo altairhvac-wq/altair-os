@@ -101,6 +101,9 @@ import type {
   AlphaTrackerItemInsert,
   AlphaTrackerItemRow,
   AlphaTrackerItemUpdate,
+  DesignLabThemeInsert,
+  DesignLabThemeRow,
+  DesignLabThemeUpdate,
   BetaFeedbackReportInsert,
   BetaFeedbackReportRow,
   TimeClockEntryInsert,
@@ -186,6 +189,27 @@ export type Database = {
           },
           {
             foreignKeyName: "alpha_tracker_items_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      design_lab_themes: {
+        Row: DesignLabThemeRow;
+        Insert: DesignLabThemeInsert;
+        Update: DesignLabThemeUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "design_lab_themes_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "design_lab_themes_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";

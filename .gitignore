@@ -43,3 +43,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# npm-ci test backup of node_modules (local only, never commit)
+/node_modules_pre_ci_*
+
+# playwright auth/session artifacts (may contain login state)
+/.playwright
+
+# root-level debug scripts and captures
+/_*.js
+/_screenshot.png
+/-

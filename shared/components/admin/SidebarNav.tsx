@@ -23,11 +23,13 @@ type SidebarNavLinkProps = {
 
 function SidebarNavLink({ item, active }: SidebarNavLinkProps) {
   const Icon = item.icon;
+  const testId = `nav-link-${item.href === "/" ? "dashboard" : item.href.slice(1).replace(/\//g, "-")}`;
 
   return (
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
+      data-testid={testId}
       className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-lg px-3 pb-3 pt-2 text-sm transition-[background-color,color] duration-150 ${
         active
           ? `${northStarSidebarLinkActiveClass} font-semibold`

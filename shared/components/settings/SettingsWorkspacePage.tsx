@@ -30,15 +30,17 @@ export function SettingsWorkspacePage({
 }: SettingsWorkspacePageProps) {
   return (
     <article className="min-w-0">
-      <header className="border-b border-[var(--north-star-border)] pb-4">
-        <h1 className="text-xl font-bold tracking-tight text-altair-ink-on-paper sm:text-2xl">
+      {/* Compact header: the shell + active tab already name this page, so
+       * the in-page header is one slim line, not a second billboard. */}
+      <header className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5 border-b border-[var(--north-star-plate-border)] pb-2">
+        <h1 className="text-sm font-bold tracking-tight text-altair-ink-on-paper">
           {title}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-altair-ink-on-paper-secondary">
+        <p className="min-w-0 text-xs leading-5 text-altair-ink-on-paper-secondary">
           {description}
         </p>
       </header>
-      <div className={`mt-5 flex flex-col ${altairMcGridGapClass}`}>{children}</div>
+      <div className={`mt-3 flex flex-col ${altairMcGridGapClass}`}>{children}</div>
     </article>
   );
 }
@@ -53,10 +55,10 @@ export function SettingsWorkspaceSection({
   const body = (
     <>
       {title ? (
-        <div className={card ? "mb-3" : "mb-3"}>
-          <h2 className="text-base font-semibold text-altair-ink">{title}</h2>
+        <div className="mb-2">
+          <h2 className="text-sm font-semibold text-altair-ink">{title}</h2>
           {description ? (
-            <p className="mt-1 text-sm leading-6 text-altair-ink-secondary">
+            <p className="mt-0.5 text-xs leading-5 text-altair-ink-secondary">
               {description}
             </p>
           ) : null}

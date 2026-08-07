@@ -95,55 +95,73 @@ function DesignLabStaticTopbar({
       style={{
         ...designLabFillStyle("--north-star-topbar"),
         borderColor: "var(--north-star-brass-ring)",
-        color: "var(--north-star-text-light)",
+        color: "var(--north-star-topbar-heading)",
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
-          <p
+          <DesignLabEditableTarget
+            targetId="topbar-heading"
+            selectedTargetId={selectedTargetId}
+            onSelectTarget={onSelectTarget}
+            as="p"
             className="truncate text-sm font-bold tracking-tight sm:text-base"
-            style={{ color: "var(--north-star-text-light)" }}
+            style={{ color: "var(--north-star-topbar-heading)" }}
+            aria-label="Edit topbar heading"
           >
             Good morning, Altair HVAC
-          </p>
-          <p
+          </DesignLabEditableTarget>
+          <DesignLabEditableTarget
+            targetId="topbar-subcopy"
+            selectedTargetId={selectedTargetId}
+            onSelectTarget={onSelectTarget}
+            as="p"
             className="mt-0.5 truncate text-xs leading-none sm:text-[13px]"
-            style={{ color: "var(--north-star-text-light-muted)" }}
+            style={{ color: "var(--north-star-topbar-subcopy)" }}
+            aria-label="Edit topbar subcopy"
           >
             Tuesday, August 4
-          </p>
+          </DesignLabEditableTarget>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-        <span
+        <DesignLabEditableTarget
+          targetId="topbar-icon"
+          selectedTargetId={selectedTargetId}
+          onSelectTarget={onSelectTarget}
+          as="span"
           className="north-star-header-search hidden rounded-none p-2 sm:inline-flex"
-          style={{ color: "var(--north-star-text-light-muted)" }}
-          aria-hidden="true"
+          style={{ color: "var(--north-star-topbar-icon)" }}
+          aria-label="Edit topbar icon"
         >
           <Search className="h-5 w-5" />
-        </span>
-        <span
+        </DesignLabEditableTarget>
+        <DesignLabEditableTarget
+          targetId="topbar-icon"
+          selectedTargetId={selectedTargetId}
+          onSelectTarget={onSelectTarget}
+          as="span"
           className="north-star-header-bell relative rounded-none p-2"
-          style={{ color: "var(--north-star-text-light-muted)" }}
-          aria-hidden="true"
+          style={{ color: "var(--north-star-topbar-icon)" }}
+          aria-label="Edit topbar icon · bell"
         >
           <Bell className="h-5 w-5" />
           <span className="north-star-header-bell-badge absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold">
             3
           </span>
-        </span>
+        </DesignLabEditableTarget>
         <div className="north-star-header-divider flex items-center gap-2 border-l pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <div className="north-star-company-switcher hidden md:block">
             <p
               className="text-xs font-semibold"
-              style={{ color: "var(--north-star-text-light)" }}
+              style={{ color: "var(--north-star-topbar-heading)" }}
             >
               Altair HVAC
             </p>
             <p
               className="text-[10px]"
-              style={{ color: "var(--north-star-text-light-muted)" }}
+              style={{ color: "var(--north-star-topbar-subcopy)" }}
             >
               Sample workspace
             </p>

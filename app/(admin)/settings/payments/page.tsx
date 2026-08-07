@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 
 /**
- * Customer payments now live under Billing (`/settings/subscription`).
- * Keep this route as a redirect so Stripe Connect return URLs and old links work.
+ * Legacy /settings/payments route — customer payments live in the Billing
+ * page's Customer payments section (/settings/billing#customer-payments).
+ * Kept so Stripe Connect return URLs and old links keep working.
  */
-export default async function PaymentsSettingsPage({
+export default async function PaymentsSettingsRedirect({
   searchParams,
 }: {
   searchParams: Promise<{ payments?: string }>;
@@ -15,5 +16,5 @@ export default async function PaymentsSettingsPage({
       ? `?payments=${params.payments}`
       : "";
 
-  redirect(`/settings/subscription${notice}#customer-payments`);
+  redirect(`/settings/billing${notice}#customer-payments`);
 }

@@ -38,7 +38,7 @@ export function jobDetailBodyTextClass(northStar?: boolean) {
 
 export function jobDetailEmptyStateClass(northStar?: boolean) {
   return northStar
-    ? "rounded-none border border-dashed border-[var(--north-star-border)] bg-[var(--surface-tile)] px-4 py-8 text-center"
+    ? "rounded-none border border-dashed border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] px-4 py-8 text-center"
     : "rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center";
 }
 

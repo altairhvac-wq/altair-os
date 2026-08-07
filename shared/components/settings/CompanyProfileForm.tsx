@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { updateCompanyProfileAction } from "@/app/actions/company-settings";
 import { Button } from "@/shared/design-system/components/Button";
@@ -83,25 +82,23 @@ export function CompanyProfileForm({
     });
   }
 
+  /*
+   * Dense single-grid layout (settings IA v2): every field lives in ONE
+   * 4-column grid on wide screens, so the whole form is four short rows
+   * instead of a nine-row stack. Column spans, not section dividers, do
+   * the grouping. The L5 density register in globals.css owns control
+   * heights/gaps; this component only decides field order and spans.
+   */
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isPending}>
+    <form onSubmit={handleSubmit} className="space-y-3" aria-busy={isPending}>
       {feedback ? (
         <SettingsAlertBanner tone={feedback.tone}>
           {feedback.message}
         </SettingsAlertBanner>
       ) : null}
 
-      <dl className="grid gap-1 border-b border-altair-border pb-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:items-baseline sm:gap-6">
-        <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-altair-ink-muted">
-          Status
-        </dt>
-        <dd className="text-sm font-medium text-altair-ink">
-          {formatCompanyStatus(initialProfile.status)}
-        </dd>
-      </dl>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block space-y-1.5 sm:col-span-2">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <label className="block space-y-1 sm:col-span-2">
           <span className={fieldLabelClass}>Company name</span>
           <input
             type="text"
@@ -117,7 +114,7 @@ export function CompanyProfileForm({
           />
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className={fieldLabelClass}>Trade</span>
           <select
             name="trade"
@@ -135,7 +132,7 @@ export function CompanyProfileForm({
           </select>
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className={fieldLabelClass}>Timezone</span>
           <select
             name="timezone"
@@ -153,7 +150,7 @@ export function CompanyProfileForm({
           </select>
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className={fieldLabelClass}>Phone</span>
           <input
             type="tel"
@@ -166,7 +163,7 @@ export function CompanyProfileForm({
           />
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className={fieldLabelClass}>Email</span>
           <input
             type="email"
@@ -178,114 +175,110 @@ export function CompanyProfileForm({
             autoComplete="email"
           />
         </label>
+
+        <label className="block space-y-1 sm:col-span-2">
+          <span className={fieldLabelClass}>Address line 1</span>
+          <input
+            type="text"
+            name="addressLine1"
+            disabled={!canManage || isPending}
+            value={values.addressLine1}
+            onChange={(event) =>
+              updateField("addressLine1", event.target.value)
+            }
+            className={fieldControlClass}
+            autoComplete="address-line1"
+          />
+        </label>
+
+        <label className="block space-y-1 sm:col-span-2">
+          <span className={fieldLabelClass}>Address line 2</span>
+          <input
+            type="text"
+            name="addressLine2"
+            disabled={!canManage || isPending}
+            value={values.addressLine2}
+            onChange={(event) =>
+              updateField("addressLine2", event.target.value)
+            }
+            className={fieldControlClass}
+            autoComplete="address-line2"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className={fieldLabelClass}>City</span>
+          <input
+            type="text"
+            name="city"
+            disabled={!canManage || isPending}
+            value={values.city}
+            onChange={(event) => updateField("city", event.target.value)}
+            className={fieldControlClass}
+            autoComplete="address-level2"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className={fieldLabelClass}>State / province</span>
+          <input
+            type="text"
+            name="state"
+            disabled={!canManage || isPending}
+            value={values.state}
+            onChange={(event) => updateField("state", event.target.value)}
+            className={fieldControlClass}
+            autoComplete="address-level1"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className={fieldLabelClass}>Postal code</span>
+          <input
+            type="text"
+            name="postalCode"
+            disabled={!canManage || isPending}
+            value={values.postalCode}
+            onChange={(event) =>
+              updateField("postalCode", event.target.value)
+            }
+            className={fieldControlClass}
+            autoComplete="postal-code"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className={fieldLabelClass}>Country</span>
+          <input
+            type="text"
+            name="country"
+            disabled={!canManage || isPending}
+            value={values.country}
+            onChange={(event) => updateField("country", event.target.value)}
+            className={fieldControlClass}
+            autoComplete="country-name"
+          />
+        </label>
       </div>
 
-      <div className="space-y-4 border-t border-altair-border pt-4">
-        <p className="text-sm font-semibold text-altair-ink">Address</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className={fieldLabelClass}>Address line 1</span>
-            <input
-              type="text"
-              name="addressLine1"
-              disabled={!canManage || isPending}
-              value={values.addressLine1}
-              onChange={(event) =>
-                updateField("addressLine1", event.target.value)
-              }
-              className={fieldControlClass}
-              autoComplete="address-line1"
-            />
-          </label>
-
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className={fieldLabelClass}>Address line 2</span>
-            <input
-              type="text"
-              name="addressLine2"
-              disabled={!canManage || isPending}
-              value={values.addressLine2}
-              onChange={(event) =>
-                updateField("addressLine2", event.target.value)
-              }
-              className={fieldControlClass}
-              autoComplete="address-line2"
-            />
-          </label>
-
-          <label className="block space-y-1.5">
-            <span className={fieldLabelClass}>City</span>
-            <input
-              type="text"
-              name="city"
-              disabled={!canManage || isPending}
-              value={values.city}
-              onChange={(event) => updateField("city", event.target.value)}
-              className={fieldControlClass}
-              autoComplete="address-level2"
-            />
-          </label>
-
-          <label className="block space-y-1.5">
-            <span className={fieldLabelClass}>State / province</span>
-            <input
-              type="text"
-              name="state"
-              disabled={!canManage || isPending}
-              value={values.state}
-              onChange={(event) => updateField("state", event.target.value)}
-              className={fieldControlClass}
-              autoComplete="address-level1"
-            />
-          </label>
-
-          <label className="block space-y-1.5">
-            <span className={fieldLabelClass}>Postal code</span>
-            <input
-              type="text"
-              name="postalCode"
-              disabled={!canManage || isPending}
-              value={values.postalCode}
-              onChange={(event) =>
-                updateField("postalCode", event.target.value)
-              }
-              className={fieldControlClass}
-              autoComplete="postal-code"
-            />
-          </label>
-
-          <label className="block space-y-1.5">
-            <span className={fieldLabelClass}>Country</span>
-            <input
-              type="text"
-              name="country"
-              disabled={!canManage || isPending}
-              value={values.country}
-              onChange={(event) => updateField("country", event.target.value)}
-              className={fieldControlClass}
-              autoComplete="country-name"
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-altair-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-altair-ink-secondary">
-          Tax rate, payment terms, and document notes live under{" "}
-          <Link
-            href="/settings/documents"
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-altair-border pt-3">
+        <p className="text-xs text-altair-ink-secondary">
+          Status: {formatCompanyStatus(initialProfile.status)} · Tax, payment
+          terms, and notes live in{" "}
+          <a
+            href="#documents"
             className="font-medium text-altair-ink underline-offset-2 hover:underline"
           >
-            Documents
-          </Link>
-          .
+            Document defaults
+          </a>{" "}
+          below.
         </p>
         {canManage ? (
           <Button type="submit" loading={isPending} className="shrink-0">
             Save company profile
           </Button>
         ) : (
-          <p className="text-sm text-altair-ink-muted">
+          <p className="text-xs text-altair-ink-muted">
             Only owners and admins can edit company profile.
           </p>
         )}

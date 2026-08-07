@@ -139,6 +139,7 @@ export function JobsTable({
                   key={job.id}
                   selected={isSelected}
                   onClick={() => onSelect(job)}
+                  data-testid="job-row"
                 >
                   {selectionEnabled ? (
                     <AltairTableCell>

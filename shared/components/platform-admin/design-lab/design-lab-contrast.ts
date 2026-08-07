@@ -1,5 +1,9 @@
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
-import { normalizeHexColor } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import {
+  isValidHexColor,
+  normalizeHexColor,
+  parseDesignLabColorChannels,
+} from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 
 export type ContrastRating = "good" | "caution" | "poor";
 
@@ -16,10 +20,8 @@ export type ContrastCheckResult = {
   helperText: string;
 };
 
-const HEX_PATTERN = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-
 export function isValidContrastHex(value: string): boolean {
-  return HEX_PATTERN.test(value.trim());
+  return isValidHexColor(value);
 }
 
 export function normalizeContrastHex(value: string): string | null {
@@ -27,21 +29,12 @@ export function normalizeContrastHex(value: string): string | null {
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const normalized = normalizeContrastHex(hex);
-  if (!normalized) {
+  const channels = parseDesignLabColorChannels(hex);
+  if (!channels) {
     return null;
   }
 
-  const value = normalized.slice(1);
-  const r = Number.parseInt(value.slice(0, 2), 16);
-  const g = Number.parseInt(value.slice(2, 4), 16);
-  const b = Number.parseInt(value.slice(4, 6), 16);
-
-  if ([r, g, b].some((channel) => Number.isNaN(channel))) {
-    return null;
-  }
-
-  return { r, g, b };
+  return { r: channels.r, g: channels.g, b: channels.b };
 }
 
 function srgbToLinear(channel: number): number {
@@ -133,7 +126,7 @@ function buildCheck(
       kind,
       ratio: null,
       rating: null,
-      helperText: "Invalid color.",
+      helperText: "Invalid or non-hex color (skipped for alpha/rgb tokens).",
     };
   }
 
@@ -187,129 +180,129 @@ export function evaluateDesignLabContrast(
 ): ContrastCheckResult[] {
   return [
     buildCheck(
-      "header-on-page",
-      "Header text on page background",
-      colors.headerText,
-      colors.pageBackground,
-      "Header text",
-      "Page background",
+      "topbar-heading-on-topbar",
+      "Topbar heading on topbar",
+      colors.northStarTopbarHeading,
+      colors.northStarTopbar,
+      "--north-star-topbar-heading",
+      "--north-star-topbar",
       "text",
     ),
     buildCheck(
-      "body-on-card",
-      "Body text on card background",
-      colors.bodyText,
-      colors.cardBackground,
-      "Body text",
-      "Card background",
+      "sidebar-link-on-sidebar",
+      "Sidebar link on sidebar",
+      colors.northStarSidebarLink,
+      colors.northStarSidebar,
+      "--north-star-sidebar-link",
+      "--north-star-sidebar",
       "text",
     ),
     buildCheck(
-      "muted-on-card",
-      "Muted text on card background",
-      colors.mutedText,
-      colors.cardBackground,
-      "Muted text",
-      "Card background",
+      "sidebar-label-on-sidebar",
+      "Sidebar label on sidebar",
+      colors.northStarSidebarLabel,
+      colors.northStarSidebar,
+      "--north-star-sidebar-label",
+      "--north-star-sidebar",
       "text",
     ),
     buildCheck(
-      "primary-button-text",
-      "Primary button text on primary button",
-      colors.primaryButtonText,
-      colors.primaryButton,
-      "Primary button text",
-      "Primary button",
+      "section-title-on-content-well",
+      "Section title on content well",
+      colors.northStarSectionTitle,
+      colors.northStarContentWell,
+      "--north-star-section-title",
+      "--north-star-content-well",
       "text",
     ),
     buildCheck(
-      "secondary-button-text",
-      "Secondary button text on secondary button",
-      colors.secondaryButtonText,
-      colors.secondaryButton,
-      "Secondary button text",
-      "Secondary button",
+      "text-dark-on-paper",
+      "Text dark on paper",
+      colors.northStarTextDark,
+      colors.altairPaper,
+      "--north-star-text-dark",
+      "--altair-paper",
       "text",
     ),
     buildCheck(
-      "body-on-secondary-button",
-      "Body text on secondary button",
-      colors.bodyText,
-      colors.secondaryButton,
-      "Body text",
-      "Secondary button",
+      "ink-on-surface-card",
+      "Ink on surface card",
+      colors.altairInk,
+      colors.surfaceCard,
+      "--altair-ink",
+      "--surface-card",
       "text",
     ),
     buildCheck(
-      "card-border-on-card",
-      "Card border on card background",
-      colors.cardBorder,
-      colors.cardBackground,
-      "Card border",
-      "Card background",
+      "section-title-on-caught-up",
+      "Section title on caught-up fill",
+      colors.northStarSectionTitle,
+      colors.northStarCaughtUpFill,
+      "--north-star-section-title",
+      "--north-star-caught-up-fill",
+      "text",
+    ),
+    buildCheck(
+      "chrome-border-on-sidebar",
+      "Chrome border on sidebar",
+      colors.northStarBorder,
+      colors.northStarSidebar,
+      "--north-star-border",
+      "--north-star-sidebar",
       "border",
     ),
     buildCheck(
-      "success-badge",
-      "Success badge readability",
-      colors.bodyText,
-      colors.successBadge,
-      "Body text",
-      "Success badge",
+      "plate-border-on-surface-card",
+      "Plate border on surface card",
+      colors.northStarPlateBorder,
+      colors.surfaceCard,
+      "--north-star-plate-border",
+      "--surface-card",
+      "border",
+    ),
+    buildCheck(
+      "exception-low-ink",
+      "Dark text on exception low shell (paper)",
+      colors.northStarTextDark,
+      colors.altairPaper,
+      "--north-star-text-dark",
+      "--altair-paper",
       "text",
     ),
     buildCheck(
-      "warning-badge",
-      "Warning badge readability",
-      colors.bodyText,
-      colors.warningBadge,
-      "Body text",
-      "Warning badge",
+      "exception-medium-ink",
+      "Warning foreground on warning surface",
+      colors.altairWarningForeground,
+      colors.altairWarningSurface,
+      "--altair-warning-foreground",
+      "--altair-warning-surface",
       "text",
     ),
     buildCheck(
-      "danger-badge",
-      "Danger badge readability",
-      colors.bodyText,
-      colors.dangerBadge,
-      "Body text",
-      "Danger badge",
+      "exception-high-ink",
+      "Danger on danger surface",
+      colors.altairDanger,
+      colors.altairDangerSurface,
+      "--altair-danger",
+      "--altair-danger-surface",
       "text",
     ),
     buildCheck(
-      "sidebar-text-on-sidebar",
-      "Sidebar text on sidebar background",
-      colors.sidebarText,
-      colors.sidebarBackground,
-      "Sidebar text",
-      "Sidebar background",
+      "dark-page-paper-on-ink",
+      "Paper text on dark-page ink",
+      colors.altairPaper,
+      colors.altairInk,
+      "--altair-paper",
+      "--altair-ink",
       "text",
     ),
     buildCheck(
-      "sidebar-muted-on-sidebar",
-      "Sidebar muted text on sidebar background",
-      colors.sidebarMutedText,
-      colors.sidebarBackground,
-      "Sidebar muted text",
-      "Sidebar background",
-      "text",
-    ),
-    buildCheck(
-      "sidebar-text-on-active",
-      "Sidebar text on active item background",
-      colors.sidebarText,
-      colors.sidebarActiveBackground,
-      "Sidebar text",
-      "Sidebar active background",
-      "text",
-    ),
-    buildCheck(
-      "topbar-text-on-topbar",
-      "Topbar text on topbar background",
-      colors.topbarText,
-      colors.topbarBackground,
-      "Topbar text",
-      "Topbar background",
+      "hub-work-text-on-row",
+      "Work text on work row",
+      colors.northStarWorkText,
+      colors.northStarWorkRow,
+      "--north-star-work-text",
+      "--north-star-work-row",
       "text",
     ),
   ];

@@ -93,7 +93,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 
 ### Design Lab
 
-- Founder design lab at `/platform/design-lab` — click-to-edit color targets, presets, contrast guardrails, theme export, dashboard replica canvas
+- Founder design lab at `/platform/design-lab` — click-to-edit color targets, presets, contrast guardrails, theme export, dashboard replica canvas, company-scoped saved themes (`design_lab_themes`) with explicit promote-to-live / revert (live CSS var injection on `.admin-north-star-shell` for the active company)
 
 ### Dashboard Brain (Operational Prioritization)
 

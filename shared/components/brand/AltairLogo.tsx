@@ -5,6 +5,7 @@ import {
   ALTAIR_BRAND_COLORS,
   ALTAIR_BRAND_LIBRARY,
   ALTAIR_GOLD_GRADIENT_STOPS,
+  ALTAIR_PLATINUM_GRADIENT_STOPS,
   ALTAIR_MARK_PATHS,
   ALTAIR_WORDMARK,
   type AltairBrandVariant,
@@ -23,58 +24,75 @@ const SIZE_MAP = {
   lg: { icon: 48, wordmark: 140 },
 } as const;
 
-function resolveFill(
-  variant: AltairBrandVariant,
-  gradientId: string,
-): string {
-  if (variant === "white") {
-    return ALTAIR_BRAND_COLORS.white;
-  }
+// Wordmark canvas is 640×200 (icon occupies the first 200×200); keep that
+// aspect ratio when the caller only specifies a width.
+const WORDMARK_ASPECT = 200 / 640;
 
-  return `url(#${gradientId})`;
+type MarkFills = { platinumFill: string; goldFill: string };
+
+function resolveMarkFills(
+  variant: AltairBrandVariant,
+  platinumGradientId: string,
+  goldGradientId: string,
+): MarkFills {
+  if (variant === "white") {
+    return { platinumFill: ALTAIR_BRAND_COLORS.white, goldFill: ALTAIR_BRAND_COLORS.white };
+  }
+  if (variant === "gold") {
+    // Monochrome gold treatment — both halves of the mark share the gold gradient.
+    return { platinumFill: `url(#${goldGradientId})`, goldFill: `url(#${goldGradientId})` };
+  }
+  // "primary" — the native two-tone treatment (platinum + gold).
+  return { platinumFill: `url(#${platinumGradientId})`, goldFill: `url(#${goldGradientId})` };
 }
 
 function AltairMark({
-  fill,
-  showGradient,
-  gradientId,
-}: {
-  fill: string;
-  showGradient: boolean;
-  gradientId: string;
+  platinumFill,
+  goldFill,
+  showGradients,
+  platinumGradientId,
+  goldGradientId,
+}: MarkFills & {
+  showGradients: boolean;
+  platinumGradientId: string;
+  goldGradientId: string;
 }) {
   return (
     <>
-      {showGradient ? (
+      {showGradients ? (
         <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id={platinumGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            {ALTAIR_PLATINUM_GRADIENT_STOPS.map((stop) => (
+              <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+            ))}
+          </linearGradient>
+          <linearGradient id={goldGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
             {ALTAIR_GOLD_GRADIENT_STOPS.map((stop) => (
-              <stop
-                key={stop.offset}
-                offset={stop.offset}
-                stopColor={stop.color}
-              />
+              <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
             ))}
           </linearGradient>
         </defs>
       ) : null}
-      <path fill={fill} d={ALTAIR_MARK_PATHS.mark} />
+      <path fill={platinumFill} d={ALTAIR_MARK_PATHS.platinum} />
+      <path fill={goldFill} d={ALTAIR_MARK_PATHS.gold} />
     </>
   );
 }
 
 function AltairWordmark({
   fill,
+  subFill,
   fontSize,
 }: {
   fill: string;
+  subFill: string;
   fontSize: number;
 }) {
   return (
     <>
       <text
-        x="50"
-        y="78"
+        x="420"
+        y="98"
         textAnchor="middle"
         fill={fill}
         fontFamily={ALTAIR_WORDMARK.fontFamily}
@@ -84,15 +102,18 @@ function AltairWordmark({
       >
         {ALTAIR_WORDMARK.text}
       </text>
-      <line
-        x1="32"
-        y1="84"
-        x2="68"
-        y2="84"
-        stroke={fill}
-        strokeWidth="0.75"
-        opacity={fill === ALTAIR_BRAND_COLORS.white ? 0.45 : 0.55}
-      />
+      <line x1="330" y1="118" x2="510" y2="118" stroke={subFill} strokeWidth="1.25" opacity={0.8} />
+      <text
+        x="420"
+        y="142"
+        textAnchor="middle"
+        fill={subFill}
+        fontFamily="'Inter', sans-serif"
+        fontSize={fontSize * 0.34}
+        letterSpacing="0.28em"
+      >
+        OPERATING SYSTEM
+      </text>
     </>
   );
 }
@@ -103,31 +124,30 @@ export function AltairLogo({
   showWordmark = true,
   className = "",
 }: AltairLogoProps) {
-  const gradientId = useId().replace(/:/g, "");
+  const rawId = useId().replace(/:/g, "");
+  const platinumGradientId = `${rawId}-platinum`;
+  const goldGradientId = `${rawId}-gold`;
   const dimensions = SIZE_MAP[size];
-  const resolvedVariant: AltairBrandVariant =
-    variant === "icon" ? "gold" : variant;
-  const useGradient = resolvedVariant !== "white";
-  const fill = resolveFill(resolvedVariant, gradientId);
+  const resolvedVariant: AltairBrandVariant = variant === "icon" ? "primary" : variant;
+  const useGradients = resolvedVariant !== "white";
+  const { platinumFill, goldFill } = resolveMarkFills(
+    resolvedVariant,
+    platinumGradientId,
+    goldGradientId,
+  );
   const includeWordmark = variant !== "icon" && showWordmark;
-  const includePrimaryBackground =
-    resolvedVariant === "primary" && includeWordmark;
+  const includePrimaryBackground = resolvedVariant === "primary" && includeWordmark;
 
   const width = includeWordmark ? dimensions.wordmark : dimensions.icon;
   const height = includeWordmark
-    ? Math.round(dimensions.wordmark * 0.56)
+    ? Math.round(dimensions.wordmark * WORDMARK_ASPECT)
     : dimensions.icon;
-  const iconScale = dimensions.icon / 80;
-  const wordmarkFontSize = size === "sm" ? 11 : size === "md" ? 14 : 18;
-
-  const markTransform = includeWordmark
-    ? `translate(50 36) scale(${iconScale * 0.95}) translate(-40 -32)`
-    : `translate(40 40) scale(${iconScale}) translate(-40 -32)`;
+  const wordmarkFontSize = size === "sm" ? 54 : size === "md" ? 60 : 66;
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox={includeWordmark ? "0 0 100 90" : "0 0 80 80"}
+      viewBox={includeWordmark ? "0 0 640 200" : "0 0 200 200"}
       width={width}
       height={height}
       role="img"
@@ -135,22 +155,17 @@ export function AltairLogo({
       className={`shrink-0 ${className}`.trim()}
     >
       {includePrimaryBackground ? (
-        <rect
-          width="100"
-          height="90"
-          rx="6"
-          fill={ALTAIR_BRAND_COLORS.black}
-        />
+        <rect width="640" height="200" rx="18" fill={ALTAIR_BRAND_COLORS.black} />
       ) : null}
-      <g transform={markTransform}>
-        <AltairMark
-          fill={fill}
-          showGradient={useGradient}
-          gradientId={gradientId}
-        />
-      </g>
+      <AltairMark
+        platinumFill={platinumFill}
+        goldFill={goldFill}
+        showGradients={useGradients}
+        platinumGradientId={platinumGradientId}
+        goldGradientId={goldGradientId}
+      />
       {includeWordmark ? (
-        <AltairWordmark fill={fill} fontSize={wordmarkFontSize} />
+        <AltairWordmark fill={platinumFill} subFill={goldFill} fontSize={wordmarkFontSize} />
       ) : null}
     </svg>
   );

@@ -1,12 +1,11 @@
-import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { ShellNorthStarView } from "@/shared/components/altair-shell-north-star-v1/ShellNorthStarView";
+import { redirect } from "next/navigation";
 
-export default async function AltairShellNorthStarV1Page() {
-  const companyContext = await getActiveCompanyContext();
-
-  if (!companyContext) {
-    return null;
-  }
-
-  return <ShellNorthStarView companyContext={companyContext} />;
+/**
+ * Retired shell experiment. Original page archived at
+ * docs/design-archive/concept-altair-shell-north-star-v1-page.tsx.bak — route neutralized per
+ * ALTAIR_ARCHITECTURE.md §5. Delete this directory (and the matching
+ * shared/components/altair-shell-north-star-v1/ dir) in the next on-machine cleanup pass.
+ */
+export default function RetiredExperimentPage() {
+  redirect("/");
 }

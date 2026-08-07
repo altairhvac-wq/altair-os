@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local tooling / deploy artifacts (not app source)
+    ".vercel/**",
+    ".tmp/**",
+    ".playwright/**",
   ]),
 ]);
 

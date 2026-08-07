@@ -13,37 +13,37 @@
 
 /** Shared geometry + interaction for single-line native controls. */
 export const fieldControlClass = [
-  "w-full min-h-11 rounded-xl border text-sm outline-none transition-colors",
+  "w-full min-h-11 sm:min-h-9 rounded-lg border text-sm outline-none transition-colors",
   "bg-altair-paper-elevated text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted",
   "border-altair-border hover:border-altair-border-strong",
   "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
   "aria-[invalid=true]:border-altair-danger-foreground aria-[invalid=true]:focus-visible:ring-altair-danger-foreground",
   "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-altair-border disabled:bg-altair-paper-subtle disabled:text-altair-ink-muted disabled:opacity-70",
   "read-only:cursor-default read-only:bg-altair-stone read-only:hover:border-altair-border",
-  "px-3.5 py-2.5",
+  "px-3 py-2.5 sm:py-1.5",
 ].join(" ");
 
 /** Multi-line control — same family as fieldControlClass with vertical resize. */
 export const fieldTextareaClass = [
-  "w-full min-h-24 resize-y rounded-xl border text-sm outline-none transition-colors",
+  "w-full min-h-20 resize-y rounded-lg border text-sm outline-none transition-colors",
   "bg-altair-paper-elevated text-altair-ink-on-paper placeholder:text-altair-ink-on-paper-muted",
   "border-altair-border hover:border-altair-border-strong",
   "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
   "aria-[invalid=true]:border-altair-danger-foreground aria-[invalid=true]:focus-visible:ring-altair-danger-foreground",
   "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-altair-border disabled:bg-altair-paper-subtle disabled:text-altair-ink-muted disabled:opacity-70",
   "read-only:cursor-default read-only:bg-altair-stone read-only:hover:border-altair-border",
-  "px-3.5 py-2.5",
+  "px-3 py-2.5 sm:py-1.5",
 ].join(" ");
 
 /** Native select — same family; no read-only (HTML has no select readOnly). */
 export const fieldSelectClass = [
-  "w-full min-h-11 rounded-xl border text-sm outline-none transition-colors",
+  "w-full min-h-11 sm:min-h-9 rounded-lg border text-sm outline-none transition-colors",
   "bg-altair-paper-elevated text-altair-ink-on-paper",
   "border-altair-border hover:border-altair-border-strong",
   "focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated",
   "aria-[invalid=true]:border-altair-danger-foreground aria-[invalid=true]:focus-visible:ring-altair-danger-foreground",
   "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-altair-border disabled:bg-altair-paper-subtle disabled:text-altair-ink-muted disabled:opacity-70",
-  "px-3.5 py-2.5",
+  "px-3 py-2.5 sm:py-1.5",
 ].join(" ");
 
 /**
@@ -54,23 +54,23 @@ export const fieldSearchClass = fieldControlClass;
 
 /** Field label — matches Field.tsx label presentation. */
 export const fieldLabelClass =
-  "block text-sm font-medium text-altair-ink-on-paper";
+  "block text-xs font-medium text-altair-ink-on-paper";
 
 /** Optional helper / description under the label. */
 export const fieldDescriptionClass =
-  "text-sm text-altair-ink-on-paper-secondary";
+  "text-xs text-altair-ink-on-paper-secondary";
 
 /** Validation / error message under the control. */
-export const fieldErrorClass = "text-sm text-altair-danger-foreground";
+export const fieldErrorClass = "text-xs text-altair-danger-foreground";
 
 /** Vertical rhythm between label, description, control, and error. */
-export const fieldStackClass = "flex flex-col gap-1.5";
+export const fieldStackClass = "flex flex-col gap-1";
 
 /** Vertical rhythm between sibling fields in a form. */
-export const fieldGroupClass = "space-y-4";
+export const fieldGroupClass = "space-y-3";
 
 /** Two-column field grid used by most create/edit forms. */
-export const fieldGridClass = "grid gap-4 sm:grid-cols-2";
+export const fieldGridClass = "grid gap-3 sm:grid-cols-2";
 
 /** Native checkbox — shared accent + focus with the field family. */
 export const fieldCheckboxClass = [

@@ -364,7 +364,7 @@ function buildAttentionItems(input: {
           input.subscription.state === "GRACE"
             ? "You are in a grace period. Update payment details to avoid interruption."
             : "Update billing to restore full subscription access.",
-        href: "/settings/subscription",
+        href: "/settings/billing",
         tone: "danger",
       });
     } else if (input.subscription.cancelAtPeriodEnd) {
@@ -372,7 +372,7 @@ function buildAttentionItems(input: {
         id: "subscription-canceling",
         title: "Subscription is set to cancel",
         description: "Review your plan if you intended to keep Altair active.",
-        href: "/settings/subscription",
+        href: "/settings/billing",
         tone: "warning",
       });
     }
@@ -384,7 +384,7 @@ function buildAttentionItems(input: {
         id: "payments-not-connected",
         title: "Customer payments are not connected",
         description: "Connect Stripe to collect invoice payments online.",
-        href: "/settings/subscription#customer-payments",
+        href: "/settings/billing#customer-payments",
         tone: "warning",
       });
     } else if (
@@ -396,7 +396,7 @@ function buildAttentionItems(input: {
         id: "payments-requirements",
         title: "Stripe needs more information",
         description: "Finish outstanding requirements to keep payouts healthy.",
-        href: "/settings/subscription#customer-payments",
+        href: "/settings/billing#customer-payments",
         tone: "danger",
       });
     } else if (
@@ -407,7 +407,7 @@ function buildAttentionItems(input: {
         id: "payments-pending",
         title: "Finish Stripe Connect setup",
         description: "Complete onboarding so customers can pay online.",
-        href: "/settings/subscription#customer-payments",
+        href: "/settings/billing#customer-payments",
         tone: "warning",
       });
     } else if (input.payments.status === "disabled") {
@@ -415,7 +415,7 @@ function buildAttentionItems(input: {
         id: "payments-disabled",
         title: "Customer payments are disabled",
         description: "Review Stripe Connect status to restore collection.",
-        href: "/settings/subscription#customer-payments",
+        href: "/settings/billing#customer-payments",
         tone: "danger",
       });
     }
@@ -436,7 +436,7 @@ function buildAttentionItems(input: {
       id: "team-suspended",
       title: `${input.suspendedCount} suspended team member${input.suspendedCount === 1 ? "" : "s"}`,
       description: "Review access for anyone who should be active again.",
-      href: "/settings/team",
+      href: "/settings/users",
       tone: "warning",
     });
   } else if (input.invitedCount > 0) {
@@ -444,7 +444,7 @@ function buildAttentionItems(input: {
       id: "team-invites",
       title: `${input.invitedCount} pending invitation${input.invitedCount === 1 ? "" : "s"}`,
       description: "Teammates still need to accept their invite.",
-      href: "/settings/team",
+      href: "/settings/users",
       tone: "info",
     });
   }
@@ -509,7 +509,7 @@ export default async function SettingsPage({
 
   if (params.payments === "return" || params.payments === "refresh") {
     redirect(
-      `/settings/subscription?payments=${params.payments}#customer-payments`,
+      `/settings/billing?payments=${params.payments}#customer-payments`,
     );
   }
 
@@ -568,7 +568,7 @@ export default async function SettingsPage({
       label: "Users",
       value: team.value,
       meta: team.meta,
-      href: "/settings/team",
+      href: "/settings/users",
       tone: team.tone,
       icon: SETTINGS_OVERVIEW_ICONS.team,
     },
@@ -577,7 +577,7 @@ export default async function SettingsPage({
       label: "Billing",
       value: subscription.value,
       meta: subscription.meta,
-      href: "/settings/subscription",
+      href: "/settings/billing",
       tone: subscription.tone,
       icon: SETTINGS_OVERVIEW_ICONS.subscription,
     },
@@ -586,7 +586,7 @@ export default async function SettingsPage({
       label: "Customer payments",
       value: payments.value,
       meta: payments.meta,
-      href: "/settings/subscription#customer-payments",
+      href: "/settings/billing#customer-payments",
       tone: payments.tone,
       icon: SETTINGS_OVERVIEW_ICONS.payments,
     },

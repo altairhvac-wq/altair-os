@@ -146,6 +146,7 @@ export function JobScheduleRow({
           type="button"
           onClick={onSelect}
           aria-label={ariaLabel}
+          data-testid="job-row"
           className={`${rowShellClass} min-w-0 flex-1 text-left ${className}`}
         >
           {content}

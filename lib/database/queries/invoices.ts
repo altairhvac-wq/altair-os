@@ -11,6 +11,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { Database } from "@/lib/database/types";
 import type {
+  InvoiceActivityInsert,
   InvoiceInsert,
   InvoiceLineItemInsert,
   InvoiceLineItemRow,
@@ -20,7 +21,6 @@ import {
   buildTrashTimestampFields,
   countRelatedRecordsByColumn,
 } from "@/lib/database/queries/entity-lifecycle-shared";
-import { recordInvoiceActivity } from "@/lib/database/queries/invoice-activities";
 import { getEstimateById, updateEstimateStatus } from "@/lib/database/queries/estimates";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
 import { expireStaleCheckoutSessionsForInvoice } from "@/lib/payments/payment-attempts-service";
@@ -905,7 +905,25 @@ type OverdueInvoiceCandidate = {
 
 /**
  * Promotes sent/partially paid invoices past due date to overdue.
- * Safe to call on read paths; uses optimistic status checks per row.
+ * Safe to call on read paths; uses optimistic status checks per status group.
+ *
+ * Batched. This runs on every Sales-hub read via listInvoicesWithBillingSync,
+ * so it has to stay cheap even when many invoices are overdue at once. The
+ * previous implementation awaited three DB round trips — a status update, an
+ * activity insert, and a checkout-session expiry check — per candidate
+ * invoice, one at a time in a for loop. With N overdue invoices that was
+ * ~3N sequential round trips sitting in front of every page render that
+ * touches invoices (confirmed as the cause of both a Playwright automation
+ * timeout and a user-reported UI lag on every Sales tab switch).
+ *
+ * This version does one bulk update per starting status (the optimistic
+ * concurrency guard — only promote a row if its status hasn't changed since
+ * the select above — still applies, just batched via .in("id", ids) instead
+ * of row-by-row), one bulk insert for every activity record, and runs the
+ * checkout-session expiry calls concurrently instead of serially (that
+ * helper is already best-effort and isolates its own errors per invoice, so
+ * parallelizing it is safe). Total cost is now a small constant number of
+ * round trips plus max(expiry latency), not sum(3 x N).
  */
 export async function syncOverdueInvoiceStatuses(
   companyId: string,
@@ -932,41 +950,62 @@ export async function syncOverdueInvoiceStatuses(
   }
 
   const candidates = (data ?? []) as OverdueInvoiceCandidate[];
-  let updatedCount = 0;
+  if (candidates.length === 0) {
+    return 0;
+  }
 
+  const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+
+  // Group by current status: the update's .eq("status", fromStatus) guard
+  // only makes sense as one value per statement, so candidates are batched
+  // per starting status rather than all together.
+  const idsByStatus = new Map<InvoiceStatus, string[]>();
   for (const candidate of candidates) {
-    const fromStatus = candidate.status;
+    const ids = idsByStatus.get(candidate.status) ?? [];
+    ids.push(candidate.id);
+    idsByStatus.set(candidate.status, ids);
+  }
 
-    const { data: updatedRow, error: updateError } = await supabase
+  const updatedIds: string[] = [];
+
+  for (const [fromStatus, ids] of idsByStatus) {
+    const { data: updatedRows, error: updateError } = await supabase
       .from("invoices")
       .update({ status: "overdue" })
       .eq("company_id", companyId)
-      .eq("id", candidate.id)
       .eq("status", fromStatus)
-      .select("id")
-      .maybeSingle();
+      .in("id", ids)
+      .select("id");
 
     if (updateError) {
-      console.error("[syncOverdueInvoiceStatuses] update failed:", {
+      console.error("[syncOverdueInvoiceStatuses] bulk update failed:", {
         companyId,
-        invoiceId: candidate.id,
+        fromStatus,
+        candidateCount: ids.length,
         code: updateError.code,
         message: updateError.message,
       });
       continue;
     }
 
-    if (!updatedRow) {
-      continue;
+    for (const row of updatedRows ?? []) {
+      updatedIds.push(row.id);
     }
+  }
 
-    const { error: activityError } = await recordInvoiceActivity({
+  if (updatedIds.length === 0) {
+    return 0;
+  }
+
+  const activityRows: InvoiceActivityInsert[] = updatedIds.map((id): InvoiceActivityInsert => {
+    const candidate = candidatesById.get(id)!;
+    return {
       company_id: companyId,
-      invoice_id: candidate.id,
+      invoice_id: id,
       actor_id: null,
       event_type: "status_changed",
       metadata: {
-        from_status: fromStatus,
+        from_status: candidate.status,
         to_status: "overdue",
         invoice_number: candidate.invoice_number,
         customer_id: candidate.customer_id,
@@ -975,27 +1014,36 @@ export async function syncOverdueInvoiceStatuses(
         automated: true,
         source: "automatic",
       },
-    });
+    };
+  });
 
-    if (activityError) {
-      console.error("[syncOverdueInvoiceStatuses] activity failed:", {
-        companyId,
-        invoiceId: candidate.id,
-        error: activityError,
-      });
-    }
+  const { error: activityError } = await supabase
+    .from("invoice_activities")
+    .insert(activityRows);
 
-    await expireStaleCheckoutSessionsBestEffort(
-      supabase,
+  if (activityError) {
+    console.error("[syncOverdueInvoiceStatuses] bulk activity insert failed:", {
       companyId,
-      candidate.id,
-      "syncOverdueInvoiceStatuses",
-    );
-
-    updatedCount += 1;
+      invoiceCount: activityRows.length,
+      code: activityError.code,
+      message: activityError.message,
+    });
   }
 
-  return updatedCount;
+  // Best-effort and already isolates its own errors per invoice — safe to
+  // run concurrently instead of one-at-a-time.
+  await Promise.all(
+    updatedIds.map((id) =>
+      expireStaleCheckoutSessionsBestEffort(
+        supabase,
+        companyId,
+        id,
+        "syncOverdueInvoiceStatuses",
+      ),
+    ),
+  );
+
+  return updatedIds.length;
 }
 
 export async function voidInvoice(

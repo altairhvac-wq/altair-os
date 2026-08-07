@@ -1,101 +1,127 @@
 import { redirect } from "next/navigation";
-import { isAiFeaturesEnabled } from "@/lib/ai/env";
-import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
-import {
-  listJobBillingSummariesForJobs,
-  listJobEstimateSummariesForAssignedJobs,
-  listJobInvoiceSummariesForAssignedJobs,
-} from "@/lib/database/queries/job-billing-summaries";
 import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
-import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import {
   getCurrentTimeState,
 } from "@/lib/database/services/time-tracking";
-import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
-import { isSmsSendingConfigured } from "@/lib/sms/env";
-import { TechnicianAssignedJobsView } from "@/shared/components/technician/TechnicianAssignedJobsView";
+import { TechnicianHomeScreen } from "@/shared/components/technician/TechnicianHomeScreen";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import {
+  filterJobsForTechnicianScheduleDay,
+  getTechnicianTodayDateOnly,
+  type TechnicianScheduleDayContext,
+} from "@/shared/lib/technician-week-schedule";
+import {
+  getTechnicianJobDeckOrder,
+  sortCompletedTodayTechnicianJobs,
+} from "@/shared/lib/technician-work-queue";
+import { formatTechnicianJobTime } from "@/shared/types/technician";
+import {
+  formatTechnicianTimeState,
+  formatTime,
+} from "@/shared/types/time-entry";
+import { TechnicianScheduleContent } from "./schedule-content";
 
 type TechnicianPageProps = {
   searchParams: Promise<{ jobId?: string }>;
 };
 
+const TIME_STATE_DOT_CLASSES: Record<string, string> = {
+  clocked_in: "bg-emerald-400",
+  on_break: "bg-amber-400",
+  working_job: "bg-cyan-400",
+  off_clock: "bg-slate-400",
+};
+
 export default async function TechnicianPage({
   searchParams,
 }: TechnicianPageProps) {
+  const { jobId: initialJobId } = await searchParams;
+
+  // Job deep links (?jobId=) keep the full schedule + detail experience.
+  if (initialJobId?.trim()) {
+    return <TechnicianScheduleContent initialJobId={initialJobId} />;
+  }
+
   const context = await getActiveCompanyContext();
 
   if (!context) {
     redirect("/setup");
   }
 
-  const { jobId: initialJobId } = await searchParams;
+  const timeZone = context.company.timezone;
 
-  const canManageTime = context.permissions.viewAssignedJobs;
-  const canCreateEstimate =
-    context.permissions.manageBilling ||
-    context.permissions.createFieldEstimates;
-  const canApproveOnSite =
-    context.permissions.manageBilling ||
-    context.permissions.createFieldEstimates;
-  const canViewBillingData = canViewBilling(context);
-  const canCollectPayment =
-    context.permissions.manageBilling ||
-    context.permissions.viewAssignedJobs;
-  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
-
-  const [jobs, timeState, serviceItems, onlinePaymentsEnabled, smsSendingConfigured] =
-    await Promise.all([
+  const [jobs, timeState] = await Promise.all([
     listAssignedJobsForTechnician(context.company.id, context.user.id, {
-      timeZone: context.company.timezone,
+      timeZone,
       scope: "operational_week",
     }),
     getCurrentTimeState(context.company.id, context.user.id),
-    listActiveServiceItems(context.company.id),
-    isCompanyOnlineCheckoutAvailable(context.company.id),
-    Promise.resolve(isSmsSendingConfigured()),
   ]);
 
-  const billingSummaries = await listJobBillingSummariesForJobs(
-    context.company.id,
-    jobs.map((job) => job.id),
-    { includeInvoices: canViewBillingData },
+  const scheduleContext: TechnicianScheduleDayContext = {
+    timeZone,
+    todayDateOnly: getTechnicianTodayDateOnly(timeZone),
+    reference: new Date(),
+  };
+  const todayJobs = filterJobsForTechnicianScheduleDay(
+    jobs,
+    scheduleContext.todayDateOnly,
+    scheduleContext,
   );
+  const deckJobs = getTechnicianJobDeckOrder(todayJobs);
+  const completedTodayCount = sortCompletedTodayTechnicianJobs(jobs, {
+    timeZone,
+  }).length;
+  const nextJob = deckJobs[0] ?? null;
 
-  if (!canViewBillingData) {
-    const assignedJobIds = jobs.map((job) => job.id);
-    const [estimatesByJobId, invoicesByJobId] = await Promise.all([
-      listJobEstimateSummariesForAssignedJobs(
-        context.company.id,
-        assignedJobIds,
-      ),
-      listJobInvoiceSummariesForAssignedJobs(
-        context.company.id,
-        assignedJobIds,
-      ),
-    ]);
-    billingSummaries.estimatesByJobId = estimatesByJobId;
-    billingSummaries.invoicesByJobId = invoicesByJobId;
-  }
+  const noonUtc = new Date(
+    `${scheduleContext.todayDateOnly}T12:00:00.000Z`,
+  );
+  const weekdayLabel = formatDateInTimeZone(noonUtc, timeZone, {
+    weekday: "long",
+  });
+  const monthLabel = formatDateInTimeZone(noonUtc, timeZone, {
+    month: "long",
+  });
+  const dayOfMonth =
+    Number(scheduleContext.todayDateOnly.slice(8, 10)) || 0;
+
+  const hourInZone = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone,
+    }).format(new Date()),
+  );
+  const greeting =
+    hourInZone < 12
+      ? "Good morning"
+      : hourInZone < 17
+        ? "Good afternoon"
+        : "Good evening";
+
+  const activeSince = timeState.activeEntry?.startedAt ?? null;
 
   return (
-    <TechnicianAssignedJobsView
-      jobs={jobs}
-      timeState={timeState}
-      serviceItems={serviceItems}
-      canManageTime={canManageTime}
-      canCreateEstimate={canCreateEstimate}
-      canApproveOnSite={canApproveOnSite}
-      canViewBilling={canViewBillingData}
-      canCollectPayment={canCollectPayment}
-      onlinePaymentsEnabled={onlinePaymentsEnabled}
-      smsSendingConfigured={smsSendingConfigured}
-      billingSummaries={billingSummaries}
-      defaultTaxRate={billingDefaults.defaultTaxRate}
-      companyTimeZone={context.company.timezone}
-      aiFeaturesEnabled={isAiFeaturesEnabled()}
-      initialSelectedJobId={initialJobId?.trim() || null}
+    <TechnicianHomeScreen
+      greeting={greeting}
+      weekdayLabel={weekdayLabel}
+      monthLabel={monthLabel}
+      dayOfMonth={dayOfMonth}
+      openJobCount={deckJobs.length}
+      completedTodayCount={completedTodayCount}
+      nextJobTimeLabel={
+        nextJob
+          ? formatTechnicianJobTime(nextJob.scheduledDate, timeZone)
+          : null
+      }
+      nextJobCustomerName={nextJob ? nextJob.customerName : null}
+      timeStateLabel={formatTechnicianTimeState(timeState.state)}
+      timeStateDotClass={
+        TIME_STATE_DOT_CLASSES[timeState.state] ?? "bg-slate-400"
+      }
+      clockedSinceLabel={activeSince ? formatTime(activeSince, timeZone) : null}
     />
   );
 }

@@ -624,15 +624,18 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 
 **Status:** Production (platform admin / founder tool)
 
-**Description:** Live North Star token editing and dashboard replica preview.
+**Description:** Live North Star token editing, company-scoped theme drafts, and promote-to-live chrome overrides for the active company.
 
 **Features:**
 - Click-to-edit color targets across admin chrome and dashboard replica
 - Color presets, contrast guardrails, theme export
 - Dashboard shell clone with scoped surface editing
-- Route: `/platform/design-lab` (platform admin access)
+- Company-scoped saved themes (`design_lab_themes`): save / update / set-active draft / delete
+- Promote-to-live with confirmation (sets `is_live`); admin layout injects resolved CSS vars onto `.admin-north-star-shell` (SSR, fail-closed)
+- Revert to default clears the live override for the company
+- Route: `/platform/design-lab` (platform admin access for mutations; live read is company-member scoped via RLS)
 
-**Dependencies:** platform admin access
+**Dependencies:** platform admin access (Design Lab UI + promote/revert); active company membership (live theme read)
 
 ---
 

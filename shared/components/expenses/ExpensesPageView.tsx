@@ -50,8 +50,8 @@ import {
   hasActiveExpenseFilters,
 } from "@/shared/utils/expense-filters";
 import { ExpenseDetailsPanel } from "./ExpenseDetailsPanel";
-import { ExpenseQueueTabs } from "./ExpenseQueueTabs";
 import { ExpenseSearchFilterBar } from "./ExpenseSearchFilterBar";
+import { ExpenseStatStrip } from "./ExpenseStatStrip";
 import { ExpensesEmptyState } from "./ExpensesEmptyState";
 import { ExpensesTable } from "./ExpensesTable";
 import {
@@ -423,6 +423,15 @@ export function ExpensesPageView({
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
       headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
+      summary={
+        !hasNoExpenses ? (
+          <ExpenseStatStrip
+            counts={queueCounts}
+            activeQueue={workQueue}
+            onQueueChange={setWorkQueue}
+          />
+        ) : undefined
+      }
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "workspace"}
@@ -437,23 +446,8 @@ export function ExpensesPageView({
             northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
           }
         >
-        {!hasNoExpenses ? (
-          <div
-            className={
-              northStar
-                ? lt.viewTabsBand
-                : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-            }
-          >
-            <ExpenseQueueTabs
-              activeQueue={workQueue}
-              onQueueChange={setWorkQueue}
-              counts={queueCounts}
-              northStar={northStar}
-            />
-          </div>
-        ) : null}
-
+        {/* Queue switching moved to ExpenseStatStrip in the page header
+            (summary slot) — the retired ExpenseQueueTabs band is gone. */}
         {!hasNoExpenses ? (
           <ExpenseSearchFilterBar
             search={search}

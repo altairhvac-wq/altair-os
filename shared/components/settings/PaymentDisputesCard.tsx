@@ -52,6 +52,22 @@ export function PaymentDisputesCard({
     isPaymentDisputeOpen(dispute.status),
   ).length;
 
+  // Nothing to act on → one quiet line instead of a full empty card. The
+  // full card (icon, guidance, list) renders only when disputes exist or
+  // the load failed — i.e. when there is actually something to read.
+  if (!loadError && disputes.length === 0) {
+    return (
+      <p
+        id="payment-disputes"
+        className="flex scroll-mt-24 items-center gap-2 px-1 text-xs text-altair-ink-on-paper-muted"
+      >
+        <Scale className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        Payment disputes: none recorded. Chargebacks on your connected account
+        will appear here.
+      </p>
+    );
+  }
+
   return (
     <section
       id="payment-disputes"
@@ -59,7 +75,7 @@ export function PaymentDisputesCard({
       aria-labelledby="payment-disputes-heading"
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--north-star-border)] bg-[var(--surface-tile)] text-altair-ink-on-paper">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] text-altair-ink-on-paper">
           <Scale className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
@@ -96,7 +112,7 @@ export function PaymentDisputesCard({
               ? `${openCount} open · ${disputes.length} total`
               : `${disputes.length} recorded`}
           </p>
-          <ul className={`${altairMcListClass} divide-y divide-[var(--north-star-border)]`}>
+          <ul className={`${altairMcListClass} divide-y divide-[var(--north-star-plate-border)]`}>
             {disputes.map((dispute) => {
               const when = formatDisputeWhen(
                 dispute.providerCreatedAt ?? dispute.createdAt,
