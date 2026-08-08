@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, Plus } from "lucide-react";
+import { BrainCircuit, Megaphone, Plus } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
@@ -505,6 +505,49 @@ export function MarketingHubPageView({
             </div>
           ) : (
             <>
+              {showFounderMarketing ? (
+                <a
+                  href="/marketing/hq"
+                  className={`flex items-center justify-between gap-3 border-b px-4 py-3 transition-colors ${
+                    northStar
+                      ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/70 hover:bg-[#FAF6EE]"
+                      : "border-amber-200/70 bg-amber-50/40 hover:bg-amber-50"
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <BrainCircuit
+                      className={`h-4 w-4 shrink-0 ${
+                        northStar ? "text-[#8A6324]" : "text-amber-700"
+                      }`}
+                    />
+                    <span className="min-w-0">
+                      <span
+                        className={`block text-sm font-semibold ${
+                          northStar ? "text-[#17130E]" : "text-slate-900"
+                        }`}
+                      >
+                        Marketing AI HQ
+                      </span>
+                      <span
+                        className={`block truncate text-xs ${
+                          northStar ? "text-[#6B6255]" : "text-slate-500"
+                        }`}
+                      >
+                        Founder-only: AI team drafts, approval queue, weekly
+                        strategy.
+                      </span>
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 text-xs font-semibold ${
+                      northStar ? "text-[#8A6324]" : "text-amber-700"
+                    }`}
+                  >
+                    Open →
+                  </span>
+                </a>
+              ) : null}
+
               <MarketingConnectedAccountsCard
                 accounts={connectedAccounts}
                 northStar={northStar}
