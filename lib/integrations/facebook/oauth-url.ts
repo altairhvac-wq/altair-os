@@ -3,8 +3,14 @@ import "server-only";
 import { getFacebookOAuthConfig } from "./env";
 
 /**
- * Facebook Login scopes for Page connect + publish (Facebook + Instagram Content Publishing).
- * Not the Instagram Login `instagram_business_*` family.
+ * Facebook Login scopes for Page connect + publish.
+ *
+ * `instagram_content_publish` is deliberately absent: this app is a
+ * Facebook Login for Business configuration where that legacy scope is
+ * rejected at the OAuth dialog ("Invalid Scopes"). `instagram_basic` still
+ * validates and powers linked-IG detection. When Instagram publishing ships
+ * (needs image support first), add the Business-app publish permission from
+ * the app's Instagram use case and prompt a reconnect.
  */
 export const FACEBOOK_CONNECT_SCOPES = [
   "public_profile",
@@ -12,7 +18,6 @@ export const FACEBOOK_CONNECT_SCOPES = [
   "pages_read_engagement",
   "pages_manage_posts",
   "instagram_basic",
-  "instagram_content_publish",
 ] as const;
 
 export type FacebookConnectScope = (typeof FACEBOOK_CONNECT_SCOPES)[number];
