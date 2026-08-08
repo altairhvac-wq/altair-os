@@ -110,7 +110,10 @@ export async function runMarketingCopywriterBatch(
     const items = parseCopywriterBatchResponse(outcome.result.draftText);
 
     if (items.length === 0) {
-      const error = "The copywriter returned no usable drafts.";
+      const snippet = outcome.result.draftText
+        .replace(/\s+/g, " ")
+        .slice(0, 180);
+      const error = `The copywriter returned no usable drafts. Response began: ${snippet}`;
       await recordMarketingRunFinished(runId, {
         companyId,
         runKey,
@@ -356,7 +359,10 @@ export async function runMarketingSeoBatch(
     const items = parseSeoBatchResponse(outcome.result.draftText);
 
     if (items.length === 0) {
-      const error = "The SEO specialist returned no usable drafts.";
+      const snippet = outcome.result.draftText
+        .replace(/\s+/g, " ")
+        .slice(0, 180);
+      const error = `The SEO specialist returned no usable drafts. Response began: ${snippet}`;
       await recordMarketingRunFinished(runId, {
         companyId,
         runKey,

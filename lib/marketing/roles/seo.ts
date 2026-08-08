@@ -137,13 +137,21 @@ export function parseSeoBatchResponse(
     return [];
   }
 
-  if (!Array.isArray(parsed)) {
-    return [];
+  let entries: unknown[];
+  if (Array.isArray(parsed)) {
+    entries = parsed;
+  } else if (parsed && typeof parsed === "object") {
+    const arrayValue = Object.values(
+      parsed as Record<string, unknown>,
+    ).find((value) => Array.isArray(value));
+    entries = (arrayValue as unknown[] | undefined) ?? [parsed];
+  } else {
+    entries = [];
   }
 
   const items: MarketingItemInsert[] = [];
 
-  for (const entry of parsed) {
+  for (const entry of entries) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
       continue;
     }

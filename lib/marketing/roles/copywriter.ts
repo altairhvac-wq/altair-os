@@ -35,6 +35,7 @@ ${MARKETING_WORKFLOW_CHECKLIST}
 
 Output requirements:
 - Output ONLY a single valid JSON array — no markdown code fences, headings, preamble, or commentary
+- The top level MUST be a JSON array starting with [ — never an object wrapper such as {"posts": [...]}
 - Each element is an object with exactly these keys: title, channel, objective, fields, hashtags, call_to_action, rationale
 - title: short internal label for the queue list (not the post headline)
 - channel: the target platform label, matching one of the channel-focus labels from context (or "general")
@@ -131,6 +132,27 @@ function normalizeText(value: unknown, maxChars: number): string {
 }
 
 /**
+ * Models sometimes wrap the requested array in an object ({"posts": [...]})
+ * or return a single post object. Unwrap those shapes; give up otherwise.
+ */
+function extractPostEntries(parsed: unknown): unknown[] {
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (parsed && typeof parsed === "object") {
+    for (const value of Object.values(parsed as Record<string, unknown>)) {
+      if (Array.isArray(value)) {
+        return value;
+      }
+    }
+    return [parsed];
+  }
+
+  return [];
+}
+
+/**
  * Parse the model's JSON array into queue-ready item inserts.
  * Lenient on wrapper noise, strict on shape — invalid entries are dropped.
  */
@@ -145,13 +167,10 @@ export function parseCopywriterBatchResponse(
     return [];
   }
 
-  if (!Array.isArray(parsed)) {
-    return [];
-  }
-
+  const entries = extractPostEntries(parsed);
   const items: MarketingItemInsert[] = [];
 
-  for (const entry of parsed) {
+  for (const entry of entries) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
       continue;
     }
@@ -175,8 +194,13 @@ export function parseCopywriterBatchResponse(
         : null;
     const fields = clampMarketingPlatformFields(spec, rawFields);
 
-    // Legacy fallback: accept post_text into the primary field when the
-    // model didn't produce a fields object.
+    // Fallback 1: the model put the platform field keys at the top level of
+    // the entry instead of nesting them under "fields".
+    if (!fields[spec.primaryField]) {
+      Object.assign(fields, clampMarketingPlatformFields(spec, record));
+    }
+
+    // Fallback 2: legacy shape — a plain post_text becomes the primary field.
     if (!fields[spec.primaryField]) {
       const legacyText = normalizeText(record.post_text, POST_TEXT_MAX_CHARS);
       if (legacyText) {
