@@ -178,7 +178,9 @@ export async function fetchFacebookUserProfile(
 }
 
 /**
- * Lists Pages via GET /me/accounts, including linked Instagram Business account ids.
+ * Shared page-list shape for GET /me/accounts and GET /me/assigned_pages.
+ * `tasks` comes from /me/accounts; `permitted_tasks` is the equivalent
+ * field name on /me/assigned_pages.
  */
 type FacebookPagesListResponse = {
   data?: Array<{
@@ -187,24 +189,25 @@ type FacebookPagesListResponse = {
     access_token?: string;
     category?: string;
     tasks?: string[];
+    permitted_tasks?: string[];
     instagram_business_account?: { id?: string } | null;
   }>;
   paging?: { next?: string };
 };
 
-export async function fetchFacebookPages(
-  accessToken: string,
-): Promise<FacebookPageSummary[]> {
+async function fetchFacebookPagesFromEdge(input: {
+  accessToken: string;
+  edge: "accounts" | "assigned_pages";
+  fields: string;
+  context: string;
+}): Promise<FacebookPageSummary[]> {
   const config = getFacebookOAuthConfig();
   const pages: FacebookPageSummary[] = [];
   const initialUrl = new URL(
-    `${graphBaseUrl(config.graphApiVersion)}/me/accounts`,
+    `${graphBaseUrl(config.graphApiVersion)}/me/${input.edge}`,
   );
-  initialUrl.searchParams.set(
-    "fields",
-    "id,name,access_token,category,tasks,instagram_business_account",
-  );
-  initialUrl.searchParams.set("access_token", accessToken);
+  initialUrl.searchParams.set("fields", input.fields);
+  initialUrl.searchParams.set("access_token", input.accessToken);
 
   let nextUrl: string | null = initialUrl.toString();
 
@@ -217,7 +220,7 @@ export async function fetchFacebookPages(
 
     const data: FacebookPagesListResponse = await readFacebookJson<
       FacebookPagesListResponse
-    >(response, "Facebook Pages list");
+    >(response, input.context);
 
     for (const page of data.data ?? []) {
       if (!page.id?.trim()) {
@@ -226,12 +229,19 @@ export async function fetchFacebookPages(
 
       const igId = page.instagram_business_account?.id?.trim();
 
+      let tasks: string[] | undefined;
+      if (Array.isArray(page.tasks)) {
+        tasks = page.tasks;
+      } else if (Array.isArray(page.permitted_tasks)) {
+        tasks = page.permitted_tasks;
+      }
+
       pages.push({
         id: page.id,
         name: page.name?.trim() || page.id,
         accessToken: page.access_token?.trim() || undefined,
         category: page.category?.trim() || undefined,
-        tasks: Array.isArray(page.tasks) ? page.tasks : undefined,
+        tasks,
         instagramBusinessAccountId: igId || undefined,
       });
     }
@@ -241,6 +251,39 @@ export async function fetchFacebookPages(
   }
 
   return pages;
+}
+
+/**
+ * Lists Pages via GET /me/accounts, including linked Instagram Business account ids.
+ * Only returns Pages the user manages through a direct personal page role.
+ */
+export async function fetchFacebookPages(
+  accessToken: string,
+): Promise<FacebookPageSummary[]> {
+  return fetchFacebookPagesFromEdge({
+    accessToken,
+    edge: "accounts",
+    fields: "id,name,access_token,category,tasks,instagram_business_account",
+    context: "Facebook Pages list",
+  });
+}
+
+/**
+ * Lists Pages assigned to the user through a Meta Business Portfolio via
+ * GET /me/assigned_pages. Portfolio-owned Pages do NOT appear in
+ * /me/accounts even for users with full control — they only surface here,
+ * and only when the token carries the `business_management` scope.
+ */
+export async function fetchFacebookAssignedPages(
+  accessToken: string,
+): Promise<FacebookPageSummary[]> {
+  return fetchFacebookPagesFromEdge({
+    accessToken,
+    edge: "assigned_pages",
+    fields:
+      "id,name,access_token,category,permitted_tasks,instagram_business_account",
+    context: "Facebook assigned Pages list",
+  });
 }
 
 /**

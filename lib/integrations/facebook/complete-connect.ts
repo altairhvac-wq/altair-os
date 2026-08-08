@@ -11,6 +11,7 @@ import { FACEBOOK_CONNECT_SCOPES } from "./oauth-url";
 import {
   exchangeFacebookAuthorizationCode,
   exchangeFacebookShortLivedToken,
+  fetchFacebookAssignedPages,
   fetchFacebookPageInstagramBusinessAccount,
   fetchFacebookPages,
   fetchFacebookUserProfile,
@@ -103,6 +104,23 @@ export async function completeFacebookOAuthConnect(
       error: "Could not load Facebook Pages for this account.",
       errorCode: "pages",
     };
+  }
+
+  if (pages.length === 0) {
+    // Pages owned by a Meta Business Portfolio never appear in /me/accounts,
+    // even for users with full control — they surface via /me/assigned_pages
+    // (requires the business_management scope). Fall back before giving up.
+    try {
+      pages = await fetchFacebookAssignedPages(userAccessToken);
+    } catch (assignedError) {
+      console.warn(
+        "[completeFacebookOAuthConnect] assigned_pages fallback failed:",
+        {
+          companyId: input.companyId,
+          error: assignedError,
+        },
+      );
+    }
   }
 
   if (pages.length === 0) {

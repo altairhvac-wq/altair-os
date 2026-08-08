@@ -11,6 +11,11 @@ import { getFacebookOAuthConfig } from "./env";
  * validates and powers linked-IG detection. When Instagram publishing ships
  * (needs image support first), add the Business-app publish permission from
  * the app's Instagram use case and prompt a reconnect.
+ *
+ * `business_management` is required for Pages owned by a Meta Business
+ * Portfolio (like the Altair Page): those are business-mediated, so they
+ * surface via GET /me/assigned_pages rather than GET /me/accounts, and that
+ * edge rejects tokens without this scope.
  */
 export const FACEBOOK_CONNECT_SCOPES = [
   "public_profile",
@@ -18,6 +23,7 @@ export const FACEBOOK_CONNECT_SCOPES = [
   "pages_read_engagement",
   "pages_manage_posts",
   "instagram_basic",
+  "business_management",
 ] as const;
 
 export type FacebookConnectScope = (typeof FACEBOOK_CONNECT_SCOPES)[number];
