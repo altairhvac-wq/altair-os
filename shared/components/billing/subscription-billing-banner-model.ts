@@ -1,4 +1,5 @@
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 
 export type SubscriptionBillingBannerTone = "info" | "warning" | "error";
 
@@ -24,7 +25,11 @@ function formatDateLabel(value: string | null): string | null {
     return null;
   }
 
-  return date.toLocaleDateString(undefined, {
+  // Company-timezone formatting, NOT toLocaleDateString: this banner
+  // server-renders on every page, and a timezone-naive format made the
+  // server (UTC) say "Aug 14" while the client (local) said "Aug 13" —
+  // a text mismatch that threw React hydration error #418 on every load.
+  return formatDateInTimeZone(date, undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
