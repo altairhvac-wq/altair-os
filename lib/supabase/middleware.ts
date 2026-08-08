@@ -24,7 +24,13 @@ const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
 const PAYMENT_WEBHOOK_ROUTE = "/api/webhooks/payments";
 const BILLING_WEBHOOK_ROUTE = "/api/webhooks/billing";
-const WORKFLOW_REMINDERS_CRON_ROUTE = "/api/cron/workflow-reminders";
+/**
+ * All cron routes are public at the middleware layer; each handler enforces
+ * its own CRON_SECRET bearer check (lib/automation/env.ts), which is the
+ * real security boundary. Without this, Vercel cron invocations get 307'd
+ * to /login and never execute.
+ */
+const CRON_ROUTE_PREFIX = "/api/cron/";
 /** Dev-only fingerprint check for the Altair Demo Tool preflight guard. */
 const DEMO_FINGERPRINT_ROUTE = "/api/demo/fingerprint";
 
@@ -69,11 +75,8 @@ function isBillingWebhookRoute(pathname: string) {
   );
 }
 
-function isWorkflowRemindersCronRoute(pathname: string) {
-  return (
-    pathname === WORKFLOW_REMINDERS_CRON_ROUTE ||
-    pathname === `${WORKFLOW_REMINDERS_CRON_ROUTE}/`
-  );
+function isCronRoute(pathname: string) {
+  return pathname.startsWith(CRON_ROUTE_PREFIX);
 }
 
 function isDemoFingerprintRoute(pathname: string) {
@@ -110,7 +113,7 @@ function isPublicRoute(pathname: string) {
     isInvoicePaymentRoute(pathname) ||
     isPaymentWebhookRoute(pathname) ||
     isBillingWebhookRoute(pathname) ||
-    isWorkflowRemindersCronRoute(pathname) ||
+    isCronRoute(pathname) ||
     isDemoFingerprintRoute(pathname)
   );
 }
