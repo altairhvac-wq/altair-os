@@ -133,6 +133,7 @@ export {
   altairReportCardPadClass,
   altairReportCardPadTier1Class,
   altairReportCardPadTier2Class,
+  altairReportCanvasActionClass,
   altairReportCardPadTier3Class,
   altairReportMetricLabelClass,
   altairReportMetricMetaClass,

@@ -8,6 +8,8 @@ const FOOTER_LINKS = [
   { href: "/#features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/#about", label: "About" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
   { href: "/login", label: "Sign In" },
   { href: "/signup", label: "Start Your 14-Day Free Trial", accent: true },
 ] as const;

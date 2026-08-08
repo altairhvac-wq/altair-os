@@ -25,6 +25,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: APP_THEME_COLOR,
   colorScheme: "light",
+  /**
+   * Resize the layout viewport when the on-screen keyboard opens instead of
+   * overlaying it. Without this, dvh-sized sheets/forms keep their full
+   * height under the keyboard on mobile, producing unreachable "blank space
+   * at the bottom of the form" scroll traps (beta bug, iPhone Safari,
+   * /leads + estimate form).
+   */
+  interactiveWidget: "resizes-content",
 };
 
 export const metadata: Metadata = {

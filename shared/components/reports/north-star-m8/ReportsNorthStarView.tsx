@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { FileText, Loader2, Sparkles } from "lucide-react";
 import { generateBusinessSummaryAction } from "@/app/actions/reports-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
@@ -11,7 +11,7 @@ import type {
 } from "@/shared/types/reports-page";
 import {
   altairMcMetricLabelClass,
-  altairReportSecondaryActionClass,
+  altairReportCanvasActionClass,
   SectionHeader,
 } from "@/shared/design-system/components";
 import {
@@ -76,40 +76,56 @@ export function ReportsNorthStarView({
   initialCachedSummary = null,
 }: ReportsNorthStarViewProps) {
   const taxSummaryHref = `/reports/tax-summary?range=${data.dateRange}`;
-  const [summary, setSummary] = useState<BusinessSummaryAiResult | null>(
-    initialCachedSummary,
-  );
-  const [summaryError, setSummaryError] = useState<string | null>(null);
+  /**
+   * Summary state is keyed by date range and DERIVED from props instead of
+   * synced via an effect (react-hooks/set-state-in-effect). An override from
+   * a previous range simply stops applying when the range changes, so no
+   * reset effect is needed.
+   */
+  const [summaryOverride, setSummaryOverride] = useState<{
+    range: ReportsPageData["dateRange"];
+    value: BusinessSummaryAiResult | null;
+  } | null>(null);
+  const [errorOverride, setErrorOverride] = useState<{
+    range: ReportsPageData["dateRange"];
+    message: string;
+  } | null>(null);
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
-  useEffect(() => {
-    setSummary(initialCachedSummary);
-    setSummaryError(null);
-  }, [data.dateRange, initialCachedSummary]);
+  const summary =
+    summaryOverride && summaryOverride.range === data.dateRange
+      ? summaryOverride.value
+      : initialCachedSummary;
+  const summaryError =
+    errorOverride && errorOverride.range === data.dateRange
+      ? errorOverride.message
+      : null;
 
   function handleGenerateSummary(refresh = false) {
     if (!aiFeaturesEnabled || isSummaryPending) {
       return;
     }
 
-    setSummaryError(null);
+    const range = data.dateRange;
+    setErrorOverride(null);
 
     startSummaryTransition(async () => {
-      const result = await generateBusinessSummaryAction(data.dateRange, {
+      const result = await generateBusinessSummaryAction(range, {
         refresh,
       });
 
       if (result.error || !result.summary) {
-        setSummaryError(
-          formatActionError(
+        setErrorOverride({
+          range,
+          message: formatActionError(
             result.error,
             "Could not generate a business summary. Try again.",
           ),
-        );
+        });
         return;
       }
 
-      setSummary(result.summary);
+      setSummaryOverride({ range, value: result.summary });
     });
   }
 
@@ -133,7 +149,7 @@ export function ReportsNorthStarView({
             <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-2.5">
               <button
                 type="button"
-                className={altairReportSecondaryActionClass}
+                className={altairReportCanvasActionClass}
                 onClick={() => handleGenerateSummary(false)}
                 disabled={!aiFeaturesEnabled || isSummaryPending}
               >
@@ -149,7 +165,7 @@ export function ReportsNorthStarView({
               </button>
               <Link
                 href={taxSummaryHref}
-                className={altairReportSecondaryActionClass}
+                className={altairReportCanvasActionClass}
               >
                 <FileText className="h-4 w-4" aria-hidden="true" />
                 Export Tax Summary

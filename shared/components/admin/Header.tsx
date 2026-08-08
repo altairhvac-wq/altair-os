@@ -10,13 +10,14 @@ import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { logoutAction } from "@/app/actions/auth";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderScheduleCalendar";
+import { AvatarUploadControl } from "@/shared/components/profile/AvatarUploadControl";
 import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
-import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import { formatDateInTimeZone, getHourInTimeZone } from "@/shared/lib/datetime";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import { buildNotificationAccess } from "@/shared/types/notification";
 import type { Notification } from "@/shared/types/notification";
@@ -39,24 +40,17 @@ type HeaderProps = {
   billingAccess?: CompanyBillingAccess | null;
 };
 
-function getInitials(fullName: string | null, email: string | undefined) {
-  if (fullName) {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-
-    if (parts.length === 1) {
-      return parts[0].slice(0, 2).toUpperCase();
-    }
-  }
-
-  return (email?.slice(0, 2) ?? "U").toUpperCase();
-}
-
-function getTimeOfDayGreeting(reference = new Date()): string {
-  const hour = reference.getHours();
+/**
+ * Greeting derived from the COMPANY timezone, not the runtime's local clock.
+ * The previous version used `new Date().getHours()`, which differs between
+ * the server (UTC on Vercel) and the browser — the resulting text mismatch
+ * threw React hydration error #418 on every page load.
+ */
+function getTimeOfDayGreeting(
+  timeZone: string,
+  reference = new Date(),
+): string {
+  const hour = getHourInTimeZone(reference, timeZone);
   if (hour < 12) {
     return "Good morning";
   }
@@ -103,10 +97,6 @@ export function Header({
     companyContext.profile.full_name ??
     companyContext.user.email ??
     "User";
-  const initials = getInitials(
-    companyContext.profile.full_name,
-    companyContext.user.email,
-  );
   const accessScope = getCompanyAccessScope(companyContext);
   const notificationAccess = buildNotificationAccess({
     canManageCustomers: accessScope.canManageCustomers,
@@ -127,7 +117,7 @@ export function Header({
     companyContext.company.name,
     displayName,
   );
-  const greeting = `${getTimeOfDayGreeting()}, ${greetingName}`;
+  const greeting = `${getTimeOfDayGreeting(timeZone)}, ${greetingName}`;
   const dateLabel = formatDateInTimeZone(new Date(), timeZone, {
     weekday: "long",
     month: "long",
@@ -236,16 +226,18 @@ export function Header({
               className="max-w-[9.5rem] sm:max-w-[14rem]"
             />
           ) : null}
-          <div
+          <AvatarUploadControl
+            name={displayName}
+            avatarUrl={companyContext.profile.avatar_url}
+            target={{ kind: "self" }}
+            canEdit
+            title={`${displayName} — change your photo`}
             className={
               northStarChrome
-                ? "north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
-                : "hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
+                ? "north-star-header-avatar flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-2"
+                : "hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
             }
-            title={displayName}
-          >
-            {initials}
-          </div>
+          />
           <form action={logoutAction}>
             <button
               type="submit"

@@ -16,6 +16,8 @@ const AUTH_ROUTES = [
   "/reset-password",
 ];
 const PRICING_ROUTE = "/pricing";
+/** Public legal documents — linked from the marketing footer. */
+const LEGAL_ROUTES = ["/privacy", "/terms"];
 const INSTALL_ROUTE = "/install";
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
 const MARKETING_HOMEPAGE_ROUTE = "/welcome";
@@ -90,6 +92,10 @@ function isPricingRoute(pathname: string) {
   return pathname === PRICING_ROUTE;
 }
 
+function isLegalRoute(pathname: string) {
+  return LEGAL_ROUTES.includes(pathname);
+}
+
 function isInstallRoute(pathname: string) {
   return pathname === INSTALL_ROUTE;
 }
@@ -106,6 +112,7 @@ function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
     isPricingRoute(pathname) ||
+    isLegalRoute(pathname) ||
     isInstallRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||

@@ -6,6 +6,14 @@ export const DEFAULT_COMPANY_TIMEZONE = "America/Denver";
 let activeCompanyTimeZone = DEFAULT_COMPANY_TIMEZONE;
 
 export function getBrowserTimeZone(): string | undefined {
+  // Only meaningful in a real browser. On the server this resolves to the
+  // HOST's timezone (UTC on Vercel), which made SSR output disagree with the
+  // client render and caused React hydration errors (#418) on every page for
+  // companies without an explicit timezone.
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
@@ -14,8 +22,14 @@ export function getBrowserTimeZone(): string | undefined {
 }
 
 /**
- * Prefer an explicit company timezone; treat the legacy Eastern default as unset
- * and use the browser zone when available (client), then Mountain Time.
+ * Prefer an explicit company timezone; treat the legacy Eastern default as
+ * unset and fall back to Mountain Time.
+ *
+ * IMPORTANT: this must resolve IDENTICALLY on the server and the client for
+ * the same inputs — rendered dates/times feed server-rendered HTML that React
+ * hydrates in the browser. Never consult the environment's local timezone
+ * here. Companies should get their real timezone written at signup and can
+ * change it in Settings → Company.
  */
 export function resolveCompanyTimeZone(
   companyTimeZone?: string | null,
@@ -23,11 +37,6 @@ export function resolveCompanyTimeZone(
   const trimmed = companyTimeZone?.trim();
   if (trimmed && trimmed !== LEGACY_DEFAULT_COMPANY_TIMEZONE) {
     return trimmed;
-  }
-
-  const browserTimeZone = getBrowserTimeZone();
-  if (browserTimeZone) {
-    return browserTimeZone;
   }
 
   return DEFAULT_COMPANY_TIMEZONE;
@@ -39,6 +48,28 @@ export function setCompanyTimeZone(timeZone: string): void {
 
 export function getCompanyTimeZone(): string {
   return activeCompanyTimeZone;
+}
+
+/**
+ * Hour of day (0-23) for an instant in a specific timezone. Deterministic for
+ * a given (date, timeZone) pair on server and client alike — safe for
+ * server-rendered UI like the header greeting.
+ */
+export function getHourInTimeZone(
+  date: Date,
+  timeZone: string = getCompanyTimeZone(),
+): number {
+  try {
+    const formatted = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "numeric",
+      hourCycle: "h23",
+    }).format(date);
+    const hour = Number.parseInt(formatted, 10);
+    return Number.isNaN(hour) ? date.getHours() : hour;
+  } catch {
+    return date.getHours();
+  }
 }
 
 export function parseDateInput(value: string | Date): Date {

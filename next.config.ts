@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        // The sidebar item is labeled "Dashboard" but the route is "/";
+        // people type /dashboard and hit a 404 without this.
+        source: "/dashboard",
+        destination: "/",
+        permanent: false,
+      },
+      {
         source: "/tech",
         destination: "/technician",
         permanent: false,

@@ -91,6 +91,15 @@ export function mapDatabaseError(error: DatabaseErrorLike): string {
     return "You do not have permission to perform this action.";
   }
 
+  // PostgREST PGRST116: a .single() query matched no (or multiple) rows —
+  // usually RLS silently filtering the write. Never show the raw message.
+  if (
+    error.code === "PGRST116" ||
+    message.includes("cannot coerce the result")
+  ) {
+    return "That change could not be saved. You may not have permission, or the record may have been removed.";
+  }
+
   if (
     error.code === "PGRST202" ||
     message.includes("could not find the function")

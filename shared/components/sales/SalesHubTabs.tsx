@@ -19,7 +19,7 @@ type SalesHubTabsProps = {
 export function SalesHubTabs({ activeTab, onTabChange }: SalesHubTabsProps) {
   return (
     <div
-      className={`${adminSegmentedControlClass} w-full sm:w-auto`}
+      className={`${adminSegmentedControlClass} w-full max-w-full overflow-x-auto sm:w-auto`}
       role="tablist"
       aria-label="Sales views"
     >

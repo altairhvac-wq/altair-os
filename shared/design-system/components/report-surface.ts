@@ -37,6 +37,15 @@ export const altairReportTileClass =
 export const altairReportSparklineWellClass =
   "mt-2 h-7 w-full rounded-md border border-altair-border bg-white/[0.04]";
 
+/**
+ * Header action on the LIGHT report canvas (page header band) — ink on
+ * paper. The dark `altairReportSecondaryActionClass` below is for controls
+ * that sit ON Graphite surfaces; using it on the cream canvas renders
+ * near-white text on cream (the washed-out "Generate AI Summary" bug).
+ */
+export const altairReportCanvasActionClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border-strong bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper transition hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-60";
+
 /** Header secondary action — dark outline control (Filters / Export chrome). */
 export const altairReportSecondaryActionClass =
   "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border bg-white/[0.04] px-3 text-sm font-medium text-altair-paper transition hover:border-altair-border-strong hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-60";

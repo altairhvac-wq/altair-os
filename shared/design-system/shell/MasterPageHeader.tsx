@@ -95,7 +95,12 @@ export function MasterPageHeader({
           </>
         )}
       </div>
-      {center ? <div className="hidden shrink-0 lg:block">{center}</div> : null}
+      {/* min-w-0 + shrink lets the slot compress (and its content scroll)
+          instead of clipping under the action buttons — e.g. the Sales hub
+          tabs truncating "Estimate Pipeline" at laptop widths. */}
+      {center ? (
+        <div className="hidden min-w-0 shrink lg:block">{center}</div>
+      ) : null}
       {hasActions ? (
         <div className={`${actionRowClass} ${center ? "ml-auto" : ""}`}>
           {secondaryAction}
