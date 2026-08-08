@@ -83,7 +83,11 @@ export function NotificationListItem({
       <p className="mt-0.5 break-words text-sm text-slate-600">
         {formatNotificationMessageForAccess(notification, canViewBilling)}
       </p>
-      <p className="mt-1 text-xs text-slate-400">
+      {/* suppressHydrationWarning: relative labels ("8m ago") depend on the
+          clock, so the server and client can disagree by a minute across the
+          hydration gap. Keeping the server's text is harmless and avoids an
+          intermittent React #418. */}
+      <p className="mt-1 text-xs text-slate-400" suppressHydrationWarning>
         {formatNotificationTimestamp(notification.createdAt)}
       </p>
     </div>

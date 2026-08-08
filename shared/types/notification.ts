@@ -3,6 +3,7 @@ import type {
   NotificationType,
 } from "@/lib/database/types/enums";
 import { isBillingSensitiveNotificationType } from "@/shared/lib/billing-activity-visibility";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 
 export type Notification = {
   id: string;
@@ -91,7 +92,11 @@ export function formatNotificationTimestamp(value: string): string {
     return `${diffHours}h ago`;
   }
 
-  return date.toLocaleDateString(undefined, {
+  // Company-timezone formatting, NOT toLocaleDateString: this renders during
+  // SSR inside the notifications list, and a timezone-naive format produced
+  // different text on the server (UTC) vs the client (local) for any
+  // notification older than a day — a React #418 hydration mismatch.
+  return formatDateInTimeZone(date, undefined, {
     month: "short",
     day: "numeric",
     hour: "numeric",
