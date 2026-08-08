@@ -154,7 +154,7 @@ export type InvoiceSeed = {
   customerKey: string;
   jobKey?: string;
   invoiceNumber: string;
-  status: "paid" | "partially_paid" | "overdue" | "sent";
+  status: "draft" | "paid" | "partially_paid" | "overdue" | "sent";
   subtotal: number;
   amountPaid: number;
   issueDaysAgo: number;

@@ -620,6 +620,36 @@ export const HVAC_DEMO_INVOICES: InvoiceSeed[] = [
       },
     ],
   },
+  {
+    // Always-present DRAFT invoice: gives new users something to send on
+    // day one, and gives demo-video captures their "click Send" hero beat
+    // without hand-creating a draft before every take (pack v6).
+    key: "draftJamesRepair",
+    customerKey: "james",
+    invoiceNumber: "INV-DEMO-3011",
+    status: "draft",
+    subtotal: 318,
+    amountPaid: 0,
+    issueDaysAgo: 0,
+    dueDaysFromNow: 30,
+    notes: "Cooling diagnostic and seasonal tune-up — ready to send.",
+    lineItems: [
+      {
+        serviceItemKey: "diagnostic",
+        name: "AC System Diagnostic",
+        description: "Cooling diagnostic and airflow verification.",
+        quantity: 1,
+        unitPrice: 129,
+      },
+      {
+        serviceItemKey: "tune-up",
+        name: "HVAC Seasonal Tune-Up",
+        description: "Full seasonal tune-up following diagnostic findings.",
+        quantity: 1,
+        unitPrice: 189,
+      },
+    ],
+  },
 ];
 
 export const HVAC_DEMO_NOTIFICATIONS: NotificationSeed[] = [

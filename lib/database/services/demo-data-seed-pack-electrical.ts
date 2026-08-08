@@ -622,6 +622,36 @@ export const ELECTRICAL_DEMO_INVOICES: InvoiceSeed[] = [
       },
     ],
   },
+  {
+    // Always-present DRAFT invoice — mirrors the HVAC pack's
+    // draftJamesRepair: day-one send fodder for new users and the demo
+    // video's "click Send" beat (pack v6).
+    key: "draftAlexPanel",
+    customerKey: "alex",
+    invoiceNumber: "INV-DEMO-3011",
+    status: "draft",
+    subtotal: 224,
+    amountPaid: 0,
+    issueDaysAgo: 0,
+    dueDaysFromNow: 30,
+    notes: "Panel inspection with breaker diagnosis — ready to send.",
+    lineItems: [
+      {
+        serviceItemKey: "panel-inspection",
+        name: "Panel Inspection",
+        description: "Annual panel inspection service.",
+        quantity: 1,
+        unitPrice: 149,
+      },
+      {
+        serviceItemKey: "breaker-troubleshoot",
+        name: "Breaker Troubleshooting",
+        description: "Diagnose intermittent tripping on kitchen circuit.",
+        quantity: 1,
+        unitPrice: 75,
+      },
+    ],
+  },
 ];
 
 export const ELECTRICAL_DEMO_NOTIFICATIONS: NotificationSeed[] = [
