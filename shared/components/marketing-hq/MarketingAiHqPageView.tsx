@@ -988,9 +988,9 @@ function DistributionTab({ distribution }: DistributionTabProps) {
     {
       platform: "Instagram",
       status: instagramPage ? "partial" : "manual",
-      statusLabel: instagramPage ? "Almost ready" : "Needs setup",
+      statusLabel: instagramPage ? "Publish with image" : "Needs setup",
       detail: instagramPage
-        ? `Instagram Business is linked via "${instagramPage.name}". Publishing requires an image on the post — image support is the next build step.`
+        ? `Instagram Business is linked via "${instagramPage.name}". Instagram requires an image: convert an approved draft, attach an image in Marketing Hub, then hit Publish to Instagram. One-click IG straight from this queue (images on queue items) is planned.`
         : "Publishes through the Instagram Business account linked to a connected Facebook Page. Connect Facebook first, link Instagram in Meta Business Suite.",
     },
     {

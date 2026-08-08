@@ -5,12 +5,13 @@ import { getFacebookOAuthConfig } from "./env";
 /**
  * Facebook Login scopes for Page connect + publish.
  *
- * `instagram_content_publish` is deliberately absent: this app is a
- * Facebook Login for Business configuration where that legacy scope is
- * rejected at the OAuth dialog ("Invalid Scopes"). `instagram_basic` still
- * validates and powers linked-IG detection. When Instagram publishing ships
- * (needs image support first), add the Business-app publish permission from
- * the app's Instagram use case and prompt a reconnect.
+ * `instagram_content_publish` requires the Instagram use case's "content
+ * management" permissions to be attached in the Meta app dashboard (Use
+ * cases → Instagram API → API setup with Facebook login → Add required
+ * content permissions) — without that, the OAuth dialog rejects it with
+ * "Invalid Scopes". That setup was completed on 2026-08-08. Note the
+ * dashboard displays the permission as "instagram_content_publishing", but
+ * the OAuth scope string is `instagram_content_publish`.
  *
  * `business_management` is required for Pages owned by a Meta Business
  * Portfolio (like the Altair Page): those are business-mediated, so they
@@ -23,6 +24,7 @@ export const FACEBOOK_CONNECT_SCOPES = [
   "pages_read_engagement",
   "pages_manage_posts",
   "instagram_basic",
+  "instagram_content_publish",
   "business_management",
 ] as const;
 
