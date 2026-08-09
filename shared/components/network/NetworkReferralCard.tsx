@@ -167,6 +167,13 @@ export function NetworkReferralCard({
       ) : null}
 
       {direction === "received" && referral.status === "sent" ? (
+        <p className={footnoteClass}>
+          Customer name, phone, email, and full address stay hidden until you
+          accept.
+        </p>
+      ) : null}
+
+      {direction === "received" && referral.status === "sent" ? (
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"

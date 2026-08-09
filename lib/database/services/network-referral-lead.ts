@@ -8,11 +8,13 @@
 
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
-import type { LeadInsert } from "@/lib/database/types/core-tables";
+import type { LeadInsert, LeadUpdate } from "@/lib/database/types/core-tables";
 import type { Lead } from "@/shared/types/lead";
 import type { NetworkReferralUrgency } from "@/lib/database/types/enums";
 import {
-  buildReferralLeadNotes,
+  buildPendingReferralLeadNotes,
+  buildRevealedReferralLeadNotes,
+  maskCustomerNameForLead,
   splitCustomerName,
 } from "@/shared/types/network-referral";
 
@@ -87,11 +89,19 @@ function mapInsertedLeadRow(row: {
   };
 }
 
+/**
+ * Creates the auto-linked lead in the receiving company's workspace WITHOUT
+ * the customer's contact PII — name reduced to first-name + last-initial,
+ * email/phone left blank, street address omitted from notes. The referral
+ * row (inserted separately, RLS-protected to source/target companies only)
+ * remains the sole holder of the full customer details until the receiving
+ * company accepts. See revealReferralLeadContact for the accept-time reveal.
+ */
 export async function createReferralTargetLead(
   input: CreateReferralTargetLeadInput,
 ): Promise<{ lead: Lead | null; error: string | null }> {
-  const { firstName, lastName } = splitCustomerName(input.customerName);
-  const notes = buildReferralLeadNotes({
+  const { firstName, lastName } = maskCustomerNameForLead(input.customerName);
+  const notes = buildPendingReferralLeadNotes({
     referralId: input.referralId,
     sourceCompanyName: input.sourceCompanyName,
     sourceUserName: input.sourceUserName,
@@ -113,8 +123,8 @@ export async function createReferralTargetLead(
     first_name: firstName,
     last_name: lastName,
     company_name: null,
-    email: input.customerEmail,
-    phone: input.customerPhone,
+    email: "",
+    phone: "",
     source: "network_referral",
     status: "new",
     notes,
@@ -236,6 +246,110 @@ export async function linkNetworkReferralTargetLead(input: {
     .eq("id", input.referralId)
     .eq("source_company_id", input.sourceCompanyId)
     .is("target_lead_id", null);
+
+  return { error: updateError ? mapDatabaseError(updateError) : null };
+}
+
+type ReferralFullRow = {
+  id: string;
+  source_company_id: string;
+  target_company_id: string;
+  source_user_id: string;
+  target_lead_id: string | null;
+  source_network_profile_id: string | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  service_address: string;
+  city: string;
+  state: string;
+  zip: string;
+  requested_service: string;
+  urgency: NetworkReferralUrgency;
+  notes: string | null;
+  incentive_note: string | null;
+};
+
+/**
+ * Reveals the customer's full contact PII on the lead once the receiving
+ * company has ACCEPTED the referral — restores the real name, fills in
+ * email/phone, and rewrites notes to include the street address. Best-effort:
+ * called after acceptance already succeeded, so a failure here never blocks
+ * accepting the referral itself (it just leaves the lead masked, which is
+ * safe — never a "declined by default" outcome).
+ */
+export async function revealReferralLeadContact(input: {
+  referralId: string;
+  targetCompanyId: string;
+}): Promise<{ error: string | null }> {
+  const supabase = createServiceRoleClient();
+
+  const { data: referral, error: referralError } = await supabase
+    .from("network_referrals")
+    .select(
+      "id, source_company_id, target_company_id, source_user_id, target_lead_id, source_network_profile_id, customer_name, customer_phone, customer_email, service_address, city, state, zip, requested_service, urgency, notes, incentive_note",
+    )
+    .eq("id", input.referralId)
+    .maybeSingle();
+
+  if (referralError || !referral) {
+    return {
+      error: referralError ? mapDatabaseError(referralError) : "Referral not found.",
+    };
+  }
+
+  const row = referral as ReferralFullRow;
+
+  if (row.target_company_id !== input.targetCompanyId || !row.target_lead_id) {
+    return { error: null };
+  }
+
+  const [{ data: sourceCompany }, { data: sourceProfile }] = await Promise.all([
+    supabase
+      .from("companies")
+      .select("name")
+      .eq("id", row.source_company_id)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", row.source_user_id)
+      .maybeSingle(),
+  ]);
+
+  const { firstName, lastName } = splitCustomerName(row.customer_name);
+  const notes = buildRevealedReferralLeadNotes({
+    referralId: row.id,
+    sourceCompanyName: sourceCompany?.name ?? "Network partner",
+    sourceUserName: sourceProfile?.full_name ?? undefined,
+    sourceCompanyId: row.source_company_id,
+    sourceNetworkProfileId: row.source_network_profile_id ?? undefined,
+    serviceAddress: row.service_address,
+    city: row.city,
+    state: row.state,
+    zip: row.zip,
+    requestedService: row.requested_service,
+    urgency: row.urgency,
+    notes: row.notes ?? undefined,
+    incentiveNote: row.incentive_note ?? undefined,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    customerEmail: row.customer_email,
+  });
+
+  const update: LeadUpdate = {
+    first_name: firstName,
+    last_name: lastName,
+    email: row.customer_email,
+    phone: row.customer_phone,
+    notes,
+  };
+
+  const { error: updateError } = await supabase
+    .from("leads")
+    .update(update)
+    .eq("id", row.target_lead_id)
+    .eq("company_id", input.targetCompanyId);
 
   return { error: updateError ? mapDatabaseError(updateError) : null };
 }

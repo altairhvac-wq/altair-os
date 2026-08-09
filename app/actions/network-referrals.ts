@@ -20,6 +20,7 @@ import {
   cancelNetworkReferralHandoff,
   createReferralTargetLead,
   linkNetworkReferralTargetLead,
+  revealReferralLeadContact,
 } from "@/lib/database/services/network-referral-lead";
 import { getLeadById, updateLead } from "@/lib/database/queries/leads";
 import { recordLeadLostActivity } from "@/lib/database/services/lead-activity";
@@ -264,6 +265,20 @@ export async function acceptNetworkReferralAction(
 
   if (error || !updated) {
     return { error: error ?? "We couldn't accept this referral." };
+  }
+
+  // Reveal the customer's full contact PII on the lead now that this company
+  // has accepted. Best-effort — acceptance already succeeded regardless.
+  const revealResult = await revealReferralLeadContact({
+    referralId,
+    targetCompanyId: permission.context.company.id,
+  });
+
+  if (revealResult.error) {
+    console.error(
+      "[acceptNetworkReferralAction] failed to reveal lead contact details:",
+      revealResult.error,
+    );
   }
 
   revalidateNetworkPaths();

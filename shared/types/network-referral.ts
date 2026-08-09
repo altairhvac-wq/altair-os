@@ -491,7 +491,32 @@ export function splitCustomerName(customerName: string): {
   };
 }
 
-export function buildReferralLeadNotes(input: {
+/**
+ * Masked name for the lead auto-created BEFORE a referral is accepted —
+ * first name kept (helps the receiving company recognize the opportunity),
+ * last name reduced to an initial. Full name is restored via splitCustomerName
+ * on accept (see buildMaskedReferralLeadContact's revealed counterpart).
+ */
+export function maskCustomerNameForLead(customerName: string): {
+  firstName: string;
+  lastName: string;
+} {
+  const trimmed = customerName.trim();
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return { firstName: "Referral", lastName: "Lead" };
+  }
+
+  if (parts.length === 1) {
+    return { firstName: parts[0]!, lastName: "—" };
+  }
+
+  const lastInitial = parts[parts.length - 1]!.charAt(0).toUpperCase();
+  return { firstName: parts[0]!, lastName: `${lastInitial}.` };
+}
+
+type ReferralLeadNotesInput = {
   referralId: string;
   sourceCompanyName: string;
   sourceUserName?: string;
@@ -505,12 +530,54 @@ export function buildReferralLeadNotes(input: {
   urgency: NetworkReferralUrgency;
   notes?: string;
   incentiveNote?: string;
-}): string {
+};
+
+/**
+ * Notes shown on the auto-created lead BEFORE the referral is accepted.
+ * Deliberately omits the customer's street address (city/state/zip are kept —
+ * needed to judge coverage, and already visible on the directory). Phone and
+ * email are never in these notes to begin with; they live only on the
+ * separately-masked lead.email / lead.phone fields (see
+ * buildMaskedReferralLeadContact) and are revealed the same way.
+ */
+export function buildPendingReferralLeadNotes(
+  input: ReferralLeadNotesInput,
+): string {
   const lines = [
-    "Network Referral",
+    "Network Referral — awaiting your acceptance",
     `Referred by: ${input.sourceCompanyName}`,
     input.sourceUserName ? `Referring contact: ${input.sourceUserName}` : null,
     "",
+    `Service: ${input.requestedService}`,
+    `Urgency: ${formatNetworkReferralUrgency(input.urgency)}`,
+    `Area: ${[input.city, input.state, input.zip].filter(Boolean).join(", ") || "Not listed"}`,
+    input.notes ? `Referral notes: ${input.notes}` : null,
+    input.incentiveNote ? `Incentive note: ${input.incentiveNote}` : null,
+    "",
+    "The customer's name, phone, email, and full address will appear here once you accept this referral in Community.",
+    "",
+    `Referral ID: ${input.referralId}`,
+  ].filter((line): line is string => line !== null);
+
+  return lines.join("\n");
+}
+
+/**
+ * Full notes written onto the lead once the referral is ACCEPTED — customer
+ * contact details now included. See buildMaskedReferralLeadContact for the
+ * companion name/email/phone reveal applied to the lead's own columns.
+ */
+export function buildRevealedReferralLeadNotes(
+  input: ReferralLeadNotesInput & { customerName: string; customerPhone: string; customerEmail: string },
+): string {
+  const lines = [
+    "Network Referral — accepted",
+    `Referred by: ${input.sourceCompanyName}`,
+    input.sourceUserName ? `Referring contact: ${input.sourceUserName}` : null,
+    "",
+    `Customer: ${input.customerName || "Not provided"}`,
+    input.customerPhone ? `Phone: ${input.customerPhone}` : null,
+    input.customerEmail ? `Email: ${input.customerEmail}` : null,
     `Service: ${input.requestedService}`,
     `Urgency: ${formatNetworkReferralUrgency(input.urgency)}`,
     `Address: ${[input.serviceAddress, input.city, input.state, input.zip]
