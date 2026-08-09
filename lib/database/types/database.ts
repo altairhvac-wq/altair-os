@@ -1516,6 +1516,13 @@ export type Database = {
         };
         Returns: NetworkReferralRow;
       };
+      sync_network_referral_job_completion: {
+        Args: {
+          p_job_id: string;
+          p_target_company_id: string;
+        };
+        Returns: NetworkReferralRow | null;
+      };
       get_network_referral_trust_stats: {
         Args: {
           p_profile_ids: string[];

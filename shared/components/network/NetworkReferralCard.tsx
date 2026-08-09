@@ -130,6 +130,19 @@ export function NetworkReferralCard({
           <p className={fieldLabelClass}>Created</p>
           <p className={fieldValueClass}>{formatDate(referral.createdAt, timeZone)}</p>
         </div>
+        {referral.jobCompletedAt ? (
+          <div>
+            <p className={fieldLabelClass}>Job completed</p>
+            <p
+              className={`${fieldValueClass} inline-flex items-center gap-1 font-semibold ${
+                isNorthStar ? "text-[#166534]" : "text-emerald-700"
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              {formatDate(referral.jobCompletedAt, timeZone)}
+            </p>
+          </div>
+        ) : null}
         {referral.targetLeadStatus ? (
           <div>
             <p className={fieldLabelClass}>Pipeline status</p>

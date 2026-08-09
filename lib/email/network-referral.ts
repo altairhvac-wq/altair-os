@@ -123,3 +123,71 @@ export async function sendNetworkReferralNotificationEmail(
     fromDisplayName: "Altair OS Community",
   });
 }
+
+// ---------------------------------------------------------------------------
+// Referral job-completed notification (to the SENDING company)
+// ---------------------------------------------------------------------------
+
+export type SendReferralJobCompletedEmailInput = {
+  to: string;
+  recipientName?: string | null;
+  sourceCompanyName: string;
+  targetCompanyName: string;
+  requestedService: string;
+  /** Date the referral was originally sent (ISO); shown coarsely. */
+  referralSentAt?: string;
+  communityUrl?: string;
+};
+
+export async function sendReferralJobCompletedEmail(
+  input: SendReferralJobCompletedEmailInput,
+): Promise<ResendSendResult> {
+  const greetingName = input.recipientName?.trim() || input.sourceCompanyName;
+  const sentDate = input.referralSentAt
+    ? new Date(input.referralSentAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+
+  const referralLine = sentDate
+    ? `the referral you sent on ${sentDate} (${input.requestedService})`
+    : `your referral (${input.requestedService})`;
+
+  const textLines = [
+    `Hi ${greetingName},`,
+    "",
+    `Good news — ${input.targetCompanyName} completed the job from ${referralLine}.`,
+    "",
+    "Your referral turned into real, finished work for a company in your network. This is what the Community is for.",
+  ];
+
+  if (input.communityUrl) {
+    textLines.push("", `See your referral activity: ${input.communityUrl}`);
+  }
+
+  const ctaBlock = input.communityUrl
+    ? `
+    <p style="margin:20px 0;">
+      <a href="${escapeHtml(input.communityUrl)}" style="display:inline-block;padding:10px 18px;background:#17130E;color:#F5F0E4;text-decoration:none;border-radius:8px;font-weight:600;">
+        View referral activity
+      </a>
+    </p>`
+    : "";
+
+  const html = `
+    <p>Hi ${escapeHtml(greetingName)},</p>
+    <p>Good news — <strong>${escapeHtml(input.targetCompanyName)}</strong> completed the job from ${escapeHtml(referralLine)}.</p>
+    <p>Your referral turned into real, finished work for a company in your network. This is what the Community is for.</p>
+    ${ctaBlock}
+  `.trim();
+
+  return sendViaResend({
+    to: input.to,
+    subject: `${input.targetCompanyName} completed the job from your referral`,
+    text: textLines.join("\n"),
+    html,
+    logContext: "network-referral-completed-email",
+    fromDisplayName: "Altair OS Community",
+  });
+}

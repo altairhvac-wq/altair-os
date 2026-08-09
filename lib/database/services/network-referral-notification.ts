@@ -31,8 +31,8 @@ type RecipientRow = {
   profile: { email: string | null; full_name: string | null } | null;
 };
 
-async function listTargetCompanyAdminRecipients(
-  targetCompanyId: string,
+async function listCompanyAdminRecipients(
+  companyId: string,
 ): Promise<{ email: string; name: string | null }[]> {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
@@ -40,7 +40,7 @@ async function listTargetCompanyAdminRecipients(
     .select(
       "role, profile:profiles!company_memberships_user_id_fkey(email, full_name)",
     )
-    .eq("company_id", targetCompanyId)
+    .eq("company_id", companyId)
     .eq("status", "active")
     .in("role", ["owner", "admin"]);
 
@@ -74,9 +74,7 @@ export async function notifyTargetCompanyOfNetworkReferral(
   input: NotifyTargetCompanyInput,
 ): Promise<void> {
   try {
-    const recipients = await listTargetCompanyAdminRecipients(
-      input.targetCompanyId,
-    );
+    const recipients = await listCompanyAdminRecipients(input.targetCompanyId);
 
     if (recipients.length === 0) {
       console.info(

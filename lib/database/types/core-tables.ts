@@ -1482,6 +1482,9 @@ export type NetworkReferralRow = {
   decline_reason: string | null;
   /** When the receiving company first accepted/declined; null if unknowable (see migration 137). */
   responded_at: Timestamp | null;
+  /** When the first qualifying job for the referred customer completed (migration 138). */
+  job_completed_at: Timestamp | null;
+  completed_job_id: UUID | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };

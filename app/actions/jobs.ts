@@ -19,6 +19,7 @@ import {
   recordJobStatusCorrectedActivity,
 } from "@/lib/database/services/job-activity";
 import { emitWorkCompletedEvent } from "@/lib/database/services/operational-events";
+import { syncNetworkReferralJobCompletion } from "@/lib/database/services/network-referral-job-completion";
 import type { CompletionDraftInvoiceOutcome } from "@/shared/types/completion-draft-invoice";
 import {
   ensureTimeTrackingForStartWork,
@@ -213,6 +214,14 @@ export async function updateJobStatusAction(
       actorId: context.user.id,
       customerId: job.customerId,
       jobNumber: job.jobNumber,
+    });
+
+    // If this job traces back to a network referral, stamp the referral's
+    // job-completion and notify the sending company. Best-effort — never
+    // blocks or fails the completion itself.
+    await syncNetworkReferralJobCompletion({
+      jobId,
+      targetCompanyId: context.company.id,
     });
   }
 

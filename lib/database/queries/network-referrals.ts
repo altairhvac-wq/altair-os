@@ -54,6 +54,7 @@ function mapNetworkReferralRow(row: NetworkReferralRowWithRelations): NetworkRef
     incentiveNote: row.incentive_note ?? undefined,
     status: row.status,
     declineReason: row.decline_reason ?? undefined,
+    jobCompletedAt: row.job_completed_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     sourceCompanyName: row.source_company?.name,

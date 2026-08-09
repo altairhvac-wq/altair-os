@@ -326,6 +326,8 @@ export type NetworkReferral = {
   incentiveNote?: string;
   status: NetworkReferralStatus;
   declineReason?: string;
+  /** Set when the first qualifying job for the referred customer completed (migration 138). */
+  jobCompletedAt?: string;
   createdAt: string;
   updatedAt: string;
   sourceCompanyName?: string;
