@@ -513,7 +513,7 @@ function NetworkReferralsPageLegacyView({
   }
 
   return (
-    <MasterShellPage fillViewport density="compact">
+    <MasterShellPage density="compact">
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
@@ -587,7 +587,7 @@ function NetworkReferralsPageLegacyView({
           ) : null}
         </MasterContentStack>
 
-        <MasterContentStack density="compact" scrollable className="min-h-0 lg:flex-1">
+        <MasterContentStack density="compact">
 
       {activeTab === "directory" ? (
         <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:overflow-hidden">

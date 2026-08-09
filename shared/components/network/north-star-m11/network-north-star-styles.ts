@@ -167,8 +167,14 @@ export const networkNorthStarStyles = {
   cancelButton: buttonClassName("secondary", "md"),
   permissionCopy: "text-sm text-[#4F4638]",
   countMeta: "text-xs font-medium text-[#64748B]",
+  // Deliberately NOT min-h-0/flex-1/overflow-y-auto — Community's page grows
+  // to its natural content height and the outer document scrolls, instead of
+  // being locked to the viewport with its own internal scrollbar. See the
+  // fillViewport removal on <MasterShellPage> above for the matching half of
+  // this — the two must stay in sync (viewport-fill needs an internal
+  // scroller; a natural-height page must not have one).
   workspaceStack:
-    "network-north-star-workspace flex min-h-0 min-w-0 flex-1 flex-col space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-12 sm:space-y-3.5 sm:px-3.5 sm:pb-14 lg:px-5 lg:pb-16",
+    "network-north-star-workspace flex min-w-0 flex-col space-y-3 overflow-x-hidden overscroll-contain px-3 pb-12 sm:space-y-3.5 sm:px-3.5 sm:pb-14 lg:px-5 lg:pb-16",
 } as const;
 
 export const st = networkNorthStarStyles;

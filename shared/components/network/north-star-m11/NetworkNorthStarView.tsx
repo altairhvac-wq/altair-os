@@ -697,7 +697,7 @@ export function NetworkNorthStarView({
   }
 
   return (
-    <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
+    <MasterShellPage density="compact" className={st.pageCanvas}>
       <div className="space-y-2 px-3 pt-3 sm:px-3.5 lg:px-5">
         <MasterPageHeader
           title="Community"
