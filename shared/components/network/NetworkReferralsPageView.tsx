@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { MapPin, Search, UserMinus, UserPlus } from "lucide-react";
@@ -59,11 +59,15 @@ import { NetworkDirectoryCard } from "./NetworkDirectoryCard";
 import { NetworkInviteForm } from "./NetworkInviteForm";
 import { NetworkInvitationCard } from "./NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
+import { NetworkNearbySearch } from "./NetworkNearbySearch";
+import { NetworkHelpRequestsPanel } from "./NetworkHelpRequestsPanel";
+import type { NetworkHelpRequest } from "@/shared/types/network-help-request";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
 import { NetworkProfileEditForm } from "./NetworkProfileEditForm";
 import { NetworkReferralCard } from "./NetworkReferralCard";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkNorthStarView } from "./north-star-m11";
+import { useSyncedState } from "@/shared/hooks/useSyncedState";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
@@ -82,6 +86,8 @@ type NetworkReferralsPageViewProps = {
   initialMyNetworkPartners: NetworkPartner[];
   initialNetworkInvites: NetworkInvite[];
   initialIncomingNetworkInvites: IncomingNetworkInvite[];
+  initialOpenHelpRequests: NetworkHelpRequest[];
+  initialMyHelpRequests: NetworkHelpRequest[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
@@ -122,6 +128,8 @@ function NetworkReferralsPageLegacyView({
   initialMyNetworkPartners,
   initialNetworkInvites,
   initialIncomingNetworkInvites,
+  initialOpenHelpRequests,
+  initialMyHelpRequests,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -131,36 +139,19 @@ function NetworkReferralsPageLegacyView({
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [activeTab, setActiveTab] = useState<NetworkReferralsTab>("directory");
-  const [profiles, setProfiles] = useState(initialProfiles);
+  const [profiles] = useSyncedState(initialProfiles);
   const [ownProfile, setOwnProfile] = useState(initialOwnProfile);
-  const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
-  const [receivedReferrals, setReceivedReferrals] =
-    useState(initialReceivedReferrals);
+  const [sentReferrals, setSentReferrals] = useSyncedState(initialSentReferrals);
+  const [receivedReferrals, setReceivedReferrals] = useSyncedState(
+    initialReceivedReferrals,
+  );
+  const [openHelpRequests] = useSyncedState(initialOpenHelpRequests);
+  const [myHelpRequests] = useSyncedState(initialMyHelpRequests);
 
-  useEffect(() => {
-    setProfiles(initialProfiles);
-  }, [initialProfiles]);
-
-  useEffect(() => {
-    setSentReferrals(initialSentReferrals);
-  }, [initialSentReferrals]);
-
-  useEffect(() => {
-    setReceivedReferrals(initialReceivedReferrals);
-  }, [initialReceivedReferrals]);
-
-  const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
-  const [incomingNetworkInvites, setIncomingNetworkInvites] = useState(
+  const [networkInvites, setNetworkInvites] = useSyncedState(initialNetworkInvites);
+  const [incomingNetworkInvites] = useSyncedState(
     initialIncomingNetworkInvites,
   );
-
-  useEffect(() => {
-    setNetworkInvites(initialNetworkInvites);
-  }, [initialNetworkInvites]);
-
-  useEffect(() => {
-    setIncomingNetworkInvites(initialIncomingNetworkInvites);
-  }, [initialIncomingNetworkInvites]);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -599,7 +590,15 @@ function NetworkReferralsPageLegacyView({
         <MasterContentStack density="compact" scrollable className="min-h-0 lg:flex-1">
 
       {activeTab === "directory" ? (
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:overflow-hidden">
+          <NetworkNearbySearch
+            surface="legacy"
+            onSelectProfile={(profileId) => {
+              setSelectedProfileId(profileId);
+              setPanelMode("detail");
+            }}
+          />
+          <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
           <MasterPageSurface
             variant="card"
             className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden`}
@@ -822,6 +821,7 @@ function NetworkReferralsPageLegacyView({
             onReferralSuccess={handleReferralSuccess}
             onReferralCancel={() => setPanelMode("detail")}
           />
+          </div>
         </div>
       ) : null}
 
@@ -1130,6 +1130,27 @@ function NetworkReferralsPageLegacyView({
                 />
               ))}
             </div>
+          )}
+        </MasterPageSurface>
+      ) : null}
+
+      {activeTab === "help-requests" ? (
+        <MasterPageSurface
+          variant="card"
+          className="min-h-0 flex-1 overflow-y-auto p-4"
+        >
+          {!canSendReferral && !canManageReceivedReferrals ? (
+            <p className="text-sm text-slate-600">
+              Help Requests are visible to lead management and company admin roles.
+            </p>
+          ) : (
+            <NetworkHelpRequestsPanel
+              initialOpenRequests={openHelpRequests}
+              initialMyRequests={myHelpRequests}
+              canManage={canManageNetwork}
+              timeZone={timeZone}
+              surface="legacy"
+            />
           )}
         </MasterPageSurface>
       ) : null}

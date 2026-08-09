@@ -121,6 +121,12 @@ import type {
   NetworkReferralInsert,
   NetworkReferralRow,
   NetworkReferralUpdate,
+  NetworkHelpRequestInsert,
+  NetworkHelpRequestRow,
+  NetworkHelpRequestUpdate,
+  NetworkHelpOfferInsert,
+  NetworkHelpOfferRow,
+  NetworkHelpOfferUpdate,
 } from "./core-tables";
 import type { Json } from "./enums";
 
@@ -507,6 +513,62 @@ export type Database = {
             columns: ["target_network_profile_id"];
             isOneToOne: false;
             referencedRelation: "network_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_help_requests: {
+        Row: NetworkHelpRequestRow;
+        Insert: NetworkHelpRequestInsert;
+        Update: NetworkHelpRequestUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_help_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_help_requests_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_help_requests_filled_referral_id_fkey";
+            columns: ["filled_referral_id"];
+            isOneToOne: false;
+            referencedRelation: "network_referrals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_help_offers: {
+        Row: NetworkHelpOfferRow;
+        Insert: NetworkHelpOfferInsert;
+        Update: NetworkHelpOfferUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_help_offers_help_request_id_fkey";
+            columns: ["help_request_id"];
+            isOneToOne: false;
+            referencedRelation: "network_help_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_help_offers_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_help_offers_offered_by_fkey";
+            columns: ["offered_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1536,6 +1598,32 @@ export type Database = {
           median_response_seconds: number | null;
           response_samples: number;
         }[];
+      };
+      get_nearby_network_profiles: {
+        Args: {
+          p_lat: number;
+          p_lng: number;
+          p_radius_miles: number;
+          p_exclude_company_id?: string | null;
+        };
+        Returns: {
+          id: string;
+          company_id: string;
+          distance_miles: number;
+        }[];
+      };
+      accept_network_help_offer: {
+        Args: {
+          p_help_request_id: string;
+          p_offer_id: string;
+          p_acting_company_id: string;
+          p_referral_id: string;
+        };
+        Returns: NetworkHelpRequestRow;
+      };
+      expire_stale_network_help_requests: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
       };
       sync_network_referral_outcome_for_lead: {
         Args: {

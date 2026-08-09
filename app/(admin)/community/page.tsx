@@ -26,6 +26,10 @@ import {
   listSentNetworkReferrals,
 } from "@/lib/database/queries/network-referrals";
 import { getNetworkReferralTrustStatsByProfileId } from "@/lib/database/queries/network-referral-trust";
+import {
+  listMyNetworkHelpRequests,
+  listOpenNetworkHelpRequests,
+} from "@/lib/database/queries/network-help-requests";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
 
@@ -51,8 +55,20 @@ export default async function CommunityPage() {
     await repairAcceptedInvitePartnerLinksForCompany(companyId);
   }
 
-  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners, networkInvites, acceptedInvite, incomingNetworkInvites] =
-    await Promise.all([
+  const canManageHelpRequests = canSendReferral || canManageReceivedReferrals;
+
+  const [
+    profiles,
+    ownProfileResult,
+    sentReferrals,
+    receivedReferrals,
+    myNetworkPartners,
+    networkInvites,
+    acceptedInvite,
+    incomingNetworkInvites,
+    openHelpRequests,
+    myHelpRequests,
+  ] = await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
         ? ensureCompanyNetworkProfile(companyId, companyContext.company.name)
@@ -71,6 +87,12 @@ export default async function CommunityPage() {
         : Promise.resolve([]),
       getAcceptedNetworkInviteForCompany(companyId),
       listIncomingNetworkInvitesForUser(companyId),
+      canManageHelpRequests
+        ? listOpenNetworkHelpRequests(companyId)
+        : Promise.resolve([]),
+      canManageHelpRequests
+        ? listMyNetworkHelpRequests(companyId)
+        : Promise.resolve([]),
     ]);
 
   // Computed trust metrics for the directory profiles on screen (aggregate
@@ -91,6 +113,8 @@ export default async function CommunityPage() {
       initialMyNetworkPartners={myNetworkPartners}
       initialNetworkInvites={networkInvites}
       initialIncomingNetworkInvites={incomingNetworkInvites}
+      initialOpenHelpRequests={openHelpRequests}
+      initialMyHelpRequests={myHelpRequests}
       invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
       companyId={companyId}
       canSendReferral={canSendReferral}

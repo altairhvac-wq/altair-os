@@ -7,6 +7,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { geocodeAddress } from "@/lib/mapbox/geocode";
 import type {
   NetworkProfileInsert,
   NetworkProfileRow,
@@ -171,6 +172,38 @@ export async function updateCompanyNetworkProfileVisibility(
   };
 }
 
+/**
+ * Approximate city/ZIP-level geocode for the "near me" radius search
+ * (migration 139). Never geocodes a street address — this table
+ * intentionally never stores one (see migration 085). Best-effort: a
+ * Mapbox failure or missing token just leaves lat/lng unset, which simply
+ * excludes this profile from radius search results until the next save.
+ */
+async function geocodeNetworkProfileLocation(input: {
+  city: string;
+  state: string;
+  postalCode: string;
+}): Promise<{ latitude: number | null; longitude: number | null }> {
+  const queryParts = input.postalCode.trim()
+    ? [input.city, input.state, input.postalCode].filter(Boolean)
+    : [input.city, input.state].filter(Boolean);
+
+  if (queryParts.length === 0) {
+    return { latitude: null, longitude: null };
+  }
+
+  try {
+    const coords = await geocodeAddress(queryParts.join(", "));
+    if (!coords) {
+      return { latitude: null, longitude: null };
+    }
+    return { latitude: coords.lat, longitude: coords.lng };
+  } catch (error) {
+    console.error("[updateCompanyNetworkProfile] geocode failed:", error);
+    return { latitude: null, longitude: null };
+  }
+}
+
 export async function updateCompanyNetworkProfile(
   companyId: string,
   input: NetworkProfileFormData,
@@ -184,6 +217,15 @@ export async function updateCompanyNetworkProfile(
   const showOnMap =
     input.showOnMap && locationPrecision !== "none" ? true : false;
 
+  const { latitude, longitude } =
+    locationPrecision === "none"
+      ? { latitude: null, longitude: null }
+      : await geocodeNetworkProfileLocation({
+          city: input.city,
+          state: input.state,
+          postalCode: input.postalCode,
+        });
+
   const update: NetworkProfileUpdate = {
     display_name: input.displayName,
     trade_type: input.tradeType,
@@ -196,6 +238,8 @@ export async function updateCompanyNetworkProfile(
     location_precision: locationPrecision,
     show_on_map: showOnMap,
     accepting_referrals: input.acceptingReferrals,
+    latitude,
+    longitude,
   };
 
   const { data, error } = await supabase
@@ -213,4 +257,62 @@ export async function updateCompanyNetworkProfile(
     profile: data ? mapNetworkProfileRow(data) : null,
     error: data ? null : "Network profile not found.",
   };
+}
+
+/**
+ * "Companies near me" radius search (migration 139's
+ * get_nearby_network_profiles RPC). Geocodes the caller's free-text query
+ * first (see searchNearbyNetworkCompaniesAction), then finds visible,
+ * map-opted-in profiles within radiusMiles, nearest first.
+ */
+export async function findNearbyNetworkProfiles(
+  excludeCompanyId: string,
+  latitude: number,
+  longitude: number,
+  radiusMiles: number,
+): Promise<{ profile: NetworkProfile; distanceMiles: number }[]> {
+  const supabase = await createClient();
+  const { data: nearby, error } = await supabase.rpc(
+    "get_nearby_network_profiles",
+    {
+      p_lat: latitude,
+      p_lng: longitude,
+      p_radius_miles: radiusMiles,
+      p_exclude_company_id: excludeCompanyId,
+    },
+  );
+
+  if (error || !nearby || nearby.length === 0) {
+    if (error) {
+      console.error("[findNearbyNetworkProfiles] RPC failed:", error);
+    }
+    return [];
+  }
+
+  const distanceByProfileId = new Map(
+    nearby.map((row) => [row.id, row.distance_miles]),
+  );
+
+  const { data: profileRows, error: profilesError } = await supabase
+    .from("network_profiles")
+    .select("*")
+    .in(
+      "id",
+      nearby.map((row) => row.id),
+    );
+
+  if (profilesError || !profileRows) {
+    console.error(
+      "[findNearbyNetworkProfiles] profile lookup failed:",
+      profilesError,
+    );
+    return [];
+  }
+
+  return profileRows
+    .map((row) => ({
+      profile: mapNetworkProfileRow(row),
+      distanceMiles: distanceByProfileId.get(row.id) ?? 0,
+    }))
+    .sort((left, right) => left.distanceMiles - right.distanceMiles);
 }

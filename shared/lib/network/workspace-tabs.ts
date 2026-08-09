@@ -9,7 +9,8 @@ export type NetworkWorkspaceTab =
   | "partners"
   | "referrals"
   | "invitations"
-  | "directory";
+  | "directory"
+  | "help-requests";
 
 export type NetworkReferralsSubTab = "received" | "sent";
 
@@ -28,6 +29,7 @@ export const NETWORK_WORKSPACE_TAB_OPTIONS: {
   { value: "referrals", label: "Referrals" },
   { value: "invitations", label: "Invitations" },
   { value: "directory", label: "Directory" },
+  { value: "help-requests", label: "Help Requests" },
 ];
 
 export const NETWORK_REFERRALS_SUB_TAB_OPTIONS: {
@@ -72,6 +74,10 @@ export function getVisibleNetworkWorkspaceTabs(
 
   if (permissions.canSendReferral) {
     tabs.push("directory");
+  }
+
+  if (permissions.canSendReferral || permissions.canManageReceivedReferrals) {
+    tabs.push("help-requests");
   }
 
   return tabs;

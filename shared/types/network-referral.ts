@@ -379,7 +379,8 @@ export type NetworkReferralsTab =
   | "my-network"
   | "invitations"
   | "sent-referrals"
-  | "received-referrals";
+  | "received-referrals"
+  | "help-requests";
 
 export const NETWORK_REFERRALS_TAB_OPTIONS: {
   value: NetworkReferralsTab;
@@ -390,6 +391,7 @@ export const NETWORK_REFERRALS_TAB_OPTIONS: {
   { value: "invitations", label: "Invitations" },
   { value: "sent-referrals", label: "Sent" },
   { value: "received-referrals", label: "Received" },
+  { value: "help-requests", label: "Help Requests" },
 ];
 
 export function formatNetworkReferralUrgency(

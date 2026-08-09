@@ -71,6 +71,20 @@ export type NetworkInviteStatus =
   | "expired"
   | "cancelled";
 
+/** `network_help_requests.status` — Help Request / Opportunity post lifecycle. */
+export type NetworkHelpRequestStatus =
+  | "open"
+  | "filled"
+  | "expired"
+  | "cancelled";
+
+/** `network_help_offers.status` — an offer to help on a posted request. */
+export type NetworkHelpOfferStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "withdrawn";
+
 export type LeadActivityType =
   | "lead_created"
   | "call_logged"

@@ -62,10 +62,14 @@ import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
 import { NetworkInviteForm } from "../NetworkInviteForm";
 import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
+import { NetworkNearbySearch } from "../NetworkNearbySearch";
+import { NetworkHelpRequestsPanel } from "../NetworkHelpRequestsPanel";
+import type { NetworkHelpRequest } from "@/shared/types/network-help-request";
 import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "../NetworkReferralCard";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
 import { st } from "./network-north-star-styles";
+import { useSyncedState } from "@/shared/hooks/useSyncedState";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
@@ -84,6 +88,8 @@ export type NetworkNorthStarViewProps = {
   initialMyNetworkPartners: NetworkPartner[];
   initialNetworkInvites: NetworkInvite[];
   initialIncomingNetworkInvites: IncomingNetworkInvite[];
+  initialOpenHelpRequests: NetworkHelpRequest[];
+  initialMyHelpRequests: NetworkHelpRequest[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
@@ -116,6 +122,8 @@ export function NetworkNorthStarView({
   initialMyNetworkPartners,
   initialNetworkInvites,
   initialIncomingNetworkInvites,
+  initialOpenHelpRequests,
+  initialMyHelpRequests,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -155,36 +163,19 @@ export function NetworkNorthStarView({
         canManageReceivedReferrals,
       }),
     );
-  const [profiles, setProfiles] = useState(initialProfiles);
-  const [ownProfile, setOwnProfile] = useState(initialOwnProfile);
-  const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
-  const [receivedReferrals, setReceivedReferrals] =
-    useState(initialReceivedReferrals);
-
-  useEffect(() => {
-    setProfiles(initialProfiles);
-  }, [initialProfiles]);
-
-  useEffect(() => {
-    setSentReferrals(initialSentReferrals);
-  }, [initialSentReferrals]);
-
-  useEffect(() => {
-    setReceivedReferrals(initialReceivedReferrals);
-  }, [initialReceivedReferrals]);
-
-  const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
-  const [incomingNetworkInvites, setIncomingNetworkInvites] = useState(
-    initialIncomingNetworkInvites,
+  const [profiles] = useSyncedState(initialProfiles);
+  const [ownProfile, setOwnProfile] = useSyncedState(initialOwnProfile);
+  const [sentReferrals, setSentReferrals] = useSyncedState(initialSentReferrals);
+  const [receivedReferrals, setReceivedReferrals] = useSyncedState(
+    initialReceivedReferrals,
   );
 
-  useEffect(() => {
-    setNetworkInvites(initialNetworkInvites);
-  }, [initialNetworkInvites]);
-
-  useEffect(() => {
-    setIncomingNetworkInvites(initialIncomingNetworkInvites);
-  }, [initialIncomingNetworkInvites]);
+  const [networkInvites, setNetworkInvites] = useSyncedState(initialNetworkInvites);
+  const [incomingNetworkInvites] = useSyncedState(
+    initialIncomingNetworkInvites,
+  );
+  const [openHelpRequests] = useSyncedState(initialOpenHelpRequests);
+  const [myHelpRequests] = useSyncedState(initialMyHelpRequests);
 
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
@@ -289,10 +280,6 @@ export function NetworkNorthStarView({
     () => getCommunityProfileReadiness(ownProfile, canSendReferral),
     [ownProfile, canSendReferral],
   );
-
-  useEffect(() => {
-    setOwnProfile(initialOwnProfile);
-  }, [initialOwnProfile]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
@@ -940,6 +927,14 @@ export function NetworkNorthStarView({
                   </label>
                 </div>
 
+                <NetworkNearbySearch
+                  surface="north-star"
+                  onSelectProfile={(profileId) => {
+                    setSelectedProfileId(profileId);
+                    setPanelMode("detail");
+                  }}
+                />
+
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
                   <div className={st.directoryListColumn}>
                     <div className={st.rosterSectionHeader}>
@@ -1364,6 +1359,25 @@ export function NetworkNorthStarView({
                       </div>
                     )}
                   </>
+                )}
+              </div>
+            ) : null}
+
+            {activeTab === "help-requests" ? (
+              <div className="min-h-0 overflow-y-auto">
+                {!canSendReferral && !canManageReceivedReferrals ? (
+                  <p className={st.cardMuted}>
+                    Help Requests are visible to lead management and company
+                    admin roles.
+                  </p>
+                ) : (
+                  <NetworkHelpRequestsPanel
+                    initialOpenRequests={openHelpRequests}
+                    initialMyRequests={myHelpRequests}
+                    canManage={canManageNetwork}
+                    timeZone={timeZone}
+                    surface="north-star"
+                  />
                 )}
               </div>
             ) : null}

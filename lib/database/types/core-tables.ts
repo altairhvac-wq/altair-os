@@ -1521,6 +1521,74 @@ export type NetworkReferralUpdate = Partial<
   >
 >;
 
+/** Help Request / Opportunity post (migration 140). See network-help-requests.ts. */
+export type NetworkHelpRequestRow = {
+  id: UUID;
+  company_id: UUID;
+  created_by: UUID;
+  trade_type: string;
+  title: string;
+  details: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  urgency: import("./enums").NetworkReferralUrgency;
+  status: import("./enums").NetworkHelpRequestStatus;
+  expires_at: Timestamp;
+  filled_referral_id: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type NetworkHelpRequestInsert = {
+  id?: UUID;
+  company_id: UUID;
+  created_by: UUID;
+  trade_type: string;
+  title: string;
+  details?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  urgency?: import("./enums").NetworkReferralUrgency;
+  status?: import("./enums").NetworkHelpRequestStatus;
+  expires_at?: Timestamp;
+  filled_referral_id?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type NetworkHelpRequestUpdate = Partial<
+  Omit<NetworkHelpRequestRow, "id" | "company_id" | "created_by" | "created_at">
+>;
+
+/** An offer to help on a posted request (migration 140). */
+export type NetworkHelpOfferRow = {
+  id: UUID;
+  help_request_id: UUID;
+  company_id: UUID;
+  offered_by: UUID;
+  message: string | null;
+  status: import("./enums").NetworkHelpOfferStatus;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type NetworkHelpOfferInsert = {
+  id?: UUID;
+  help_request_id: UUID;
+  company_id: UUID;
+  offered_by: UUID;
+  message?: string | null;
+  status?: import("./enums").NetworkHelpOfferStatus;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type NetworkHelpOfferUpdate = Partial<
+  Omit<NetworkHelpOfferRow, "id" | "help_request_id" | "company_id" | "offered_by" | "created_at">
+>;
+
 /** Private partner CRM row — "My Network" uses rows with `linked_company_id` set. */
 export type NetworkPartnerRow = {
   id: UUID;
