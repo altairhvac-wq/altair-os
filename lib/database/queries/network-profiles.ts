@@ -19,30 +19,14 @@ import type {
 import {
   deriveNetworkLocationPrecision,
 } from "@/shared/types/network-referral";
-import type { TradeType } from "@/shared/types/network";
-
-const TRADE_TYPES = new Set<string>([
-  "HVAC",
-  "Plumbing",
-  "Electrical",
-  "Roofing",
-  "General Contracting",
-  "Landscaping",
-  "Painting",
-]);
-
-function normalizeTradeType(value: string): TradeType {
-  return TRADE_TYPES.has(value)
-    ? (value as TradeType)
-    : "General Contracting";
-}
+import { normalizeNetworkTradeType } from "@/shared/types/network";
 
 function mapNetworkProfileRow(row: NetworkProfileRow): NetworkProfile {
   return {
     id: row.id,
     companyId: row.company_id,
     displayName: row.display_name,
-    tradeType: normalizeTradeType(row.trade_type),
+    tradeType: normalizeNetworkTradeType(row.trade_type),
     serviceArea: row.service_area,
     city: row.city,
     state: row.state,

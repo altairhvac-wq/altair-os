@@ -4,6 +4,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import {
+  decryptIntegrationSecret,
+  encryptIntegrationSecret,
+} from "@/lib/integrations/crypto";
 import type {
   NetworkInviteInsert,
   NetworkInviteRow,
@@ -11,29 +15,17 @@ import type {
 import {
   generateNetworkInviteToken,
   getNetworkInviteTokenExpiresAt,
+  hashNetworkInviteToken,
 } from "@/shared/lib/network-invite-token";
 import type {
   IncomingNetworkInvite,
   NetworkInvite,
   PublicNetworkInvitePreview,
 } from "@/shared/types/network-invite";
-import type { TradeType } from "@/shared/types/network";
-
-const TRADE_TYPES = new Set<string>([
-  "HVAC",
-  "Plumbing",
-  "Electrical",
-  "Roofing",
-  "General Contracting",
-  "Landscaping",
-  "Painting",
-]);
-
-function normalizeTradeType(value: string): TradeType {
-  return TRADE_TYPES.has(value)
-    ? (value as TradeType)
-    : "General Contracting";
-}
+import {
+  normalizeNetworkTradeType,
+  type TradeType,
+} from "@/shared/types/network";
 
 function mapNetworkInviteRow(
   row: NetworkInviteRow,
@@ -47,7 +39,7 @@ function mapNetworkInviteRow(
     invitedContactName: row.invited_contact_name,
     invitedEmail: row.invited_email,
     invitedPhone: row.invited_phone,
-    tradeCategory: normalizeTradeType(row.trade_category),
+    tradeCategory: normalizeNetworkTradeType(row.trade_category),
     personalMessage: row.personal_message ?? undefined,
     status: row.status,
     acceptedCompanyId: row.accepted_company_id ?? undefined,
@@ -62,6 +54,23 @@ function mapNetworkInviteRow(
 type InviteRowWithCompany = NetworkInviteRow & {
   source_company: { name: string } | null;
 };
+
+/**
+ * Best-effort encryption of the raw invite token so the same shareable link
+ * can be re-copied later. Returns null (legacy rotate-on-copy behavior) if the
+ * integrations encryption key is not configured in this environment.
+ */
+function encryptInviteTokenOrNull(rawToken: string): string | null {
+  try {
+    return encryptIntegrationSecret(rawToken);
+  } catch (error) {
+    console.error(
+      "[network-invites] Unable to encrypt invite token; falling back to rotate-on-copy:",
+      error,
+    );
+    return null;
+  }
+}
 
 function mapInviteRowsWithCompany(rows: InviteRowWithCompany[]): NetworkInvite[] {
   return rows.map((row) =>
@@ -131,6 +140,7 @@ export async function createNetworkInvite(input: {
   const supabase = await createClient();
 
   const row: NetworkInviteInsert = {
+    invite_token_encrypted: encryptInviteTokenOrNull(raw),
     source_company_id: input.sourceCompanyId,
     source_user_id: input.sourceUserId,
     invited_company_name: input.invitedCompanyName,
@@ -222,7 +232,7 @@ export async function getPublicNetworkInvitePreview(
         : undefined,
     tradeCategory:
       typeof payload.trade_category === "string"
-        ? normalizeTradeType(payload.trade_category)
+        ? normalizeNetworkTradeType(payload.trade_category)
         : undefined,
     personalMessage:
       typeof payload.personal_message === "string"
@@ -337,8 +347,8 @@ function mapIncomingNetworkInviteRow(
     invitedEmail,
     tradeCategory:
       typeof payload.trade_category === "string"
-        ? normalizeTradeType(payload.trade_category)
-        : "General Contracting",
+        ? normalizeNetworkTradeType(payload.trade_category)
+        : "Other",
     personalMessage:
       typeof payload.personal_message === "string"
         ? payload.personal_message
@@ -434,6 +444,53 @@ export async function acceptIncomingNetworkInvite(input: {
   };
 }
 
+/**
+ * Recover the raw invite token stored encrypted at creation, so "Copy invite
+ * link" can return the SAME link instead of rotating. Returns null when the
+ * invite is not pending, was created before encrypted storage existed, the
+ * encryption key is unavailable, or the stored token no longer matches the
+ * live hash (e.g. rotated elsewhere) — callers should fall back to rotation.
+ */
+export async function getStoredNetworkInviteRawToken(input: {
+  inviteId: string;
+  sourceCompanyId: string;
+}): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("network_invites")
+    .select("invite_token_hash, invite_token_encrypted, status, expires_at")
+    .eq("id", input.inviteId)
+    .eq("source_company_id", input.sourceCompanyId)
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error) {
+      console.error("[getStoredNetworkInviteRawToken] query failed:", error);
+    }
+    return null;
+  }
+
+  if (
+    data.status !== "pending" ||
+    !data.invite_token_encrypted ||
+    new Date(data.expires_at).getTime() <= Date.now()
+  ) {
+    return null;
+  }
+
+  try {
+    const raw = decryptIntegrationSecret(data.invite_token_encrypted);
+    // Safety: only trust the stored token if it still matches the live hash.
+    if (hashNetworkInviteToken(raw) !== data.invite_token_hash) {
+      return null;
+    }
+    return raw;
+  } catch (error) {
+    console.error("[getStoredNetworkInviteRawToken] decrypt failed:", error);
+    return null;
+  }
+}
+
 export async function rotateNetworkInviteToken(input: {
   inviteId: string;
   sourceCompanyId: string;
@@ -454,6 +511,26 @@ export async function rotateNetworkInviteToken(input: {
         ? mapDatabaseError(error)
         : "Unable to refresh this invitation link.",
     };
+  }
+
+  // Keep the encrypted copy in step with the rotated hash (best-effort — the
+  // RLS pending→pending update policy covers this write; a failure only means
+  // the next copy falls back to rotation again).
+  const encrypted = encryptInviteTokenOrNull(raw);
+  if (encrypted) {
+    const { error: updateError } = await supabase
+      .from("network_invites")
+      .update({ invite_token_encrypted: encrypted })
+      .eq("id", input.inviteId)
+      .eq("source_company_id", input.sourceCompanyId)
+      .eq("status", "pending");
+
+    if (updateError) {
+      console.error(
+        "[rotateNetworkInviteToken] failed to store rotated token:",
+        updateError,
+      );
+    }
   }
 
   return { rawToken: raw, error: null };

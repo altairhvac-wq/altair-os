@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Copy, Mail } from "lucide-react";
-import { copyNetworkInviteLinkAction } from "@/app/actions/network-invites";
+import { Copy, Mail, RefreshCw } from "lucide-react";
+import {
+  copyNetworkInviteLinkAction,
+  regenerateNetworkInviteLinkAction,
+  resendNetworkInviteEmailAction,
+} from "@/app/actions/network-invites";
 import { formatDate } from "@/shared/types/customer";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
@@ -34,8 +38,6 @@ export function NetworkInvitationCard({
 
   async function copyToClipboard(url: string) {
     await navigator.clipboard.writeText(url);
-    setCopyMessage("Invite link copied.");
-    window.setTimeout(() => setCopyMessage(null), 2500);
   }
 
   function handleCopyLink() {
@@ -66,10 +68,63 @@ export function NetworkInvitationCard({
       try {
         await copyToClipboard(result.inviteUrl);
         setCopyMessage(
-          "Fresh invite link copied. Any previously shared link no longer works.",
+          result.rotated
+            ? "Fresh invite link copied. Any previously shared link no longer works."
+            : "Invite link copied. It's the same link as before — safe to re-share.",
         );
       } catch {
         setError("Link generated but clipboard access was blocked.");
+      }
+    });
+  }
+
+  function handleResendEmail() {
+    setError(null);
+    setCopyMessage(null);
+
+    startTransition(async () => {
+      const result = await resendNetworkInviteEmailAction(invite.id);
+      if (result.error) {
+        setError(
+          formatActionError(result.error, "Unable to resend the invitation email."),
+        );
+        return;
+      }
+
+      if (result.inviteUrl) {
+        setInviteUrl(result.inviteUrl);
+      }
+
+      setCopyMessage(
+        result.rotated
+          ? `Invitation email sent to ${invite.invitedEmail} with a fresh link. Any previously shared link no longer works.`
+          : `Invitation email sent to ${invite.invitedEmail}.`,
+      );
+    });
+  }
+
+  function handleGenerateNewLink() {
+    setError(null);
+    setCopyMessage(null);
+
+    startTransition(async () => {
+      const result = await regenerateNetworkInviteLinkAction(invite.id);
+      if (result.error || !result.inviteUrl) {
+        setError(
+          formatActionError(result.error, "Unable to generate a new invite link."),
+        );
+        return;
+      }
+
+      setInviteUrl(result.inviteUrl);
+
+      try {
+        await copyToClipboard(result.inviteUrl);
+        setCopyMessage(
+          "New invite link copied. Any previously shared link no longer works.",
+        );
+      } catch {
+        setError("New link generated but clipboard access was blocked.");
       }
     });
   }
@@ -95,9 +150,6 @@ export function NetworkInvitationCard({
   const copyButtonClass = isNorthStar
     ? st.panelAction
     : "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50";
-  const disabledButtonClass = isNorthStar
-    ? "inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#F5F0E4] px-3 py-2 text-xs font-semibold text-[#6B6255]"
-    : "inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400";
   const helperClass = isNorthStar ? st.cardMuted : "text-xs text-slate-500";
 
   return (
@@ -138,18 +190,28 @@ export function NetworkInvitationCard({
             </button>
             <button
               type="button"
-              disabled
-              title="Email resend will be available in a later release"
-              className={disabledButtonClass}
+              onClick={handleGenerateNewLink}
+              disabled={isPending}
+              title="Issues a fresh link and invalidates any link shared before"
+              className={copyButtonClass}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              New link
+            </button>
+            <button
+              type="button"
+              onClick={handleResendEmail}
+              disabled={isPending}
+              title="Sends the invitation email again with the same link"
+              className={copyButtonClass}
             >
               <Mail className="h-3.5 w-3.5" />
               Resend invitation
             </button>
           </div>
           <p className={helperClass}>
-            {inviteUrl
-              ? "Copy again from this card without refreshing to reuse the same link."
-              : "After a page refresh, copying generates a fresh link and invalidates older ones."}
+            Copy reuses the same secure link. Use New link only to revoke a link
+            you&apos;ve already shared — older links stop working.
           </p>
         </div>
       ) : null}

@@ -25,6 +25,7 @@ import {
   listReceivedNetworkReferrals,
   listSentNetworkReferrals,
 } from "@/lib/database/queries/network-referrals";
+import { getNetworkReferralTrustStatsByProfileId } from "@/lib/database/queries/network-referral-trust";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
 
@@ -72,9 +73,18 @@ export default async function CommunityPage() {
       listIncomingNetworkInvitesForUser(companyId),
     ]);
 
+  // Computed trust metrics for the directory profiles on screen (aggregate
+  // RPC, visible profiles only — see migration 137).
+  const trustStats = canSendReferral
+    ? await getNetworkReferralTrustStatsByProfileId(
+        profiles.map((profile) => profile.id),
+      )
+    : {};
+
   return (
     <NetworkReferralsPageView
       initialProfiles={profiles}
+      initialTrustStats={trustStats}
       initialOwnProfile={ownProfileResult.profile}
       initialSentReferrals={sentReferrals}
       initialReceivedReferrals={receivedReferrals}

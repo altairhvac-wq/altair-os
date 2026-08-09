@@ -1516,6 +1516,20 @@ export type Database = {
         };
         Returns: NetworkReferralRow;
       };
+      get_network_referral_trust_stats: {
+        Args: {
+          p_profile_ids: string[];
+        };
+        Returns: {
+          profile_id: string;
+          referrals_handled: number;
+          accepted_count: number;
+          declined_count: number;
+          won_count: number;
+          median_response_seconds: number | null;
+          response_samples: number;
+        }[];
+      };
       sync_network_referral_outcome_for_lead: {
         Args: {
           p_lead_id: string;

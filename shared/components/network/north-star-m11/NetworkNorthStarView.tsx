@@ -46,6 +46,7 @@ import {
   type NetworkWorkspaceTab,
 } from "@/shared/lib/network/workspace-tabs";
 import type { TradeType } from "@/shared/types/network";
+import type { NetworkReferralTrustStats } from "@/shared/lib/network/trust-metrics";
 import {
   filterInvitesByTab,
   isNetworkInviteConnected,
@@ -76,6 +77,7 @@ type NetworkActionTarget = {
 
 export type NetworkNorthStarViewProps = {
   initialProfiles: NetworkProfile[];
+  initialTrustStats?: Record<string, NetworkReferralTrustStats>;
   initialOwnProfile: NetworkProfile | null;
   initialSentReferrals: NetworkReferral[];
   initialReceivedReferrals: NetworkReferral[];
@@ -107,6 +109,7 @@ function sortProfilesWithTrustedFirst(
 
 export function NetworkNorthStarView({
   initialProfiles,
+  initialTrustStats,
   initialOwnProfile,
   initialSentReferrals,
   initialReceivedReferrals,
@@ -183,6 +186,20 @@ export function NetworkNorthStarView({
     setIncomingNetworkInvites(initialIncomingNetworkInvites);
   }, [initialIncomingNetworkInvites]);
 
+  const [invitationsTab, setInvitationsTab] =
+    useState<NetworkInvitationsTab>("pending");
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
+  const [latestInviteEmailNotice, setLatestInviteEmailNotice] = useState<
+    string | null
+  >(null);
+  const [search, setSearch] = useState("");
+  const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
     function updateLayout() {
@@ -192,16 +209,6 @@ export function NetworkNorthStarView({
     mediaQuery.addEventListener("change", updateLayout);
     return () => mediaQuery.removeEventListener("change", updateLayout);
   }, []);
-  const [invitationsTab, setInvitationsTab] =
-    useState<NetworkInvitationsTab>("pending");
-  const [showInviteForm, setShowInviteForm] = useState(false);
-  const [showProfileEditor, setShowProfileEditor] = useState(false);
-  const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
-  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
   const [visibilityError, setVisibilityError] = useState<string | null>(null);
@@ -368,11 +375,16 @@ export function NetworkNorthStarView({
     setPanelMode("detail");
   }
 
-  function handleInviteSuccess(invite: NetworkInvite, inviteUrl?: string) {
+  function handleInviteSuccess(
+    invite: NetworkInvite,
+    inviteUrl?: string,
+    emailNotice?: string,
+  ) {
     setNetworkInvites((current) => [invite, ...current]);
     setShowInviteForm(false);
     setInvitationsTab("pending");
     setLatestInviteUrl(inviteUrl ?? null);
+    setLatestInviteEmailNotice(emailNotice ?? null);
   }
 
   const filteredInvites = useMemo(
@@ -542,6 +554,9 @@ export function NetworkNorthStarView({
     <NetworkProfileDetailPanel
       mode={panelMode}
       profile={selectedProfile}
+      trustStats={
+        selectedProfile ? initialTrustStats?.[selectedProfile.id] : undefined
+      }
       canSendReferral={canSendReferral}
       canManageNetwork={canManageNetwork}
       isInMyNetwork={Boolean(selectedPartner)}
@@ -588,6 +603,7 @@ export function NetworkNorthStarView({
       <NetworkDirectoryCard
         key={profile.id}
         profile={profile}
+        trustStats={initialTrustStats?.[profile.id]}
         selected={profile.id === selectedProfileId}
         onSelect={() => handleSelectProfile(profile.id)}
         canSendReferral={canSendReferral}
@@ -622,6 +638,7 @@ export function NetworkNorthStarView({
         <NetworkDirectoryCard
           key={partner.id}
           profile={profile}
+          trustStats={initialTrustStats?.[profile.id]}
           selected={profile.id === selectedProfileId}
           onSelect={() => handleSelectProfile(profile.id)}
           canSendReferral={canSendReferral}
@@ -1103,6 +1120,11 @@ export function NetworkNorthStarView({
                         <p className="text-sm font-semibold text-[#166534]">
                           Invitation created
                         </p>
+                        {latestInviteEmailNotice ? (
+                          <p className="mt-1 text-xs font-medium text-[#166534]">
+                            {latestInviteEmailNotice}
+                          </p>
+                        ) : null}
                         <p className="mt-1 break-all text-xs text-[#4F4638]">
                           {latestInviteUrl}
                         </p>

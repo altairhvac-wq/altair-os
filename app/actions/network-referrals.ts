@@ -21,6 +21,9 @@ import {
   createReferralTargetLead,
   linkNetworkReferralTargetLead,
 } from "@/lib/database/services/network-referral-lead";
+import { getLeadById, updateLead } from "@/lib/database/queries/leads";
+import { recordLeadLostActivity } from "@/lib/database/services/lead-activity";
+import { notifyTargetCompanyOfNetworkReferral } from "@/lib/database/services/network-referral-notification";
 import type { NetworkProfile, NetworkReferral } from "@/shared/types/network-referral";
 import {
   normalizeNetworkProfileFormData,
@@ -37,7 +40,8 @@ export type NetworkReferralActionResult = {
 };
 
 function revalidateNetworkPaths() {
-  revalidatePath("/network");
+  // /community is the live route; /network is only a redirect stub.
+  revalidatePath("/community");
   revalidatePath("/customers");
   revalidatePath("/leads");
 }
@@ -211,6 +215,18 @@ export async function sendNetworkReferralAction(
     };
   }
 
+  // Best-effort email heads-up to the receiving company's owners/admins —
+  // the referral and lead already exist regardless of delivery.
+  await notifyTargetCompanyOfNetworkReferral({
+    targetCompanyId: targetProfile.companyId,
+    targetCompanyName: targetProfile.displayName,
+    sourceCompanyName: permission.context.company.name,
+    requestedService: normalized.requestedService,
+    urgency: normalized.urgency,
+    city: normalized.city,
+    state: normalized.state,
+  });
+
   revalidateNetworkPaths();
 
   return {
@@ -285,8 +301,68 @@ export async function declineNetworkReferralAction(input: {
     return { error: error ?? "We couldn't decline this referral." };
   }
 
+  // Close out the auto-created referral lead so it doesn't sit in the active
+  // pipeline forever. Only touch it if this company hasn't independently
+  // progressed it to a terminal state already. Best-effort: a failure here
+  // never blocks the decline itself (the referral is already terminal, so the
+  // lead's "lost" status won't re-sync any referral outcome).
+  await closeDeclinedReferralLead(
+    permission.context.company.id,
+    permission.context.user.id,
+    updated.targetLeadId,
+  );
+
   revalidateNetworkPaths();
   return { referral: updated };
+}
+
+async function closeDeclinedReferralLead(
+  companyId: string,
+  actorUserId: string,
+  targetLeadId: string | undefined,
+) {
+  if (!targetLeadId) {
+    return;
+  }
+
+  try {
+    const lead = await getLeadById(companyId, targetLeadId);
+    if (!lead || lead.status === "won" || lead.status === "lost") {
+      return;
+    }
+
+    const lostReason = "Network referral declined.";
+    const { lead: closedLead, error: closeError } = await updateLead(
+      companyId,
+      targetLeadId,
+      {
+        status: "lost",
+        lostAt: new Date().toISOString(),
+        lostReason,
+        wonAt: null,
+      },
+    );
+
+    if (closeError || !closedLead) {
+      console.error(
+        "[declineNetworkReferralAction] failed to close referral lead:",
+        closeError,
+      );
+      return;
+    }
+
+    await recordLeadLostActivity({
+      companyId,
+      leadId: targetLeadId,
+      actorId: actorUserId,
+      lostReason,
+    });
+  } catch (error) {
+    console.error(
+      "[declineNetworkReferralAction] failed to close referral lead:",
+      error,
+    );
+  }
 }
 
 export async function listSentNetworkReferralsAction(): Promise<{

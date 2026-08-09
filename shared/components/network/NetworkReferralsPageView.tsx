@@ -45,6 +45,7 @@ import {
   type NetworkReferralsTab,
 } from "@/shared/types/network-referral";
 import type { TradeType } from "@/shared/types/network";
+import type { NetworkReferralTrustStats } from "@/shared/lib/network/trust-metrics";
 import {
   filterInvitesByTab,
   isNetworkInviteConnected,
@@ -74,6 +75,7 @@ type NetworkActionTarget = {
 
 type NetworkReferralsPageViewProps = {
   initialProfiles: NetworkProfile[];
+  initialTrustStats?: Record<string, NetworkReferralTrustStats>;
   initialOwnProfile: NetworkProfile | null;
   initialSentReferrals: NetworkReferral[];
   initialReceivedReferrals: NetworkReferral[];
@@ -113,6 +115,7 @@ export function NetworkReferralsPageView(props: NetworkReferralsPageViewProps) {
 
 function NetworkReferralsPageLegacyView({
   initialProfiles,
+  initialTrustStats,
   initialOwnProfile,
   initialSentReferrals,
   initialReceivedReferrals,
@@ -162,6 +165,9 @@ function NetworkReferralsPageLegacyView({
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
+  const [latestInviteEmailNotice, setLatestInviteEmailNotice] = useState<
+    string | null
+  >(null);
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
   const [locationFilter, setLocationFilter] = useState("");
@@ -268,11 +274,16 @@ function NetworkReferralsPageLegacyView({
     setLatestInviteUrl(null);
   }
 
-  function handleInviteSuccess(invite: NetworkInvite, inviteUrl?: string) {
+  function handleInviteSuccess(
+    invite: NetworkInvite,
+    inviteUrl?: string,
+    emailNotice?: string,
+  ) {
     setNetworkInvites((current) => [invite, ...current]);
     setShowInviteForm(false);
     setInvitationsTab("pending");
     setLatestInviteUrl(inviteUrl ?? null);
+    setLatestInviteEmailNotice(emailNotice ?? null);
   }
 
   const filteredInvites = useMemo(
@@ -444,6 +455,7 @@ function NetworkReferralsPageLegacyView({
         <NetworkDirectoryCard
           key={partner.id}
           profile={profile}
+          trustStats={initialTrustStats?.[profile.id]}
           selected={profile.id === selectedProfileId}
           onSelect={() => handleSelectProfile(profile.id)}
           canSendReferral={canSendReferral}
@@ -723,6 +735,7 @@ function NetworkReferralsPageLegacyView({
                       <NetworkDirectoryCard
                         key={profile.id}
                         profile={profile}
+                        trustStats={initialTrustStats?.[profile.id]}
                         selected={profile.id === selectedProfileId}
                         onSelect={() => handleSelectProfile(profile.id)}
                         canSendReferral={canSendReferral}
@@ -765,6 +778,11 @@ function NetworkReferralsPageLegacyView({
           <NetworkProfileDetailPanel
             mode={panelMode}
             profile={selectedProfile}
+            trustStats={
+              selectedProfile
+                ? initialTrustStats?.[selectedProfile.id]
+                : undefined
+            }
             canSendReferral={canSendReferral}
             canManageNetwork={canManageNetwork}
             isInMyNetwork={Boolean(selectedPartner)}
@@ -866,6 +884,11 @@ function NetworkReferralsPageLegacyView({
           <NetworkProfileDetailPanel
             mode={panelMode}
             profile={selectedProfile}
+            trustStats={
+              selectedProfile
+                ? initialTrustStats?.[selectedProfile.id]
+                : undefined
+            }
             canSendReferral={canSendReferral}
             canManageNetwork={canManageNetwork}
             isInMyNetwork={Boolean(selectedPartner)}
@@ -961,6 +984,11 @@ function NetworkReferralsPageLegacyView({
                   <p className="text-sm font-semibold text-emerald-900">
                     Invitation created
                   </p>
+                  {latestInviteEmailNotice ? (
+                    <p className="mt-1 text-xs font-medium text-emerald-800">
+                      {latestInviteEmailNotice}
+                    </p>
+                  ) : null}
                   <p className="mt-1 break-all text-xs text-emerald-800">
                     {latestInviteUrl}
                   </p>

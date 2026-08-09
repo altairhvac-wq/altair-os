@@ -6,7 +6,7 @@
  */
 
 import type { NetworkInviteStatus } from "@/lib/database/types/enums";
-import type { TradeType } from "@/shared/types/network";
+import { NETWORK_TRADE_OPTIONS, type TradeType } from "@/shared/types/network";
 import type { NetworkPartner } from "@/shared/types/network-partner";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 
@@ -73,18 +73,14 @@ export const NETWORK_INVITE_STATUS_OPTIONS: {
   { value: "cancelled", label: "Cancelled" },
 ];
 
+/**
+ * Invite trade picker options — same shared taxonomy as directory profiles
+ * and partner CRM (see NETWORK_TRADE_CATEGORIES in shared/types/network.ts).
+ */
 export const NETWORK_INVITE_TRADE_OPTIONS: {
   value: TradeType;
   label: string;
-}[] = [
-  { value: "HVAC", label: "HVAC" },
-  { value: "Plumbing", label: "Plumbing" },
-  { value: "Electrical", label: "Electrical" },
-  { value: "Roofing", label: "Roofing" },
-  { value: "General Contracting", label: "General Contracting" },
-  { value: "Landscaping", label: "Landscaping" },
-  { value: "Painting", label: "Painting" },
-];
+}[] = NETWORK_TRADE_OPTIONS;
 
 export type NetworkInvitationsTab = "pending" | "accepted" | "expired";
 

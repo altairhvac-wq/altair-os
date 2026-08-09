@@ -21,6 +21,8 @@ import {
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkAcceptingReferralsBadge } from "./NetworkAcceptingReferralsBadge";
+import { NetworkTrustMetricsSection } from "./NetworkTrustMetrics";
+import type { NetworkReferralTrustStats } from "@/shared/lib/network/trust-metrics";
 import { SendReferralDialog } from "./SendReferralDialog";
 import type { NetworkReferral } from "@/shared/types/network-referral";
 
@@ -29,6 +31,7 @@ type PanelMode = "detail" | "referral" | "empty";
 type NetworkProfileDetailPanelProps = {
   mode: PanelMode;
   profile: NetworkProfile | null;
+  trustStats?: NetworkReferralTrustStats;
   canSendReferral: boolean;
   canManageNetwork?: boolean;
   isInMyNetwork?: boolean;
@@ -86,6 +89,7 @@ function ProfileEmptyState({
 export function NetworkProfileDetailPanel({
   mode,
   profile,
+  trustStats,
   canSendReferral,
   canManageNetwork = false,
   isInMyNetwork = false,
@@ -328,6 +332,9 @@ export function NetworkProfileDetailPanel({
                 </div>
               ) : null}
             </section>
+
+            {/* Referral track record — computed trust metrics */}
+            <NetworkTrustMetricsSection stats={trustStats} surface={surface} />
 
             {/* Referral status */}
             <section>

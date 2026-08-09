@@ -5,9 +5,12 @@ import { formatNetworkProfileLocationLine } from "@/shared/lib/network/community
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkAcceptingReferralsBadge } from "./NetworkAcceptingReferralsBadge";
+import { NetworkTrustMetricsLine } from "./NetworkTrustMetrics";
+import type { NetworkReferralTrustStats } from "@/shared/lib/network/trust-metrics";
 
 type NetworkDirectoryCardProps = {
   profile: NetworkProfile;
+  trustStats?: NetworkReferralTrustStats;
   selected?: boolean;
   onSelect: () => void;
   onSendReferral?: () => void;
@@ -26,6 +29,7 @@ type NetworkDirectoryCardProps = {
 
 export function NetworkDirectoryCard({
   profile,
+  trustStats,
   selected = false,
   onSelect,
   onSendReferral,
@@ -81,6 +85,7 @@ export function NetworkDirectoryCard({
             ) : (
               <p className={`mt-0.5 ${st.cardMuted}`}>Location not listed</p>
             )}
+            <NetworkTrustMetricsLine stats={trustStats} surface={surface} />
           </div>
           <ChevronRight
             className={`h-3.5 w-3.5 ${st.rosterRowChevron} ${
@@ -194,6 +199,7 @@ export function NetworkDirectoryCard({
             ) : (
               <p className="mt-1 text-xs text-slate-400">Location not listed</p>
             )}
+            <NetworkTrustMetricsLine stats={trustStats} surface={surface} />
           </div>
         </div>
       </button>

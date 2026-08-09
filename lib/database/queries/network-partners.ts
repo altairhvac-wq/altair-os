@@ -13,23 +13,7 @@ import type {
 } from "@/lib/database/types/core-tables";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 import type { NetworkPartner } from "@/shared/types/network-partner";
-import type { TradeType } from "@/shared/types/network";
-
-const TRADE_TYPES = new Set<string>([
-  "HVAC",
-  "Plumbing",
-  "Electrical",
-  "Roofing",
-  "General Contracting",
-  "Landscaping",
-  "Painting",
-]);
-
-function normalizeTradeType(value: string): TradeType {
-  return TRADE_TYPES.has(value)
-    ? (value as TradeType)
-    : "General Contracting";
-}
+import { normalizeNetworkTradeType } from "@/shared/types/network";
 
 function mapNetworkPartnerRow(row: NetworkPartnerRow): NetworkPartner {
   return {
@@ -40,7 +24,7 @@ function mapNetworkPartnerRow(row: NetworkPartnerRow): NetworkPartner {
     contactName: row.contact_name,
     email: row.email,
     phone: row.phone,
-    tradeType: normalizeTradeType(row.trade_type),
+    tradeType: normalizeNetworkTradeType(row.trade_type),
     serviceArea: row.service_area,
     city: row.city,
     state: row.state,

@@ -1480,6 +1480,8 @@ export type NetworkReferralRow = {
   incentive_note: string | null;
   status: import("./enums").NetworkReferralStatus;
   decline_reason: string | null;
+  /** When the receiving company first accepted/declined; null if unknowable (see migration 137). */
+  responded_at: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -1583,6 +1585,8 @@ export type NetworkInviteRow = {
   trade_category: string;
   personal_message: string | null;
   invite_token_hash: string;
+  /** AES-256-GCM payload of the raw invite token (integrations key); null on legacy rows. */
+  invite_token_encrypted: string | null;
   status: import("./enums").NetworkInviteStatus;
   accepted_company_id: UUID | null;
   accepted_user_id: UUID | null;
@@ -1602,6 +1606,7 @@ export type NetworkInviteInsert = {
   trade_category: string;
   personal_message?: string | null;
   invite_token_hash: string;
+  invite_token_encrypted?: string | null;
   status?: import("./enums").NetworkInviteStatus;
   accepted_company_id?: UUID | null;
   accepted_user_id?: UUID | null;

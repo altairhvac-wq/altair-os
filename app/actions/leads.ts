@@ -70,7 +70,8 @@ function revalidateLeadPaths() {
   revalidatePath("/");
   revalidatePath("/estimates");
   revalidatePath("/sales");
-  revalidatePath("/network");
+  // /community is the live Community route; /network is only a redirect stub.
+  revalidatePath("/community");
 }
 
 async function syncReferralOutcomeForNetworkLead(

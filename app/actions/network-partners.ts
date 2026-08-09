@@ -41,7 +41,8 @@ async function assertNetworkManager() {
 }
 
 function revalidateNetworkPath() {
-  revalidatePath("/network");
+  // /community is the live route; /network is only a redirect stub.
+  revalidatePath("/community");
 }
 
 export async function listMyNetworkPartnersAction(): Promise<NetworkPartnerActionResult> {

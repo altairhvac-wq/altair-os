@@ -13,7 +13,11 @@ import {
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 
 type NetworkInviteFormProps = {
-  onSuccess: (invite: NetworkInvite, inviteUrl?: string) => void;
+  onSuccess: (
+    invite: NetworkInvite,
+    inviteUrl?: string,
+    emailNotice?: string,
+  ) => void;
   onCancel?: () => void;
   surface?: NetworkSurface;
 };
@@ -64,7 +68,13 @@ export function NetworkInviteForm({
         return;
       }
 
-      onSuccess(result.invite, result.inviteUrl);
+      const emailNotice =
+        result.warning ??
+        (result.emailDelivery === "sent"
+          ? `Invitation email sent to ${result.invite.invitedEmail}.`
+          : undefined);
+
+      onSuccess(result.invite, result.inviteUrl, emailNotice);
       setFormData(DEFAULT_FORM);
     });
   }
