@@ -147,6 +147,53 @@ export function isScheduledMarketingPost(post: MarketingPost): boolean {
   return post.status === "scheduled" && Boolean(post.scheduledAt);
 }
 
+/**
+ * Statuses a post may be in when it enters an external publish path.
+ *
+ * ================= WHY THIS IS AN ALLOW-LIST =================
+ * The publish guard used to be a deny-list that rejected only `archived`,
+ * which meant a post already in `posted` sailed straight back into the Graph
+ * API and produced a SECOND real Facebook or Instagram post. Double-clicking
+ * Publish, a browser retry on a slow response, or a back-button resubmit were
+ * all enough. An allow-list fails closed instead: a status added to
+ * `MarketingPostStatus` later is unpublishable until someone deliberately
+ * lists it here.
+ *
+ * `failed` is publishable on purpose — retrying a publish that genuinely
+ * failed is the whole point of that state.
+ */
+export const PUBLISHABLE_MARKETING_POST_STATUSES = new Set<MarketingPostStatus>(
+  ["draft", "ready", "scheduled", "failed"],
+);
+
+export function isPublishableMarketingPostStatus(
+  status: MarketingPostStatus,
+): boolean {
+  return PUBLISHABLE_MARKETING_POST_STATUSES.has(status);
+}
+
+/**
+ * Why a post cannot be published, phrased for the operator. Returns null when
+ * the status is publishable, so a caller reads as a plain guard.
+ *
+ * The `posted` message deliberately says the post already went out rather
+ * than something vague: the operator's next question is always "did it
+ * actually publish?", and answering it here prevents the manual re-check that
+ * itself tends to end in a duplicate.
+ */
+export function describeUnpublishableMarketingPostStatus(
+  status: MarketingPostStatus,
+): string | null {
+  if (isPublishableMarketingPostStatus(status)) return null;
+  if (status === "posted") {
+    return "This post has already been published. Duplicate it to publish again.";
+  }
+  if (status === "archived") {
+    return "Archived posts cannot be published.";
+  }
+  return `Posts with status "${status}" cannot be published.`;
+}
+
 function sortMarketingPostsForTab(
   posts: MarketingPost[],
   tab: MarketingPostListTab,

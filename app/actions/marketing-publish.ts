@@ -24,6 +24,7 @@ import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
 import type { MarketingPost } from "@/shared/types/marketing-post";
+import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 
 export type MarketingPublishActionResult = {
   error?: string;
@@ -93,8 +94,17 @@ async function loadFounderDraftForPublish(input: {
     };
   }
 
-  if (post.status === "archived") {
-    return { error: "Archived posts cannot be published." };
+  // Allow-list, not a deny-list. This previously rejected only `archived`,
+  // which let an already-`posted` draft re-enter the Graph publish path and
+  // create a second real post. See the note on
+  // PUBLISHABLE_MARKETING_POST_STATUSES.
+  //
+  // This is a guard, NOT provider idempotency: it closes the reachable
+  // double-submit path, and does not make the publish + mark sequence atomic.
+  // The remaining race is documented in the build log.
+  const statusError = describeUnpublishableMarketingPostStatus(post.status);
+  if (statusError) {
+    return { error: statusError };
   }
 
   const body = buildMarketingPostBodyFromPost(post);
