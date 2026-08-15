@@ -20,32 +20,33 @@
     "verify:delivery": "node scripts/verify-marketing-delivery.mjs",
     "typecheck:readonly": "node scripts/typecheck.mjs --readonly",
     "verify:readonly": "node scripts/verify-all.mjs --readonly",
-    "verify:all": "node scripts/verify-all.mjs"
+    "verify:all": "node scripts/verify-all.mjs",
+    "verify:media": "node scripts/verify-marketing-media.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "lucide-react": "^1.16.0",
     "mapbox-gl": "^3.27.0",
-    "next": "16.3.0",
+    "next": "16.2.6",
     "openai": "^6.39.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-qr-code": "^2.2.0",
     "stripe": "^22.4.0",
-     "twilio": "^6.0.2"
-},
-"devDependencies": {
-  "@tailwindcss/postcss": "^4",
-  "@types/node": "^20",
-  "@types/react": "^19",
-  "@types/react-dom": "^19",
-  "eslint": "^9",
-  "eslint-config-next": "16.3.0",
-  "husky": "^9.1.7",
-  "lint-staged": "^15.2.10",
-  "playwright": "^1.52.0",
-  "tailwindcss": "^4",
-  "typescript": "^5"
+    "twilio": "^6.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "playwright": "^1.52.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
