@@ -14,7 +14,8 @@
     "capture:founder-auth": "node scripts/save-founder-playwright-auth.mjs",
     "capture:comparison-screenshots": "node scripts/capture-comparison-screenshots.mjs",
     "verify:agent-contract": "node scripts/verify-agent-snapshot-contract.mjs",
-    "verify:publish-guard": "node scripts/verify-marketing-publish-guard.mjs"
+    "verify:publish-guard": "node scripts/verify-marketing-publish-guard.mjs",
+    "verify:migrations": "node scripts/verify-marketing-migrations.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
