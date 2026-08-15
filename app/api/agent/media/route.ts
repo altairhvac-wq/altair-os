@@ -51,10 +51,16 @@ import {
  * `complete` VERIFIES AGAINST STORAGE. It reads the object's real size and
  * content type back from the bucket and refuses a completion that disagrees,
  * so a client can neither report a success it never achieved nor record
- * metadata the bytes do not support. The one field it cannot establish is the
- * checksum — confirming that means downloading up to 2 GB — so
- * `checksum_sha256` is stored as the uploader's assertion and is labelled as
- * such wherever it is read.
+ * metadata the bytes do not support.
+ *
+ * THE DIGEST IS THE ONE THING IT CANNOT ESTABLISH, and the wire contract says
+ * so in the field name. Confirming a digest means downloading the object — up
+ * to 2 GB — on every completion, which buys little against a caller that
+ * already controls the bytes it uploaded. So the request field is
+ * `clientReportedSha256`, the column is `client_reported_sha256`, and a
+ * payload still using the old neutral `checksumSha256` name is REFUSED rather
+ * than silently dropped: a rename that loses data quietly is worse than the
+ * ambiguity it fixed. (Independent audit P2-1.)
  *
  * THIS ROUTE PUBLISHES NOTHING. It moves bytes into private storage. No
  * provider is contacted, and nothing here can cause a post or a spend.
@@ -71,6 +77,9 @@ type Body = {
   sourceJobId?: unknown;
   byteSize?: unknown;
   contentType?: unknown;
+  /** UNVERIFIED by this route. Named so a reader cannot assume otherwise. */
+  clientReportedSha256?: unknown;
+  /** Accepted only to be REFUSED — see the header. Never read as a value. */
   checksumSha256?: unknown;
   durationMs?: unknown;
   widthPx?: unknown;
@@ -182,6 +191,17 @@ export async function POST(request: Request) {
     const invalid = validateMediaMetadata({ contentType, byteSize });
     if (invalid) return reject(400, invalid);
 
+    // REFUSED, not ignored. `checksumSha256` was the old name for a value this
+    // route has never verified. Accepting and discarding it would leave a
+    // caller believing it had sent an integrity check that was recorded;
+    // saying so is cheap and unambiguous.
+    if (body.checksumSha256 !== undefined) {
+      return reject(
+        400,
+        'checksumSha256 is not accepted; send clientReportedSha256 instead — the server does not verify this digest',
+      );
+    }
+
     const existing = await getMediaAssetByJob(companyId, sourceJobId);
     if (!existing) {
       return reject(409, "No reservation exists for this job; reserve first");
@@ -257,12 +277,13 @@ export async function POST(request: Request) {
       // favour of the bytes rather than the claim.
       byteSize: facts.byteSize,
       contentType: storedType,
-      // CLIENT-REPORTED, and deliberately not presented as verified. Confirming
-      // a checksum requires reading the object back — up to 2 GB through this
-      // deployment on every completion — so it is recorded as the uploader's
-      // assertion for later comparison, not as a fact this route established.
-      checksumSha256:
-        typeof body.checksumSha256 === "string" ? body.checksumSha256 : null,
+      // CLIENT-REPORTED, and the name is the disclosure. Confirming a digest
+      // requires reading the object back — up to 2 GB through this deployment
+      // on every completion — so it is recorded as the uploader's assertion
+      // for later comparison, not as a fact this route established. It lands
+      // in a column of the same name, so nothing downstream has to be told.
+      clientReportedSha256:
+        typeof body.clientReportedSha256 === "string" ? body.clientReportedSha256 : null,
       durationMs: typeof body.durationMs === "number" ? body.durationMs : null,
       widthPx: typeof body.widthPx === "number" ? body.widthPx : null,
       heightPx: typeof body.heightPx === "number" ? body.heightPx : null,
@@ -276,6 +297,12 @@ export async function POST(request: Request) {
     // Identity only. No URL of any kind is returned here — a caller that
     // wants the bytes asks for a read grant separately, which is an access
     // decision rather than a side effect of finishing an upload.
+    //
+    // `byteSize` and `contentType` are echoed because they may DIFFER from
+    // what was sent: these are storage's values, and returning them lets a
+    // caller notice. `clientReportedSha256` is echoed under its own name so
+    // the response contract says, without a comment, which of the three the
+    // server stood behind.
     return NextResponse.json({
       ok: true,
       route: ROUTE_NAME,
@@ -283,6 +310,9 @@ export async function POST(request: Request) {
       bucket: stored.asset.bucket,
       uploadState: stored.asset.uploadState,
       storedAt: stored.asset.storedAt,
+      byteSize: stored.asset.byteSize,
+      contentType: stored.asset.contentType,
+      clientReportedSha256: stored.asset.clientReportedSha256,
     });
   }
 

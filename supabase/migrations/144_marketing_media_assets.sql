@@ -11,9 +11,13 @@
 -- PRIVATE bucket, and a table of stable references to objects inside it.
 --
 -- ==================== WHAT IS AND IS NOT STORED ====================
--- STORED:     bucket name, object key, content type, size, checksum,
---             and the render's own dimensions.
+-- STORED:     bucket name, object key, content type, size, the uploader's
+--             claimed digest, and the render's own dimensions.
 -- NOT STORED: filesystem paths, signed URLs, public URLs, tokens.
+--
+-- Of those, content type and size are VERIFIED against storage before an asset
+-- is marked stored. The digest is not, and is named `client_reported_sha256`
+-- so no reader can mistake it for one that is.
 --
 -- A signed URL is a temporary capability, not an identity. Persisting one
 -- converts a 15-minute grant into a permanent one that outlives every access
@@ -69,7 +73,14 @@ create table if not exists public.marketing_media_assets (
 
   content_type text not null default 'video/mp4',
   byte_size bigint,
-  checksum_sha256 text,
+
+  -- NAMED FOR WHAT IT IS. `content_type` and `byte_size` are read back from
+  -- storage and a completion that disagrees with them is refused, so those two
+  -- are facts. This one is not: confirming a digest means downloading the
+  -- object, up to 2 GB, on every completion. It is what the uploader said, and
+  -- the column name says so rather than leaving a reader to assume the
+  -- verification that the other two get. (Independent audit P2-1.)
+  client_reported_sha256 text,
 
   -- Render metadata, carried so the control plane can describe a video
   -- without fetching it. Nullable on purpose: an older editor reports no
@@ -108,6 +119,28 @@ create table if not exists public.marketing_media_assets (
   constraint marketing_media_assets_unique
     unique (company_id, source_job_id)
 );
+
+-- Converges an environment where an earlier form of this migration already
+-- ran and created `checksum_sha256`. `create table if not exists` would leave
+-- that name in place, and a column whose name implies a verification that
+-- never happens is the whole finding.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'marketing_media_assets'
+      and column_name = 'checksum_sha256'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'marketing_media_assets'
+      and column_name = 'client_reported_sha256'
+  ) then
+    alter table public.marketing_media_assets
+      rename column checksum_sha256 to client_reported_sha256;
+  end if;
+end $$;
 
 create index if not exists marketing_media_assets_company_state_idx
   on public.marketing_media_assets (company_id, upload_state);
@@ -151,3 +184,6 @@ comment on table public.marketing_media_assets is
 
 comment on column public.marketing_media_assets.object_key is
   'Server-derived as {company_id}/video/{source_job_id}.mp4. Never accepted from a request payload — a payload must not be able to choose which company prefix it writes to.';
+
+comment on column public.marketing_media_assets.client_reported_sha256 is
+  'UNVERIFIED. The sha256 the uploader said it computed over the bytes it sent. The server does NOT confirm it — that would mean downloading the object (up to 2 GB) on every completion. Unlike byte_size and content_type, which are read back from storage and must match before an asset is marked stored, this value is an assertion. Do not use it as an integrity check.';

@@ -47,7 +47,7 @@ type AssetRow = {
   object_key: string;
   content_type: string;
   byte_size: number | null;
-  checksum_sha256: string | null;
+  client_reported_sha256: string | null;
   duration_ms: number | null;
   width_px: number | null;
   height_px: number | null;
@@ -66,7 +66,7 @@ function toAsset(row: AssetRow): MarketingMediaAsset {
     objectKey: row.object_key,
     contentType: row.content_type,
     byteSize: row.byte_size,
-    checksumSha256: row.checksum_sha256,
+    clientReportedSha256: row.client_reported_sha256,
     durationMs: row.duration_ms,
     widthPx: row.width_px,
     heightPx: row.height_px,
@@ -243,7 +243,7 @@ export async function markMediaStored(input: {
   sourceJobId: string;
   byteSize: number;
   contentType: string;
-  checksumSha256?: string | null;
+  clientReportedSha256?: string | null;
   durationMs?: number | null;
   widthPx?: number | null;
   heightPx?: number | null;
@@ -255,7 +255,7 @@ export async function markMediaStored(input: {
       upload_state: "stored",
       byte_size: input.byteSize,
       content_type: input.contentType,
-      checksum_sha256: input.checksumSha256 ?? null,
+      client_reported_sha256: input.clientReportedSha256 ?? null,
       duration_ms: input.durationMs ?? null,
       width_px: input.widthPx ?? null,
       height_px: input.heightPx ?? null,

@@ -85,7 +85,19 @@ export type MarketingMediaAsset = {
   readonly objectKey: string;
   readonly contentType: string;
   readonly byteSize: number | null;
-  readonly checksumSha256: string | null;
+  /**
+   * UNVERIFIED. What the uploader said it computed over the bytes it sent.
+   *
+   * `contentType` and `byteSize` next to it are read back from storage and a
+   * completion that disagrees is refused, so they are facts. This is not: the
+   * server never confirms it, because confirming a digest means downloading
+   * the object — up to 2 GB — on every completion. The name carries that
+   * distinction so no caller has to know this comment exists.
+   *
+   * Do not use it as an integrity check. It is useful for one thing: noticing
+   * later that an uploader's claim and a re-read of the object disagree.
+   */
+  readonly clientReportedSha256: string | null;
   readonly durationMs: number | null;
   readonly widthPx: number | null;
   readonly heightPx: number | null;

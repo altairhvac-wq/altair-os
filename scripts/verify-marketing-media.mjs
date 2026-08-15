@@ -280,6 +280,50 @@ console.log("\nCompletion is verified against storage, not against the claim");
     /CLIENT-REPORTED/.test(complete));
 }
 
+console.log("\nThe digest is named for what it is, not for what it is not");
+{
+  // The finding was not that an unverified digest is stored — that is a
+  // deliberate trade — but that nothing in the contract SAID so. These assert
+  // the disclosure is in the names, where a reader cannot miss it, rather than
+  // only in a comment.
+  const route = readFileSync("app/api/agent/media/route.ts", "utf8");
+  const types = readFileSync("shared/types/marketing-media.ts", "utf8");
+  const queries = readFileSync("lib/database/queries/marketing-media-assets.ts", "utf8");
+  const sql = readFileSync("supabase/migrations/144_marketing_media_assets.sql", "utf8");
+
+  check("the request field is clientReportedSha256",
+    /body\.clientReportedSha256/.test(route));
+  check("the persisted field is clientReportedSha256",
+    /clientReportedSha256:\s*\n?\s*typeof body\.clientReportedSha256/.test(route));
+  check("the response names it too, so the contract discloses it",
+    /clientReportedSha256: stored\.asset\.clientReportedSha256/.test(route));
+
+  // A silent drop would be worse than the ambiguity being fixed: a caller
+  // would believe it had sent something that was recorded.
+  check("the OLD neutral name is REFUSED, not ignored",
+    /body\.checksumSha256 !== undefined/.test(route) &&
+      /checksumSha256 is not accepted/.test(route));
+  check("no code path reads a value out of the old field",
+    !/typeof body\.checksumSha256 === "string"/.test(route));
+
+  check("the asset type carries no field called checksum",
+    !/\bchecksumSha256\b/.test(types) && /clientReportedSha256/.test(types));
+  check("the query layer maps the renamed column only",
+    /client_reported_sha256/.test(queries) && !/\bchecksum_sha256\b/.test(queries));
+
+  check("the column is named client_reported_sha256",
+    /client_reported_sha256 text/.test(sql));
+  check("an already-applied database is renamed rather than left behind",
+    /rename column checksum_sha256 to client_reported_sha256/.test(sql));
+  check("the column carries an UNVERIFIED comment",
+    /comment on column public\.marketing_media_assets\.client_reported_sha256[\s\S]{0,80}UNVERIFIED/.test(sql));
+
+  // The contrast is the point: two of the three are verified against storage,
+  // one is not, and only the unverified one is named for its provenance.
+  check("size and type keep their plain names, because they ARE verified",
+    /byte_size bigint/.test(sql) && /content_type text/.test(sql));
+}
+
 console.log("\nReservation is atomic — the database arbitrates");
 {
   const src = readFileSync("lib/database/queries/marketing-media-assets.ts", "utf8");
