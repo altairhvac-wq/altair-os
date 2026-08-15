@@ -61,6 +61,13 @@ import {
   type MarketingRun,
   type MarketingStrategyReportContent,
 } from "@/shared/types/marketing-ai-hq";
+import {
+  MARKETING_CHANNEL_DESCRIPTORS,
+  canAcceptContent,
+  publishesImmediately,
+  type MarketingChannelState,
+  type MarketingPublishChannel,
+} from "@/shared/types/marketing-channel-connection";
 
 type HqTab = "queue" | "strategy" | "distribution" | "settings" | "runs";
 
@@ -68,6 +75,22 @@ export type MarketingDistributionStatus = {
   encryptionConfigured: boolean;
   facebookConfigured: boolean;
   facebookPages: { id: string; name: string; hasInstagram: boolean }[];
+  /**
+   * Direct-publishing channels, resolved server-side (migration 143).
+   * Each carries the state derived by `deriveMarketingChannelState` plus the
+   * connected identity to display. Absent means "not resolved on this
+   * render" and falls back to NOT_CONFIGURED rather than guessing.
+   */
+  channels?: MarketingChannelSummary[];
+};
+
+export type MarketingChannelSummary = {
+  channel: MarketingPublishChannel;
+  state: MarketingChannelState;
+  /** "@channel", location name, "@username" — never a token. */
+  identity: string | null;
+  detail: string;
+  connectPath: string;
 };
 
 type MarketingAiHqPageViewProps = {
@@ -88,6 +111,7 @@ const EMPTY_DISTRIBUTION: MarketingDistributionStatus = {
   encryptionConfigured: false,
   facebookConfigured: false,
   facebookPages: [],
+  channels: [],
 };
 
 const TABS: { id: HqTab; label: string }[] = [
@@ -954,6 +978,119 @@ function QueueItemCard({
   );
 }
 
+/**
+ * Chip styling per channel state.
+ *
+ * Semantic colour is load-bearing in this design system, so it is spent
+ * carefully: green ONLY for a channel that will actually publish, amber for
+ * "connected but constrained" (a real, non-broken state), rose for genuine
+ * failure, neutral for not-yet-set-up. A draft-only TikTok is amber and not
+ * green precisely because green here would promise publishing that will not
+ * happen.
+ */
+function channelChipClass(state: MarketingChannelState): string {
+  if (state === "DIRECT_PUBLISH_READY") {
+    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80";
+  }
+  if (state === "DRAFT_UPLOAD_ONLY" || state === "API_ACCESS_REQUIRED") {
+    return "bg-amber-50 text-amber-800 ring-1 ring-amber-200/80";
+  }
+  if (state === "ERROR" || state === "REAUTH_REQUIRED") {
+    return "bg-rose-50 text-rose-700 ring-1 ring-rose-200/80";
+  }
+  if (state === "TOKEN_EXPIRED" || state === "CONNECTING") {
+    return "bg-sky-50 text-sky-700 ring-1 ring-sky-200/80";
+  }
+  return "bg-slate-100 text-slate-600";
+}
+
+const CHANNEL_STATE_LABEL: Record<MarketingChannelState, string> = {
+  NOT_CONFIGURED: "Not set up",
+  NOT_CONNECTED: "Not connected",
+  CONNECTING: "Connecting…",
+  TOKEN_EXPIRED: "Access expired",
+  REAUTH_REQUIRED: "Reconnect required",
+  API_ACCESS_REQUIRED: "API access required",
+  DRAFT_UPLOAD_ONLY: "Draft upload only",
+  DIRECT_PUBLISH_READY: "Direct publish ready",
+  ERROR: "Error",
+};
+
+/**
+ * The three direct-publishing channels.
+ *
+ * A Connect button is offered ONLY when connecting is the actual next step.
+ * Offering it in `NOT_CONFIGURED` would send the operator through a consent
+ * screen that cannot complete, because there is no client id to send.
+ */
+function ConnectedChannels({
+  channels,
+}: {
+  channels: MarketingChannelSummary[];
+}) {
+  if (channels.length === 0) return null;
+
+  return (
+    <>
+      <h3 className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+        Connected publishing
+      </h3>
+      <ul className="mt-2 space-y-2">
+        {channels.map((entry) => {
+          const descriptor = MARKETING_CHANNEL_DESCRIPTORS[entry.channel];
+          const canConnect =
+            entry.state === "NOT_CONNECTED" ||
+            entry.state === "REAUTH_REQUIRED" ||
+            entry.state === "ERROR";
+
+          return (
+            <li
+              key={entry.channel}
+              className="flex flex-col gap-1.5 rounded-lg border border-slate-100 bg-white px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800">
+                  {descriptor.label}
+                  {entry.identity ? (
+                    <span className="ml-1.5 font-normal text-slate-500">
+                      — {entry.identity}
+                    </span>
+                  ) : null}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                  {entry.detail}
+                </p>
+                {canAcceptContent(entry.state) ? (
+                  <p className="mt-0.5 text-xs text-slate-400">
+                    {publishesImmediately(entry.state)
+                      ? "Approved content publishes from the queue."
+                      : "Approved content uploads as a draft to finish in the app."}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span
+                  className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${channelChipClass(entry.state)}`}
+                >
+                  {CHANNEL_STATE_LABEL[entry.state]}
+                </span>
+                {canConnect ? (
+                  <a
+                    href={entry.connectPath}
+                    className="inline-flex w-fit rounded-md bg-slate-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-700"
+                  >
+                    {entry.state === "NOT_CONNECTED" ? "Connect" : "Reconnect"}
+                  </a>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
 type DistributionTabProps = {
   distribution: MarketingDistributionStatus;
 };
@@ -994,13 +1131,6 @@ function DistributionTab({ distribution }: DistributionTabProps) {
         : "Publishes through the Instagram Business account linked to a connected Facebook Page. Connect Facebook first, link Instagram in Meta Business Suite.",
     },
     {
-      platform: "Google Business",
-      status: "manual",
-      statusLabel: "Copy / paste",
-      detail:
-        "Drafts are packaged to Google Business limits. Direct posting adapter is planned; for now copy from the queue.",
-    },
-    {
       platform: "X (Twitter)",
       status: "manual",
       statusLabel: "Copy / paste",
@@ -1013,20 +1143,6 @@ function DistributionTab({ distribution }: DistributionTabProps) {
       statusLabel: "Copy / paste",
       detail:
         "Drafts are packaged and ready to paste. API adapter planned.",
-    },
-    {
-      platform: "YouTube",
-      status: "manual",
-      statusLabel: "Brief + render",
-      detail:
-        "Video briefs export as JSON for the demo-tool render pipeline; title, description, and tags come pre-packaged for upload.",
-    },
-    {
-      platform: "TikTok",
-      status: "manual",
-      statusLabel: "Brief + render",
-      detail:
-        "Video briefs carry a TikTok-packaged caption. Render via the demo-tool pipeline, upload manually for now.",
     },
   ];
 
@@ -1041,7 +1157,13 @@ function DistributionTab({ distribution }: DistributionTabProps) {
         rework needed.
       </p>
 
-      <ul className="mt-3 space-y-2">
+      <ConnectedChannels channels={distribution.channels ?? []} />
+
+      <h3 className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+        Other channels
+      </h3>
+
+      <ul className="mt-2 space-y-2">
         {rows.map((row) => (
           <li
             key={row.platform}
