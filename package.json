@@ -16,7 +16,8 @@
     "verify:agent-contract": "node scripts/verify-agent-snapshot-contract.mjs",
     "verify:publish-guard": "node scripts/verify-marketing-publish-guard.mjs",
     "verify:migrations": "node scripts/verify-marketing-migrations.mjs",
-    "verify:channels": "node scripts/verify-marketing-channels.mjs"
+    "verify:channels": "node scripts/verify-marketing-channels.mjs",
+    "verify:delivery": "node scripts/verify-marketing-delivery.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

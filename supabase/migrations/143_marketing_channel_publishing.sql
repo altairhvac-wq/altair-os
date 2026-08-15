@@ -144,6 +144,12 @@ create policy "dispatchers can read marketing channel deliveries"
     and public.can_dispatch_jobs(company_id)
   );
 
+-- The SELECT policy above is only reachable if the role also holds a
+-- table-level GRANT: RLS narrows an existing privilege, it does not create
+-- one. Without this line the dispatcher-read policy would be silently inert.
+-- This repo grants explicitly rather than relying on Supabase's default
+-- privileges (see 089, 100, 102, 112, 113, 120).
+grant select on table public.marketing_channel_deliveries to authenticated;
 revoke insert, update, delete on table public.marketing_channel_deliveries from authenticated;
 revoke all on table public.marketing_channel_deliveries from anon;
 grant all on table public.marketing_channel_deliveries to service_role;

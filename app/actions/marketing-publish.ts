@@ -25,6 +25,14 @@ import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketin
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
 import type { MarketingPost } from "@/shared/types/marketing-post";
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
+import {
+  claimDelivery,
+  settleDelivery,
+} from "@/lib/database/queries/marketing-channel-deliveries";
+import {
+  describeDeliveryDecision,
+  mayPublish,
+} from "@/shared/types/marketing-delivery";
 
 export type MarketingPublishActionResult = {
   error?: string;
@@ -212,6 +220,35 @@ export async function publishMarketingPostToFacebookAction(
   const pageId = pageLoad.account.providerResourceId!;
   const screenshotRef = draft.post.founderScreenshotReference?.trim();
 
+  // ---------------------------------------------------------------------
+  // CLAIM BEFORE THE EXTERNAL CALL.
+  //
+  // The unique (company_id, marketing_post_id, provider) constraint makes
+  // this insert the duplicate guard: a second attempt cannot claim, so it
+  // cannot reach the Graph API. Checking first and inserting after would
+  // leave a window where two requests both see nothing and both publish.
+  //
+  // A stale unsettled claim is NOT taken over automatically — it may have
+  // published, and only Meta knows. That surfaces to the operator instead.
+  // ---------------------------------------------------------------------
+  const claimedAt = new Date().toISOString();
+  const claim = await claimDelivery({
+    companyId: permission.context.company.id,
+    marketingPostId: normalizedPostId,
+    provider: "facebook",
+    connectedAccountId: pageLoad.account.id,
+    nowIso: claimedAt,
+  });
+
+  if (!mayPublish(claim.decision)) {
+    return {
+      error:
+        claim.error ??
+        describeDeliveryDecision(claim.decision, "Facebook", claim.delivery),
+    };
+  }
+  const deliveryId = claim.delivery!.id;
+
   let publishResult: {
     providerPostId: string;
     permalinkUrl?: string;
@@ -248,8 +285,30 @@ export async function publishMarketingPostToFacebookAction(
       error instanceof Error && error.message.trim()
         ? error.message.trim()
         : "Facebook publish failed. Check Page permissions and try again.";
+    // Settle as FAILED so the claim is released and a retry is permitted.
+    // Leaving it in_flight would strand a genuinely failed attempt as a
+    // reconciliation case the operator has to resolve by hand.
+    await settleDelivery({
+      deliveryId,
+      settlement: { outcome: "failed", failureDetail: messageText },
+      nowIso: new Date().toISOString(),
+    });
     return { error: messageText };
   }
+
+  // Settle POSTED immediately, before anything else can fail. This is where
+  // the provider's own id is finally persisted — previously it was returned,
+  // shown once, and discarded, leaving nothing able to prove the post
+  // existed.
+  await settleDelivery({
+    deliveryId,
+    settlement: {
+      outcome: "posted",
+      providerPostId: publishResult.providerPostId,
+      providerPermalink: publishResult.permalinkUrl ?? null,
+    },
+    nowIso: new Date().toISOString(),
+  });
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,
@@ -358,6 +417,28 @@ export async function publishMarketingPostToInstagramAction(
 
   const caption = buildMarketingPostBodyFromPost(draft.post);
 
+  // Claimed under the INSTAGRAM provider, not Facebook. They are separate
+  // rows for the same post on purpose: publishing to the Page and to the
+  // linked IG account are two distinct external objects, and a post may
+  // legitimately go to one and not the other. Sharing a row would make the
+  // second delivery look like a duplicate of the first.
+  const igClaim = await claimDelivery({
+    companyId: permission.context.company.id,
+    marketingPostId: normalizedPostId,
+    provider: "instagram",
+    connectedAccountId: pageLoad.account.id,
+    nowIso: new Date().toISOString(),
+  });
+
+  if (!mayPublish(igClaim.decision)) {
+    return {
+      error:
+        igClaim.error ??
+        describeDeliveryDecision(igClaim.decision, "Instagram", igClaim.delivery),
+    };
+  }
+  const igDeliveryId = igClaim.delivery!.id;
+
   let publishResult: {
     providerPostId: string;
     permalinkUrl?: string;
@@ -384,8 +465,25 @@ export async function publishMarketingPostToInstagramAction(
       error instanceof Error && error.message.trim()
         ? error.message.trim()
         : "Instagram publish failed. Check permissions and try again.";
+    await settleDelivery({
+      deliveryId: igDeliveryId,
+      settlement: { outcome: "failed", failureDetail: messageText },
+      nowIso: new Date().toISOString(),
+    });
     return { error: messageText };
   }
+
+  // Settle POSTED before anything else can fail, so the Instagram media id
+  // is durable even if the mark-posted write below does not land.
+  await settleDelivery({
+    deliveryId: igDeliveryId,
+    settlement: {
+      outcome: "posted",
+      providerPostId: publishResult.providerPostId,
+      providerPermalink: publishResult.permalinkUrl ?? null,
+    },
+    nowIso: new Date().toISOString(),
+  });
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,

@@ -28,6 +28,7 @@ import { readFileSync } from "node:fs";
 const MIGRATIONS = {
   141: "supabase/migrations/141_agent_marketing_snapshots.sql",
   142: "supabase/migrations/142_agent_marketing_decisions.sql",
+  143: "supabase/migrations/143_marketing_channel_publishing.sql",
 };
 
 let failures = 0;
@@ -176,6 +177,61 @@ for (const [version, sql] of [
     !/create\s+policy/.test(sql),
   );
 }
+
+// ---------------------------------------------------------------- 143
+const sql143 = loadSql(MIGRATIONS[143]);
+console.log("\n143 — marketing_channel_deliveries (publish idempotency)");
+
+check(
+  "creates the delivery table",
+  /create\s+table\s+if\s+not\s+exists\s+public\.marketing_channel_deliveries/.test(sql143),
+);
+check(
+  "THE DUPLICATE GUARD — unique (company_id, marketing_post_id, provider)",
+  /unique\s*\(\s*company_id\s*,\s*marketing_post_id\s*,\s*provider\s*\)/.test(sql143),
+);
+check(
+  "persists the provider's own post id — the gap the audit found",
+  /provider_post_id\s+text/.test(sql143),
+);
+check("persists a permalink when the provider gives one", /provider_permalink\s+text/.test(sql143));
+check(
+  "models the four delivery states including in_flight",
+  /check\s*\(\s*delivery_state\s+in\s*\(\s*'in_flight'\s*,\s*'posted'\s*,\s*'draft'\s*,\s*'failed'\s*\)\s*\)/.test(
+    sql143,
+  ),
+);
+check(
+  "defaults to in_flight so a row is claimed, not assumed settled",
+  /delivery_state\s+text\s+not\s+null\s+default\s+'in_flight'/.test(sql143),
+);
+check("company-scoped with cascade", /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies/.test(sql143));
+check(
+  "indexes unsettled claims for the reconciliation queue",
+  /where\s+delivery_state\s*=\s*'in_flight'/.test(sql143),
+);
+check("bounds failure_detail so a provider error body cannot be pasted in whole",
+  /char_length\s*\(\s*failure_detail\s*\)\s*<=\s*1000/.test(sql143));
+check("enables row level security", /marketing_channel_deliveries[\s\S]*?enable\s+row\s+level\s+security/.test(sql143));
+check(
+  "GRANTS SELECT TO authenticated — without it the read policy is inert",
+  /grant\s+select\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+authenticated/.test(sql143),
+);
+check(
+  "but revokes writes from authenticated — deliveries are written server-side only",
+  /revoke\s+insert,\s*update,\s*delete\s+on\s+table\s+public\.marketing_channel_deliveries\s+from\s+authenticated/.test(
+    sql143,
+  ),
+);
+check("revokes everything from anon",
+  /revoke\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+from\s+anon/.test(sql143));
+check("grants to service_role",
+  /grant\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+service_role/.test(sql143));
+check("143 contains no destructive statement",
+  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(sql143));
+check("143 adds enum values idempotently",
+  /add\s+value\s+if\s+not\s+exists\s+'youtube'/.test(sql143) &&
+  /add\s+value\s+if\s+not\s+exists\s+'tiktok'/.test(sql143));
 
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} migration checks passed.`,
