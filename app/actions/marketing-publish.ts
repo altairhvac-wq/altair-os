@@ -221,6 +221,31 @@ export async function publishMarketingPostToFacebookAction(
   const screenshotRef = draft.post.founderScreenshotReference?.trim();
 
   // ---------------------------------------------------------------------
+  // RESOLVE EVERYTHING LOCAL *BEFORE* CLAIMING (independent audit P2-1).
+  //
+  // Screenshot resolution is a pure local operation — it reads a reference
+  // and app config, and touches nothing external. Doing it after the claim
+  // meant its early `return` on a bad reference or missing NEXT_PUBLIC_APP_URL
+  // escaped the `catch`, so the claim was never settled: the row stranded
+  // `in_flight` and became a NEEDS_RECONCILIATION case for an attempt that
+  // never reached Facebook at all. The operator would then be told to go
+  // check Meta for a post that could not exist.
+  //
+  // Ordering fixes that structurally rather than by adding a second settle
+  // call. THE CLAIM NOW COVERS EXACTLY THE EXTERNAL CALL AND NOTHING ELSE,
+  // so any future pre-flight validation added here cannot reintroduce the
+  // same defect.
+  // ---------------------------------------------------------------------
+  let imageUrl: string | null = null;
+  if (screenshotRef) {
+    const image = resolveFounderScreenshotPublicUrl(screenshotRef);
+    if (image.error || !image.url) {
+      return { error: image.error ?? "Could not resolve screenshot URL." };
+    }
+    imageUrl = image.url;
+  }
+
+  // ---------------------------------------------------------------------
   // CLAIM BEFORE THE EXTERNAL CALL.
   //
   // The unique (company_id, marketing_post_id, provider) constraint makes
@@ -255,16 +280,13 @@ export async function publishMarketingPostToFacebookAction(
   };
 
   try {
-    if (screenshotRef) {
-      const image = resolveFounderScreenshotPublicUrl(screenshotRef);
-      if (image.error || !image.url) {
-        return { error: image.error ?? "Could not resolve screenshot URL." };
-      }
-
+    // No early return is permitted inside this block: everything between the
+    // claim and the settle must either reach a settle or throw into `catch`.
+    if (imageUrl) {
       publishResult = await publishFacebookPagePhotoPost({
         pageId,
         accessToken: tokenResult.accessToken,
-        imageUrl: image.url,
+        imageUrl,
         caption: message,
       });
     } else {

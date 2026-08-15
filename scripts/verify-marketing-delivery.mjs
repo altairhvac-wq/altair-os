@@ -152,6 +152,83 @@ check(
   d.MARKETING_DELIVERY_STATES.join(",") === "in_flight,posted,draft,failed",
 );
 
+/**
+ * STRUCTURAL GUARD (independent audit P2-1).
+ *
+ * The defect this catches: a delivery is claimed, then something between the
+ * claim and the provider call `return`s early. The claim is never settled,
+ * the row strands `in_flight`, and five minutes later the operator is told to
+ * go reconcile an attempt that never reached the provider at all.
+ *
+ * It was reachable through the Facebook screenshot branch, whose resolver can
+ * fail on a bad reference or missing app-URL config. Fixed by moving all local
+ * resolution BEFORE the claim, so the claim spans exactly the external call.
+ *
+ * Asserted structurally rather than behaviourally because the hazard is a
+ * control-flow shape, not a value: any future pre-flight check dropped into
+ * that window would reintroduce it, and no unit test of the happy path would
+ * notice.
+ */
+console.log("\nClaim/settle control flow");
+{
+  const src = readFileSync("app/actions/marketing-publish.ts", "utf8");
+  const lines = src.split("\n");
+
+  const claimLines = [];
+  lines.forEach((line, i) => {
+    if (/=\s*await\s+claimDelivery\(/.test(line)) claimLines.push(i);
+  });
+  check("both publish actions claim a delivery", claimLines.length === 2, claimLines.length);
+
+  // THE RULE, stated once: between claiming a delivery and settling it, EVERY
+  // `return` must be justified — either it is the mayPublish refusal (no claim
+  // is held) or it is preceded by a settle. An unjustified return is the audited
+  // defect: the claim strands `in_flight` and the operator is sent to reconcile
+  // an attempt that never reached the provider.
+  //
+  // The span runs from the claim to its `posted` settle, which deliberately
+  // INCLUDES the try/catch body — the first version of this guard stopped at
+  // `try {` and therefore missed the very defect it was written for.
+  const JUSTIFY_WINDOW = 14;
+
+  for (const claimAt of claimLines) {
+    const settleAt = lines.findIndex(
+      (l, i) => i > claimAt && /outcome:\s*"posted"/.test(l),
+    );
+    check(`a posted settle follows the claim at line ${claimAt + 1}`, settleAt > claimAt);
+
+    const unjustified = [];
+    for (let i = claimAt; i < settleAt; i += 1) {
+      if (!/^\s*return\b/.test(lines[i])) continue;
+      const before = lines.slice(Math.max(claimAt, i - JUSTIFY_WINDOW), i).join("\n");
+      const justified =
+        /mayPublish\(/.test(before) || /settleDelivery\(/.test(before);
+      if (!justified) unjustified.push(`line ${i + 1}: ${lines[i].trim()}`);
+    }
+    check(
+      `every return between claim and settle is justified (claim at line ${claimAt + 1})`,
+      unjustified.length === 0,
+      unjustified,
+    );
+
+    // Belt and braces: local resolution must not sit inside the claimed span.
+    const span = lines.slice(claimAt, settleAt);
+    check(
+      `screenshot resolution happens BEFORE the claim (claim at line ${claimAt + 1})`,
+      !span.some((l) => /resolveFounderScreenshotPublicUrl\(/.test(l)),
+    );
+  }
+
+  check(
+    "every claim is matched by a posted settle",
+    (src.match(/outcome:\s*"posted"/g) ?? []).length === claimLines.length,
+  );
+  check(
+    "every claim is matched by a failed settle in its catch",
+    (src.match(/outcome:\s*"failed"/g) ?? []).length === claimLines.length,
+  );
+}
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} delivery checks passed.`,
 );
