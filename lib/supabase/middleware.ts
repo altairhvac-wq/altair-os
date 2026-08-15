@@ -108,6 +108,16 @@ function isMarketingHomepageRoute(pathname: string) {
   );
 }
 
+/**
+ * Agent Platform bridge routes are public at the middleware layer by design,
+ * exactly like the cron routes above: each handler enforces its own
+ * `AGENT_INGEST_SECRET` bearer check. Without this they would be 307'd to
+ * /login and the laptop-side platform could never deliver a snapshot.
+ */
+function isAgentBridgeRoute(pathname: string) {
+  return pathname === "/api/agent" || pathname.startsWith("/api/agent/");
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
@@ -121,6 +131,7 @@ function isPublicRoute(pathname: string) {
     isPaymentWebhookRoute(pathname) ||
     isBillingWebhookRoute(pathname) ||
     isCronRoute(pathname) ||
+    isAgentBridgeRoute(pathname) ||
     isDemoFingerprintRoute(pathname)
   );
 }

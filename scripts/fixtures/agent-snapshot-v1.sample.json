@@ -1,0 +1,126 @@
+{
+  "contractVersion": 1,
+  "companyId": "altair",
+  "producedAt": "2026-08-15T04:46:23.509Z",
+  "sections": {
+    "automationStatus": {
+      "support": "SUPPORTED_WITH_DATA",
+      "unsupportedReason": null,
+      "data": {
+        "companyId": "altair",
+        "observedAt": "2026-08-15T04:46:23.509Z",
+        "schedulesActive": 1,
+        "schedulesPaused": 0,
+        "schedulesFailed": 0,
+        "nextScheduledRunAt": "2026-08-16T02:24:49.989Z",
+        "lastScheduleRunAt": "2026-08-15T02:24:49.989Z",
+        "lastCompletedRunAt": null,
+        "lastFailedRunAt": null,
+        "hoursSinceLastCompletedRun": null,
+        "tasksPending": 0,
+        "tasksRunning": 0,
+        "tasksAwaitingApproval": 0,
+        "tasksFailed": 0,
+        "approvalsPending": 0,
+        "dataProvenance": "UNKNOWN",
+        "modelProvenance": "UNKNOWN"
+      }
+    },
+    "recentActivity": {
+      "support": "SUPPORTED_EMPTY",
+      "unsupportedReason": null,
+      "items": []
+    },
+    "agentStatus": {
+      "support": "SUPPORTED_WITH_DATA",
+      "unsupportedReason": null,
+      "items": [
+        {
+          "companyId": "altair",
+          "agentId": "marketing-agent",
+          "name": "Marketing Agent",
+          "enabled": true,
+          "grantedToolCount": 4,
+          "allowedRiskClasses": [
+            "READ"
+          ],
+          "canActExternally": false,
+          "lastRunAt": null,
+          "lastRunState": null,
+          "runsCompleted": 0,
+          "runsFailed": 0,
+          "openTaskCount": 0
+        }
+      ]
+    },
+    "upcomingWork": {
+      "support": "SUPPORTED_WITH_DATA",
+      "unsupportedReason": null,
+      "items": [
+        {
+          "companyId": "altair",
+          "scheduleId": "sched_673c4430-7070-4fd8-a5a0-9e5afdd3b529",
+          "name": "marketing.performance-sweep",
+          "agentId": "marketing-agent",
+          "jobName": "marketing.performance-sweep",
+          "scheduleState": "ACTIVE",
+          "intervalMs": 86400000,
+          "nextRunAt": "2026-08-16T02:24:49.989Z",
+          "lastRunAt": "2026-08-15T02:24:49.989Z",
+          "missedRunPolicy": "RUN_ONCE",
+          "isDue": false
+        }
+      ]
+    },
+    "campaign": {
+      "support": "NOT_SUPPORTED",
+      "unsupportedReason": "Campaign metrics are only available from a completed marketing review: the platform has no standalone metrics store, and no review has yet produced a readable digest. Campaigns may well exist at the provider — this is \"cannot say\", not \"none\".",
+      "items": []
+    },
+    "recommendations": {
+      "support": "SUPPORTED_EMPTY",
+      "unsupportedReason": null,
+      "items": []
+    },
+    "approvals": {
+      "support": "SUPPORTED_EMPTY",
+      "unsupportedReason": null,
+      "items": []
+    },
+    "videoRenders": {
+      "support": "SUPPORTED_EMPTY",
+      "unsupportedReason": null,
+      "items": []
+    }
+  },
+  "knownGaps": [
+    {
+      "capability": "video.playableMediaReference",
+      "reason": "The editor reports a finished master as an absolute path on the operator machine. No shareable media reference (object storage path or equivalent) exists yet, so a render can be reported as finished but not played back from another system."
+    },
+    {
+      "capability": "video.thumbnail",
+      "reason": "No thumbnail is produced or recorded by the render pipeline."
+    },
+    {
+      "capability": "video.durationMs",
+      "reason": "The job result records total pipeline time, not the duration of the rendered video. Projecting it as a video duration would be wrong, so it is omitted."
+    },
+    {
+      "capability": "campaign.continuousMetricSeries",
+      "reason": "The platform has no standalone metrics store. Campaign numbers exist only as the digest embedded in the most recent marketing.recommendation artifact, so this reflects what one review examined rather than a continuous series."
+    },
+    {
+      "capability": "campaign.spendCurrency",
+      "reason": "The live Insights adapter has not had its spend currency unit verified against the real account, so no monetary campaign figure is projected."
+    },
+    {
+      "capability": "publishing.permalink",
+      "reason": "Delivery state is derived from the effect ledger fold. The ledger records a provider id on CONFIRMED but no permalink, so a published post cannot be linked to from here."
+    },
+    {
+      "capability": "editor.costAttribution",
+      "reason": "Editor-side model and speech spend is invisible to the platform budget: the job result usage map is defined by the contract but is always empty in spec v1."
+    }
+  ]
+}
