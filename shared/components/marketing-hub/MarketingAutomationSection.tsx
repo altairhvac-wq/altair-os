@@ -12,6 +12,7 @@ import {
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
 import { AgentDecisionControls } from "./AgentDecisionControls";
+import { MarketingMediaPreview } from "./MarketingMediaPreview";
 import type {
   AgentListSection,
   AgentSnapshotProvenance,
@@ -49,6 +50,17 @@ type MarketingAutomationSectionProps = {
   stored: StoredAgentSnapshot | null;
   /** Decisions already recorded, so a subject is never offered twice. */
   decisions: AgentDecisionRecord[];
+  /**
+   * Render job ids whose media is in THIS deployment's object storage.
+   *
+   * Read from Altair OS, not from the snapshot, because the snapshot's
+   * `previewAvailability` describes a file on the machine that rendered it —
+   * a fact about the operator's laptop, not about whether this page can play
+   * anything. Storage is the only authority on that, so the button appears
+   * for a job in this set even when the platform still reports
+   * NOT_TRANSPORTED, and never appears for one that is not.
+   */
+  storedMediaJobIds: readonly string[];
   /** True when the deployment has the bridge env configured at all. */
   bridgeConfigured: boolean;
   /**
@@ -171,12 +183,14 @@ export function MarketingAutomationSection({
   stored,
   decisions,
   bridgeConfigured,
+  storedMediaJobIds,
   nowIso,
 }: MarketingAutomationSectionProps) {
   const nowMs = Date.parse(nowIso);
   const decisionBySubject = new Map(
     decisions.map((entry) => [entry.decisionKey, entry]),
   );
+  const storedMedia = new Set(storedMediaJobIds);
   // The loudest state, and a distinct one: the automation has never reported.
   // Rendering an empty dashboard here would say "nothing is happening" when
   // the truth is "nothing has ever been heard from".
@@ -670,7 +684,15 @@ export function MarketingAutomationSection({
                       .join(" · ") || "Master rendered"}
                   </p>
                 ) : null}
-                {item.previewAvailability === "NOT_TRANSPORTED" ? (
+                {/* Storage decides, not the snapshot. A job whose media has
+                    been transported into this deployment's private bucket is
+                    playable here regardless of what the rendering machine
+                    still reports about its own local file; one that has not
+                    been transported says so plainly rather than offering a
+                    button that would fail. */}
+                {storedMedia.has(item.jobId) ? (
+                  <MarketingMediaPreview sourceJobId={item.jobId} />
+                ) : item.previewAvailability === "NOT_TRANSPORTED" ? (
                   <p className="mt-1 text-[11px] text-altair-ink-muted">
                     Preview unavailable — the file exists only on the machine
                     that rendered it.

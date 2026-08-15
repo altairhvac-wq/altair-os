@@ -148,13 +148,28 @@ export async function createMediaReadGrant(input: {
 }
 
 /**
- * Whether the bytes are actually there.
+ * What storage ACTUALLY holds for this object.
  *
- * Called after an upload is reported complete, so `stored` means observed
- * rather than claimed. Without it a client could report success it never
- * achieved and the control plane would show a video that does not exist.
+ * Replaces an earlier `mediaObjectExists` that only checked the name
+ * (independent audit P2-1). Existence alone let a caller record any size,
+ * type or dimensions it liked against a real object — so the persisted
+ * metadata could disagree with the bytes, and a later publishing workflow
+ * would size its upload from a number nobody verified.
+ *
+ * `size` and `mimetype` here come from STORAGE, not from the client. The
+ * route compares them and refuses a mismatch.
  */
-export async function mediaObjectExists(objectKey: string): Promise<boolean> {
+export type StoredObjectFacts = {
+  readonly exists: boolean;
+  /** Authoritative byte size as recorded by storage. */
+  readonly byteSize: number | null;
+  /** Authoritative content type as recorded by storage. */
+  readonly contentType: string | null;
+};
+
+export async function describeStoredObject(
+  objectKey: string,
+): Promise<StoredObjectFacts> {
   const client = createServiceRoleClient();
   const slash = objectKey.lastIndexOf("/");
   const prefix = slash === -1 ? "" : objectKey.slice(0, slash);
@@ -165,11 +180,25 @@ export async function mediaObjectExists(objectKey: string): Promise<boolean> {
     .list(prefix, { search: name, limit: 1 });
 
   if (result.error || !result.data) {
-    console.error("[mediaObjectExists] list failed:", {
+    console.error("[describeStoredObject] list failed:", {
       objectKey,
       message: result.error?.message,
     });
-    return false;
+    return { exists: false, byteSize: null, contentType: null };
   }
-  return result.data.some((entry) => entry.name === name);
+
+  const entry = result.data.find((item) => item.name === name);
+  if (!entry) return { exists: false, byteSize: null, contentType: null };
+
+  // Supabase reports object metadata under `metadata`; shape is not strongly
+  // typed in the client, so it is read defensively rather than asserted.
+  const meta = (entry as { metadata?: Record<string, unknown> }).metadata ?? {};
+  const rawSize = meta.size;
+  const rawType = meta.mimetype;
+
+  return {
+    exists: true,
+    byteSize: typeof rawSize === "number" && Number.isFinite(rawSize) ? rawSize : null,
+    contentType: typeof rawType === "string" && rawType.trim() ? rawType.trim() : null,
+  };
 }

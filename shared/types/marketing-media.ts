@@ -91,6 +91,15 @@ export type MarketingMediaAsset = {
   readonly heightPx: number | null;
   readonly uploadState: MediaUploadState;
   readonly createdAt: string;
+  /**
+   * Last write, maintained by the table's own trigger.
+   *
+   * This — not `createdAt` — is what staleness is measured from, because it
+   * is the same value the database uses to arbitrate a concurrent re-claim.
+   * Two clocks would let the pure decision and the conditional update
+   * disagree about whether a reservation had been taken.
+   */
+  readonly updatedAt: string;
   readonly storedAt: string | null;
 };
 
@@ -215,22 +224,144 @@ export const MEDIA_PENDING_GRACE_MS = 2 * 60 * 60_000;
  * `decideDelivery` is deliberate and is the whole reason the two are
  * separate functions: publishing to Meta twice creates two posts; uploading
  * to the same key twice creates one object.
+ *
+ * ================= THIS PROPOSES; THE DATABASE DISPOSES =================
+ * A UPLOAD here is a proposal, not a claim. The caller still has to win a
+ * conditional update whose predicate uses this same `updatedAt` clock, so
+ * two callers that both reach UPLOAD do not both proceed. Measuring
+ * staleness from `updatedAt` rather than `createdAt` is what keeps the two
+ * in agreement: a reservation another caller just re-took has a fresh
+ * `updatedAt` and reads as IN_PROGRESS here, exactly as the update predicate
+ * will treat it.
  */
 export function decideMediaUpload(
-  existing: Pick<MarketingMediaAsset, "uploadState" | "createdAt"> | null,
+  existing: Pick<MarketingMediaAsset, "uploadState" | "updatedAt"> | null,
   nowIso: string,
 ): MediaUploadDecision {
   if (!existing) return "UPLOAD";
   if (existing.uploadState === "stored") return "ALREADY_STORED";
   if (existing.uploadState === "failed") return "UPLOAD";
 
-  const created = Date.parse(existing.createdAt);
+  const touched = Date.parse(existing.updatedAt);
   const now = Date.parse(nowIso);
-  if (Number.isNaN(created) || Number.isNaN(now)) return "UPLOAD";
-  return now - created <= MEDIA_PENDING_GRACE_MS ? "IN_PROGRESS" : "UPLOAD";
+  if (Number.isNaN(touched) || Number.isNaN(now)) return "UPLOAD";
+  return now - touched <= MEDIA_PENDING_GRACE_MS ? "IN_PROGRESS" : "UPLOAD";
+}
+
+/**
+ * The instant before which a `pending` reservation counts as abandoned.
+ *
+ * Exported so the conditional update and the decision above compute the same
+ * boundary from the same constant, instead of one of them re-deriving it and
+ * drifting.
+ */
+export function mediaStaleBefore(nowIso: string): string {
+  return new Date(Date.parse(nowIso) - MEDIA_PENDING_GRACE_MS).toISOString();
+}
+
+/* -------------------------------------------------------------- read gate */
+
+export const MEDIA_READ_DECISIONS = [
+  /** Every condition holds. A short-lived signed URL may be minted. */
+  "GRANT",
+  /** No record for this job. */
+  "NOT_FOUND",
+  /** The record belongs to another company. */
+  "WRONG_COMPANY",
+  /** A record exists but the bytes are not confirmed present. */
+  "NOT_STORED",
+  /** The stored key is not the key this company and job derive to. */
+  "KEY_MISMATCH",
+] as const;
+export type MediaReadDecision = (typeof MEDIA_READ_DECISIONS)[number];
+
+/**
+ * Whether a read grant may be minted — the whole authorization rule, as a
+ * pure function.
+ *
+ * ================= WHY THIS IS NOT INSIDE THE MINTING CODE =================
+ * The function that mints a signed URL needs storage and a service-role
+ * client, so testing it means having both. The rule about WHO may read WHAT
+ * needs neither, and it is the part that must never quietly weaken. Keeping
+ * it here means every branch is exercised by a verifier that opens no socket.
+ *
+ * ==================== THE KEY IS RE-DERIVED, NOT TRUSTED ====================
+ * `object_key` is a database column, and a column is something an attacker
+ * with any write path — or a future migration, or a bad backfill — can
+ * change. So the key is recomputed from the company and the job and required
+ * to match. A row rewritten to point at another company's object is refused
+ * here rather than turned into a signed URL for that object.
+ *
+ * ================== ORDER IS PART OF THE BEHAVIOUR ==================
+ * WRONG_COMPANY is decided BEFORE NOT_STORED. A caller probing another
+ * company's job ids learns only "not yours" and never "yours exists but is
+ * still uploading", so the refusal carries no cross-tenant information.
+ */
+export function decideMediaRead(
+  asset: Pick<
+    MarketingMediaAsset,
+    "companyId" | "sourceJobId" | "objectKey" | "uploadState"
+  > | null,
+  companyId: string,
+): MediaReadDecision {
+  if (!asset) return "NOT_FOUND";
+
+  const requester = companyId.trim();
+  if (!requester || asset.companyId !== requester) return "WRONG_COMPANY";
+
+  if (asset.uploadState !== "stored") return "NOT_STORED";
+
+  let derived: string;
+  try {
+    derived = buildMediaObjectKey({
+      companyId: asset.companyId,
+      sourceJobId: asset.sourceJobId,
+    });
+  } catch {
+    return "KEY_MISMATCH";
+  }
+  if (derived !== asset.objectKey) return "KEY_MISMATCH";
+  if (!mediaKeyBelongsToCompany(asset.objectKey, requester)) return "KEY_MISMATCH";
+
+  return "GRANT";
+}
+
+/**
+ * Operator-facing copy for a refusal.
+ *
+ * Deliberately uninformative across a tenant boundary: WRONG_COMPANY and
+ * NOT_FOUND read the same to the person asking, because distinguishing them
+ * would confirm the existence of another company's render.
+ */
+export function describeMediaReadDecision(decision: MediaReadDecision): string {
+  switch (decision) {
+    case "GRANT":
+      return "";
+    case "NOT_STORED":
+      return "The video has not finished uploading yet.";
+    case "KEY_MISMATCH":
+      return "This media record is inconsistent and cannot be opened.";
+    case "NOT_FOUND":
+    case "WRONG_COMPANY":
+    default:
+      return "No stored video exists for this render.";
+  }
 }
 
 /* ------------------------------------------------------------- validation */
+
+/**
+ * The bare media type, for comparing a claim against what storage reports.
+ *
+ * Object storage may record `video/mp4; codecs="avc1"` where the uploader sent
+ * `video/mp4`. That is not a disagreement about what the object is, and
+ * treating it as one would reject correct uploads — so the parameters are
+ * dropped and the type is lowercased before the two are compared.
+ */
+export function normalizeContentType(value: string): string {
+  const [base] = value.split(";");
+  return (base ?? "").trim().toLowerCase();
+}
 
 export function validateMediaMetadata(input: {
   readonly contentType: string;

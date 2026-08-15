@@ -5,6 +5,7 @@ import {
   MARKETING_MEDIA_BUCKET,
   buildMediaObjectKey,
   decideMediaUpload,
+  mediaStaleBefore,
   type MarketingMediaAsset,
   type MediaUploadDecision,
 } from "@/shared/types/marketing-media";
@@ -23,6 +24,8 @@ import {
  */
 
 const TABLE = "marketing_media_assets";
+/** Postgres unique_violation — the signal that another caller claimed first. */
+const UNIQUE_VIOLATION = "23505";
 
 type ServiceClient = ReturnType<typeof createServiceRoleClient>;
 
@@ -50,6 +53,7 @@ type AssetRow = {
   height_px: number | null;
   upload_state: string;
   created_at: string;
+  updated_at: string;
   stored_at: string | null;
 };
 
@@ -68,6 +72,9 @@ function toAsset(row: AssetRow): MarketingMediaAsset {
     heightPx: row.height_px,
     uploadState: row.upload_state as MarketingMediaAsset["uploadState"],
     createdAt: row.created_at,
+    // Falls back to created_at only for a row written before the column
+    // existed; the trigger maintains it on every write thereafter.
+    updatedAt: row.updated_at ?? row.created_at,
     storedAt: row.stored_at,
   };
 }
@@ -87,6 +94,29 @@ export async function getMediaAssetByJob(
   return toAsset(result.data as AssetRow);
 }
 
+/**
+ * One asset by its own id, SCOPED BY COMPANY.
+ *
+ * The company filter is in the query as well as in `decideMediaRead` on
+ * purpose. Here it means a cross-company id returns nothing at all — no row
+ * to reason about, so no chance of a later refactor reasoning about it wrong.
+ * There it means the rule survives a caller that forgets to filter.
+ */
+export async function getMediaAssetById(
+  companyId: string,
+  assetId: string,
+): Promise<MarketingMediaAsset | null> {
+  const client = createServiceRoleClient();
+  const result = await assetsTable(client)
+    .select("*")
+    .eq("id", assetId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (result.error || !result.data) return null;
+  return toAsset(result.data as AssetRow);
+}
+
 export type ReserveMediaResult = {
   decision: MediaUploadDecision;
   asset: MarketingMediaAsset | null;
@@ -96,25 +126,23 @@ export type ReserveMediaResult = {
 /**
  * Reserve the key for a render job.
  *
- * Upsert on (company_id, source_job_id) — the unique constraint from
- * migration 144. Unlike a publish claim, re-reserving is SAFE: object storage
- * is addressed by key, so a repeat upload replaces the same object rather
- * than creating a second one. That is why a stale reservation resolves to
- * UPLOAD rather than to a reconciliation case, and why this function is
- * allowed to be far less paranoid than `claimDelivery`.
+ * ATOMIC. The unique constraint on (company_id, source_job_id) from migration
+ * 144 is the arbiter — this function INSERTs first and interprets the
+ * resulting unique violation, rather than reading, deciding, and then writing.
+ * A read-then-write would let two concurrent calls for the same new job both
+ * observe no record and both receive an upload grant.
+ *
+ * Unlike a publish claim, re-reserving is SAFE: object storage is addressed by
+ * key, so a repeat upload replaces the same object rather than creating a
+ * second one. That is why a stale reservation resolves to UPLOAD rather than
+ * to a reconciliation case — the asymmetry with `decideDelivery` is about
+ * consequences, not about rigour.
  */
 export async function reserveMediaUpload(input: {
   companyId: string;
   sourceJobId: string;
   nowIso: string;
 }): Promise<ReserveMediaResult> {
-  const existing = await getMediaAssetByJob(input.companyId, input.sourceJobId);
-  const decision = decideMediaUpload(existing, input.nowIso);
-
-  if (decision !== "UPLOAD") {
-    return { decision, asset: existing };
-  }
-
   let objectKey: string;
   try {
     objectKey = buildMediaObjectKey({
@@ -130,27 +158,77 @@ export async function reserveMediaUpload(input: {
   }
 
   const client = createServiceRoleClient();
-  const result = await assetsTable(client)
-    .upsert(
-      {
-        company_id: input.companyId,
-        source_job_id: input.sourceJobId,
-        bucket: MARKETING_MEDIA_BUCKET,
-        object_key: objectKey,
-        upload_state: "pending",
-        stored_at: null,
-      },
-      { onConflict: "company_id,source_job_id" },
-    )
+
+  // ATOMIC CLAIM (independent audit P2-4). The previous version read, decided,
+  // then upserted — so two concurrent calls for a new job could both see no
+  // record and both receive an upload grant. INSERT first and interpret the
+  // unique violation instead: Postgres arbitrates, and there is no window.
+  //
+  // Same shape as `claimDelivery`, deliberately. The two differ only in what
+  // they do when a row already exists, because their hazards differ — a
+  // second publish creates a second post, a second upload to a deterministic
+  // key creates one object.
+  const insert = await assetsTable(client)
+    .insert({
+      company_id: input.companyId,
+      source_job_id: input.sourceJobId,
+      bucket: MARKETING_MEDIA_BUCKET,
+      object_key: objectKey,
+      upload_state: "pending",
+    })
     .select("*")
     .single();
 
-  if (result.error || !result.data) {
-    console.error("[reserveMediaUpload] upsert failed:", result.error);
+  if (!insert.error) {
+    return { decision: "UPLOAD", asset: toAsset(insert.data as AssetRow) };
+  }
+
+  if ((insert.error as { code?: string }).code !== UNIQUE_VIOLATION) {
+    console.error("[reserveMediaUpload] insert failed:", insert.error);
     return { decision: "UPLOAD", asset: null, error: "Could not reserve media storage." };
   }
 
-  return { decision: "UPLOAD", asset: toAsset(result.data as AssetRow) };
+  // A row exists. Its state decides what happens next.
+  const existing = await getMediaAssetByJob(input.companyId, input.sourceJobId);
+  if (!existing) {
+    return { decision: "UPLOAD", asset: null, error: "Could not read the existing reservation." };
+  }
+
+  const decision = decideMediaUpload(existing, input.nowIso);
+  if (decision !== "UPLOAD") {
+    return { decision, asset: existing };
+  }
+
+  // Reached from `failed`, or from a reservation stale enough to be
+  // abandoned. The predicate is the arbiter, not the read above.
+  //
+  // ============== WHY NOT `in ("failed", "pending")` ==============
+  // Because it would not be exclusive. Under READ COMMITTED a blocked UPDATE
+  // re-evaluates its WHERE clause against the row version the winner just
+  // committed — and that row is `pending`, which such a filter still matches.
+  // Both callers would "win". Each branch below is written so the winner's own
+  // write falsifies the loser's predicate: `failed` becomes `pending`, and a
+  // stale `updated_at` becomes fresh (the table's trigger maintains it).
+  const retake =
+    existing.uploadState === "failed"
+      ? await assetsTable(client)
+          .update({ upload_state: "pending", stored_at: null })
+          .eq("id", existing.id)
+          .eq("upload_state", "failed")
+          .select("*")
+          .maybeSingle()
+      : await assetsTable(client)
+          .update({ upload_state: "pending", stored_at: null })
+          .eq("id", existing.id)
+          .eq("upload_state", "pending")
+          .lte("updated_at", mediaStaleBefore(input.nowIso))
+          .select("*")
+          .maybeSingle();
+
+  if (retake.error || !retake.data) {
+    return { decision: "IN_PROGRESS", asset: existing };
+  }
+  return { decision: "UPLOAD", asset: toAsset(retake.data as AssetRow) };
 }
 
 /**

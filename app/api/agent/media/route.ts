@@ -14,10 +14,11 @@ import {
 } from "@/lib/database/queries/marketing-media-assets";
 import {
   createMediaUploadGrant,
-  mediaObjectExists,
+  describeStoredObject,
 } from "@/lib/media/marketing-media-storage";
 import {
   isSafeSourceJobId,
+  normalizeContentType,
   validateMediaMetadata,
 } from "@/shared/types/marketing-media";
 
@@ -47,8 +48,13 @@ import {
  * it. A caller with a valid credential still cannot choose whose media it
  * writes, and the object key is DERIVED rather than accepted.
  *
- * `complete` VERIFIES. It lists the object in the bucket before recording it
- * as stored, so a client cannot report a success it never achieved.
+ * `complete` VERIFIES AGAINST STORAGE. It reads the object's real size and
+ * content type back from the bucket and refuses a completion that disagrees,
+ * so a client can neither report a success it never achieved nor record
+ * metadata the bytes do not support. The one field it cannot establish is the
+ * checksum — confirming that means downloading up to 2 GB — so
+ * `checksum_sha256` is stored as the uploader's assertion and is labelled as
+ * such wherever it is read.
  *
  * THIS ROUTE PUBLISHES NOTHING. It moves bytes into private storage. No
  * provider is contacted, and nothing here can cause a post or a spend.
@@ -185,17 +191,76 @@ export async function POST(request: Request) {
     // upload successful — otherwise the control plane shows a video that
     // does not exist and a publish attempt fails at the provider instead of
     // here.
-    const present = await mediaObjectExists(existing.objectKey);
-    if (!present) {
+    //
+    // Existence alone is not enough (independent audit P2-1). An object can be
+    // present and the reported metadata still be wrong, and every later
+    // consumer — a resumable YouTube upload sizing its request, a UI showing a
+    // duration — reads the persisted numbers rather than the bytes. So the
+    // facts are read back FROM STORAGE and the client's claim is checked
+    // against them.
+    const facts = await describeStoredObject(existing.objectKey);
+    if (!facts.exists) {
       await markMediaFailed({ companyId, sourceJobId });
       return reject(409, "The object is not present in storage; upload did not complete");
+    }
+
+    // No storage-reported metadata means nothing to check against, and
+    // recording an unverified number here would silently defeat the whole
+    // check. Refuse instead: the reservation returns to `failed` and the next
+    // cycle re-uploads. This is why `byte_size` and `content_type` in
+    // `marketing_media_assets` are storage-verified BY CONSTRUCTION.
+    if (facts.byteSize === null || facts.contentType === null) {
+      await markMediaFailed({ companyId, sourceJobId });
+      return reject(
+        409,
+        "Storage did not report size and content type for this object; it cannot be verified",
+      );
+    }
+
+    if (facts.byteSize !== byteSize) {
+      await markMediaFailed({ companyId, sourceJobId });
+      return reject(
+        409,
+        `Reported size does not match storage (reported ${byteSize}, stored ${facts.byteSize})`,
+      );
+    }
+
+    // Compared on the bare type: storage may append parameters the client did
+    // not send, and a `; codecs=...` suffix is not a disagreement about what
+    // the object is.
+    const storedType = normalizeContentType(facts.contentType);
+    if (storedType !== normalizeContentType(contentType)) {
+      await markMediaFailed({ companyId, sourceJobId });
+      return reject(
+        409,
+        `Reported content type does not match storage (reported ${contentType}, stored ${storedType})`,
+      );
+    }
+
+    // Re-validated against the STORAGE values, since those are what get
+    // persisted. The earlier call validated the client's claim; this one
+    // validates the fact.
+    const invalidStored = validateMediaMetadata({
+      contentType: storedType,
+      byteSize: facts.byteSize,
+    });
+    if (invalidStored) {
+      await markMediaFailed({ companyId, sourceJobId });
+      return reject(409, `Stored object is not acceptable: ${invalidStored}`);
     }
 
     const stored = await markMediaStored({
       companyId,
       sourceJobId,
-      byteSize,
-      contentType,
+      // STORAGE VALUES, not the client's. They have just been shown equal, so
+      // this changes nothing today; it means a future divergence resolves in
+      // favour of the bytes rather than the claim.
+      byteSize: facts.byteSize,
+      contentType: storedType,
+      // CLIENT-REPORTED, and deliberately not presented as verified. Confirming
+      // a checksum requires reading the object back — up to 2 GB through this
+      // deployment on every completion — so it is recorded as the uploader's
+      // assertion for later comparison, not as a fact this route established.
       checksumSha256:
         typeof body.checksumSha256 === "string" ? body.checksumSha256 : null,
       durationMs: typeof body.durationMs === "number" ? body.durationMs : null,

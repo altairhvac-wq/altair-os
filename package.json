@@ -21,7 +21,8 @@
     "typecheck:readonly": "node scripts/typecheck.mjs --readonly",
     "verify:readonly": "node scripts/verify-all.mjs --readonly",
     "verify:all": "node scripts/verify-all.mjs",
-    "verify:media": "node scripts/verify-marketing-media.mjs"
+    "verify:media": "node scripts/verify-marketing-media.mjs",
+    "verify:media-concurrency": "bash scripts/proof-media-reservation-concurrency.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

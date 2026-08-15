@@ -187,14 +187,20 @@ export type AgentApprovalItem = {
  * Whether a finished render can actually be watched from this deployment.
  *
  * NONE            no master exists.
- * NOT_TRANSPORTED a master exists, but only on the machine that rendered it.
- *                 The only value the platform currently emits for a finished
- *                 render — media transport is deferred, not forgotten.
- * AVAILABLE       reserved; nothing emits it yet.
+ * NOT_TRANSPORTED a master exists, but only on the machine that rendered it —
+ *                 either that deployment has no media transport configured,
+ *                 or the upload has not succeeded yet.
+ * AVAILABLE       the platform uploaded the bytes and this deployment
+ *                 confirmed storing them.
  *
  * Kept as data rather than inferred from `hasRenderedMaster`, because
  * "rendered" and "watchable" are different facts and a UI that conflates them
  * promises a preview it cannot serve.
+ *
+ * AVAILABLE IS NOT PERMISSION, and this page does not use it as such. Whether
+ * a video can be played here is decided against `marketing_media_assets` and
+ * a freshly minted signed URL, not against a flag in a snapshot that was
+ * pushed some minutes ago and describes what another system believes.
  */
 export type AgentPreviewAvailability = "NONE" | "NOT_TRANSPORTED" | "AVAILABLE";
 

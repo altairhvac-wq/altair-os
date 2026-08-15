@@ -9,6 +9,7 @@ import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
+import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
 import { MarketingAutomationSection } from "@/shared/components/marketing-hub/MarketingAutomationSection";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -42,17 +43,26 @@ export default async function MarketingPage({
     );
   }
 
-  const [posts, connectedAccounts, agentSnapshot, agentDecisions] =
-    await Promise.all([
-      listMarketingPosts(companyContext.company.id),
-      listMarketingConnectedAccounts(companyContext.company.id),
-      // Read-only projection pushed by the Agent Platform. Null means it has
-      // never reported in, which the section renders as its own distinct state
-      // rather than as an empty dashboard.
-      getLatestAgentMarketingSnapshot(companyContext.company.id),
-      // Recorded decisions, so a subject already decided is never offered again.
-      listAgentDecisionsSince(companyContext.company.id, 0, 200),
-    ]);
+  const [
+    posts,
+    connectedAccounts,
+    agentSnapshot,
+    agentDecisions,
+    storedMedia,
+  ] = await Promise.all([
+    listMarketingPosts(companyContext.company.id),
+    listMarketingConnectedAccounts(companyContext.company.id),
+    // Read-only projection pushed by the Agent Platform. Null means it has
+    // never reported in, which the section renders as its own distinct state
+    // rather than as an empty dashboard.
+    getLatestAgentMarketingSnapshot(companyContext.company.id),
+    // Recorded decisions, so a subject already decided is never offered again.
+    listAgentDecisionsSince(companyContext.company.id, 0, 200),
+    // Which renders this deployment actually holds bytes for. Identities only
+    // — no URL is created here. A playable link is minted per request by
+    // `requestMarketingMediaPreviewAction` and expires on its own.
+    listStoredMediaAssets(companyContext.company.id),
+  ]);
 
   const canManageConnectedAccounts = hasCompanyRole(companyContext.role, [
     "owner",
@@ -79,6 +89,7 @@ export default async function MarketingPage({
         stored={agentSnapshot}
         decisions={agentDecisions}
         bridgeConfigured={isAgentBridgeConfigured()}
+        storedMediaJobIds={storedMedia.map((asset) => asset.sourceJobId)}
         nowIso={renderedAt}
       />
       <MarketingHubPageView
