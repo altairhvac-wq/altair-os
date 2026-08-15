@@ -1,14 +1,14 @@
 {
   "contractVersion": 1,
   "companyId": "altair",
-  "producedAt": "2026-08-15T04:46:23.509Z",
+  "producedAt": "2026-08-15T05:13:14.220Z",
   "sections": {
     "automationStatus": {
       "support": "SUPPORTED_WITH_DATA",
       "unsupportedReason": null,
       "data": {
         "companyId": "altair",
-        "observedAt": "2026-08-15T04:46:23.509Z",
+        "observedAt": "2026-08-15T05:13:14.220Z",
         "schedulesActive": 1,
         "schedulesPaused": 0,
         "schedulesFailed": 0,
@@ -96,15 +96,11 @@
   "knownGaps": [
     {
       "capability": "video.playableMediaReference",
-      "reason": "The editor reports a finished master as an absolute path on the operator machine. No shareable media reference (object storage path or equivalent) exists yet, so a render can be reported as finished but not played back from another system."
+      "reason": "The editor reports a finished master as an absolute path on the operator machine. No shareable media reference (object storage path or equivalent) exists yet, so a render can be reported as finished, described by duration/resolution/size, and still not be playable from another system. Every finished render reports previewAvailability NOT_TRANSPORTED until media transport is built."
     },
     {
       "capability": "video.thumbnail",
       "reason": "No thumbnail is produced or recorded by the render pipeline."
-    },
-    {
-      "capability": "video.durationMs",
-      "reason": "The job result records total pipeline time, not the duration of the rendered video. Projecting it as a video duration would be wrong, so it is omitted."
     },
     {
       "capability": "campaign.continuousMetricSeries",

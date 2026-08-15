@@ -220,5 +220,45 @@ if (real.ok) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Video media facts (milestone 3). The platform describes a finished master
+// without locating it, and says explicitly whether it can be watched.
+// ---------------------------------------------------------------------------
+console.log("\nVideo media mirror");
+const withVideo = validSnapshot();
+withVideo.sections.videoRenders = listSection([
+  {
+    companyId: "altair", jobId: "render-abc", contentArtifactId: "art-c", attempt: 1,
+    renderState: "COMPLETED", stage: "validate", editorVersion: "abc1234",
+    hasRenderedMaster: true, failureName: null, failureMessage: null,
+    durationMs: 49000, widthPx: 1920, heightPx: 1080, outputBytes: 88400000,
+    videoCodec: "h264", hasAudio: true, previewAvailability: "NOT_TRANSPORTED",
+    submittedAt: "2026-08-15T09:00:00.000Z", recordedAt: "2026-08-15T09:30:00.000Z",
+    renderJobArtifactId: "art-job", renderResultArtifactId: "art-result",
+  },
+]);
+const video = parseAgentMarketingSnapshot(withVideo);
+check("parses a completed render with media", video.ok, video.ok ? "" : video.error);
+if (video.ok) {
+  const row = video.snapshot.sections.videoRenders.items[0];
+  check("keeps duration", row.durationMs === 49000);
+  check("keeps resolution", row.widthPx === 1920 && row.heightPx === 1080);
+  check("keeps size", row.outputBytes === 88400000);
+  check("keeps previewAvailability NOT_TRANSPORTED", row.previewAvailability === "NOT_TRANSPORTED");
+}
+const noMedia = validSnapshot();
+noMedia.sections.videoRenders = listSection([
+  { companyId: "altair", jobId: "render-old", attempt: 1, renderState: "COMPLETED", hasRenderedMaster: true },
+]);
+const older = parseAgentMarketingSnapshot(noMedia);
+check(
+  "an older platform's row degrades to null, never zero",
+  older.ok && older.snapshot.sections.videoRenders.items[0].durationMs === null,
+);
+check(
+  "and to NONE rather than a guessed availability",
+  older.ok && older.snapshot.sections.videoRenders.items[0].previewAvailability === "NONE",
+);
+
 console.log(failures === 0 ? "\nAll contract mirror checks passed." : `\n${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);

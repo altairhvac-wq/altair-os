@@ -183,6 +183,21 @@ export type AgentApprovalItem = {
   deliveryState: string | null;
 };
 
+/**
+ * Whether a finished render can actually be watched from this deployment.
+ *
+ * NONE            no master exists.
+ * NOT_TRANSPORTED a master exists, but only on the machine that rendered it.
+ *                 The only value the platform currently emits for a finished
+ *                 render — media transport is deferred, not forgotten.
+ * AVAILABLE       reserved; nothing emits it yet.
+ *
+ * Kept as data rather than inferred from `hasRenderedMaster`, because
+ * "rendered" and "watchable" are different facts and a UI that conflates them
+ * promises a preview it cannot serve.
+ */
+export type AgentPreviewAvailability = "NONE" | "NOT_TRANSPORTED" | "AVAILABLE";
+
 export type AgentVideoRenderEntry = {
   companyId: string;
   jobId: string;
@@ -194,6 +209,14 @@ export type AgentVideoRenderEntry = {
   hasRenderedMaster: boolean;
   failureName: string | null;
   failureMessage: string | null;
+  /** Facts about the master. Null means "not reported", never zero. */
+  durationMs: number | null;
+  widthPx: number | null;
+  heightPx: number | null;
+  outputBytes: number | null;
+  videoCodec: string | null;
+  hasAudio: boolean | null;
+  previewAvailability: AgentPreviewAvailability;
   submittedAt: string | null;
   recordedAt: string | null;
   renderJobArtifactId: string | null;
@@ -484,6 +507,14 @@ function readApproval(raw: unknown): AgentApprovalItem | null {
   };
 }
 
+function previewAvailability(value: unknown): AgentPreviewAvailability {
+  return value === "NOT_TRANSPORTED" || value === "AVAILABLE" ? value : "NONE";
+}
+
+function boolOrNull(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
+}
+
 function readVideoRender(raw: unknown): AgentVideoRenderEntry | null {
   if (!isRecord(raw)) return null;
   const jobId = str(raw.jobId);
@@ -500,6 +531,13 @@ function readVideoRender(raw: unknown): AgentVideoRenderEntry | null {
     hasRenderedMaster: bool(raw.hasRenderedMaster),
     failureName: strOrNull(raw.failureName),
     failureMessage: strOrNull(raw.failureMessage),
+    durationMs: numOrNull(raw.durationMs),
+    widthPx: numOrNull(raw.widthPx),
+    heightPx: numOrNull(raw.heightPx),
+    outputBytes: numOrNull(raw.outputBytes),
+    videoCodec: strOrNull(raw.videoCodec),
+    hasAudio: boolOrNull(raw.hasAudio),
+    previewAvailability: previewAvailability(raw.previewAvailability),
     submittedAt: strOrNull(raw.submittedAt),
     recordedAt: strOrNull(raw.recordedAt),
     renderJobArtifactId: strOrNull(raw.renderJobArtifactId),

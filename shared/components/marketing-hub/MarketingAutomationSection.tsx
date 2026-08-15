@@ -85,6 +85,19 @@ function formatRelative(value: string | null, nowMs: number): string {
   return `${Math.round(hours / 24)}d ago`;
 }
 
+function formatDuration(ms: number | null): string | null {
+  if (ms === null) return null;
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, "0")}s`;
+}
+
+function formatBytes(bytes: number | null): string | null {
+  if (bytes === null || bytes <= 0) return null;
+  const mb = bytes / 1_048_576;
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`;
+}
+
 function formatInterval(intervalMs: number | null): string {
   if (intervalMs === null) return "one-time";
   const hours = intervalMs / 3_600_000;
@@ -613,13 +626,33 @@ export function MarketingAutomationSection({
                     {formatRelative(item.recordedAt ?? item.submittedAt, nowMs)}
                   </span>
                 </div>
-                {/* Honest about playback: the master exists on the operator's
-                    machine and there is no shareable reference yet. Saying
-                    "ready" with no way to watch it would be the lie. */}
+                {/* Describable, not locatable. The master exists only on the
+                    machine that rendered it, so these facts are all a remote
+                    reviewer can have — and claiming "ready to watch" without a
+                    way to watch it would be the lie. */}
                 {item.hasRenderedMaster ? (
                   <p className="mt-1 text-[11px] text-altair-ink-muted">
-                    Master rendered — preview not available from this workspace
-                    yet.
+                    {[
+                      formatDuration(item.durationMs),
+                      item.widthPx && item.heightPx
+                        ? `${item.widthPx}×${item.heightPx}`
+                        : null,
+                      item.videoCodec,
+                      item.hasAudio === null
+                        ? null
+                        : item.hasAudio
+                          ? "audio"
+                          : "no audio",
+                      formatBytes(item.outputBytes),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Master rendered"}
+                  </p>
+                ) : null}
+                {item.previewAvailability === "NOT_TRANSPORTED" ? (
+                  <p className="mt-1 text-[11px] text-altair-ink-muted">
+                    Preview unavailable — the file exists only on the machine
+                    that rendered it.
                   </p>
                 ) : null}
                 {item.failureName ? (
