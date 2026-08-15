@@ -10,6 +10,8 @@ import {
   altairMcTileClass,
 } from "@/shared/design-system/components";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
+import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
+import { AgentDecisionControls } from "./AgentDecisionControls";
 import type {
   AgentListSection,
   AgentSnapshotProvenance,
@@ -45,6 +47,8 @@ import type {
 
 type MarketingAutomationSectionProps = {
   stored: StoredAgentSnapshot | null;
+  /** Decisions already recorded, so a subject is never offered twice. */
+  decisions: AgentDecisionRecord[];
   /** True when the deployment has the bridge env configured at all. */
   bridgeConfigured: boolean;
   /**
@@ -165,10 +169,14 @@ function AutomationSection<T>({
 
 export function MarketingAutomationSection({
   stored,
+  decisions,
   bridgeConfigured,
   nowIso,
 }: MarketingAutomationSectionProps) {
   const nowMs = Date.parse(nowIso);
+  const decisionBySubject = new Map(
+    decisions.map((entry) => [entry.decisionKey, entry]),
+  );
   // The loudest state, and a distinct one: the automation has never reported.
   // Rendering an empty dashboard here would say "nothing is happening" when
   // the truth is "nothing has ever been heard from".
@@ -326,6 +334,19 @@ export function MarketingAutomationSection({
                   Requested {formatDateTime(item.requestedAt)} · expires{" "}
                   {formatDateTime(item.expiresAt)}
                 </p>
+                {/* Only a still-open approval is decidable. An expired or
+                    already-decided one is history, and offering buttons on it
+                    would invite a decision that can no longer mean anything. */}
+                {item.approvalDecision === "PENDING" && !item.isExpired ? (
+                  <AgentDecisionControls
+                    subjectKind="approval"
+                    subjectId={item.approvalId}
+                    existingDecision={
+                      decisionBySubject.get(`approval:${item.approvalId}`)
+                        ?.decision ?? null
+                    }
+                  />
+                ) : null}
               </li>
             ))}
           </ul>
