@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit $TSC_EXTRA_ARGS",
+    "typecheck": "node scripts/typecheck.mjs",
     "verify": "npm run typecheck && npm run lint",
     "prepare": "husky",
     "capture:founder-screenshots": "node scripts/capture-founder-marketing-screenshots.mjs",
@@ -18,8 +18,9 @@
     "verify:migrations": "node scripts/verify-marketing-migrations.mjs",
     "verify:channels": "node scripts/verify-marketing-channels.mjs",
     "verify:delivery": "node scripts/verify-marketing-delivery.mjs",
-    "typecheck:readonly": "TSC_EXTRA_ARGS=\"--tsBuildInfoFile ${TSBUILDINFO_FILE:-/tmp/altair-os.tsbuildinfo}\" npm run typecheck",
-    "verify:readonly": "npm run typecheck:readonly && npm run verify:migrations && npm run verify:delivery && npm run verify:publish-guard && npm run verify:channels && npm run verify:agent-contract"
+    "typecheck:readonly": "node scripts/typecheck.mjs --readonly",
+    "verify:readonly": "node scripts/verify-all.mjs --readonly",
+    "verify:all": "node scripts/verify-all.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
