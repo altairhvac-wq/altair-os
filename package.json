@@ -18,6 +18,7 @@
     "verify:migrations": "node scripts/verify-marketing-migrations.mjs",
     "verify:channels": "node scripts/verify-marketing-channels.mjs",
     "verify:delivery": "node scripts/verify-marketing-delivery.mjs",
+    "verify:delivery-store": "node scripts/verify-marketing-delivery-store.mjs",
     "typecheck:readonly": "node scripts/typecheck.mjs --readonly",
     "verify:readonly": "node scripts/verify-all.mjs --readonly",
     "verify:all": "node scripts/verify-all.mjs",

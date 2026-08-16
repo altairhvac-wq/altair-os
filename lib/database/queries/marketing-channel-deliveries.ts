@@ -5,6 +5,9 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   clampFailureDetail,
   decideDelivery,
+  decideUnmatchedSettle,
+  describeUnmatchedSettle,
+  unmatchedSettleIsRecorded,
   type DeliveryDecision,
   type DeliverySettlement,
   type MarketingDeliveryRecord,
@@ -268,6 +271,20 @@ export async function recordDeliveryProviderMedia(input: {
  *
  * Only ever moves a row out of `in_flight`, so a late settle from a
  * superseded attempt cannot overwrite a newer outcome.
+ *
+ * ============= A ZERO-ROW UPDATE IS A FAILURE, NOT A SUCCESS =============
+ * That `in_flight` guard is the whole point, and it means the UPDATE can
+ * legitimately match nothing. This function used to inspect only
+ * `result.error`, so that case returned success and the caller went on to mark
+ * the post `posted` on the strength of a write that never happened — the
+ * precise contradiction the previous round of remediation was supposed to
+ * eliminate, one layer further down.
+ *
+ * A miss is not automatically a failure, though: `settlePublishedDelivery`
+ * retries, and a first attempt that committed but returned an error makes the
+ * second attempt miss BECAUSE the first worked. So the row is re-read and
+ * `decideUnmatchedSettle` compares it against what this settle intended.
+ * Identical means already recorded; anything else is reported.
  */
 export async function settleDelivery(input: {
   deliveryId: string;
@@ -310,6 +327,41 @@ export async function settleDelivery(input: {
       error: result.error,
     });
     return { error: mapDatabaseError(result.error) };
+  }
+
+  if (!result.data) {
+    // No row matched the `in_flight` guard. Find out why before deciding
+    // whether that matters.
+    const current = await deliveriesTable(client)
+      .select("*")
+      .eq("id", input.deliveryId)
+      .maybeSingle();
+
+    if (current.error) {
+      console.error("[settleDelivery] settle matched no row and the row could not be re-read:", {
+        deliveryId: input.deliveryId,
+        outcome: s.outcome,
+        error: current.error,
+      });
+      return { error: mapDatabaseError(current.error) };
+    }
+
+    const record = current.data ? toRecord(current.data as DeliveryRow) : null;
+    const outcome = decideUnmatchedSettle(record, s);
+
+    if (unmatchedSettleIsRecorded(outcome)) {
+      // An earlier attempt of this same settle already landed. Nothing to do,
+      // and nothing to alarm anyone about.
+      return {};
+    }
+
+    console.error("[settleDelivery] settle matched no in_flight row:", {
+      deliveryId: input.deliveryId,
+      intendedOutcome: s.outcome,
+      actualState: record?.deliveryState ?? "(no row)",
+      unmatched: outcome,
+    });
+    return { error: describeUnmatchedSettle(outcome, record?.provider ?? "the provider", s) };
   }
 
   return {};

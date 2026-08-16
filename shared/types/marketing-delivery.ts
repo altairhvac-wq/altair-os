@@ -192,6 +192,114 @@ export type PostedDeliverySettlement = Extract<
   { outcome: "posted" }
 >;
 
+/* ------------------------------------------------- a settle that hit nothing */
+
+export const UNMATCHED_SETTLE_OUTCOMES = [
+  /**
+   * The row already says exactly what this settle was trying to say. The write
+   * landed on an earlier attempt whose response was lost. Nothing to do.
+   */
+  "ALREADY_RECORDED",
+  /** The row says something else. Another attempt owns it now. */
+  "SUPERSEDED",
+  /** There is no row at all. */
+  "VANISHED",
+] as const;
+export type UnmatchedSettleOutcome = (typeof UNMATCHED_SETTLE_OUTCOMES)[number];
+
+/**
+ * What it means when settling a delivery updated NO row.
+ *
+ * ===================== THE DEFECT THIS CLOSES =====================
+ * `settleDelivery` guards its UPDATE with `delivery_state = 'in_flight'` and
+ * reads the result with `maybeSingle()`. It checked only `result.error`, so a
+ * zero-row match — the guard rejecting the write — returned SUCCESS. The
+ * caller then marked the post `posted` on the strength of a write that never
+ * happened. (Independent audit, second round.)
+ *
+ * ============ WHY THIS IS NOT SIMPLY "ZERO ROWS MEANS FAILURE" ============
+ * Because `settlePublishedDelivery` retries. Attempt one can commit at the
+ * database and still return an error to us — a timeout after commit is the
+ * textbook case. Attempt two then matches zero rows precisely BECAUSE attempt
+ * one worked. Calling that a failure would tell the operator to go reconcile a
+ * publish that is already correctly recorded, which is its own kind of wrong.
+ *
+ * So the row is re-read and compared. Same outcome and same provider id means
+ * the record is already right; anything else means it is not.
+ *
+ * Pure, so all three branches are testable without contriving a lost response.
+ */
+export function decideUnmatchedSettle(
+  existing: MarketingDeliveryRecord | null,
+  settlement: DeliverySettlement,
+): UnmatchedSettleOutcome {
+  if (!existing) return "VANISHED";
+
+  // Still `in_flight` while the guarded update matched nothing is
+  // contradictory, and contradictory must not read as fine.
+  if (existing.deliveryState !== settlement.outcome) return "SUPERSEDED";
+
+  if (settlement.outcome === "posted") {
+    return existing.providerPostId === settlement.providerPostId
+      ? "ALREADY_RECORDED"
+      : "SUPERSEDED";
+  }
+
+  if (settlement.outcome === "draft") {
+    const intended = settlement.providerPostId ?? null;
+    if (intended !== null && existing.providerPostId !== intended) {
+      return "SUPERSEDED";
+    }
+    return "ALREADY_RECORDED";
+  }
+
+  return "ALREADY_RECORDED";
+}
+
+/** The only outcome that means the durable record is already correct. */
+export function unmatchedSettleIsRecorded(
+  outcome: UnmatchedSettleOutcome,
+): boolean {
+  return outcome === "ALREADY_RECORDED";
+}
+
+/**
+ * Operator-facing explanation, exhaustive over the union.
+ *
+ * Both failing branches name the provider id, because the whole reason this
+ * distinction exists is that someone has to go and reconcile by hand, and
+ * "something went wrong" is not something anyone can act on.
+ */
+export function describeUnmatchedSettle(
+  outcome: UnmatchedSettleOutcome,
+  providerLabel: string,
+  settlement: DeliverySettlement,
+): string {
+  const id =
+    settlement.outcome === "posted"
+      ? settlement.providerPostId
+      : (settlement.outcome === "draft" ? settlement.providerPostId : null) ?? null;
+  const named = id ? ` The ${providerLabel} id is ${id}.` : "";
+
+  switch (outcome) {
+    case "ALREADY_RECORDED":
+      return "";
+    case "SUPERSEDED":
+      return (
+        `The delivery record for this ${providerLabel} publish was changed by ` +
+        `something else before the outcome could be written, so it no longer ` +
+        `describes this attempt.${named} Check ${providerLabel} and reconcile ` +
+        `the record by hand — do not publish again.`
+      );
+    case "VANISHED":
+      return (
+        `The delivery record for this ${providerLabel} publish no longer ` +
+        `exists, so the outcome could not be written down.${named} ` +
+        `Check ${providerLabel} before doing anything else.`
+      );
+  }
+}
+
 export const DELIVERY_FAILURE_DETAIL_MAX = 1000;
 
 /**

@@ -30,6 +30,7 @@ if (readonly) {
 steps.push(
   { name: "migrations", script: "scripts/verify-marketing-migrations.mjs" },
   { name: "delivery", script: "scripts/verify-marketing-delivery.mjs" },
+  { name: "delivery-store", script: "scripts/verify-marketing-delivery-store.mjs" },
   { name: "media", script: "scripts/verify-marketing-media.mjs" },
   { name: "reel", script: "scripts/verify-marketing-reel.mjs" },
   { name: "reel-transport", script: "scripts/verify-marketing-reel-transport.mjs" },

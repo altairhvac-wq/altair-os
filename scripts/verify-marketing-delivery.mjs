@@ -151,6 +151,96 @@ check(
   ),
 );
 
+console.log("\nA settle that matched no row");
+/**
+ * THE DEFECT (independent audit, second round). `settleDelivery` guards its
+ * UPDATE with `delivery_state = 'in_flight'` and read the result with
+ * `maybeSingle()`, checking only `result.error`. A zero-row match — the guard
+ * doing its job — returned SUCCESS, and the caller marked the post `posted` on
+ * the strength of a write that never happened.
+ *
+ * Not simply "zero rows means failure", because the settle retries: an attempt
+ * that commits and then times out makes the NEXT attempt miss precisely
+ * because the first one worked. So the row is re-read and compared.
+ */
+const posted = (id) => ({ outcome: "posted", providerPostId: id, providerPermalink: null });
+
+check(
+  "a miss with no row at all is a failure",
+  d.decideUnmatchedSettle(null, posted("fb_1")) === "VANISHED",
+);
+check(
+  "a miss where the row ALREADY says exactly this is not a failure",
+  d.decideUnmatchedSettle(
+    row({ deliveryState: "posted", providerPostId: "fb_1" }),
+    posted("fb_1"),
+  ) === "ALREADY_RECORDED",
+);
+check(
+  "THE RETRY IS PROTECTED — a committed-then-timed-out first attempt reads as recorded",
+  d.unmatchedSettleIsRecorded(
+    d.decideUnmatchedSettle(
+      row({ deliveryState: "posted", providerPostId: "fb_1" }),
+      posted("fb_1"),
+    ),
+  ),
+);
+check(
+  "but a row posted with a DIFFERENT provider id is superseded, not fine",
+  d.decideUnmatchedSettle(
+    row({ deliveryState: "posted", providerPostId: "fb_OTHER" }),
+    posted("fb_1"),
+  ) === "SUPERSEDED",
+);
+check(
+  "a row that failed while we were publishing is superseded",
+  d.decideUnmatchedSettle(row({ deliveryState: "failed" }), posted("fb_1")) === "SUPERSEDED",
+);
+check(
+  "a row still in_flight while the guarded update matched nothing is contradictory, not fine",
+  d.decideUnmatchedSettle(row({ deliveryState: "in_flight" }), posted("fb_1")) === "SUPERSEDED",
+);
+check(
+  "a repeated FAILED settle reads as already recorded",
+  d.decideUnmatchedSettle(row({ deliveryState: "failed" }), {
+    outcome: "failed",
+    failureDetail: "429",
+  }) === "ALREADY_RECORDED",
+);
+check(
+  "a repeated DRAFT settle reads as already recorded",
+  d.decideUnmatchedSettle(row({ deliveryState: "draft" }), { outcome: "draft" }) ===
+    "ALREADY_RECORDED",
+);
+check(
+  "a draft settle naming a different id is superseded",
+  d.decideUnmatchedSettle(row({ deliveryState: "draft", providerPostId: "a" }), {
+    outcome: "draft",
+    providerPostId: "b",
+  }) === "SUPERSEDED",
+);
+check(
+  "EXACTLY ONE outcome is treated as success",
+  d.UNMATCHED_SETTLE_OUTCOMES.filter((o) => d.unmatchedSettleIsRecorded(o)).join(",") ===
+    "ALREADY_RECORDED",
+);
+for (const outcome of d.UNMATCHED_SETTLE_OUTCOMES) {
+  const text = d.describeUnmatchedSettle(outcome, "Facebook", posted("fb_1"));
+  check(
+    `${outcome} has copy (empty only when the record is already correct)`,
+    outcome === "ALREADY_RECORDED" ? text === "" : text.length > 0,
+  );
+}
+check(
+  "a failing outcome names the provider id the operator has to reconcile",
+  d.describeUnmatchedSettle("SUPERSEDED", "Facebook", posted("fb_1")).includes("fb_1") &&
+    d.describeUnmatchedSettle("VANISHED", "Facebook", posted("fb_1")).includes("fb_1"),
+);
+check(
+  "and tells them not to publish again",
+  /do not publish again/i.test(d.describeUnmatchedSettle("SUPERSEDED", "Facebook", posted("fb_1"))),
+);
+
 console.log("\nFailure detail clamping");
 
 check(
@@ -307,6 +397,53 @@ console.log("\nClaim/settle control flow");
       between,
     );
   }
+  /**
+   * STRUCTURAL: `settleDelivery` must inspect the returned ROW, not only the
+   * error. This is the shape of the second-round defect — `maybeSingle()`
+   * paired with an error-only check — and it is one deleted line away from
+   * coming back.
+   */
+  const queriesSrc = readFileSync(
+    "lib/database/queries/marketing-channel-deliveries.ts",
+    "utf8",
+  );
+  const settleBody = queriesSrc.slice(queriesSrc.indexOf("export async function settleDelivery"));
+  check(
+    "settleDelivery treats a zero-row update as something to resolve",
+    /if\s*\(\s*!result\.data\s*\)/.test(settleBody),
+  );
+  check(
+    "and decides what the miss means rather than assuming",
+    /decideUnmatchedSettle\(/.test(settleBody) &&
+      /unmatchedSettleIsRecorded\(/.test(settleBody),
+  );
+  check(
+    "control — the guard would NOT be satisfied by an error-only check",
+    !/if\s*\(\s*!result\.data\s*\)/.test(
+      "const result = await t.update(p).eq('id', id).maybeSingle();\n" +
+        "if (result.error) { return { error: 'x' }; }\nreturn {};",
+    ),
+  );
+  // Per site, not by counting: every `maybeSingle()` in this module must have
+  // its row inspected within the lines that follow, because in every one of
+  // them a zero-row result means a guard rejected the write.
+  {
+    const qLines = queriesSrc.split("\n");
+    const unchecked = [];
+    qLines.forEach((line, i) => {
+      if (!/\.maybeSingle\(\)/.test(line)) return;
+      const window = qLines.slice(i, i + 20).join("\n");
+      if (!/\.data\b/.test(window.replace(/\.data\s*as\s+DeliveryRow/g, ""))) {
+        unchecked.push(`line ${i + 1}`);
+      }
+    });
+    check(
+      "every maybeSingle() in this module inspects the row it got back",
+      unchecked.length === 0,
+      unchecked,
+    );
+  }
+
   check(
     "the settle-and-verify helper retries before giving up on a live publish",
     /async function settlePublishedDelivery[\s\S]{0,900}?for \(let attempt/.test(src),

@@ -284,12 +284,13 @@ before resolving it** — that is how a Reel gets posted twice.
 ## Verification without publishing
 
 ```
-npm run verify:reel            # decisions, host pinning, source structure
-npm run verify:reel-transport  # the actual HTTP conversation, with a fake fetch
-npm run verify:delivery        # claim/settle discipline across all four actions
-npm run verify:migrations      # migration file properties, including 145
-npm run verify:all             # everything above
-npm run typecheck:readonly     # plain `typecheck` writes tsbuildinfo into the checkout
+npm run verify:reel             # decisions, host pinning, source structure
+npm run verify:reel-transport   # the actual HTTP conversation, with a fake fetch
+npm run verify:delivery         # claim/settle discipline across all four actions
+npm run verify:delivery-store   # the delivery writes, against a fake Supabase client
+npm run verify:migrations       # migration file properties, including 145
+npm run verify:all              # everything above
+npm run typecheck:readonly      # plain `typecheck` writes tsbuildinfo into the checkout
 ```
 
 `verify:reel-transport` is the one that proves the request bodies, headers and
@@ -327,6 +328,15 @@ posted. The error names the live provider id. Neither the delivery row nor the
 post claims something untrue, and the outstanding claim continues to block a
 second publish. Resolve it by hand: record the id on the delivery row, then use
 **Mark posted manually**.
+
+"Fails" here includes the quiet case. The settle only updates a row that is
+still `in_flight`, so it can match **nothing** — and matching nothing is not
+success. When that happens the row is re-read and compared against what the
+settle intended: if it already says exactly that, an earlier attempt landed and
+there is nothing to do; anything else is reported as needing reconciliation.
+That distinction matters because the settle retries, and a first attempt that
+commits and then times out makes the second attempt match nothing *because it
+worked*.
 
 ## Not in scope
 
