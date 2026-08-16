@@ -52,6 +52,7 @@ type DeliveryRow = {
   provider: string;
   delivery_state: string;
   provider_post_id: string | null;
+  provider_media_id: string | null;
   provider_permalink: string | null;
   failure_detail: string | null;
   created_at: string;
@@ -66,6 +67,8 @@ function toRecord(row: DeliveryRow): MarketingDeliveryRecord {
     provider: row.provider,
     deliveryState: row.delivery_state as MarketingDeliveryRecord["deliveryState"],
     providerPostId: row.provider_post_id,
+    // Absent on rows written before migration 145 added the column.
+    providerMediaId: row.provider_media_id ?? null,
     providerPermalink: row.provider_permalink,
     failureDetail: row.failure_detail,
     createdAt: row.created_at,
@@ -177,6 +180,44 @@ export async function claimDelivery(
   }
 
   return { decision, delivery: record };
+}
+
+/**
+ * Record the provider-side object created before publishing.
+ *
+ * ==================== WHY THIS IS ITS OWN WRITE ====================
+ * The Reel flows create an object at Meta — a video id, a container id — some
+ * seconds to minutes before anything is published. Waiting for the settle to
+ * record it means that if the process dies in that window, the durable record
+ * says only "an attempt started", and the operator is asked to reconcile
+ * against a provider with no identifier in hand.
+ *
+ * ONLY TOUCHES `in_flight`, like `settleDelivery`, so a late write from a
+ * superseded attempt cannot stamp its media id onto a settled row.
+ *
+ * A failure here is NOT fatal to the publish and is deliberately not thrown:
+ * losing the breadcrumb is worse than not having it, but far better than
+ * aborting a publish that was about to succeed. It is logged loudly instead.
+ */
+export async function recordDeliveryProviderMedia(input: {
+  deliveryId: string;
+  providerMediaId: string;
+}): Promise<void> {
+  const mediaId = input.providerMediaId.trim();
+  if (!mediaId) return;
+
+  const client = createServiceRoleClient();
+  const result = await deliveriesTable(client)
+    .update({ provider_media_id: mediaId })
+    .eq("id", input.deliveryId)
+    .eq("delivery_state", "in_flight");
+
+  if (result.error) {
+    console.error("[recordDeliveryProviderMedia] write failed:", {
+      deliveryId: input.deliveryId,
+      error: result.error,
+    });
+  }
 }
 
 /**

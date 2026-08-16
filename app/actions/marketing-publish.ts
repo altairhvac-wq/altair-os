@@ -20,6 +20,21 @@ import {
   publishInstagramImagePost,
   resolveFounderScreenshotPublicUrl,
 } from "@/lib/integrations/facebook/publish";
+import {
+  publishFacebookPageReel,
+  publishInstagramReel,
+} from "@/lib/integrations/facebook/reels";
+import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
+import { createMediaReadGrant } from "@/lib/media/marketing-media-storage";
+import {
+  decideMediaRead,
+  describeMediaReadDecision,
+} from "@/shared/types/marketing-media";
+import {
+  decideReelMedia,
+  describeReelMediaDecision,
+  mayAttemptReel,
+} from "@/shared/types/marketing-reel";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
@@ -27,6 +42,7 @@ import type { MarketingPost } from "@/shared/types/marketing-post";
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 import {
   claimDelivery,
+  recordDeliveryProviderMedia,
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
 import {
@@ -40,6 +56,8 @@ export type MarketingPublishActionResult = {
   providerPostId?: string;
   permalinkUrl?: string;
   platform?: "facebook" | "instagram";
+  /** Set on Reel publishes: the Facebook video id / Instagram container id. */
+  providerMediaId?: string;
 };
 
 const FOUNDER_MARKETING_SOURCES = new Set(["founder_milestone", "product_update"]);
@@ -123,6 +141,80 @@ async function loadFounderDraftForPublish(input: {
   return { post };
 }
 
+/**
+ * Refuses a post that carries a video from the text and image paths.
+ *
+ * ==================== WHY THIS IS NOT PEDANTRY ====================
+ * `/feed` and `/photos` do not accept a video. A Reel post pushed through
+ * either would publish successfully, as TEXT, silently dropping the video the
+ * operator attached — and the post would then be `posted`, so the Reel could
+ * never be published without duplicating it. A quiet success that produced the
+ * wrong artefact is worse than a refusal.
+ *
+ * This cannot change the behaviour of any post that exists today: the column
+ * it reads was added by migration 145 and is null everywhere until someone
+ * deliberately attaches a video.
+ */
+function refuseVideoPostOnTextPath(post: MarketingPost): string | null {
+  if (!post.videoMediaAssetId?.trim()) return null;
+  return "This post has a video attached. Use Publish Reel — Facebook feed and photo posts cannot carry video.";
+}
+
+/**
+ * Everything a Reel publish needs from local state, resolved BEFORE any
+ * delivery is claimed.
+ *
+ * ============ WHY THE SIGNED URL IS MINTED HERE AND NOT LATER ============
+ * Minting is a call to storage and it can fail. Doing it after the claim would
+ * put a failure path inside the claimed span, which is precisely the defect the
+ * delivery audit found in the screenshot branch: an early return between claim
+ * and settle strands the row `in_flight`, and five minutes later the operator
+ * is told to go reconcile an attempt that never reached Meta at all.
+ *
+ * The grant is returned, used once, and dropped. Nothing writes it anywhere —
+ * not to the post, not to the delivery, not to a log.
+ */
+async function resolveReelMediaForPublish(input: {
+  companyId: string;
+  post: MarketingPost;
+}): Promise<{ videoUrl?: string; error?: string }> {
+  const assetId = input.post.videoMediaAssetId?.trim();
+  if (!assetId) {
+    return { error: describeReelMediaDecision("NO_MEDIA") };
+  }
+
+  const asset = await getMediaAssetById(input.companyId, assetId);
+
+  // PRE-FLIGHT on the render's own reported shape. Not an authority — Meta is
+  // — but it turns the common mistake of pointing a Reel at the landscape
+  // render into an instant local refusal instead of a three-minute round trip.
+  const reelDecision = decideReelMedia(asset, input.companyId);
+  if (!mayAttemptReel(reelDecision)) {
+    return { error: describeReelMediaDecision(reelDecision) };
+  }
+
+  // The authorization gate, re-derived rather than trusted: `object_key` is a
+  // column, and a column is something a bad backfill can change.
+  const readDecision = decideMediaRead(asset, input.companyId);
+  if (readDecision !== "GRANT" || !asset) {
+    return { error: describeMediaReadDecision(readDecision) };
+  }
+
+  const grant = await createMediaReadGrant({
+    companyId: input.companyId,
+    objectKey: asset.objectKey,
+    contentType: asset.contentType,
+    byteSize: asset.byteSize,
+    nowMs: Date.now(),
+  });
+
+  if (grant.error || !grant.grant) {
+    return { error: grant.error ?? "Could not open the video for publishing." };
+  }
+
+  return { videoUrl: grant.grant.url };
+}
+
 async function loadConnectedFacebookPage(input: {
   companyId: string;
   connectedAccountId: string;
@@ -195,6 +287,11 @@ export async function publishMarketingPostToFacebookAction(
   });
   if (draft.error || !draft.post) {
     return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const videoBlocked = refuseVideoPostOnTextPath(draft.post);
+  if (videoBlocked) {
+    return { error: videoBlocked };
   }
 
   const pageLoad = await loadConnectedFacebookPage({
@@ -395,6 +492,11 @@ export async function publishMarketingPostToInstagramAction(
     return { error: draft.error ?? "Marketing post not found." };
   }
 
+  const videoBlockedForInstagram = refuseVideoPostOnTextPath(draft.post);
+  if (videoBlockedForInstagram) {
+    return { error: videoBlockedForInstagram };
+  }
+
   const screenshotRef = draft.post.founderScreenshotReference?.trim();
   if (!screenshotRef) {
     return {
@@ -528,6 +630,372 @@ export async function publishMarketingPostToInstagramAction(
   return {
     post: marked.post,
     providerPostId: publishResult.providerPostId,
+    permalinkUrl: publishResult.permalinkUrl,
+    platform: "instagram",
+  };
+}
+
+/* ========================================================================
+ *                              REEL PUBLISHING
+ *
+ * Two more actions rather than a flag on the existing two.
+ *
+ * The text and image paths are a single POST. A Reel is a multi-phase
+ * conversation with an asynchronous provider, with a bounded wait and a point
+ * of no return near the end. Threading that through the existing actions would
+ * put a timeout loop inside paths that have none, and would make the audited
+ * claim/settle span — the thing that keeps publishing replay-safe — harder to
+ * read in exactly the place it most needs to be obvious.
+ *
+ * WHAT IS SHARED, DELIBERATELY: the founder access gate, the publishable-status
+ * allow-list, the connected-Page load, the token load, and the
+ * claim/`mayPublish`/settle discipline. None of that is reimplemented here.
+ *
+ * WHAT IS NOT SHARED: nothing in `publish.ts` is called, and the image
+ * container poller in particular is not reused — its twelve-second budget is
+ * right for a photo and hopeless for video.
+ *
+ * A REEL IS ITS OWN MARKETING POST. Migration 143's duplicate guard is
+ * `unique (company_id, marketing_post_id, provider)`; a Reel sharing a post
+ * with a text publish could never claim its own row. That is why the delivery
+ * provider below is plain `facebook` / `instagram` and no migration to the
+ * delivery table's key was needed.
+ * ====================================================================== */
+
+/**
+ * Publishes the video attached to a founder draft as a Facebook Page Reel.
+ * Deliberate human click only — no scheduling and no auto-trigger.
+ */
+export async function publishMarketingReelToFacebookAction(
+  postId: string,
+  connectedAccountId: string,
+): Promise<MarketingPublishActionResult> {
+  const permission = await assertFounderPublishAccess();
+  if ("error" in permission) {
+    return { error: permission.error };
+  }
+
+  const configError = assertPublishPrerequisites();
+  if (configError) {
+    return { error: configError };
+  }
+
+  const normalizedPostId = normalizeId(postId);
+  const normalizedAccountId = normalizeId(connectedAccountId);
+
+  if (!normalizedPostId) {
+    return { error: "A valid marketing post is required." };
+  }
+  if (!normalizedAccountId) {
+    return { error: "Select a Facebook Page to publish to." };
+  }
+
+  const draft = await loadFounderDraftForPublish({
+    companyId: permission.context.company.id,
+    postId: normalizedPostId,
+  });
+  if (draft.error || !draft.post) {
+    return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const pageLoad = await loadConnectedFacebookPage({
+    companyId: permission.context.company.id,
+    connectedAccountId: normalizedAccountId,
+  });
+  if (pageLoad.error || !pageLoad.account) {
+    return { error: pageLoad.error ?? "Connected Facebook Page not found." };
+  }
+
+  const tokenResult = await getMarketingConnectedAccountAccessToken(
+    pageLoad.account.id,
+  );
+  if (tokenResult.error || !tokenResult.accessToken) {
+    return {
+      error:
+        tokenResult.error ??
+        "Could not load the Page access token. Reconnect Facebook.",
+    };
+  }
+
+  // EVERYTHING LOCAL, AND EVERY FALLIBLE PRE-FLIGHT, RESOLVES HERE — before a
+  // delivery is claimed. Minting the signed media URL is a call to storage and
+  // it can fail; doing it after the claim would strand the row `in_flight` on
+  // failure, which is the exact defect the delivery audit found on the
+  // screenshot branch. The claim below therefore spans the Meta calls and
+  // nothing else.
+  const media = await resolveReelMediaForPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+  });
+  if (media.error || !media.videoUrl) {
+    return { error: media.error ?? "Could not open the video for publishing." };
+  }
+
+  const description = buildMarketingPostBodyFromPost(draft.post);
+  const pageId = pageLoad.account.providerResourceId!;
+
+  const claim = await claimDelivery({
+    companyId: permission.context.company.id,
+    marketingPostId: normalizedPostId,
+    provider: "facebook",
+    connectedAccountId: pageLoad.account.id,
+    nowIso: new Date().toISOString(),
+  });
+
+  if (!mayPublish(claim.decision)) {
+    return {
+      error:
+        claim.error ??
+        describeDeliveryDecision(claim.decision, "Facebook", claim.delivery),
+    };
+  }
+  const deliveryId = claim.delivery!.id;
+
+  let publishResult: {
+    providerPostId: string;
+    providerMediaId: string;
+    permalinkUrl?: string;
+  };
+
+  try {
+    // No early return is permitted inside this block: everything between the
+    // claim and the settle must either reach a settle or throw into `catch`.
+    publishResult = await publishFacebookPageReel({
+      pageId,
+      accessToken: tokenResult.accessToken,
+      videoUrl: media.videoUrl,
+      description,
+      // Fires the moment Meta reserves a video id, BEFORE any byte moves and
+      // long before anything is published. If this process dies mid-upload the
+      // row still names the object an operator has to go look at.
+      onMediaCreated: async (providerMediaId) => {
+        await recordDeliveryProviderMedia({ deliveryId, providerMediaId });
+      },
+    });
+  } catch (error) {
+    console.error("[publishMarketingReelToFacebookAction] Reel publish failed:", {
+      companyId: permission.context.company.id,
+      postId: normalizedPostId,
+      pageId,
+      error,
+    });
+    const messageText =
+      error instanceof Error && error.message.trim()
+        ? error.message.trim()
+        : "Facebook Reel publish failed. Check Page permissions and try again.";
+    // Safe to settle FAILED and permit a retry: a Reel is not public until the
+    // `finish` phase, so every failure before it leaves an unpublished video
+    // object at Meta and nothing on the Page.
+    await settleDelivery({
+      deliveryId,
+      settlement: { outcome: "failed", failureDetail: messageText },
+      nowIso: new Date().toISOString(),
+    });
+    return { error: messageText };
+  }
+
+  await settleDelivery({
+    deliveryId,
+    settlement: {
+      outcome: "posted",
+      providerPostId: publishResult.providerPostId,
+      providerPermalink: publishResult.permalinkUrl ?? null,
+    },
+    nowIso: new Date().toISOString(),
+  });
+
+  const marked = await markMarketingPostPosted(
+    permission.context.company.id,
+    normalizedPostId,
+  );
+
+  if (marked.error || !marked.post) {
+    return {
+      error:
+        marked.error ??
+        "Published the Reel, but marking the draft posted failed. Refresh and check the Page.",
+      providerPostId: publishResult.providerPostId,
+      providerMediaId: publishResult.providerMediaId,
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "facebook",
+    };
+  }
+
+  revalidateMarketingPaths();
+
+  return {
+    post: marked.post,
+    providerPostId: publishResult.providerPostId,
+    providerMediaId: publishResult.providerMediaId,
+    permalinkUrl: publishResult.permalinkUrl,
+    platform: "facebook",
+  };
+}
+
+/**
+ * Publishes the video attached to a founder draft as an Instagram Reel, to the
+ * Instagram Professional account linked to the selected Facebook Page.
+ */
+export async function publishMarketingReelToInstagramAction(
+  postId: string,
+  connectedAccountId: string,
+): Promise<MarketingPublishActionResult> {
+  const permission = await assertFounderPublishAccess();
+  if ("error" in permission) {
+    return { error: permission.error };
+  }
+
+  const configError = assertPublishPrerequisites();
+  if (configError) {
+    return { error: configError };
+  }
+
+  const normalizedPostId = normalizeId(postId);
+  const normalizedAccountId = normalizeId(connectedAccountId);
+
+  if (!normalizedPostId) {
+    return { error: "A valid marketing post is required." };
+  }
+  if (!normalizedAccountId) {
+    return { error: "Select a Facebook Page with a linked Instagram account." };
+  }
+
+  const draft = await loadFounderDraftForPublish({
+    companyId: permission.context.company.id,
+    postId: normalizedPostId,
+  });
+  if (draft.error || !draft.post) {
+    return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const pageLoad = await loadConnectedFacebookPage({
+    companyId: permission.context.company.id,
+    connectedAccountId: normalizedAccountId,
+  });
+  if (pageLoad.error || !pageLoad.account) {
+    return { error: pageLoad.error ?? "Connected Facebook Page not found." };
+  }
+
+  const igUserId = getFacebookPageInstagramBusinessAccountId(
+    pageLoad.account.metadata,
+  );
+  if (!igUserId) {
+    return {
+      error:
+        "This Facebook Page has no linked Instagram Business account. Link one in Meta Business Suite, then reconnect Facebook.",
+    };
+  }
+
+  const tokenResult = await getMarketingConnectedAccountAccessToken(
+    pageLoad.account.id,
+  );
+  if (tokenResult.error || !tokenResult.accessToken) {
+    return {
+      error:
+        tokenResult.error ??
+        "Could not load the Page access token. Reconnect Facebook.",
+    };
+  }
+
+  // Resolved before the claim, for the reason documented on the Facebook Reel
+  // action above.
+  const media = await resolveReelMediaForPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+  });
+  if (media.error || !media.videoUrl) {
+    return { error: media.error ?? "Could not open the video for publishing." };
+  }
+
+  const caption = buildMarketingPostBodyFromPost(draft.post);
+
+  const claim = await claimDelivery({
+    companyId: permission.context.company.id,
+    marketingPostId: normalizedPostId,
+    provider: "instagram",
+    connectedAccountId: pageLoad.account.id,
+    nowIso: new Date().toISOString(),
+  });
+
+  if (!mayPublish(claim.decision)) {
+    return {
+      error:
+        claim.error ??
+        describeDeliveryDecision(claim.decision, "Instagram", claim.delivery),
+    };
+  }
+  const deliveryId = claim.delivery!.id;
+
+  let publishResult: {
+    providerPostId: string;
+    providerMediaId: string;
+    permalinkUrl?: string;
+  };
+
+  try {
+    publishResult = await publishInstagramReel({
+      igUserId,
+      accessToken: tokenResult.accessToken,
+      videoUrl: media.videoUrl,
+      caption,
+      onMediaCreated: async (providerMediaId) => {
+        await recordDeliveryProviderMedia({ deliveryId, providerMediaId });
+      },
+    });
+  } catch (error) {
+    console.error("[publishMarketingReelToInstagramAction] Reel publish failed:", {
+      companyId: permission.context.company.id,
+      postId: normalizedPostId,
+      igUserId,
+      error,
+    });
+    const messageText =
+      error instanceof Error && error.message.trim()
+        ? error.message.trim()
+        : "Instagram Reel publish failed. Check permissions and try again.";
+    // Safe to settle FAILED: an Instagram container is not public until
+    // `media_publish`, and an unused container is discarded by Meta.
+    await settleDelivery({
+      deliveryId,
+      settlement: { outcome: "failed", failureDetail: messageText },
+      nowIso: new Date().toISOString(),
+    });
+    return { error: messageText };
+  }
+
+  await settleDelivery({
+    deliveryId,
+    settlement: {
+      outcome: "posted",
+      providerPostId: publishResult.providerPostId,
+      providerPermalink: publishResult.permalinkUrl ?? null,
+    },
+    nowIso: new Date().toISOString(),
+  });
+
+  const marked = await markMarketingPostPosted(
+    permission.context.company.id,
+    normalizedPostId,
+  );
+
+  if (marked.error || !marked.post) {
+    return {
+      error:
+        marked.error ??
+        "Published the Reel, but marking the draft posted failed. Refresh and check Instagram.",
+      providerPostId: publishResult.providerPostId,
+      providerMediaId: publishResult.providerMediaId,
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "instagram",
+    };
+  }
+
+  revalidateMarketingPaths();
+
+  return {
+    post: marked.post,
+    providerPostId: publishResult.providerPostId,
+    providerMediaId: publishResult.providerMediaId,
     permalinkUrl: publishResult.permalinkUrl,
     platform: "instagram",
   };

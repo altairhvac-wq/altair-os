@@ -31,6 +31,7 @@ type MarketingPostRow = {
   archived_at: string | null;
   deleted_at: string | null;
   founder_screenshot_reference: string | null;
+  video_media_asset_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -49,6 +50,7 @@ type MarketingPostInsert = {
   source_id?: string | null;
   scheduled_at?: string | null;
   founder_screenshot_reference?: string | null;
+  video_media_asset_id?: string | null;
 };
 
 type MarketingPostRowUpdate = {
@@ -62,6 +64,7 @@ type MarketingPostRowUpdate = {
   source_id?: string | null;
   scheduled_at?: string | null;
   founder_screenshot_reference?: string | null;
+  video_media_asset_id?: string | null;
   posted_at?: string | null;
   archived_at?: string | null;
 };
@@ -92,6 +95,7 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     archivedAt: row.archived_at ?? undefined,
     deletedAt: row.deleted_at ?? null,
     founderScreenshotReference: row.founder_screenshot_reference ?? undefined,
+    videoMediaAssetId: row.video_media_asset_id ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -116,6 +120,7 @@ function mapMarketingPostCreateInputToInsert(
     source_id: input.sourceId ?? null,
     scheduled_at: input.scheduledAt ?? null,
     founder_screenshot_reference: input.founderScreenshotReference?.trim() || null,
+    video_media_asset_id: input.videoMediaAssetId?.trim() || null,
   };
 }
 
@@ -154,6 +159,12 @@ function mapMarketingPostUpdateInputToRow(
   if (input.founderScreenshotReference !== undefined) {
     update.founder_screenshot_reference =
       input.founderScreenshotReference?.trim() || null;
+  }
+  // Cleared with an explicit null, not by omission — the same convention as
+  // every other nullable field here. A post that should no longer publish a
+  // video says so; it does not simply stop mentioning one.
+  if (input.videoMediaAssetId !== undefined) {
+    update.video_media_asset_id = input.videoMediaAssetId?.trim() || null;
   }
 
   return update;

@@ -165,6 +165,79 @@ function validateFounderScreenshotReferencePermission(
   return null;
 }
 
+/**
+ * The video reference a Reel publishes.
+ *
+ * ============== WHY IT IS SHAPE-CHECKED HERE ==============
+ * The composite foreign key from migration 145 is the authority on WHOSE video
+ * this may be, and it cannot be talked around. This is only about the message
+ * the operator reads: a malformed id reaching the database produces
+ * `invalid input syntax for type uuid`, which tells a human nothing.
+ */
+const UUID_SHAPE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function normalizeVideoMediaAssetId(
+  value: string | null | undefined,
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Same gate as founder screenshots: platform admin, founder marketing sources
+ * only. A rendered product video is founder collateral, and the two must not
+ * drift apart — a video attachable by a role that cannot attach a screenshot
+ * would be an accidental privilege escalation on the publish path.
+ */
+function validateVideoMediaAssetPermission(
+  videoMediaAssetId: string | null | undefined,
+  sourceType: MarketingPostSource | undefined,
+  user: { email: string | undefined },
+): string | null {
+  const normalized = normalizeVideoMediaAssetId(videoMediaAssetId);
+  if (!normalized) {
+    return null;
+  }
+
+  if (!UUID_SHAPE.test(normalized)) {
+    return "That video reference is not valid. Pick a rendered video from the list.";
+  }
+
+  if (!canAccessPlatformAdmin(user)) {
+    return "You do not have permission to attach rendered video.";
+  }
+
+  if (!isFounderMarketingSource(sourceType)) {
+    return "Rendered video is only allowed on founder marketing drafts.";
+  }
+
+  return null;
+}
+
+function stripUnauthorizedVideoMediaAssetId(
+  input: MarketingPostCreateInput | MarketingPostUpdateInput,
+  user: { email: string | undefined },
+  sourceType: MarketingPostSource | undefined,
+): void {
+  if (input.videoMediaAssetId === undefined) {
+    return;
+  }
+
+  const permissionError = validateVideoMediaAssetPermission(
+    input.videoMediaAssetId,
+    sourceType,
+    user,
+  );
+
+  if (permissionError) {
+    delete input.videoMediaAssetId;
+  }
+}
+
 function stripUnauthorizedFounderScreenshotReference(
   input: MarketingPostCreateInput | MarketingPostUpdateInput,
   user: { email: string | undefined },
@@ -410,6 +483,7 @@ function normalizeCreateMarketingPostInput(
     founderScreenshotReference: normalizeFounderScreenshotReference(
       input.founderScreenshotReference,
     ),
+    videoMediaAssetId: normalizeVideoMediaAssetId(input.videoMediaAssetId),
   };
 
   applyScheduleStatusCouplingForCreate(normalized);
@@ -440,6 +514,11 @@ function normalizeUpdateMarketingPostInput(
   if (normalized.founderScreenshotReference !== undefined) {
     normalized.founderScreenshotReference = normalizeFounderScreenshotReference(
       normalized.founderScreenshotReference,
+    );
+  }
+  if (normalized.videoMediaAssetId !== undefined) {
+    normalized.videoMediaAssetId = normalizeVideoMediaAssetId(
+      normalized.videoMediaAssetId,
     );
   }
 
@@ -499,7 +578,22 @@ export async function createMarketingPostAction(
     return { error: founderScreenshotError };
   }
 
+  const videoAssetError = validateVideoMediaAssetPermission(
+    input.videoMediaAssetId,
+    normalized.sourceType,
+    permission.context.user,
+  );
+  if (videoAssetError) {
+    return { error: videoAssetError };
+  }
+
   stripUnauthorizedFounderScreenshotReference(
+    normalized,
+    permission.context.user,
+    normalized.sourceType,
+  );
+
+  stripUnauthorizedVideoMediaAssetId(
     normalized,
     permission.context.user,
     normalized.sourceType,
@@ -582,6 +676,15 @@ export async function updateMarketingPostAction(
     return { error: founderScreenshotError };
   }
 
+  const videoAssetError = validateVideoMediaAssetPermission(
+    input.videoMediaAssetId,
+    existing.sourceType,
+    permission.context.user,
+  );
+  if (videoAssetError) {
+    return { error: videoAssetError };
+  }
+
   if (existing.status === "archived") {
     return { error: "Archived posts cannot be edited." };
   }
@@ -596,6 +699,12 @@ export async function updateMarketingPostAction(
   delete normalized.sourceId;
 
   stripUnauthorizedFounderScreenshotReference(
+    normalized,
+    permission.context.user,
+    existing.sourceType,
+  );
+
+  stripUnauthorizedVideoMediaAssetId(
     normalized,
     permission.context.user,
     existing.sourceType,

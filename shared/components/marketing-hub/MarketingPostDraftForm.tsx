@@ -26,6 +26,11 @@ import { MarketingFounderDraftAiGenerator } from "@/shared/components/marketing-
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
 import { FounderScreenshotUploadControl } from "@/shared/components/marketing-hub/FounderScreenshotUploadControl";
 import { MarketingFounderPublishControls } from "@/shared/components/marketing-hub/MarketingFounderPublishControls";
+import { MarketingReelPublishControls } from "@/shared/components/marketing-hub/MarketingReelPublishControls";
+import {
+  describeReelVideoOption,
+  type ReelVideoOption,
+} from "@/shared/types/marketing-reel";
 import {
   FOUNDER_MARKETING_SCREENSHOT_OPTIONS,
   isPreviewableScreenshotReference,
@@ -57,6 +62,8 @@ type MarketingPostDraftFormProps = {
   aiDraftingConfigured?: boolean;
   showFounderMarketing?: boolean;
   connectedAccounts?: MarketingConnectedAccount[];
+  /** Stored renders for this company. Identities and shapes, never URLs. */
+  videoOptions?: ReelVideoOption[];
   onSuccess: () => void;
   onCancel: () => void;
   onRecurringCreated?: () => void;
@@ -82,6 +89,8 @@ type DraftFormData = {
   callToAction: string;
   scheduledAtLocal: string;
   founderScreenshotReference: string;
+  /** Empty string means "no video attached" — the form has no nulls. */
+  videoMediaAssetId: string;
 };
 
 const DEFAULT_FORM_DATA: DraftFormData = {
@@ -92,6 +101,7 @@ const DEFAULT_FORM_DATA: DraftFormData = {
   callToAction: "",
   scheduledAtLocal: "",
   founderScreenshotReference: "",
+  videoMediaAssetId: "",
 };
 
 function toDatetimeLocal(iso: string): string {
@@ -151,6 +161,7 @@ function postToFormData(post: MarketingPost): DraftFormData {
     callToAction: post.callToAction ?? "",
     scheduledAtLocal: post.scheduledAt ? toDatetimeLocal(post.scheduledAt) : "",
     founderScreenshotReference: post.founderScreenshotReference ?? "",
+    videoMediaAssetId: post.videoMediaAssetId ?? "",
   };
 }
 
@@ -221,15 +232,14 @@ function draftStarterToFormData(
     callToAction: draftStarter.callToAction,
     scheduledAtLocal: "",
     founderScreenshotReference: "",
+    videoMediaAssetId: "",
   };
 }
 
 function isFounderMarketingSourceType(
   sourceType: MarketingPostSource,
 ): boolean {
-  return (
-    sourceType === "founder_milestone" || sourceType === "product_update"
-  );
+  return sourceType === "founder_milestone" || sourceType === "product_update";
 }
 
 function isFounderDraftStarter(
@@ -539,6 +549,7 @@ export function MarketingPostDraftForm({
   aiDraftingConfigured = false,
   showFounderMarketing = false,
   connectedAccounts = [],
+  videoOptions = [],
   onSuccess,
   onCancel,
   onRecurringCreated,
@@ -569,8 +580,9 @@ export function MarketingPostDraftForm({
   const [isDeletePending, startDeleteTransition] = useTransition();
   const [isRecurringPending, startRecurringTransition] = useTransition();
   const [showRecurringForm, setShowRecurringForm] = useState(false);
-  const [recurringFormData, setRecurringFormData] =
-    useState<RecurringFormData>(DEFAULT_RECURRING_FORM);
+  const [recurringFormData, setRecurringFormData] = useState<RecurringFormData>(
+    DEFAULT_RECURRING_FORM,
+  );
   const [recurringError, setRecurringError] = useState<string | null>(null);
   const isActionPending =
     isPending ||
@@ -597,8 +609,8 @@ export function MarketingPostDraftForm({
     ? post.sourceType
     : createSource.sourceType;
   const rewriteSourceId = isEditMode
-    ? post.sourceId ?? null
-    : createSource.sourceId ?? null;
+    ? (post.sourceId ?? null)
+    : (createSource.sourceId ?? null);
   const isCompletedJobCreate =
     !isEditMode &&
     draftStarter != null &&
@@ -608,8 +620,7 @@ export function MarketingPostDraftForm({
   const isFounderCreate =
     !isEditMode && showFounderMarketing && isFounderDraftStarter(draftStarter);
   const showFounderScreenshot =
-    showFounderMarketing &&
-    isFounderMarketingSourceType(rewriteSourceType);
+    showFounderMarketing && isFounderMarketingSourceType(rewriteSourceType);
   const showFounderPublish =
     isEditMode &&
     post != null &&
@@ -617,9 +628,10 @@ export function MarketingPostDraftForm({
     isFounderMarketingSourceType(post.sourceType) &&
     post.status !== "posted" &&
     post.status !== "archived";
-  const selectedFounderScreenshotOption = FOUNDER_MARKETING_SCREENSHOT_OPTIONS.find(
-    (option) => option.path === formData.founderScreenshotReference.trim(),
-  );
+  const selectedFounderScreenshotOption =
+    FOUNDER_MARKETING_SCREENSHOT_OPTIONS.find(
+      (option) => option.path === formData.founderScreenshotReference.trim(),
+    );
   const founderScreenshotPath = formData.founderScreenshotReference.trim();
   const hasStaleFounderScreenshotPath =
     showFounderScreenshot &&
@@ -655,6 +667,7 @@ export function MarketingPostDraftForm({
       callToAction: draft.callToAction,
       scheduledAtLocal: current.scheduledAtLocal,
       founderScreenshotReference: current.founderScreenshotReference,
+      videoMediaAssetId: current.videoMediaAssetId,
     }));
   }
 
@@ -687,6 +700,11 @@ export function MarketingPostDraftForm({
           ? {
               founderScreenshotReference:
                 formData.founderScreenshotReference.trim() || null,
+              // Sent under the same gate as the screenshot. The server
+              // re-checks the permission and the database enforces that the
+              // video belongs to this company — this only decides whether the
+              // field is offered at all.
+              videoMediaAssetId: formData.videoMediaAssetId.trim() || null,
             }
           : {}),
       };
@@ -1105,7 +1123,9 @@ export function MarketingPostDraftForm({
               </span>
               <textarea
                 value={formData.postText}
-                onChange={(event) => updateField("postText", event.target.value)}
+                onChange={(event) =>
+                  updateField("postText", event.target.value)
+                }
                 rows={10}
                 disabled={isReadOnly}
                 className={`${inputClassName} min-h-[12rem] resize-y`}
@@ -1251,10 +1271,7 @@ export function MarketingPostDraftForm({
                         if (nextValue === "__uploaded__") {
                           return;
                         }
-                        updateField(
-                          "founderScreenshotReference",
-                          nextValue,
-                        );
+                        updateField("founderScreenshotReference", nextValue);
                       }}
                       disabled={isReadOnly || isActionPending}
                       className={inputClassName}
@@ -1313,6 +1330,70 @@ export function MarketingPostDraftForm({
               </div>
             ) : null}
 
+            {showFounderScreenshot ? (
+              <div
+                className={`rounded-xl border p-4 sm:p-5 ${
+                  northStar
+                    ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/50"
+                    : "border-amber-200/70 bg-amber-50/30"
+                }`}
+              >
+                <div className="block text-sm">
+                  <span
+                    className={`font-medium ${
+                      northStar ? "text-[#17130E]" : "text-slate-700"
+                    }`}
+                  >
+                    Rendered video{" "}
+                    <span
+                      className={`font-normal ${
+                        northStar ? "text-[#8A7F72]" : "text-slate-400"
+                      }`}
+                    >
+                      (optional — makes this a Reel)
+                    </span>
+                  </span>
+                  <p
+                    className={`mt-1.5 text-xs leading-relaxed ${
+                      northStar ? "text-[#6B6255]" : "text-slate-500"
+                    }`}
+                  >
+                    Attaching a video makes this post a Reel. It can then only
+                    be published as a Reel — Facebook feed and photo posts
+                    cannot carry video, and publishing there would quietly drop
+                    it. Give the Reel its own post rather than reusing a text
+                    draft.
+                  </p>
+                  {videoOptions.length === 0 ? (
+                    <p
+                      className={`mt-2 text-xs leading-relaxed ${
+                        northStar ? "text-[#6B6255]" : "text-slate-500"
+                      }`}
+                    >
+                      No rendered video has reached this deployment yet. Run a
+                      render, then `npm run integration:cycle` to transport it.
+                    </p>
+                  ) : (
+                    <select
+                      value={formData.videoMediaAssetId}
+                      disabled={isReadOnly || isActionPending}
+                      onChange={(event) =>
+                        updateField("videoMediaAssetId", event.target.value)
+                      }
+                      className={inputClassName}
+                    >
+                      <option value="">No video (text or image post)</option>
+                      {videoOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {describeReelVideoOption(option)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
             {!isReadOnly ? (
               <label className="block text-sm">
                 <span
@@ -1343,8 +1424,8 @@ export function MarketingPostDraftForm({
                     northStar ? "text-[#6B6255]" : "text-slate-500"
                   }`}
                 >
-                  Altair does not post automatically. Use this to plan when
-                  your team should copy and post manually.
+                  Altair does not post automatically. Use this to plan when your
+                  team should copy and post manually.
                 </p>
               </label>
             ) : isEditMode && post.scheduledAt ? (
@@ -1527,7 +1608,9 @@ export function MarketingPostDraftForm({
 
             <div
               className={`flex flex-col gap-3 border-t pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${
-                northStar ? "border-[rgba(148,163,184,0.18)]" : "border-slate-100"
+                northStar
+                  ? "border-[rgba(148,163,184,0.18)]"
+                  : "border-slate-100"
               }`}
             >
               <div className="flex flex-wrap gap-2">
@@ -1581,13 +1664,28 @@ export function MarketingPostDraftForm({
                       </p>
                     ) : null}
                     {showFounderPublish ? (
-                      <MarketingFounderPublishControls
-                        post={post}
-                        connectedAccounts={connectedAccounts}
-                        northStar={northStar}
-                        disabled={isActionPending}
-                        onPublished={onSuccess}
-                      />
+                      post.videoMediaAssetId?.trim() ? (
+                        // A post either publishes a video or it does not. Two
+                        // panels here would offer a feed publish that drops the
+                        // video — which the server refuses anyway, so the only
+                        // thing showing it would achieve is a wasted click.
+                        <MarketingReelPublishControls
+                          post={post}
+                          connectedAccounts={connectedAccounts}
+                          videoOptions={videoOptions}
+                          northStar={northStar}
+                          disabled={isActionPending}
+                          onPublished={onSuccess}
+                        />
+                      ) : (
+                        <MarketingFounderPublishControls
+                          post={post}
+                          connectedAccounts={connectedAccounts}
+                          northStar={northStar}
+                          disabled={isActionPending}
+                          onPublished={onSuccess}
+                        />
+                      )
                     ) : null}
                     {canMarkPosted ? (
                       <button

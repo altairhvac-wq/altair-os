@@ -46,6 +46,17 @@ export type MarketingDeliveryRecord = {
   readonly provider: string;
   readonly deliveryState: MarketingDeliveryState;
   readonly providerPostId: string | null;
+  /**
+   * The provider-side object created BEFORE publishing — a Facebook Reel video
+   * id, an Instagram container id (migration 145).
+   *
+   * Distinct from `providerPostId`, which names something that was actually
+   * published. A Reel flow reserves an object at Meta, uploads to it, waits,
+   * and only then publishes; a process that dies in the middle leaves
+   * `providerPostId` correctly null and this set. Without it the operator
+   * would be told to go reconcile with nothing to reconcile against.
+   */
+  readonly providerMediaId: string | null;
   readonly providerPermalink: string | null;
   readonly failureDetail: string | null;
   readonly createdAt: string;
@@ -138,12 +149,19 @@ export function describeDeliveryDecision(
       return `Already uploaded to ${providerLabel} as a draft. Finish it in the ${providerLabel} app.`;
     case "IN_PROGRESS":
       return `A publish to ${providerLabel} is already in progress. Wait for it to finish.`;
-    case "NEEDS_RECONCILIATION":
+    case "NEEDS_RECONCILIATION": {
+      // The media id is named when there is one, because "go check Meta" is
+      // not actionable advice without something to look for. This is the whole
+      // reason migration 145 records it before publishing rather than after.
+      const handle = existing?.providerMediaId
+        ? ` The ${providerLabel} object to look for is ${existing.providerMediaId}.`
+        : "";
       return (
         `A previous publish to ${providerLabel} started but never reported back, ` +
         `so it may or may not have gone out. Check ${providerLabel} before trying again — ` +
-        `retrying now could post twice.`
+        `retrying now could post twice.${handle}`
       );
+    }
   }
 }
 

@@ -40,6 +40,21 @@ export type MarketingPost = {
   deletedAt: string | null;
   /** Platform-admin founder drafts only — product screenshot path or URL. */
   founderScreenshotReference?: string;
+  /**
+   * The rendered video this post publishes, as a `marketing_media_assets` id.
+   *
+   * ================= AN ID, NOT A LOCATION =================
+   * Deliberately not a path and not a URL. A path is meaningless off the
+   * machine that rendered it; a signed URL is a fifteen-minute capability that
+   * would become permanent the moment it were stored here. This is a stable
+   * identity that grants nothing on its own — the bytes are reached only
+   * through a grant minted at publish time and discarded.
+   *
+   * Migration 145 enforces the same-company rule as a composite foreign key on
+   * (video_media_asset_id, company_id), so a post can never name another
+   * company's video regardless of which code path writes it.
+   */
+  videoMediaAssetId?: string;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -56,6 +71,7 @@ export type MarketingPostCreateInput = {
   sourceId?: string | null;
   scheduledAt?: string | null;
   founderScreenshotReference?: string | null;
+  videoMediaAssetId?: string | null;
 };
 
 export type MarketingPostUpdateInput = {
@@ -69,6 +85,7 @@ export type MarketingPostUpdateInput = {
   sourceId?: string | null;
   scheduledAt?: string | null;
   founderScreenshotReference?: string | null;
+  videoMediaAssetId?: string | null;
 };
 
 export const MARKETING_POST_STATUS_OPTIONS: {

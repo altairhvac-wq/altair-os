@@ -1,5 +1,5 @@
 /**
- * Static verification of migrations 141 and 142.
+ * Static verification of the agent and marketing media migrations.
  *
  * ===================== WHY STATIC, NOT LIVE =====================
  * The only Supabase project this checkout is linked to is hosted and may be
@@ -29,6 +29,8 @@ const MIGRATIONS = {
   141: "supabase/migrations/141_agent_marketing_snapshots.sql",
   142: "supabase/migrations/142_agent_marketing_decisions.sql",
   143: "supabase/migrations/143_marketing_channel_publishing.sql",
+  144: "supabase/migrations/144_marketing_media_assets.sql",
+  145: "supabase/migrations/145_marketing_reel_publishing.sql",
 };
 
 let failures = 0;
@@ -61,7 +63,9 @@ console.log("\n141 — agent_marketing_snapshots");
 
 check(
   "creates the snapshot table",
-  /create\s+table\s+if\s+not\s+exists\s+public\.agent_marketing_snapshots/.test(sql141),
+  /create\s+table\s+if\s+not\s+exists\s+public\.agent_marketing_snapshots/.test(
+    sql141,
+  ),
 );
 check(
   "is idempotent DDL (if not exists)",
@@ -69,7 +73,9 @@ check(
 );
 check(
   "company-scoped by primary key with a real FK to companies",
-  /company_id\s+uuid\s+primary\s+key\s+references\s+public\.companies\s*\(\s*id\s*\)/.test(sql141),
+  /company_id\s+uuid\s+primary\s+key\s+references\s+public\.companies\s*\(\s*id\s*\)/.test(
+    sql141,
+  ),
 );
 check("cascades on company deletion", /on\s+delete\s+cascade/.test(sql141));
 check(
@@ -88,28 +94,47 @@ check(
   "records dropped item count rather than hiding contract skew",
   /dropped_items\s+integer\s+not\s+null/.test(sql141),
 );
-check("enables row level security", /enable\s+row\s+level\s+security/.test(sql141));
-check("revokes from anon", /revoke\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+from\s+anon/.test(sql141));
+check(
+  "enables row level security",
+  /enable\s+row\s+level\s+security/.test(sql141),
+);
+check(
+  "revokes from anon",
+  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+from\s+anon/.test(
+    sql141,
+  ),
+);
 check(
   "revokes from authenticated",
-  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+from\s+authenticated/.test(sql141),
+  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+from\s+authenticated/.test(
+    sql141,
+  ),
 );
 check(
   "grants to service_role only",
-  /grant\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+to\s+service_role/.test(sql141),
+  /grant\s+all\s+on\s+table\s+public\.agent_marketing_snapshots\s+to\s+service_role/.test(
+    sql141,
+  ),
 );
-check("creates its read index idempotently", /create\s+index\s+if\s+not\s+exists/.test(sql141));
+check(
+  "creates its read index idempotently",
+  /create\s+index\s+if\s+not\s+exists/.test(sql141),
+);
 
 // ---------------------------------------------------------------- 142
 console.log("\n142 — agent_marketing_decisions");
 
 check(
   "creates the decision table",
-  /create\s+table\s+if\s+not\s+exists\s+public\.agent_marketing_decisions/.test(sql142),
+  /create\s+table\s+if\s+not\s+exists\s+public\.agent_marketing_decisions/.test(
+    sql142,
+  ),
 );
 check(
   "company-scoped with a real FK to companies",
-  /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies\s*\(\s*id\s*\)/.test(sql142),
+  /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies\s*\(\s*id\s*\)/.test(
+    sql142,
+  ),
 );
 check("cascades on company deletion", /on\s+delete\s+cascade/.test(sql142));
 check(
@@ -144,15 +169,27 @@ check(
   "keeps applied_at nullable — 'queued' must stay distinguishable from 'applied'",
   /applied_at\s+timestamptz\s*(,|\n)/.test(sql142),
 );
-check("enables row level security", /enable\s+row\s+level\s+security/.test(sql142));
-check("revokes from anon", /revoke\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+from\s+anon/.test(sql142));
+check(
+  "enables row level security",
+  /enable\s+row\s+level\s+security/.test(sql142),
+);
+check(
+  "revokes from anon",
+  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+from\s+anon/.test(
+    sql142,
+  ),
+);
 check(
   "revokes from authenticated",
-  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+from\s+authenticated/.test(sql142),
+  /revoke\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+from\s+authenticated/.test(
+    sql142,
+  ),
 );
 check(
   "grants to service_role only",
-  /grant\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+to\s+service_role/.test(sql142),
+  /grant\s+all\s+on\s+table\s+public\.agent_marketing_decisions\s+to\s+service_role/.test(
+    sql142,
+  ),
 );
 
 // ------------------------------------------------------- both, safety
@@ -164,7 +201,9 @@ for (const [version, sql] of [
 ]) {
   check(
     `${version} contains no destructive statement`,
-    !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(sql),
+    !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(
+      sql,
+    ),
   );
   check(
     `${version} grants to no role other than service_role`,
@@ -184,17 +223,24 @@ console.log("\n143 — marketing_channel_deliveries (publish idempotency)");
 
 check(
   "creates the delivery table",
-  /create\s+table\s+if\s+not\s+exists\s+public\.marketing_channel_deliveries/.test(sql143),
+  /create\s+table\s+if\s+not\s+exists\s+public\.marketing_channel_deliveries/.test(
+    sql143,
+  ),
 );
 check(
   "THE DUPLICATE GUARD — unique (company_id, marketing_post_id, provider)",
-  /unique\s*\(\s*company_id\s*,\s*marketing_post_id\s*,\s*provider\s*\)/.test(sql143),
+  /unique\s*\(\s*company_id\s*,\s*marketing_post_id\s*,\s*provider\s*\)/.test(
+    sql143,
+  ),
 );
 check(
   "persists the provider's own post id — the gap the audit found",
   /provider_post_id\s+text/.test(sql143),
 );
-check("persists a permalink when the provider gives one", /provider_permalink\s+text/.test(sql143));
+check(
+  "persists a permalink when the provider gives one",
+  /provider_permalink\s+text/.test(sql143),
+);
 check(
   "models the four delivery states including in_flight",
   /check\s*\(\s*delivery_state\s+in\s*\(\s*'in_flight'\s*,\s*'posted'\s*,\s*'draft'\s*,\s*'failed'\s*\)\s*\)/.test(
@@ -205,17 +251,31 @@ check(
   "defaults to in_flight so a row is claimed, not assumed settled",
   /delivery_state\s+text\s+not\s+null\s+default\s+'in_flight'/.test(sql143),
 );
-check("company-scoped with cascade", /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies/.test(sql143));
+check(
+  "company-scoped with cascade",
+  /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies/.test(
+    sql143,
+  ),
+);
 check(
   "indexes unsettled claims for the reconciliation queue",
   /where\s+delivery_state\s*=\s*'in_flight'/.test(sql143),
 );
-check("bounds failure_detail so a provider error body cannot be pasted in whole",
-  /char_length\s*\(\s*failure_detail\s*\)\s*<=\s*1000/.test(sql143));
-check("enables row level security", /marketing_channel_deliveries[\s\S]*?enable\s+row\s+level\s+security/.test(sql143));
+check(
+  "bounds failure_detail so a provider error body cannot be pasted in whole",
+  /char_length\s*\(\s*failure_detail\s*\)\s*<=\s*1000/.test(sql143),
+);
+check(
+  "enables row level security",
+  /marketing_channel_deliveries[\s\S]*?enable\s+row\s+level\s+security/.test(
+    sql143,
+  ),
+);
 check(
   "GRANTS SELECT TO authenticated — without it the read policy is inert",
-  /grant\s+select\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+authenticated/.test(sql143),
+  /grant\s+select\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+authenticated/.test(
+    sql143,
+  ),
 );
 check(
   "but revokes writes from authenticated — deliveries are written server-side only",
@@ -223,15 +283,173 @@ check(
     sql143,
   ),
 );
-check("revokes everything from anon",
-  /revoke\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+from\s+anon/.test(sql143));
-check("grants to service_role",
-  /grant\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+service_role/.test(sql143));
-check("143 contains no destructive statement",
-  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(sql143));
-check("143 adds enum values idempotently",
+check(
+  "revokes everything from anon",
+  /revoke\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+from\s+anon/.test(
+    sql143,
+  ),
+);
+check(
+  "grants to service_role",
+  /grant\s+all\s+on\s+table\s+public\.marketing_channel_deliveries\s+to\s+service_role/.test(
+    sql143,
+  ),
+);
+check(
+  "143 contains no destructive statement",
+  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(
+    sql143,
+  ),
+);
+check(
+  "143 adds enum values idempotently",
   /add\s+value\s+if\s+not\s+exists\s+'youtube'/.test(sql143) &&
-  /add\s+value\s+if\s+not\s+exists\s+'tiktok'/.test(sql143));
+    /add\s+value\s+if\s+not\s+exists\s+'tiktok'/.test(sql143),
+);
+
+// ---------------------------------------------------------------- 144
+const sql144 = loadSql(MIGRATIONS[144]);
+console.log("\n144 — private marketing media assets");
+check(
+  "creates the media metadata table",
+  /create\s+table\s+if\s+not\s+exists\s+public\.marketing_media_assets/.test(
+    sql144,
+  ),
+);
+check(
+  "company-scoped with cascade",
+  /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies\s*\(\s*id\s*\)\s+on\s+delete\s+cascade/.test(
+    sql144,
+  ),
+);
+check(
+  "stores a stable object key, not a URL",
+  /object_key\s+text\s+not\s+null/.test(sql144) && !/public_url/.test(sql144),
+);
+// These three were written against an EARLIER draft of 144 and named columns
+// that the applied migration does not have — `content_sha256`, `render_id`,
+// `mime_type`. They had been failing silently ever since, and because
+// `verify-all.mjs` stops at its first failing step, they were also masking
+// every verifier that runs after this one. Corrected to the applied schema,
+// and the digest check strengthened: the point of the P2-1 remediation was
+// that the column NAME carries "unverified", so that is what is asserted.
+check(
+  "names the digest as client-reported, never as a verified checksum",
+  /client_reported_sha256\s+text/.test(sql144) &&
+    !/\bchecksum_sha256\s+text/.test(sql144) &&
+    !/content_sha256/.test(sql144),
+);
+check(
+  "records a byte size, nullable until storage confirms one",
+  /byte_size\s+bigint/.test(sql144),
+);
+check(
+  "renames an older checksum column rather than leaving both names in play",
+  /rename\s+column\s+checksum_sha256\s+to\s+client_reported_sha256/.test(sql144),
+);
+check(
+  "idempotent by company and render job",
+  /unique\s*\(\s*company_id\s*,\s*source_job_id\s*\)/.test(sql144),
+);
+check(
+  "accepts MP4 only",
+  /content_type\s+text\s+not\s+null\s+default\s+'video\/mp4'/.test(sql144) &&
+    /content_type\s+in\s*\(\s*'video\/mp4'\s*\)/.test(sql144),
+);
+check(
+  "enables RLS and grants authenticated reads only",
+  /enable\s+row\s+level\s+security/.test(sql144) &&
+    /grant\s+select\s+on\s+table\s+public\.marketing_media_assets\s+to\s+authenticated/.test(
+      sql144,
+    ),
+);
+check(
+  "revokes authenticated writes and anon access",
+  /revoke\s+insert,\s*update,\s*delete\s+on\s+table\s+public\.marketing_media_assets\s+from\s+authenticated/.test(
+    sql144,
+  ) &&
+    /revoke\s+all\s+on\s+table\s+public\.marketing_media_assets\s+from\s+anon/.test(
+      sql144,
+    ),
+);
+check(
+  "creates a private video-only storage bucket",
+  /values\s*\(\s*'marketing-media'\s*,\s*'marketing-media'\s*,\s*false[\s\S]*array\s*\[\s*'video\/mp4'\s*\]/.test(
+    sql144,
+  ),
+);
+check(
+  "144 contains no destructive statement",
+  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database)\b/.test(
+    sql144,
+  ),
+);
+
+// ---------------------------------------------------------------- 145
+const sql145 = loadSql(MIGRATIONS[145]);
+console.log("\n145 — marketing post video reference (Reel publishing)");
+
+check(
+  "adds the video reference idempotently",
+  /alter\s+table\s+public\.marketing_posts\s+add\s+column\s+if\s+not\s+exists\s+video_media_asset_id\s+uuid/.test(
+    sql145,
+  ),
+);
+check(
+  "THE SAME-COMPANY RULE IS A FOREIGN KEY, not an application check",
+  /foreign\s+key\s*\(\s*video_media_asset_id\s*,\s*company_id\s*\)\s*references\s+public\.marketing_media_assets\s*\(\s*id\s*,\s*company_id\s*\)/.test(
+    sql145,
+  ),
+);
+check(
+  "and the referenced pair is actually unique, or the FK could not exist",
+  /create\s+unique\s+index\s+if\s+not\s+exists\s+\w+\s+on\s+public\.marketing_media_assets\s*\(\s*id\s*,\s*company_id\s*\)/.test(
+    sql145,
+  ),
+);
+check(
+  "NO ACTION on delete — RESTRICT would block company deletion outright",
+  /on\s+delete\s+no\s+action/.test(sql145) &&
+    !/on\s+delete\s+(cascade|restrict|set\s+null)/.test(sql145),
+);
+check(
+  "the constraint is added inside an existence guard so a re-run converges",
+  /if\s+not\s+exists\s*\([\s\S]*?pg_constraint[\s\S]*?marketing_posts_video_media_asset_fkey/.test(
+    sql145,
+  ),
+);
+check(
+  "records the provider-side media id, idempotently",
+  /alter\s+table\s+public\.marketing_channel_deliveries\s+add\s+column\s+if\s+not\s+exists\s+provider_media_id\s+text/.test(
+    sql145,
+  ),
+);
+check(
+  "stores no URL and no filesystem path",
+  !/signed_url|public_url|video_url|file_path|master_path/.test(sql145),
+);
+check(
+  "creates no new table — a Reel is one post publishing one video",
+  !/create\s+table/.test(sql145),
+);
+check(
+  "leaves 143's duplicate guard untouched",
+  !/unique\s*\(\s*company_id\s*,\s*marketing_post_id/.test(sql145) &&
+    !/drop\s+constraint/.test(sql145),
+);
+check(
+  "145 contains no destructive statement",
+  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database|drop\s+column)\b/.test(
+    sql145,
+  ),
+);
+check(
+  "145 grants nothing new — it adds columns to tables that already have grants",
+  // Matches a GRANT *statement*, not the word. The column comments explain
+  // that bytes are reached through a short-lived grant, and prose must not be
+  // able to fail a structural check.
+  !/\bgrant\s+[\w,\s]+\s+on\s+/.test(sql145) && !/\brevoke\s+/.test(sql145),
+);
 
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} migration checks passed.`,

@@ -95,6 +95,17 @@ export default async function MarketingPage({
       <MarketingHubPageView
         initialPosts={posts}
         connectedAccounts={connectedAccounts}
+        // Identity and shape only. No object key, no URL, no path crosses into
+        // the client bundle — reaching the bytes is a separate authorized
+        // request that mints its own short-lived grant.
+        videoOptions={storedMedia.map((asset) => ({
+          id: asset.id,
+          sourceJobId: asset.sourceJobId,
+          widthPx: asset.widthPx,
+          heightPx: asset.heightPx,
+          durationMs: asset.durationMs,
+          storedAt: asset.storedAt,
+        }))}
         companyName={companyContext.company.name}
         showFounderMarketing={isPlatformAdmin}
         showFounderScreenshotCapture={showFounderScreenshotCapture}

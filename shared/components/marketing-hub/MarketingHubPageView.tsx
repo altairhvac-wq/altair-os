@@ -37,6 +37,7 @@ import {
 } from "@/shared/components/marketing-hub/marketing-post-templates";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
+import type { ReelVideoOption } from "@/shared/types/marketing-reel";
 import {
   countMarketingPostsByTab,
   filterMarketingPostsByTab,
@@ -51,13 +52,18 @@ type ViewMode = "list" | "create" | "edit" | "pick-completed-job";
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
   connectedAccounts: MarketingConnectedAccount[];
+  /** Stored renders for this company. Identities and shapes, never URLs. */
+  videoOptions?: ReelVideoOption[];
   companyName: string;
   showFounderMarketing?: boolean;
   showFounderScreenshotCapture?: boolean;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
   canManageConnectedAccounts?: boolean;
-  connectedAccountsFlash?: { tone: "success" | "error"; message: string } | null;
+  connectedAccountsFlash?: {
+    tone: "success" | "error";
+    message: string;
+  } | null;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -155,9 +161,7 @@ function MarketingPostTemplateIdeas({
 
       <ul
         className={`mt-3 grid gap-2 ${
-          compact
-            ? "sm:grid-cols-2"
-            : "text-left sm:grid-cols-2"
+          compact ? "sm:grid-cols-2" : "text-left sm:grid-cols-2"
         }`}
       >
         {MARKETING_POST_TEMPLATES.map((template) => (
@@ -311,6 +315,7 @@ function MarketingPostTemplateIdeas({
 export function MarketingHubPageView({
   initialPosts,
   connectedAccounts,
+  videoOptions = [],
   companyName,
   showFounderMarketing = false,
   showFounderScreenshotCapture = false,
@@ -334,7 +339,7 @@ export function MarketingHubPageView({
   const [createFormKey, setCreateFormKey] = useState("blank");
   const selectedPost =
     selectedPostId != null
-      ? initialPosts.find((post) => post.id === selectedPostId) ?? null
+      ? (initialPosts.find((post) => post.id === selectedPostId) ?? null)
       : null;
   const isFormOpen =
     viewMode === "create" ||
@@ -484,6 +489,7 @@ export function MarketingHubPageView({
                 aiDraftingConfigured={aiDraftingConfigured}
                 showFounderMarketing={showFounderMarketing}
                 connectedAccounts={connectedAccounts}
+                videoOptions={videoOptions}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />
@@ -498,6 +504,7 @@ export function MarketingHubPageView({
                 aiDraftingConfigured={aiDraftingConfigured}
                 showFounderMarketing={showFounderMarketing}
                 connectedAccounts={connectedAccounts}
+                videoOptions={videoOptions}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
                 onRecurringCreated={handleRecurringCreated}
@@ -580,7 +587,9 @@ export function MarketingHubPageView({
                           <span>{tab.label}</span>
                           <span
                             className={
-                              isActive ? lt.viewTabsCountActive : lt.viewTabsCount
+                              isActive
+                                ? lt.viewTabsCountActive
+                                : lt.viewTabsCount
                             }
                           >
                             {tab.count}
@@ -590,7 +599,9 @@ export function MarketingHubPageView({
                     })}
                   </div>
                 ) : (
-                  <div className={`${adminSegmentedControlClass} w-full sm:w-auto`}>
+                  <div
+                    className={`${adminSegmentedControlClass} w-full sm:w-auto`}
+                  >
                     {tabCounts.map((tab) => {
                       const isActive = listTab === tab.id;
 
@@ -675,7 +686,9 @@ export function MarketingHubPageView({
                       northStar={northStar}
                       disabled={isFormOpen}
                       showFounderMarketing={showFounderMarketing}
-                      showFounderScreenshotCapture={showFounderScreenshotCapture}
+                      showFounderScreenshotCapture={
+                        showFounderScreenshotCapture
+                      }
                       onUseTemplate={handleUseTemplate}
                       onUseFounderTemplate={handleUseFounderTemplate}
                       onCreateFromCompletedJob={handleOpenCompletedJobPicker}
@@ -686,7 +699,8 @@ export function MarketingHubPageView({
                 <ul className="divide-y divide-slate-100/90">
                   {filteredPosts.map((post) => {
                     const isScheduledTab = listTab === "scheduled";
-                    const overdue = isScheduledTab && isScheduledPostOverdue(post);
+                    const overdue =
+                      isScheduledTab && isScheduledPostOverdue(post);
 
                     return (
                       <li key={post.id}>

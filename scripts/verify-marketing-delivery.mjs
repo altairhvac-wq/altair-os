@@ -53,6 +53,7 @@ const row = (over = {}) => ({
   providerPostId: null,
   providerPermalink: null,
   failureDetail: null,
+  providerMediaId: null,
   createdAt: NOW,
   settledAt: null,
   ...over,
@@ -133,6 +134,22 @@ check(
     d.describeDeliveryDecision("NEEDS_RECONCILIATION", "Facebook", row()),
   ),
 );
+check(
+  "NEEDS_RECONCILIATION names the provider object when one was recorded",
+  d
+    .describeDeliveryDecision(
+      "NEEDS_RECONCILIATION",
+      "Facebook",
+      row({ providerMediaId: "1784200123" }),
+    )
+    .includes("1784200123"),
+);
+check(
+  "and does not invent one when nothing was recorded",
+  !/undefined|null/.test(
+    d.describeDeliveryDecision("NEEDS_RECONCILIATION", "Facebook", row()),
+  ),
+);
 
 console.log("\nFailure detail clamping");
 
@@ -178,7 +195,21 @@ console.log("\nClaim/settle control flow");
   lines.forEach((line, i) => {
     if (/=\s*await\s+claimDelivery\(/.test(line)) claimLines.push(i);
   });
-  check("both publish actions claim a delivery", claimLines.length === 2, claimLines.length);
+
+  // Derived rather than hardcoded. When Reel publishing added two more
+  // actions this assertion was a literal `=== 2`, and a stale count is the
+  // worst kind of guard: it fails on the correct change and gets "fixed" by
+  // bumping the number, which is how the interesting part quietly stops being
+  // checked. Every exported publish action must claim exactly one delivery.
+  const publishActions = (
+    src.match(/export async function publish\w*Action\b/g) ?? []
+  ).length;
+  check("there is at least one publish action to check", publishActions > 0);
+  check(
+    `every publish action claims a delivery (${publishActions} actions)`,
+    claimLines.length === publishActions,
+    `${claimLines.length} claims for ${publishActions} actions`,
+  );
 
   // THE RULE, stated once: between claiming a delivery and settling it, EVERY
   // `return` must be justified — either it is the mayPublish refusal (no claim
@@ -211,12 +242,23 @@ console.log("\nClaim/settle control flow");
       unjustified,
     );
 
-    // Belt and braces: local resolution must not sit inside the claimed span.
+    // Belt and braces: NO fallible local resolution may sit inside the claimed
+    // span. The list grows as new publish paths add pre-flight steps — the
+    // screenshot resolver was the original defect, and the Reel media
+    // resolver (which mints a signed URL, and can fail) is the same shape.
+    const PRE_FLIGHT_RESOLVERS = [
+      /resolveFounderScreenshotPublicUrl\(/,
+      /resolveReelMediaForPublish\(/,
+      /createMediaReadGrant\(/,
+      /getMediaAssetById\(/,
+    ];
     const span = lines.slice(claimAt, settleAt);
-    check(
-      `screenshot resolution happens BEFORE the claim (claim at line ${claimAt + 1})`,
-      !span.some((l) => /resolveFounderScreenshotPublicUrl\(/.test(l)),
-    );
+    for (const resolver of PRE_FLIGHT_RESOLVERS) {
+      check(
+        `${String(resolver)} resolves BEFORE the claim at line ${claimAt + 1}`,
+        !span.some((l) => resolver.test(l)),
+      );
+    }
   }
 
   check(
