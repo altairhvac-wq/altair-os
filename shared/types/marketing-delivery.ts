@@ -178,6 +178,20 @@ export type DeliverySettlement =
     }
   | { readonly outcome: "failed"; readonly failureDetail: string };
 
+/**
+ * A settlement that records a LIVE publish.
+ *
+ * Named here rather than re-derived at each call site so the `"posted"`
+ * literal exists in exactly one place per file. `verify-marketing-delivery.mjs`
+ * counts that literal in the actions to assert every claim is matched by a
+ * settle, and a second copy in a type alias would have made a correct change
+ * look like a miscount.
+ */
+export type PostedDeliverySettlement = Extract<
+  DeliverySettlement,
+  { outcome: "posted" }
+>;
+
 export const DELIVERY_FAILURE_DETAIL_MAX = 1000;
 
 /**

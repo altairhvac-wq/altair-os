@@ -48,6 +48,7 @@ import {
 import {
   describeDeliveryDecision,
   mayPublish,
+  type PostedDeliverySettlement,
 } from "@/shared/types/marketing-delivery";
 
 export type MarketingPublishActionResult = {
@@ -90,6 +91,62 @@ async function assertFounderPublishAccess() {
 
 function normalizeId(value: string): string {
   return value.trim();
+}
+
+/**
+ * Settle a delivery that HAS published, and refuse to lie about it if that
+ * write does not land.
+ *
+ * ==================== THE STATE THIS PREVENTS ====================
+ * Every action used to `await settleDelivery(...)` and discard the result, then
+ * mark the post `posted` regardless. If the settle failed after Meta had
+ * published, the durable record contradicted itself: a post reading `posted`
+ * with no provider id anywhere, and a delivery row still `in_flight` that
+ * would age into the operator's reconciliation queue as an unknown outcome —
+ * for an attempt that had, in fact, succeeded. (Independent audit P2-1.)
+ *
+ * ==================== WHY THE POST IS LEFT ALONE ====================
+ * When this returns an error the caller must NOT mark the post posted, and
+ * neither state is a lie: the delivery stays `in_flight`, which is exactly
+ * what "we started an external write and never recorded the outcome" means,
+ * and the claim itself continues to block a second attempt. Marking the post
+ * posted here would assert that the publish is recorded, which is the one
+ * thing that just failed.
+ *
+ * The provider id is put in the message rather than only in a log, because
+ * the operator resolving this needs it and the log is not where they are
+ * looking.
+ */
+async function settlePublishedDelivery(
+  deliveryId: string,
+  settlement: PostedDeliverySettlement,
+  providerLabel: string,
+): Promise<{ error?: string }> {
+  // Two attempts, for the same reason as `recordDeliveryProviderMedia`: one
+  // failed UPDATE against our own database is most likely transient, and the
+  // external write has already happened so there is nothing left to protect
+  // by giving up early.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await settleDelivery({
+      deliveryId,
+      settlement,
+      nowIso: new Date().toISOString(),
+    });
+    if (!result.error) return {};
+    console.error("[settlePublishedDelivery] settle failed after a live publish:", {
+      deliveryId,
+      providerLabel,
+      attempt: attempt + 1,
+      error: result.error,
+    });
+  }
+
+  return {
+    error:
+      `Published to ${providerLabel} — it IS live, with id ${settlement.providerPostId} — ` +
+      "but recording that failed, so this post has deliberately NOT been marked posted. " +
+      "Do NOT publish it again. Record the id above against the delivery row, then mark the post posted manually.",
+  };
 }
 
 function assertPublishPrerequisites(): string | null {
@@ -419,15 +476,25 @@ export async function publishMarketingPostToFacebookAction(
   // the provider's own id is finally persisted — previously it was returned,
   // shown once, and discarded, leaving nothing able to prove the post
   // existed.
-  await settleDelivery({
+  const settlement = {
+    outcome: "posted",
+    providerPostId: publishResult.providerPostId,
+    providerPermalink: publishResult.permalinkUrl ?? null,
+  } as const;
+
+  const settled = await settlePublishedDelivery(
     deliveryId,
-    settlement: {
-      outcome: "posted",
+    settlement,
+    "Facebook",
+  );
+  if (settled.error) {
+    return {
+      error: settled.error,
       providerPostId: publishResult.providerPostId,
-      providerPermalink: publishResult.permalinkUrl ?? null,
-    },
-    nowIso: new Date().toISOString(),
-  });
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "facebook",
+    };
+  }
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,
@@ -599,15 +666,25 @@ export async function publishMarketingPostToInstagramAction(
 
   // Settle POSTED before anything else can fail, so the Instagram media id
   // is durable even if the mark-posted write below does not land.
-  await settleDelivery({
-    deliveryId: igDeliveryId,
-    settlement: {
-      outcome: "posted",
+  const settlement = {
+    outcome: "posted",
+    providerPostId: publishResult.providerPostId,
+    providerPermalink: publishResult.permalinkUrl ?? null,
+  } as const;
+
+  const settled = await settlePublishedDelivery(
+    igDeliveryId,
+    settlement,
+    "Instagram",
+  );
+  if (settled.error) {
+    return {
+      error: settled.error,
       providerPostId: publishResult.providerPostId,
-      providerPermalink: publishResult.permalinkUrl ?? null,
-    },
-    nowIso: new Date().toISOString(),
-  });
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "instagram",
+    };
+  }
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,
@@ -794,15 +871,26 @@ export async function publishMarketingReelToFacebookAction(
     return { error: messageText };
   }
 
-  await settleDelivery({
+  const settlement = {
+    outcome: "posted",
+    providerPostId: publishResult.providerPostId,
+    providerPermalink: publishResult.permalinkUrl ?? null,
+  } as const;
+
+  const settled = await settlePublishedDelivery(
     deliveryId,
-    settlement: {
-      outcome: "posted",
+    settlement,
+    "Facebook",
+  );
+  if (settled.error) {
+    return {
+      error: settled.error,
       providerPostId: publishResult.providerPostId,
-      providerPermalink: publishResult.permalinkUrl ?? null,
-    },
-    nowIso: new Date().toISOString(),
-  });
+        providerMediaId: publishResult.providerMediaId,
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "facebook",
+    };
+  }
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,
@@ -963,15 +1051,26 @@ export async function publishMarketingReelToInstagramAction(
     return { error: messageText };
   }
 
-  await settleDelivery({
+  const settlement = {
+    outcome: "posted",
+    providerPostId: publishResult.providerPostId,
+    providerPermalink: publishResult.permalinkUrl ?? null,
+  } as const;
+
+  const settled = await settlePublishedDelivery(
     deliveryId,
-    settlement: {
-      outcome: "posted",
+    settlement,
+    "Instagram",
+  );
+  if (settled.error) {
+    return {
+      error: settled.error,
       providerPostId: publishResult.providerPostId,
-      providerPermalink: publishResult.permalinkUrl ?? null,
-    },
-    nowIso: new Date().toISOString(),
-  });
+        providerMediaId: publishResult.providerMediaId,
+      permalinkUrl: publishResult.permalinkUrl,
+      platform: "instagram",
+    };
+  }
 
   const marked = await markMarketingPostPosted(
     permission.context.company.id,

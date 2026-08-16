@@ -269,6 +269,53 @@ console.log("\nClaim/settle control flow");
     "every claim is matched by a failed settle in its catch",
     (src.match(/outcome:\s*"failed"/g) ?? []).length === claimLines.length,
   );
+
+  /**
+   * THE SETTLE RESULT IS CHECKED BEFORE THE POST IS MARKED POSTED
+   * (independent audit P2-1).
+   *
+   * The defect: `await settleDelivery(...)` with its result discarded, then
+   * `markMarketingPostPosted(...)` unconditionally. When the settle failed
+   * after Meta had already published, the durable record contradicted itself
+   * — a post reading `posted` with no provider id anywhere, and a delivery row
+   * still `in_flight` that would surface as an unknown outcome for an attempt
+   * that had actually succeeded.
+   *
+   * Structural, because the hazard is an ignored return value. No test of the
+   * happy path would ever notice it, and any future publish action that
+   * settles-then-marks would reintroduce it in one line.
+   */
+  check(
+    "no action settles a live publish without checking the result",
+    !/^\s*await settleDelivery\(\{[\s\S]{0,200}?outcome: "posted"/m.test(src),
+  );
+  for (const claimAt of claimLines) {
+    const settleAt = lines.findIndex(
+      (l, i) => i > claimAt && /outcome:\s*"posted"/.test(l),
+    );
+    const markAt = lines.findIndex(
+      (l, i) => i > settleAt && /markMarketingPostPosted\(/.test(l),
+    );
+    check(
+      `the post is marked posted after the settle (claim at line ${claimAt + 1})`,
+      settleAt !== -1 && markAt > settleAt,
+    );
+    const between = lines.slice(settleAt, markAt).join("\n");
+    check(
+      `the settle outcome is inspected before marking posted (claim at line ${claimAt + 1})`,
+      /settled\.error|\.error\b/.test(between),
+      between,
+    );
+  }
+  check(
+    "the settle-and-verify helper retries before giving up on a live publish",
+    /async function settlePublishedDelivery[\s\S]{0,900}?for \(let attempt/.test(src),
+  );
+  check(
+    "and its refusal names the provider id the operator has to reconcile",
+    /settlement\.providerPostId/.test(src) &&
+      /NOT been marked posted|not been marked posted/i.test(src),
+  );
 }
 
 console.log(

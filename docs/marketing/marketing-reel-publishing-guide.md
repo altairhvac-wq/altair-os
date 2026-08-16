@@ -259,6 +259,8 @@ cannot be published again by design.
 | "Facebook could not fetch the video" | Meta could not read the signed URL. | Check the deployment can reach Supabase storage and that the object still exists. |
 | "already been published… could post twice" | The delivery row says a previous attempt succeeded or its outcome is unknown. | **Check Meta before doing anything.** Do not retry. |
 | "This post has a video attached. Use Publish Reel" | A video post reached the feed/photo path. | Expected — `/feed` and `/photos` cannot carry video and would have silently dropped it. |
+| "publishing was stopped before anything went out" | This deployment could not record the provider object id before publishing. | Nothing was published. Retry. If it repeats, the database is unhealthy — fix that first, because the settle after a publish would fail too. |
+| "it IS live … but recording that failed" | **Meta published, and writing that down did not.** | The post is deliberately left unposted. Do NOT publish again. Take the id from the message, write it onto the delivery row, then use Mark posted manually. |
 
 ### A claim that never settled
 
@@ -282,12 +284,21 @@ before resolving it** — that is how a Reel gets posted twice.
 ## Verification without publishing
 
 ```
-npm run verify:reel        # 108 checks: decisions, host pinning, structure
-npm run verify:delivery    # claim/settle discipline across all four actions
-npm run verify:migrations  # migration file properties, including 145
-npm run verify:all         # everything above
-npm run typecheck
+npm run verify:reel            # decisions, host pinning, source structure
+npm run verify:reel-transport  # the actual HTTP conversation, with a fake fetch
+npm run verify:delivery        # claim/settle discipline across all four actions
+npm run verify:migrations      # migration file properties, including 145
+npm run verify:all             # everything above
+npm run typecheck:readonly     # plain `typecheck` writes tsbuildinfo into the checkout
 ```
+
+`verify:reel-transport` is the one that proves the request bodies, headers and
+phase ordering are what Meta expects. It transpiles the provider modules into a
+temp directory, replaces `globalThis.fetch` with a recorder, and asserts the
+request log — including what is **not** sent after a failure. An unrecognised
+request throws rather than reaching the network, and the suite was
+mutation-checked: six deliberate defects were introduced into `reels.ts` one at
+a time and every one was caught.
 
 `scripts/proof-reel-tenancy.sql` proves the same-company foreign key against a
 **throwaway local Postgres** — never a hosted project. It applies 145 twice to
@@ -296,6 +307,26 @@ on insert and on update, that a null video is still allowed, that deleting a
 referenced video is refused, and that company deletion still cascades cleanly.
 
 ---
+
+## If the record and the reality disagree
+
+Two windows exist where Meta's state and this deployment's record can come
+apart. Both are handled deliberately rather than left to chance.
+
+**Before publishing.** Both flows create an object at Meta — a Facebook video
+id, an Instagram container — and write it to the delivery row before going any
+further. If that write fails, the publish is **abandoned**, not continued. The
+object at Meta is an unpublished orphan, the delivery settles `failed`, and a
+retry is permitted immediately. Continuing without the breadcrumb would be the
+one combination that produces an unrecoverable case: a Reel that may or may not
+be public, with no identifier to look it up by.
+
+**After publishing.** If Meta publishes and the settle write fails, the settle
+is retried once, and if it still fails the post is deliberately **not** marked
+posted. The error names the live provider id. Neither the delivery row nor the
+post claims something untrue, and the outstanding claim continues to block a
+second publish. Resolve it by hand: record the id on the delivery row, then use
+**Mark posted manually**.
 
 ## Not in scope
 

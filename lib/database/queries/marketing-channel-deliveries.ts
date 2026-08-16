@@ -195,29 +195,71 @@ export async function claimDelivery(
  * ONLY TOUCHES `in_flight`, like `settleDelivery`, so a late write from a
  * superseded attempt cannot stamp its media id onto a settled row.
  *
- * A failure here is NOT fatal to the publish and is deliberately not thrown:
- * losing the breadcrumb is worse than not having it, but far better than
- * aborting a publish that was about to succeed. It is logged loudly instead.
+ * ================== WHY A FAILURE HERE STOPS THE PUBLISH ==================
+ * An earlier version logged the failure and carried on, reasoning that losing
+ * a breadcrumb was better than abandoning a publish about to succeed. That
+ * reasoning is backwards, and the independent audit was right to call it an
+ * operational gap.
+ *
+ * This write is the safety net for the risky window. Failing to place it and
+ * then entering that window anyway is the one combination that produces the
+ * unrecoverable case: a Reel that may or may not be public, with no identifier
+ * to look it up by. THROWING instead gives up a publish that had not started —
+ * Facebook has reserved a video id but no bytes have moved, Instagram has a
+ * container it will discard — and the caller's existing catch settles the
+ * delivery `failed`, so a retry is permitted immediately.
+ *
+ * And if this deployment cannot write one column to its own database, the
+ * settle that follows the publish was about to fail too. Stopping here trades
+ * a clean retryable failure for a mess.
+ *
+ * ================== A ZERO-ROW UPDATE IS ALSO A FAILURE ==================
+ * The row was inserted `in_flight` by this caller's own claim moments ago.
+ * Matching nothing means the claim has been settled or taken over by someone
+ * else — which is precisely a state in which this attempt must NOT go on to
+ * publish. It is detected rather than passed over silently.
  */
 export async function recordDeliveryProviderMedia(input: {
   deliveryId: string;
   providerMediaId: string;
 }): Promise<void> {
   const mediaId = input.providerMediaId.trim();
-  if (!mediaId) return;
+  if (!mediaId) {
+    throw new Error(
+      "The provider returned an empty media id, so nothing could be recorded before publishing.",
+    );
+  }
 
   const client = createServiceRoleClient();
-  const result = await deliveriesTable(client)
-    .update({ provider_media_id: mediaId })
-    .eq("id", input.deliveryId)
-    .eq("delivery_state", "in_flight");
 
-  if (result.error) {
+  // Two attempts. A single UPDATE against our own database that fails once is
+  // most likely transient, and the cost of retrying is a few milliseconds
+  // against the cost of abandoning a publish for a blip.
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await deliveriesTable(client)
+      .update({ provider_media_id: mediaId })
+      .eq("id", input.deliveryId)
+      .eq("delivery_state", "in_flight")
+      .select("id")
+      .maybeSingle();
+
+    if (!result.error && result.data) return;
+
+    lastError = result.error ?? "no in_flight delivery matched";
     console.error("[recordDeliveryProviderMedia] write failed:", {
       deliveryId: input.deliveryId,
-      error: result.error,
+      attempt: attempt + 1,
+      error: lastError,
     });
   }
+
+  // Deliberately thrown. The caller is mid-flow with a provider object that
+  // exists and nothing published yet — the only moment at which stopping is
+  // still free.
+  throw new Error(
+    "Could not record the provider media reference, so publishing was stopped before anything went out. Nothing was published — try again.",
+  );
 }
 
 /**

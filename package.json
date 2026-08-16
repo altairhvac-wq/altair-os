@@ -23,6 +23,7 @@
     "verify:all": "node scripts/verify-all.mjs",
     "verify:media": "node scripts/verify-marketing-media.mjs",
     "verify:reel": "node scripts/verify-marketing-reel.mjs",
+    "verify:reel-transport": "node scripts/verify-marketing-reel-transport.mjs",
     "verify:media-concurrency": "bash scripts/proof-media-reservation-concurrency.sh"
   },
   "dependencies": {
