@@ -11,9 +11,8 @@ import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-sn
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
-import { MarketingAutomationSection } from "@/shared/components/marketing-hub/MarketingAutomationSection";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import { MarketingHubPageView } from "@/shared/components/marketing-hub/MarketingHubPageView";
+import { MarketingWorkspace } from "@/shared/components/marketing-hub/MarketingWorkspace";
 import { formatFacebookConnectFlashMessage } from "@/shared/types/marketing-connected-account";
 
 type MarketingPageProps = {
@@ -53,8 +52,8 @@ export default async function MarketingPage({
     listMarketingPosts(companyContext.company.id),
     listMarketingConnectedAccounts(companyContext.company.id),
     // Read-only projection pushed by the Agent Platform. Null means it has
-    // never reported in, which the section renders as its own distinct state
-    // rather than as an empty dashboard.
+    // never reported in. That is a diagnostic fact, so it is rendered under
+    // Advanced rather than as the first thing on the page.
     getLatestAgentMarketingSnapshot(companyContext.company.id),
     // Recorded decisions, so a subject already decided is never offered again.
     listAgentDecisionsSince(companyContext.company.id, 0, 200),
@@ -84,36 +83,32 @@ export default async function MarketingPage({
     process.env.NODE_ENV === "development" && isPlatformAdmin;
 
   return (
-    <div className="space-y-6">
-      <MarketingAutomationSection
-        stored={agentSnapshot}
-        decisions={agentDecisions}
-        bridgeConfigured={isAgentBridgeConfigured()}
-        storedMediaJobIds={storedMedia.map((asset) => asset.sourceJobId)}
-        nowIso={renderedAt}
-      />
-      <MarketingHubPageView
-        initialPosts={posts}
-        connectedAccounts={connectedAccounts}
-        // Identity and shape only. No object key, no URL, no path crosses into
-        // the client bundle — reaching the bytes is a separate authorized
-        // request that mints its own short-lived grant.
-        videoOptions={storedMedia.map((asset) => ({
-          id: asset.id,
-          sourceJobId: asset.sourceJobId,
-          widthPx: asset.widthPx,
-          heightPx: asset.heightPx,
-          durationMs: asset.durationMs,
-          storedAt: asset.storedAt,
-        }))}
-        companyName={companyContext.company.name}
-        showFounderMarketing={isPlatformAdmin}
-        showFounderScreenshotCapture={showFounderScreenshotCapture}
-        aiFeaturesEnabled={isAiFeaturesEnabled()}
-        aiDraftingConfigured={isAiDraftingConfigured()}
-        canManageConnectedAccounts={canManageConnectedAccounts}
-        connectedAccountsFlash={connectedAccountsFlash}
-      />
-    </div>
+    <MarketingWorkspace
+      posts={posts}
+      connectedAccounts={connectedAccounts}
+      // Identity and shape only. No object key, no URL, no path crosses into
+      // the client bundle — reaching the bytes is a separate authorized
+      // request that mints its own short-lived grant.
+      videoOptions={storedMedia.map((asset) => ({
+        id: asset.id,
+        sourceJobId: asset.sourceJobId,
+        widthPx: asset.widthPx,
+        heightPx: asset.heightPx,
+        durationMs: asset.durationMs,
+        storedAt: asset.storedAt,
+      }))}
+      snapshot={agentSnapshot}
+      decisions={agentDecisions}
+      bridgeConfigured={isAgentBridgeConfigured()}
+      storedMediaJobIds={storedMedia.map((asset) => asset.sourceJobId)}
+      nowIso={renderedAt}
+      companyName={companyContext.company.name}
+      showFounderMarketing={isPlatformAdmin}
+      showFounderScreenshotCapture={showFounderScreenshotCapture}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
+      aiDraftingConfigured={isAiDraftingConfigured()}
+      canManageConnectedAccounts={canManageConnectedAccounts}
+      connectedAccountsFlash={connectedAccountsFlash}
+    />
   );
 }
