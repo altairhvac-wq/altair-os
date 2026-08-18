@@ -62,35 +62,28 @@ import {
   type MarketingStrategyReportContent,
 } from "@/shared/types/marketing-ai-hq";
 import {
-  MARKETING_CHANNEL_DESCRIPTORS,
-  canAcceptContent,
-  publishesImmediately,
-  type MarketingChannelState,
-  type MarketingPublishChannel,
-} from "@/shared/types/marketing-channel-connection";
+  marketingItemInformationalReason,
+  partitionMarketingQueue,
+} from "@/shared/types/marketing-hq-queue";
 
 type HqTab = "queue" | "strategy" | "distribution" | "settings" | "runs";
 
+/**
+ * What the Distribution tab is told.
+ *
+ * A `channels?: MarketingChannelSummary[]` field used to sit here, feeding a
+ * `ConnectedChannels` list. No caller ever populated it — the only producer of
+ * this object, `app/(admin)/marketing/hq/page.tsx`, builds three keys and has
+ * never built that one — so the component read `?? []`, hit its own
+ * `length === 0` early return, and rendered null on every request since it was
+ * written. The type, the component and its two styling tables are gone rather
+ * than wired: inventing a second source for connection state when Settings
+ * already shows the truthful one would have been two answers to one question.
+ */
 export type MarketingDistributionStatus = {
   encryptionConfigured: boolean;
   facebookConfigured: boolean;
   facebookPages: { id: string; name: string; hasInstagram: boolean }[];
-  /**
-   * Direct-publishing channels, resolved server-side (migration 143).
-   * Each carries the state derived by `deriveMarketingChannelState` plus the
-   * connected identity to display. Absent means "not resolved on this
-   * render" and falls back to NOT_CONFIGURED rather than guessing.
-   */
-  channels?: MarketingChannelSummary[];
-};
-
-export type MarketingChannelSummary = {
-  channel: MarketingPublishChannel;
-  state: MarketingChannelState;
-  /** "@channel", location name, "@username" — never a token. */
-  identity: string | null;
-  detail: string;
-  connectPath: string;
 };
 
 type MarketingAiHqPageViewProps = {
@@ -111,7 +104,6 @@ const EMPTY_DISTRIBUTION: MarketingDistributionStatus = {
   encryptionConfigured: false,
   facebookConfigured: false,
   facebookPages: [],
-  channels: [],
 };
 
 const TABS: { id: HqTab; label: string }[] = [
@@ -264,12 +256,15 @@ export function MarketingAiHqPageView({
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const pendingItems = useMemo(
-    () => items.filter((item) => item.status === "draft"),
-    [items],
-  );
-  const reviewedItems = useMemo(
-    () => items.filter((item) => item.status !== "draft"),
+  // ============ STATUS ALONE IS NOT WHAT MAKES A CARD ACTIONABLE ============
+  // `status === 'draft'` used to be the whole filter, which handed an Approve
+  // button to every artifact the AI team produced — including the weekly
+  // strategy report, which then appeared as an approvable card here AND as a
+  // report in the Strategy tab. `partitionMarketingQueue` mirrors the two
+  // server actions' own guards and drops nothing: every item lands in exactly
+  // one of the three lists.
+  const { actionable, informational, reviewed: reviewedItems } = useMemo(
+    () => partitionMarketingQueue(items),
     [items],
   );
   const latestStrategyReport = useMemo(() => {
@@ -351,8 +346,11 @@ export function MarketingAiHqPageView({
             <div className={`${adminSegmentedControlClass} w-full sm:w-auto`}>
               {TABS.map((entry) => {
                 const isActive = tab === entry.id;
+                // Counts the decisions waiting on the reader. It used to
+                // count every draft, so a strategy report inflated the badge
+                // with work nobody could do.
                 const count =
-                  entry.id === "queue" ? pendingItems.length : null;
+                  entry.id === "queue" ? actionable.length : null;
 
                 return (
                   <button
@@ -399,7 +397,8 @@ export function MarketingAiHqPageView({
 
           {tab === "queue" ? (
             <QueueTab
-              pendingItems={pendingItems}
+              actionableItems={actionable}
+              informationalItems={informational}
               reviewedItems={reviewedItems}
               hasConfig={hasConfig}
               aiReady={aiReady}
@@ -504,7 +503,10 @@ export function MarketingAiHqPageView({
 }
 
 type QueueTabProps = {
-  pendingItems: MarketingItem[];
+  /** Drafts whose Approve leads somewhere. The only ones with buttons. */
+  actionableItems: MarketingItem[];
+  /** Drafts that are real output but need no decision. Read-only. */
+  informationalItems: MarketingItem[];
   reviewedItems: MarketingItem[];
   hasConfig: boolean;
   aiReady: boolean;
@@ -523,7 +525,8 @@ type QueueTabProps = {
 };
 
 function QueueTab({
-  pendingItems,
+  actionableItems,
+  informationalItems,
   reviewedItems,
   hasConfig,
   aiReady,
@@ -604,7 +607,7 @@ function QueueTab({
             Open Brand &amp; goals
           </button>
         </div>
-      ) : pendingItems.length === 0 ? (
+      ) : actionableItems.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center">
           <ClipboardList className="mx-auto h-7 w-7 text-slate-400" />
           <p className="mt-3 text-sm font-semibold text-slate-900">
@@ -617,7 +620,7 @@ function QueueTab({
         </div>
       ) : (
         <ul className="space-y-3">
-          {pendingItems.map((item) => (
+          {actionableItems.map((item) => (
             <QueueItemCard
               key={item.id}
               item={item}
@@ -626,11 +629,59 @@ function QueueTab({
               onSaveFields={(fields) => onSaveFields(item, fields)}
               onApprove={() => onApprove(item)}
               onReject={() => onReject(item)}
-              onConvert={() => onConvert(item)}
             />
           ))}
         </ul>
       )}
+
+      {/* ============ VISIBLE, AND HONESTLY NOT A DECISION ============
+          These are real output and they stay on the page — hiding a strategy
+          report because it has no button would be its own kind of dishonesty.
+          What they lose is the green Approve that recorded a status column
+          nothing downstream reads. Each says why. */}
+      {informationalItems.length > 0 ? (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Also produced — no decision needed
+          </h3>
+          <ul className="mt-2 space-y-2">
+            {informationalItems.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col gap-1.5 rounded-lg border border-slate-100 bg-white px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-slate-800">
+                    {item.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                    {marketingItemInformationalReason(item)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                    {formatMarketingItemKind(item.kind)}
+                  </span>
+                  {/* Export is a download of bytes that already exist. It
+                      decides nothing and changes no state, so it is not the
+                      class of control this fix removed — and it is the only
+                      way a brief reaches the video editor. */}
+                  {item.kind === "video_brief" ? (
+                    <button
+                      type="button"
+                      onClick={() => downloadVideoBriefJson(item)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Export brief
+                    </button>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {reviewedItems.length > 0 ? (
         <div>
@@ -717,7 +768,6 @@ type QueueItemCardProps = {
   onSaveFields: (fields: Record<string, string>) => void;
   onApprove: () => void;
   onReject: () => void;
-  onConvert: () => void;
 };
 
 function QueueItemCard({
@@ -978,119 +1028,6 @@ function QueueItemCard({
   );
 }
 
-/**
- * Chip styling per channel state.
- *
- * Semantic colour is load-bearing in this design system, so it is spent
- * carefully: green ONLY for a channel that will actually publish, amber for
- * "connected but constrained" (a real, non-broken state), rose for genuine
- * failure, neutral for not-yet-set-up. A draft-only TikTok is amber and not
- * green precisely because green here would promise publishing that will not
- * happen.
- */
-function channelChipClass(state: MarketingChannelState): string {
-  if (state === "DIRECT_PUBLISH_READY") {
-    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80";
-  }
-  if (state === "DRAFT_UPLOAD_ONLY" || state === "API_ACCESS_REQUIRED") {
-    return "bg-amber-50 text-amber-800 ring-1 ring-amber-200/80";
-  }
-  if (state === "ERROR" || state === "REAUTH_REQUIRED") {
-    return "bg-rose-50 text-rose-700 ring-1 ring-rose-200/80";
-  }
-  if (state === "TOKEN_EXPIRED" || state === "CONNECTING") {
-    return "bg-sky-50 text-sky-700 ring-1 ring-sky-200/80";
-  }
-  return "bg-slate-100 text-slate-600";
-}
-
-const CHANNEL_STATE_LABEL: Record<MarketingChannelState, string> = {
-  NOT_CONFIGURED: "Not set up",
-  NOT_CONNECTED: "Not connected",
-  CONNECTING: "Connecting…",
-  TOKEN_EXPIRED: "Access expired",
-  REAUTH_REQUIRED: "Reconnect required",
-  API_ACCESS_REQUIRED: "API access required",
-  DRAFT_UPLOAD_ONLY: "Draft upload only",
-  DIRECT_PUBLISH_READY: "Direct publish ready",
-  ERROR: "Error",
-};
-
-/**
- * The three direct-publishing channels.
- *
- * A Connect button is offered ONLY when connecting is the actual next step.
- * Offering it in `NOT_CONFIGURED` would send the operator through a consent
- * screen that cannot complete, because there is no client id to send.
- */
-function ConnectedChannels({
-  channels,
-}: {
-  channels: MarketingChannelSummary[];
-}) {
-  if (channels.length === 0) return null;
-
-  return (
-    <>
-      <h3 className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-        Connected publishing
-      </h3>
-      <ul className="mt-2 space-y-2">
-        {channels.map((entry) => {
-          const descriptor = MARKETING_CHANNEL_DESCRIPTORS[entry.channel];
-          const canConnect =
-            entry.state === "NOT_CONNECTED" ||
-            entry.state === "REAUTH_REQUIRED" ||
-            entry.state === "ERROR";
-
-          return (
-            <li
-              key={entry.channel}
-              className="flex flex-col gap-1.5 rounded-lg border border-slate-100 bg-white px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800">
-                  {descriptor.label}
-                  {entry.identity ? (
-                    <span className="ml-1.5 font-normal text-slate-500">
-                      — {entry.identity}
-                    </span>
-                  ) : null}
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                  {entry.detail}
-                </p>
-                {canAcceptContent(entry.state) ? (
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {publishesImmediately(entry.state)
-                      ? "Approved content publishes from the queue."
-                      : "Approved content uploads as a draft to finish in the app."}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span
-                  className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${channelChipClass(entry.state)}`}
-                >
-                  {CHANNEL_STATE_LABEL[entry.state]}
-                </span>
-                {canConnect ? (
-                  <a
-                    href={entry.connectPath}
-                    className="inline-flex w-fit rounded-md bg-slate-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-700"
-                  >
-                    {entry.state === "NOT_CONNECTED" ? "Connect" : "Reconnect"}
-                  </a>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </>
-  );
-}
-
 type DistributionTabProps = {
   distribution: MarketingDistributionStatus;
 };
@@ -1157,10 +1094,10 @@ function DistributionTab({ distribution }: DistributionTabProps) {
         rework needed.
       </p>
 
-      <ConnectedChannels channels={distribution.channels ?? []} />
-
+      {/* "Other channels" was other than a `ConnectedChannels` list that
+          never rendered. These four rows are the whole list. */}
       <h3 className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-        Other channels
+        Channels
       </h3>
 
       <ul className="mt-2 space-y-2">

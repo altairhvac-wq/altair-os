@@ -38,6 +38,7 @@ steps.push(
   { name: "channels", script: "scripts/verify-marketing-channels.mjs" },
   { name: "agent-contract", script: "scripts/verify-agent-snapshot-contract.mjs" },
   { name: "workspace", script: "scripts/verify-marketing-workspace.mjs" },
+  { name: "hq-queue", script: "scripts/verify-marketing-hq-queue.mjs" },
 );
 
 const results = [];
