@@ -25,7 +25,8 @@
     "verify:media": "node scripts/verify-marketing-media.mjs",
     "verify:reel": "node scripts/verify-marketing-reel.mjs",
     "verify:reel-transport": "node scripts/verify-marketing-reel-transport.mjs",
-    "verify:media-concurrency": "bash scripts/proof-media-reservation-concurrency.sh"
+    "verify:media-concurrency": "bash scripts/proof-media-reservation-concurrency.sh",
+    "verify:workspace": "node scripts/verify-marketing-workspace.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

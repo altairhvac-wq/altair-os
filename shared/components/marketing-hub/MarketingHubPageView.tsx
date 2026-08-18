@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BrainCircuit, Megaphone, Plus } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
-  MasterListPageLayout,
   MasterPageSurface,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
@@ -20,7 +19,6 @@ import {
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
 import { FounderScreenshotCaptureControl } from "@/shared/components/marketing-hub/FounderScreenshotCaptureControl";
-import { MarketingConnectedAccountsCard } from "@/shared/components/marketing-hub/MarketingConnectedAccountsCard";
 import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
@@ -59,11 +57,6 @@ type MarketingHubPageViewProps = {
   showFounderScreenshotCapture?: boolean;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
-  canManageConnectedAccounts?: boolean;
-  connectedAccountsFlash?: {
-    tone: "success" | "error";
-    message: string;
-  } | null;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -321,8 +314,6 @@ export function MarketingHubPageView({
   showFounderScreenshotCapture = false,
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
-  canManageConnectedAccounts = false,
-  connectedAccountsFlash = null,
 }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
@@ -436,33 +427,24 @@ export function MarketingHubPageView({
 
   const showTemplateIdeas = listTab === "active";
 
-  return (
-    <MasterListPageLayout
-      title="Marketing"
-      subtitle="Draft and track copy-ready marketing posts your team can paste manually."
-      density="compact"
-      primaryAction={
-        <button
-          type="button"
-          disabled={isFormOpen}
-          onClick={handleOpenCreateForm}
-          className={
-            northStar
-              ? `north-star-marketing-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
-              : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
-          }
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New post draft
-        </button>
+  const newPostButton = (
+    <button
+      type="button"
+      disabled={isFormOpen}
+      onClick={handleOpenCreateForm}
+      className={
+        northStar
+          ? `north-star-marketing-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+          : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
       }
-      className={northStar ? lt.pageCanvas : ""}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
-      <MasterPageSurface
+      <Plus className="h-3.5 w-3.5" />
+      New post draft
+    </button>
+  );
+
+  const body = (
+    <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
@@ -512,56 +494,16 @@ export function MarketingHubPageView({
             </div>
           ) : (
             <>
-              {showFounderMarketing ? (
-                <a
-                  href="/marketing/hq"
-                  className={`flex items-center justify-between gap-3 border-b px-4 py-3 transition-colors ${
-                    northStar
-                      ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/70 hover:bg-[#FAF6EE]"
-                      : "border-amber-200/70 bg-amber-50/40 hover:bg-amber-50"
-                  }`}
-                >
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    <BrainCircuit
-                      className={`h-4 w-4 shrink-0 ${
-                        northStar ? "text-[#8A6324]" : "text-amber-700"
-                      }`}
-                    />
-                    <span className="min-w-0">
-                      <span
-                        className={`block text-sm font-semibold ${
-                          northStar ? "text-[#17130E]" : "text-slate-900"
-                        }`}
-                      >
-                        Marketing AI HQ
-                      </span>
-                      <span
-                        className={`block truncate text-xs ${
-                          northStar ? "text-[#6B6255]" : "text-slate-500"
-                        }`}
-                      >
-                        Founder-only: AI team drafts, approval queue, weekly
-                        strategy.
-                      </span>
-                    </span>
-                  </span>
-                  <span
-                    className={`shrink-0 text-xs font-semibold ${
-                      northStar ? "text-[#8A6324]" : "text-amber-700"
-                    }`}
-                  >
-                    Open →
-                  </span>
-                </a>
-              ) : null}
+              {/* ============ ONE HOME PER CAPABILITY ============
+                  A Marketing AI HQ banner and a Connected accounts card used
+                  to render here as well as in the workspace's Settings tab —
+                  the same two cards, twice, on the same page. Both now live
+                  in Settings only. Neither capability was removed; the second
+                  copy of each was.
 
-              <MarketingConnectedAccountsCard
-                accounts={connectedAccounts}
-                northStar={northStar}
-                canManageConnectedAccounts={canManageConnectedAccounts}
-                flashMessage={connectedAccountsFlash}
-              />
-
+                  What is left in this file is the manual post-drafting
+                  workflow and nothing else: the status tabs, the starter
+                  templates, the draft form, the post list. */}
               <div
                 className={`shrink-0 border-b px-3 py-2 sm:px-4 ${
                   northStar
@@ -764,7 +706,28 @@ export function MarketingHubPageView({
             </>
           )}
         </div>
-      </MasterPageSurface>
-    </MasterListPageLayout>
+    </MasterPageSurface>
+  );
+
+  // ============ A SECTION, NOT A SECOND PAGE ============
+  // `/marketing` is the canonical Marketing route and this view is one
+  // section inside its Advanced tab — its only mount point in the product.
+  // It used to declare its own page title, subtitle and canvas, which is
+  // what made Advanced feel like a second application stitched into a tab.
+  // Those belong to the route, and the route already has them.
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-altair-ink">Manual posts</h2>
+          <p className="mt-0.5 text-sm text-altair-ink-muted">
+            Copy-ready drafts your team writes and posts by hand. Separate from
+            the daily video.
+          </p>
+        </div>
+        {newPostButton}
+      </div>
+      {body}
+    </section>
   );
 }

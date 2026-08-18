@@ -14,6 +14,7 @@ import { listMarketingItems } from "@/lib/marketing/store";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { MarketingWorkspace } from "@/shared/components/marketing-hub/MarketingWorkspace";
+import { deriveMarketingAutomationHealth } from "@/shared/types/marketing-workspace-state";
 import { formatFacebookConnectFlashMessage } from "@/shared/types/marketing-connected-account";
 
 type MarketingPageProps = {
@@ -102,9 +103,32 @@ export default async function MarketingPage({
   const showFounderScreenshotCapture =
     process.env.NODE_ENV === "development" && isPlatformAdmin;
 
+  // ============ THE THREE CLAIMS THE FRONT PAGE MAY MAKE ============
+  // Reduced HERE, on the server, from the projection that was already
+  // fetched — no extra query, and the rules live in a pure module with its
+  // own proof script rather than in JSX. "Daily content: On" is a statement
+  // about another machine in another repository, so it is the one thing on
+  // this page that is not allowed to be a hand-written conditional.
+  const automationHealth = deriveMarketingAutomationHealth({
+    snapshot: agentSnapshot,
+    nowIso: renderedAt,
+  });
+
   return (
     <MarketingWorkspace
       posts={posts}
+      automationHealth={automationHealth}
+      // The same section Advanced renders in full. Today reads it only to
+      // tell "being prepared" from "could not be prepared" from "nothing
+      // was started", which used to be one indistinguishable empty state.
+      renders={
+        agentSnapshot
+          ? {
+              support: agentSnapshot.snapshot.sections.videoRenders.support,
+              items: agentSnapshot.snapshot.sections.videoRenders.items,
+            }
+          : null
+      }
       connectedAccounts={connectedAccounts}
       // Identity and shape only. No object key, no URL, no path crosses into
       // the client bundle — reaching the bytes is a separate authorized

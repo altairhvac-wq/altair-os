@@ -2,25 +2,43 @@
 
 import { useState } from "react";
 import { MarketingTodayView } from "./MarketingTodayView";
+import { MarketingSettingsView } from "./MarketingSettingsView";
 import { MarketingAutomationSection } from "./MarketingAutomationSection";
 import { MarketingHubPageView } from "./MarketingHubPageView";
-import { MarketingConnectedAccountsCard } from "./MarketingConnectedAccountsCard";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
+import type {
+  MarketingAutomationHealth,
+  TodayStateInput,
+} from "@/shared/types/marketing-workspace-state";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingPost } from "@/shared/types/marketing-post";
 import type { ReelVideoOption } from "@/shared/types/marketing-reel";
 
 /**
- * Three tabs, in the order the founder needs them.
+ * `/marketing` — the one canonical founder-facing Marketing workspace.
+ *
+ * ==================== THREE TABS, IN THE ORDER THE FOUNDER NEEDS THEM ====================
+ * Today is first and is the default, because the daily job is a decision
+ * about one video and everything else is support for it. Settings is the
+ * short list of things a founder actually sets. Advanced is where the
+ * control room went.
  *
  * ==================== WHAT MOVED, AND WHY NOTHING WAS DELETED ====================
  * Every section that used to be on this page is still reachable. What changed
  * is which of them the page opens on. Runs, schedules, agent permissions,
  * artifact and job ids, codecs, byte sizes, attempt counts, contract-drift
- * notices and stale-report warnings are diagnostics: real, worth keeping,
- * and incapable of changing a marketing decision. They are one click away
- * under Advanced instead of ahead of the video.
+ * notices, campaign telemetry, the empty AI-recommendations list, the video
+ * production ledger and historical render ids are diagnostics: real, worth
+ * keeping, and incapable of changing a marketing decision. They are one click
+ * away under Advanced instead of ahead of the video.
+ *
+ * ==================== ONE HOME PER CAPABILITY ====================
+ * Connected accounts and the Marketing HQ entry point each used to render
+ * TWICE inside this page — once from Settings and again from the manual-posts
+ * view below. Both now live in Settings only. `MarketingHubPageView` also
+ * stopped declaring a page title, subtitle and canvas of its own: `/marketing`
+ * is the route, and a route does not need a second one nested in a tab.
  *
  * ==================== PERFORMANCE IS ABSENT ON PURPOSE ====================
  * There is no post or Reel analytics anywhere in any of the three repos — no
@@ -36,6 +54,10 @@ type MarketingWorkspaceProps = {
   connectedAccounts: MarketingConnectedAccount[];
   videoOptions: ReelVideoOption[];
   rationaleByPostId?: Record<string, string | undefined>;
+  /** Derived server-side by `deriveMarketingAutomationHealth`. */
+  automationHealth: MarketingAutomationHealth;
+  /** The platform's video-render section, or null when it never reported. */
+  renders: TodayStateInput["renders"];
   snapshot: StoredAgentSnapshot | null;
   decisions: AgentDecisionRecord[];
   bridgeConfigured: boolean;
@@ -88,43 +110,29 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           connectedAccounts={props.connectedAccounts}
           videoOptions={props.videoOptions}
           rationaleByPostId={props.rationaleByPostId}
+          automationHealth={props.automationHealth}
+          renders={props.renders}
+          nowIso={props.nowIso}
           onChanged={() => setRefreshKey((value) => value + 1)}
         />
       ) : null}
 
       {tab === "settings" ? (
-        <div className="space-y-6">
-          <MarketingConnectedAccountsCard
-            accounts={props.connectedAccounts}
-            northStar
-            canManageConnectedAccounts={props.canManageConnectedAccounts}
-            flashMessage={props.connectedAccountsFlash}
-          />
-          <section className="rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6">
-            <h2 className="text-lg font-semibold text-altair-ink">Automation</h2>
-            <p className="mt-1 text-sm text-altair-ink-muted">
-              {/* Stated rather than implied. The daily generator is off, and a
-                  toggle that pretended otherwise would be the same class of
-                  lie this page was rebuilt to remove. */}
-              The daily video generator is not running on a schedule yet. Candidates
-              are produced by running the pilot manually.
-            </p>
-            <p className="mt-3 text-sm text-altair-ink-muted">
-              Brand, goals and industry profile live in{" "}
-              <a className="underline" href="/marketing/hq">
-                Marketing HQ
-              </a>
-              .
-            </p>
-          </section>
-        </div>
+        <MarketingSettingsView
+          automationHealth={props.automationHealth}
+          connectedAccounts={props.connectedAccounts}
+          canManageConnectedAccounts={props.canManageConnectedAccounts}
+          connectedAccountsFlash={props.connectedAccountsFlash}
+          canOpenMarketingHq={props.showFounderMarketing}
+        />
       ) : null}
 
       {tab === "advanced" ? (
         <div className="space-y-6">
           <p className="text-sm text-altair-ink-muted">
-            Runs, schedules, agent status, render diagnostics and post drafting.
-            Nothing here is needed for the daily decision.
+            Runs, schedules, agent status, campaign telemetry, render
+            diagnostics and manual post drafting. Nothing here is needed for
+            the daily decision.
           </p>
           <MarketingAutomationSection
             stored={props.snapshot}
@@ -142,8 +150,6 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
             showFounderScreenshotCapture={props.showFounderScreenshotCapture}
             aiFeaturesEnabled={props.aiFeaturesEnabled}
             aiDraftingConfigured={props.aiDraftingConfigured}
-            canManageConnectedAccounts={props.canManageConnectedAccounts}
-            connectedAccountsFlash={props.connectedAccountsFlash}
           />
         </div>
       ) : null}
