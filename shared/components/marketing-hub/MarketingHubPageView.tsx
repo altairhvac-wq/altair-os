@@ -445,267 +445,267 @@ export function MarketingHubPageView({
 
   const body = (
     <MasterPageSurface
-        variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
-      >
-        {northStar ? (
-          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
-        ) : null}
+      variant={northStar ? "northStarList" : "card"}
+      className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
+    >
+      {northStar ? (
+        <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+      ) : null}
 
-        <div className={masterListPageScrollRegionClass}>
-          {viewMode === "pick-completed-job" ? (
-            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-              <MarketingCompletedJobPicker
-                northStar={northStar}
-                onSelect={handleSelectCompletedJob}
-                onCancel={handleCloseCompletedJobPicker}
-              />
-            </div>
-          ) : viewMode === "create" ? (
-            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-              <MarketingPostDraftForm
-                key={createFormKey}
-                mode="create"
-                draftStarter={createDraftStarter ?? undefined}
-                aiFeaturesEnabled={aiFeaturesEnabled}
-                aiDraftingConfigured={aiDraftingConfigured}
-                showFounderMarketing={showFounderMarketing}
-                connectedAccounts={connectedAccounts}
-                videoOptions={videoOptions}
-                onSuccess={handleCreateSuccess}
-                onCancel={handleCloseForm}
-              />
-            </div>
-          ) : viewMode === "edit" && selectedPost ? (
-            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-              <MarketingPostDraftForm
-                key={selectedPost.id}
-                mode="edit"
-                post={selectedPost}
-                aiFeaturesEnabled={aiFeaturesEnabled}
-                aiDraftingConfigured={aiDraftingConfigured}
-                showFounderMarketing={showFounderMarketing}
-                connectedAccounts={connectedAccounts}
-                videoOptions={videoOptions}
-                onSuccess={handleEditSuccess}
-                onCancel={handleCloseForm}
-                onRecurringCreated={handleRecurringCreated}
-              />
-            </div>
-          ) : (
-            <>
-              {/* ============ ONE HOME PER CAPABILITY ============
-                  A Marketing AI HQ banner and a Connected accounts card used
-                  to render here as well as in the workspace's Settings tab —
-                  the same two cards, twice, on the same page. Both now live
-                  in Settings only. Neither capability was removed; the second
-                  copy of each was.
+      <div className={masterListPageScrollRegionClass}>
+        {viewMode === "pick-completed-job" ? (
+          <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+            <MarketingCompletedJobPicker
+              northStar={northStar}
+              onSelect={handleSelectCompletedJob}
+              onCancel={handleCloseCompletedJobPicker}
+            />
+          </div>
+        ) : viewMode === "create" ? (
+          <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+            <MarketingPostDraftForm
+              key={createFormKey}
+              mode="create"
+              draftStarter={createDraftStarter ?? undefined}
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              aiDraftingConfigured={aiDraftingConfigured}
+              showFounderMarketing={showFounderMarketing}
+              connectedAccounts={connectedAccounts}
+              videoOptions={videoOptions}
+              onSuccess={handleCreateSuccess}
+              onCancel={handleCloseForm}
+            />
+          </div>
+        ) : viewMode === "edit" && selectedPost ? (
+          <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+            <MarketingPostDraftForm
+              key={selectedPost.id}
+              mode="edit"
+              post={selectedPost}
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              aiDraftingConfigured={aiDraftingConfigured}
+              showFounderMarketing={showFounderMarketing}
+              connectedAccounts={connectedAccounts}
+              videoOptions={videoOptions}
+              onSuccess={handleEditSuccess}
+              onCancel={handleCloseForm}
+              onRecurringCreated={handleRecurringCreated}
+            />
+          </div>
+        ) : (
+          <>
+            {/* ============ ONE HOME PER CAPABILITY ============
+                A Marketing AI HQ banner and a Connected accounts card used
+                to render here as well as in the workspace's Settings tab —
+                the same two cards, twice, on the same page. Both now live
+                in Settings only. Neither capability was removed; the second
+                copy of each was.
 
-                  What is left in this file is the manual post-drafting
-                  workflow and nothing else: the status tabs, the starter
-                  templates, the draft form, the post list. */}
-              <div
-                className={`shrink-0 border-b px-3 py-2 sm:px-4 ${
-                  northStar
-                    ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
-                    : "border-slate-100/90 bg-white"
-                }`}
-              >
-                {northStar ? (
-                  <div className={`${lt.viewTabsControl} w-full sm:w-auto`}>
-                    {tabCounts.map((tab) => {
-                      const isActive = listTab === tab.id;
-
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          aria-pressed={isActive}
-                          onClick={() => setListTab(tab.id)}
-                          className={`${lt.viewTabsItem} sm:px-3 sm:py-1.5 ${
-                            isActive ? lt.viewTabsItemActive : ""
-                          }`}
-                        >
-                          <span>{tab.label}</span>
-                          <span
-                            className={
-                              isActive
-                                ? lt.viewTabsCountActive
-                                : lt.viewTabsCount
-                            }
-                          >
-                            {tab.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div
-                    className={`${adminSegmentedControlClass} w-full sm:w-auto`}
-                  >
-                    {tabCounts.map((tab) => {
-                      const isActive = listTab === tab.id;
-
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          aria-pressed={isActive}
-                          onClick={() => setListTab(tab.id)}
-                          className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
-                            isActive ? adminSegmentedItemActiveClass : ""
-                          }`}
-                        >
-                          <span>{tab.label}</span>
-                          <span
-                            className={`ml-1.5 text-xs font-medium ${
-                              isActive ? "text-slate-500" : "text-slate-400"
-                            }`}
-                          >
-                            {tab.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {showTemplateIdeas && filteredPosts.length > 0 ? (
-                <MarketingPostTemplateIdeas
-                  northStar={northStar}
-                  disabled={isFormOpen}
-                  showFounderMarketing={showFounderMarketing}
-                  showFounderScreenshotCapture={showFounderScreenshotCapture}
-                  onUseTemplate={handleUseTemplate}
-                  onUseFounderTemplate={handleUseFounderTemplate}
-                  onCreateFromCompletedJob={handleOpenCompletedJobPicker}
-                  compact
-                />
-              ) : null}
-
-              {filteredPosts.length === 0 ? (
-                <div className="admin-empty-wrap">
-                  <div
-                    className={`${
-                      northStar ? lt.emptyState : "admin-empty-state"
-                    } w-full max-w-md text-center`}
-                  >
-                    <div
-                      className={
-                        northStar
-                          ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
-                          : "admin-empty-icon mx-auto"
-                      }
-                    >
-                      <Megaphone
-                        className={
-                          northStar
-                            ? "h-6 w-6 text-[#8A6324]"
-                            : "h-7 w-7 text-slate-400"
-                        }
-                      />
-                    </div>
-                    <p
-                      className={`mt-4 text-sm font-semibold ${
-                        northStar ? "text-[#17130E]" : "text-slate-900"
-                      }`}
-                    >
-                      {emptyState.title}
-                    </p>
-                    <p
-                      className={`mt-1 text-sm ${
-                        northStar ? "text-[#6B6255]" : "text-slate-500"
-                      }`}
-                    >
-                      {emptyState.description}
-                    </p>
-                  </div>
-
-                  {showTemplateIdeas ? (
-                    <MarketingPostTemplateIdeas
-                      northStar={northStar}
-                      disabled={isFormOpen}
-                      showFounderMarketing={showFounderMarketing}
-                      showFounderScreenshotCapture={
-                        showFounderScreenshotCapture
-                      }
-                      onUseTemplate={handleUseTemplate}
-                      onUseFounderTemplate={handleUseFounderTemplate}
-                      onCreateFromCompletedJob={handleOpenCompletedJobPicker}
-                    />
-                  ) : null}
-                </div>
-              ) : (
-                <ul className="divide-y divide-slate-100/90">
-                  {filteredPosts.map((post) => {
-                    const isScheduledTab = listTab === "scheduled";
-                    const overdue =
-                      isScheduledTab && isScheduledPostOverdue(post);
+                What is left in this file is the manual post-drafting
+                workflow and nothing else: the status tabs, the starter
+                templates, the draft form, the post list. */}
+            <div
+              className={`shrink-0 border-b px-3 py-2 sm:px-4 ${
+                northStar
+                  ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+                  : "border-slate-100/90 bg-white"
+              }`}
+            >
+              {northStar ? (
+                <div className={`${lt.viewTabsControl} w-full sm:w-auto`}>
+                  {tabCounts.map((tab) => {
+                    const isActive = listTab === tab.id;
 
                     return (
-                      <li key={post.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectPost(post.id)}
-                          className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
-                            northStar
-                              ? "hover:bg-[#FAF6EE]/80"
-                              : "hover:bg-slate-50/80"
-                          }`}
+                      <button
+                        key={tab.id}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setListTab(tab.id)}
+                        className={`${lt.viewTabsItem} sm:px-3 sm:py-1.5 ${
+                          isActive ? lt.viewTabsItemActive : ""
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        <span
+                          className={
+                            isActive
+                              ? lt.viewTabsCountActive
+                              : lt.viewTabsCount
+                          }
                         >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-900">
-                              {post.title}
-                            </p>
-                            <p className="mt-0.5 truncate text-xs text-slate-500">
-                              {formatMarketingChannel(post.channelTarget)}
-                            </p>
-                            {isScheduledTab && post.scheduledAt ? (
-                              <p className="mt-1 text-xs text-slate-600">
-                                Planned for{" "}
-                                {formatDateTimeInTimeZone(
-                                  post.scheduledAt,
-                                  timeZone,
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                                {" · "}
-                                Copy and post manually
-                              </p>
-                            ) : null}
-                          </div>
-                          <div className="flex shrink-0 flex-wrap items-center gap-2">
-                            {overdue ? (
-                              <span className="inline-flex w-fit rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200/80">
-                                Overdue
-                              </span>
-                            ) : null}
-                            <span
-                              className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                northStar
-                                  ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
-                                  : "bg-slate-100 text-slate-700"
-                              }`}
-                            >
-                              {formatMarketingPostStatus(post.status)}
-                            </span>
-                          </div>
-                        </button>
-                      </li>
+                          {tab.count}
+                        </span>
+                      </button>
                     );
                   })}
-                </ul>
+                </div>
+              ) : (
+                <div
+                  className={`${adminSegmentedControlClass} w-full sm:w-auto`}
+                >
+                  {tabCounts.map((tab) => {
+                    const isActive = listTab === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setListTab(tab.id)}
+                        className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
+                          isActive ? adminSegmentedItemActiveClass : ""
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        <span
+                          className={`ml-1.5 text-xs font-medium ${
+                            isActive ? "text-slate-500" : "text-slate-400"
+                          }`}
+                        >
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </>
-          )}
-        </div>
+            </div>
+
+            {showTemplateIdeas && filteredPosts.length > 0 ? (
+              <MarketingPostTemplateIdeas
+                northStar={northStar}
+                disabled={isFormOpen}
+                showFounderMarketing={showFounderMarketing}
+                showFounderScreenshotCapture={showFounderScreenshotCapture}
+                onUseTemplate={handleUseTemplate}
+                onUseFounderTemplate={handleUseFounderTemplate}
+                onCreateFromCompletedJob={handleOpenCompletedJobPicker}
+                compact
+              />
+            ) : null}
+
+            {filteredPosts.length === 0 ? (
+              <div className="admin-empty-wrap">
+                <div
+                  className={`${
+                    northStar ? lt.emptyState : "admin-empty-state"
+                  } w-full max-w-md text-center`}
+                >
+                  <div
+                    className={
+                      northStar
+                        ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
+                        : "admin-empty-icon mx-auto"
+                    }
+                  >
+                    <Megaphone
+                      className={
+                        northStar
+                          ? "h-6 w-6 text-[#8A6324]"
+                          : "h-7 w-7 text-slate-400"
+                      }
+                    />
+                  </div>
+                  <p
+                    className={`mt-4 text-sm font-semibold ${
+                      northStar ? "text-[#17130E]" : "text-slate-900"
+                    }`}
+                  >
+                    {emptyState.title}
+                  </p>
+                  <p
+                    className={`mt-1 text-sm ${
+                      northStar ? "text-[#6B6255]" : "text-slate-500"
+                    }`}
+                  >
+                    {emptyState.description}
+                  </p>
+                </div>
+
+                {showTemplateIdeas ? (
+                  <MarketingPostTemplateIdeas
+                    northStar={northStar}
+                    disabled={isFormOpen}
+                    showFounderMarketing={showFounderMarketing}
+                    showFounderScreenshotCapture={
+                      showFounderScreenshotCapture
+                    }
+                    onUseTemplate={handleUseTemplate}
+                    onUseFounderTemplate={handleUseFounderTemplate}
+                    onCreateFromCompletedJob={handleOpenCompletedJobPicker}
+                  />
+                ) : null}
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-100/90">
+                {filteredPosts.map((post) => {
+                  const isScheduledTab = listTab === "scheduled";
+                  const overdue =
+                    isScheduledTab && isScheduledPostOverdue(post);
+
+                  return (
+                    <li key={post.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectPost(post.id)}
+                        className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+                          northStar
+                            ? "hover:bg-[#FAF6EE]/80"
+                            : "hover:bg-slate-50/80"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {post.title}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-slate-500">
+                            {formatMarketingChannel(post.channelTarget)}
+                          </p>
+                          {isScheduledTab && post.scheduledAt ? (
+                            <p className="mt-1 text-xs text-slate-600">
+                              Planned for{" "}
+                              {formatDateTimeInTimeZone(
+                                post.scheduledAt,
+                                timeZone,
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                },
+                              )}
+                              {" · "}
+                              Copy and post manually
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center gap-2">
+                          {overdue ? (
+                            <span className="inline-flex w-fit rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200/80">
+                              Overdue
+                            </span>
+                          ) : null}
+                          <span
+                            className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              northStar
+                                ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
+                                : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            {formatMarketingPostStatus(post.status)}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
     </MasterPageSurface>
   );
 
