@@ -128,14 +128,23 @@ export function MarketingTodayView({
               </p>
             )}
 
-            {rationale ? (
-              <div>
-                <h3 className="text-sm font-medium text-altair-ink">Why this one</h3>
+            <div>
+              <h3 className="text-sm font-medium text-altair-ink">Why this one</h3>
+              {rationale ? (
                 <p className="mt-1 text-sm text-altair-ink-muted whitespace-pre-line">
                   {rationale}
                 </p>
-              </div>
-            ) : null}
+              ) : (
+                // Stated, not hidden. A missing heading would let the reader
+                // assume nobody had a reason; this says the reason was not
+                // recorded, which is the true and more useful claim — and
+                // inventing one here would be exactly the kind of plausible
+                // filler this page was rebuilt to remove.
+                <p className="mt-1 text-sm text-altair-ink-muted italic">
+                  No rationale was recorded for this post.
+                </p>
+              )}
+            </div>
 
             <div>
               <h3 className="text-sm font-medium text-altair-ink">

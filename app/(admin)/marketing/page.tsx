@@ -10,6 +10,7 @@ import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
+import { listMarketingItems } from "@/lib/marketing/store";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { MarketingWorkspace } from "@/shared/components/marketing-hub/MarketingWorkspace";
@@ -63,6 +64,25 @@ export default async function MarketingPage({
     listStoredMediaAssets(companyContext.company.id),
   ]);
 
+  // ============ WHY THIS ONE IS FETCHED SEPARATELY ============
+  // The rationale on the Today card is not new text and is not inferred. It is
+  // the `rationale` the queue item was written with, carried across the one
+  // real link between the two: converting an item to a Hub post stamps
+  // `convertedPostId` on the item and `sourceId` on the post, in the same
+  // write. Anything a post cannot be traced back to has no rationale, and the
+  // card says so rather than filling the space.
+  const queueItems = await listMarketingItems(companyContext.company.id);
+  const rationaleByPostId: Record<string, string> = {};
+  for (const item of queueItems) {
+    const rationale = item.content?.["rationale"];
+    if (typeof rationale !== "string" || rationale.trim() === "") continue;
+    const postId =
+      item.convertedPostId ??
+      posts.find((post) => post.sourceId === item.id)?.id ??
+      null;
+    if (postId) rationaleByPostId[postId] = rationale.trim();
+  }
+
   const canManageConnectedAccounts = hasCompanyRole(companyContext.role, [
     "owner",
     "admin",
@@ -97,6 +117,7 @@ export default async function MarketingPage({
         durationMs: asset.durationMs,
         storedAt: asset.storedAt,
       }))}
+      rationaleByPostId={rationaleByPostId}
       snapshot={agentSnapshot}
       decisions={agentDecisions}
       bridgeConfigured={isAgentBridgeConfigured()}
