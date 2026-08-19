@@ -38,7 +38,10 @@ import {
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
-import type { MarketingPost } from "@/shared/types/marketing-post";
+import type {
+  MarketingPost,
+  MarketingPostSource,
+} from "@/shared/types/marketing-post";
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 import {
   claimDelivery,
@@ -61,7 +64,34 @@ export type MarketingPublishActionResult = {
   providerMediaId?: string;
 };
 
-const FOUNDER_MARKETING_SOURCES = new Set(["founder_milestone", "product_update"]);
+/**
+ * Which post SOURCES may be published from Marketing Hub.
+ *
+ * ==================== WHY THIS IS AN ALLOWLIST ====================
+ * Most `marketing_posts` rows are queue material — converted items, seasonal
+ * suggestions, drafts started from a completed job. None of those has been
+ * through the review this path assumes, so publishing is opened deliberately,
+ * per source, rather than to every draft that happens to exist.
+ *
+ * `agent_daily_reel` (migration 146) is the daily pilot's proposal. It joins
+ * this list because it satisfies the same condition the other two do: a human
+ * looked at it and chose to send it. The pilot writes `status = 'draft'` as a
+ * literal and has no path to any other status, so an agent-created row cannot
+ * reach a provider without a founder clicking Publish in Today — which is the
+ * only thing that calls into here.
+ *
+ * Named for the question it answers. It used to be `FOUNDER_MARKETING_SOURCES`,
+ * which was accurate while both members were founder-authored and would have
+ * quietly become a lie the moment a third joined.
+ *
+ * Typed, so a source that does not exist cannot be added by typo — an untyped
+ * `Set<string>` would accept "agent_daily_reels" and refuse every real post.
+ */
+const HUB_PUBLISHABLE_SOURCES = new Set<MarketingPostSource>([
+  "founder_milestone",
+  "product_update",
+  "agent_daily_reel",
+]);
 
 function revalidateMarketingPaths() {
   revalidatePath("/marketing");
@@ -171,9 +201,10 @@ async function loadFounderDraftForPublish(input: {
     return { error: "Marketing post not found." };
   }
 
-  if (!FOUNDER_MARKETING_SOURCES.has(post.sourceType)) {
+  if (!HUB_PUBLISHABLE_SOURCES.has(post.sourceType)) {
     return {
-      error: "Only founder marketing drafts can be published from Marketing Hub.",
+      error:
+        "Only founder drafts and agent daily-reel drafts can be published from Marketing Hub.",
     };
   }
 
