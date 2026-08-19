@@ -21,6 +21,16 @@ export type MarketingPostSource =
   | "project_gallery"
   | "founder_milestone"
   | "product_update"
+  /**
+   * Proposed by the Agent Platform's daily reel pilot, not by a person.
+   *
+   * Mirrors the database label added in migration 146. It is deliberately NOT
+   * offered anywhere a human picks a source: nobody hand-authors a post and
+   * calls it agent-proposed, and migration 147's duplicate guard is scoped to
+   * exactly this label — widening who can write it would put that guard over
+   * rows it was never meant to police.
+   */
+  | "agent_daily_reel"
   | "other";
 
 export type MarketingPost = {

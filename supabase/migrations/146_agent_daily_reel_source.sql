@@ -1,0 +1,27 @@
+-- A marketing post the Agent Platform's daily reel pilot proposed.
+--
+-- ==================== WHY A NEW SOURCE AND NOT AN EXISTING ONE ====================
+-- The daily pilot's drafts need to be distinguishable from anything a human
+-- wrote, for one load-bearing reason: migration 147's duplicate guard is scoped
+-- to them. Reusing `product_update` (which the first hand-made Reel posts used)
+-- would put that guard over rows a founder created by hand, and three of those
+-- already share one asset and one channel — the index could not be created at
+-- all, and if it could, it would start refusing edits nobody asked it to police.
+--
+-- It is also the honest label. `product_update` says a human decided this reel
+-- was about a product update. `agent_daily_reel` says an unattended pilot
+-- proposed it and a human has not yet decided anything.
+--
+-- ==================== WHY THIS IS ALONE IN A MIGRATION ====================
+-- `alter type ... add value` cannot share a transaction with a statement that
+-- USES the new label, and every migration here runs in one. Migration 092 added
+-- two labels in a single file safely because it never referenced them; 147's
+-- index predicate names this one, so it has to be a separate file. Splitting is
+-- not tidiness — a combined migration fails at apply time.
+--
+-- No policy change. `can_write_marketing_post_source` (093) restricts only
+-- `founder_milestone` and `product_update`, so this label stays writable by any
+-- dispatcher — which is what lets the founder edit and approve the draft in
+-- Today. The bridge itself writes with the service role and never relies on it.
+alter type public.marketing_post_source
+  add value if not exists 'agent_daily_reel';

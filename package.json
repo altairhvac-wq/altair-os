@@ -54,5 +54,8 @@
     "playwright": "^1.52.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint"
   }
 }

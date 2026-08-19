@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
   MarketingChannel,
@@ -625,4 +626,152 @@ export async function softDeleteMarketingPost(
     post: mapMarketingPostRow(data as MarketingPostRow),
     error: null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Agent-proposed reel drafts (agent bridge only)
+// ---------------------------------------------------------------------------
+
+/**
+ * The source label the daily-reel bridge writes, and the only one migration
+ * 147's duplicate guard covers. Declared here so the route and the guard cannot
+ * drift apart through a typo.
+ */
+export const AGENT_DAILY_REEL_SOURCE: MarketingPostSource = "agent_daily_reel";
+
+type ServiceClient = ReturnType<typeof createServiceRoleClient>;
+
+function marketingPostsServiceTable(client: ServiceClient) {
+  // Same shim as `marketingPostsTable`, against the service-role client the
+  // agent bridge uses. marketing_posts predates the generated Database types.
+  return (
+    client as ServiceClient & {
+      from(table: "marketing_posts"): ReturnType<ServiceClient["from"]>;
+    }
+  ).from("marketing_posts");
+}
+
+/** Postgres unique-violation. The duplicate guard reports itself this way. */
+const UNIQUE_VIOLATION = "23505";
+
+export type AgentDraftPostOutcome = "CREATED" | "ALREADY_EXISTS";
+
+export type AgentDraftPostInput = {
+  companyId: string;
+  title: string;
+  channelTarget: MarketingChannel;
+  postText: string;
+  callToAction: string | null;
+  suggestedHashtags: string[];
+  sourceId: string | null;
+  videoMediaAssetId: string;
+};
+
+/**
+ * Find the agent-proposed draft for one (company, video, channel), if any.
+ *
+ * Scoped to `AGENT_DAILY_REEL_SOURCE` for the same reason the index is: a
+ * founder's own post about the same video is not this row and must never be
+ * returned as though the bridge had already written it.
+ */
+export async function findAgentDraftPost(
+  companyId: string,
+  videoMediaAssetId: string,
+  channelTarget: MarketingChannel,
+): Promise<MarketingPost | null> {
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("video_media_asset_id", videoMediaAssetId)
+    .eq("channel_target", channelTarget)
+    .eq("source_type", AGENT_DAILY_REEL_SOURCE)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapMarketingPostRow(data as MarketingPostRow);
+}
+
+/**
+ * Create ONE agent-proposed draft post, idempotently.
+ *
+ * ==================== WHY IT INSERTS BEFORE IT LOOKS ====================
+ * Reading first and inserting second leaves a window two cycles could both pass
+ * through. Migration 147's partial unique index is the arbiter instead: the
+ * insert either wins or comes back 23505, and 23505 is not an error here — it is
+ * the answer "somebody already proposed this", so we read the winner and report
+ * ALREADY_EXISTS.
+ *
+ * ==================== IT NEVER UPDATES ====================
+ * There is deliberately no update branch. By the time a second cycle runs, the
+ * founder may have rewritten the copy, added hashtags, or archived the post.
+ * Overwriting that would let an unattended pilot silently undo a human decision,
+ * which is the one thing this whole path is built not to do.
+ *
+ * `created_by` is null: no human created this, and inventing a system profile to
+ * satisfy the column would put a fake author on a real row. The column has
+ * always been nullable (`references profiles(id) on delete set null`).
+ *
+ * `status` is written as the literal 'draft'. There is no parameter for it.
+ */
+export async function createAgentDraftMarketingPost(
+  input: AgentDraftPostInput,
+): Promise<{
+  post: MarketingPost | null;
+  outcome: AgentDraftPostOutcome | null;
+  error: string | null;
+}> {
+  const client = createServiceRoleClient();
+
+  // `MarketingPostInsert` types `created_by` as string, and intersecting that
+  // with null collapses the field to `never`. Omit and re-add instead: the
+  // column is nullable in the schema, and no human created this row.
+  const insert: Omit<MarketingPostInsert, "created_by"> & { created_by: null } = {
+    company_id: input.companyId,
+    created_by: null,
+    title: input.title,
+    channel_target: input.channelTarget,
+    post_text: input.postText,
+    suggested_hashtags: input.suggestedHashtags,
+    call_to_action: input.callToAction,
+    status: "draft",
+    source_type: AGENT_DAILY_REEL_SOURCE,
+    source_id: input.sourceId,
+    video_media_asset_id: input.videoMediaAssetId,
+  };
+
+  const { data, error } = await marketingPostsServiceTable(client)
+    .insert(insert)
+    .select("*")
+    .single();
+
+  if (!error && data) {
+    return {
+      post: mapMarketingPostRow(data as MarketingPostRow),
+      outcome: "CREATED",
+      error: null,
+    };
+  }
+
+  if (error?.code === UNIQUE_VIOLATION) {
+    const existing = await findAgentDraftPost(
+      input.companyId,
+      input.videoMediaAssetId,
+      input.channelTarget,
+    );
+    if (existing) {
+      return { post: existing, outcome: "ALREADY_EXISTS", error: null };
+    }
+    // The guard fired but the row is not readable: a soft-deleted row still
+    // occupying the key would do this. Say so rather than reporting success.
+    return {
+      post: null,
+      outcome: null,
+      error:
+        "A draft for this video and channel already exists but could not be read back.",
+    };
+  }
+
+  return { post: null, outcome: null, error: mapDatabaseError(error) };
 }
