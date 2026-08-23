@@ -30,6 +30,7 @@
     "verify:hq-queue": "node scripts/verify-marketing-hq-queue.mjs",
     "verify:reel-insights": "node scripts/verify-marketing-reel-insights.mjs",
     "verify:reel-evidence": "node scripts/verify-marketing-reel-evidence.mjs",
+    "verify:oauth-scopes": "node scripts/verify-marketing-oauth-scopes.mjs",
     "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs"
   },
   "dependencies": {

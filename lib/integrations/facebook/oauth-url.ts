@@ -36,6 +36,20 @@ export const FACEBOOK_CONNECT_SCOPES = [
    * insight can be read.
    */
   "instagram_manage_insights",
+  /**
+   * Required by GET /{video-id}/video_insights.
+   *
+   * Meta named this one itself: real Facebook Reel video objects answered the
+   * collector with `(#200) read_insights permission missing`. Page publishing
+   * scopes are not enough — `pages_read_engagement` lets an app read a Page's
+   * content, and reading its INSIGHTS is a separate grant
+   * ("Integrate Facebook's app, page or domain insights into your own analytics
+   * tools", Meta's permissions reference).
+   *
+   * Like the Instagram one, this changes nothing for a token that already
+   * exists. Facebook must be RECONNECTED.
+   */
+  "read_insights",
   "business_management",
 ] as const;
 
