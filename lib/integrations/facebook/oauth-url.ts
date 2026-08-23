@@ -25,6 +25,17 @@ export const FACEBOOK_CONNECT_SCOPES = [
   "pages_manage_posts",
   "instagram_basic",
   "instagram_content_publish",
+  /**
+   * Required by GET /{ig-media-id}/insights, per Meta's Instagram Media
+   * Insights reference. Without it that edge answers every request with
+   * `(#10) Application does not have permission for this action` — which is
+   * exactly what the live collector saw on real, published media ids.
+   *
+   * ADDING IT HERE IS NOT ENOUGH: a token already minted carries the scopes it
+   * was granted at the time, so Instagram must be RECONNECTED before any
+   * insight can be read.
+   */
+  "instagram_manage_insights",
   "business_management",
 ] as const;
 

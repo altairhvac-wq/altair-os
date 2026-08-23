@@ -20,7 +20,8 @@ import { getFacebookOAuthConfig } from "./env";
 import { FacebookGraphError, graphBaseUrl, readFacebookJson } from "./graph";
 import {
   classifyInsightsFailure,
-  metricsFor,
+  keepKnownMetrics,
+  metricRequestFor,
   normalizeInsightsPayload,
   type CollectedMetric,
   type InsightsFailureKind,
@@ -84,7 +85,8 @@ export async function fetchReelInsights(input: {
   const url = new URL(
     `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(providerPostId)}/${edge}`,
   );
-  url.searchParams.set("metric", metricsFor(input.provider).join(","));
+  const requested = metricRequestFor(input.provider);
+  if (requested) url.searchParams.set("metric", requested.join(","));
   // ==================== NO `period` PARAMETER ====================
   // The first version sent `period=lifetime`. It is not a parameter of either
   // edge: Instagram media insights takes `media_id` and `metric` only, and
@@ -97,7 +99,7 @@ export async function fetchReelInsights(input: {
 
   // For the diagnostics. The token is set on the URL above and must never
   // reach a log, so this is rebuilt from the parts that are safe to print.
-  const endpoint = `GET /${providerPostId}/${edge}?metric=${metricsFor(input.provider).join(",")}`;
+  const endpoint = `GET /${providerPostId}/${edge}${requested ? `?metric=${requested.join(",")}` : " (all available metrics)"}`;
 
   let payload: unknown;
   try {
@@ -133,7 +135,10 @@ export async function fetchReelInsights(input: {
     };
   }
 
-  const metrics = normalizeInsightsPayload(payload);
+  // Meta may return more than we understand (Facebook returns everything when
+  // `metric` is omitted). Keep only the known vocabulary — a retention graph is
+  // a real measurement and still not a number this system can store honestly.
+  const metrics = keepKnownMetrics(input.provider, normalizeInsightsPayload(payload));
   if (metrics.length === 0) {
     // Graph answers a too-fresh Reel with an empty data array and HTTP 200.
     return { ok: false, kind: "not_ready", detail: "HTTP 200 with an empty data array", endpoint };

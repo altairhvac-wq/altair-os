@@ -70,6 +70,38 @@ export function metricsFor(provider: InsightsProvider): readonly string[] {
   return provider === "facebook" ? FACEBOOK_REEL_METRICS : INSTAGRAM_REEL_METRICS;
 }
 
+/**
+ * What to SEND as `metric`, which is not the same as what we accept back.
+ *
+ * ==================== WHY FACEBOOK SENDS NOTHING ====================
+ * A live run returned `(#100) The value must be a valid insights metric` on
+ * real video objects — the edge was reachable, the token was fine, and the
+ * NAMES were wrong for this API version. Asserting a metric vocabulary against
+ * an API that revises it is a standing bet we will keep losing, and one bad
+ * name fails the entire request, so a single drift blinds every Reel at once.
+ *
+ * `metric` is optional on /{video-id}/video_insights: omitted, Meta returns
+ * everything it has for that video. So we stop asserting and start asking, then
+ * keep only the names we understand (`FACEBOOK_REEL_METRICS` becomes an
+ * accept-list rather than a request). Nothing is invented, nothing is guessed,
+ * and a metric Meta renames simply stops appearing instead of breaking the run.
+ *
+ * Instagram's edge REQUIRES `metric`, and its names are current — every one of
+ * ours appears in Meta's Reels metric list — so it keeps sending them.
+ */
+export function metricRequestFor(provider: InsightsProvider): readonly string[] | null {
+  return provider === "facebook" ? null : INSTAGRAM_REEL_METRICS;
+}
+
+/** Drops anything outside the provider's known vocabulary. */
+export function keepKnownMetrics(
+  provider: InsightsProvider,
+  metrics: readonly CollectedMetric[],
+): CollectedMetric[] {
+  const known = new Set<string>(metricsFor(provider));
+  return metrics.filter((m) => known.has(m.metric));
+}
+
 export type CollectedMetric = {
   readonly metric: string;
   readonly value: number;

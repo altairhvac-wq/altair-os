@@ -60,6 +60,8 @@ export async function GET(request: Request) {
         const companyIds = await listCompaniesWithActiveMarketingHq();
         let collected = 0;
         let notReady = 0;
+        let unattributed = 0;
+        let notAReel = 0;
         let failed = 0;
         let metricsWritten = 0;
         const attempts: Record<string, unknown>[] = [];
@@ -68,6 +70,8 @@ export async function GET(request: Request) {
           const summary = await collectReelInsightsForCompany({ companyId });
           collected += summary.collected;
           notReady += summary.notReady;
+          unattributed += summary.unattributed;
+          notAReel += summary.notAReel;
           failed += summary.failed;
           metricsWritten += summary.metricsWritten;
 
@@ -111,6 +115,11 @@ export async function GET(request: Request) {
           companyCount: companyIds.length,
           collected,
           notReady,
+          // History and non-Reel posts. Reported separately and deliberately
+          // NOT folded into `failed`: a run that finds only these has done its
+          // job correctly and must not read as an outage.
+          unattributed,
+          notAReel,
           failed,
           metricsWritten,
           // Bounded: a company with hundreds of posts should not return a

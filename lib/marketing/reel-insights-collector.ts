@@ -40,7 +40,17 @@ import {
 export type CollectionOutcome =
   | "collected"
   | "not_ready"
-  | "no_render_job"
+  /**
+   * Published before this pipeline existed, so no render job is attached.
+   * These are HISTORY, not faults: there is nothing to attribute their numbers
+   * to, and counting them as failures made a working collector look broken.
+   */
+  | "unattributed"
+  /**
+   * Published through the plain feed/photo path rather than the Reel path, so
+   * the Reel insight edges do not apply to it. Also not a fault.
+   */
+  | "not_a_reel"
   | "no_token"
   | "unsupported_provider"
   | "failed";
@@ -69,6 +79,10 @@ export type CollectionSummary = {
   readonly considered: number;
   readonly collected: number;
   readonly notReady: number;
+  /** History with no render job attached. Expected, and not a fault. */
+  readonly unattributed: number;
+  /** Published outside the Reel path, so the Reel edges do not apply. */
+  readonly notAReel: number;
   readonly skipped: number;
   readonly failed: number;
   readonly metricsWritten: number;
@@ -117,12 +131,31 @@ export async function collectReelInsightsForCompany(input: {
       continue;
     }
 
+    // ============ ONLY REELS HAVE REEL INSIGHTS ============
+    // The Reel publish paths record a provider media id — a Facebook video id,
+    // an Instagram container — via `onMediaCreated`. The plain feed and photo
+    // paths never do. So a null here means this was published as an ordinary
+    // post, and asking /video_insights about it produced exactly what the live
+    // run showed: `nonexisting field (video_insights)` on a Page post id, and
+    // subcode 33 on the rest. Skipping them is not loosening anything: it stops
+    // asking a question that cannot have an answer.
+    if (!delivery.providerMediaId?.trim()) {
+      results.push({
+        ...base, outcome: "not_a_reel", sourceJobId: null, metricsWritten: 0, providerPostId,
+        detail: "published through the feed/photo path — no Reel media object, so no Reel insights",
+      });
+      continue;
+    }
+
     // The join, walked before the network call. A post with no render behind it
     // is not worth a Graph request: its numbers would have nothing to attribute
     // to, which is the entire purpose of collecting them.
     const job = await getRenderJobForMarketingPost(input.companyId, delivery.marketingPostId);
     if (!job) {
-      results.push({ ...base, outcome: "no_render_job", sourceJobId: null, metricsWritten: 0 });
+      results.push({
+        ...base, outcome: "unattributed", sourceJobId: null, metricsWritten: 0, providerPostId,
+        detail: "published before render-job attribution existed — nothing to attribute numbers to",
+      });
       continue;
     }
 
@@ -192,8 +225,13 @@ export async function collectReelInsightsForCompany(input: {
     considered: deliveries.length,
     collected: results.filter((r) => r.outcome === "collected").length,
     notReady: results.filter((r) => r.outcome === "not_ready").length,
+    unattributed: results.filter((r) => r.outcome === "unattributed").length,
+    notAReel: results.filter((r) => r.outcome === "not_a_reel").length,
+    // `no_token` stays here rather than in `failed`: it is a configuration
+    // state an operator fixes by reconnecting, not a collector fault. It is
+    // still reported, loudly, per delivery.
     skipped: results.filter((r) =>
-      r.outcome === "no_render_job" || r.outcome === "no_token" || r.outcome === "unsupported_provider",
+      r.outcome === "no_token" || r.outcome === "unsupported_provider",
     ).length,
     failed: results.filter((r) => r.outcome === "failed").length,
     metricsWritten: results.reduce((total, r) => total + r.metricsWritten, 0),

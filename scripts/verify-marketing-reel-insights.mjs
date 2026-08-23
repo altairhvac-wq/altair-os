@@ -310,6 +310,94 @@ check(
   "before this fix the code was thrown away and this fell through to `unknown`",
 );
 
+/* ---------------- what we ASK for vs what we ACCEPT back ------------------ */
+//
+// A live run returned `(#100) The value must be a valid insights metric` on
+// real Facebook video objects: the edge was reachable and the token was fine,
+// and the metric NAMES were wrong for the API version. One bad name fails the
+// whole request, so a single drift blinds every Reel at once. Facebook now asks
+// Meta what it has instead of asserting a vocabulary at it.
+
+check(
+  "Facebook sends NO metric parameter — it asks Meta what exists",
+  M.metricRequestFor("facebook") === null,
+);
+check(
+  "Instagram still sends its metric list, because that edge requires one",
+  Array.isArray(M.metricRequestFor("instagram")) &&
+    M.metricRequestFor("instagram").includes("views"),
+);
+check(
+  "every Instagram metric we send appears in Meta's current Reels metric list",
+  (() => {
+    // From developers.facebook.com Instagram Media Insights reference.
+    const current = new Set([
+      "comments", "likes", "reach", "saved", "shares", "views", "total_interactions",
+      "total_comments", "total_likes", "total_views", "reposts", "reels_skip_rate",
+      "ig_reels_avg_watch_time", "ig_reels_video_view_total_time", "crossposted_views",
+      "facebook_views",
+    ]);
+    return M.INSTAGRAM_REEL_METRICS.every((m) => current.has(m));
+  })(),
+  M.INSTAGRAM_REEL_METRICS,
+);
+check(
+  "an unknown metric Meta volunteers is dropped, not stored",
+  M.keepKnownMetrics("facebook", [
+    { metric: "blue_reels_play_count", value: 10 },
+    { metric: "post_video_retention_graph", value: 999 },
+  ]).length === 1,
+  "a retention graph is a real measurement and still not a number we can store honestly",
+);
+check(
+  "the accept-list is per provider",
+  M.keepKnownMetrics("instagram", [{ metric: "blue_reels_play_count", value: 10 }]).length === 0,
+);
+
+fakeGraph(200, {
+  data: [
+    { name: "blue_reels_play_count", values: [{ value: 77 }] },
+    { name: "some_future_metric", values: [{ value: 1 }] },
+  ],
+});
+const fbAll = await F.fetchReelInsights({ provider: "facebook", providerPostId: "v9", accessToken: "t" });
+check(
+  "the Facebook request URL carries no metric parameter",
+  !/[?&]metric=/.test(lastUrl),
+  lastUrl?.replace(/access_token=[^&]+/, "access_token=***"),
+);
+check(
+  "a metric Meta volunteers but we do not understand never reaches storage",
+  fbAll.ok === true && fbAll.metrics.length === 1 && fbAll.metrics[0].metric === "blue_reels_play_count",
+  fbAll.metrics,
+);
+check(
+  "the reported endpoint says plainly that all metrics were requested",
+  fbAll.endpoint.includes("all available metrics"),
+  fbAll.endpoint,
+);
+
+fakeGraph(400, {
+  error: {
+    message: "(#100) Tried accessing nonexisting field (video_insights) on node type (Post)",
+    code: 100, error_subcode: 33,
+  },
+});
+const notAVideo = await F.fetchReelInsights({ provider: "facebook", providerPostId: "123_456", accessToken: "t" });
+check(
+  "a Page post id asked for video_insights still fails loudly with Meta's own code",
+  notAVideo.ok === false && notAVideo.code === 100 && notAVideo.subcode === 33,
+  `${notAVideo.code}/${notAVideo.subcode}`,
+);
+
+fakeGraph(400, { error: { message: "(#10) Application does not have permission for this action", code: 10 } });
+const noPerm = await F.fetchReelInsights({ provider: "instagram", providerPostId: "ig-9", accessToken: "t" });
+check(
+  "a missing Instagram permission classifies as auth, never as not_ready",
+  noPerm.ok === false && noPerm.kind === "auth" && noPerm.code === 10,
+  `${noPerm.kind}/${noPerm.code}`,
+);
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} reel insights checks passed.`,
 );
