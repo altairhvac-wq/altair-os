@@ -227,13 +227,41 @@ function downloadVideoBriefJson(item: MarketingItem) {
 
   const script = { videoTitle, beats };
 
-  const blob = new Blob([JSON.stringify(script, null, 2)], {
+  downloadJson(script, `demo-script-${item.id.slice(0, 8)}.json`);
+}
+
+/**
+ * The brief EXACTLY as the AI wrote it — no transformation.
+ *
+ * ==================== WHY A SECOND EXPORT ====================
+ * `downloadVideoBriefJson` above rewrites a brief into a `rawScript`
+ * ({videoTitle, beats:[{narration, directions}]}) for the older demo-script
+ * path. That conversion folds each beat's route into a prose direction
+ * ("Navigate to /work.") and DROPS the captions entirely, so it cannot be
+ * turned back into a brief.
+ *
+ * The Reel variation path needs the untransformed record: hook, per-beat
+ * narration AND caption, cta. Changing the export above to produce that would
+ * have broken the demo-script consumer, so this sits beside it and neither has
+ * to know about the other.
+ *
+ * The file is the item's own `content`, verbatim. Nothing here interprets it —
+ * the renderer's spec validator remains the only thing that decides what a
+ * brief is allowed to become.
+ */
+function downloadRawVideoBriefJson(item: MarketingItem) {
+  downloadJson(item.content, `video-brief-${item.id.slice(0, 8)}.json`);
+}
+
+/** Shared blob-download plumbing. Same behaviour both exports always had. */
+function downloadJson(payload: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `demo-script-${item.id.slice(0, 8)}.json`;
+  anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
@@ -667,14 +695,25 @@ function QueueTab({
                       class of control this fix removed — and it is the only
                       way a brief reaches the video editor. */}
                   {item.kind === "video_brief" ? (
-                    <button
-                      type="button"
-                      onClick={() => downloadVideoBriefJson(item)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Export brief
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => downloadVideoBriefJson(item)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Export brief
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadRawVideoBriefJson(item)}
+                        title="The brief exactly as written — for a Reel variation"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Export raw JSON
+                      </button>
+                    </>
                   ) : null}
                 </div>
               </li>
@@ -737,14 +776,25 @@ function QueueTab({
                     </button>
                   ) : null}
                   {item.kind === "video_brief" ? (
-                    <button
-                      type="button"
-                      onClick={() => downloadVideoBriefJson(item)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Download className="h-3 w-3" />
-                      Export brief
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => downloadVideoBriefJson(item)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="h-3 w-3" />
+                        Export brief
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadRawVideoBriefJson(item)}
+                        title="The brief exactly as written — for a Reel variation"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="h-3 w-3" />
+                        Export raw JSON
+                      </button>
+                    </>
                   ) : null}
                   <span
                     className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChipClass(item.status)}`}
@@ -1012,14 +1062,25 @@ function QueueItemCard({
               </button>
             ) : null}
             {item.kind === "video_brief" ? (
-              <button
-                type="button"
-                onClick={() => downloadVideoBriefJson(item)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Export brief
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => downloadVideoBriefJson(item)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export brief
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadRawVideoBriefJson(item)}
+                  title="The brief exactly as written — for a Reel variation"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export raw JSON
+                </button>
+              </>
             ) : null}
           </>
         )}

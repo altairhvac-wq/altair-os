@@ -356,5 +356,43 @@ check(
 );
 
 // ---------------------------------------------------------------------------
+// Exporting a video brief: TWO exports, deliberately, for two consumers.
+//
+// `downloadVideoBriefJson` rewrites a brief into a rawScript for the older
+// demo-script path — folding each beat's route into prose ("Navigate to /work.")
+// and dropping captions. That file cannot be turned back into a brief, so the
+// Reel variation path needs the untransformed record beside it. If the two ever
+// collapse into one, one of the two consumers breaks silently.
+const hqView = readFileSync(
+  "shared/components/marketing-hq/MarketingAiHqPageView.tsx",
+  "utf8",
+);
+
+check(
+  "the demo-script export still exists for the older path",
+  /function downloadVideoBriefJson/.test(hqView),
+);
+check(
+  "a raw video_brief export exists for the Reel variation path",
+  /function downloadRawVideoBriefJson/.test(hqView),
+);
+check(
+  "the raw export writes the item content VERBATIM — no route folding, no transformation",
+  /function downloadRawVideoBriefJson\(item: MarketingItem\) \{\s*downloadJson\(item\.content,/.test(hqView),
+);
+check(
+  "the raw export is named so its file cannot be confused with the demo script",
+  /video-brief-\$\{item\.id/.test(hqView) && /demo-script-\$\{item\.id/.test(hqView),
+);
+check(
+  "both exports are offered on video_brief items and nothing else",
+  (hqView.match(/downloadRawVideoBriefJson\(item\)/g) ?? []).length ===
+    (hqView.match(/downloadVideoBriefJson\(item\)/g) ?? []).length,
+);
+check(
+  "the raw export decides nothing — it is a download, not a state change",
+  !/downloadRawVideoBriefJson[\s\S]{0,400}(startTransition|fetch\(|Action\()/.test(hqView),
+);
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 process.exit(failures === 0 ? 0 : 1);
