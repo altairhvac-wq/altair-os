@@ -7,6 +7,7 @@ import "server-only";
 
 import { generateDraftText } from "@/lib/ai/provider";
 import { loadMarketingHqContext } from "@/lib/marketing/brand";
+import { getReelPerformanceEvidence } from "@/lib/database/queries/marketing-reel-evidence";
 import {
   buildCopywriterBatchRequest,
   parseCopywriterBatchResponse,
@@ -202,17 +203,24 @@ export async function runMarketingStrategist(
       return { ok: false, runKey, itemsCreated: 0, error };
     }
 
-    const [itemFlowStats, previousRun, recentItems] = await Promise.all([
-      getMarketingItemFlowStats(companyId, 7),
-      getLatestSuccessfulMarketingRun(companyId, runKey),
-      listMarketingItems(companyId, { statuses: ["rejected"], limit: 10 }),
-    ]);
+    const [itemFlowStats, previousRun, recentItems, reelEvidence] =
+      await Promise.all([
+        getMarketingItemFlowStats(companyId, 7),
+        getLatestSuccessfulMarketingRun(companyId, runKey),
+        listMarketingItems(companyId, { statuses: ["rejected"], limit: 10 }),
+        // 30 days, not 7: a Reel keeps earning views after the week it was
+        // posted, and these are lifetime counters, so a reading taken today is
+        // current whatever day the Reel went out. A 7-day window would throw
+        // away most of the evidence there is.
+        getReelPerformanceEvidence(companyId, 30),
+      ]);
 
     const request = buildStrategistRequest({
       context,
       itemFlowStats,
       previousReport: previousRun?.report ?? null,
       recentRejectedTitles: recentItems.map((item) => item.title),
+      reelEvidence,
     });
 
     const outcome = await generateDraftText(request);

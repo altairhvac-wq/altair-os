@@ -43,6 +43,8 @@ export type MarketingDeliveryRecord = {
   readonly id: string;
   readonly companyId: string;
   readonly marketingPostId: string;
+  /** The connected account this was published through — the key to its token. */
+  readonly connectedAccountId: string;
   readonly provider: string;
   readonly deliveryState: MarketingDeliveryState;
   readonly providerPostId: string | null;

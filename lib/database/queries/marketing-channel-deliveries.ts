@@ -52,6 +52,7 @@ type DeliveryRow = {
   id: string;
   company_id: string;
   marketing_post_id: string;
+  connected_account_id: string;
   provider: string;
   delivery_state: string;
   provider_post_id: string | null;
@@ -67,6 +68,10 @@ function toRecord(row: DeliveryRow): MarketingDeliveryRecord {
     id: row.id,
     companyId: row.company_id,
     marketingPostId: row.marketing_post_id,
+    // Projected so a reader can reach the account's token without a second
+    // query. The column has always been there; the record simply never carried
+    // it, which is why nothing could ask the provider anything about a post.
+    connectedAccountId: row.connected_account_id,
     provider: row.provider,
     deliveryState: row.delivery_state as MarketingDeliveryRecord["deliveryState"],
     providerPostId: row.provider_post_id,
@@ -380,6 +385,31 @@ export async function listDeliveriesForPost(
 
   if (result.error || !result.data) {
     console.error("[listDeliveriesForPost] lookup failed:", result.error);
+    return [];
+  }
+  return (result.data as DeliveryRow[]).map(toRecord);
+}
+
+/**
+ * Deliveries that actually reached the provider and carry an id to ask about.
+ *
+ * This is the insights collector's work list. `provider_post_id not is null` is
+ * the load-bearing filter: a row can be `posted` with a null id only if a
+ * settle raced, and asking Meta about nothing would be a request per run that
+ * can never succeed.
+ */
+export async function listPostedDeliveries(
+  companyId: string,
+): Promise<MarketingDeliveryRecord[]> {
+  const client = createServiceRoleClient();
+  const result = await deliveriesTable(client)
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("delivery_state", "posted")
+    .not("provider_post_id", "is", null);
+
+  if (result.error || !result.data) {
+    console.error("[listPostedDeliveries] lookup failed:", result.error);
     return [];
   }
   return (result.data as DeliveryRow[]).map(toRecord);

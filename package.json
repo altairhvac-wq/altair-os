@@ -27,7 +27,10 @@
     "verify:reel-transport": "node scripts/verify-marketing-reel-transport.mjs",
     "verify:media-concurrency": "bash scripts/proof-media-reservation-concurrency.sh",
     "verify:workspace": "node scripts/verify-marketing-workspace.mjs",
-    "verify:hq-queue": "node scripts/verify-marketing-hq-queue.mjs"
+    "verify:hq-queue": "node scripts/verify-marketing-hq-queue.mjs",
+    "verify:reel-insights": "node scripts/verify-marketing-reel-insights.mjs",
+    "verify:reel-evidence": "node scripts/verify-marketing-reel-evidence.mjs",
+    "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

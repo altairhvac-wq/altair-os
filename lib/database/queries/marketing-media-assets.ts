@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   MARKETING_MEDIA_BUCKET,
@@ -102,6 +103,56 @@ export async function getMediaAssetByJob(
  * to reason about, so no chance of a later refactor reasoning about it wrong.
  * There it means the rule survives a caller that forgets to filter.
  */
+/**
+ * The render job behind a marketing post — the join this repository has always
+ * had in its schema and never walked.
+ *
+ *   marketing_posts.video_media_asset_id
+ *     -> marketing_media_assets.id        (composite FK on (id, company_id),
+ *                                          so a cross-tenant hop is impossible)
+ *   marketing_media_assets.source_job_id  = the Agent Platform's render jobId
+ *                                          (unique per company, migration 144)
+ *
+ * Returns null rather than throwing when a post carries no video: an
+ * agent-authored Reel always does, a hand-written post may not, and that is not
+ * an error — it just has no render to attribute numbers to.
+ */
+export async function getRenderJobForMarketingPost(
+  companyId: string,
+  marketingPostId: string,
+): Promise<{ sourceJobId: string; mediaAssetId: string } | null> {
+  const client = createServiceRoleClient();
+
+  const post = await (client as unknown as SupabaseClient)
+    .from("marketing_posts")
+    .select("video_media_asset_id")
+    .eq("company_id", companyId)
+    .eq("id", marketingPostId)
+    .maybeSingle();
+
+  if (post.error) {
+    console.error("[getRenderJobForMarketingPost] post lookup failed:", post.error);
+    return null;
+  }
+  const assetId = (post.data as { video_media_asset_id?: string | null } | null)
+    ?.video_media_asset_id;
+  if (!assetId) return null;
+
+  const asset = await assetsTable(client)
+    .select("id, source_job_id")
+    .eq("company_id", companyId)
+    .eq("id", assetId)
+    .maybeSingle();
+
+  if (asset.error) {
+    console.error("[getRenderJobForMarketingPost] asset lookup failed:", asset.error);
+    return null;
+  }
+  const row = asset.data as { id?: string; source_job_id?: string } | null;
+  if (!row?.source_job_id) return null;
+  return { sourceJobId: row.source_job_id, mediaAssetId: String(row.id) };
+}
+
 export async function getMediaAssetById(
   companyId: string,
   assetId: string,

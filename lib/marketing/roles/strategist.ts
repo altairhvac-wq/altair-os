@@ -16,6 +16,10 @@ import {
   MARKETING_AI_ROLES,
   type MarketingStrategyReportContent,
 } from "@/shared/types/marketing-ai-hq";
+import {
+  formatReelEvidence,
+  type ReelEvidence,
+} from "@/shared/types/marketing-reel-evidence";
 
 export const MARKETING_HQ_STRATEGIST_AI_FEATURE = "marketing-hq-strategist";
 
@@ -42,6 +46,9 @@ Output requirements:
 
 Judgment rules:
 - Early weeks will have thin data; say so plainly instead of inventing signal
+- Organic Reel performance, when present, is the only evidence you have about what the AUDIENCE responded to; the approval-queue stats only tell you what the FOUNDER accepted. Weigh them accordingly and never confuse the two
+- Obey the sufficiency labels on the Reel evidence exactly. INSUFFICIENT means report the numbers and draw no comparison; DIRECTIONAL means you may propose a hypothesis to test; only COMPARABLE supports naming a pattern as a finding
+- When a recommendation is based on Reel performance, cite the render job id it came from, so the next plan can be traced back to the evidence
 - Recommend the smallest set of actions with the highest expected impact
 - If the approval queue shows many rejections, diagnose why before recommending more volume
 - Never recommend paid spend beyond proposals — ads are proposal-only at this stage
@@ -53,6 +60,15 @@ type StrategistInput = {
   itemFlowStats: MarketingItemFlowStats;
   previousReport: Record<string, unknown> | null;
   recentRejectedTitles: string[];
+  /**
+   * What the audience did with the Reels that were actually published.
+   *
+   * Optional so an older caller — or a company with nothing published yet —
+   * still produces a report. Absent is rendered as an explicit "no data"
+   * sentence rather than omitted, because a silently missing section reads to
+   * the model as a section with nothing worth saying.
+   */
+  reelEvidence?: ReelEvidence;
 };
 
 function formatStats(stats: MarketingItemFlowStats): string {
@@ -75,6 +91,15 @@ function formatStrategistInput(input: StrategistInput): string {
 
   sections.push(
     `Computed stats (narrate these; do not recompute):\n${formatStats(input.itemFlowStats)}`,
+  );
+
+  // The audience half of the evidence. Placed before the queue stats' rejected
+  // titles so that, when both exist, the model reads what people watched before
+  // it reads what the founder declined.
+  sections.push(
+    formatReelEvidence(
+      input.reelEvidence ?? { sinceDays: 30, reels: [], byProvider: {} },
+    ),
   );
 
   if (input.recentRejectedTitles.length > 0) {
