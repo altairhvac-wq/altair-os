@@ -3,7 +3,8 @@ import "server-only";
 /**
  * Organic Reel insights reads. PUBLISHING IS NOT TOUCHED BY THIS FILE.
  *
- * Two edges, both read-only, both `period=lifetime`:
+ * Two edges, both read-only. The metrics are lifetime by definition, which is
+ * a property of the metrics and NOT a `period` parameter to send:
  *
  *   Facebook   GET /{video-id}/video_insights?metric=...
  *   Instagram  GET /{ig-media-id}/insights?metric=...
@@ -16,7 +17,7 @@ import "server-only";
  * Nothing here writes, claims, settles or publishes.
  */
 import { getFacebookOAuthConfig } from "./env";
-import { graphBaseUrl, readFacebookJson } from "./graph";
+import { FacebookGraphError, graphBaseUrl, readFacebookJson } from "./graph";
 import {
   classifyInsightsFailure,
   metricsFor,
@@ -27,12 +28,33 @@ import {
 } from "@/shared/types/marketing-insights";
 
 export type ReelInsightsResult =
-  | { readonly ok: true; readonly metrics: CollectedMetric[] }
-  | { readonly ok: false; readonly kind: InsightsFailureKind; readonly detail: string };
+  | { readonly ok: true; readonly metrics: CollectedMetric[]; readonly endpoint: string }
+  | {
+      readonly ok: false;
+      readonly kind: InsightsFailureKind;
+      readonly detail: string;
+      readonly endpoint: string;
+      /** Meta's own numbers, so a diagnosis never has to be inferred from prose. */
+      readonly code?: number;
+      readonly subcode?: number;
+      /** The metric Meta named as invalid, when it named one. */
+      readonly offendingMetric?: string;
+    };
 
-type GraphErrorShape = {
-  error?: { code?: number; error_subcode?: number; message?: string };
-};
+/**
+ * `(#100) Tried accessing nonexisting field (blue_reels_play_count) on node ...`
+ *
+ * One bad name fails the WHOLE request, which blinds the collector for every
+ * post on that provider. Meta says which name; surfacing it turns a permanent
+ * silent outage into a one-line fix.
+ */
+function offendingMetricFrom(message: string): string | undefined {
+  const field = /nonexisting field \(([^)]+)\)/.exec(message)?.[1];
+  if (field) return field;
+  return /metric\[0\] must be one of|Invalid metric|unsupported metric/i.test(message)
+    ? /\b([a-z_]{4,})\b(?=[^a-z_]*$)/.exec(message)?.[1]
+    : undefined;
+}
 
 /**
  * One insights read.
@@ -49,7 +71,12 @@ export async function fetchReelInsights(input: {
   const providerPostId = input.providerPostId.trim();
   const accessToken = input.accessToken.trim();
   if (!providerPostId || !accessToken) {
-    return { ok: false, kind: "unknown", detail: "missing provider post id or access token" };
+    return {
+      ok: false,
+      kind: "unknown",
+      detail: "missing provider post id or access token",
+      endpoint: "(not attempted)",
+    };
   }
 
   const config = getFacebookOAuthConfig();
@@ -58,8 +85,19 @@ export async function fetchReelInsights(input: {
     `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(providerPostId)}/${edge}`,
   );
   url.searchParams.set("metric", metricsFor(input.provider).join(","));
-  url.searchParams.set("period", "lifetime");
+  // ==================== NO `period` PARAMETER ====================
+  // The first version sent `period=lifetime`. It is not a parameter of either
+  // edge: Instagram media insights takes `media_id` and `metric` only, and
+  // these Reels metrics are lifetime by definition rather than by request.
+  // `period` IS a real parameter on ACCOUNT insights, so Graph recognised the
+  // name, rejected the combination, and failed the whole call with code 100 —
+  // which this collector then read as "this Reel is too new". Every post would
+  // have stayed notReady forever, and nothing would ever have looked broken.
   url.searchParams.set("access_token", accessToken);
+
+  // For the diagnostics. The token is set on the URL above and must never
+  // reach a log, so this is rebuilt from the parts that are safe to print.
+  const endpoint = `GET /${providerPostId}/${edge}?metric=${metricsFor(input.provider).join(",")}`;
 
   let payload: unknown;
   try {
@@ -73,25 +111,34 @@ export async function fetchReelInsights(input: {
       `${input.provider} Reel insights`,
     );
   } catch (error) {
-    // readFacebookJson throws on a Graph error body. Recover the code from the
-    // message rather than losing the classification: a fresh post and a broken
-    // token must not be reported the same way.
     const detail = error instanceof Error ? error.message : String(error);
-    const body = (error as { body?: GraphErrorShape } | undefined)?.body;
+    // Meta's own code, now that readFacebookJson preserves it. The message
+    // regex remains only as a fallback for a non-Graph failure.
+    const graph = error instanceof FacebookGraphError ? error : null;
+    const code = graph?.code ?? codeFromMessage(detail);
     const kind = classifyInsightsFailure({
-      code: body?.error?.code ?? codeFromMessage(detail),
-      subcode: body?.error?.error_subcode,
+      code,
+      subcode: graph?.subcode,
       message: detail,
     });
-    return { ok: false, kind, detail };
+    const offending = offendingMetricFrom(detail);
+    return {
+      ok: false,
+      kind,
+      detail,
+      endpoint,
+      ...(code === undefined ? {} : { code }),
+      ...(graph?.subcode === undefined ? {} : { subcode: graph.subcode }),
+      ...(offending ? { offendingMetric: offending } : {}),
+    };
   }
 
   const metrics = normalizeInsightsPayload(payload);
   if (metrics.length === 0) {
     // Graph answers a too-fresh Reel with an empty data array and HTTP 200.
-    return { ok: false, kind: "not_ready", detail: "no metric values returned yet" };
+    return { ok: false, kind: "not_ready", detail: "HTTP 200 with an empty data array", endpoint };
   }
-  return { ok: true, metrics };
+  return { ok: true, metrics, endpoint };
 }
 
 /** `(#100) Unsupported...` / `code: 190` — best-effort, and honest when absent. */

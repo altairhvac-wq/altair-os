@@ -52,6 +52,15 @@ export type DeliveryCollectionResult = {
   readonly sourceJobId: string | null;
   readonly metricsWritten: number;
   readonly detail?: string;
+  /** The Meta post/media id asked about. Not a secret; it is in every permalink. */
+  readonly providerPostId?: string;
+  /** The exact call made, token stripped. */
+  readonly endpoint?: string;
+  /** Meta's own numbers, so a diagnosis is never inferred from prose. */
+  readonly metaCode?: number;
+  readonly metaSubcode?: number;
+  /** The metric Meta rejected, when it named one — one bad name fails the lot. */
+  readonly offendingMetric?: string;
 };
 
 export type CollectionSummary = {
@@ -144,6 +153,11 @@ export async function collectReelInsightsForCompany(input: {
         sourceJobId: job.sourceJobId,
         metricsWritten: 0,
         detail: `${insights.kind}: ${insights.detail}`,
+        providerPostId,
+        endpoint: insights.endpoint,
+        ...(insights.code === undefined ? {} : { metaCode: insights.code }),
+        ...(insights.subcode === undefined ? {} : { metaSubcode: insights.subcode }),
+        ...(insights.offendingMetric ? { offendingMetric: insights.offendingMetric } : {}),
       });
       continue;
     }
@@ -166,6 +180,8 @@ export async function collectReelInsightsForCompany(input: {
       outcome: write.error ? "failed" : "collected",
       sourceJobId: job.sourceJobId,
       metricsWritten: write.written,
+      providerPostId,
+      endpoint: insights.endpoint,
       ...(write.error ? { detail: write.error } : {}),
     });
   }

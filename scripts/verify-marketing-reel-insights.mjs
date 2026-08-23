@@ -187,6 +187,129 @@ check(
   M.observedOnFor(new Date("2026-08-23T23:30:00.000Z")) === "2026-08-23",
 );
 
+/* ------------------- the real request, driven against a fake Graph --------- */
+//
+// The first live run collected NOTHING from eleven published Reels and reported
+// six as "notReady" — the label meaning "too fresh, try later". They were not
+// too fresh. The request carried `period=lifetime`, which is a parameter of
+// ACCOUNT insights and not of these two edges, so Graph recognised the name,
+// rejected the combination with code 100, and the collector read code 100 as
+// "not ready yet". A permanent bug wearing the costume of a normal state.
+//
+// These drive the actual fetcher against a fake Graph so the shape of the
+// request, and the classification of the reply, are both pinned.
+
+writeFileSync(join(dir, "server-only.mjs"), "export {};\n");
+writeFileSync(
+  join(dir, "env.mjs"),
+  'export function getFacebookOAuthConfig(){ return { graphApiVersion: "v21.0" }; }\n',
+);
+writeFileSync(
+  join(dir, "graph.mjs"),
+  `
+export function graphBaseUrl(v) { return \`https://graph.facebook.com/\${v}\`; }
+export class FacebookGraphError extends Error {
+  constructor(message, detail) {
+    super(message);
+    this.name = "FacebookGraphError";
+    this.code = detail.code; this.subcode = detail.subcode;
+    this.type = detail.type; this.status = detail.status;
+  }
+}
+export async function readFacebookJson(response) {
+  const body = await response.json();
+  if (!response.ok) {
+    throw new FacebookGraphError(body?.error?.message ?? "failed", {
+      code: body?.error?.code, subcode: body?.error?.error_subcode,
+      type: body?.error?.type, status: response.status,
+    });
+  }
+  return body;
+}
+`,
+);
+{
+  const { outputText } = ts.transpileModule(
+    readFileSync("lib/integrations/facebook/reel-insights.ts", "utf8"),
+    { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } },
+  );
+  let code = outputText;
+  for (const [from, to] of [
+    ['"server-only"', '"./server-only.mjs"'],
+    ['"./env"', '"./env.mjs"'],
+    ['"./graph"', '"./graph.mjs"'],
+    ['"@/shared/types/marketing-insights"', '"./insights.mjs"'],
+  ]) code = code.split(from).join(to);
+  writeFileSync(join(dir, "fetcher.mjs"), code);
+}
+const F = await import(pathToFileURL(join(dir, "fetcher.mjs")).href);
+
+let lastUrl = null;
+const fakeGraph = (status, body) => {
+  globalThis.fetch = async (u) => {
+    lastUrl = String(u);
+    return { ok: status < 400, status, json: async () => body };
+  };
+};
+
+fakeGraph(200, { data: [{ name: "views", period: "lifetime", values: [{ value: 12 }] }] });
+const okResult = await F.fetchReelInsights({
+  provider: "instagram", providerPostId: "ig-1", accessToken: "SECRET-TOKEN-VALUE",
+});
+
+check(
+  "the request does NOT send a `period` parameter — it is not a parameter of these edges",
+  !/[?&]period=/.test(lastUrl),
+  lastUrl?.replace(/access_token=[^&]+/, "access_token=***"),
+);
+check("the request asks the media-insights edge for Instagram", /\/ig-1\/insights\?/.test(lastUrl));
+check("the request carries the metric list", /metric=views/.test(lastUrl));
+check("a good reply is collected", okResult.ok === true && okResult.metrics[0]?.value === 12);
+check(
+  "the reported endpoint NEVER contains the access token",
+  !okResult.endpoint.includes("SECRET-TOKEN-VALUE") && !/access_token/i.test(okResult.endpoint),
+  okResult.endpoint,
+);
+
+fakeGraph(200, { data: [] });
+const empty = await F.fetchReelInsights({ provider: "facebook", providerPostId: "v1", accessToken: "t" });
+check("Facebook uses the video_insights edge", /\/v1\/video_insights\?/.test(lastUrl));
+check(
+  "HTTP 200 with an empty data array is the ONLY genuine not_ready",
+  empty.ok === false && empty.kind === "not_ready" && /empty data array/.test(empty.detail),
+);
+
+fakeGraph(400, {
+  error: {
+    message: "(#100) Tried accessing nonexisting field (blue_reels_play_count) on node type (Video)",
+    code: 100, error_subcode: 33, type: "OAuthException",
+  },
+});
+const badMetric = await F.fetchReelInsights({ provider: "facebook", providerPostId: "v1", accessToken: "t" });
+check("Meta's numeric code survives to the caller", badMetric.code === 100, badMetric.code);
+check("so does the subcode", badMetric.subcode === 33, badMetric.subcode);
+check(
+  "the rejected metric is named, turning a silent outage into a one-line fix",
+  badMetric.offendingMetric === "blue_reels_play_count",
+  badMetric.offendingMetric,
+);
+
+fakeGraph(400, { error: { message: "Error validating access token: Session has expired", code: 190 } });
+const dead = await F.fetchReelInsights({ provider: "instagram", providerPostId: "ig-1", accessToken: "t" });
+check(
+  "a dead token classifies as auth from the CODE, not from the sentence",
+  dead.ok === false && dead.kind === "auth" && dead.code === 190,
+  `${dead.kind} / ${dead.code}`,
+);
+
+fakeGraph(400, { error: { message: "Invalid parameter", code: 100 } });
+const invalidParam = await F.fetchReelInsights({ provider: "instagram", providerPostId: "ig-1", accessToken: "t" });
+check(
+  "a bare 'Invalid parameter' with code 100 is now classified by its code",
+  invalidParam.code === 100,
+  "before this fix the code was thrown away and this fell through to `unknown`",
+);
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} reel insights checks passed.`,
 );

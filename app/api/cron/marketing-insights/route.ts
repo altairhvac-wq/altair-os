@@ -62,6 +62,7 @@ export async function GET(request: Request) {
         let notReady = 0;
         let failed = 0;
         let metricsWritten = 0;
+        const attempts: Record<string, unknown>[] = [];
 
         for (const companyId of companyIds) {
           const summary = await collectReelInsightsForCompany({ companyId });
@@ -69,6 +70,28 @@ export async function GET(request: Request) {
           notReady += summary.notReady;
           failed += summary.failed;
           metricsWritten += summary.metricsWritten;
+
+          // ==================== PER-DELIVERY DETAIL ====================
+          // The first live run reported 0 collected / 6 notReady / 5 failed and
+          // there was no way to tell WHY without guessing. Totals say a run
+          // happened; they never say what happened. Every field below is either
+          // a public identifier or Meta's own error — the access token is set on
+          // the URL inside the fetcher and never travels with these.
+          for (const r of summary.results) {
+            attempts.push({
+              provider: r.provider,
+              deliveryId: r.deliveryId,
+              providerPostId: r.providerPostId ?? null,
+              sourceJobId: r.sourceJobId,
+              outcome: r.outcome,
+              endpoint: r.endpoint ?? null,
+              metaCode: r.metaCode ?? null,
+              metaSubcode: r.metaSubcode ?? null,
+              offendingMetric: r.offendingMetric ?? null,
+              detail: r.detail ?? null,
+              metricsWritten: r.metricsWritten,
+            });
+          }
         }
 
         await recordPlatformAutomationRunFinished(runId, {
@@ -90,6 +113,10 @@ export async function GET(request: Request) {
           notReady,
           failed,
           metricsWritten,
+          // Bounded: a company with hundreds of posts should not return a
+          // megabyte of JSON to a cron caller.
+          attempts: attempts.slice(0, 50),
+          ...(attempts.length > 50 ? { attemptsTruncated: attempts.length - 50 } : {}),
         });
       } catch (error) {
         await recordPlatformAutomationRunFinished(runId, {

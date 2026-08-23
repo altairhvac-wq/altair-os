@@ -28,8 +28,41 @@ type FacebookGraphErrorBody = {
     message?: string;
     type?: string;
     code?: number;
+    error_subcode?: number;
   };
 };
+
+/**
+ * A Graph failure that still knows WHY it failed.
+ *
+ * `readFacebookJson` used to throw `new Error(graphError.message)`, which
+ * discarded the numeric code entirely. Every caller that wanted to tell "this
+ * post is too new to have insights" (code 100) from "this token is dead"
+ * (code 190) was left string-matching English prose — and Meta writes several
+ * different sentences for code 100, so that classification was always going to
+ * be wrong some of the time.
+ *
+ * Subclassing Error keeps this additive: the publish paths catch it and read
+ * `.message` exactly as before, and `instanceof Error` still holds.
+ */
+class FacebookGraphError extends Error {
+  readonly code: number | undefined;
+  readonly subcode: number | undefined;
+  readonly type: string | undefined;
+  readonly status: number;
+
+  constructor(
+    message: string,
+    detail: { code?: number; subcode?: number; type?: string; status: number },
+  ) {
+    super(message);
+    this.name = "FacebookGraphError";
+    this.code = detail.code;
+    this.subcode = detail.subcode;
+    this.type = detail.type;
+    this.status = detail.status;
+  }
+}
 
 function graphBaseUrl(version: string): string {
   return `https://graph.facebook.com/${version}`;
@@ -52,7 +85,14 @@ async function readFacebookJson<T>(
     const message =
       graphError.error?.message?.trim() ||
       `${context}: Facebook request failed (${response.status}).`;
-    throw new Error(message);
+    throw new FacebookGraphError(message, {
+      ...(graphError.error?.code === undefined ? {} : { code: graphError.error.code }),
+      ...(graphError.error?.error_subcode === undefined
+        ? {}
+        : { subcode: graphError.error.error_subcode }),
+      ...(graphError.error?.type === undefined ? {} : { type: graphError.error.type }),
+      status: response.status,
+    });
   }
 
   return body as T;
@@ -322,5 +362,5 @@ export async function fetchFacebookPageInstagramBusinessAccount(input: {
   return igId || null;
 }
 
-export { graphBaseUrl, readFacebookJson };
+export { graphBaseUrl, readFacebookJson, FacebookGraphError };
 export type { FacebookGraphErrorBody };
