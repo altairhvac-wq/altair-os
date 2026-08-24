@@ -16,7 +16,12 @@ import {
 } from "@/shared/types/marketing-workspace-state";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingPost } from "@/shared/types/marketing-post";
-import type { ReelVideoOption } from "@/shared/types/marketing-reel";
+import {
+  markReelVersions,
+  parseRenderJobId,
+  type ReelVersionMark,
+  type ReelVideoOption,
+} from "@/shared/types/marketing-reel";
 
 /**
  * The morning workflow, and nothing else.
@@ -63,6 +68,118 @@ type MarketingTodayViewProps = {
   onChanged: () => void;
 };
 
+/**
+ * ============ WHICH RENDER IS THIS ============
+ *
+ * Three drafts of `altair-overview-hookB` sat in Today looking identical, and
+ * only the newest was worth approving. Every fact needed to tell them apart was
+ * already on the row: `marketing_media_assets.source_job_id` carries the Agent
+ * Platform's render job id, and that id encodes the reel/variation name and the
+ * render time. It was simply never displayed.
+ *
+ * Reports what it has and says so when it has not got it. `hasAudio` is the
+ * only audio fact the platform snapshot carries, and it means A TRACK EXISTS —
+ * not that anyone can hear it — so it is worded as presence, never as sound.
+ */
+function ReelIdentityPanel({
+  sourceJobId,
+  mark,
+  render,
+  timeZone,
+  storedAt,
+}: {
+  sourceJobId: string;
+  mark: ReelVersionMark | undefined;
+  render:
+    | {
+        renderState: string;
+        stage: string | null;
+        failureName: string | null;
+        hasAudio: boolean | null;
+      }
+    | undefined;
+  timeZone: string;
+  storedAt: string | null;
+}) {
+  const identity = parseRenderJobId(sourceJobId);
+  const supersededBy = mark && !mark.isNewest ? mark.siblingCount - 1 : 0;
+  const failed = Boolean(render?.failureName);
+  // The id's own stamp is when the render STARTED, which is the number that
+  // separates these drafts. `storedAt` is when the bytes landed here — close,
+  // but a different fact, and used only when the id carries no stamp.
+  const renderedAt = identity?.renderedAt ?? storedAt;
+
+  return (
+    <div className="rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-sm font-medium text-altair-ink">
+          {identity ? identity.reelName : "Reel name not in this job id"}
+        </p>
+        {/* Brass, not green: newest is an identity, not a health verdict. An
+            older draft is OLDER, not broken, and nothing here rejects one. */}
+        {mark?.isNewest && mark.siblingCount > 1 ? (
+          <span className="rounded border border-altair-brass px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-altair-brass">
+            Newest render
+          </span>
+        ) : null}
+        {supersededBy > 0 ? (
+          <span className="text-[11px] text-altair-ink-muted">
+            superseded by {supersededBy} newer render
+            {supersededBy === 1 ? "" : "s"} of this Reel
+          </span>
+        ) : null}
+      </div>
+
+      <dl className="mt-2 grid gap-x-4 gap-y-1 text-[11px] sm:grid-cols-[auto_1fr]">
+        <dt className="uppercase tracking-wide text-altair-ink-muted">Render job</dt>
+        <dd className="break-all font-mono text-[11px] text-altair-ink-secondary">
+          {sourceJobId}
+        </dd>
+
+        <dt className="uppercase tracking-wide text-altair-ink-muted">Rendered</dt>
+        <dd className="text-altair-ink-secondary">
+          {renderedAt
+            ? formatDateTimeInTimeZone(renderedAt, timeZone, {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "time not reported"}
+        </dd>
+
+        <dt className="uppercase tracking-wide text-altair-ink-muted">Render</dt>
+        <dd className={failed ? "text-altair-danger" : "text-altair-ink-secondary"}>
+          {render
+            ? [
+                render.renderState,
+                render.stage ? `stage ${render.stage}` : null,
+                render.failureName,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : "not reported by the platform"}
+        </dd>
+
+        <dt className="uppercase tracking-wide text-altair-ink-muted">Audio</dt>
+        <dd
+          className={
+            render?.hasAudio === false
+              ? "text-altair-danger"
+              : "text-altair-ink-secondary"
+          }
+        >
+          {render?.hasAudio === true
+            ? "audio track present"
+            : render?.hasAudio === false
+              ? "NO audio track"
+              : "not reported"}
+        </dd>
+      </dl>
+    </div>
+  );
+}
+
 function channelLabel(channel: string): string {
   if (channel === "facebook") return "Facebook";
   if (channel === "instagram") return "Instagram";
@@ -93,6 +210,21 @@ export function MarketingTodayView({
   const videoById = useMemo(
     () => new Map(videoOptions.map((option) => [option.id, option])),
     [videoOptions],
+  );
+
+  // Which render of each Reel is newest. Derived from the job ids already on
+  // the rows — nothing new is stored, nothing is filtered, and an id from an
+  // older scheme simply gets no mark.
+  const versionMarks = useMemo(
+    () => markReelVersions(videoOptions.map((option) => option.sourceJobId)),
+    [videoOptions],
+  );
+
+  // The platform's own account of each render, by job id. Absent for a render
+  // it never reported, which the panel says rather than guessing.
+  const renderByJobId = useMemo(
+    () => new Map((renders?.items ?? []).map((item) => [item.jobId, item])),
+    [renders],
   );
 
   // Formatted here rather than in the strip, because the company's time zone
@@ -157,7 +289,16 @@ export function MarketingTodayView({
               </header>
 
               {video ? (
-                <MarketingMediaPreview sourceJobId={video.sourceJobId} />
+                <>
+                  <ReelIdentityPanel
+                    sourceJobId={video.sourceJobId}
+                    mark={versionMarks.get(video.sourceJobId)}
+                    render={renderByJobId.get(video.sourceJobId)}
+                    timeZone={timeZone}
+                    storedAt={video.storedAt}
+                  />
+                  <MarketingMediaPreview sourceJobId={video.sourceJobId} />
+                </>
               ) : (
                 <p className="text-sm text-altair-ink-muted">
                   This post names a video that is not stored on this deployment

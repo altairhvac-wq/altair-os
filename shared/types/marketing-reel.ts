@@ -456,3 +456,118 @@ export function describeReelVideoOption(option: ReelVideoOption): string {
 
   return parts.join(" · ");
 }
+
+/**
+ * ==================== WHICH RENDER AM I LOOKING AT ====================
+ *
+ * Marketing → Today can hold several drafts for the same Reel, one per render
+ * attempt, and until now every one of them showed the same headline and the
+ * same preview. Three drafts of `altair-overview-hookB` were indistinguishable
+ * on screen, and the only difference that mattered — which one had the caption
+ * fix and real narration — was invisible.
+ *
+ * Nothing new has to be stored to fix that. The Agent Platform mints the render
+ * job id as `reel-{reelId}-{YYYYMMDDTHHMMSSZ}-{suffix}` (reelJobId() in
+ * src/video/reel-render.ts), where `reelId` is the Reel's own id or the
+ * VARIATION'S NAME. Altair OS has been keeping the whole string since the day
+ * media transport landed:
+ *
+ *   marketing_posts.video_media_asset_id -> marketing_media_assets.source_job_id
+ *
+ * So the reel name, the render time and the attempt's identity are already on
+ * the row. They were simply never read.
+ */
+export type RenderJobIdentity = {
+  /** The Reel id, or the variation's name — `altair-overview-hookB`. */
+  readonly reelName: string;
+  /** When the render STARTED, from the id itself. ISO 8601, UTC. */
+  readonly renderedAt: string;
+  /** The attempt's random tail, which is what makes two same-second ids differ. */
+  readonly suffix: string;
+};
+
+/** `20260823T202125Z` -> `2026-08-23T20:21:25Z`, or null if it is not a stamp. */
+function parseJobStamp(stamp: string): string | null {
+  const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(stamp);
+  if (!m) return null;
+  const iso = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`;
+  // Round-trip through Date so 20261340T… is rejected rather than displayed.
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) || at.toISOString().slice(0, 19) !== iso.slice(0, 19)
+    ? null
+    : iso;
+}
+
+/**
+ * Reads the reel name and render time back out of a render job id.
+ *
+ * Returns null for anything that is not one — the older `render-art_…` and
+ * `render-content-assets-…` ids predate this scheme, and a caller must fall
+ * back to showing the raw id rather than guessing at a name for them.
+ *
+ * The reel name is everything BETWEEN the prefix and the last two segments,
+ * rejoined, because reel names legitimately contain hyphens
+ * (`altair-overview-hookB`).
+ */
+export function parseRenderJobId(jobId: string): RenderJobIdentity | null {
+  const parts = String(jobId ?? "").split("-");
+  if (parts.length < 4 || parts[0] !== "reel") return null;
+  const suffix = parts[parts.length - 1];
+  const renderedAt = parseJobStamp(parts[parts.length - 2] ?? "");
+  const reelName = parts.slice(1, -2).join("-");
+  if (!renderedAt || !reelName || !suffix) return null;
+  return { reelName, renderedAt, suffix };
+}
+
+export type ReelVersionMark = {
+  readonly reelName: string;
+  readonly renderedAt: string;
+  /** True only when this is the most recent render of its own reel name. */
+  readonly isNewest: boolean;
+  /** How many drafts share this reel name, this one included. */
+  readonly siblingCount: number;
+};
+
+/**
+ * Works out which render of each Reel is the newest.
+ *
+ * ==================== WHAT IT DELIBERATELY DOES NOT DO ====================
+ * It marks. It does not rank, hide, reject or delete: an older draft is OLDER,
+ * not WRONG, and deciding what to do about it stays a person's call. Two ids
+ * with the same stamp are broken by suffix so the answer is stable rather than
+ * dependent on what order the rows arrived in.
+ *
+ * An unparseable id gets no entry at all — better to show a draft with no
+ * version marking than to invent a name for it and group it with strangers.
+ */
+export function markReelVersions(
+  jobIds: readonly string[],
+): ReadonlyMap<string, ReelVersionMark> {
+  const byReel = new Map<string, { jobId: string; identity: RenderJobIdentity }[]>();
+  for (const jobId of jobIds) {
+    const identity = parseRenderJobId(jobId);
+    if (!identity) continue;
+    const group = byReel.get(identity.reelName) ?? [];
+    // The same job id twice is one draft, not two versions of itself.
+    if (!group.some((entry) => entry.jobId === jobId)) group.push({ jobId, identity });
+    byReel.set(identity.reelName, group);
+  }
+
+  const marks = new Map<string, ReelVersionMark>();
+  for (const [reelName, group] of byReel) {
+    const sorted = [...group].sort((left, right) =>
+      left.identity.renderedAt === right.identity.renderedAt
+        ? right.identity.suffix.localeCompare(left.identity.suffix)
+        : right.identity.renderedAt.localeCompare(left.identity.renderedAt),
+    );
+    sorted.forEach((entry, index) => {
+      marks.set(entry.jobId, {
+        reelName,
+        renderedAt: entry.identity.renderedAt,
+        isNewest: index === 0,
+        siblingCount: group.length,
+      });
+    });
+  }
+  return marks;
+}

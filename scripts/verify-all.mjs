@@ -34,6 +34,7 @@ steps.push(
   { name: "media", script: "scripts/verify-marketing-media.mjs" },
   { name: "reel", script: "scripts/verify-marketing-reel.mjs" },
   { name: "reel-transport", script: "scripts/verify-marketing-reel-transport.mjs" },
+  { name: "reel-identity", script: "scripts/verify-marketing-reel-identity.mjs" },
   { name: "publish-guard", script: "scripts/verify-marketing-publish-guard.mjs" },
   { name: "channels", script: "scripts/verify-marketing-channels.mjs" },
   { name: "agent-contract", script: "scripts/verify-agent-snapshot-contract.mjs" },
