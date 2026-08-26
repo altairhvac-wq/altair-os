@@ -1,3 +1,9 @@
+import {
+  buildDonutArcs,
+  DONUT_RADIUS,
+  DONUT_SIZE,
+  DONUT_STROKE,
+} from "@/shared/lib/reports/donut-arc-geometry";
 import { formatCurrency } from "@/shared/types/customer";
 import type { ReportCashHealth } from "@/shared/types/reports-page";
 import { nsReportChart as ns } from "./north-star-chart-styles";
@@ -37,10 +43,6 @@ const LEGACY_ITEMS = [
   },
 ];
 
-const DONUT_SIZE = 148;
-const DONUT_STROKE = 18;
-const DONUT_RADIUS = (DONUT_SIZE - DONUT_STROKE) / 2;
-const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 
 type CashHealthSegmentKey = "paid" | "outstanding" | "overdue";
 
@@ -58,7 +60,10 @@ function CashHealthDonut({
   items: DonutSegment[];
   total: number;
 }) {
-  let cumulative = 0;
+  const arcs = buildDonutArcs(
+    items.map((item) => item.value),
+    total,
+  );
 
   return (
     <div className="relative mx-auto h-[148px] w-[148px] shrink-0">
@@ -77,16 +82,11 @@ function CashHealthDonut({
           stroke="rgba(255,255,255,0.06)"
           strokeWidth={DONUT_STROKE}
         />
-        {items.map((item) => {
-          if (item.value <= 0 || total <= 0) {
+        {items.map((item, index) => {
+          const arc = arcs[index];
+          if (!arc) {
             return null;
           }
-
-          const fraction = item.value / total;
-          const dash = fraction * DONUT_CIRCUMFERENCE;
-          const gap = DONUT_CIRCUMFERENCE - dash;
-          const offset = -cumulative * DONUT_CIRCUMFERENCE;
-          cumulative += fraction;
 
           return (
             <circle
@@ -97,8 +97,8 @@ function CashHealthDonut({
               fill="none"
               stroke={item.stroke}
               strokeWidth={DONUT_STROKE}
-              strokeDasharray={`${dash} ${gap}`}
-              strokeDashoffset={offset}
+              strokeDasharray={`${arc.dash} ${arc.gap}`}
+              strokeDashoffset={arc.offset}
               strokeLinecap="butt"
             />
           );

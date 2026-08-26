@@ -109,7 +109,15 @@ function handleDocumentEscape(event: KeyboardEvent) {
 /** Only the most recently opened active sheet receives Escape. */
 export function useSheetEscape(onClose: () => void, active = true) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  // The latest-callback ref used to be written during render. A render that
+  // React discards still mutated it, and the registration effect below reads
+  // it much later from a document listener — so the write belongs in a commit,
+  // not in render. `useRef(onClose)` already seeds the first value, so the
+  // registration effect never observes a stale handler on mount.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!active) {

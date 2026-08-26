@@ -51,50 +51,55 @@ export function OperationalResolutionQueueSheet({
   sheetData,
   onClose,
 }: OperationalResolutionQueueSheetProps) {
-  const queueType = card.queueType;
+  const queueType = card.queueType ?? null;
 
-  if (!queueType) {
-    return null;
-  }
-
-  const titleId = `operational-resolution-queue-${card.id}`;
-  const presentation = getOperationalResolutionQueuePresentation(
-    queueType,
-    card.label,
-    card.description,
-  );
-  const Icon = QUEUE_ICONS[presentation.icon];
-
-  const initialQueue = useMemo(
+  // ==================== WHY THE HOOKS RUN FIRST ====================
+  // This component used to `return null` for a card with no queueType BEFORE
+  // calling useMemo/useState. Every call site happens to guard with
+  // `activeCard?.queueType ? <Sheet .../> : null`, so the early return was
+  // unreachable — but the correctness of a component cannot depend on five
+  // separate callers remembering the same precondition. A sixth call site
+  // without the guard would produce "rendered fewer hooks than expected" and
+  // take the dashboard down.
+  //
+  // Both hooks are now unconditional, and the memo answers "no queue" with an
+  // empty queue rather than by not running. The guard below is now a plain
+  // render decision, which is what it always should have been.
+  const initialQueue = useMemo<{
+    items: OperationalResolutionQueueItem[];
+    hiddenCount: number;
+  }>(
     () =>
-      buildOperationalResolutionQueue({
-        queueType,
-        unassignedJobs: sheetData.unassignedJobs,
-        readyToInvoiceJobs: sheetData.readyToInvoiceJobs,
-        completedWorkReviewJobs: sheetData.completedWorkReviewJobs,
-        overdueInvoices: sheetData.overdueInvoices,
-        unpaidInvoicesNeedingFollowUp: sheetData.unpaidInvoicesNeedingFollowUp,
-        unpaidInvoiceFollowUpThresholdDays:
-          sheetData.unpaidInvoiceFollowUpThresholdDays,
-        unsentInvoices: sheetData.unsentInvoices,
-        unsentEstimates: sheetData.unsentEstimates,
-        staleSentEstimates: sheetData.staleSentEstimates,
-        staleSentEstimateThresholdDays: sheetData.staleSentEstimateThresholdDays,
-        acceptedEstimatesNeedingScheduling:
-          sheetData.acceptedEstimatesNeedingScheduling,
-        newLeadsNeedingContact: sheetData.newLeadsNeedingContact,
-        leadsReadyForEstimate: sheetData.leadsReadyForEstimate,
-        leadFollowUps: sheetData.leadFollowUps,
-        stalledJobs: sheetData.stalledJobs,
-        stalledJobInactivityThresholdDays:
-          sheetData.stalledJobInactivityThresholdDays,
-        technicians: sheetData.technicians,
-        assignableTechnicians: sheetData.assignableTechnicians,
-        technicianStatuses: sheetData.technicianStatuses,
-        todayJobs: sheetData.todayJobs,
-        access: sheetData.access,
-        totalCount: card.count,
-      }),
+      queueType === null
+        ? { items: [], hiddenCount: 0 }
+        : buildOperationalResolutionQueue({
+            queueType,
+            unassignedJobs: sheetData.unassignedJobs,
+            readyToInvoiceJobs: sheetData.readyToInvoiceJobs,
+            completedWorkReviewJobs: sheetData.completedWorkReviewJobs,
+            overdueInvoices: sheetData.overdueInvoices,
+            unpaidInvoicesNeedingFollowUp: sheetData.unpaidInvoicesNeedingFollowUp,
+            unpaidInvoiceFollowUpThresholdDays:
+              sheetData.unpaidInvoiceFollowUpThresholdDays,
+            unsentInvoices: sheetData.unsentInvoices,
+            unsentEstimates: sheetData.unsentEstimates,
+            staleSentEstimates: sheetData.staleSentEstimates,
+            staleSentEstimateThresholdDays: sheetData.staleSentEstimateThresholdDays,
+            acceptedEstimatesNeedingScheduling:
+              sheetData.acceptedEstimatesNeedingScheduling,
+            newLeadsNeedingContact: sheetData.newLeadsNeedingContact,
+            leadsReadyForEstimate: sheetData.leadsReadyForEstimate,
+            leadFollowUps: sheetData.leadFollowUps,
+            stalledJobs: sheetData.stalledJobs,
+            stalledJobInactivityThresholdDays:
+              sheetData.stalledJobInactivityThresholdDays,
+            technicians: sheetData.technicians,
+            assignableTechnicians: sheetData.assignableTechnicians,
+            technicianStatuses: sheetData.technicianStatuses,
+            todayJobs: sheetData.todayJobs,
+            access: sheetData.access,
+            totalCount: card.count,
+          }),
     [card.count, queueType, sheetData],
   );
 
@@ -114,6 +119,21 @@ export function OperationalResolutionQueueSheet({
     remaining === 1
       ? "1 remaining"
       : `${remaining} remaining`;
+
+  // A card with no queueType has no queue to resolve, so there is nothing to
+  // show. Every hook above has already run, so this is a render decision and
+  // not a change in hook order.
+  if (queueType === null) {
+    return null;
+  }
+
+  const titleId = `operational-resolution-queue-${card.id}`;
+  const presentation = getOperationalResolutionQueuePresentation(
+    queueType,
+    card.label,
+    card.description,
+  );
+  const Icon = QUEUE_ICONS[presentation.icon];
 
   return (
     <MobileSheet

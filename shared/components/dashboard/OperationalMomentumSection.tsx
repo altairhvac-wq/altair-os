@@ -21,16 +21,24 @@ type OperationalMomentumSectionProps = {
   data: OperationalMomentumInput;
 };
 
-function getTrendIcon(direction: "improving" | "declining" | "stable") {
-  switch (direction) {
-    case "improving":
-      return TrendingUp;
-    case "declining":
-      return TrendingDown;
-    default:
-      return Gauge;
-  }
-}
+/**
+ * Trend direction → icon, as a constant map rather than a function call.
+ *
+ * `getTrendIcon(direction)` returned one of these same three module-level
+ * lucide components, but the React Compiler cannot see through a call and
+ * reads the result as a component created during render — which would reset
+ * its state on every render if it were true. A lookup table states the fact
+ * the function was only implying, and matches how QUEUE_ICONS is declared in
+ * the resolution-queue sheet.
+ */
+const TREND_ICONS = {
+  improving: TrendingUp,
+  declining: TrendingDown,
+  stable: Gauge,
+} as const satisfies Record<
+  "improving" | "declining" | "stable",
+  typeof TrendingUp
+>;
 
 function MetricTile({
   label,
@@ -79,7 +87,7 @@ export function OperationalMomentumSection({
   const trendStyles = getOperationalHealthTrendStyles(
     snapshot.metrics.trendDirection,
   );
-  const TrendIcon = getTrendIcon(snapshot.metrics.trendDirection);
+  const TrendIcon = TREND_ICONS[snapshot.metrics.trendDirection];
   const queueTrend = snapshot.metrics.queueResolutionTrend;
 
   return (
