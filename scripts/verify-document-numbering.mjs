@@ -32,6 +32,8 @@
 import { readFileSync } from "node:fs";
 
 const MIGRATION = "supabase/migrations/148_document_number_sequences.sql";
+const HARDENING_MIGRATION =
+  "supabase/migrations/149_document_number_allocator_hardening.sql";
 
 const QUERY_MODULES = {
   jobs: "lib/database/queries/jobs.ts",
@@ -210,6 +212,98 @@ check(
 // ===========================================================================
 // PART A2 — the COUNT(*) formula is gone from every application path
 // ===========================================================================
+
+// ===========================================================================
+// PART A1b — migration 149 closes two allocator authorization defects
+// ===========================================================================
+//
+// Both were introduced by 148 and found in the post-Phase-3 adversarial review:
+//
+//   P1  max_existing_document_number is SECURITY DEFINER, performs no
+//       membership check, and 148 granted EXECUTE on it to `authenticated` —
+//       so any signed-in user could read any company's highest document
+//       number. The company UUIDs needed are handed out by the Community
+//       directory (listVisibleNetworkProfiles), so this was reachable.
+//
+//   P2  the estimate/invoice branch accepted can_dispatch_jobs, which is
+//       wider than the RLS INSERT policy on public.invoices and wider than
+//       every application path. A dispatcher could burn invoice numbers.
+
+console.log("\nPART A1b — migration 149 allocator hardening");
+
+const sql149 = loadSql(HARDENING_MIGRATION);
+
+check(
+  "149 revokes EXECUTE on the RLS-bypassing seed helper from authenticated",
+  /revoke\s+execute\s+on\s+function\s+public\.max_existing_document_number\s*\(\s*uuid\s*,\s*text\s*\)\s*from\s+authenticated/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 revokes EXECUTE on document_number_base from authenticated",
+  /revoke\s+execute\s+on\s+function\s+public\.document_number_base\s*\(\s*text\s*\)\s*from\s+authenticated/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 does not re-grant the seed helper to authenticated",
+  !/grant\s+execute\s+on\s+function\s+public\.max_existing_document_number[^;]*authenticated/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 narrows the estimate/invoice branch to can_manage_billing alone",
+  /if not public\.can_manage_billing\(p_company_id\) then/.test(sql149) &&
+    !/can_manage_billing\(p_company_id\)\s*or public\.can_dispatch_jobs\(p_company_id\)/.test(
+      sql149,
+    ),
+);
+
+check(
+  "149 leaves the job/expense branch accepting dispatchers and billing managers",
+  /if p_document_type in \('job', 'expense'\) then[\s\S]{0,400}?can_dispatch_jobs\(p_company_id\)[\s\S]{0,200}?can_manage_billing\(p_company_id\)/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 keeps the allocator callable by authenticated",
+  /grant\s+execute\s+on\s+function\s+public\.allocate_company_document_number[\s\S]{0,80}?authenticated/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 still requires active company membership for an authenticated caller",
+  /is_active_company_member\s*\(\s*p_company_id\s*\)[\s\S]{0,140}?insufficient_permission/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 preserves the atomic upsert and the monotonic increment",
+  /on\s+conflict\s*\(\s*company_id\s*,\s*document_type\s*\)\s*do\s+update[\s\S]{0,140}?next_value\s*=\s*c\.next_value\s*\+\s*1/.test(
+    sql149,
+  ),
+);
+
+check(
+  "149 touches no customer data and creates no table",
+  !/\bdrop\s+table\b/.test(sql149) &&
+    !/\bdelete\s+from\b/.test(sql149) &&
+    !/\bupdate\s+public\.(jobs|invoices|estimates|expenses)\b/.test(sql149) &&
+    !/\bcreate\s+table\b/.test(sql149),
+);
+
+check(
+  "the seed helper is reachable only through the allocator, never from app code",
+  !/max_existing_document_number/.test(
+    loadTs("lib/database/queries/document-numbers.ts"),
+  ),
+);
 
 console.log("\nPART A2 — application code no longer derives numbers from counts");
 
