@@ -21,6 +21,7 @@
     "verify:perimeter": "node scripts/verify-perimeter.mjs",
     "verify:loadtest-harness": "node scripts/verify-loadtest-harness.mjs",
     "verify:dashboard-aggregates": "node scripts/verify-dashboard-aggregates.mjs",
+    "verify:cron-sweep": "node scripts/verify-cron-sweep.mjs",
     "loadtest:seed": "node scripts/loadtest-seed.mjs",
     "loadtest:benchmark": "node scripts/loadtest-benchmark.mjs",
     "verify:channels": "node scripts/verify-marketing-channels.mjs",

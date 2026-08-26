@@ -12,5 +12,22 @@
       "path": "/api/cron/marketing-ai",
       "schedule": "30 12 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/cron/workflow-reminders/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/marketing-ai/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/marketing-insights/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/webhooks/payments/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/webhooks/billing/route.ts": {
+      "maxDuration": 30
+    }
+  }
 }

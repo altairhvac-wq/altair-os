@@ -1,7 +1,7 @@
 export type PlatformAutomationRunBrief = {
   id: string;
   automationKey: string;
-  status: "started" | "succeeded" | "failed";
+  status: "started" | "succeeded" | "failed" | "partial";
   startedAt: string;
   finishedAt: string | null;
   durationMs: number | null;

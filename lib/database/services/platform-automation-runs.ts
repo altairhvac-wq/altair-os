@@ -83,7 +83,15 @@ export async function recordPlatformAutomationRunFinished(
   input: {
     automationKey: string;
     startedAt: string;
-    status: Extract<PlatformAutomationRunStatus, "succeeded" | "failed">;
+    /**
+     * "partial" (migration 152) is a terminal outcome for a bounded sweep that
+     * did real work and will resume. It is NOT "started" — a run left at
+     * "started" now unambiguously means the function died.
+     */
+    status: Extract<
+      PlatformAutomationRunStatus,
+      "succeeded" | "failed" | "partial"
+    >;
     companyCount?: number;
     totals?: PlatformAutomationRunTotals;
     errorSummary?: string | null;

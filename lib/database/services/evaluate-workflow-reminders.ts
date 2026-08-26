@@ -17,6 +17,30 @@ import {
   resolveCompletedAt,
 } from "@/lib/database/services/reports/completed-work-report";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import {
+  runTenantSweep,
+  type TenantSweepCompany,
+  type TenantSweepCursor,
+  type TenantSweepOutcome,
+} from "@/lib/automation/tenant-sweep";
+
+/**
+ * Checkpoint key for the workflow-reminder sweep.
+ *
+ * Distinct from WORKFLOW_REMINDERS_AUTOMATION_KEY (the run-record key) so the
+ * two concerns stay separable: one records what happened, the other records
+ * where to resume.
+ */
+const WORKFLOW_REMINDER_SWEEP_KEY = "workflow_reminders_sweep";
+
+/**
+ * Companies per invocation.
+ *
+ * Chosen to be comfortably completable inside the route's maxDuration with the
+ * time budget as the real backstop. Raising it trades a shorter full cycle for
+ * a higher chance of hitting the budget mid-batch, which is safe but wasteful.
+ */
+const WORKFLOW_REMINDER_SWEEP_BATCH_SIZE = 50;
 import type { WorkflowReminderRow } from "@/lib/database/types/core-tables";
 import type {
   Json,
@@ -60,6 +84,15 @@ export type WorkflowReminderEvaluationResult = {
   errors: WorkflowReminderEvaluationError[];
 };
 
+export type WorkflowReminderSweepSummary = {
+  attempted: number;
+  succeeded: number;
+  /** True when this invocation reached the end of the tenant list. */
+  cycleComplete: boolean;
+  /** True when it stopped early because the time budget was reached. */
+  stoppedForTime: boolean;
+};
+
 export type WorkflowReminderBatchEvaluationResult = {
   evaluatedAt: string;
   companyCount: number;
@@ -70,6 +103,8 @@ export type WorkflowReminderBatchEvaluationResult = {
     skipped: number;
   };
   companies: WorkflowReminderEvaluationResult[];
+  /** Present when the batch ran as a bounded sweep. */
+  sweep?: WorkflowReminderSweepSummary;
   errors: WorkflowReminderEvaluationError[];
 };
 
@@ -790,19 +825,46 @@ export async function evaluateWorkflowRemindersForCompany(input: {
   return result;
 }
 
-async function listCompanyIdsForReminderEvaluation(
+/**
+ * One page of companies, in the total order (created_at, id).
+ *
+ * This replaced an unfiltered `select id from companies` with no bound. That
+ * query returned EVERY tenant, and the caller then processed them serially with
+ * an await each — so a large enough tenant list guaranteed the function would be
+ * killed partway through, silently dropping everyone after the cut.
+ *
+ * The keyset predicate is written as the standard row-comparison expansion
+ * rather than a tuple comparison, because PostgREST cannot express
+ * `(a, b) > (x, y)` directly:
+ *
+ *     created_at > cursor.createdAt
+ *  OR (created_at = cursor.createdAt AND id > cursor.companyId)
+ */
+async function listCompanyPageForReminderEvaluation(
   client: DbClient,
-): Promise<string[]> {
-  const { data, error } = await client
+  cursor: TenantSweepCursor | null,
+  limit: number,
+): Promise<TenantSweepCompany[]> {
+  let query = client
     .from("companies")
-    .select("id")
-    .order("created_at", { ascending: true });
+    .select("id, created_at")
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(limit);
+
+  if (cursor) {
+    query = query.or(
+      `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.companyId})`,
+    );
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((row) => row.id);
+  return (data ?? []) as TenantSweepCompany[];
 }
 
 /**
@@ -812,6 +874,10 @@ async function listCompanyIdsForReminderEvaluation(
 export async function evaluateWorkflowRemindersForAllCompanies(input?: {
   evaluatedAt?: string | Date;
   client?: DbClient;
+  /** Companies per invocation. Defaults to WORKFLOW_REMINDER_SWEEP_BATCH_SIZE. */
+  batchSize?: number;
+  /** Wall-clock budget for starting new companies. Defaults to the sweep default. */
+  timeBudgetMs?: number;
 }): Promise<WorkflowReminderBatchEvaluationResult> {
   const evaluatedAt =
     input?.evaluatedAt != null
@@ -851,10 +917,47 @@ export async function evaluateWorkflowRemindersForAllCompanies(input?: {
     };
   }
 
-  let companyIds: string[];
+  const companies: WorkflowReminderEvaluationResult[] = [];
+  const totals = {
+    created: 0,
+    updated: 0,
+    completed: 0,
+    skipped: 0,
+  };
+
+  // ==================== BOUNDED, RESUMABLE SWEEP ====================
+  // This was a serial `for` over EVERY company with no time budget, which meant
+  // a large enough tenant list guaranteed the function would be killed partway
+  // through and every company after the cut got nothing that day, silently.
+  //
+  // runTenantSweep pages through companies in (created_at, id) order, stops on
+  // batch size or time budget, and persists a cursor so the next invocation
+  // resumes where this one stopped. Re-running a company is safe: workflow
+  // reminders carry a natural unique key, so evaluation converges rather than
+  // duplicating.
+  let outcome: TenantSweepOutcome;
 
   try {
-    companyIds = await listCompanyIdsForReminderEvaluation(client);
+    outcome = await runTenantSweep({
+      automationKey: WORKFLOW_REMINDER_SWEEP_KEY,
+      batchSize: input?.batchSize ?? WORKFLOW_REMINDER_SWEEP_BATCH_SIZE,
+      timeBudgetMs: input?.timeBudgetMs,
+      listCompanies: (cursor, limit) =>
+        listCompanyPageForReminderEvaluation(client, cursor, limit),
+      processCompany: async (companyId) => {
+        const result = await evaluateWorkflowRemindersForCompany({
+          companyId,
+          evaluatedAt,
+          client,
+        });
+
+        companies.push(result);
+        totals.created += result.created;
+        totals.updated += result.updated;
+        totals.completed += result.completed;
+        totals.skipped += result.skipped;
+      },
+    });
   } catch (error) {
     return {
       ...emptyBatchResult,
@@ -868,33 +971,24 @@ export async function evaluateWorkflowRemindersForAllCompanies(input?: {
     };
   }
 
-  const companies: WorkflowReminderEvaluationResult[] = [];
-  const totals = {
-    created: 0,
-    updated: 0,
-    completed: 0,
-    skipped: 0,
-  };
-
-  for (const companyId of companyIds) {
-    const result = await evaluateWorkflowRemindersForCompany({
-      companyId,
-      evaluatedAt,
-      client,
-    });
-
-    companies.push(result);
-    totals.created += result.created;
-    totals.updated += result.updated;
-    totals.completed += result.completed;
-    totals.skipped += result.skipped;
-  }
-
   return {
     evaluatedAt: evaluatedAtIso,
-    companyCount: companyIds.length,
+    companyCount: outcome.attempted,
     totals,
     companies,
-    errors: companies.flatMap((result) => result.errors),
+    sweep: {
+      attempted: outcome.attempted,
+      succeeded: outcome.succeeded,
+      cycleComplete: outcome.cycleComplete,
+      stoppedForTime: outcome.stoppedForTime,
+    },
+    errors: [
+      ...companies.flatMap((result) => result.errors),
+      ...outcome.errors.map((entry) => ({
+        kind: "company" as const,
+        companyId: entry.companyId,
+        message: entry.message,
+      })),
+    ],
   };
 }
