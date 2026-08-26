@@ -66,6 +66,7 @@ steps.push(
   { name: "loadtest-harness", script: "scripts/verify-loadtest-harness.mjs" },
   { name: "dashboard-aggregates", script: "scripts/verify-dashboard-aggregates.mjs" },
   { name: "cron-sweep", script: "scripts/verify-cron-sweep.mjs" },
+  { name: "phase4-controls", script: "scripts/verify-phase4-controls.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",

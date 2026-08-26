@@ -34,6 +34,19 @@ export function RouteErrorView({
       </div>
       <h1 className="mt-5 text-lg font-bold text-slate-900">{title}</h1>
       <p className="mt-2 text-sm text-slate-500">{description}</p>
+      {/*
+        The digest only — never error.message or the stack. The digest is the
+        server-generated identifier that correlates this screen with the record
+        in the error monitor, so it is exactly what support needs and carries
+        none of the query fragments, ids or customer data a message can.
+        app/error.tsx already shows it; showing it here too means a user can
+        quote a reference wherever they hit a failure.
+      */}
+      {error.digest ? (
+        <p className="mt-2 font-mono text-xs text-slate-400">
+          Reference: {error.digest}
+        </p>
+      ) : null}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Button
           type="button"
