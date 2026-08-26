@@ -3,7 +3,10 @@ import "server-only";
 import { isCronSecretConfigured } from "@/lib/automation/env";
 import { resolveAppBaseUrl } from "@/lib/email/env";
 import { getStripeSecretKey, getStripeWebhookSecret } from "@/lib/payments/env";
-import { isSmsSendingConfigured, getSmsProvider } from "@/lib/sms/env";
+import {
+  getSmsComplianceStatus,
+  getSmsProvider,
+} from "@/lib/sms/env";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import type {
   PlatformSystemCheckItem,
@@ -142,23 +145,38 @@ export function runPlatformSystemChecks(): PlatformSystemCheckSummary {
     );
   }
 
+  // SMS reports the COMPLIANCE answer, not just the credential answer.
+  // "Disabled" is the correct launch state and reads as informational; having
+  // credentials without inbound STOP handling is a hard failure, because that
+  // is the configuration that would text customers who cannot opt out.
   const smsProvider = getSmsProvider();
-  if (smsProvider === "disabled") {
-    checks.push(
-      buildCheck(
-        "env-sms",
-        "SMS (Twilio)",
-        "warn",
-        "SMS provider is disabled (SMS_PROVIDER not set or disabled).",
-      ),
-    );
-  } else if (isSmsSendingConfigured()) {
+  const smsCompliance = getSmsComplianceStatus();
+
+  if (smsCompliance.ok) {
     checks.push(
       buildCheck(
         "env-sms",
         "SMS (Twilio)",
         "pass",
-        "Twilio SMS env is configured.",
+        "Twilio SMS is configured and inbound STOP handling is asserted live.",
+      ),
+    );
+  } else if (smsCompliance.reason === "provider_disabled") {
+    checks.push(
+      buildCheck(
+        "env-sms",
+        "SMS (Twilio)",
+        "warn",
+        "SMS is disabled (SMS_PROVIDER not set). This is the intended launch state until inbound STOP handling ships.",
+      ),
+    );
+  } else if (smsCompliance.reason === "inbound_stop_handling_not_live") {
+    checks.push(
+      buildCheck(
+        "env-sms",
+        "SMS (Twilio)",
+        "fail",
+        `SMS credentials are present for "${smsProvider}" but SMS_INBOUND_STOP_HANDLING is not "live". Sending is blocked: outbound texts invite a STOP reply that nothing processes. Ship inbound STOP handling, or unset SMS_PROVIDER.`,
       ),
     );
   } else {
