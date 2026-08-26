@@ -8,6 +8,11 @@ import {
   getSmsProvider,
 } from "@/lib/sms/env";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import {
+  buildProductionConfigReport,
+  isProductionRuntime,
+} from "@/lib/system-check/production-config";
+import { isPlatformAdminConfigured } from "@/lib/database/platform-admin";
 import type {
   PlatformSystemCheckItem,
   PlatformSystemCheckSummary,
@@ -189,6 +194,86 @@ export function runPlatformSystemChecks(): PlatformSystemCheckSummary {
       ),
     );
   }
+
+  // ==================== THE PRODUCTION CONFIGURATION CONTRACT ====================
+  // Reads lib/system-check/production-config.ts — the same declaration CI uses
+  // to prove .env.example documents every variable the code depends on. This
+  // reports PRESENCE ONLY and never echoes a value.
+  const configReport = buildProductionConfigReport();
+
+  checks.push(
+    configReport.missingRequired.length === 0
+      ? buildCheck(
+          "config-required",
+          "Required production configuration",
+          "pass",
+          "Every variable classified REQUIRED is present.",
+        )
+      : buildCheck(
+          "config-required",
+          "Required production configuration",
+          "fail",
+          `Missing ${configReport.missingRequired.length}: ${configReport.missingRequired
+            .map((entry) => entry.name)
+            .join(", ")}`,
+        ),
+  );
+
+  if (configReport.deprecatedPresent.length > 0) {
+    checks.push(
+      buildCheck(
+        "config-deprecated",
+        "Deprecated configuration aliases",
+        "warn",
+        `Set but superseded: ${configReport.deprecatedPresent.join(", ")}. Rename to EMAIL_RECIPIENT_OVERRIDE (local only).`,
+      ),
+    );
+  }
+
+  if (configReport.devOnlyInProduction.length > 0) {
+    checks.push(
+      buildCheck(
+        "config-dev-only-in-production",
+        "Development-only configuration in production",
+        "fail",
+        `These must not exist in production: ${configReport.devOnlyInProduction.join(", ")}`,
+      ),
+    );
+  }
+
+  // The email override is the specific dangerous case worth naming, because a
+  // stale value here used to intercept every customer email silently.
+  const emailOverridePresent = configReport.dangerousPresent.some(
+    (entry) => entry.name === "EMAIL_RECIPIENT_OVERRIDE",
+  );
+  if (emailOverridePresent) {
+    checks.push(
+      buildCheck(
+        "config-email-override",
+        "Email recipient override",
+        isProductionRuntime() ? "fail" : "warn",
+        isProductionRuntime()
+          ? "EMAIL_RECIPIENT_OVERRIDE is set in production. It is IGNORED, so customer email is delivering correctly — but remove it in Vercel."
+          : "EMAIL_RECIPIENT_OVERRIDE is set. Outbound email is redirected away from real recipients (correct for local development).",
+      ),
+    );
+  }
+
+  checks.push(
+    isPlatformAdminConfigured()
+      ? buildCheck(
+          "env-platform-admin",
+          "Platform admin allowlist",
+          "pass",
+          "PLATFORM_ADMIN_EMAILS is configured.",
+        )
+      : buildCheck(
+          "env-platform-admin",
+          "Platform admin allowlist",
+          "fail",
+          "PLATFORM_ADMIN_EMAILS is empty or unset. Nobody can reach the platform surfaces, including the payment reconciliation queue.",
+        ),
+  );
 
   const appUrl = resolveAppBaseUrl();
   if (appUrl.ok) {

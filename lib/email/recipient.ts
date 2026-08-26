@@ -16,6 +16,12 @@ export type ResolvedEmailRecipient = {
   intendedRecipient: string;
   redirected: boolean;
   redirectReason?: EmailRecipientRedirectReason;
+  /**
+   * An override variable was set but deliberately ignored because this is a
+   * production runtime. Mail goes to the real recipient; the caller reports
+   * the misconfiguration.
+   */
+  overrideIgnoredInProduction?: boolean;
   warning?: string;
   overrideEnv?: string;
 };
@@ -75,7 +81,21 @@ export function readEmailRecipientOverrideEnv(): {
 export function formatEmailRecipientOverrideProductionWarning(
   envName: string,
 ): string {
-  return `${envName} is set in production. Billing emails are redirected away from customer addresses. Remove it in Vercel for beta customer delivery.`;
+  return `${envName} is set in production and is being IGNORED. Email is going to real recipients as intended, but this variable should not exist in a production environment — remove it in Vercel.`;
+}
+
+/**
+ * Is this a production runtime?
+ *
+ * Read through a function so the check is one place and so the verifier can
+ * assert on it. VERCEL_ENV is consulted as well as NODE_ENV because a Vercel
+ * production deployment is production regardless of how NODE_ENV was set.
+ */
+function isProductionRuntime(): boolean {
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV?.trim() === "production"
+  );
 }
 
 export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipientResult {
@@ -99,6 +119,50 @@ export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipient
         to: intendedRecipient,
         intendedRecipient,
         redirected: false,
+      },
+    };
+  }
+
+  // ==================== THE OVERRIDE IS INERT IN PRODUCTION ====================
+  //
+  // This used to redirect in production too, composing an explicit warning
+  // about it and then performing the redirect anyway. The warning went to
+  // console.warn, which nothing was watching. The result: one stale Vercel
+  // variable could silently intercept every estimate, invoice, payment link
+  // and team invite indefinitely, and the only symptom a customer would
+  // report is "I never got the email".
+  //
+  // Two candidate behaviours were available: refuse the send, or ignore the
+  // override. Ignoring is correct. Refusing would convert a misconfiguration
+  // into a total outage of customer email — strictly worse than the thing
+  // being prevented — whereas ignoring restores the intended behaviour and
+  // leaves only the operator's test inbox unfed.
+  //
+  // The misconfiguration is not silent: it is reported to the error monitor,
+  // and the system check reports it too.
+  if (isProductionRuntime()) {
+    console.error(
+      "[resolveEmailRecipient] recipient override IGNORED in production:",
+      {
+        envName,
+        legacyEnvNames,
+        intendedDomain: intendedRecipient.split("@")[1] ?? "unknown",
+        overrideDomain: override.split("@")[1] ?? "unknown",
+      },
+    );
+
+    return {
+      ok: true,
+      recipient: {
+        to: intendedRecipient,
+        intendedRecipient,
+        redirected: false,
+        // The caller (lib/email/resend.ts) reports this to the error monitor.
+        // This module stays a pure decision function with no server-only
+        // imports so it remains directly testable.
+        overrideIgnoredInProduction: true,
+        warning: formatEmailRecipientOverrideProductionWarning(envName),
+        overrideEnv: envName,
       },
     };
   }
@@ -133,10 +197,8 @@ export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipient
       ? ` Rename ${legacyEnvNames.join(", ")} to ${EMAIL_RECIPIENT_OVERRIDE_ENV} for local dev only.`
       : "";
 
-  const isProduction = process.env.NODE_ENV === "production";
-  const warning = isProduction
-    ? `Billing email redirected by ${envName}: intended ${intendedRecipient}, sent to ${override}. Remove ${envName} in Vercel for real customer delivery.${legacyNote}`
-    : `Billing email redirected by ${envName}: intended ${intendedRecipient}, sent to ${override}.${legacyNote}`;
+  // Production returned above, so a redirect can only happen outside it.
+  const warning = `Billing email redirected by ${envName}: intended ${intendedRecipient}, sent to ${override}.${legacyNote}`;
 
   if (legacyEnvNames.length > 0) {
     console.warn("[resolveEmailRecipient] legacy override env detected:", {
@@ -149,7 +211,6 @@ export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipient
 
   console.warn("[resolveEmailRecipient] recipient override active:", {
     envName,
-    isProduction,
     intendedDomain: intendedRecipient.split("@")[1] ?? "unknown",
     overrideDomain: override.split("@")[1] ?? "unknown",
   });

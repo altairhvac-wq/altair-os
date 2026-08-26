@@ -35,12 +35,13 @@ function check(name, condition) {
   }
 }
 
+/** Line comments first — see the note in scripts/verify-perimeter.mjs. */
 function loadTs(path) {
   return readFileSync(path, "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
     .split("\n")
     .filter((line) => !line.trimStart().startsWith("//"))
-    .join("\n");
+    .join("\n")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
 const monitoring = loadTs("lib/operations/monitoring.ts");

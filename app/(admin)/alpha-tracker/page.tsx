@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listAlphaTrackerItems } from "@/lib/database/queries/alpha-tracker-items";
 import { AlphaTrackerPageView } from "@/shared/components/alpha-tracker/AlphaTrackerPageView";
@@ -11,9 +12,12 @@ export default async function AlphaTrackerPage() {
     redirect("/setup");
   }
 
-  if (!companyContext.permissions.manageCompany) {
+  // Internal-only surface: platform admin AND company admin. Mirrors
+  // canAccessAdminNavItem(context, "/alpha-tracker") so hiding the nav entry
+  // and blocking the route cannot drift apart.
+  if (!canAccessAdminNavItem(companyContext, "/alpha-tracker")) {
     return (
-      <UnauthorizedAccessView description="Feedback access is limited to company admins." />
+      <UnauthorizedAccessView description="The alpha tracker is an internal Altair surface." />
     );
   }
 

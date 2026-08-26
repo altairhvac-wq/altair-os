@@ -477,7 +477,19 @@ export function canAccessAdminNavItem(
     case "/leads":
       return access.canManageCustomers;
     case "/marketing":
-      return permissions.dispatchJobs;
+      // ==================== INTERNAL-ONLY SURFACE ====================
+      // Marketing Hub is the founder's own workspace: the Facebook connection
+      // panel, the agent snapshot, the media library and the daily reel queue.
+      // Publishing from it has always been restricted to the platform-admin
+      // allowlist (assertFounderPublishAccess), which meant a paying customer
+      // could explore the entire surface and could not use the one action it
+      // exists for.
+      //
+      // Gated at the access-control layer, not merely hidden from the sidebar,
+      // so the page guard and the redirect guard tighten with it. The server
+      // actions behind it keep their own canAccessPlatformAdmin checks — this
+      // does not replace them.
+      return context.isPlatformAdmin && permissions.dispatchJobs;
     case "/sales":
     case "/estimates":
     case "/price-book":
@@ -500,7 +512,9 @@ export function canAccessAdminNavItem(
     case "/reports":
       return access.canViewOperationalReports;
     case "/alpha-tracker":
-      return permissions.manageCompany;
+      // Internal alpha feedback tracker. Not a customer-facing feature, and a
+      // nav item named "Alpha Tracker" in a paid product reads as unfinished.
+      return context.isPlatformAdmin && permissions.manageCompany;
     case "/settings":
       return permissions.manageCompany;
     default:
@@ -662,7 +676,7 @@ export function canAccessAppRedirectPath(
   }
 
   if (path.startsWith("/marketing")) {
-    return context.permissions.dispatchJobs;
+    return context.isPlatformAdmin && context.permissions.dispatchJobs;
   }
 
   if (path.startsWith("/network") || path.startsWith("/community")) {
@@ -676,7 +690,7 @@ export function canAccessAppRedirectPath(
   }
 
   if (path.startsWith("/alpha-tracker")) {
-    return context.permissions.manageCompany;
+    return context.isPlatformAdmin && context.permissions.manageCompany;
   }
 
   if (path === "/platform" || path.startsWith("/platform/")) {

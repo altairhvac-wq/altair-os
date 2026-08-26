@@ -1699,6 +1699,18 @@ export type ActiveCompanyContext = UserCompanyContext & {
     email: string | undefined;
   };
   role: CompanyRole;
+  /**
+   * Whether this user is on the internal platform-admin allowlist.
+   *
+   * Resolved once, server-side, in getActiveCompanyContext. It lives on the
+   * context so client-safe guards in lib/database/access-control.ts can gate
+   * internal-only surfaces without importing the server-only allowlist module.
+   *
+   * This is a convenience for gating, NOT the authorization boundary: every
+   * platform-admin action still calls canAccessPlatformAdmin /
+   * requirePlatformAdmin on the server.
+   */
+  isPlatformAdmin: boolean;
   permissions: Record<
     | "manageCompany"
     | "manageUsers"

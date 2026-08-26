@@ -1,5 +1,8 @@
 import os from "os";
 import type { NextConfig } from "next";
+// Relative import on purpose: next.config.ts is evaluated by the config loader
+// before the tsconfig path alias is available.
+import { buildSecurityHeaders } from "./lib/security/response-headers";
 
 function getLocalDevOrigins(): string[] {
   const origins = new Set<string>();
@@ -24,9 +27,31 @@ function getLocalDevOrigins(): string[] {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: getLocalDevOrigins(),
+  // Nothing gains from announcing the framework and version to a scanner.
+  poweredByHeader: false,
   images: {
     qualities: [70, 75, 90],
   },
+  /**
+   * Security headers on every response.
+   *
+   * Applied at the config layer rather than in middleware so they also cover
+   * responses middleware does not see, and so a matcher change cannot silently
+   * drop them. The policy is derived from what the application actually loads;
+   * see lib/security/response-headers.ts for each directive's justification.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: buildSecurityHeaders({
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          isDevelopment: process.env.NODE_ENV !== "production",
+        }),
+      },
+    ];
+  },
+
   async redirects() {
     return [
       {

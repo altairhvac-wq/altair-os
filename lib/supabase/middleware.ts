@@ -35,6 +35,14 @@ const BILLING_WEBHOOK_ROUTE = "/api/webhooks/billing";
 const CRON_ROUTE_PREFIX = "/api/cron/";
 /** Dev-only fingerprint check for the Altair Demo Tool preflight guard. */
 const DEMO_FINGERPRINT_ROUTE = "/api/demo/fingerprint";
+/**
+ * Machine-to-machine media ingest. Public at this layer for the same reason
+ * the cron and agent routes are: the render pipeline posting here has no
+ * browser session, so without the exemption an unauthenticated POST is 307'd
+ * to /login and the handler never runs. The route enforces its own
+ * ALTAIR_MEDIA_INGEST_SECRET bearer check, which is the real boundary.
+ */
+const MARKETING_MEDIA_INGEST_ROUTE = "/api/marketing/media/ingest";
 
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
@@ -79,6 +87,13 @@ function isBillingWebhookRoute(pathname: string) {
 
 function isCronRoute(pathname: string) {
   return pathname.startsWith(CRON_ROUTE_PREFIX);
+}
+
+function isMarketingMediaIngestRoute(pathname: string) {
+  return (
+    pathname === MARKETING_MEDIA_INGEST_ROUTE ||
+    pathname === `${MARKETING_MEDIA_INGEST_ROUTE}/`
+  );
 }
 
 function isDemoFingerprintRoute(pathname: string) {
@@ -132,6 +147,7 @@ function isPublicRoute(pathname: string) {
     isBillingWebhookRoute(pathname) ||
     isCronRoute(pathname) ||
     isAgentBridgeRoute(pathname) ||
+    isMarketingMediaIngestRoute(pathname) ||
     isDemoFingerprintRoute(pathname)
   );
 }

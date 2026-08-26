@@ -63,12 +63,13 @@ function loadSql(path) {
 }
 
 /** Line comments and block comments stripped, for the same reason. */
+/** Line comments first — see the note in scripts/verify-perimeter.mjs. */
 function loadTs(path) {
   return readFileSync(path, "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
     .split("\n")
     .filter((line) => !line.trimStart().startsWith("//"))
-    .join("\n");
+    .join("\n")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
 // ===========================================================================

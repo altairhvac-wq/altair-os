@@ -11,6 +11,7 @@ import {
   resolveEmailRecipient,
   type ResolvedEmailRecipient,
 } from "@/lib/email/recipient";
+import { captureMonitoredEvent } from "@/lib/operations/monitoring";
 
 export type EmailRecipientRedirect = Pick<
   ResolvedEmailRecipient,
@@ -164,6 +165,21 @@ export async function sendViaResend(
   }
 
   const { recipient } = resolved;
+
+  // A recipient override exists in a production environment. It was ignored,
+  // so this send is going to the real customer — but the variable should not
+  // be there, and until now the only trace was a console line nobody read.
+  if (recipient.overrideIgnoredInProduction) {
+    captureMonitoredEvent({
+      event: "email.recipient_override_ignored_in_production",
+      level: "warning",
+      meta: {
+        overrideEnv: recipient.overrideEnv,
+        logContext: input.logContext,
+      },
+    });
+  }
+
   const toDomain = recipient.to.split("@")[1] ?? "unknown";
   const intendedDomain = recipient.intendedRecipient.split("@")[1] ?? "unknown";
 

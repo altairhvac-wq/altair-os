@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isAuthorizedBearerRequest } from "@/lib/operations/bearer-auth";
+
 /**
  * Configuration for the Agent Platform bridge.
  *
@@ -61,28 +63,15 @@ export function getMissingAgentBridgeEnvVars(): string[] {
 }
 
 /**
- * Constant-time-ish bearer comparison.
+ * Agent bridge authorization.
  *
- * `timingSafeEqual` requires equal lengths, so length is compared first and a
- * mismatch returns early — that leaks the LENGTH of the configured secret and
- * nothing else, which is the same trade every practical bearer check makes.
- * The point is that a correct-length guess cannot be refined byte by byte.
+ * The constant-time comparison this used to carry privately now lives in
+ * lib/operations/bearer-auth.ts and is shared with the cron routes, so there
+ * is one bearer check to review rather than two. The shared version is also
+ * strictly stronger: it hashes both values to a fixed 32 bytes before
+ * comparing, so it does not leak the configured secret's length the way the
+ * previous early length check did.
  */
-function secretsMatch(provided: string, expected: string): boolean {
-  if (provided.length !== expected.length) return false;
-  let difference = 0;
-  for (let index = 0; index < provided.length; index += 1) {
-    difference |= provided.charCodeAt(index) ^ expected.charCodeAt(index);
-  }
-  return difference === 0;
-}
-
 export function isAuthorizedAgentRequest(request: Request): boolean {
-  const secret = getAgentIngestSecret();
-  if (!secret) return false;
-
-  const authorization = request.headers.get("authorization");
-  if (!authorization || !authorization.startsWith("Bearer ")) return false;
-
-  return secretsMatch(authorization.slice("Bearer ".length), secret);
+  return isAuthorizedBearerRequest(request, getAgentIngestSecret());
 }

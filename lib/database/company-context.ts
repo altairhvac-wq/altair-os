@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import type {
   ActiveCompanyContext,
@@ -59,6 +60,10 @@ function toActiveCompanyContext(
       timezone: resolveCompanyTimeZone(company.timezone),
     },
     role,
+    // Resolved here so client-safe guards can read it off the context instead
+    // of importing the server-only allowlist. Not the authorization boundary —
+    // server actions still call canAccessPlatformAdmin themselves.
+    isPlatformAdmin: canAccessPlatformAdmin(user),
     permissions: buildPermissions(role),
   };
 }

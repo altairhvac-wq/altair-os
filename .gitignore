@@ -54,3 +54,10 @@ next-env.d.ts
 /_*.js
 /_screenshot.png
 /-
+
+# local scratch parked for deletion, transfer archives, and one-off exports.
+# Listed so a stray `git add -A` can never sweep them into a commit.
+/_to_delete/
+/_xfer-media.tgz
+/altair-overview-*.json
+*.tgz
