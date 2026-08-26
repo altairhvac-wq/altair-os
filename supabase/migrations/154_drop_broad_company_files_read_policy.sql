@@ -1,0 +1,56 @@
+-- Migration 154: remove the broad company-files read policy.
+--
+-- ==============================================================================
+-- APPLY THIS ONLY AFTER MIGRATION 153 HAS BEEN APPLIED AND VERIFIED IN THE
+-- TARGET ENVIRONMENT. This is the step where access actually narrows.
+-- ==============================================================================
+--
+-- Migration 153 added "row authorized company file reads", which joins each
+-- object to the expenses or jobs row it belongs to. PostgreSQL combines
+-- PERMISSIVE policies with OR, so while migration 021's
+-- "company members can read company files" also exists, the broad policy keeps
+-- granting everything and 153 has no effect.
+--
+-- Dropping the broad policy is therefore the entire behaviour change of this
+-- pair. Before applying it, confirm against a non-production copy:
+--
+--   * an owner / admin / office_staff can open any expense receipt
+--   * a dispatcher can open any expense receipt and any job attachment
+--   * a technician can open THEIR OWN expense receipt
+--   * a technician CANNOT open another technician's receipt, even given the
+--     exact object key
+--   * a technician can open an attachment on a job assigned to them
+--   * a technician CANNOT open an attachment on a job assigned to someone else
+--   * no member of another company can open anything
+--
+-- The checklist and the exact SQL for exercising it are in
+-- docs/development/storage-authorization.md.
+--
+-- ============================== WHAT THIS DOES NOT TOUCH ==============================
+-- The INSERT and DELETE policies from migration 021 are left exactly as they
+-- are. Upload and delete are already gated on company membership, they are not
+-- the read-path defect, and changing three policies at once would make a
+-- rollback ambiguous about which one caused a problem.
+--
+-- ============================== ROLLBACK ==============================
+-- Immediate and complete — re-create the dropped policy:
+--
+--   create policy "company members can read company files"
+--   on storage.objects
+--   for select
+--   to authenticated
+--   using (
+--     bucket_id = 'company-files'
+--     and (storage.foldername(name))[1] = 'company'
+--     and public.is_active_company_member(((storage.foldername(name))[2])::uuid)
+--   );
+--
+-- Rolling back restores the previous over-broad behaviour, which is the correct
+-- trade if receipts stop opening in the field: a technician who cannot retrieve
+-- a receipt cannot do their job, and the defect being closed is a wrong shape
+-- rather than a live breach.
+--
+-- ============================== SAFETY ==============================
+-- Drops one SELECT policy. No table, no column, no data, no function.
+
+drop policy if exists "company members can read company files" on storage.objects;
