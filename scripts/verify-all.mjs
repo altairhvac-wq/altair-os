@@ -63,6 +63,7 @@ steps.push(
   { name: "document-numbering", script: "scripts/verify-document-numbering.mjs" },
   { name: "observability", script: "scripts/verify-observability.mjs" },
   { name: "perimeter", script: "scripts/verify-perimeter.mjs" },
+  { name: "loadtest-harness", script: "scripts/verify-loadtest-harness.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",

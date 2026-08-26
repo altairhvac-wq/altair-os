@@ -1,16 +1,31 @@
 # Backup and restore runbook
 
-> **STATUS: REQUIRES MANUAL PLATFORM VERIFICATION — NOT CLOSED**
+> **STATUS: RESTORE PROVEN — RECOVERY OBJECTIVES STILL UNMEASURED**
 >
-> Nothing in this repository can prove that backups exist, that point-in-time
-> recovery is enabled, or that a restore works. Those are Supabase project
-> settings and a live operation. This document specifies exactly what must be
-> confirmed and rehearsed; **P0-4 stays open until the rehearsal in section 4
-> has actually been performed and its measured RPO and RTO are recorded in
-> section 5.**
+> A restore-to-new-project rehearsal **has been performed** (see section 5).
+> A Supabase backup was restored into a separate scratch project, real
+> production-derived data was present, migration 148 applied cleanly, and the
+> document-number allocator seeded correctly above the existing per-company
+> maxima for jobs, invoices, estimates and expenses.
 >
-> Do not mark this closed because the document exists. The document is not the
-> control; the rehearsal is.
+> That closes the question "can this data be brought back at all", which was
+> the substance of P0-4.
+>
+> **It does not close P0-4 entirely.** Three things are still outstanding and
+> are recorded honestly as unknown rather than assumed:
+>
+> 1. **RPO and RTO were not measured.** The rehearsal proved recoverability,
+>    not recovery *time* or recovery *point*. Sections 3 and 5 stay empty.
+> 2. **The Supabase settings in section 1 are still unconfirmed** — in
+>    particular whether PITR is enabled, which is a paid add-on that is off by
+>    default even on Pro. Without it the exposure is up to 24 hours of
+>    accepted invoices and payments.
+> 3. **Storage objects are still unprotected** (section 6). Database backups
+>    do not cover them, and `company-files` holds expense receipts, which are
+>    tax records.
+>
+> Do not upgrade this banner to "closed" until sections 1, 3 and 5 are filled
+> in from measurement.
 
 ## Why this is a launch blocker
 
@@ -116,25 +131,57 @@ project any customer or preview deployment points at.
 
 ## 5. Rehearsal record
 
-> **Empty. No rehearsal has been performed.**
-> P0-4 remains open until this table is filled in from an actual run.
+### Rehearsal 1 — restore to a new project
+
+A restore-to-new-project rehearsal was performed after the Phase 1–3
+remediation. Only fields that were actually observed are filled in. Everything
+else is left explicitly unmeasured rather than estimated — a runbook that
+invents an RTO is worse than one that admits it does not have one.
 
 | Field | Value |
 |---|---|
-| Date performed | _not yet performed_ |
-| Performed by | — |
+| Date performed | Post-Phase-3 remediation cycle (exact timestamp not captured) |
+| Performed by | Operator (not captured) |
+| Restore method | Supabase backup restored into a **separate scratch project** |
+| Restored data present | **Yes** — real production-derived data was present in the restored copy |
+| Auth / database state | **Sufficient for verification** — the restored copy could be inspected and migrated |
+| Migration 148 applied to the restored copy | **Yes — applied successfully** |
+| Document-number allocator behaviour | **Correct** — seeded above the existing per-company maxima for jobs, invoices, estimates and expenses, against real data |
 | Production project tier | _unverified_ |
 | Daily backups enabled | _unverified_ |
-| PITR enabled | _unverified_ |
+| PITR enabled | _unverified — see the banner; this is the largest remaining exposure_ |
 | PITR retention window | _unverified_ |
-| Backup restored (timestamp) | — |
-| Schema check (4.4) | — |
-| Tenant isolation check (4.5) | — |
-| **Measured RPO** | — |
-| **Measured RTO** | — |
-| End-to-end path verified (4.8) | — |
-| Scratch project destroyed | — |
-| Notes / surprises | — |
+| Schema check (4.4) | _not captured as a count comparison_ |
+| Tenant isolation check (4.5) | _not captured_ |
+| **Measured RPO** | **not measured** |
+| **Measured RTO** | **not measured** |
+| End-to-end path verified (4.8) | _not captured_ |
+| Scratch project destroyed | _not recorded — confirm and record_ |
+
+#### What this rehearsal did and did not establish
+
+**Established.** A Supabase backup can be restored into a fresh project, the
+restored copy contains real data, the schema accepts a forward migration, and
+migration 148's lazy seeding behaves correctly against real per-company
+maxima — which is a stronger result than the modelled proof in
+`scripts/verify-document-numbering.mjs`, because it ran against production-derived
+rows rather than a reference model.
+
+**Not established.** How long a restore takes (RTO), how much data a restore
+would lose (RPO), whether RLS policies and `SECURITY DEFINER` functions came
+back intact, and whether a restored copy can actually serve authenticated
+application traffic end to end.
+
+#### What the next rehearsal must add
+
+Steps 4.4, 4.5, 4.6, 4.7, 4.8 and 4.9 of section 4 — the schema and policy
+count comparison, the cross-tenant read check, the RPO and RTO measurements,
+one authenticated end-to-end path, and confirmation the scratch project was
+destroyed.
+
+A scratch restore is also the correct target for the Phase 4 load-test harness
+(`docs/development/load-testing.md`), so the next rehearsal and the first
+scale benchmark should be run in the same sitting.
 
 Re-run this rehearsal at least every 6 months, and after any migration that
 changes RLS, `SECURITY DEFINER` functions, or grants.
@@ -157,9 +204,85 @@ objects. This application keeps customer-visible files in Storage:
 tax record. Losing it while the `expenses` row survives leaves a database that
 claims a receipt exists and storage that cannot produce it.
 
-**Action required (not yet implemented):** decide and implement a Storage
-backup strategy — scheduled `supabase storage` export to independent object
-storage, or bucket replication. Record the decision here.
+**Still not implemented.** The restore rehearsal in section 5 did not restore
+Storage, because a database backup cannot. What follows is the analysis and a
+recommended strategy; implementing it requires external infrastructure and is
+deliberately not done from the repository.
+
+### How Altair actually uses Storage
+
+Only one bucket carries irreplaceable customer data.
+
+| Bucket | Written by | Object key | Replaceable? |
+|---|---|---|---|
+| `company-files` | `attachReceiptToExpense`, job attachment upload | `company/{companyId}/expenses/{expenseId}/{file}`<br>`company/{companyId}/jobs/{jobId}/{attachmentId}/{file}` | **No.** A receipt photographed once in a van is gone. |
+| `marketing-media` | `/api/marketing/media/ingest` | `company/{id}/marketing/renders/{renderId}/{sha}.mp4` | Yes — re-renderable from the source pipeline. |
+| `avatars` | `app/actions/profile-avatar.ts` | per-user | Yes — cosmetic, re-uploadable. |
+| `founder-marketing-screenshots` | founder capture script | per-capture | Yes — regenerable with `npm run capture:founder-screenshots`. |
+
+So the backup problem is narrower than "back up Storage". It is: **back up
+`company-files`, and specifically the expense-receipt and job-attachment
+prefixes.** The other three buckets can be recreated from a source of truth
+that is not Storage.
+
+### The consistency problem, which matters more than the volume
+
+A database backup and a Storage copy are taken at different instants. Restoring
+them together produces two failure shapes:
+
+- **Row without object** — an `expenses` row with `receipt_status = 'attached'`
+  and `receipt_storage_path` set, pointing at a key that is not in the restored
+  bucket. The UI will offer a receipt and fail to produce one. This is the
+  damaging direction: the record asserts a tax document exists.
+- **Object without row** — a file nobody references. Harmless, but see the
+  orphan note below.
+
+Any strategy must therefore include a **reconciliation pass** after a restore,
+not just a copy. That pass is cheap and worth scripting before it is needed:
+select every `expenses` row with `receipt_status = 'attached'`, list the bucket
+prefix, and report keys present in one and not the other.
+
+### Recommended strategy
+
+Ordered by effort. Do at least the first.
+
+1. **Scheduled incremental sync of `company-files` to independent object
+   storage.** A daily job that lists the bucket and copies new or changed keys
+   into an S3-compatible bucket in a *different* provider or account, with
+   versioning and object-lock enabled. Independence is the point: a Supabase
+   account compromise or billing lapse must not take the backup with it.
+   Receipts are small (images and PDFs, capped at 10 MB by the bucket's
+   `file_size_limit`), so cost is negligible relative to the liability.
+
+2. **Pair every Storage sync with a database backup marker.** Record the
+   Storage sync's completion timestamp in a small table so a future restore
+   can pick the database backup closest to a known-good Storage snapshot,
+   rather than pairing them blindly.
+
+3. **Reconciliation script.** As described above, run after any restore and
+   monthly in normal operation. It is the only way to discover silent drift.
+
+4. **Retention aligned to the tax records the bucket holds** — meaningfully
+   longer than the 7-day database PITR window. Expense receipts are commonly
+   retained for years; a 7-day backup of them is not a backup.
+
+### Related defect found during this analysis (not fixed)
+
+**Storage objects are never deleted.** No code path in the repository removes a
+Storage object — `grep` for `.remove(` across `lib/` and `app/` returns
+nothing. `permanentlyDeleteExpense` deletes the `expenses` row and leaves the
+receipt in `company-files` indefinitely. Consequences:
+
+- Storage grows without bound and is never reclaimed.
+- A record the product describes as *permanently deleted* still has its
+  attachment retrievable by object key, which is a data-retention problem
+  independent of backups.
+- Under the row-joined storage policy proposed for P1-11, these orphans become
+  unreadable by anyone — which is the safe outcome, but they still occupy
+  storage and still exist.
+
+A reaper (delete objects whose owning row is gone) belongs with the P1-11
+storage-authorization work, because both need the same row↔object mapping.
 
 ---
 
