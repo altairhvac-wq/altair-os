@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
+import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
@@ -112,27 +113,23 @@ export type ListJobsOptions = {
   assignedTechnicianId?: string;
 };
 
+/**
+ * Job numbers come from the per-company counter (migration 148).
+ *
+ * This used to be `JOB-${1049 + count(*)}`, which collided permanently with
+ * the UNIQUE (company_id, job_number) constraint the moment any job was hard
+ * deleted, and had no retry to fall back on. It also degraded to
+ * `JOB-${Date.now()}` when the count query failed, writing a meaningless
+ * number into the customer's records rather than failing.
+ *
+ * The allocator throws on failure. createJob surfaces that as an ordinary
+ * action error instead of inventing a number.
+ */
 async function generateJobNumber(
   companyId: string,
   db?: DbClient,
 ): Promise<string> {
-  const supabase = await resolveDbClient(db);
-
-  const { count, error } = await supabase
-    .from("jobs")
-    .select("*", { count: "exact", head: true })
-    .eq("company_id", companyId);
-
-  if (error) {
-    console.error("[generateJobNumber] count failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-    });
-    return `JOB-${Date.now()}`;
-  }
-
-  return `JOB-${1049 + (count ?? 0)}`;
+  return allocateDocumentNumber(companyId, "job", db);
 }
 
 function mapJobFormDataFields(data: JobFormData) {
@@ -427,7 +424,26 @@ export async function createJob(
     };
   }
 
-  const jobNumber = await generateJobNumber(companyId);
+  // Allocation can fail (permission, connectivity). It must surface as an
+  // action error rather than a fabricated number: the old generator fell back
+  // to `JOB-${Date.now()}` and wrote that into the customer's records.
+  let jobNumber: string;
+  try {
+    jobNumber = await generateJobNumber(companyId);
+  } catch (allocationError) {
+    console.error("[createJob] job number allocation failed:", {
+      companyId,
+      message:
+        allocationError instanceof Error
+          ? allocationError.message
+          : "unknown",
+    });
+    return {
+      job: null,
+      error: "Could not assign a job number. Please try again.",
+    };
+  }
+
   const insert = mapJobFormDataToInsert(companyId, jobNumber, data);
 
   const { data: row, error } = await supabase
@@ -525,7 +541,25 @@ export async function createJobFromApprovedEstimate(
     .filter(Boolean)
     .join(", ");
 
-  const jobNumber = await generateJobNumber(input.companyId, db);
+  let jobNumber: string;
+  try {
+    jobNumber = await generateJobNumber(input.companyId, db);
+  } catch (allocationError) {
+    console.error("[createJobFromApprovedEstimate] job number allocation failed:", {
+      companyId: input.companyId,
+      estimateId: input.estimateId,
+      message:
+        allocationError instanceof Error
+          ? allocationError.message
+          : "unknown",
+    });
+    return {
+      jobId: null,
+      jobNumber: null,
+      error: "Could not assign a job number. Please try again.",
+    };
+  }
+
   const estimateLabel = input.estimateNumber.trim() || "estimate";
   const description = `Approved estimate ${estimateLabel}`;
   const notes = [input.notes?.trim(), `Created from approved estimate ${estimateLabel}.`]

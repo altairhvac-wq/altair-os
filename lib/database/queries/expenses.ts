@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
 import type {
   ExpenseInsert,
   ExpenseRow,
@@ -87,40 +88,26 @@ const EXPENSE_SELECT = `
   job:jobs(job_number, customer_id)
 `;
 
+/**
+ * Expense numbers come from the per-company counter (migration 148).
+ *
+ * The previous implementation called generate_expense_number, whose body was
+ * 'EXP-' || (1013 + count(*)) — the same defect the other three document types
+ * had, in SQL rather than TypeScript. Against the
+ * UNIQUE (company_id, expense_number) constraint it collided permanently once
+ * any expense was hard deleted, and createExpense had no retry.
+ *
+ * Its TypeScript fallback was worse than the bug: on RPC failure it recomputed
+ * the same broken formula through the RLS-scoped client, where a technician
+ * sees only their OWN expenses. That count is far lower than the company's
+ * real total, so the fallback produced a number that was almost guaranteed to
+ * already exist.
+ *
+ * Both are gone. Allocation is atomic and monotonic, and failure throws rather
+ * than fabricating a number.
+ */
 async function generateExpenseNumber(companyId: string): Promise<string> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("generate_expense_number", {
-    p_company_id: companyId,
-  });
-
-  if (!error && typeof data === "string" && data.trim()) {
-    return data;
-  }
-
-  if (error) {
-    console.error("[generateExpenseNumber] rpc failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-    });
-  }
-
-  const { count, error: countError } = await supabase
-    .from("expenses")
-    .select("*", { count: "exact", head: true })
-    .eq("company_id", companyId);
-
-  if (countError) {
-    console.error("[generateExpenseNumber] count fallback failed:", {
-      companyId,
-      code: countError.code,
-      message: countError.message,
-    });
-    return `EXP-${Date.now()}`;
-  }
-
-  return `EXP-${1013 + (count ?? 0)}`;
+  return allocateDocumentNumber(companyId, "expense");
 }
 
 export type ListExpensesOptions = {
@@ -290,7 +277,25 @@ export async function createExpense(
   },
 ): Promise<{ expense: Expense | null; error: string | null }> {
   const supabase = await createClient();
-  const expenseNumber = await generateExpenseNumber(companyId);
+
+  // Allocation failure must not fabricate a number. The old fallback path
+  // produced one from an RLS-scoped count that a technician could not see the
+  // whole of, which reliably duplicated an existing expense number.
+  let expenseNumber: string;
+  try {
+    expenseNumber = await generateExpenseNumber(companyId);
+  } catch (allocationError) {
+    console.error("[createExpense] expense number allocation failed:", {
+      companyId,
+      message:
+        allocationError instanceof Error ? allocationError.message : "unknown",
+    });
+    return {
+      expense: null,
+      error: "Could not assign an expense number. Please try again.",
+    };
+  }
+
   const paymentMethod: ExpensePaymentMethod = data.paymentMethod ?? "personal_card";
   const isReimbursable = resolveExpenseReimbursable({
     paymentMethod,

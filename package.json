@@ -16,6 +16,7 @@
     "verify:agent-contract": "node scripts/verify-agent-snapshot-contract.mjs",
     "verify:publish-guard": "node scripts/verify-marketing-publish-guard.mjs",
     "verify:migrations": "node scripts/verify-marketing-migrations.mjs",
+    "verify:document-numbering": "node scripts/verify-document-numbering.mjs",
     "verify:channels": "node scripts/verify-marketing-channels.mjs",
     "verify:delivery": "node scripts/verify-marketing-delivery.mjs",
     "verify:delivery-store": "node scripts/verify-marketing-delivery-store.mjs",

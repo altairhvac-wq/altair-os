@@ -1468,6 +1468,18 @@ export type Database = {
         };
         Returns: TimeEntryRow;
       };
+      // allocate_company_document_number: migration 148 — wire into Database
+      // types on next gen types run. Returns bigint; PostgREST may serialize
+      // that as a JSON number or a string, so the caller
+      // (lib/database/queries/document-numbers.ts) parses defensively.
+      allocate_company_document_number: {
+        Args: {
+          p_company_id: string;
+          p_document_type: "job" | "estimate" | "invoice" | "expense";
+        };
+        Returns: number;
+      };
+      /** @deprecated migration 148 — shim over allocate_company_document_number. */
       generate_expense_number: {
         Args: {
           p_company_id: string;

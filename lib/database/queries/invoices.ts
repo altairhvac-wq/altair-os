@@ -6,6 +6,7 @@ import {
 } from "@/shared/lib/company-billing-defaults";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
+import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -195,27 +196,25 @@ function mapInvoiceRowToInvoiceDetail(
 
 const DOCUMENT_NUMBER_INSERT_RETRIES = 5;
 
+/**
+ * Standalone invoice numbers come from the per-company counter (migration 148).
+ *
+ * This used to be `INV-${1050 + count(*)}`. With a
+ * UNIQUE (company_id, invoice_number) constraint that collided permanently
+ * the moment any invoice was hard deleted: the count dropped, the next number
+ * pointed at a row that still existed, and because the formula is
+ * deterministic the retry loop below recomputed the same value every time.
+ *
+ * It also degraded to `INV-${Date.now()}` when the count query failed, which
+ * wrote a meaningless permanent number into the customer's records.
+ *
+ * The allocator throws instead; createInvoice turns that into an action error.
+ */
 async function generateStandaloneInvoiceNumber(
   companyId: string,
   db?: DbClient,
 ): Promise<string> {
-  const supabase = await resolveDbClient(db);
-
-  const { count, error } = await supabase
-    .from("invoices")
-    .select("*", { count: "exact", head: true })
-    .eq("company_id", companyId);
-
-  if (error) {
-    console.error("[generateInvoiceNumber] count failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-    });
-    return `INV-${Date.now()}`;
-  }
-
-  return `INV-${1050 + (count ?? 0)}`;
+  return allocateDocumentNumber(companyId, "invoice", db);
 }
 
 async function generateJobLinkedInvoiceNumberValue(
@@ -1209,12 +1208,42 @@ export async function createInvoice(
   let row: { id: string } | null = null;
   let insertError: { code?: string; message?: string; details?: string; hint?: string } | null =
     null;
+  let numberAllocationFailed = false;
 
+  /**
+   * ==================== WHAT THIS RETRY IS FOR NOW ====================
+   * It used to paper over the COUNT(*) numbering defect, and could not: the
+   * generator was deterministic, so every attempt produced the same colliding
+   * number and all 5 tries failed identically.
+   *
+   * Standalone numbers now come from the migration-148 counter and cannot
+   * collide at all. The loop remains because the OTHER numbering scheme still
+   * needs it: a job-linked child number (INV-1049-01) is derived from the
+   * highest existing sibling, so two estimates created against the same job at
+   * the same moment can genuinely pick the same sequence. There the retry does
+   * real work — the second attempt re-reads a max that has since moved.
+   *
+   * A standalone create therefore executes exactly one iteration in practice.
+   */
   for (let attempt = 0; attempt < DOCUMENT_NUMBER_INSERT_RETRIES; attempt += 1) {
-    const invoiceNumber = await generateInvoiceNumber(companyId, {
-      jobNumber: linkedJobNumber,
-      db,
-    });
+    let invoiceNumber: string;
+    try {
+      invoiceNumber = await generateInvoiceNumber(companyId, {
+        jobNumber: linkedJobNumber,
+        db,
+      });
+    } catch (allocationError) {
+      // A number could not be allocated at all (permission, connectivity).
+      // Retrying cannot help and inventing one is not acceptable, so stop.
+      console.error("[createInvoice] number allocation failed:", {
+        companyId,
+        message:
+          allocationError instanceof Error ? allocationError.message : "unknown",
+      });
+      numberAllocationFailed = true;
+      break;
+    }
+
     const insert = mapInvoiceFormDataToInsert(
       companyId,
       invoiceNumber,
@@ -1243,6 +1272,13 @@ export async function createInvoice(
     }
 
     break;
+  }
+
+  if (numberAllocationFailed) {
+    return {
+      invoice: null,
+      error: "Could not assign an invoice number. Please try again.",
+    };
   }
 
   if (insertError || !row) {

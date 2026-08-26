@@ -60,6 +60,7 @@ steps.push(
  * The document-numbering verifier is pure and needs no such flag.
  */
 steps.push(
+  { name: "document-numbering", script: "scripts/verify-document-numbering.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
