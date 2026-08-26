@@ -65,7 +65,7 @@ export async function generateCompletionNotesDraftAction(
   }
 
   const { context, job } = permission;
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: COMPLETION_NOTES_AI_FEATURE,

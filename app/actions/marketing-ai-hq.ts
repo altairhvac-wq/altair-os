@@ -150,7 +150,7 @@ export async function runMarketingCopywriterBatchAction(): Promise<MarketingHqRu
     return { error: permission.error };
   }
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: permission.context.company.id,
     userId: permission.context.user.id,
     feature: MARKETING_HQ_COPYWRITER_AI_FEATURE,
@@ -179,7 +179,7 @@ export async function runMarketingSeoBatchAction(): Promise<MarketingHqRunAction
     return { error: permission.error };
   }
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: permission.context.company.id,
     userId: permission.context.user.id,
     feature: MARKETING_HQ_SEO_AI_FEATURE,
@@ -208,7 +208,7 @@ export async function runMarketingVideoBriefAction(): Promise<MarketingHqRunActi
     return { error: permission.error };
   }
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: permission.context.company.id,
     userId: permission.context.user.id,
     feature: MARKETING_HQ_VIDEO_AI_FEATURE,
@@ -237,7 +237,7 @@ export async function runMarketingStrategistAction(): Promise<MarketingHqRunActi
     return { error: permission.error };
   }
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: permission.context.company.id,
     userId: permission.context.user.id,
     feature: MARKETING_HQ_STRATEGIST_AI_FEATURE,

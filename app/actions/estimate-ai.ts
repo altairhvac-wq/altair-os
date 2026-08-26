@@ -65,7 +65,7 @@ export async function generateEstimateDescriptionDraftAction(
   }
 
   const { context } = permission;
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: ESTIMATE_DESCRIPTION_AI_FEATURE,

@@ -191,7 +191,7 @@ export async function generateLeadFollowUpAction(
 
   const { context, lead } = permission;
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: LEAD_FOLLOW_UP_AI_FEATURE,

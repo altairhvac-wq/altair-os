@@ -14,12 +14,16 @@ import {
 export type AiUserErrorCode =
   | GenerateDraftTextErrorCode
   | "rate_limited"
+  /** Company has spent its monthly AI token budget (migration 155). */
+  | "monthly_ceiling_reached"
   | "insufficient_context";
 
 const DEFAULT_MESSAGES: Record<AiUserErrorCode, string> = {
   ai_disabled: "AI drafting is not configured yet.",
   missing_api_key: "AI drafting is not configured yet.",
   rate_limited: "Please wait a moment before using AI again.",
+  monthly_ceiling_reached:
+    "This workspace has reached its AI usage limit for the month. It resets on the 1st.",
   insufficient_context: "Add a few notes or line items before using AI.",
   provider_error: "Could not complete the AI request. Try again.",
   empty_response: "Could not complete the AI request. Try again.",

@@ -1,3 +1,4 @@
+import { recordAiUsage } from "@/lib/ai/guardrails";
 import "server-only";
 
 import OpenAI from "openai";
@@ -110,6 +111,32 @@ export async function generateDraftText(
         promptTokens: response.usage.prompt_tokens,
         completionTokens: response.usage.completion_tokens,
       };
+    }
+
+    // ==================== SPEND ACCOUNTING ====================
+    // OpenAI has always returned these token counts and this module has always
+    // read them — and then discarded them. That is why there was no spend
+    // ceiling: the data existed and nothing wrote it down.
+    //
+    // Recorded here rather than at each of the thirteen call sites, so a new AI
+    // feature is accounted for by construction rather than by remembering.
+    //
+    // `companyId` on the request was marked "reserved for future tenancy
+    // scoping"; this is that future. When it is absent the call cannot be
+    // attributed, so nothing is written rather than being charged to the wrong
+    // tenant.
+    //
+    // Awaited, but never allowed to fail the request: the user has already
+    // received the draft, and a missing ledger row must not turn a success into
+    // an error. The failure is reported instead.
+    if (request.companyId && response.usage) {
+      await recordAiUsage({
+        companyId: request.companyId,
+        feature: request.feature,
+        model: config.model,
+        promptTokens: response.usage.prompt_tokens,
+        completionTokens: response.usage.completion_tokens,
+      });
     }
 
     return { ok: true, result };

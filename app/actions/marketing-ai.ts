@@ -110,7 +110,7 @@ export async function generateMarketingPostRewriteAction(
 
   const { context } = permission;
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: MARKETING_POST_REWRITE_AI_FEATURE,
@@ -201,7 +201,7 @@ export async function generateMarketingCompletedJobDraftAction(
     return { error: "Choose a completed job before generating a draft." };
   }
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
@@ -280,7 +280,7 @@ export async function generateMarketingFounderDraftAction(
 
   const { context } = permission;
 
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: MARKETING_FOUNDER_DRAFT_AI_FEATURE,

@@ -1468,6 +1468,29 @@ export type Database = {
         };
         Returns: TimeEntryRow;
       };
+      // check_and_record_ai_request / record_ai_usage: migration 155 — wire
+      // into Database types on next gen types run.
+      check_and_record_ai_request: {
+        Args: {
+          p_company_id: string;
+          p_feature: string;
+          p_cooldown_seconds: number;
+          p_window_seconds: number;
+          p_window_limit: number;
+          p_default_monthly_token_ceiling: number;
+        };
+        Returns: Json;
+      };
+      record_ai_usage: {
+        Args: {
+          p_company_id: string;
+          p_feature: string;
+          p_model: string | null;
+          p_prompt_tokens: number;
+          p_completion_tokens: number;
+        };
+        Returns: undefined;
+      };
       // get_company_dashboard_aggregates: migration 151 — wire into Database
       // types on next gen types run. Returns a jsonb envelope; the caller
       // (lib/database/queries/dashboard-aggregates.ts) coerces every field

@@ -60,7 +60,7 @@ export async function generateJobSummaryAction(
   }
 
   const { context, job } = permission;
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: JOB_SUMMARY_AI_FEATURE,

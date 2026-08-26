@@ -92,7 +92,7 @@ export async function generateInvoiceMessageDraftAction(
   }
 
   const { context, invoice } = permission;
-  const rateLimit = checkAiRateLimit({
+  const rateLimit = await checkAiRateLimit({
     companyId: context.company.id,
     userId: context.user.id,
     feature: INVOICE_MESSAGE_AI_FEATURE,
