@@ -173,11 +173,34 @@ assert(
   typeof stripeEvidenceDueByToIso(1682294399) === "string",
 );
 
+/**
+ * Offline mode.
+ *
+ * ==================== WHY THIS EXISTS ====================
+ * The DB section below authenticates with the SERVICE ROLE key from
+ * .env.local and INSERTS a probe row. That is fine when a developer runs this
+ * script deliberately against a scratch project, and unacceptable inside the
+ * aggregate `verify:all` gate, which is documented as offline and side-effect
+ * free and is expected to be safe to run in any checkout -- including one
+ * whose .env.local points at production.
+ *
+ * `verify-all.mjs` sets ALTAIR_VERIFY_OFFLINE=1, which keeps every pure-logic
+ * assertion above and skips only the DB probe. Running the script directly is
+ * unchanged.
+ */
+const OFFLINE =
+  process.env.ALTAIR_VERIFY_OFFLINE === "1" ||
+  process.argv.includes("--offline");
+
 const env = loadEnv();
 const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
+if (OFFLINE) {
+  console.log(
+    "(offline mode: skipping the DB persistence check; pure-logic assertions above still ran)",
+  );
+} else if (!SUPABASE_URL || !SERVICE_KEY) {
   console.log(
     "\n(skipping DB persistence check — missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local)\n",
   );

@@ -42,12 +42,43 @@ steps.push(
   { name: "hq-queue", script: "scripts/verify-marketing-hq-queue.mjs" },
 );
 
+/**
+ * ==================== THE MONEY PATH ====================
+ * These four were passing individually but sat outside the aggregate gate, so
+ * nothing routinely ran them and a regression in payment recording, dispute
+ * handling, card-failure persistence, or subscription entitlement could reach
+ * production unchallenged. The launch audit called that out; they belong here.
+ *
+ * Two of them (disputes, payment-intent-failed) contain an OPTIONAL DB probe
+ * that authenticates with the service-role key from .env.local and writes a
+ * row. That must never happen from `verify:all`, which is documented above as
+ * offline and side-effect free and may be run in a checkout pointed at
+ * production. `ALTAIR_VERIFY_OFFLINE=1` (set below) keeps every pure-logic
+ * assertion and skips only the DB probe. Run either script directly, without
+ * that variable, to exercise the DB half against a scratch project.
+ *
+ * The document-numbering verifier is pure and needs no such flag.
+ */
+steps.push(
+  {
+    name: "payment-reconciliation",
+    script: "scripts/test-payment-reconciliation-classification.mjs",
+  },
+  { name: "charge-disputes", script: "scripts/verify-charge-dispute-handler.mjs" },
+  {
+    name: "payment-intent-failed",
+    script: "scripts/verify-payment-intent-failed-handler.mjs",
+  },
+  { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
+);
+
 const results = [];
 let failed = false;
 
 for (const step of steps) {
   const result = spawnSync(process.execPath, [step.script, ...(step.args ?? [])], {
     stdio: "inherit",
+    env: { ...process.env, ALTAIR_VERIFY_OFFLINE: "1" },
   });
   const status = result.error ? 1 : (result.status ?? 1);
   if (result.error) {

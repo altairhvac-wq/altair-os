@@ -1,0 +1,101 @@
+name: CI
+
+# =============================== WHAT THIS GATE IS ===============================
+# Before this workflow existed the only thing standing between a change and
+# production was a Husky pre-commit hook running lint-staged over changed files.
+# Nothing ran the typechecker, nothing ran the verifier suite, and nothing ran a
+# production build. A regression in payment recording or permission enforcement
+# had no obstacle at all.
+#
+# The four jobs below are the same four commands a developer runs locally, so
+# "green in CI" and "green on my machine" mean the same thing. Keep them in sync
+# with docs/development/lint-policy.md and the `verify:*` scripts in package.json.
+#
+# =============================== WHY NO SECRETS ===============================
+# Every step here is offline. `verify:all` sets ALTAIR_VERIFY_OFFLINE=1 so the
+# payment verifiers skip their optional Supabase probe, and the production build
+# runs against placeholder Supabase values that are never used to open a
+# connection — Next.js only needs them to exist at module-eval time. No real
+# credential is required, and none should ever be added to this workflow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Errors fail the build; warnings do not. The single deliberate severity
+      # downgrade is documented in docs/development/lint-policy.md.
+      - run: npm run lint
+
+  verify:
+    name: Verifier suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Includes the money-path verifiers: payment reconciliation classification,
+      # charge disputes, payment-intent failures, and SaaS entitlement gating.
+      - run: npm run verify:all
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: next build
+        # Placeholder values only. The build never opens a connection; these
+        # exist so module-eval-time env reads resolve. Never replace them with
+        # real project credentials.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
