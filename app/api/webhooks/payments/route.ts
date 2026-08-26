@@ -19,6 +19,16 @@ import {
   STALE_PAYMENT_PROVIDER_EVENT_PROCESSING_MS,
 } from "@/lib/database/services/payment-provider-events";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import {
+  createRequestId,
+  requestIdFromHeaders,
+  runOperation,
+} from "@/lib/operations";
+import {
+  captureMonitoredEvent,
+  captureMonitoredException,
+  flushMonitoring,
+} from "@/lib/operations/monitoring";
 
 export const runtime = "nodejs";
 
@@ -68,7 +78,7 @@ async function claimAndProcessStripeWebhookEvent(
   return buildProcessResponse(processResult);
 }
 
-export async function POST(request: Request) {
+async function handleWebhook(request: Request): Promise<Response> {
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = getStripeWebhookSecret();
@@ -210,4 +220,73 @@ export async function POST(request: Request) {
   }
 
   return claimAndProcessStripeWebhookEvent(supabase, event);
+}
+
+/**
+ * ==================== WHY THE HANDLER IS WRAPPED ====================
+ * This route is where money becomes a record. Before this wrapper the only
+ * trace of a failure was `console.error` into a log stream nothing watched: a
+ * webhook that started returning 500 would be retried by Stripe for days and
+ * then abandoned, with no one told.
+ *
+ * `runOperation` gives it the same treatment the cron routes already had —
+ * request correlation, structured start/finish logging, retry classification,
+ * and the metrics hooks that lib/operations/monitoring.ts now bridges to the
+ * error monitor.
+ *
+ * ==================== RESPONSE SEMANTICS ARE UNCHANGED ====================
+ * Stripe's redelivery behaviour is driven entirely by the status code, so this
+ * wrapper must never alter one. `throwOnFailure: false` keeps the operation
+ * from rethrowing, the handler's own responses pass through untouched, and an
+ * unexpected throw produces the same 500 Next would have produced on its own —
+ * which is the correct answer, because an unhandled exception here means we do
+ * not know whether the payment was recorded and Stripe must try again.
+ *
+ * A deliberate 5xx is reported too. It is not an exception, but it is the
+ * signal that this endpoint is failing to keep up with reality.
+ */
+export async function POST(request: Request): Promise<Response> {
+  const requestId = requestIdFromHeaders(request.headers) ?? createRequestId();
+
+  const opResult = await runOperation<Response>({
+    operationName: "webhook.stripe_payments.process",
+    context: { requestId, route: "/api/webhooks/payments" },
+    throwOnFailure: false,
+    callback: async () => {
+      const response = await handleWebhook(request);
+
+      if (response.status >= 500) {
+        // Reported through the same seam as a thrown error so one alert rule
+        // covers both. Deliberate 5xx means "Stripe, try again" — repeated,
+        // it means the money path is stuck.
+        captureMonitoredEvent({
+          event: "payments.webhook_server_error",
+          level: "error",
+          requestId,
+          route: "/api/webhooks/payments",
+          meta: { status: response.status },
+        });
+      }
+
+      return response;
+    },
+  });
+
+  if (opResult.success && opResult.value) {
+    await flushMonitoring();
+    return opResult.value;
+  }
+
+  captureMonitoredException(new Error(opResult.error?.message ?? "unknown"), {
+    event: "payments.webhook_unhandled_exception",
+    requestId,
+    route: "/api/webhooks/payments",
+    meta: { retryable: opResult.retryable },
+  });
+  await flushMonitoring();
+
+  return NextResponse.json(
+    { received: true, processed: false, error: "Webhook processing failed" },
+    { status: 500 },
+  );
 }

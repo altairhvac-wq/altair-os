@@ -34,6 +34,7 @@ import {
   recordPaymentAttemptCardFailure,
 } from "@/lib/payments/payment-attempts-service";
 import { recordPaymentReconciliationAtomic } from "@/lib/payments/payment-reconciliation-service";
+import { captureMonitoredEvent } from "@/lib/operations/monitoring";
 import type { PaymentAttemptRecord } from "@/lib/payments/payment-attempts";
 import type { PaymentReconciliationReasonCode } from "@/lib/payments/payment-reconciliations";
 import {
@@ -734,6 +735,33 @@ async function reconcileStaleCapturedCheckoutSession(
     reconciliationId: reconcileResult.result.reconciliation_id,
     created: reconcileResult.result.created,
   });
+
+  // ==================== WHY THIS IS AN ALERT ====================
+  // Nothing threw. The webhook is about to correctly return 200. And yet money
+  // was captured by Stripe that has NOT been applied to an invoice, because the
+  // invoice or the payment attempt moved underneath the capture.
+  //
+  // That is the single most important condition in this file and, until now,
+  // it was discoverable only if someone happened to open the founder
+  // reconciliation dashboard. `created` distinguishes a genuinely new
+  // reconciliation from a redelivered webhook re-reaching an existing one, so
+  // a retry storm does not become an alert storm.
+  if (reconcileResult.result.created) {
+    captureMonitoredEvent({
+      event: "payments.reconciliation_required",
+      level: "error",
+      companyId,
+      route: "/api/webhooks/payments",
+      meta: {
+        reasonCode,
+        invoiceId,
+        capturedAmount,
+        currency: (session.currency ?? "usd").toLowerCase(),
+        reconciliationId: reconcileResult.result.reconciliation_id,
+        paymentAttemptId: attempt.id,
+      },
+    });
+  }
 
   revalidateInvoiceOperationalPages(invoiceId);
   return { processed: true, ignored: false };

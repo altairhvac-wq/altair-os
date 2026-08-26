@@ -61,6 +61,7 @@ steps.push(
  */
 steps.push(
   { name: "document-numbering", script: "scripts/verify-document-numbering.mjs" },
+  { name: "observability", script: "scripts/verify-observability.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",

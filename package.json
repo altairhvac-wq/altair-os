@@ -17,6 +17,7 @@
     "verify:publish-guard": "node scripts/verify-marketing-publish-guard.mjs",
     "verify:migrations": "node scripts/verify-marketing-migrations.mjs",
     "verify:document-numbering": "node scripts/verify-document-numbering.mjs",
+    "verify:observability": "node scripts/verify-observability.mjs",
     "verify:channels": "node scripts/verify-marketing-channels.mjs",
     "verify:delivery": "node scripts/verify-marketing-delivery.mjs",
     "verify:delivery-store": "node scripts/verify-marketing-delivery-store.mjs",
@@ -35,6 +36,7 @@
     "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.71.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "lucide-react": "^1.16.0",
