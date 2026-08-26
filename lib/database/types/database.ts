@@ -1468,6 +1468,17 @@ export type Database = {
         };
         Returns: TimeEntryRow;
       };
+      // get_company_dashboard_aggregates: migration 151 — wire into Database
+      // types on next gen types run. Returns a jsonb envelope; the caller
+      // (lib/database/queries/dashboard-aggregates.ts) coerces every field
+      // defensively because PostgREST serializes numeric inconsistently.
+      get_company_dashboard_aggregates: {
+        Args: {
+          p_company_id: string;
+          p_reference?: string;
+        };
+        Returns: Json;
+      };
       // allocate_company_document_number: migration 148 — wire into Database
       // types on next gen types run. Returns bigint; PostgREST may serialize
       // that as a JSON number or a string, so the caller

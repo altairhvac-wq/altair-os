@@ -64,6 +64,7 @@ steps.push(
   { name: "observability", script: "scripts/verify-observability.mjs" },
   { name: "perimeter", script: "scripts/verify-perimeter.mjs" },
   { name: "loadtest-harness", script: "scripts/verify-loadtest-harness.mjs" },
+  { name: "dashboard-aggregates", script: "scripts/verify-dashboard-aggregates.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
