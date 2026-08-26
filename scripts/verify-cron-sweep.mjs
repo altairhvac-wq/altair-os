@@ -367,6 +367,58 @@ function runToCycleCompletion(state, options = {}, maxInvocations = 500) {
   check("both cycles were recorded as complete", state.cyclesCompleted === 2);
 }
 
+// ===========================================================================
+// Overdue invoice sweep — stage one of moving maintenance off the read path
+// ===========================================================================
+
+console.log("\nOverdue sweep — scheduled path added, read path deliberately kept");
+
+{
+  const sweepService = loadTs("lib/database/services/overdue-invoice-sweep.ts");
+  const sweepRoute = loadTs("app/api/cron/billing-maintenance/route.ts");
+  const billing = loadTs("lib/database/services/invoice-billing.ts");
+
+  check(
+    "a scheduled overdue sweep exists and uses the resumable tenant sweep",
+    sweepService.includes("runTenantSweep({") &&
+      sweepService.includes("syncOverdueInvoiceStatuses"),
+  );
+
+  check(
+    "the sweep evaluates due dates in each company timezone, not the server one",
+    sweepService.includes("resolveCompanyTimeZone") &&
+      sweepService.includes("timeZoneByCompany"),
+  );
+
+  check(
+    "the cron route requires the cron bearer secret",
+    sweepRoute.includes("isAuthorizedCronRequest"),
+  );
+
+  check(
+    "the cron route records partial runs like the other sweeps",
+    sweepRoute.includes("cycleComplete") && sweepRoute.includes("partial"),
+  );
+
+  check(
+    "the route is scheduled and has a maxDuration",
+    JSON.stringify(vercel.crons).includes("billing-maintenance") &&
+      Object.keys(vercel.functions).some(
+        (k) => k.includes("billing-maintenance") && vercel.functions[k].maxDuration >= 30,
+      ),
+  );
+
+  check(
+    "STAGE ONE: the read-path sync is still in place, so no coverage gap exists",
+    billing.includes("syncOverdueInvoiceStatuses"),
+  );
+
+  check(
+    "the staged rollout is documented in the route",
+    /STAGE ONE OF TWO/.test(readFileSync("app/api/cron/billing-maintenance/route.ts", "utf8")),
+  );
+}
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} cron sweep checks passed (${checks} total).`,
 );

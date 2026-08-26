@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/marketing-ai",
       "schedule": "30 12 * * *"
+    },
+    {
+      "path": "/api/cron/billing-maintenance",
+      "schedule": "15 11 * * *"
     }
   ],
   "functions": {
@@ -28,6 +32,9 @@
     },
     "app/api/webhooks/billing/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/cron/billing-maintenance/route.ts": {
+      "maxDuration": 60
     }
   }
 }
