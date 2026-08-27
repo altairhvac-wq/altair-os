@@ -1,3 +1,4 @@
+import { countInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { phonesMatch } from "@/shared/lib/phone";
@@ -691,11 +692,16 @@ async function countCustomerInvoicePayments(
     return 0;
   }
 
-  const { count, error } = await supabase
-    .from("invoice_payments")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .in("invoice_id", invoiceIds);
+  // Chunked: a long-standing customer can have more invoices than PostgREST
+  // will accept in one .in() filter, and this count gates a delete dependency
+  // check — a silent 0 there would report "nothing depends on this".
+  const { count, error } = await countInChunks(invoiceIds, (chunk) =>
+    supabase
+      .from("invoice_payments")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .in("invoice_id", chunk),
+  );
 
   if (error) {
     console.error("[countCustomerInvoicePayments] count failed:", {

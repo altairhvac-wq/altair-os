@@ -5,6 +5,7 @@
  * `network_referrals` (lead handoff). See `shared/components/network/README.md`.
  */
 
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { geocodeAddress } from "@/lib/mapbox/geocode";
@@ -293,13 +294,16 @@ export async function findNearbyNetworkProfiles(
     nearby.map((row) => [row.id, row.distance_miles]),
   );
 
-  const { data: profileRows, error: profilesError } = await supabase
-    .from("network_profiles")
-    .select("*")
-    .in(
-      "id",
-      nearby.map((row) => row.id),
-    );
+  // Chunked — see lib/database/queries/chunked-in.ts. This id set comes from a
+  // radius search, so it grows with how many partners are nearby rather than
+  // with anything the caller controls.
+  const { data: profileRows, error: profilesError } = await selectInChunks<
+    NetworkProfileRow
+  >(
+    nearby.map((row) => row.id),
+    (chunk) =>
+      supabase.from("network_profiles").select("*").in("id", chunk),
+  );
 
   if (profilesError || !profileRows) {
     console.error(

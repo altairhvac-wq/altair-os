@@ -1,6 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { mapDatabaseError } from "@/lib/database/errors";
-import type { ExpenseActivityInsert } from "@/lib/database/types/core-tables";
+import type {
+  ExpenseActivityInsert,
+  ExpenseActivityRow,
+} from "@/lib/database/types/core-tables";
+
+/**
+ * The activity feeds select `*` plus a joined actor. Naming the fields the
+ * callers actually read keeps this typed: widening it to Record<string,
+ * unknown> compiles here and pushes the failure into
+ * lib/database/queries/operational-activities.ts, which reads these fields.
+ */
+type ExpenseActivityFeedRow = ExpenseActivityRow & {
+  actor: unknown;
+};
+
+/**
+ * selectInChunks concatenates chunks in completion order, so a feed that must
+ * be globally chronological has to be re-sorted. Cheap: these lists are one
+ * page of activity, not a table scan.
+ */
+function sortByCreatedAtDesc(
+  rows: ExpenseActivityFeedRow[] | null,
+): ExpenseActivityFeedRow[] {
+  return [...(rows ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
 
 export async function recordExpenseActivity(
   input: ExpenseActivityInsert,
@@ -78,17 +103,26 @@ export async function listExpenseActivitiesForJob(
 
   const expenseIds = expenses.map((expense) => expense.id);
 
-  const { data, error } = await supabase
-    .from("expense_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  //
+  // Unlike the estimate and lead equivalents, this one returns a FLAT feed
+  // rather than one row per id, so chunking really does lose the global
+  // created_at ordering. It is restored explicitly below.
+  const { data, error } = await selectInChunks<ExpenseActivityFeedRow>(
+    expenseIds,
+    (chunk) =>
+      supabase
+        .from("expense_activities")
+        .select(
+          `
       *,
       actor:profiles!expense_activities_actor_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .in("expense_id", expenseIds)
-    .order("created_at", { ascending: false });
+        )
+        .eq("company_id", companyId)
+        .in("expense_id", chunk)
+        .order("created_at", { ascending: false }),
+  );
 
   if (error) {
     console.error("[listExpenseActivitiesForJob] query failed:", {
@@ -100,7 +134,7 @@ export async function listExpenseActivitiesForJob(
     return [];
   }
 
-  return data ?? [];
+  return sortByCreatedAtDesc(data);
 }
 
 export async function listExpenseActivitiesForCustomer(
@@ -121,17 +155,26 @@ export async function listExpenseActivitiesForCustomer(
 
   const expenseIds = expenses.map((expense) => expense.id);
 
-  const { data, error } = await supabase
-    .from("expense_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  //
+  // Unlike the estimate and lead equivalents, this one returns a FLAT feed
+  // rather than one row per id, so chunking really does lose the global
+  // created_at ordering. It is restored explicitly below.
+  const { data, error } = await selectInChunks<ExpenseActivityFeedRow>(
+    expenseIds,
+    (chunk) =>
+      supabase
+        .from("expense_activities")
+        .select(
+          `
       *,
       actor:profiles!expense_activities_actor_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .in("expense_id", expenseIds)
-    .order("created_at", { ascending: false });
+        )
+        .eq("company_id", companyId)
+        .in("expense_id", chunk)
+        .order("created_at", { ascending: false }),
+  );
 
   if (error) {
     console.error("[listExpenseActivitiesForCustomer] query failed:", {
@@ -143,5 +186,5 @@ export async function listExpenseActivitiesForCustomer(
     return [];
   }
 
-  return data ?? [];
+  return sortByCreatedAtDesc(data);
 }

@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 import { createServiceRoleClient } from "@/lib/supabase/service";
@@ -207,11 +208,18 @@ export async function markAgentDecisionsApplied(
 ): Promise<number> {
   if (seqs.length === 0) return 0;
   const supabase = createServiceRoleClient();
-  const { error } = await decisionsTable(supabase)
-    .update({ applied_at: new Date().toISOString() })
-    .eq("company_id", companyId)
-    .is("applied_at", null)
-    .in("seq", seqs.slice(0, 500));
+  // Chunked rather than truncated. seq values are integers, so 500 of them fit
+  // inside the PostgREST request line comfortably — the bug the slice caused was
+  // not a request-size failure, it was that decision 501 onward was silently
+  // never marked applied and would be re-applied on the next pass.
+  const { error } = await selectInChunks<{ seq: number }, number>(seqs, (chunk) =>
+    decisionsTable(supabase)
+      .update({ applied_at: new Date().toISOString() })
+      .eq("company_id", companyId)
+      .is("applied_at", null)
+      .in("seq", chunk)
+      .select("seq"),
+  );
 
   if (error) {
     console.error("[markAgentDecisionsApplied] write failed", {

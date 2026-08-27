@@ -1,3 +1,4 @@
+import { countInChunks } from "@/lib/database/queries/chunked-in";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const TRASH_RETENTION_DAYS = 60;
@@ -77,11 +78,16 @@ export async function countInvoicePaymentsForJob(
     return 0;
   }
 
-  const { count, error } = await supabase
-    .from("invoice_payments")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .in("invoice_id", invoiceIds);
+  // Chunked — see lib/database/queries/chunked-in.ts. This count decides
+  // whether a job can be deleted, so a silent failure would report zero
+  // dependent payments and let a delete through.
+  const { count, error } = await countInChunks(invoiceIds, (chunk) =>
+    supabase
+      .from("invoice_payments")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .in("invoice_id", chunk),
+  );
 
   if (error) {
     console.error("[countInvoicePaymentsForJob] payment count failed:", {

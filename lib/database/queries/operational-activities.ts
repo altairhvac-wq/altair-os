@@ -1,3 +1,5 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
+
 import { createClient } from "@/lib/supabase/server";
 import { listCustomerActivitiesForCustomer } from "@/lib/database/queries/customer-activities";
 import { listExpenseActivitiesForCustomer, listExpenseActivitiesForJob } from "@/lib/database/queries/expense-activities";
@@ -181,17 +183,31 @@ export async function listJobActivitiesForJobIds(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("job_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts. Sorted after
+  // concatenation so the returned order still matches the .order() below.
+  const { data, error } = await selectInChunks<
+    Omit<ActivityRowBase, "event_type"> & {
+      event_type: JobActivity["eventType"];
+      job_id: string;
+    }
+  >(jobIds, (chunk) =>
+    supabase
+      .from("job_activities")
+      .select(
+        `
       *,
       actor:profiles!job_activities_actor_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .in("job_id", jobIds)
-    .order("created_at", { ascending: false });
+      )
+      .eq("company_id", companyId)
+      .in("job_id", chunk)
+      .order("created_at", { ascending: false }),
+  ).then((result) => ({
+    ...result,
+    data: [...result.data].sort((a, b) =>
+      b.created_at.localeCompare(a.created_at),
+    ),
+  }));
 
   if (error) {
     console.error("[listJobActivitiesForJobIds] query failed:", {
@@ -228,17 +244,31 @@ async function listEstimateActivitiesForEstimateIds(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("estimate_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts. Sorted after
+  // concatenation so the returned order still matches the .order() below.
+  const { data, error } = await selectInChunks<
+    Omit<ActivityRowBase, "event_type"> & {
+      event_type: EstimateActivity["eventType"];
+      estimate_id: string;
+    }
+  >(estimateIds, (chunk) =>
+    supabase
+      .from("estimate_activities")
+      .select(
+        `
       *,
       actor:profiles!estimate_activities_actor_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .in("estimate_id", estimateIds)
-    .order("created_at", { ascending: false });
+      )
+      .eq("company_id", companyId)
+      .in("estimate_id", chunk)
+      .order("created_at", { ascending: false }),
+  ).then((result) => ({
+    ...result,
+    data: [...result.data].sort((a, b) =>
+      b.created_at.localeCompare(a.created_at),
+    ),
+  }));
 
   if (error) {
     console.error("[listEstimateActivitiesForEstimateIds] query failed:", {
@@ -275,17 +305,31 @@ async function listInvoiceActivitiesForInvoiceIds(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("invoice_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts. Sorted after
+  // concatenation so the returned order still matches the .order() below.
+  const { data, error } = await selectInChunks<
+    Omit<ActivityRowBase, "event_type"> & {
+      event_type: InvoiceActivity["eventType"];
+      invoice_id: string;
+    }
+  >(invoiceIds, (chunk) =>
+    supabase
+      .from("invoice_activities")
+      .select(
+        `
       *,
       actor:profiles!invoice_activities_actor_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .in("invoice_id", invoiceIds)
-    .order("created_at", { ascending: false });
+      )
+      .eq("company_id", companyId)
+      .in("invoice_id", chunk)
+      .order("created_at", { ascending: false }),
+  ).then((result) => ({
+    ...result,
+    data: [...result.data].sort((a, b) =>
+      b.created_at.localeCompare(a.created_at),
+    ),
+  }));
 
   if (error) {
     console.error("[listInvoiceActivitiesForInvoiceIds] query failed:", {

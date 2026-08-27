@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { EstimateStatus } from "@/shared/types/estimate";
@@ -108,20 +109,29 @@ export async function listJobBillingSummariesForJobs(
   const supabase = await createClient();
   const includeInvoices = options?.includeInvoices ?? true;
 
-  const estimatesPromise = supabase
-    .from("estimates")
-    .select(ESTIMATE_SUMMARY_SELECT)
-    .eq("company_id", companyId)
-    .in("job_id", uniqueJobIds)
-    .order("created_at", { ascending: false });
+  // Chunked — see lib/database/queries/chunked-in.ts. Both results are
+  // grouped by job_id below, so a chunk boundary never splits one job's rows
+  // and the per-job ordering that matters is preserved.
+  const estimatesPromise = selectInChunks<EstimateSummaryRow>(
+    uniqueJobIds,
+    (chunk) =>
+      supabase
+        .from("estimates")
+        .select(ESTIMATE_SUMMARY_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk)
+        .order("created_at", { ascending: false }),
+  );
 
   const invoicesPromise = includeInvoices
-    ? supabase
-        .from("invoices")
-        .select(INVOICE_SUMMARY_SELECT)
-        .eq("company_id", companyId)
-        .in("job_id", uniqueJobIds)
-        .order("created_at", { ascending: false })
+    ? selectInChunks<InvoiceSummaryRow>(uniqueJobIds, (chunk) =>
+        supabase
+          .from("invoices")
+          .select(INVOICE_SUMMARY_SELECT)
+          .eq("company_id", companyId)
+          .in("job_id", chunk)
+          .order("created_at", { ascending: false }),
+      )
     : Promise.resolve({ data: [] as InvoiceSummaryRow[], error: null });
 
   const [estimatesResult, invoicesResult] = await Promise.all([
@@ -177,13 +187,18 @@ export async function listJobEstimateSummariesForAssignedJobs(
 
   const supabase = createServiceRoleClient();
 
-  const { data, error } = await supabase
-    .from("estimates")
-    .select(ESTIMATE_SUMMARY_SELECT)
-    .eq("company_id", companyId)
-    .in("job_id", uniqueJobIds)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  const { data, error } = await selectInChunks<EstimateSummaryRow>(
+    uniqueJobIds,
+    (chunk) =>
+      supabase
+        .from("estimates")
+        .select(ESTIMATE_SUMMARY_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false }),
+  );
 
   if (error) {
     console.error("[listJobEstimateSummariesForAssignedJobs] query failed:", {
@@ -218,12 +233,17 @@ export async function listJobInvoiceSummariesForAssignedJobs(
 
   const supabase = createServiceRoleClient();
 
-  const { data, error } = await supabase
-    .from("invoices")
-    .select(INVOICE_SUMMARY_SELECT)
-    .eq("company_id", companyId)
-    .in("job_id", uniqueJobIds)
-    .order("created_at", { ascending: false });
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  const { data, error } = await selectInChunks<InvoiceSummaryRow>(
+    uniqueJobIds,
+    (chunk) =>
+      supabase
+        .from("invoices")
+        .select(INVOICE_SUMMARY_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk)
+        .order("created_at", { ascending: false }),
+  );
 
   if (error) {
     console.error("[listJobInvoiceSummariesForAssignedJobs] query failed:", {

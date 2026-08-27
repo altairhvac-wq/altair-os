@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
@@ -38,11 +39,18 @@ export async function listCompanyCardFailureAttentionAttempts(
   const invoiceNumberById = new Map<string, string>();
 
   if (invoiceIds.length > 0) {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("id, invoice_number")
-      .eq("company_id", companyId)
-      .in("id", invoiceIds);
+    // Chunked — see lib/database/queries/chunked-in.ts. The rows only
+    // populate a lookup map, so chunk order does not matter.
+    const { data, error } = await selectInChunks<{
+      id: string;
+      invoice_number: string;
+    }>(invoiceIds, (chunk) =>
+      supabase
+        .from("invoices")
+        .select("id, invoice_number")
+        .eq("company_id", companyId)
+        .in("id", chunk),
+    );
 
     if (error) {
       console.error(

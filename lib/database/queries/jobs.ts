@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
@@ -328,11 +329,19 @@ export async function getJobSchedulingSnapshotsByIds(
 
   const supabase = await resolveDbClient(db);
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("id, status, assigned_technician_id")
-    .eq("company_id", companyId)
-    .in("id", uniqueJobIds);
+  // Chunked — see lib/database/queries/chunked-in.ts. Results are keyed by job id below,
+  // so chunk completion order is irrelevant.
+  const { data, error } = await selectInChunks<{
+    id: string;
+    status: JobStatus;
+    assigned_technician_id: string | null;
+  }>(uniqueJobIds, (chunk) =>
+    supabase
+      .from("jobs")
+      .select("id, status, assigned_technician_id")
+      .eq("company_id", companyId)
+      .in("id", chunk),
+  );
 
   if (error) {
     console.error("[getJobSchedulingSnapshotsByIds] query failed:", {

@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 /**
@@ -71,11 +72,19 @@ export async function getReelPerformanceEvidence(
   if (byDelivery.size === 0) return { sinceDays, reels: [], byProvider: {} };
 
   const deliveryIds = [...byDelivery.keys()];
-  const deliveries = await anyClient
-    .from("marketing_channel_deliveries")
-    .select("id, marketing_post_id, provider, settled_at")
-    .eq("company_id", companyId)
-    .in("id", deliveryIds);
+  // Chunked — see lib/database/queries/chunked-in.ts. Keyed into a Map below.
+  const deliveries = await selectInChunks<{
+    id: string;
+    marketing_post_id: string;
+    provider: string;
+    settled_at: string | null;
+  }>(deliveryIds, (chunk) =>
+    anyClient
+      .from("marketing_channel_deliveries")
+      .select("id, marketing_post_id, provider, settled_at")
+      .eq("company_id", companyId)
+      .in("id", chunk),
+  );
 
   if (deliveries.error || !deliveries.data) {
     console.error("[getReelPerformanceEvidence] delivery lookup failed:", deliveries.error);
@@ -87,11 +96,18 @@ export async function getReelPerformanceEvidence(
   );
 
   const postIds = [...new Set([...deliveryById.values()].map((d) => d.marketing_post_id))];
-  const posts = await anyClient
-    .from("marketing_posts")
-    .select("id, title, post_text")
-    .eq("company_id", companyId)
-    .in("id", postIds);
+  // Chunked — see lib/database/queries/chunked-in.ts. Keyed into a Map below.
+  const posts = await selectInChunks<{
+    id: string;
+    title: string | null;
+    post_text: string | null;
+  }>(postIds, (chunk) =>
+    anyClient
+      .from("marketing_posts")
+      .select("id, title, post_text")
+      .eq("company_id", companyId)
+      .in("id", chunk),
+  );
 
   if (posts.error || !posts.data) {
     console.error("[getReelPerformanceEvidence] post lookup failed:", posts.error);

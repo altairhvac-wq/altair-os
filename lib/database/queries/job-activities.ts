@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -179,11 +180,18 @@ export async function findFollowUpJobForApprovedEstimate(
     return null;
   }
 
-  const { data: jobs, error: jobsError } = await supabase
-    .from("jobs")
-    .select("id, job_number, status")
-    .eq("company_id", input.companyId)
-    .in("id", candidateJobIds);
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  const { data: jobs, error: jobsError } = await selectInChunks<{
+    id: string;
+    job_number: string;
+    status: string;
+  }>(candidateJobIds, (chunk) =>
+    supabase
+      .from("jobs")
+      .select("id, job_number, status")
+      .eq("company_id", input.companyId)
+      .in("id", chunk),
+  );
 
   if (jobsError) {
     console.error("[findFollowUpJobForApprovedEstimate] jobs lookup failed:", {

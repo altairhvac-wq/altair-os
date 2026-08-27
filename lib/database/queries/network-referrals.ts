@@ -5,6 +5,7 @@
  * Not partner CRM (`network_partners`). See `shared/components/network/README.md`.
  */
 
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -205,6 +206,15 @@ export async function updateNetworkReferral(
   };
 }
 
+type NetworkReferralByLeadRow = {
+  id: string;
+  source_company_id: string;
+  source_network_profile_id: string | null;
+  target_lead_id: string | null;
+  source_company: unknown;
+  source_user: unknown;
+};
+
 export async function getNetworkReferralsByLeadIds(
   companyId: string,
   leadIds: string[],
@@ -214,10 +224,15 @@ export async function getNetworkReferralsByLeadIds(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("network_referrals")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts. Rows are keyed into a
+  // Map by target_lead_id below, so chunk completion order is irrelevant.
+  const { data, error } = await selectInChunks<NetworkReferralByLeadRow>(
+    leadIds,
+    (chunk) =>
+      supabase
+        .from("network_referrals")
+        .select(
+          `
       id,
       source_company_id,
       source_network_profile_id,
@@ -232,9 +247,10 @@ export async function getNetworkReferralsByLeadIds(
         email
       )
     `,
-    )
-    .eq("target_company_id", companyId)
-    .in("target_lead_id", leadIds);
+        )
+        .eq("target_company_id", companyId)
+        .in("target_lead_id", chunk),
+  );
 
   if (error) {
     console.error("[getNetworkReferralsByLeadIds] query failed:", error);

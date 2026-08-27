@@ -1,3 +1,4 @@
+import { countInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
@@ -124,11 +125,15 @@ export async function validateServiceItemIdsBelongToCompany(
 
   const supabase = await createClient();
 
-  const { count, error } = await supabase
-    .from("service_items")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .in("id", ids);
+  // Chunked — see lib/database/queries/chunked-in.ts. Summing is correct
+  // because the chunks partition the id set, so no row is counted twice.
+  const { count, error } = await countInChunks(ids, (chunk) =>
+    supabase
+      .from("service_items")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .in("id", chunk),
+  );
 
   if (error) {
     console.error("[validateServiceItemIdsBelongToCompany] lookup failed:", {

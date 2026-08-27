@@ -5,6 +5,7 @@
  * `network_referrals` pipeline via app/actions/network-help-requests.ts.
  */
 
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -121,13 +122,21 @@ export async function listOpenNetworkHelpRequests(
     return requests;
   }
 
-  const { data: offerCounts } = await supabase
-    .from("network_help_offers")
-    .select("id, help_request_id, company_id, status")
-    .in(
-      "help_request_id",
-      requests.map((request) => request.id),
-    );
+  // Chunked — see lib/database/queries/chunked-in.ts. Counted into Maps below,
+  // so chunk completion order is irrelevant.
+  const { data: offerCounts } = await selectInChunks<{
+    id: string;
+    help_request_id: string;
+    company_id: string;
+    status: NetworkHelpOffer["status"];
+  }>(
+    requests.map((request) => request.id),
+    (chunk) =>
+      supabase
+        .from("network_help_offers")
+        .select("id, help_request_id, company_id, status")
+        .in("help_request_id", chunk),
+  );
 
   const countsByRequest = new Map<string, number>();
   const myOfferStatusByRequest = new Map<string, NetworkHelpOffer["status"]>();

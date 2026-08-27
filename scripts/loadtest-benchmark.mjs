@@ -160,7 +160,15 @@ async function runBenchmark(args) {
   const baseUrl = String(args["base-url"] ?? "http://localhost:3000").replace(/\/$/, "");
   assertLocalOrAllowed(baseUrl, args);
 
-  const cookie = typeof args.cookie === "string" ? args.cookie : "";
+  // --cookie-file is preferred: a session cookie is a bearer credential, and
+  // passing it inline puts it in shell history. scripts/loadtest-auth-cookie.mjs
+  // writes one to a gitignored file.
+  const cookie =
+    typeof args["cookie-file"] === "string"
+      ? readFileSync(args["cookie-file"], "utf8").trim()
+      : typeof args.cookie === "string"
+        ? args.cookie
+        : "";
   const runs = Number.parseInt(String(args.runs ?? 10), 10);
   const warmups = Number.parseInt(String(args.warmups ?? 2), 10);
   const label = String(args.label ?? "run");

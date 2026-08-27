@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 import {
@@ -131,11 +132,22 @@ async function fetchStripeConnectRisks(
   const companyIds = companiesWithInvoices.map((company) => company.companyId);
   const companyById = new Map(companiesWithInvoices.map((company) => [company.companyId, company]));
 
-  const { data, error } = await supabase
-    .from("company_payment_accounts")
-    .select("company_id, status, charges_enabled, online_payments_enabled, disabled_at")
-    .eq("provider", "stripe")
-    .in("company_id", companyIds);
+  // Chunked — see lib/database/queries/chunked-in.ts. This id set grows with
+  // the number of TENANTS rather than with one tenant's data, so it crosses the
+  // limit as the platform grows rather than as one customer does.
+  const { data, error } = await selectInChunks<{
+    company_id: string;
+    status: string;
+    charges_enabled: boolean | null;
+    online_payments_enabled: boolean | null;
+    disabled_at: string | null;
+  }>(companyIds, (chunk) =>
+    supabase
+      .from("company_payment_accounts")
+      .select("company_id, status, charges_enabled, online_payments_enabled, disabled_at")
+      .eq("provider", "stripe")
+      .in("company_id", chunk),
+  );
 
   if (error) {
     const message = `company_payment_accounts query failed: ${error.message}`;

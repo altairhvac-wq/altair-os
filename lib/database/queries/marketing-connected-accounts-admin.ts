@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -235,13 +236,19 @@ export async function disconnectMissingMarketingConnectedFacebookPages(input: {
     return {};
   }
 
-  const { error } = await marketingConnectedAccountsTable(supabase)
-    .update({
-      status: "disconnected",
-      disconnected_at: now,
-      last_error: null,
-    })
-    .in("id", toDisconnect);
+  // Chunked — see lib/database/queries/chunked-in.ts. A Facebook account with
+  // many pages produces one row per page, and a bulk disconnect that silently
+  // fails would leave revoked pages marked connected.
+  const { error } = await selectInChunks<{ id: string }>(toDisconnect, (chunk) =>
+    marketingConnectedAccountsTable(supabase)
+      .update({
+        status: "disconnected",
+        disconnected_at: now,
+        last_error: null,
+      })
+      .in("id", chunk)
+      .select("id"),
+  );
 
   if (error) {
     console.error(

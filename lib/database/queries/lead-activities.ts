@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
   LeadActivityInsert,
@@ -146,10 +147,19 @@ export async function getLatestLeadActivityForLeads(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("lead_activities")
-    .select(
-      `
+  // Chunked — see lib/database/queries/chunked-in.ts.
+  //
+  // Safe without a re-sort: chunks are split by lead_id, so every activity for
+  // a lead stays in one chunk, each chunk is ordered created_at desc, and the
+  // loop below takes the first row it sees per lead. The latest-per-lead answer
+  // is therefore unchanged.
+  const { data, error } = await selectInChunks<LeadActivityRowWithActor>(
+    leadIds,
+    (chunk) =>
+      supabase
+        .from("lead_activities")
+        .select(
+          `
       *,
       actor:profiles!lead_activities_created_by_fkey (
         id,
@@ -157,10 +167,11 @@ export async function getLatestLeadActivityForLeads(
         email
       )
     `,
-    )
-    .eq("company_id", companyId)
-    .in("lead_id", leadIds)
-    .order("created_at", { ascending: false });
+        )
+        .eq("company_id", companyId)
+        .in("lead_id", chunk)
+        .order("created_at", { ascending: false }),
+  );
 
   if (error) {
     console.error("[getLatestLeadActivityForLeads] query failed:", {

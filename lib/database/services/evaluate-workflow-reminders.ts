@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import "server-only";
 
 import type { DbClient } from "@/lib/database/db-client";
@@ -271,12 +272,22 @@ async function loadEstimatesForEvaluation(
     return estimates;
   }
 
-  const { data: activityRows, error: activityError } = await client
-    .from("estimate_activities")
-    .select("estimate_id, event_type, created_at")
-    .eq("company_id", companyId)
-    .in("estimate_id", estimates.map((estimate) => estimate.id))
-    .in("event_type", ["estimate_sent", "estimate_approved"]);
+  // Chunked — see lib/database/queries/chunked-in.ts. The resolver takes the
+  // minimum created_at per event type, so chunk order is irrelevant.
+  const { data: activityRows, error: activityError } = await selectInChunks<{
+    estimate_id: string;
+    event_type: string;
+    created_at: string;
+  }>(
+    estimates.map((estimate) => estimate.id),
+    (chunk) =>
+      client
+        .from("estimate_activities")
+        .select("estimate_id, event_type, created_at")
+        .eq("company_id", companyId)
+        .in("estimate_id", chunk)
+        .in("event_type", ["estimate_sent", "estimate_approved"]),
+  );
 
   if (activityError) {
     throw new Error(activityError.message);

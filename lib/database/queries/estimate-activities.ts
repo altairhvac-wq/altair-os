@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -148,13 +149,27 @@ export async function batchResolveEstimateLifecycleTimestamps(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("estimate_activities")
-    .select("estimate_id, event_type, created_at")
-    .eq("company_id", companyId)
-    .in("estimate_id", estimateIds)
-    .in("event_type", [...LIFECYCLE_TIMESTAMP_EVENT_TYPES])
-    .order("created_at", { ascending: true });
+  // Chunked: the Sales hub passes every estimate on the page, which crosses the
+  // PostgREST request-line limit at a few hundred rows.
+  //
+  // Chunking costs nothing here. Chunks are split by estimate_id, so every
+  // activity for a given estimate stays in one chunk, and the resolver takes the
+  // MINIMUM created_at per event type rather than the first row — it does not
+  // depend on ordering at all. The .order() below is retained only because it
+  // matches the query it replaced.
+  const { data, error } = await selectInChunks<{
+    estimate_id: string;
+    event_type: string;
+    created_at: string;
+  }>(estimateIds, (chunk) =>
+    supabase
+      .from("estimate_activities")
+      .select("estimate_id, event_type, created_at")
+      .eq("company_id", companyId)
+      .in("estimate_id", chunk)
+      .in("event_type", [...LIFECYCLE_TIMESTAMP_EVENT_TYPES])
+      .order("created_at", { ascending: true }),
+  );
 
   if (error) {
     console.error("[batchResolveEstimateLifecycleTimestamps] query failed:", {

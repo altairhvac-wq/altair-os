@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -968,13 +969,21 @@ export async function syncOverdueInvoiceStatuses(
   const updatedIds: string[] = [];
 
   for (const [fromStatus, ids] of idsByStatus) {
-    const { data: updatedRows, error: updateError } = await supabase
-      .from("invoices")
-      .update({ status: "overdue" })
-      .eq("company_id", companyId)
-      .eq("status", fromStatus)
-      .in("id", ids)
-      .select("id");
+    // Chunked: a company with a few hundred past-due invoices in one status
+    // otherwise builds a request line too large for PostgREST, and the catch
+    // below turns that into "no invoice is ever marked overdue" — permanently,
+    // and only for the customers with enough invoices to care.
+    const { data: updatedRows, error: updateError } = await selectInChunks<{
+      id: string;
+    }>(ids, (chunk) =>
+      supabase
+        .from("invoices")
+        .update({ status: "overdue" })
+        .eq("company_id", companyId)
+        .eq("status", fromStatus)
+        .in("id", chunk)
+        .select("id"),
+    );
 
     if (updateError) {
       console.error("[syncOverdueInvoiceStatuses] bulk update failed:", {
