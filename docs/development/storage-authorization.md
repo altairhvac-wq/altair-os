@@ -198,6 +198,31 @@ removes them. It is dry-run by default and deliberately **not** wired into cron:
 a scheduled job that decides which customer documents no longer matter is not
 something to switch on casually.
 
+### Verified, not assumed
+
+A dry run against a corpus containing no orphans proves only that the script
+does not crash. `scripts/verify-storage-reaper-live.mjs` seeds a corpus in
+scratch where the right answer is known for every object — live, aged orphan,
+orphan still inside the grace period, unparseable path — backdates
+`storage.objects.created_at` to exercise the grace period, and runs the real
+reaper as a child process.
+
+```bash
+node scripts/verify-storage-reaper-live.mjs --confirm <scratch-ref>              # classification only
+node scripts/verify-storage-reaper-live.mjs --confirm <scratch-ref> --destructive # also proves deletion
+```
+
+Result: 15/15. Both aged orphans are flagged and deleted; the live receipt, the
+live attachment, the file inside the grace period and both unparseable objects
+all survive an actual `--delete` run; a second pass finds nothing left.
+
+One assertion is there for a specific catastrophe. The reaper concludes a file
+is an orphan when it cannot find the owning row — and migrations 154 and 156
+narrowed who can see those rows. A reaper holding anything but a service-role
+key would find no rows at all and classify the **entire bucket** as orphaned.
+The check that live files are never mass-classified as orphans exists to catch
+exactly that, because the consequence is total and unrecoverable.
+
 ```bash
 export ALTAIR_STORAGE_REAPER_SUPABASE_URL="https://<ref>.supabase.co"
 export ALTAIR_STORAGE_REAPER_SERVICE_ROLE_KEY="<service role key>"
