@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { loadExpensesPageAction } from "@/app/actions/list-pages";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
+import {
+  usePagedList,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
@@ -75,6 +81,27 @@ type ExpensesPageViewProps = {
   initialSelectedId?: string;
   initialCreate?: boolean;
   initialStatusFilter?: ExpenseStatus | "all";
+  /**
+   * One server-paged page of expenses.
+   *
+   * When present the rows already have the queue, the eight filters and the
+   * lifecycle scope applied in SQL, so the client-side equivalents are skipped
+   * rather than run a second time over a subset.
+   */
+  serverPage?: PagedListSnapshot<Expense>;
+  /** Queue counts over the WHOLE tenant, not this page. */
+  serverQueueCounts?: Record<ExpenseWorkQueue, number>;
+  /**
+   * Dropdown options from their own bounded sources.
+   *
+   * Deriving these from the loaded page would offer only whichever technicians
+   * and jobs happened to appear in 50 rows — so a filter the user needs would
+   * simply not be listed.
+   */
+  filterOptions?: {
+    technicians: { id: string; name: string }[];
+    jobs: { id: string; jobNumber: string }[];
+  };
 };
 
 const DEFAULT_FILTERS = {
@@ -99,6 +126,9 @@ export function ExpensesPageView({
   initialSelectedId,
   initialCreate = false,
   initialStatusFilter = DEFAULT_FILTERS.statusFilter,
+  serverPage,
+  serverQueueCounts,
+  filterOptions,
 }: ExpensesPageViewProps) {
   const [search, setSearch] = useState(DEFAULT_FILTERS.search);
   const [workQueue, setWorkQueue] = useState<ExpenseWorkQueue>(() =>
@@ -132,7 +162,34 @@ export function ExpensesPageView({
     return "empty";
   });
   const [createJobId] = useState(initialJobId);
+  const isServerPaged = Boolean(serverPage);
+
+  const snapshot = useMemo<PagedListSnapshot<Expense>>(
+    () =>
+      serverPage ?? {
+        rows: expenses,
+        nextCursor: null,
+        totalCount: expenses.length,
+        hasMore: false,
+      },
+    [serverPage, expenses],
+  );
+
+  const paged = usePagedList<Expense>(
+    snapshot,
+    useCallback(
+      (cursor) => loadExpensesPageAction({ cursor }),
+      [],
+    ),
+  );
+
   const [localExpenses, setLocalExpenses] = useState(expenses);
+  const [seenSource, setSeenSource] = useState<Expense[] | null>(null);
+  const incomingExpenses = isServerPaged ? paged.rows : expenses;
+  if (seenSource !== incomingExpenses) {
+    setSeenSource(incomingExpenses);
+    setLocalExpenses(incomingExpenses);
+  }
   const [lifecycleMessage, setLifecycleMessage] = useState<string | null>(null);
   const [lifecycleFailureDetails, setLifecycleFailureDetails] = useState<
     string[] | null
@@ -164,12 +221,18 @@ export function ExpensesPageView({
   }, [expenses, initialSelectedId]);
 
   const technicianOptions = useMemo(
-    () => getExpenseTechnicianOptions(localExpenses),
-    [localExpenses],
+    () =>
+      filterOptions
+        ? filterOptions.technicians.map((t) => ({ value: t.id, label: t.name }))
+        : getExpenseTechnicianOptions(localExpenses),
+    [filterOptions, localExpenses],
   );
   const jobOptions = useMemo(
-    () => getExpenseJobOptions(localExpenses),
-    [localExpenses],
+    () =>
+      filterOptions
+        ? filterOptions.jobs.map((j) => ({ value: j.id, label: j.jobNumber }))
+        : getExpenseJobOptions(localExpenses),
+    [filterOptions, localExpenses],
   );
 
   const listFilters = useMemo(
@@ -201,6 +264,7 @@ export function ExpensesPageView({
 
   const queueCounts = useMemo(
     () =>
+      serverQueueCounts ??
       ({
         "needs-review": countExpensesForWorkQueue(localExpenses, "needs-review"),
         uncategorized: countExpensesForWorkQueue(
@@ -209,30 +273,42 @@ export function ExpensesPageView({
         ),
         approved: countExpensesForWorkQueue(localExpenses, "approved"),
         past: countExpensesForWorkQueue(localExpenses, "past"),
-      }) satisfies Record<ExpenseWorkQueue, number>,
-    [localExpenses],
+      } satisfies Record<ExpenseWorkQueue, number>),
+    [localExpenses, serverQueueCounts],
   );
 
   const queueScopedExpenses = useMemo(
-    () => filterExpensesForWorkQueue(localExpenses, workQueue),
-    [localExpenses, workQueue],
+    () =>
+      isServerPaged
+        ? localExpenses
+        : filterExpensesForWorkQueue(localExpenses, workQueue),
+    [isServerPaged, localExpenses, workQueue],
   );
 
   const lifecycleScopedExpenses = useMemo(
     () =>
-      queueScopedExpenses.filter(
-        (expense) => getExpenseLifecycleState(expense) === lifecycleFilter,
-      ),
-    [queueScopedExpenses, lifecycleFilter],
+      isServerPaged
+        ? queueScopedExpenses
+        : queueScopedExpenses.filter(
+            (expense) => getExpenseLifecycleState(expense) === lifecycleFilter,
+          ),
+    [isServerPaged, queueScopedExpenses, lifecycleFilter],
   );
 
   const filteredExpenses = useMemo(
     () =>
       sortExpensesForWorkQueue(
-        filterExpenses(lifecycleScopedExpenses, listFilters),
+        // Server-paged rows already have the queue and all eight filters
+        // applied in SQL. Re-running filterExpenses over them would be a second
+        // copy of the same rule evaluated against a subset of the data — which
+        // is what made these numbers wrong in the first place. The sort stays:
+        // it orders the page, it does not select it.
+        isServerPaged
+          ? lifecycleScopedExpenses
+          : filterExpenses(lifecycleScopedExpenses, listFilters),
         workQueue,
       ),
-    [lifecycleScopedExpenses, listFilters, workQueue],
+    [isServerPaged, lifecycleScopedExpenses, listFilters, workQueue],
   );
 
   const selectionEnabled = canManageBilling;
@@ -472,7 +548,7 @@ export function ExpensesPageView({
             onReceiptFilterChange={setReceiptFilter}
             onClearFilters={handleClearFilters}
             hasActiveFilters={activeFilters}
-            resultCount={filteredExpenses.length}
+            resultCount={isServerPaged ? paged.totalCount : filteredExpenses.length}
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageBilling}
@@ -508,16 +584,29 @@ export function ExpensesPageView({
               northStar={northStar}
             />
           ) : (
-            <ExpensesTable
-              expenses={filteredExpenses}
-              selectedId={selectedId}
-              onSelect={handleSelectExpense}
-              selectionEnabled={selectionEnabled}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleSelection}
-              onToggleAllVisible={toggleAllVisible}
-              northStar={northStar}
-            />
+            <>
+              <ExpensesTable
+                expenses={filteredExpenses}
+                selectedId={selectedId}
+                onSelect={handleSelectExpense}
+                selectionEnabled={selectionEnabled}
+                selectedIds={selectedIds}
+                onToggleSelection={toggleSelection}
+                onToggleAllVisible={toggleAllVisible}
+                northStar={northStar}
+              />
+              {isServerPaged ? (
+                <PagedListFooter
+                  loadedCount={paged.loadedCount}
+                  totalCount={paged.totalCount}
+                  hasMore={paged.hasMore}
+                  isLoadingMore={paged.isLoadingMore}
+                  error={paged.error}
+                  onLoadMore={paged.loadMore}
+                  noun="expenses"
+                />
+              ) : null}
+            </>
           )}
 
           {selectionEnabled && selectedCount > 0 ? (

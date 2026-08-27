@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   fetchPagedList,
   type FilterableQuery,
@@ -18,8 +19,10 @@ import {
 import { mapExpenseRow } from "@/lib/database/queries/expenses";
 import {
   applyExpenseListFilters,
+  applyExpenseQueueFilters,
   type ExpenseListFilterRequest,
 } from "@/lib/database/queries/expense-list-filters";
+import type { ExpenseWorkQueue } from "@/shared/components/expenses/expense-work-queues";
 import { mapLeadRowToLead } from "@/lib/database/queries/leads";
 import {
   applyJobPageFilters,
@@ -441,6 +444,74 @@ export async function listExpensesPage(
  * different hat.
  */
 export const EXPENSE_JOB_OPTION_LIMIT = 200;
+
+/**
+ * Queue counts over the whole tenant.
+ *
+ * Previously derived by filtering the loaded array, which meant the tab strip
+ * described whatever had been shipped to the browser rather than the book. Four
+ * head requests run together are cheap and, unlike the array, they count
+ * everything.
+ *
+ * Scoped by technician when the caller may only see their own expenses, so the
+ * counts match the list beneath them.
+ *
+ * ============================== WHY SERVICE-ROLE HERE ==============================
+ * An exact count under RLS was measured at 1.4-1.7 SECONDS on this table, against
+ * 139-177 ms for the same count with RLS bypassed. The expenses SELECT policy
+ * evaluates is_active_company_member and can_view_company_expenses, and an exact
+ * count makes the planner run that for every row it counts. Four of those put
+ * roughly four seconds on the page.
+ *
+ * The caller has already been authorized — the page resolves the active company
+ * context and its permissions before reaching here, and passes technicianId
+ * precisely when the caller may only see their own. So the two things RLS would
+ * enforce are enforced above, and enforced again below by the explicit
+ * company_id and technician_id filters, which are not derived from user input.
+ *
+ * The ROW query deliberately keeps the user-scoped client. Rows are what a
+ * mistake would actually leak, they are bounded to one page, and RLS staying in
+ * that path is worth more than the milliseconds.
+ */
+export async function getExpenseQueueCounts(
+  companyId: string,
+  technicianId: string | null,
+): Promise<Record<ExpenseWorkQueue, number>> {
+  const supabase = createServiceRoleClient() as unknown as PagedClient;
+  const queues: ExpenseWorkQueue[] = [
+    "needs-review",
+    "uncategorized",
+    "approved",
+    "past",
+  ];
+
+  const results = await Promise.all(
+    queues.map(async (queue) => {
+      let query = applyExpenseQueueFilters(
+        supabase
+          .from("expenses")
+          .select<{ id: string }>("id", { count: "exact", head: true })
+          .eq("company_id", companyId),
+        queue,
+      );
+      if (technicianId) query = query.eq("technician_id", technicianId);
+
+      const { count, error } = await query;
+      if (error) {
+        console.error("[getExpenseQueueCounts] count failed:", {
+          companyId,
+          queue,
+          code: error.code,
+          message: error.message,
+        });
+        return [queue, 0] as const;
+      }
+      return [queue, count ?? 0] as const;
+    }),
+  );
+
+  return Object.fromEntries(results) as Record<ExpenseWorkQueue, number>;
+}
 
 export async function listExpenseFilterOptions(
   companyId: string,

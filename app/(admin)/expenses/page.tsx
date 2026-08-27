@@ -4,6 +4,11 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listDeletedExpenses, listExpenses } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { ExpensesPageView } from "@/shared/components/expenses/ExpensesPageView";
+import {
+  getExpenseQueueCounts,
+  listExpenseFilterOptions,
+  listExpensesPage,
+} from "@/lib/database/queries/list-pages";
 import type { ExpenseStatus } from "@/shared/types/expense";
 
 type ExpensesPageProps = {
@@ -51,20 +56,33 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
       ? params.customerId
       : undefined;
 
-  const [expenses, deletedExpenses] = await Promise.all([
-    listExpenses(companyContext.company.id, { includeArchived: true }),
-    listDeletedExpenses(companyContext.company.id),
+  // Served one page at a time. The queue, the eight filters and the lifecycle
+  // scope are all applied in SQL; nothing here loads the expense history into
+  // memory. Field staff are pinned to their own expenses by the query rather
+  // than by filtering an array that already contains everyone's.
+  const technicianScope = canViewCompanyExpenses(companyContext)
+    ? null
+    : companyContext.user.id;
+
+  const [expensesPage, queueCounts, filterOptions] = await Promise.all([
+    listExpensesPage(companyContext.company.id, {
+      technicianId: technicianScope,
+      statusFilter: parseExpenseStatusFilter(params.status),
+      jobIdFilter: params.jobId ?? null,
+      customerIdFilter: initialCustomerId ?? null,
+    }),
+    getExpenseQueueCounts(companyContext.company.id, technicianScope),
+    listExpenseFilterOptions(companyContext.company.id),
   ]);
-  const allExpenses = [...expenses, ...deletedExpenses];
-  const visibleExpenses = canViewCompanyExpenses(companyContext)
-    ? allExpenses
-    : allExpenses.filter(
-        (expense) => expense.technicianId === companyContext.user.id,
-      );
+
+  const visibleExpenses = expensesPage.rows;
 
   return (
     <ExpensesPageView
       expenses={visibleExpenses}
+      serverPage={expensesPage}
+      serverQueueCounts={queueCounts}
+      filterOptions={filterOptions}
       currentUserId={companyContext.user.id}
       canManageBilling={companyContext.permissions.manageBilling}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
