@@ -70,6 +70,7 @@ steps.push(
   { name: "storage-matrix", script: "scripts/verify-storage-matrix.mjs" },
   { name: "postgrest-in-limits", script: "scripts/verify-postgrest-in-limits.mjs" },
   { name: "migration-columns", script: "scripts/verify-migration-columns.mjs" },
+  { name: "function-grants", script: "scripts/verify-function-grants.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
