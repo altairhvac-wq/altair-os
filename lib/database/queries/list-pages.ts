@@ -11,7 +11,10 @@ import {
 import { escapeFilterValue, normalizeSearchTerm } from "@/lib/database/queries/pagination";
 import { mapInvoiceRowToInvoice } from "@/lib/database/queries/invoices";
 import { mapEstimateRowToEstimate } from "@/lib/database/queries/estimates";
-import { mapJobRowToJob } from "@/lib/database/mappers/job";
+import {
+  mapJobRowToJob,
+  type JobRowWithTechnician,
+} from "@/lib/database/mappers/job";
 import { mapExpenseRow } from "@/lib/database/queries/expenses";
 import { mapLeadRowToLead } from "@/lib/database/queries/leads";
 import {
@@ -273,6 +276,103 @@ export async function listJobsPage(
     sortValue: (row, column) =>
       column === "created_at" ? row.created_at : row.scheduled_at,
   }, request);
+}
+
+/**
+ * Candidate retrieval for a RANKED search.
+ *
+ * ============================== WHY TWO STAGES ==============================
+ * The jobs list does not filter on a search term, it RANKS on one:
+ * rankAndSortRecords scores exact, prefix, substring, token and typo matches
+ * differently per field kind, and shows the user which field matched and why.
+ * Reproducing that in SQL would mean reimplementing fuzzy matching and a scoring
+ * table in a second language, then keeping the two in agreement forever — the
+ * failure this codebase has already had twice.
+ *
+ * So the stages are split by what each is actually good at. The DATABASE decides
+ * which rows could plausibly match, across the whole tenant. The EXISTING
+ * ranking function decides how well each one matches, unchanged.
+ *
+ * That is not a simplification of the current behaviour, it is a correction of
+ * it: ranking previously ran over whatever rows had survived PostgREST's
+ * 1000-row ceiling, so a job that matched perfectly was invisible if it was not
+ * among the most recent thousand. Now the candidates come from the whole book.
+ *
+ * ============================== THE CAP ==============================
+ * A broad substring match can still be large, so the candidate set is bounded.
+ * The bound is reported rather than silently applied — a search matching more
+ * than this many jobs is not one anyone is reading results from, but it should
+ * not claim to be exhaustive either.
+ */
+export const SEARCH_CANDIDATE_LIMIT = 500;
+
+export type SearchCandidates<TRow> = {
+  rows: TRow[];
+  /** True when the candidate set hit the cap and may be incomplete. */
+  truncated: boolean;
+};
+
+export async function searchJobCandidates(
+  companyId: string,
+  request: JobsPageRequest,
+  db?: PagedClient,
+): Promise<SearchCandidates<ReturnType<typeof mapJobRowToJob>>> {
+  // Injectable so the scale verification can drive this exact function.
+  const supabase = db ?? ((await createClient()) as unknown as PagedClient);
+  const term = normalizeSearchTerm(request.search);
+  if (!term) return { rows: [], truncated: false };
+
+  const customerIds = await resolveCustomerIdsForSearch(supabase, companyId, term);
+  const escaped = escapeFilterValue(`%${term}%`);
+  const byCustomer = customerIdFilter(customerIds);
+
+  const ownColumns = JOB_SEARCH_COLUMNS.map(
+    (column) => `${column}.ilike.${escaped}`,
+  ).join(",");
+
+  let query = applyJobPageFilters(
+    applyLifecycle(
+      supabase
+        .from("jobs")
+        .select<JobRowWithTechnician>(JOB_SELECT)
+        .eq("company_id", companyId),
+      request,
+    ),
+    request,
+  );
+
+  if (request.assignedTechnicianId) {
+    query = query.eq("assigned_technician_id", request.assignedTechnicianId);
+  }
+
+  const { data, error } = await query
+    .or(byCustomer ? `${ownColumns},${byCustomer}` : ownColumns)
+    .order("scheduled_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(SEARCH_CANDIDATE_LIMIT + 1);
+
+  if (error) {
+    console.error("[searchJobCandidates] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { rows: [], truncated: false };
+  }
+
+  const rows = (data ?? []);
+  const truncated = rows.length > SEARCH_CANDIDATE_LIMIT;
+  if (truncated) {
+    console.warn(
+      `[searchJobCandidates] more than ${SEARCH_CANDIDATE_LIMIT} jobs match; ranking sees the first ${SEARCH_CANDIDATE_LIMIT}.`,
+      { companyId },
+    );
+  }
+
+  return {
+    rows: (truncated ? rows.slice(0, SEARCH_CANDIDATE_LIMIT) : rows).map(mapJobRowToJob),
+    truncated,
+  };
 }
 
 // ---------------------------------------------------------------------------

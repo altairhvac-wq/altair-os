@@ -14,8 +14,10 @@ import {
   listInvoicesPage,
   listJobsPage,
   listLeadsPage,
+  searchJobCandidates,
   type ListPageRequest,
 } from "@/lib/database/queries/list-pages";
+import type { JobPageFilterRequest } from "@/lib/database/queries/job-page-filters";
 import type { PaginatedResult } from "@/lib/database/queries/pagination";
 import type { CustomerWorkQueue } from "@/shared/components/customers/customer-work-queues";
 import type { Customer } from "@/shared/types/customer";
@@ -116,6 +118,34 @@ export async function loadJobsPageAction(
   return {
     page: await listJobsPage(context.company.id, { ...params, assignedTechnicianId }),
   };
+}
+
+/**
+ * Candidates for a RANKED job search, drawn from the whole tenant.
+ *
+ * The ranking itself stays in the browser — see searchJobCandidates for why
+ * splitting it that way preserves the existing behaviour rather than
+ * approximating it. This action's job is only to make sure the rows being ranked
+ * are the tenant's rows and not the most recent thousand.
+ */
+export async function searchJobsAction(
+  params: ListPageRequest & JobPageFilterRequest,
+): Promise<{ error?: string; jobs?: Job[]; truncated?: boolean }> {
+  const context = await getActiveCompanyContext();
+  if (!context) return { error: "No active company workspace." };
+
+  const scope = getCompanyAccessScope(context);
+  if (!scope.canViewAssignedJobs && !canViewAllJobs(context)) {
+    return { error: "You do not have permission to view jobs." };
+  }
+
+  const assignedTechnicianId = canViewAllJobs(context) ? null : context.user.id;
+  const result = await searchJobCandidates(context.company.id, {
+    ...params,
+    assignedTechnicianId,
+  });
+
+  return { jobs: result.rows, truncated: result.truncated };
 }
 
 export async function loadExpensesPageAction(

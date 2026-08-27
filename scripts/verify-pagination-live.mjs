@@ -265,6 +265,64 @@ async function walkSurface(companyId, surface) {
   );
 }
 
+/**
+ * Ranked search draws its candidates from the WHOLE tenant.
+ *
+ * The jobs list ranks rather than filters — exact, prefix, substring, token and
+ * typo matches score differently per field kind, and the UI shows which field
+ * matched. That ranking stays in the browser, unchanged, because reimplementing
+ * fuzzy scoring in SQL would be a second implementation of one rule, and this
+ * codebase has been bitten by exactly that twice.
+ *
+ * What had to change is where the ROWS being ranked come from. They used to be
+ * whatever survived the 1000-row ceiling, so a job that matched perfectly was
+ * invisible unless it happened to be among the most recent thousand. This proves
+ * the candidate query reaches a job that page one does not contain.
+ */
+async function verifyRankedSearchCandidates(companyId) {
+  console.log("\nRanked search candidates come from the whole tenant");
+
+  const { searchJobCandidates } = await import("@/lib/database/queries/list-pages");
+
+  const { data: oldest } = await activeScope(
+    admin.from("jobs").select("id, job_number, scheduled_at").eq("company_id", companyId),
+  )
+    .order("scheduled_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(1)
+    .single();
+
+  // Confirm it really is absent from page one, or finding it proves nothing.
+  const { data: firstPage } = await activeScope(
+    admin.from("jobs").select("id").eq("company_id", companyId),
+  )
+    .order("scheduled_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(50);
+
+  check(
+    "the oldest job is NOT on page one, so finding it means something",
+    !(firstPage ?? []).some((row) => row.id === oldest.id),
+  );
+
+  const result = await searchJobCandidates(companyId, { search: oldest.job_number }, admin);
+
+  check(
+    `candidate search finds it (${result.rows.length} candidates)`,
+    result.rows.some((job) => job.id === oldest.id),
+    `searched for ${oldest.job_number}`,
+  );
+  check("the candidate set stays bounded", result.rows.length <= 500);
+
+  // A term matching a large slice must report truncation rather than pretend.
+  const broad = await searchJobCandidates(companyId, { search: "JOB-" }, admin);
+  check(
+    "a very broad term reports truncation instead of claiming completeness",
+    broad.truncated === true && broad.rows.length === 500,
+    `truncated=${broad.truncated}, rows=${broad.rows.length}`,
+  );
+}
+
 async function main() {
   console.log(`\nTarget project: ${ref}`);
 
@@ -289,6 +347,8 @@ async function main() {
     console.log(`Walking ${surface.label}...`);
     await walkSurface(seeded.id, surface);
   }
+
+  await verifyRankedSearchCandidates(seeded.id);
 
   console.log(
     `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} pagination checks passed (${checks} total).`,
