@@ -1,3 +1,4 @@
+import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { countInChunks } from "@/lib/database/queries/chunked-in";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -134,7 +135,10 @@ export async function listCustomers(
     return [];
   }
 
-  return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
+  return reportIfRowCapped((data ?? []) as CustomerRow[], {
+    query: "listCustomers",
+    companyId,
+  }).map(mapCustomerRowToCustomer);
 }
 
 export async function listCustomerImportContacts(

@@ -149,7 +149,52 @@ check(
   /count: firstError \? 0 : total/.test(helper),
 );
 
+// ---------------------------------------------------------------------------
+// The other half of the same ceiling: the response row cap.
+// ---------------------------------------------------------------------------
+console.log("\nThe 1000-row response ceiling is at least detectable");
+
+const rowCap = readFileSync("lib/database/queries/row-cap.ts", "utf8");
+
+check(
+  "the ceiling is recorded as a named constant",
+  /POSTGREST_ROW_CEILING = 1000/.test(rowCap),
+);
+check(
+  "detection reports through the operations monitoring seam",
+  /captureMonitoredEvent/.test(rowCap) && /postgrest\.row_cap_reached/.test(rowCap),
+);
+check(
+  "detection costs no extra query",
+  // Comments stripped first: the module explains at length WHY it avoids an
+  // exact count, and matching that prose would fail the check it is describing.
+  !/count:\s*"exact"/.test(stripComments(rowCap)),
+  "an exact count would add a scan to every list render",
+);
+check(
+  "the module is explicit that this DETECTS rather than fixes",
+  /does NOT fix/i.test(rowCap) && /pagination/i.test(rowCap),
+);
+
+// The four company-wide lists a real tenant crosses first.
+for (const [file, label] of [
+  ["lib/database/queries/customers.ts", "listCustomers"],
+  ["lib/database/queries/invoices.ts", "listInvoices"],
+  ["lib/database/queries/estimates.ts", "listEstimates"],
+  ["lib/database/queries/jobs.ts", "listJobs"],
+]) {
+  const source = readFileSync(file, "utf8");
+  check(
+    `${label} reports when it comes back at the ceiling`,
+    /reportIfRowCapped/.test(source) && source.includes(`query: "${label}"`),
+  );
+}
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} PostgREST .in() checks passed (${checks} total).`,
+);
+console.log(
+  "\n  NOT fixed here: the lists themselves are still truncated at 1000 rows.\n" +
+    "  Detection only makes that visible. The fix is pagination.\n",
 );
 if (failures > 0) process.exit(1);

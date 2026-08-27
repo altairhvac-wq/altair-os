@@ -1,3 +1,4 @@
+import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
@@ -463,7 +464,10 @@ export const listEstimates = cache(async function listEstimates(
 
   return enrichEstimatesWithLifecycleTimestamps(
     companyId,
-    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
+    reportIfRowCapped((data ?? []) as EstimateRowWithRelations[], {
+      query: "listEstimates",
+      companyId,
+    }).map(mapEstimateRowToEstimate),
   );
 });
 

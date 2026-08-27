@@ -1,3 +1,4 @@
+import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
@@ -203,7 +204,10 @@ export const listJobs = cache(async function listJobs(
     return [];
   }
 
-  return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
+  return reportIfRowCapped((data ?? []) as JobRowWithTechnician[], {
+    query: "listJobs",
+    companyId,
+  }).map(mapJobRowToJob);
 });
 
 type ListJobsForOperationalDayOptions = {

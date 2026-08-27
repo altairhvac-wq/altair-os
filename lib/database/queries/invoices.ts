@@ -1,3 +1,4 @@
+import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -549,7 +550,10 @@ export const listInvoices = cache(async function listInvoices(
     return [];
   }
 
-  return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
+  return reportIfRowCapped((data ?? []) as InvoiceRowWithRelations[], {
+    query: "listInvoices",
+    companyId,
+  }).map(mapInvoiceRowToInvoice);
 });
 
 /** Lightweight refs for relationship-aware search (no line items / totals). */
