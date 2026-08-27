@@ -2,6 +2,8 @@ import "server-only";
 
 import { captureMonitoredEvent } from "@/lib/operations/monitoring";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
+import type { DbClient } from "@/lib/database/db-client";
 import type { AiFeatureName } from "@/lib/ai/types";
 
 /**
@@ -105,8 +107,21 @@ function toNumber(raw: unknown): number {
  */
 export async function checkAiRateLimit(
   params: CheckInput,
+  db?: DbClient,
 ): Promise<AiRateLimitCheck> {
-  const supabase = createServiceRoleClient();
+  // The USER-SCOPED client, not the service-role one.
+  //
+  // check_and_record_ai_request derives the actor from auth.uid() and raises
+  // insufficient_permission when it is null — deliberately, because a
+  // client-supplied user id must never be able to choose whose budget is spent.
+  // The service-role client has no auth.uid(), so calling it that way refused
+  // EVERY request; and since the ceiling fails closed, each refusal surfaced to
+  // the user as "monthly ceiling reached". Every caller is a server action with
+  // a real session, so this is the correct client.
+  //
+  // Injectable so the cross-instance verification can drive this function with
+  // two independently authenticated clients rather than a copy of it.
+  const supabase = db ?? (await createClient());
   const ceiling = resolveDefaultMonthlyCeiling();
 
   const { data, error } = await supabase.rpc("check_and_record_ai_request", {
@@ -182,13 +197,16 @@ export async function checkAiRateLimit(
  * Records tokens, model, feature and actor. Never prompt or completion text;
  * migration 155 has no column for either.
  */
-export async function recordAiUsage(input: {
-  companyId: string;
-  feature: AiFeatureName;
-  model?: string | null;
-  promptTokens?: number | null;
-  completionTokens?: number | null;
-}): Promise<void> {
+export async function recordAiUsage(
+  input: {
+    companyId: string;
+    feature: AiFeatureName;
+    model?: string | null;
+    promptTokens?: number | null;
+    completionTokens?: number | null;
+  },
+  db?: DbClient,
+): Promise<void> {
   const promptTokens = Math.max(0, Math.floor(input.promptTokens ?? 0));
   const completionTokens = Math.max(0, Math.floor(input.completionTokens ?? 0));
 
@@ -197,7 +215,10 @@ export async function recordAiUsage(input: {
     return;
   }
 
-  const supabase = createServiceRoleClient();
+  // Service-role by default: record_ai_usage deliberately accepts a null actor
+  // for the cron-driven marketing path, which has no session. Injectable so a
+  // test can attribute usage to a specific signed-in user.
+  const supabase = db ?? createServiceRoleClient();
   const { error } = await supabase.rpc("record_ai_usage", {
     p_company_id: input.companyId,
     p_feature: input.feature,
