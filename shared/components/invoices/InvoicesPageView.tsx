@@ -1,6 +1,12 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
+import { loadInvoicesPageAction } from "@/app/actions/list-pages";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
+import {
+  usePagedList,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -91,6 +97,15 @@ type PanelMode = "create" | "empty";
 
 type InvoicesPageViewProps = {
   initialInvoices: Invoice[];
+  /**
+   * One server-paged page.
+   *
+   * When present the rows already have the queue and its lifecycle applied in
+   * SQL, so the client-side equivalents are skipped rather than re-run over a
+   * subset. The queue owns the lifecycle here — a voided invoice is Past, not
+   * archived — which is why the two entities cannot share one filter builder.
+   */
+  serverPage?: PagedListSnapshot<Invoice>;
   initialPayments: InvoicePayment[];
   customers: Customer[];
   jobs: Job[];
@@ -168,6 +183,7 @@ function filterInvoices(
 
 export function InvoicesPageView({
   initialInvoices,
+  serverPage,
   initialPayments,
   customers,
   jobs,
@@ -184,7 +200,31 @@ export function InvoicesPageView({
   embedded = false,
   onRegisterCreateHandler,
 }: InvoicesPageViewProps) {
+  const isServerPaged = Boolean(serverPage);
+
+  const snapshot = useMemo<PagedListSnapshot<Invoice>>(
+    () =>
+      serverPage ?? {
+        rows: initialInvoices,
+        nextCursor: null,
+        totalCount: initialInvoices.length,
+        hasMore: false,
+      },
+    [serverPage, initialInvoices],
+  );
+
+  const paged = usePagedList<Invoice>(
+    snapshot,
+    useCallback((cursor) => loadInvoicesPageAction({ cursor }), []),
+  );
+
   const [invoices, setInvoices] = useState(initialInvoices);
+  const [seenPagedSource, setSeenPagedSource] = useState<Invoice[] | null>(null);
+  const incomingRows = isServerPaged ? paged.rows : initialInvoices;
+  if (seenPagedSource !== incomingRows) {
+    setSeenPagedSource(incomingRows);
+    setInvoices(incomingRows);
+  }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>(() =>
@@ -301,8 +341,13 @@ export function InvoicesPageView({
       return invoices;
     }
 
-    return filterInvoicesForWorkQueue(invoices, workQueue);
-  }, [invoices, lifecycleFilter, workQueue]);
+    // Server-paged rows already have the queue and its lifecycle applied in
+    // SQL. Re-running the predicate here would be a second copy of the rule
+    // evaluated against one page.
+    return isServerPaged
+      ? invoices
+      : filterInvoicesForWorkQueue(invoices, workQueue);
+  }, [invoices, isServerPaged, lifecycleFilter, workQueue]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -816,6 +861,18 @@ export function InvoicesPageView({
               matchReasons={searchMatchReasons}
             />
           )}
+
+          {isServerPaged ? (
+            <PagedListFooter
+              loadedCount={paged.loadedCount}
+              totalCount={paged.totalCount}
+              hasMore={paged.hasMore}
+              isLoadingMore={paged.isLoadingMore}
+              error={paged.error}
+              onLoadMore={paged.loadMore}
+              noun="invoices"
+            />
+          ) : null}
 
           {selectionEnabled && lifecycleFilter === "active" ? (
             <InvoiceBatchSelectionBar

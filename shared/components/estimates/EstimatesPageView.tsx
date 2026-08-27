@@ -1,6 +1,13 @@
 "use client";
 
+import { loadEstimatesPageAction } from "@/app/actions/list-pages";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
+  usePagedList,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
+import {
+  useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -85,6 +92,15 @@ type PanelMode = "create" | "empty";
 
 type EstimatesPageViewProps = {
   initialEstimates: Estimate[];
+  /**
+   * One server-paged page.
+   *
+   * When present the rows already have the queue and its lifecycle applied in
+   * SQL, so the client-side equivalents are skipped rather than re-run over a
+   * subset. The queue owns the lifecycle here — a voided invoice is Past, not
+   * archived — which is why the two entities cannot share one filter builder.
+   */
+  serverPage?: PagedListSnapshot<Estimate>;
   customers: Customer[];
   jobs: Job[];
   serviceItems: ServiceItem[];
@@ -159,6 +175,7 @@ function filterEstimates(
 
 export function EstimatesPageView({
   initialEstimates,
+  serverPage,
   customers,
   jobs,
   serviceItems,
@@ -172,7 +189,31 @@ export function EstimatesPageView({
   embedded = false,
   onRegisterCreateHandler,
 }: EstimatesPageViewProps) {
+  const isServerPaged = Boolean(serverPage);
+
+  const snapshot = useMemo<PagedListSnapshot<Estimate>>(
+    () =>
+      serverPage ?? {
+        rows: initialEstimates,
+        nextCursor: null,
+        totalCount: initialEstimates.length,
+        hasMore: false,
+      },
+    [serverPage, initialEstimates],
+  );
+
+  const paged = usePagedList<Estimate>(
+    snapshot,
+    useCallback((cursor) => loadEstimatesPageAction({ cursor }), []),
+  );
+
   const [estimates, setEstimates] = useState(initialEstimates);
+  const [seenPagedSource, setSeenPagedSource] = useState<Estimate[] | null>(null);
+  const incomingRows = isServerPaged ? paged.rows : initialEstimates;
+  if (seenPagedSource !== incomingRows) {
+    setSeenPagedSource(incomingRows);
+    setEstimates(incomingRows);
+  }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>(() =>
@@ -249,8 +290,11 @@ export function EstimatesPageView({
       return estimates;
     }
 
-    return filterEstimatesForWorkQueue(estimates, workQueue);
-  }, [estimates, lifecycleFilter, workQueue]);
+    // Server-paged rows already have the queue applied in SQL.
+    return isServerPaged
+      ? estimates
+      : filterEstimatesForWorkQueue(estimates, workQueue);
+  }, [estimates, isServerPaged, lifecycleFilter, workQueue]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -737,6 +781,18 @@ export function EstimatesPageView({
               matchReasons={searchMatchReasons}
             />
           )}
+
+          {isServerPaged ? (
+            <PagedListFooter
+              loadedCount={paged.loadedCount}
+              totalCount={paged.totalCount}
+              hasMore={paged.hasMore}
+              isLoadingMore={paged.isLoadingMore}
+              error={paged.error}
+              onLoadMore={paged.loadMore}
+              noun="estimates"
+            />
+          ) : null}
 
           {selectionEnabled && lifecycleFilter === "active" ? (
             <EstimateBatchSelectionBar

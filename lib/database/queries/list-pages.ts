@@ -51,6 +51,19 @@ import {
  */
 export type LifecycleScope = "active" | "archived" | "deleted";
 
+/**
+ * The client used for COUNT queries across every paged list.
+ *
+ * See fetchPagedList for why this is safe: the count is built by the same
+ * filter closure as the rows, so it cannot be scoped more broadly than them,
+ * and the rows themselves stay under RLS. It exists because an exact count
+ * under RLS was measured at 2,280 ms against 169 ms without — thirteen times,
+ * and essentially the whole page.
+ */
+function countClient(): PagedClient {
+  return createServiceRoleClient() as unknown as PagedClient;
+}
+
 export type ListPageRequest = PageRequest & {
   scope?: LifecycleScope;
   /** Entity status filter, already validated against that entity's enum. */
@@ -207,7 +220,7 @@ export async function listInvoicesPage(
         : column === "issue_date"
           ? row.issue_date
           : row.created_at,
-  }, request);
+  }, request, countClient());
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +265,7 @@ export async function listEstimatesPage(
     map: mapEstimateRowToEstimate,
     sortValue: (row, column) =>
       column === "total" ? Number(row.total) : row.created_at,
-  }, request);
+  }, request, countClient());
 }
 
 // ---------------------------------------------------------------------------
@@ -303,7 +316,7 @@ export async function listJobsPage(
     map: mapJobRowToJob,
     sortValue: (row, column) =>
       column === "created_at" ? row.created_at : row.scheduled_at,
-  }, request);
+  }, request, countClient());
 }
 
 /**
@@ -447,7 +460,7 @@ export async function listExpensesPage(
     map: mapExpenseRow,
     sortValue: (row, column) =>
       column === "amount" ? Number(row.amount) : row.created_at,
-  }, request);
+  }, request, countClient());
 }
 
 /**
@@ -580,6 +593,93 @@ export async function listExpenseFilterOptions(
   return { technicians, jobs };
 }
 
+/**
+ * Complete data for the estimate pipeline tab.
+ *
+ * ============================== WHY THIS IS NOT PAGED ==============================
+ * The pipeline is not a list, it is an aggregate: monthly cohorts tracking
+ * estimates through to invoice and payment. Paging it would be meaningless — a
+ * cohort computed from one page is not a cohort.
+ *
+ * But it was reading unbounded, which meant its cohorts were built from
+ * whichever 1000 rows PostgREST returned. The numbers were wrong in the same
+ * quiet way the dashboard's were, and for the same reason.
+ *
+ * So the fix is not a page, it is a BOUND plus completeness. The bound is time:
+ * cohorts older than the window are not shown, so there is no reason to read
+ * them. Within the window the reads walk to the end rather than stopping at the
+ * first response — being bounded is what makes walking cheap, and walking is
+ * what makes the cohorts true.
+ */
+export const PIPELINE_MONTHS = 24;
+
+async function readAllRows<TRow>(
+  build: (from: number, to: number) => PromiseLike<{
+    data: TRow[] | null;
+    error: { code?: string; message: string } | null;
+  }>,
+  label: string,
+): Promise<TRow[]> {
+  const PAGE = 1000;
+  const rows: TRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) {
+      console.error(`[${label}] read failed:`, { from, code: error.code, message: error.message });
+      return rows;
+    }
+    const batch = data ?? [];
+    rows.push(...batch);
+    if (batch.length < PAGE) return rows;
+  }
+}
+
+export async function listEstimatePipelineData(
+  companyId: string,
+  monthsBack: number = PIPELINE_MONTHS,
+): Promise<{
+  estimates: ReturnType<typeof mapEstimateRowToEstimate>[];
+  invoices: ReturnType<typeof mapInvoiceRowToInvoice>[];
+}> {
+  const supabase = (await createClient()) as unknown as PagedClient;
+
+  const since = new Date();
+  since.setMonth(since.getMonth() - monthsBack);
+  const sinceIso = since.toISOString();
+
+  const [estimateRows, invoiceRows] = await Promise.all([
+    readAllRows<Parameters<typeof mapEstimateRowToEstimate>[0]>(
+      (from, to) =>
+        supabase
+          .from("estimates")
+          .select<Parameters<typeof mapEstimateRowToEstimate>[0]>(ESTIMATE_SELECT)
+          .eq("company_id", companyId)
+          .is("deleted_at", null)
+          .gte("created_at", sinceIso)
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      "pipeline.estimates",
+    ),
+    readAllRows<Parameters<typeof mapInvoiceRowToInvoice>[0]>(
+      (from, to) =>
+        supabase
+          .from("invoices")
+          .select<Parameters<typeof mapInvoiceRowToInvoice>[0]>(INVOICE_SELECT)
+          .eq("company_id", companyId)
+          .is("deleted_at", null)
+          .gte("created_at", sinceIso)
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      "pipeline.invoices",
+    ),
+  ]);
+
+  return {
+    estimates: estimateRows.map(mapEstimateRowToEstimate),
+    invoices: invoiceRows.map(mapInvoiceRowToInvoice),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Leads
 // ---------------------------------------------------------------------------
@@ -603,5 +703,5 @@ export async function listLeadsPage(
     // looser than the schema. The fallback is unreachable and exists only so a
     // future schema change cannot silently produce a null cursor.
     sortValue: (row) => row.created_at ?? "",
-  }, request);
+  }, request, countClient());
 }

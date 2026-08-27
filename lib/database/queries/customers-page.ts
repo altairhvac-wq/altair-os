@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   buildKeysetFilter,
   buildPage,
@@ -113,8 +114,12 @@ export async function listCustomersPage(
       .limit(pageSize + 1);
   })();
 
+  // The COUNT runs with RLS bypassed; the rows above do not. Safe for the same
+  // structural reason as fetchPagedList: applyShared builds both, so the count
+  // cannot be scoped more broadly than the rows beside it. An exact count under
+  // RLS was measured at over two seconds on a large table.
   const countQuery = applyShared(
-    supabase
+    createServiceRoleClient()
       .from("customers")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId),

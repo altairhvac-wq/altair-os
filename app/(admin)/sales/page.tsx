@@ -20,7 +20,11 @@ import {
 } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
-import { listInvoices } from "@/lib/database/queries/invoices";
+import {
+  listEstimatePipelineData,
+  listEstimatesPage,
+  listInvoicesPage,
+} from "@/lib/database/queries/list-pages";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SalesHubPageView } from "@/shared/components/sales/SalesHubPageView";
@@ -92,9 +96,9 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   });
 
   const [
-    estimates,
-    deletedEstimates,
-    invoices,
+    estimatesPage,
+    pipelineData,
+    invoicesPage,
     deletedInvoices,
     paymentsLedger,
     paymentsThisWeek,
@@ -104,10 +108,19 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     serviceItems,
     invoiceDocumentRefs,
   ] = await Promise.all([
-    listEstimates(companyId, { includeArchived: true }),
-    listDeletedEstimates(companyId),
-    listInvoices(companyId, { includeArchived: true }),
-    listDeletedInvoices(companyId),
+    // The two list tabs are paged; the pipeline tab is an aggregate and gets its
+    // own bounded-but-complete read instead — a cohort computed from one page is
+    // not a cohort.
+    listEstimatesPage(companyId, {}),
+    // ONLY for the pipeline tab. It reads two years of estimates and invoices
+    // to completion, which is right for cohorts and completely wrong to ship
+    // alongside a 50-row list — doing it unconditionally took this page from
+    // 3.4 MB to 11 MB.
+    activeTab === "estimate-pipeline"
+      ? listEstimatePipelineData(companyId)
+      : Promise.resolve({ estimates: [], invoices: [] }),
+    listInvoicesPage(companyId, {}),
+    Promise.resolve([]),
     listInvoicePayments(companyId),
     getPaymentsThisWeekSummary(companyId, timeZone),
     getPaymentsThisMonthSummary(companyId, timeZone),
@@ -187,8 +200,12 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
   return (
     <SalesHubPageView
-      estimates={[...estimates, ...deletedEstimates]}
-      invoices={[...invoices, ...deletedInvoices]}
+      estimates={estimatesPage.rows}
+      invoices={invoicesPage.rows}
+      estimatesPage={estimatesPage}
+      invoicesPage={invoicesPage}
+      pipelineEstimates={pipelineData.estimates}
+      pipelineInvoices={pipelineData.invoices}
       invoicePayments={paymentsLedger}
       paymentsLedger={paymentsLedger}
       paymentsThisWeek={paymentsThisWeek}

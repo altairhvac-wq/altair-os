@@ -28,6 +28,18 @@ import type { ServiceItem } from "@/shared/types/service-item";
 type SalesHubPageViewProps = {
   estimates: Estimate[];
   invoices: Invoice[];
+  /** One server-paged page for each list tab. */
+  estimatesPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Estimate>;
+  invoicesPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Invoice>;
+  /**
+   * Complete data for the pipeline tab, bounded by time rather than by page.
+   *
+   * Kept separate from the list props on purpose: cohorts computed from one
+   * page are not cohorts, and quietly reusing the paged arrays here is exactly
+   * how these numbers would go wrong again.
+   */
+  pipelineEstimates?: Estimate[];
+  pipelineInvoices?: Invoice[];
   invoicePayments: InvoicePayment[];
   paymentsLedger: RecentInvoicePayment[];
   paymentsThisWeek: { count: number; total: number };
@@ -77,6 +89,10 @@ const TAB_SCOPED_PARAMS = [
 export function SalesHubPageView({
   estimates,
   invoices,
+  estimatesPage,
+  invoicesPage,
+  pipelineEstimates,
+  pipelineInvoices,
   invoicePayments,
   paymentsLedger,
   paymentsThisWeek,
@@ -175,6 +191,7 @@ export function SalesHubPageView({
       {activeTab === "estimates" ? (
         <EstimatesPageView
           initialEstimates={estimates}
+          serverPage={estimatesPage}
           customers={customers}
           jobs={jobs}
           serviceItems={serviceItems}
@@ -193,6 +210,7 @@ export function SalesHubPageView({
       {activeTab === "invoices" ? (
         <InvoicesPageView
           initialInvoices={invoices}
+          serverPage={invoicesPage}
           initialPayments={invoicePayments}
           customers={customers}
           jobs={jobs}
@@ -223,8 +241,8 @@ export function SalesHubPageView({
 
       {activeTab === "estimate-pipeline" ? (
         <EstimatePipelinePageView
-          estimates={estimates}
-          invoices={invoices}
+          estimates={pipelineEstimates ?? estimates}
+          invoices={pipelineInvoices ?? invoices}
           payments={invoicePayments}
         />
       ) : null}
