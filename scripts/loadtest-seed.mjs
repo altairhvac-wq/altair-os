@@ -592,6 +592,7 @@ async function runSeed(client, args) {
   // proportions. That matters — a benchmark against 10,000 rows that all fall
   // out of every filter measures nothing.
   const invoices = [];
+  const invoiceLineItems = [];
   for (let i = 0; i < invoiceCount; i += 1) {
     const items = buildLineItems(rnd, rnd.int(1, 5));
     const { subtotal, tax, total } = totalsFromLineItems(items, 0.081);
@@ -612,15 +613,13 @@ async function runSeed(client, args) {
       customer_id: rnd.pick(customerIds),
       job_id: rnd.next() < 0.8 ? rnd.pick(jobIds) : null,
       invoice_number: `INV-${900000 + i}`,
-      job_type: rnd.pick(JOB_TYPES),
       status,
-      line_items: items,
       subtotal,
-      tax,
+      tax_amount: tax,
       total,
       amount_paid: amountPaid,
       balance_due: Math.round((total - amountPaid) * 100) / 100,
-      issued_at: isoAtOffsetDays(asOf, issuedOffset),
+      issue_date: dateOnlyAtOffsetDays(asOf, issuedOffset),
       // Overdue rows get a due date safely in the past so they satisfy the
       // dashboard's overdue predicate without depending on run date.
       due_date: dateOnlyAtOffsetDays(
@@ -629,11 +628,32 @@ async function runSeed(client, args) {
       ),
       created_at: isoAtOffsetDays(asOf, issuedOffset),
     });
+    // Line items live in their own table, not a jsonb column on the invoice.
+    invoiceLineItems.push(
+      ...items.map((item, index) => ({
+        company_id: companyId,
+        invoice_id: deterministicUuid(seedValue, "invoice", i),
+        name: item.name,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        line_total: item.total,
+        taxable: true,
+        sort_order: index,
+      })),
+    );
   }
   await insertChunked(client, "invoices", invoices, "invoices");
+  await insertChunked(
+    client,
+    "invoice_line_items",
+    invoiceLineItems,
+    "invoice line items",
+  );
 
   // ---- estimates -----------------------------------------------------------
   const estimates = [];
+  const estimateLineItems = [];
   for (let i = 0; i < estimateCount; i += 1) {
     const items = buildLineItems(rnd, rnd.int(1, 4));
     const { subtotal, tax, total } = totalsFromLineItems(items, 0.081);
@@ -643,18 +663,37 @@ async function runSeed(client, args) {
       customer_id: rnd.pick(customerIds),
       job_id: rnd.next() < 0.5 ? rnd.pick(jobIds) : null,
       estimate_number: `EST-${900000 + i}`,
+      // Every label here must exist in public.estimate_status: draft, sent,
+      // approved, declined, cancelled, converted. There is no "expired".
       status: rnd.weighted([
         ["approved", 34], ["sent", 26], ["draft", 18],
-        ["declined", 10], ["converted", 8], ["expired", 4],
+        ["declined", 10], ["converted", 8], ["cancelled", 4],
       ]),
-      line_items: items,
       subtotal,
       tax,
       total,
       created_at: isoAtOffsetDays(asOf, -rnd.int(1, 900)),
     });
+    estimateLineItems.push(
+      ...items.map((item, index) => ({
+        company_id: companyId,
+        estimate_id: deterministicUuid(seedValue, "estimate", i),
+        name: item.name,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        taxable: true,
+        sort_order: index,
+      })),
+    );
   }
   await insertChunked(client, "estimates", estimates, "estimates");
+  await insertChunked(
+    client,
+    "estimate_line_items",
+    estimateLineItems,
+    "estimate line items",
+  );
 
   // ---- expenses ------------------------------------------------------------
   const expenses = [];
@@ -692,9 +731,11 @@ async function runSeed(client, args) {
       email: `loadtest+l${i}@example.invalid`,
       phone: `520444${String(1000 + (i % 9000)).padStart(4, "0")}`,
       source: "other",
+      // public.lead_status is new, contacted, scheduled, estimate_sent, won,
+      // lost. There is no "qualified".
       status: rnd.weighted([
-        ["new", 30], ["contacted", 26], ["qualified", 18],
-        ["won", 14], ["lost", 12],
+        ["new", 30], ["contacted", 26], ["scheduled", 10],
+        ["estimate_sent", 8], ["won", 14], ["lost", 12],
       ]),
       created_at: isoAtOffsetDays(asOf, -rnd.int(1, 120)),
     });
