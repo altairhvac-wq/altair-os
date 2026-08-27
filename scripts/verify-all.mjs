@@ -72,6 +72,7 @@ steps.push(
   { name: "migration-columns", script: "scripts/verify-migration-columns.mjs" },
   { name: "function-grants", script: "scripts/verify-function-grants.mjs" },
   { name: "read-path-writes", script: "scripts/verify-read-path-writes.mjs" },
+  { name: "error-boundaries", script: "scripts/verify-error-boundaries.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
