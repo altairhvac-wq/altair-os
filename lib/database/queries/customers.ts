@@ -1,5 +1,6 @@
 import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { countInChunks } from "@/lib/database/queries/chunked-in";
+import { mapCustomerRowToCustomer } from "@/lib/database/mappers/customer";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { phonesMatch } from "@/shared/lib/phone";
@@ -25,31 +26,11 @@ function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
 }
 
-export function mapCustomerRowToCustomer(row: CustomerRow): Customer {
-  return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    company: row.company_name ?? undefined,
-    status: normalizeCustomerStatus(row.status),
-    address: row.address_line1,
-    city: row.city,
-    state: row.state,
-    zip: row.postal_code,
-    totalJobs: row.total_jobs,
-    totalRevenue: Number(row.total_revenue),
-    lastServiceDate: row.last_service_date
-      ? toDateOnly(row.last_service_date)
-      : undefined,
-    tags: row.tags,
-    notes: row.notes ?? undefined,
-    createdAt: toDateOnly(row.created_at),
-    archivedAt: row.archived_at ? row.archived_at : undefined,
-    deletedAt: row.deleted_at ? row.deleted_at : undefined,
-    deleteAfter: row.delete_after ? row.delete_after : undefined,
-  };
-}
+/**
+ * Re-exported from lib/database/mappers/customer.ts, which has no server
+ * imports so the queue differential verifier can run the real mapper.
+ */
+export { mapCustomerRowToCustomer };
 
 function mapCustomerFormDataToRowFields(
   data: CustomerFormData,
