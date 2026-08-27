@@ -17,6 +17,15 @@
  * So this imports the REAL predicates, the REAL mappers and the REAL SQL
  * builders, and asserts set equality per queue on both entities.
  *
+ * ===================== AND THE STRIPS ABOVE THEM =====================
+ * Migration 161 moved the two glance strips into SQL for the same reason the
+ * lists moved: once a list is served fifty rows at a time, a strip reduced
+ * over the loaded array describes those fifty and reads as a statement about
+ * the company. The RPC is compared here against the REAL builders
+ * (buildInvoicesGlanceStats / buildEstimatesGlanceStats) run over EVERY row,
+ * including the money — Paid is collected-from-the-ledger, not invoiced, and
+ * getting that wrong is a plausible-looking mistake.
+ *
  * Run:
  *   node --experimental-strip-types \
  *        --import ./scripts/lib/ts-alias-loader-register.mjs \
@@ -34,9 +43,19 @@ import {
   applyEstimateQueueFilters,
   applyInvoiceQueueFilters,
 } from "@/lib/database/queries/document-queue-filters";
+import {
+  buildInvoicesGlanceStats,
+  buildInvoicesGlanceStatsFromMetrics,
+} from "@/shared/lib/invoices/invoices-glance-stats";
+import {
+  buildEstimatesGlanceStats,
+  buildEstimatesGlanceStatsFromMetrics,
+} from "@/shared/lib/estimates/estimates-glance-stats";
+import { mapPaymentRow } from "@/lib/database/queries/invoice-payments";
 
 const URL_ENV = "ALTAIR_LOADTEST_SUPABASE_URL";
 const KEY_ENV = "ALTAIR_LOADTEST_SERVICE_ROLE_KEY";
+const ANON_ENV = "ALTAIR_LOADTEST_ANON_KEY";
 const SLUG_PREFIX = "loadtest-docfilters-";
 const RUN_ID = Math.random().toString(36).slice(2, 10);
 
@@ -108,6 +127,14 @@ const admin = createClient(url, key, {
 });
 
 let company = null;
+let member = null;
+/**
+ * The RPC needs a real actor. Under the service-role client auth.uid() is
+ * null and the function returns zeros by design, so an admin-driven test
+ * would compare zeros with zeros and prove nothing.
+ */
+let signedIn = null;
+const anonKey = process.env[ANON_ENV]?.trim();
 
 const INVOICE_SELECT = `
   *,
@@ -192,7 +219,141 @@ async function buildFixture() {
     if (e) throw new Error(`estimates: ${e.message}`);
   }
 
+  // Paid sums the PAYMENT LEDGER, not invoice totals. Two payments against
+  // one paid invoice, summing to more than that invoice's total, is exactly
+  // the case where the two definitions diverge.
+  const { data: paidInvoices } = await admin
+    .from("invoices")
+    .select("id")
+    .eq("company_id", company.id)
+    .eq("status", "paid")
+    .is("deleted_at", null)
+    .is("archived_at", null);
+
+  if ((paidInvoices ?? []).length > 0) {
+    const target = paidInvoices[0].id;
+    const { error: payError } = await admin.from("invoice_payments").insert([
+      {
+        company_id: company.id,
+        invoice_id: target,
+        amount: 60,
+        payment_method: "card",
+        payment_date: new Date().toISOString().slice(0, 10),
+      },
+      {
+        company_id: company.id,
+        invoice_id: target,
+        amount: 55,
+        payment_method: "cash",
+        payment_date: new Date().toISOString().slice(0, 10),
+      },
+    ]);
+    if (payError) throw new Error(`invoice_payments: ${payError.message}`);
+  }
+
+  await createSignedInMember();
+
   console.log(`  ${invoices.length} invoices, ${estimates.length} estimates`);
+}
+
+const MEMBER_EMAIL = `docfilters-${RUN_ID}@docfilters.invalid`;
+const MEMBER_PASSWORD = `Doc!filters-${RUN_ID}-Zq9`;
+
+async function createSignedInMember() {
+  if (!anonKey) return;
+
+  const { data: created, error } = await admin.auth.admin.createUser({
+    email: MEMBER_EMAIL,
+    password: MEMBER_PASSWORD,
+    email_confirm: true,
+  });
+  if (error) throw new Error(`member: ${error.message}`);
+  member = created.user;
+
+  await admin
+    .from("profiles")
+    .upsert({ id: member.id, email: MEMBER_EMAIL, full_name: "Doc Filters" });
+
+  // Owner: the strip sits behind canViewBilling, and the RPC checks
+  // can_manage_billing as well as membership.
+  const { error: membershipError } = await admin
+    .from("company_memberships")
+    .insert({
+      company_id: company.id,
+      user_id: member.id,
+      role: "owner",
+      status: "active",
+      joined_at: new Date().toISOString(),
+    });
+  if (membershipError) throw new Error(`membership: ${membershipError.message}`);
+
+  signedIn = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { error: signInError } = await signedIn.auth.signInWithPassword({
+    email: MEMBER_EMAIL,
+    password: MEMBER_PASSWORD,
+  });
+  if (signInError) throw new Error(`sign-in: ${signInError.message}`);
+}
+
+/**
+ * The strips, compared stat by stat — label, count and money — against the
+ * shipped builders run over every row in the tenant.
+ */
+async function compareStrips() {
+  console.log("\nThe queue strips agree with the shipped builders");
+
+  if (!signedIn) {
+    console.log(`  SKIPPED: ${ANON_ENV} is not set.`);
+    return;
+  }
+
+  const [{ data: invoiceRows }, { data: estimateRows }, { data: paymentRows }] =
+    await Promise.all([
+      admin.from("invoices").select(INVOICE_SELECT).eq("company_id", company.id),
+      admin.from("estimates").select(ESTIMATE_SELECT).eq("company_id", company.id),
+      admin.from("invoice_payments").select("*").eq("company_id", company.id),
+    ]);
+
+  const expectedInvoices = buildInvoicesGlanceStats({
+    invoices: (invoiceRows ?? []).map(mapInvoiceRowToInvoice),
+    payments: (paymentRows ?? []).map(mapPaymentRow),
+  });
+  const expectedEstimates = buildEstimatesGlanceStats({
+    estimates: (estimateRows ?? []).map(mapEstimateRowToEstimate),
+  });
+
+  const { data: metrics, error } = await signedIn.rpc(
+    "get_company_document_queue_metrics",
+    { p_company_id: company.id },
+  );
+  if (error) {
+    check("the strip RPC returns", false, error.message);
+    return;
+  }
+
+  const actualInvoices = buildInvoicesGlanceStatsFromMetrics(metrics.invoices);
+  const actualEstimates = buildEstimatesGlanceStatsFromMetrics(metrics.estimates);
+
+  for (const [label, expected, actual] of [
+    ["Invoice", expectedInvoices, actualInvoices],
+    ["Estimate", expectedEstimates, actualEstimates],
+  ]) {
+    for (let i = 0; i < expected.length; i += 1) {
+      const e = expected[i];
+      const a = actual[i];
+      check(
+        `${label} strip "${e.id}" ${a?.value}${a?.amount ? ` / ${a.amount}` : ""}`,
+        a != null &&
+          a.id === e.id &&
+          a.value === e.value &&
+          a.amount === e.amount &&
+          a.detail === e.detail,
+        `builder ${JSON.stringify(e)}\n        RPC     ${JSON.stringify(a)}`,
+      );
+    }
+  }
 }
 
 async function compareQueues({ label, table, select, map, queues, matches, applyFilters }) {
@@ -238,10 +399,19 @@ async function compareQueues({ label, table, select, map, queues, matches, apply
 
 async function cleanup() {
   if (!company) return;
-  for (const table of ["invoice_line_items", "estimate_line_items", "invoices", "estimates", "customers"]) {
+  for (const table of [
+    "invoice_payments",
+    "invoice_line_items",
+    "estimate_line_items",
+    "invoices",
+    "estimates",
+    "customers",
+    "company_memberships",
+  ]) {
     await admin.from(table).delete().eq("company_id", company.id);
   }
   await admin.from("companies").delete().eq("id", company.id);
+  if (member) await admin.auth.admin.deleteUser(member.id);
 }
 
 async function main() {
@@ -290,6 +460,8 @@ async function main() {
       "an archived estimate is excluded from its status queue",
       (draftEstimates ?? []).every((row) => row.archived_at === null),
     );
+
+    await compareStrips();
   } finally {
     console.log("\nCleaning up fixture...");
     await cleanup();

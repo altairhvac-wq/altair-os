@@ -29,7 +29,6 @@ import {
   applyEstimateQueueFilters,
   applyInvoiceQueueFilters,
 } from "@/lib/database/queries/document-queue-filters";
-import { mapLeadRowToLead } from "@/lib/database/queries/leads";
 import {
   applyJobPageFilters,
   JOB_SEARCH_COLUMNS,
@@ -683,25 +682,85 @@ export async function listEstimatePipelineData(
 // ---------------------------------------------------------------------------
 // Leads
 // ---------------------------------------------------------------------------
+//
+// Leads live in lib/database/queries/leads-page.ts. They outgrew the generic
+// helper: the list filters carry a company-time-zone cutoff, the search has to
+// re-check the shipped predicate against enriched records, and every row needs
+// its latest activity and network referral attached before it is a Lead at all.
+// Splitting it out keeps this file the place where the ordinary lists live.
 
-export async function listLeadsPage(
+// ---------------------------------------------------------------------------
+// Document queue strips
+// ---------------------------------------------------------------------------
+
+export type DocumentQueueMetric = { count: number; amount: number };
+
+export type DocumentQueueMetrics = {
+  invoices: Record<InvoiceWorkQueue, DocumentQueueMetric>;
+  estimates: Record<EstimateWorkQueue, DocumentQueueMetric>;
+};
+
+const EMPTY_METRIC: DocumentQueueMetric = { count: 0, amount: 0 };
+
+export const EMPTY_DOCUMENT_QUEUE_METRICS: DocumentQueueMetrics = {
+  invoices: {
+    draft: EMPTY_METRIC,
+    sent: EMPTY_METRIC,
+    partially_paid: EMPTY_METRIC,
+    overdue: EMPTY_METRIC,
+    paid: EMPTY_METRIC,
+    past: EMPTY_METRIC,
+  },
+  estimates: {
+    draft: EMPTY_METRIC,
+    sent: EMPTY_METRIC,
+    approved: EMPTY_METRIC,
+    declined: EMPTY_METRIC,
+    past: EMPTY_METRIC,
+  },
+};
+
+/**
+ * Per-queue counts and money for the two Sales strips, from migration 161.
+ *
+ * These used to be reduced over the loaded array. That was defensible while the
+ * page loaded every invoice; it stopped being defensible the moment the list
+ * became one page, because a strip reading "Overdue 7 · $12,480 owed" over fifty
+ * rows looks exactly like a statement about the company.
+ *
+ * PostgREST cannot sum, so this is an RPC rather than a fan-out of head counts.
+ * A failure returns zeros and logs: a partial strip is worse than an empty one,
+ * because a partial one still looks like an answer.
+ */
+export async function getDocumentQueueMetrics(
   companyId: string,
-  request: ListPageRequest,
-): Promise<PaginatedResult<ReturnType<typeof mapLeadRowToLead>>> {
-  const supabase = (await createClient()) as unknown as PagedClient;
+): Promise<DocumentQueueMetrics> {
+  const supabase = await createClient();
 
-  return fetchPagedList(supabase, companyId, {
-    label: "listLeadsPage",
-    table: "leads",
-    select: "*",
-    sortable: ["created_at"],
-    defaultSort: "created_at",
-    searchColumns: ["first_name", "last_name", "email", "phone", "company_name"],
-    applyFilters: applyScopeAndStatus,
-    map: mapLeadRowToLead,
-    // leads.created_at is NOT NULL in the database; the generated row type is
-    // looser than the schema. The fallback is unreachable and exists only so a
-    // future schema change cannot silently produce a null cursor.
-    sortValue: (row) => row.created_at ?? "",
-  }, request, countClient());
+  const { data, error } = await supabase.rpc(
+    "get_company_document_queue_metrics",
+    { p_company_id: companyId },
+  );
+
+  if (error) {
+    console.error("[getDocumentQueueMetrics] rpc failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return EMPTY_DOCUMENT_QUEUE_METRICS;
+  }
+
+  const payload = (data ?? {}) as Partial<DocumentQueueMetrics>;
+
+  return {
+    invoices: {
+      ...EMPTY_DOCUMENT_QUEUE_METRICS.invoices,
+      ...(payload.invoices ?? {}),
+    },
+    estimates: {
+      ...EMPTY_DOCUMENT_QUEUE_METRICS.estimates,
+      ...(payload.estimates ?? {}),
+    },
+  };
 }

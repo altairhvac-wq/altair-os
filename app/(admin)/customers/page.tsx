@@ -10,10 +10,15 @@ import {
 } from "@/lib/database/queries/customers-page";
 import { resolveInitialCustomerWorkQueue } from "@/shared/components/customers/customer-work-queues";
 import { listLeadActivitiesForLead } from "@/lib/database/queries/lead-activities";
+import { listLeadAssignableMembers } from "@/lib/database/queries/leads";
 import {
-  listLeadAssignableMembers,
-  listLeadsWithReferrals,
-} from "@/lib/database/queries/leads";
+  getLeadFilterCounts,
+  getLeadPipelineAggregates,
+  listLeadsPage,
+  EMPTY_LEAD_PIPELINE_AGGREGATES,
+} from "@/lib/database/queries/leads-page";
+import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
+import { resolveInitialLeadListFilter } from "@/shared/components/leads/lead-work-queues";
 import { CustomersHubPageView } from "@/shared/components/customers/CustomersHubPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { resolveCustomersHubTab } from "@/shared/lib/customers/customers-hub";
@@ -58,20 +63,54 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     `${new Date().toISOString().slice(0, 7)}-01T00:00:00.000Z`,
   ).toISOString();
 
-  const [customersPage, archivedPage, customerCounts, leads, assignableMembers] =
-    await Promise.all([
-      listCustomersPage(companyContext.company.id, {
-        queue: customerQueue,
-        search: params.q ?? null,
-      }),
-      listCustomersPage(companyContext.company.id, {
-        queue: "past",
-        search: params.q ?? null,
-      }),
-      getCustomerQueueCounts(companyContext.company.id, { monthStartIso }),
-      listLeadsWithReferrals(companyContext.company.id),
-      listLeadAssignableMembers(companyContext.company.id),
-    ]);
+  // The pipeline is read only when the pipeline is on screen. It used to load
+  // every lead in the tenant on every request to this route, including the two
+  // tabs that never render one.
+  const isPipelineTab = activeTab === "pipeline";
+  const leadFilter = resolveInitialLeadListFilter(
+    params.status as never,
+    params.filter === "follow_up_due",
+    params.queue && isPipelineTab ? (params.queue as never) : undefined,
+  );
+  // Derived from the company's zone, once, and passed to both the SQL filters
+  // and the aggregate RPC — so "due today" means one thing on this page.
+  const followUpCutoff = getLeadFollowUpDueCutoff(new Date(), companyTimeZone);
+
+  const [
+    customersPage,
+    archivedPage,
+    customerCounts,
+    leadsPage,
+    leadFilterCounts,
+    leadAggregates,
+    assignableMembers,
+  ] = await Promise.all([
+    listCustomersPage(companyContext.company.id, {
+      queue: customerQueue,
+      search: params.q ?? null,
+    }),
+    listCustomersPage(companyContext.company.id, {
+      queue: "past",
+      search: params.q ?? null,
+    }),
+    getCustomerQueueCounts(companyContext.company.id, { monthStartIso }),
+    isPipelineTab
+      ? listLeadsPage(companyContext.company.id, {
+          filter: leadFilter,
+          followUpCutoff,
+          search: params.q ?? null,
+        })
+      : Promise.resolve(null),
+    isPipelineTab
+      ? getLeadFilterCounts(companyContext.company.id, { followUpCutoff })
+      : Promise.resolve(null),
+    isPipelineTab
+      ? getLeadPipelineAggregates(companyContext.company.id, { followUpCutoff })
+      : Promise.resolve(EMPTY_LEAD_PIPELINE_AGGREGATES),
+    listLeadAssignableMembers(companyContext.company.id),
+  ]);
+
+  const leads = leadsPage?.rows ?? [];
 
   // Stats are fetched for the customers actually on screen, and read to
   // completion rather than to PostgREST's first 1,000 rows — see
@@ -120,6 +159,9 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       customerCounts={customerCounts}
       canManageCustomers={companyContext.permissions.manageCustomers}
       initialLeads={leads}
+      leadsPage={leadsPage}
+      leadFilterCounts={leadFilterCounts}
+      leadAggregates={leadAggregates}
       activitiesByLeadId={activitiesByLeadId}
       assignableMembers={assignableMembers}
       aiFeaturesEnabled={isAiFeaturesEnabled()}

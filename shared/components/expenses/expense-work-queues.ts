@@ -132,3 +132,35 @@ export function sortExpensesForWorkQueue(
 
   return sorted;
 }
+
+/**
+ * The same default, chosen from counts rather than from a loaded array.
+ *
+ * resolveDefaultExpenseWorkQueue reduces over the expenses it is handed, which
+ * only answers the question "which queue has work in it?" while the page holds
+ * every expense. Once the list is served one page at a time, the array is 50
+ * rows and the answer describes those 50. The counts come from the database and
+ * cover the whole tenant, so the landing queue is chosen the same way for a
+ * company with 40 expenses and one with 40,000.
+ */
+export function resolveDefaultExpenseWorkQueueFromCounts(
+  counts: Record<ExpenseWorkQueue, number>,
+): ExpenseWorkQueue {
+  if ((counts["needs-review"] ?? 0) > 0) return "needs-review";
+  if ((counts.uncategorized ?? 0) > 0) return "uncategorized";
+  if ((counts.approved ?? 0) > 0) return "approved";
+  return "past";
+}
+
+const EXPENSE_WORK_QUEUE_SET = new Set<ExpenseWorkQueue>([
+  "needs-review",
+  "uncategorized",
+  "approved",
+  "past",
+]);
+
+/** Narrows a URL parameter. The queue is a database filter, so an unrecognized
+ *  value must not reach the query builder. */
+export function isExpenseWorkQueue(value: string): value is ExpenseWorkQueue {
+  return EXPENSE_WORK_QUEUE_SET.has(value as ExpenseWorkQueue);
+}

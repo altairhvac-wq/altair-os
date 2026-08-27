@@ -160,9 +160,9 @@ export async function listCustomersPage(
  * Counts for every queue in one pass, for the tab strip.
  *
  * These were previously derived by filtering the in-memory array, which is why
- * they were wrong for exactly the tenants where they mattered. Five head
- * requests are cheap (~170 ms each, run together) and, unlike the array, they
- * count the whole book.
+ * they were wrong for exactly the tenants where they mattered. Six head
+ * requests run together are cheap and, unlike the array, they count the whole
+ * book.
  */
 export type CustomerCounts = {
   byQueue: Record<CustomerWorkQueue, number>;
@@ -170,11 +170,33 @@ export type CustomerCounts = {
   newThisMonth: number;
 };
 
+/**
+ * ============================== WHY THE COUNTS BYPASS RLS ==============================
+ * Measured on the scale-seeded scratch tenant (5,000 customers), as a real
+ * signed-in owner against the same query with the policy bypassed:
+ *
+ *     four queue counts, concurrently    3,536 ms   vs   187 ms
+ *     one unfiltered count               1,439 ms   vs   146 ms
+ *
+ * An exact count makes the planner evaluate the SELECT policy — is_active_company_member
+ * and friends — once per row it counts. Six of those put roughly five seconds on
+ * the Customers page, which is where the 6.3-second render came from after the
+ * lead book was removed from it.
+ *
+ * The two things RLS would enforce here are enforced above and below it: the
+ * page resolves the active company context and checks canManageCustomers before
+ * calling, and every query below is pinned to that company id and to a queue
+ * predicate, neither of which comes from user input. The ROW queries keep the
+ * user-scoped client — rows are what a mistake would actually leak, they are
+ * bounded to one page, and RLS staying in that path is worth the milliseconds.
+ *
+ * Same call, same reasoning, as getExpenseQueueCounts.
+ */
 export async function getCustomerQueueCounts(
   companyId: string,
   options?: { monthStartIso?: string },
 ): Promise<CustomerCounts> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const queues: CustomerWorkQueue[] = ["active", "needs-info", "inactive", "past"];
 
   const results = await Promise.all(

@@ -108,3 +108,62 @@ export function buildInvoicesGlanceStats(input: {
     };
   });
 }
+
+/**
+ * The same strip, from database counts and sums.
+ *
+ * buildInvoicesGlanceStats reduces over an array. Under server paging that array
+ * is one page, so every figure in the strip would describe fifty invoices while
+ * reading as a statement about the company's receivables — a smaller number
+ * stated with the same confidence, which is worse than the truncation this pass
+ * set out to remove.
+ *
+ * Labels, ordering and the detail text are shared with the array version; only
+ * the arithmetic moved. Paid still reports COLLECTED from the payment ledger,
+ * not invoiced totals, because that is what the array version reported.
+ */
+export function buildInvoicesGlanceStatsFromMetrics(
+  metrics: Record<InvoiceWorkQueue, { count: number; amount: number }>,
+): InvoicesGlanceStat[] {
+  return INVOICE_WORK_QUEUE_ORDER.map((queue) => {
+    const { count, amount } = metrics[queue] ?? { count: 0, amount: 0 };
+    const label = INVOICE_WORK_QUEUE_LABELS[queue];
+
+    if (queue === "past") {
+      return {
+        id: queue,
+        label,
+        value: String(count),
+        detail:
+          count === 0 ? "No void or cancelled invoices" : FILTER_DETAILS.past,
+        filterQueue: queue,
+      };
+    }
+
+    if (queue === "paid") {
+      return {
+        id: queue,
+        label,
+        value: String(count),
+        amount: formatCurrency(amount),
+        detail:
+          count === 0
+            ? "No paid invoices"
+            : `${FILTER_DETAILS.paid} · ${formatCurrency(amount)}`,
+        filterQueue: queue,
+      };
+    }
+
+    return {
+      id: queue,
+      label,
+      value: String(count),
+      amount: formatCurrency(amount),
+      detail:
+        count === 0
+          ? `No ${label.toLowerCase()} invoices`
+          : `${FILTER_DETAILS[queue]} · ${formatCurrency(amount)} owed`,
+      filterQueue: queue,
+    };
+  });
+}

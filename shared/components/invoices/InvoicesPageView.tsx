@@ -4,6 +4,7 @@ import { loadInvoicesPageAction } from "@/app/actions/list-pages";
 import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
   usePagedList,
+  useUrlParamState,
   type PagedListSnapshot,
 } from "@/shared/components/lists/usePagedList";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
@@ -63,7 +64,10 @@ import {
   type InvoiceListStatusFilter,
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
-import { buildInvoicesGlanceStats } from "@/shared/lib/invoices/invoices-glance-stats";
+import {
+  buildInvoicesGlanceStats,
+  buildInvoicesGlanceStatsFromMetrics,
+} from "@/shared/lib/invoices/invoices-glance-stats";
 import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import {
   MasterListPageLayout,
@@ -106,6 +110,18 @@ type InvoicesPageViewProps = {
    * archived — which is why the two entities cannot share one filter builder.
    */
   serverPage?: PagedListSnapshot<Invoice>;
+  /**
+   * Per-queue counts and money over the whole tenant (migration 161).
+   *
+   * Present exactly when serverPage is, because the strip and the list have
+   * to describe the same thing.
+   */
+  serverQueueMetrics?: Record<
+    InvoiceWorkQueue,
+    { count: number; amount: number }
+  >;
+  /** The queue the server actually paged by. */
+  serverQueue?: InvoiceWorkQueue;
   initialPayments: InvoicePayment[];
   customers: Customer[];
   jobs: Job[];
@@ -184,6 +200,8 @@ function filterInvoices(
 export function InvoicesPageView({
   initialInvoices,
   serverPage,
+  serverQueueMetrics,
+  serverQueue,
   initialPayments,
   customers,
   jobs,
@@ -215,7 +233,12 @@ export function InvoicesPageView({
 
   const paged = usePagedList<Invoice>(
     snapshot,
-    useCallback((cursor) => loadInvoicesPageAction({ cursor }), []),
+    useCallback(
+      // The queue must match the one the server used for the first page,
+      // or load-more continues a different list from where this stopped.
+      (cursor) => loadInvoicesPageAction({ queue: serverQueue, cursor }),
+      [serverQueue],
+    ),
   );
 
   const [invoices, setInvoices] = useState(initialInvoices);
@@ -227,13 +250,19 @@ export function InvoicesPageView({
   }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>(() =>
-    resolveDefaultInvoiceWorkQueue(
-      initialStatusFilter,
-      invoicePageFocus?.focus ?? null,
-      initialInvoices,
-    ),
+  // The server chose and applied the queue when it paged the list, and that
+  // choice wins. Re-resolving it from the loaded array would pick a queue
+  // from fifty rows and then show rows filtered by a different one.
+  const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>(
+    () =>
+      serverQueue ??
+      resolveDefaultInvoiceWorkQueue(
+        initialStatusFilter,
+        invoicePageFocus?.focus ?? null,
+        initialInvoices,
+      ),
   );
+  const [, setUrlQueue] = useUrlParamState("invoiceQueue", "");
   const [statusFilter, setStatusFilter] = useState<InvoiceListStatusFilter>(
     () => {
       // Deep-link status that maps to a header pill is expressed by the queue;
@@ -327,11 +356,13 @@ export function InvoicesPageView({
 
   const glanceStats = useMemo(
     () =>
-      buildInvoicesGlanceStats({
-        invoices,
-        payments: initialPayments,
-      }),
-    [invoices, initialPayments],
+      serverQueueMetrics
+        ? buildInvoicesGlanceStatsFromMetrics(serverQueueMetrics)
+        : buildInvoicesGlanceStats({
+            invoices,
+            payments: initialPayments,
+          }),
+    [serverQueueMetrics, invoices, initialPayments],
   );
 
   const queueScopedInvoices = useMemo(() => {
@@ -672,6 +703,11 @@ export function InvoicesPageView({
 
   function handleQueueChange(queue: InvoiceWorkQueue) {
     setWorkQueue(queue);
+    if (isServerPaged) {
+      // The pill is a database filter now. Highlighting it without telling
+      // the server leaves the previous filter's page on screen.
+      setUrlQueue(queue);
+    }
     setStatusFilter("all");
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);

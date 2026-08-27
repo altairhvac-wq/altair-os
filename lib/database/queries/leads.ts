@@ -20,7 +20,7 @@ const LEAD_MANAGER_ROLES: CompanyRole[] = [
   "office_staff",
 ];
 
-type LeadRowWithRelations = LeadRow & {
+export type LeadRowWithRelations = LeadRow & {
   assigned_user?: { id: string; full_name: string | null; email: string } | null;
   created_by_profile?: { id: string; full_name: string | null; email: string } | null;
 };
@@ -105,7 +105,7 @@ function mapLeadFormDataToRowFields(
   };
 }
 
-async function attachLatestActivity(
+export async function attachLatestActivity(
   companyId: string,
   rows: LeadRowWithRelations[],
 ): Promise<Lead[]> {
@@ -190,7 +190,7 @@ export async function listLeads(
   return attachLatestActivity(companyId, rows);
 }
 
-async function attachNetworkReferrals(
+export async function attachNetworkReferrals(
   companyId: string,
   leads: Lead[],
 ): Promise<Lead[]> {

@@ -9,12 +9,18 @@ import {
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomersPage } from "@/lib/database/queries/customers-page";
 import {
+  listLeadsPage,
+  type LeadsPageRequest,
+} from "@/lib/database/queries/leads-page";
+import {
   listEstimatesPage,
   listExpensesPage,
   listInvoicesPage,
   listJobsPage,
-  listLeadsPage,
   searchJobCandidates,
+  type EstimatesPageRequest,
+  type ExpensesPageRequest,
+  type InvoicesPageRequest,
   type ListPageRequest,
 } from "@/lib/database/queries/list-pages";
 import type { JobPageFilterRequest } from "@/lib/database/queries/job-page-filters";
@@ -26,6 +32,7 @@ import type { Expense } from "@/shared/types/expense";
 import type { Invoice } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
 import type { Lead } from "@/shared/types/lead";
+import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
 
 /**
  * "Load the next page" for each paged list surface.
@@ -75,7 +82,7 @@ export async function loadCustomersPageAction(
 }
 
 export async function loadInvoicesPageAction(
-  params: ListPageRequest,
+  params: InvoicesPageRequest,
 ): Promise<PageResult<Invoice>> {
   const context = await getActiveCompanyContext();
   if (!context) return { error: "No active company workspace." };
@@ -88,7 +95,7 @@ export async function loadInvoicesPageAction(
 }
 
 export async function loadEstimatesPageAction(
-  params: ListPageRequest,
+  params: EstimatesPageRequest,
 ): Promise<PageResult<Estimate>> {
   const context = await getActiveCompanyContext();
   if (!context) return { error: "No active company workspace." };
@@ -149,7 +156,7 @@ export async function searchJobsAction(
 }
 
 export async function loadExpensesPageAction(
-  params: ListPageRequest,
+  params: Omit<ExpensesPageRequest, "technicianId">,
 ): Promise<PageResult<Expense>> {
   const context = await getActiveCompanyContext();
   if (!context) return { error: "No active company workspace." };
@@ -163,7 +170,7 @@ export async function loadExpensesPageAction(
 }
 
 export async function loadLeadsPageAction(
-  params: ListPageRequest,
+  params: Omit<LeadsPageRequest, "followUpCutoff">,
 ): Promise<PageResult<Lead>> {
   const context = await getActiveCompanyContext();
   if (!context) return { error: "No active company workspace." };
@@ -172,5 +179,16 @@ export async function loadLeadsPageAction(
     return { error: "You do not have permission to view leads." };
   }
 
-  return { page: await listLeadsPage(context.company.id, params) };
+  // The follow-up cutoff is derived here, from the company's own time zone, and
+  // never accepted from the caller. A client-supplied cutoff would let anyone
+  // reachable by this action redefine which leads count as overdue.
+  return {
+    page: await listLeadsPage(context.company.id, {
+      ...params,
+      followUpCutoff: getLeadFollowUpDueCutoff(
+        new Date(),
+        context.company.timezone,
+      ),
+    }),
+  };
 }

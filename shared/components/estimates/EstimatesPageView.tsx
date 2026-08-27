@@ -4,6 +4,7 @@ import { loadEstimatesPageAction } from "@/app/actions/list-pages";
 import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
   usePagedList,
+  useUrlParamState,
   type PagedListSnapshot,
 } from "@/shared/components/lists/usePagedList";
 import {
@@ -69,7 +70,10 @@ import {
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
-import { buildEstimatesGlanceStats } from "@/shared/lib/estimates/estimates-glance-stats";
+import {
+  buildEstimatesGlanceStats,
+  buildEstimatesGlanceStatsFromMetrics,
+} from "@/shared/lib/estimates/estimates-glance-stats";
 import { EstimateBatchSelectionBar } from "./EstimateBatchSelectionBar";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
@@ -101,6 +105,13 @@ type EstimatesPageViewProps = {
    * archived — which is why the two entities cannot share one filter builder.
    */
   serverPage?: PagedListSnapshot<Estimate>;
+  /** Per-queue counts and money over the whole tenant (migration 161). */
+  serverQueueMetrics?: Record<
+    EstimateWorkQueue,
+    { count: number; amount: number }
+  >;
+  /** The queue the server actually paged by. */
+  serverQueue?: EstimateWorkQueue;
   customers: Customer[];
   jobs: Job[];
   serviceItems: ServiceItem[];
@@ -176,6 +187,8 @@ function filterEstimates(
 export function EstimatesPageView({
   initialEstimates,
   serverPage,
+  serverQueueMetrics,
+  serverQueue,
   customers,
   jobs,
   serviceItems,
@@ -204,7 +217,12 @@ export function EstimatesPageView({
 
   const paged = usePagedList<Estimate>(
     snapshot,
-    useCallback((cursor) => loadEstimatesPageAction({ cursor }), []),
+    useCallback(
+      // The queue must match the one the server used for the first page,
+      // or load-more continues a different list from where this stopped.
+      (cursor) => loadEstimatesPageAction({ queue: serverQueue, cursor }),
+      [serverQueue],
+    ),
   );
 
   const [estimates, setEstimates] = useState(initialEstimates);
@@ -216,9 +234,10 @@ export function EstimatesPageView({
   }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>(() =>
-    resolveDefaultEstimateWorkQueue(),
+  const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>(
+    () => serverQueue ?? resolveDefaultEstimateWorkQueue(),
   );
+  const [, setUrlQueue] = useUrlParamState("estimateQueue", "");
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
   );
@@ -279,8 +298,11 @@ export function EstimatesPageView({
   );
 
   const glanceStats = useMemo(
-    () => buildEstimatesGlanceStats({ estimates }),
-    [estimates],
+    () =>
+      serverQueueMetrics
+        ? buildEstimatesGlanceStatsFromMetrics(serverQueueMetrics)
+        : buildEstimatesGlanceStats({ estimates }),
+    [serverQueueMetrics, estimates],
   );
 
   const queueScopedEstimates = useMemo(() => {
@@ -602,6 +624,11 @@ export function EstimatesPageView({
 
   function handleQueueChange(queue: EstimateWorkQueue) {
     setWorkQueue(queue);
+    if (isServerPaged) {
+      // The pill is a database filter now. Highlighting it without telling
+      // the server leaves the previous filter's page on screen.
+      setUrlQueue(queue);
+    }
     setStatusFilter("all");
     clearBatchSendFeedback();
     clearLifecycleFeedback();

@@ -8,7 +8,12 @@ import { Button } from "@/shared/design-system/components";
 import { MasterListPageLayout } from "@/shared/design-system/shell";
 import { CustomersHubTabs } from "@/shared/components/customers/CustomersHubTabs";
 import { CustomersPageView } from "@/shared/components/customers/CustomersPageView";
-import { isLeadListFilter } from "@/shared/components/leads/lead-work-queues";
+import {
+  isLeadListFilter,
+  type LeadListFilter,
+} from "@/shared/components/leads/lead-work-queues";
+import type { PagedListSnapshot } from "@/shared/components/lists/usePagedList";
+import type { LeadPipelineAggregates } from "@/lib/database/queries/leads-page";
 import { LeadsPageView } from "@/shared/components/leads/LeadsPageView";
 import {
   resolveCustomersHubTab,
@@ -43,6 +48,12 @@ type CustomersHubPageViewProps = {
   };
   canManageCustomers: boolean;
   initialLeads: Lead[];
+  /** One server-paged page of leads, present only on the pipeline tab. */
+  leadsPage?: PagedListSnapshot<Lead> | null;
+  /** Pill counts over the whole book, not over the loaded page. */
+  leadFilterCounts?: Record<LeadListFilter, number> | null;
+  /** Tenant-wide pipeline counts from migration 160. */
+  leadAggregates?: LeadPipelineAggregates;
   activitiesByLeadId: Record<string, LeadActivity[]>;
   assignableMembers: LeadAssignableMember[];
   aiFeaturesEnabled: boolean;
@@ -76,6 +87,9 @@ export function CustomersHubPageView({
   customerCounts,
   canManageCustomers,
   initialLeads,
+  leadsPage,
+  leadFilterCounts,
+  leadAggregates,
   activitiesByLeadId,
   assignableMembers,
   aiFeaturesEnabled,
@@ -222,6 +236,9 @@ export function CustomersHubPageView({
       {activeTab === "pipeline" ? (
         <LeadsPageView
           initialLeads={initialLeads}
+          serverPage={leadsPage ?? undefined}
+          serverFilterCounts={leadFilterCounts ?? undefined}
+          serverAggregates={leadAggregates}
           activitiesByLeadId={activitiesByLeadId}
           assignableMembers={assignableMembers}
           aiFeaturesEnabled={aiFeaturesEnabled}

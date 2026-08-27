@@ -21,6 +21,17 @@ export type LeadSource =
 
 export type LeadLifecycleState = "active" | "archived" | "deleted";
 
+/**
+ * One row of the per-source pipeline breakdown as the database returns it.
+ * Counts only: the rate is derived once, in buildLeadPipelineMetrics.
+ */
+export type LeadSourcePerformanceInput = {
+  source: LeadSource;
+  total: number;
+  won: number;
+  lost: number;
+};
+
 export type Lead = {
   id: string;
   firstName: string;

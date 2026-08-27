@@ -53,3 +53,29 @@ export function buildEstimatesGlanceStats(input: {
     };
   });
 }
+
+/**
+ * The same strip, from database counts and sums. See the invoices equivalent:
+ * once the list is paged, an array-derived strip describes the page and looks
+ * like it describes the book.
+ */
+export function buildEstimatesGlanceStatsFromMetrics(
+  metrics: Record<EstimateWorkQueue, { count: number; amount: number }>,
+): EstimatesGlanceStat[] {
+  return ESTIMATE_WORK_QUEUE_ORDER.map((queue) => {
+    const { count, amount } = metrics[queue] ?? { count: 0, amount: 0 };
+    const label = ESTIMATE_WORK_QUEUE_LABELS[queue];
+
+    return {
+      id: queue,
+      label,
+      value: String(count),
+      amount: formatCurrency(amount),
+      detail:
+        count === 0
+          ? `No ${label.toLowerCase()} estimates`
+          : `${FILTER_DETAILS[queue]} · ${formatCurrency(amount)} total`,
+      filterQueue: queue,
+    };
+  });
+}

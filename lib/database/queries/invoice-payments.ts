@@ -49,7 +49,7 @@ function mapProviderMetadata(
   return {};
 }
 
-function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
+export function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
   return {
     id: row.id,
     invoiceId: row.invoice_id,

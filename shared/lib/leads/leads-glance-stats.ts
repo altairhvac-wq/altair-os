@@ -58,3 +58,32 @@ export function buildLeadsGlanceStats(input: {
     };
   });
 }
+
+/**
+ * The same strip, from database counts.
+ *
+ * countLeadsForListFilter above counts an array. That array was capped at
+ * PostgREST's 1,000 rows, so on a large tenant every pill was a lower bound
+ * wearing a total's clothes — and the pill a user clicks to find work is
+ * exactly where an undercount hides the work.
+ *
+ * The labels, the order and the detail text are shared with the array version;
+ * only the counting moved. See lib/database/queries/leads-page.ts.
+ */
+export function buildLeadsGlanceStatsFromCounts(
+  counts: Record<LeadListFilter, number>,
+): LeadsGlanceStat[] {
+  return LEAD_LIST_FILTER_ORDER.map((filter) => {
+    const count = counts[filter] ?? 0;
+    const label = LEAD_LIST_FILTER_LABELS[filter];
+
+    return {
+      id: filter,
+      label,
+      value: String(count),
+      detail:
+        count === 0 ? `No ${label.toLowerCase()} leads` : FILTER_DETAILS[filter],
+      filterQueue: filter,
+    };
+  });
+}

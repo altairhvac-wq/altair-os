@@ -136,3 +136,12 @@ export function sortEstimatesForWorkQueue(
 export function resolveDefaultEstimateWorkQueue(): EstimateWorkQueue {
   return "draft";
 }
+
+const ESTIMATE_WORK_QUEUE_SET = new Set<EstimateWorkQueue>(
+  ESTIMATE_WORK_QUEUE_ORDER,
+);
+
+/** Narrows a URL parameter before it reaches a query builder. */
+export function isEstimateWorkQueue(value: string): value is EstimateWorkQueue {
+  return ESTIMATE_WORK_QUEUE_SET.has(value as EstimateWorkQueue);
+}

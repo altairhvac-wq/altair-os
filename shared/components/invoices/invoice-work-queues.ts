@@ -178,3 +178,42 @@ export function resolveDefaultInvoiceWorkQueue(
 
   return "draft";
 }
+
+const INVOICE_WORK_QUEUE_SET = new Set<InvoiceWorkQueue>(
+  INVOICE_WORK_QUEUE_ORDER,
+);
+
+/** Narrows a URL parameter. The queue reaches a query builder, so an
+ *  unrecognized value must not get that far. */
+export function isInvoiceWorkQueue(value: string): value is InvoiceWorkQueue {
+  return INVOICE_WORK_QUEUE_SET.has(value as InvoiceWorkQueue);
+}
+
+/**
+ * The same landing pill, chosen from database counts rather than a loaded array.
+ *
+ * resolveDefaultInvoiceWorkQueue walks the queues and takes the first with an
+ * invoice in it. Over the whole book that is "where is there work"; over one
+ * page it is "which queue happens to be represented in the newest fifty", which
+ * is a different question with a plausible-looking answer.
+ */
+export function resolveDefaultInvoiceWorkQueueFromMetrics(
+  metrics: Record<InvoiceWorkQueue, { count: number }>,
+  statusFilter?: InvoiceStatus | "all" | "unpaid",
+  focus?: "cash-flow" | null,
+): InvoiceWorkQueue {
+  if (statusFilter === "draft") return "draft";
+  if (statusFilter === "sent") return "sent";
+  if (statusFilter === "partially_paid") return "partially_paid";
+  if (statusFilter === "overdue") return "overdue";
+  if (statusFilter === "paid") return "paid";
+  if (statusFilter === "void" || statusFilter === "cancelled") return "past";
+  if (statusFilter === "unpaid" || focus === "cash-flow") return "overdue";
+
+  for (const queue of INVOICE_WORK_QUEUE_ORDER) {
+    if (queue === "past") continue;
+    if ((metrics[queue]?.count ?? 0) > 0) return queue;
+  }
+
+  return "draft";
+}

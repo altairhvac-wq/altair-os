@@ -5,6 +5,7 @@ import { loadExpensesPageAction } from "@/app/actions/list-pages";
 import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
   usePagedList,
+  useUrlParamState,
   type PagedListSnapshot,
 } from "@/shared/components/lists/usePagedList";
 import { useRouter } from "next/navigation";
@@ -82,6 +83,13 @@ type ExpensesPageViewProps = {
   initialCreate?: boolean;
   initialStatusFilter?: ExpenseStatus | "all";
   /**
+   * The queue the server actually paged by.
+   *
+   * Not a hint: the rows in serverPage have this queue applied in SQL, so
+   * the pill has to start here and every load-more has to repeat it.
+   */
+  initialWorkQueue?: ExpenseWorkQueue;
+  /**
    * One server-paged page of expenses.
    *
    * When present the rows already have the queue, the eight filters and the
@@ -126,16 +134,24 @@ export function ExpensesPageView({
   initialSelectedId,
   initialCreate = false,
   initialStatusFilter = DEFAULT_FILTERS.statusFilter,
+  initialWorkQueue,
   serverPage,
   serverQueueCounts,
   filterOptions,
 }: ExpensesPageViewProps) {
   const [search, setSearch] = useState(DEFAULT_FILTERS.search);
-  const [workQueue, setWorkQueue] = useState<ExpenseWorkQueue>(() =>
-    initialStatusFilter === "submitted"
-      ? "needs-review"
-      : resolveDefaultExpenseWorkQueue(expenses),
+  // When the server paged the list it also chose and applied the queue, and
+  // that choice wins: resolving it again from the loaded array would pick a
+  // queue from 50 rows and then display rows filtered by a different one.
+  const [workQueue, setWorkQueue] = useState<ExpenseWorkQueue>(
+    () =>
+      initialWorkQueue ??
+      (initialStatusFilter === "submitted"
+        ? "needs-review"
+        : resolveDefaultExpenseWorkQueue(expenses)),
   );
+  const serverQueue = initialWorkQueue ?? null;
+  const [, setUrlQueue] = useUrlParamState("queue", "");
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [categoryFilter, setCategoryFilter] = useState(
     DEFAULT_FILTERS.categoryFilter,
@@ -178,8 +194,11 @@ export function ExpensesPageView({
   const paged = usePagedList<Expense>(
     snapshot,
     useCallback(
-      (cursor) => loadExpensesPageAction({ cursor }),
-      [],
+      // The queue must match the one the server used for the first page,
+      // or load-more continues a different list from where this stopped.
+      (cursor) =>
+        loadExpensesPageAction({ queue: serverQueue ?? undefined, cursor }),
+      [serverQueue],
     ),
   );
 
@@ -428,6 +447,15 @@ export function ExpensesPageView({
     setReceiptFilter(DEFAULT_FILTERS.receiptFilter);
   }
 
+  function handleQueueChange(queue: ExpenseWorkQueue) {
+    setWorkQueue(queue);
+    if (isServerPaged) {
+      // The queue is a database filter now. Highlighting the tab without
+      // telling the server leaves the previous queue's page on screen.
+      setUrlQueue(queue);
+    }
+  }
+
   function handleClosePanel() {
     setSelectedId(null);
     setPanelMode("empty");
@@ -504,7 +532,7 @@ export function ExpensesPageView({
           <ExpenseStatStrip
             counts={queueCounts}
             activeQueue={workQueue}
-            onQueueChange={setWorkQueue}
+            onQueueChange={handleQueueChange}
           />
         ) : undefined
       }

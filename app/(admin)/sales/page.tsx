@@ -21,6 +21,7 @@ import {
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import {
+  getDocumentQueueMetrics,
   listEstimatePipelineData,
   listEstimatesPage,
   listInvoicesPage,
@@ -34,6 +35,16 @@ import {
 } from "@/shared/lib/company-billing-defaults";
 import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 import { resolveSalesHubTab } from "@/shared/lib/sales/sales-hub";
+import {
+  isInvoiceWorkQueue,
+  resolveDefaultInvoiceWorkQueueFromMetrics,
+  type InvoiceWorkQueue,
+} from "@/shared/components/invoices/invoice-work-queues";
+import {
+  isEstimateWorkQueue,
+  resolveDefaultEstimateWorkQueue,
+  type EstimateWorkQueue,
+} from "@/shared/components/estimates/estimate-work-queues";
 
 type SalesPageProps = {
   searchParams: Promise<{
@@ -44,6 +55,13 @@ type SalesPageProps = {
     jobId?: string;
     status?: string;
     focus?: string;
+    /**
+     * Work-queue pills. Both lists live on one route, so they need one
+     * parameter each. They are applied in SQL, which is why they are in the
+     * URL rather than in component state.
+     */
+    invoiceQueue?: string;
+    estimateQueue?: string;
   }>;
 };
 
@@ -83,6 +101,8 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     jobId,
     status,
     focus,
+    invoiceQueue,
+    estimateQueue,
   } = params;
 
   const companyId = companyContext.company.id;
@@ -94,6 +114,26 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     jobId,
     create,
   });
+
+  // The strip metrics come first because the landing pill is chosen from
+  // them. resolveDefaultInvoiceWorkQueue used to walk the loaded array and
+  // pick "the first queue with anything in it", which over one page means
+  // the first queue represented in the newest fifty invoices.
+  const queueMetrics = await getDocumentQueueMetrics(companyId);
+
+  const resolvedInvoiceQueue: InvoiceWorkQueue =
+    invoiceQueue && isInvoiceWorkQueue(invoiceQueue)
+      ? invoiceQueue
+      : resolveDefaultInvoiceWorkQueueFromMetrics(
+          queueMetrics.invoices,
+          pageFocus.statusFilter,
+          pageFocus.focus,
+        );
+
+  const resolvedEstimateQueue: EstimateWorkQueue =
+    estimateQueue && isEstimateWorkQueue(estimateQueue)
+      ? estimateQueue
+      : resolveDefaultEstimateWorkQueue();
 
   const [
     estimatesPage,
@@ -111,7 +151,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     // The two list tabs are paged; the pipeline tab is an aggregate and gets its
     // own bounded-but-complete read instead — a cohort computed from one page is
     // not a cohort.
-    listEstimatesPage(companyId, {}),
+    listEstimatesPage(companyId, { queue: resolvedEstimateQueue }),
     // ONLY for the pipeline tab. It reads two years of estimates and invoices
     // to completion, which is right for cohorts and completely wrong to ship
     // alongside a 50-row list — doing it unconditionally took this page from
@@ -119,7 +159,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     activeTab === "estimate-pipeline"
       ? listEstimatePipelineData(companyId)
       : Promise.resolve({ estimates: [], invoices: [] }),
-    listInvoicesPage(companyId, {}),
+    listInvoicesPage(companyId, { queue: resolvedInvoiceQueue }),
     Promise.resolve([]),
     listInvoicePayments(companyId),
     getPaymentsThisWeekSummary(companyId, timeZone),

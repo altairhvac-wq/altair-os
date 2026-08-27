@@ -182,6 +182,11 @@ export function CustomersPageView({
   const [urlSearch, setUrlSearch] = useUrlParamState("q", "", {
     debounceMs: 300,
   });
+  // The queue is a server-side filter once the list is paged, so clicking a
+  // pill has to reach the server. Without this the pill highlighted, the
+  // counts stayed right, and the list underneath did not move — which is the
+  // same "looks answered, is not" failure the paging work exists to remove.
+  const [, setUrlQueue] = useUrlParamState("queue", "");
   const [localSearch, setLocalSearch] = useState("");
   const search = isServerPaged ? urlSearch : localSearch;
   const setSearch = isServerPaged ? setUrlSearch : setLocalSearch;
@@ -480,6 +485,9 @@ export function CustomersPageView({
     }
 
     setWorkQueue(queue);
+    if (isServerPaged) {
+      setUrlQueue(queue);
+    }
     clearSelection();
     clearBulkActionFeedback();
   }

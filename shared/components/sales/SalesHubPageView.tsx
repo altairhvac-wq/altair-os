@@ -30,6 +30,11 @@ type SalesHubPageViewProps = {
   invoices: Invoice[];
   /** One server-paged page for each list tab. */
   estimatesPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Estimate>;
+  /** Per-queue counts and money over the whole tenant (migration 161). */
+  queueMetrics?: import("@/lib/database/queries/list-pages").DocumentQueueMetrics;
+  /** The queues the server actually paged each list by. */
+  invoiceQueue?: import("@/shared/components/invoices/invoice-work-queues").InvoiceWorkQueue;
+  estimateQueue?: import("@/shared/components/estimates/estimate-work-queues").EstimateWorkQueue;
   invoicesPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Invoice>;
   /**
    * Complete data for the pipeline tab, bounded by time rather than by page.
@@ -91,6 +96,9 @@ export function SalesHubPageView({
   invoices,
   estimatesPage,
   invoicesPage,
+  queueMetrics,
+  invoiceQueue,
+  estimateQueue,
   pipelineEstimates,
   pipelineInvoices,
   invoicePayments,
@@ -192,6 +200,8 @@ export function SalesHubPageView({
         <EstimatesPageView
           initialEstimates={estimates}
           serverPage={estimatesPage}
+          serverQueueMetrics={queueMetrics?.estimates}
+          serverQueue={estimateQueue}
           customers={customers}
           jobs={jobs}
           serviceItems={serviceItems}
@@ -211,6 +221,8 @@ export function SalesHubPageView({
         <InvoicesPageView
           initialInvoices={invoices}
           serverPage={invoicesPage}
+          serverQueueMetrics={queueMetrics?.invoices}
+          serverQueue={invoiceQueue}
           initialPayments={invoicePayments}
           customers={customers}
           jobs={jobs}

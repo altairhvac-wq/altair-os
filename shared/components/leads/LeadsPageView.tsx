@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { prepareLeadEstimateAction } from "@/app/actions/leads";
+import { loadLeadsPageAction } from "@/app/actions/list-pages";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
+import {
+  usePagedList,
+  useUrlParamState,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
+import type { LeadPipelineAggregates } from "@/lib/database/queries/leads-page";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import {
@@ -25,18 +33,22 @@ import {
   type LeadListFilter,
 } from "@/shared/components/leads/lead-work-queues";
 import { LeadPipelineMetricsHeader } from "@/shared/components/customers/LeadPipelineMetricsHeader";
-import { buildLeadsGlanceStats } from "@/shared/lib/leads/leads-glance-stats";
-import { buildLeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
+import {
+  buildLeadsGlanceStats,
+  buildLeadsGlanceStatsFromCounts,
+} from "@/shared/lib/leads/leads-glance-stats";
+import {
+  buildLeadPipelineMetrics,
+  buildLeadPipelineMetricsFromAggregates,
+} from "@/shared/lib/leads/lead-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
 import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
+import { filterLeadsBySearch } from "@/shared/lib/leads/lead-search";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import type { LeadActivity } from "@/shared/types/lead-activity";
 import {
-  formatLeadName,
-  formatLeadSource,
-  formatLeadStatus,
   type Lead,
   type LeadSortField,
   type LeadStatus,
@@ -47,6 +59,18 @@ type PanelMode = "detail" | "create" | "empty";
 
 type LeadsPageViewProps = {
   initialLeads: Lead[];
+  /**
+   * One server-paged page.
+   *
+   * When present, the pill, the search and the counts have all been applied by
+   * the database over the whole tenant, and the client-side equivalents are
+   * skipped rather than re-run over a subset of it.
+   */
+  serverPage?: PagedListSnapshot<Lead>;
+  /** Pill counts over the whole book — see leads-page.ts. */
+  serverFilterCounts?: Record<LeadListFilter, number>;
+  /** Tenant-wide pipeline counts from migration 160. */
+  serverAggregates?: LeadPipelineAggregates;
   activitiesByLeadId: Record<string, LeadActivity[]>;
   assignableMembers: LeadAssignableMember[];
   aiFeaturesEnabled: boolean;
@@ -65,41 +89,11 @@ type LeadsPageViewProps = {
   onRegisterCreateHandler?: (handler: () => void) => void;
 };
 
-function filterLeads(
-  leads: Lead[],
-  search: string,
-  statusFilter: LeadStatus | "all",
-): Lead[] {
-  const query = search.trim().toLowerCase();
-
-  return leads.filter((lead) => {
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    if (!matchesStatus) {
-      return false;
-    }
-
-    if (!query) {
-      return true;
-    }
-
-    const haystack = [
-      formatLeadName(lead),
-      lead.phone,
-      lead.email,
-      formatLeadSource(lead.source),
-      formatLeadStatus(lead.status),
-      lead.assignedUserName,
-      lead.lastActivityLabel,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
-  });
-}
-
 export function LeadsPageView({
   initialLeads,
+  serverPage,
+  serverFilterCounts,
+  serverAggregates,
   activitiesByLeadId,
   assignableMembers,
   aiFeaturesEnabled,
@@ -114,19 +108,63 @@ export function LeadsPageView({
 }: LeadsPageViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
-  const [leads, setLeads] = useState(initialLeads);
-  const [leadsProp, setLeadsProp] = useState(initialLeads);
-  if (initialLeads !== leadsProp) {
-    setLeadsProp(initialLeads);
-    setLeads(initialLeads);
-  }
-  const [search, setSearch] = useState("");
-  const [listFilter, setListFilter] = useState<LeadListFilter>(() =>
-    resolveInitialLeadListFilter(
-      initialStatusFilter,
-      initialFollowUpDue,
-      initialListFilter,
+  const isServerPaged = Boolean(serverPage);
+
+  // Hooks cannot be conditional, so the unpaged path gets a snapshot describing
+  // the array it was handed. Memoised because usePagedList treats a new
+  // snapshot object as "the server sent a fresh first page" and resets.
+  const snapshot = useMemo<PagedListSnapshot<Lead>>(
+    () =>
+      serverPage ?? {
+        rows: initialLeads,
+        nextCursor: null,
+        totalCount: initialLeads.length,
+        hasMore: false,
+      },
+    [serverPage, initialLeads],
+  );
+
+  // What the server actually filtered this page by. Read from the URL rather
+  // than from local input state, which may be mid-debounce, and from the pill
+  // the server was told about rather than the one being highlighted.
+  const [urlSearch, setUrlSearch] = useUrlParamState("q", "", {
+    debounceMs: 300,
+  });
+  const [, setUrlQueue] = useUrlParamState("queue", "");
+
+  const serverFilter = resolveInitialLeadListFilter(
+    initialStatusFilter,
+    initialFollowUpDue,
+    initialListFilter,
+  );
+
+  const paged = usePagedList<Lead>(
+    snapshot,
+    useCallback(
+      (cursor) =>
+        // Both must match what produced the first page, or "load more"
+        // continues a different list from where this one stopped.
+        loadLeadsPageAction({
+          filter: serverFilter,
+          search: urlSearch,
+          cursor,
+        }),
+      [serverFilter, urlSearch],
     ),
+  );
+
+  const [leads, setLeads] = useState<Lead[]>(snapshot.rows);
+  const [leadsSource, setLeadsSource] = useState<Lead[]>(snapshot.rows);
+  const incomingLeads = isServerPaged ? paged.rows : initialLeads;
+  if (leadsSource !== incomingLeads) {
+    setLeadsSource(incomingLeads);
+    setLeads(incomingLeads);
+  }
+  const [localSearch, setLocalSearch] = useState("");
+  const search = isServerPaged ? urlSearch : localSearch;
+  const setSearch = isServerPaged ? setUrlSearch : setLocalSearch;
+  const [listFilter, setListFilter] = useState<LeadListFilter>(
+    () => serverFilter,
   );
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">(
     initialStatusFilter ?? "all",
@@ -166,31 +204,44 @@ export function LeadsPageView({
     });
   }, [onRegisterCreateHandler]);
 
+  // Counted by the database over the whole book when it can be. The array
+  // version only ever saw the rows that had been shipped, which on a tenant
+  // past PostgREST's 1,000-row ceiling was a fraction of them.
   const glanceStats = useMemo(
     () =>
-      buildLeadsGlanceStats({
-        leads,
-        timeZone,
-      }),
-    [leads, timeZone],
+      serverFilterCounts
+        ? buildLeadsGlanceStatsFromCounts(serverFilterCounts)
+        : buildLeadsGlanceStats({ leads, timeZone }),
+    [serverFilterCounts, leads, timeZone],
   );
 
   const pipelineMetrics = useMemo(
-    () => buildLeadPipelineMetrics(leads, undefined, timeZone),
-    [leads, timeZone],
+    () =>
+      serverAggregates
+        ? buildLeadPipelineMetricsFromAggregates(serverAggregates)
+        : buildLeadPipelineMetrics(leads, undefined, timeZone),
+    [serverAggregates, leads, timeZone],
   );
 
   const queueScopedLeads = useMemo(
-    () => filterLeadsForListFilter(leads, listFilter, timeZone),
-    [leads, listFilter, timeZone],
+    () =>
+      isServerPaged
+        ? leads
+        : filterLeadsForListFilter(leads, listFilter, timeZone),
+    [isServerPaged, leads, listFilter, timeZone],
   );
 
   const filteredLeads = useMemo(() => {
-    const filtered = filterLeads(queueScopedLeads, search, statusFilter);
+    // The search and the status dropdown are applied by the database when the
+    // list is server-paged; re-running them here would narrow one page and
+    // present the result as the whole list.
+    const filtered = isServerPaged
+      ? queueScopedLeads
+      : filterLeadsBySearch(queueScopedLeads, search, statusFilter);
     return [...filtered].sort((left, right) =>
       compareLeadsByField(left, right, sortField),
     );
-  }, [queueScopedLeads, search, sortField, statusFilter]);
+  }, [isServerPaged, queueScopedLeads, search, sortField, statusFilter]);
 
   const selectedLead =
     leads.find((lead) => lead.id === selectedId) ?? null;
@@ -222,6 +273,11 @@ export function LeadsPageView({
   function handleQueueChange(queue: LeadListFilter) {
     setListFilter(queue);
     setStatusFilter("all");
+    if (isServerPaged) {
+      // The pill is a database filter now. Highlighting it without telling the
+      // server would leave the list showing the previous filter's page.
+      setUrlQueue(queue);
+    }
   }
 
   function handleCreateSuccess(lead: Lead, outcome: LeadCreateOutcome = "save") {
@@ -308,7 +364,9 @@ export function LeadsPageView({
               onStatusFilterChange={setStatusFilter}
               onSortFieldChange={setSortField}
               onListFilterChange={handleQueueChange}
-              resultCount={filteredLeads.length}
+              resultCount={
+                isServerPaged ? paged.totalCount : filteredLeads.length
+              }
               showStatusFilter={listFilter === "past"}
             />
           </div>
@@ -324,12 +382,25 @@ export function LeadsPageView({
           ) : hasNoResults ? (
             <LeadsEmptyState variant="no-results" northStar={northStar} />
           ) : (
-            <LeadList
-              leads={filteredLeads}
-              selectedId={selectedId}
-              onSelect={handleSelectLead}
-              timeZone={timeZone}
-            />
+            <>
+              <LeadList
+                leads={filteredLeads}
+                selectedId={selectedId}
+                onSelect={handleSelectLead}
+                timeZone={timeZone}
+              />
+              {isServerPaged ? (
+                <PagedListFooter
+                  loadedCount={paged.loadedCount}
+                  totalCount={paged.totalCount}
+                  hasMore={paged.hasMore}
+                  isLoadingMore={paged.isLoadingMore}
+                  error={paged.error}
+                  onLoadMore={paged.loadMore}
+                  noun="leads"
+                />
+              ) : null}
+            </>
           )}
         </div>
       </MasterPageSurface>

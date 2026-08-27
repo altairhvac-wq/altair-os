@@ -8,6 +8,7 @@ import {
   isLeadClosed,
   type Lead,
   type LeadSource,
+  type LeadSourcePerformanceInput,
 } from "@/shared/types/lead";
 import {
   isDateWithinReportBounds,
@@ -208,7 +209,15 @@ export function buildLeadPipelineMetrics(
         return right.won - left.won;
       }
 
-      return right.total - left.total;
+      if (right.total !== left.total) {
+        return right.total - left.total;
+      }
+
+      // Sources genuinely tie — same wins, same volume — and without a final
+      // key the order is whatever the input order happened to be. That made
+      // the strip reorder itself between renders, and made the array path and
+      // the SQL path disagree about a list they had both computed correctly.
+      return left.source.localeCompare(right.source);
     });
 
   return {
@@ -218,6 +227,70 @@ export function buildLeadPipelineMetrics(
     openLeads: activeLeads.length - closedLeads,
     followUpsDue,
     conversionRate: toCloseRate(wonLeads, activeLeads.length),
+    sourcePerformance,
+    topSourceInsight: buildTopSourceInsight(sourcePerformance),
+  };
+}
+
+/**
+ * The same metrics, assembled from database counts instead of an array.
+ *
+ * ============================== WHY THIS EXISTS ==============================
+ * buildLeadPipelineMetrics above reduces over every lead. That was only ever
+ * possible because the page loaded every lead, and it was only ever CORRECT
+ * while a tenant had fewer than PostgREST's 1,000-row ceiling. Past that the
+ * conversion rate described the newest thousand leads and said "pipeline".
+ *
+ * So the counting moved to SQL (migration 160) and this function does the rest.
+ * Everything below the counts — the rate, the open figure, the ordering, the
+ * insight — is computed by the SAME code paths as before, from the same
+ * helpers, so there is exactly one definition of what a conversion rate is and
+ * one definition of which source is "best". Only the summation changed venue.
+ *
+ * The array version stays: reports still call it over a bounded, date-filtered
+ * set where loading the rows is the point.
+ */
+export function buildLeadPipelineMetricsFromAggregates(input: {
+  totalLeads: number;
+  wonLeads: number;
+  lostLeads: number;
+  followUpsDue: number;
+  sources: LeadSourcePerformanceInput[];
+}): LeadPipelineMetrics {
+  const sourcePerformance = input.sources
+    .map((entry) => ({
+      source: entry.source,
+      total: entry.total,
+      won: entry.won,
+      lost: entry.lost,
+      conversionRate: toCloseRate(entry.won, entry.total),
+    }))
+    .filter((entry) => entry.total > 0)
+    .sort((left, right) => {
+      if (right.won !== left.won) {
+        return right.won - left.won;
+      }
+
+      if (right.total !== left.total) {
+        return right.total - left.total;
+      }
+
+      // Sources genuinely tie — same wins, same volume — and without a final
+      // key the order is whatever the input order happened to be. That made
+      // the strip reorder itself between renders, and made the array path and
+      // the SQL path disagree about a list they had both computed correctly.
+      return left.source.localeCompare(right.source);
+    });
+
+  const closedLeads = input.wonLeads + input.lostLeads;
+
+  return {
+    totalLeads: input.totalLeads,
+    wonLeads: input.wonLeads,
+    lostLeads: input.lostLeads,
+    openLeads: input.totalLeads - closedLeads,
+    followUpsDue: input.followUpsDue,
+    conversionRate: toCloseRate(input.wonLeads, input.totalLeads),
     sourcePerformance,
     topSourceInsight: buildTopSourceInsight(sourcePerformance),
   };

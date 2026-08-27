@@ -10,6 +10,11 @@ import {
   listExpensesPage,
 } from "@/lib/database/queries/list-pages";
 import type { ExpenseStatus } from "@/shared/types/expense";
+import {
+  isExpenseWorkQueue,
+  resolveDefaultExpenseWorkQueueFromCounts,
+  type ExpenseWorkQueue,
+} from "@/shared/components/expenses/expense-work-queues";
 
 type ExpensesPageProps = {
   searchParams: Promise<{
@@ -18,6 +23,8 @@ type ExpensesPageProps = {
     selected?: string;
     create?: string;
     status?: string;
+    /** Work-queue pill. Applied in SQL, so it has to be in the URL. */
+    queue?: string;
   }>;
 };
 
@@ -64,16 +71,29 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
     ? null
     : companyContext.user.id;
 
-  const [expensesPage, queueCounts, filterOptions] = await Promise.all([
-    listExpensesPage(companyContext.company.id, {
-      technicianId: technicianScope,
-      statusFilter: parseExpenseStatusFilter(params.status),
-      jobIdFilter: params.jobId ?? null,
-      customerIdFilter: initialCustomerId ?? null,
-    }),
+  // The counts come first because the landing queue is chosen from them.
+  // That used to be decided from the loaded array, which stopped meaning
+  // anything the moment the array became one page: "which queue has work in
+  // it" answered over 50 rows is not the same question.
+  const [queueCounts, filterOptions] = await Promise.all([
     getExpenseQueueCounts(companyContext.company.id, technicianScope),
     listExpenseFilterOptions(companyContext.company.id),
   ]);
+
+  const workQueue: ExpenseWorkQueue =
+    params.queue && isExpenseWorkQueue(params.queue)
+      ? params.queue
+      : params.status === "submitted"
+        ? "needs-review"
+        : resolveDefaultExpenseWorkQueueFromCounts(queueCounts);
+
+  const expensesPage = await listExpensesPage(companyContext.company.id, {
+    queue: workQueue,
+    technicianId: technicianScope,
+    statusFilter: parseExpenseStatusFilter(params.status),
+    jobIdFilter: params.jobId ?? null,
+    customerIdFilter: initialCustomerId ?? null,
+  });
 
   const visibleExpenses = expensesPage.rows;
 
@@ -92,6 +112,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
       initialSelectedId={params.selected}
       initialCreate={params.create === "1"}
       initialStatusFilter={parseExpenseStatusFilter(params.status)}
+      initialWorkQueue={workQueue}
     />
   );
 }

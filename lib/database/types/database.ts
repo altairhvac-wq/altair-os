@@ -1502,6 +1502,25 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_lead_pipeline_metrics: migration 160 — wire into Database
+      // types on next gen types run. Returns a jsonb envelope of counts only;
+      // the rates are derived in shared/lib/leads/lead-metrics.ts.
+      get_company_lead_pipeline_metrics: {
+        Args: {
+          p_company_id: string;
+          p_follow_up_cutoff: string;
+        };
+        Returns: Json;
+      };
+      // get_company_document_queue_metrics: migration 161 — wire into
+      // Database types on next gen types run. Returns a jsonb envelope of
+      // per-queue counts and sums for invoices and estimates.
+      get_company_document_queue_metrics: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: Json;
+      };
       // allocate_company_document_number: migration 148 — wire into Database
       // types on next gen types run. Returns bigint; PostgREST may serialize
       // that as a JSON number or a string, so the caller
