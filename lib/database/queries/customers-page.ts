@@ -253,3 +253,77 @@ export async function getCustomerQueueCounts(
     newThisMonth: newResult.count ?? 0,
   };
 }
+
+/**
+ * A bounded customer list for pickers and typeaheads.
+ *
+ * ============================== WHY THIS EXISTS ==============================
+ * The Work hub loaded every customer in the company — 1.27 MB of rows on the
+ * scale-seeded tenant, which serialized into a 3.56 MB page — for three things:
+ * the New Job customer picker, the "matching customers" section of search, and
+ * looking up one preselected customer by id.
+ *
+ * None of those needs the book. The third is a lookup by primary key. The other
+ * two are searches, and a search that has already been narrowed to a term does
+ * not need five thousand rows to answer — it needs the ones that match.
+ *
+ * ============================== WHY NOT JUST A LIMIT ==============================
+ * Putting .limit(25) on listCustomers would have been the same defect wearing a
+ * smaller number: the picker would silently offer the 25 newest customers and
+ * quietly not contain the one being looked for. This searches the WHOLE tenant
+ * and returns the top matches of that search, which is a different thing.
+ *
+ * The cap is reported. A caller that wants to say "showing the first 25 of many"
+ * can, rather than presenting a truncated list as the answer.
+ */
+export type CustomerOptionsResult = {
+  customers: Customer[];
+  /** True when more customers matched than were returned. */
+  truncated: boolean;
+};
+
+export const CUSTOMER_OPTION_LIMIT = 25;
+
+export async function listCustomerOptions(
+  companyId: string,
+  options?: { search?: string | null; limit?: number },
+): Promise<CustomerOptionsResult> {
+  const supabase = await createClient();
+  const limit = Math.min(Math.max(options?.limit ?? CUSTOMER_OPTION_LIMIT, 1), 100);
+  const term = normalizeSearchTerm(options?.search);
+
+  let query = supabase
+    .from("customers")
+    .select("*")
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .is("archived_at", null);
+
+  if (term) {
+    query = query.or(buildSearchFilter(SEARCH_COLUMNS, term));
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit + 1);
+
+  if (error) {
+    console.error("[listCustomerOptions] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customers: [], truncated: false };
+  }
+
+  const rows = (data ?? []) as CustomerRow[];
+  const truncated = rows.length > limit;
+
+  return {
+    customers: (truncated ? rows.slice(0, limit) : rows).map(
+      mapCustomerRowToCustomer,
+    ),
+    truncated,
+  };
+}

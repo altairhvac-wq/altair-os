@@ -7,7 +7,11 @@ import {
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCustomersPage } from "@/lib/database/queries/customers-page";
+import {
+  listCustomerOptions,
+  listCustomersPage,
+  type CustomerOptionsResult,
+} from "@/lib/database/queries/customers-page";
 import {
   listLeadsPage,
   type LeadsPageRequest,
@@ -166,6 +170,34 @@ export async function loadExpensesPageAction(
 
   return {
     page: await listExpensesPage(context.company.id, { ...params, technicianId }),
+  };
+}
+
+/**
+ * Customer typeahead for the pickers.
+ *
+ * The Work hub used to be handed every customer in the company so it could
+ * filter them in the browser. This searches the whole tenant and returns the
+ * matches, which is both smaller and more correct: the old list stopped at
+ * PostgREST's 1,000 rows, so a picker on a large tenant could not offer a
+ * customer who was definitely there.
+ *
+ * Gated on canManageCustomers OR canDispatchJobs — dispatch needs to pick a
+ * customer when creating a job without otherwise managing the customer book.
+ */
+export async function searchCustomerOptionsAction(
+  search: string,
+): Promise<{ error?: string; result?: CustomerOptionsResult }> {
+  const context = await getActiveCompanyContext();
+  if (!context) return { error: "No active company workspace." };
+
+  const scope = getCompanyAccessScope(context);
+  if (!scope.canManageCustomers && !context.permissions.dispatchJobs) {
+    return { error: "You do not have permission to view customers." };
+  }
+
+  return {
+    result: await listCustomerOptions(context.company.id, { search }),
   };
 }
 

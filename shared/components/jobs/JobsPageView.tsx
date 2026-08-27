@@ -23,6 +23,7 @@ import {
   bulkUpdateJobStatusAction,
 } from "@/app/actions/jobs-bulk";
 import { createJobAction } from "@/app/actions/jobs";
+import { searchCustomerOptionsAction } from "@/app/actions/list-pages";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
@@ -123,25 +124,9 @@ type JobsPageViewProps = {
   billingSummaries?: JobBillingSummariesByJobId;
 };
 
-function filterCustomers(customers: Customer[], search: string): Customer[] {
-  const query = search.trim().toLowerCase();
-  if (!query) return [];
-
-  return customers.filter((customer) => {
-    const haystack = [
-      customer.name,
-      customer.email,
-      customer.phone,
-      customer.company ?? "",
-      customer.city,
-      customer.state,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
-  });
-}
+/** Stable empty array: a fresh [] would invalidate the customersById memo on
+ *  every render while the search box is empty, which is most of the time. */
+const EMPTY_CUSTOMERS: Customer[] = [];
 
 export function JobsPageView({
   initialJobs,
@@ -441,9 +426,66 @@ export function JobsPageView({
     [viewScopedJobsForGlance],
   );
 
+  // ============================== CUSTOMERS ARE NOT LOADED IN BULK ANY MORE ==============================
+  // This page used to receive every customer in the company so it could filter
+  // them here. That was 1.27 MB of rows on the seeded tenant and a 3.56 MB
+  // page, and it was also WRONG at scale: the array stopped at PostgREST's
+  // 1,000 rows, so the picker could not offer a customer who existed and the
+  // search section could not find them.
+  //
+  // `customers` is now a bounded slice for the picker's default list, and
+  // searching goes to the server, which searches the whole tenant.
+  // The response carries the term it answers, and the term on screen is what
+  // decides whether to show it. That does two things a plain results array
+  // does not: clearing the box needs no state write at all, and a response for
+  // a term the user has already typed past is ignored rather than rendered
+  // under the new one.
+  const [customerSearch, setCustomerSearch] = useState<{
+    term: string;
+    customers: Customer[];
+    truncated: boolean;
+  }>({ term: "", customers: [], truncated: false });
+
+  useEffect(() => {
+    const query = deferredSearch.trim();
+    if (!query) return;
+
+    let cancelled = false;
+    void searchCustomerOptionsAction(query).then((response) => {
+      if (cancelled) return;
+      setCustomerSearch({
+        term: query,
+        customers: response.result?.customers ?? [],
+        truncated: response.result?.truncated ?? false,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deferredSearch]);
+
+  const customerSearchIsCurrent =
+    deferredSearch.trim() !== "" && customerSearch.term === deferredSearch.trim();
+  const searchedCustomers = customerSearchIsCurrent
+    ? customerSearch.customers
+    : EMPTY_CUSTOMERS;
+  const customerSearchTruncated =
+    customerSearchIsCurrent && customerSearch.truncated;
+
+  // Search ranking wants the customer behind each job, for the company name,
+  // email and phone that the job row does not carry. Built from whichever
+  // customers are actually in hand — the bounded slice plus anything the
+  // search returned — rather than from a copy of the book.
   const customersById = useMemo(
-    () => new Map(customers.map((customer) => [customer.id, customer])),
-    [customers],
+    () =>
+      new Map(
+        [...customers, ...searchedCustomers].map((customer) => [
+          customer.id,
+          customer,
+        ]),
+      ),
+    [customers, searchedCustomers],
   );
 
   const applyJobSearch = useCallback(
@@ -537,10 +579,7 @@ export function JobsPageView({
       ? filteredTodayResult.matchReasons
       : filteredAllResult.matchReasons;
 
-  const filteredCustomers = useMemo(
-    () => filterCustomers(customers, deferredSearch),
-    [customers, deferredSearch],
-  );
+  const filteredCustomers = searchedCustomers;
 
   const visibleJobs = useMemo(
     () => (viewTab === "today" ? filteredTodayJobs : filteredAllJobs),
@@ -927,8 +966,7 @@ export function JobsPageView({
   }
 
   const hasNoJobs = jobs.length === 0;
-  const showCustomerMatches =
-    isSearching && customers.length > 0 && filteredCustomers.length > 0;
+  const showCustomerMatches = isSearching && filteredCustomers.length > 0;
 
   const hasActiveFilters = hasActiveJobsPageFilters({
     viewTab,
@@ -959,6 +997,11 @@ export function JobsPageView({
       >
         <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-muted">
           Customers
+          {customerSearchTruncated ? (
+            <span className="ml-2 font-normal normal-case tracking-normal text-altair-ink-on-paper-secondary">
+              showing the first {filteredCustomers.length} matches
+            </span>
+          ) : null}
         </p>
         <ul className="divide-y divide-altair-border/50">
           {filteredCustomers.map((customer) => (

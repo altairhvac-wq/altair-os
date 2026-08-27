@@ -13,6 +13,46 @@ export type FetchOperationalDayJobsOptions = ScheduledTodayOptions & {
   assignedTechnicianId?: string;
 };
 
+/**
+ * A ceiling on the carryover query, and why it needs one.
+ *
+ * ============================== THE RULE, AND ITS EDGE ==============================
+ * A job in dispatched / arrived / in_progress belongs on today's board whatever
+ * date it was scheduled for — that is the point of carryover, and it is why the
+ * query has no date filter. In a healthy tenant that is a handful of jobs.
+ *
+ * But "no date filter" is also "every one ever", and PostgREST silently caps a
+ * response at 1,000 rows. Measured on the scale-seeded tenant: 695 dispatched
+ * plus 699 in_progress, so the carryover query alone returned 1,000 job rows
+ * into every /work and /schedule render — about 3 MB of the 3.56 MB page — and
+ * the 394 it could not fit vanished with no error and no warning.
+ *
+ * ============================== WHY A LIMIT IS THE RIGHT SHAPE HERE ==============================
+ * Paging is wrong for this one: it is not a list a person scrolls, it is the
+ * membership rule for a board. The board needs the jobs that are stuck, and it
+ * needs to say so when there are more than it can show.
+ *
+ * scheduled_at ASCENDING is deliberate and unchanged: the oldest carryover is
+ * the most overdue, so a cap keeps the work that has been waiting longest. The
+ * silent version kept the same rows — the difference is that this one reports
+ * the truncation instead of pretending the board is complete.
+ */
+const CARRYOVER_LIMIT = 200;
+
+function reportCarryoverTruncation(
+  label: string,
+  companyId: string,
+  rows: unknown[],
+): void {
+  if (rows.length <= CARRYOVER_LIMIT) return;
+  console.warn(
+    `[${label}] more than ${CARRYOVER_LIMIT} carryover jobs are open; the board ` +
+      `shows the ${CARRYOVER_LIMIT} oldest. This is an operational signal, not a ` +
+      `display problem: that many jobs are sitting in dispatched/arrived/in_progress.`,
+    { companyId },
+  );
+}
+
 export async function fetchOperationalDayJobRows<
   T extends { id: string; scheduled_at: string },
 >(
@@ -49,7 +89,8 @@ export async function fetchOperationalDayJobRows<
         .order("scheduled_at", { ascending: true }),
       baseQuery()
         .in("status", [...ACTIVE_CARRYOVER_JOB_STATUSES])
-        .order("scheduled_at", { ascending: true }),
+        .order("scheduled_at", { ascending: true })
+        .limit(CARRYOVER_LIMIT + 1),
       baseQuery()
         .eq("status", "completed")
         .gte("completed_at", start)
@@ -69,9 +110,16 @@ export async function fetchOperationalDayJobRows<
     };
   }
 
+  const carryover = carryoverResult.data ?? [];
+  reportCarryoverTruncation(
+    "fetchOperationalDayJobRows",
+    options.companyId,
+    carryover,
+  );
+
   const rows = [
     ...(scheduledTodayResult.data ?? []),
-    ...(carryoverResult.data ?? []),
+    ...carryover.slice(0, CARRYOVER_LIMIT),
     ...(completedTodayResult.data ?? []),
   ] as unknown as T[];
 
@@ -128,7 +176,8 @@ export async function fetchOperationalRangeJobRows<
         .order("scheduled_at", { ascending: true }),
       baseQuery()
         .in("status", [...ACTIVE_CARRYOVER_JOB_STATUSES])
-        .order("scheduled_at", { ascending: true }),
+        .order("scheduled_at", { ascending: true })
+        .limit(CARRYOVER_LIMIT + 1),
       baseQuery()
         .eq("status", "completed")
         .gte("completed_at", todayStart)
@@ -148,9 +197,16 @@ export async function fetchOperationalRangeJobRows<
     };
   }
 
+  const rangeCarryover = carryoverResult.data ?? [];
+  reportCarryoverTruncation(
+    "fetchOperationalRangeJobRows",
+    options.companyId,
+    rangeCarryover,
+  );
+
   const rows = [
     ...(scheduledRangeResult.data ?? []),
-    ...(carryoverResult.data ?? []),
+    ...rangeCarryover.slice(0, CARRYOVER_LIMIT),
     ...(completedTodayResult.data ?? []),
   ] as unknown as T[];
 

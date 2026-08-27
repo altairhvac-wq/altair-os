@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCustomers } from "@/lib/database/queries/customers";
+import { getCustomerById } from "@/lib/database/queries/customers";
+import { listCustomerOptions } from "@/lib/database/queries/customers-page";
 import {
   listAssignedJobs,
   listDeletedJobs,
@@ -65,7 +66,14 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
     assignedTechnicianId: canViewAll ? null : companyContext.user.id,
   });
 
-  const [jobs, deletedJobs, todayJobs, customers, technicians] = await Promise.all([
+  // The customer picker and the search page's customer section used to be fed
+  // every customer in the company: 1.27 MB of rows on the seeded tenant, which
+  // serialized into a 3.56 MB page, on a route where most visits never open
+  // the picker at all. They now get a bounded slice, and searching goes to the
+  // server through searchCustomerOptionsAction — which searches the WHOLE
+  // tenant, so it can offer customers the old array had already truncated away.
+  const [jobs, deletedJobs, todayJobs, customerOptions, technicians] =
+    await Promise.all([
     Promise.resolve(jobsPage.rows),
     canViewAll
       ? listDeletedJobs(companyContext.company.id)
@@ -76,11 +84,15 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
         ? undefined
         : companyContext.user.id,
     }),
-    canViewAll ? listCustomers(companyContext.company.id) : Promise.resolve([]),
+    canViewAll
+      ? listCustomerOptions(companyContext.company.id)
+      : Promise.resolve({ customers: [], truncated: false }),
     canDispatchJobs
       ? listTechnicians(companyContext.company.id, companyContext)
       : Promise.resolve([]),
-  ]);
+    ]);
+
+  const customers = customerOptions.customers;
 
   const allJobsForBilling = [...jobs, ...deletedJobs, ...todayJobs];
   const billingSummaries = await listJobBillingSummariesForJobs(
@@ -88,9 +100,14 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
     allJobsForBilling.map((job) => job.id),
   );
 
-  const preselectedCustomer = customerId
-    ? customers.find((customer) => customer.id === customerId)
-    : undefined;
+  // By primary key, not by scanning an array that may not contain them. The
+  // deep link carries a customer id; the bounded option list is the newest
+  // twenty-five and has no reason to include that particular customer.
+  const preselectedCustomer =
+    customerId && canViewAll
+      ? ((await getCustomerById(companyContext.company.id, customerId)) ??
+        undefined)
+      : undefined;
 
   const createInitialData: Partial<JobFormData> | undefined =
     preselectedCustomer
