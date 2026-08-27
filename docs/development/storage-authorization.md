@@ -49,18 +49,41 @@ and mirrors the SELECT policy of the owning row.
 | Any other company | None | None |
 
 Receipts mirror `public.expenses` (migration 103). Attachments mirror
-`public.jobs` (migration 046) rather than `public.job_attachments`, whose own
-SELECT policy is still bare company membership — an attachment is a view onto a
-job, so job visibility is the right authority.
+`public.jobs` (migration 046) — an attachment is a view onto a job, so job
+visibility is the right authority.
 
 Every branch fails closed: an unknown path family, a missing row, a malformed
 uuid, a path shorter than four segments, and an unauthenticated caller all
 return false.
 
-> **Known follow-on.** `public.job_attachments` row metadata (filename, size,
-> uploader) remains readable company-wide. Tightening it could break attachment
-> lists in the UI and deserves its own verification, so it is recorded as
-> separate work rather than changed alongside the storage policy.
+### Row metadata (migration 156 — resolved)
+
+This was previously recorded as a known follow-on: `can_read_company_file` gated
+the *bytes* of an attachment on job visibility, but `public.job_attachments`
+kept a bare `is_active_company_member(company_id)` SELECT policy, so a
+technician could still read the file name, caption and path of every attachment
+in the company — including jobs they were never assigned to. File names and
+captions routinely carry customer names and addresses, so the two halves of one
+attachment disagreed in a way that leaked.
+
+Migration 156 closes it by giving the row the same predicate the bytes already
+had, on both SELECT and INSERT. The concern that held it back — that tightening
+would break attachment lists — was checked rather than assumed, and does not
+hold. `job_attachments` has exactly two read paths and both are already gated at
+or above the new rule:
+
+- `app/(admin)/work/[jobId]/page.tsx` and
+  `app/actions/technician-job-work-history.ts` already refuse in application code
+  when `job.assignedTechnicianId !== context.user.id`. RLS was *weaker* than the
+  application's own rule; 156 moves that rule down into the database.
+- `app/(admin)/customers/[customerId]/page.tsx` is guarded by
+  `canManageCustomers` (owner/admin/dispatcher/office_staff), every one of which
+  satisfies `can_view_operational_jobs`, so the new predicate is unconditionally
+  true there.
+
+Confirmed empirically: with 156 reverted in scratch, the live matrix fails on
+exactly three assertions (technician sees an unassigned job's row, twice, and
+can plant a row on an unassigned job) and nothing else.
 
 ## Rollout — the part that matters
 
@@ -131,8 +154,38 @@ returns false, that 153 does not drop the broad policy, that 154 does and
 carries a rollback, and that the path families still match the two builders in
 `lib/storage/company-files.ts`.
 
-It cannot prove the live denial in rows 7 and 9. That is what this checklist is
-for.
+`scripts/verify-storage-matrix.mjs` (in `verify:all`) covers the drift risk
+across the three files that must agree — the key builders, 153's parser, and the
+154/156 policies — including that 156's row predicate is character-for-character
+the same as 153's byte predicate, and that 156 introduces no new privileged
+function (the migration 148 failure mode).
+
+Neither is evidence about behavior. Structure agreeing with itself is not the
+same as Postgres allowing and denying the right people.
+
+### The live matrix
+
+`scripts/verify-storage-matrix-live.mjs` closes that gap and supersedes the
+manual checklist above for rows 7 and 9. It builds a disposable fixture company
+in a scratch project, creates one user per role, signs each in with the anon key
+for a genuine JWT, and drives the real RPC and real Storage API as those users.
+
+```bash
+node scripts/verify-storage-matrix-live.mjs --confirm <scratch-project-ref>
+```
+
+It proves, among 36 assertions, the two the checklist could not: a technician
+reading their **own** receipt while being refused another technician's given the
+exact object key, and a technician reading an attachment on an **assigned** job
+while being refused one on an unassigned job. It also confirms the absence of
+over-tightening — owner, admin, office staff and dispatcher all retain access —
+and that the write path is untouched.
+
+Safety: it requires `ALTAIR_LOADTEST_SUPABASE_URL`,
+`ALTAIR_LOADTEST_SERVICE_ROLE_KEY` and `ALTAIR_LOADTEST_ANON_KEY`, never reads
+the application's own credentials, refuses to run if the target matches
+`NEXT_PUBLIC_SUPABASE_URL`, requires `--confirm` to match the target ref, and
+cleans up after itself (`--clean` removes leftovers from an interrupted run).
 
 ## Related: orphaned objects
 

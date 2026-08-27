@@ -61,3 +61,8 @@ next-env.d.ts
 /_xfer-media.tgz
 /altair-overview-*.json
 *.tgz
+
+# Local scratch-only SQL runner (holds a connection string). Never committed.
+/.scratch-sql.mjs
+/.env.scratch.local
+/.scratch-*
