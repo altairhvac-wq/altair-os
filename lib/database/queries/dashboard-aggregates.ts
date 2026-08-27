@@ -73,7 +73,18 @@ export type DashboardEstimateAggregates = {
 
 export type DashboardExpenseAggregates = {
   submittedCount: number;
-  attachedReceiptCount: number;
+  /**
+   * Money, and the field the dashboard actually renders.
+   *
+   * This type previously declared `attachedReceiptCount`, which the SQL has
+   * never returned — so it read as 0 forever — while dropping submittedTotal,
+   * which the SQL does return and which
+   * shared/components/dashboard/DashboardCompactSummaries.tsx displays as a
+   * currency amount. The reader and the function disagreed about the shape of
+   * the one section carrying a number a person acts on.
+   */
+  submittedTotal: number;
+  missingReceiptCount: number;
   totalActiveCount: number;
 };
 
@@ -102,7 +113,8 @@ export const EMPTY_DASHBOARD_AGGREGATES: DashboardAggregates = {
   },
   expenses: {
     submittedCount: 0,
-    attachedReceiptCount: 0,
+    submittedTotal: 0,
+    missingReceiptCount: 0,
     totalActiveCount: 0,
   },
 };
@@ -149,7 +161,8 @@ function readExpenses(raw: unknown): DashboardExpenseAggregates {
   const source = (raw ?? {}) as Record<string, unknown>;
   return {
     submittedCount: toNumber(source.submittedCount),
-    attachedReceiptCount: toNumber(source.attachedReceiptCount),
+    submittedTotal: toNumber(source.submittedTotal),
+    missingReceiptCount: toNumber(source.missingReceiptCount),
     totalActiveCount: toNumber(source.totalActiveCount),
   };
 }

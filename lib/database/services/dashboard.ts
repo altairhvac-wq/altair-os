@@ -1,3 +1,4 @@
+import { selectDashboardAggregates } from "@/lib/database/services/dashboard-aggregate-bridge";
 import {
   canViewCompanyTimeEntries,
   getCompanyAccessScope,
@@ -630,6 +631,36 @@ export async function getDashboardData(
 
   const { sections: summarySections } = operationsSummary;
 
+  // The ten dashboard numbers that are a count or a sum over the WHOLE tenant.
+  //
+  // Derived here from the arrays this function already loaded — which is the
+  // defect: PostgREST caps those arrays at 1000 rows, so on a large tenant these
+  // are computed from a fraction of the data and understate by roughly 90%.
+  // selectDashboardAggregates decides whether that stays authoritative, whether
+  // the SQL aggregates are compared against it, or whether they replace it.
+  const legacyAggregateFields = {
+    unpaidCount: unpaidInvoices.length,
+    unpaidTotal: invoiceSummary.unpaidTotal,
+    overdueCount: overdueInvoices.length,
+    overdueTotal: invoiceSummary.overdueTotal,
+    unpaidInvoiceFollowUpCount: unpaidInvoiceFollowUpEntries.length,
+    unsentInvoiceCount: unsentInvoices.length,
+    unsentEstimateCount: unsentEstimates.length,
+    staleSentEstimateCount: staleSentEstimateEntries.length,
+    expenseSubmittedCount: summarySections.pendingExpenses.count,
+    expenseSubmittedTotal: summarySections.pendingExpenses.totalAmount,
+  };
+
+  const aggregateSelection = access.canViewBilling
+    ? await selectDashboardAggregates({
+        companyId,
+        legacy: legacyAggregateFields,
+        reference: new Date(),
+      })
+    : { fields: legacyAggregateFields, source: "legacy" as const, drift: [] };
+
+  const totals = aggregateSelection.fields;
+
   return {
     access,
     analytics: access.canViewOperationalReports
@@ -671,10 +702,10 @@ export async function getDashboardData(
       : [],
     money: access.canViewBilling
       ? {
-          unpaidCount: unpaidInvoices.length,
-          unpaidTotal: invoiceSummary.unpaidTotal,
-          overdueCount: overdueInvoices.length,
-          overdueTotal: invoiceSummary.overdueTotal,
+          unpaidCount: totals.unpaidCount,
+          unpaidTotal: totals.unpaidTotal,
+          overdueCount: totals.overdueCount,
+          overdueTotal: totals.overdueTotal,
           paymentsTodayCount: summarySections.revenue.todayPaymentCount,
           paymentsTodayTotal: summarySections.revenue.todayCollectedRevenue,
           paymentsYesterdayTotal: paymentsYesterday.total,
@@ -705,7 +736,7 @@ export async function getDashboardData(
               dueDate: invoice.dueDate,
               status: invoice.status,
             })),
-          unpaidInvoiceFollowUpCount: unpaidInvoiceFollowUpEntries.length,
+          unpaidInvoiceFollowUpCount: totals.unpaidInvoiceFollowUpCount,
           unpaidInvoicesNeedingFollowUp: unpaidInvoiceFollowUpEntries
             .slice(0, UNPAID_INVOICE_FOLLOW_UP_DASHBOARD_LIMIT)
             .map((entry) => ({
@@ -721,7 +752,7 @@ export async function getDashboardData(
             })),
           unpaidInvoiceFollowUpThresholdDays:
             UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
-          unsentInvoiceCount: unsentInvoices.length,
+          unsentInvoiceCount: totals.unsentInvoiceCount,
           unsentInvoices: unsentInvoices
             .slice(0, UNSENT_INVOICES_DASHBOARD_LIMIT)
             .map((invoice) => ({
@@ -733,7 +764,7 @@ export async function getDashboardData(
               total: invoice.total,
               status: invoice.status,
             })),
-          unsentEstimateCount: unsentEstimates.length,
+          unsentEstimateCount: totals.unsentEstimateCount,
           unsentEstimates: unsentEstimates
             .slice(0, UNSENT_ESTIMATES_DASHBOARD_LIMIT)
             .map((estimate) => ({
@@ -745,7 +776,7 @@ export async function getDashboardData(
               total: estimate.total,
               status: estimate.status,
             })),
-          staleSentEstimateCount: staleSentEstimateEntries.length,
+          staleSentEstimateCount: totals.staleSentEstimateCount,
           staleSentEstimates: staleSentEstimateEntries
             .slice(0, STALE_SENT_ESTIMATES_DASHBOARD_LIMIT)
             .map((entry) => ({
@@ -764,8 +795,8 @@ export async function getDashboardData(
       : EMPTY_MONEY,
     expenses: access.canViewCompanyExpenses
       ? {
-          submittedCount: summarySections.pendingExpenses.count,
-          submittedTotal: summarySections.pendingExpenses.totalAmount,
+          submittedCount: totals.expenseSubmittedCount,
+          submittedTotal: totals.expenseSubmittedTotal,
           rejectedCount: expenses.filter(
             (expense) => expense.status === "rejected",
           ).length,
