@@ -29,7 +29,7 @@
  *
  * Run: node scripts/verify-cron-sweep.mjs
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 const SWEEP = "lib/automation/tenant-sweep.ts";
 const MIGRATION = "supabase/migrations/152_cron_checkpoints.sql";
@@ -371,12 +371,11 @@ function runToCycleCompletion(state, options = {}, maxInvocations = 500) {
 // Overdue invoice sweep — stage one of moving maintenance off the read path
 // ===========================================================================
 
-console.log("\nOverdue sweep — scheduled path added, read path deliberately kept");
+console.log("\nOverdue sweep — stage two: the read path no longer performs maintenance");
 
 {
   const sweepService = loadTs("lib/database/services/overdue-invoice-sweep.ts");
   const sweepRoute = loadTs("app/api/cron/billing-maintenance/route.ts");
-  const billing = loadTs("lib/database/services/invoice-billing.ts");
 
   check(
     "a scheduled overdue sweep exists and uses the resumable tenant sweep",
@@ -408,14 +407,19 @@ console.log("\nOverdue sweep — scheduled path added, read path deliberately ke
       ),
   );
 
+  // Stage two. The read-path wrapper module is gone and the sweep is now the
+  // only caller — asserted in detail by scripts/verify-read-path-writes.mjs,
+  // which also checks that the sweep injects a service-role client. Without
+  // that injection the cron resolves the cookie-scoped client, has no session
+  // in a scheduled request, and marks nothing overdue while reporting success.
   check(
-    "STAGE ONE: the read-path sync is still in place, so no coverage gap exists",
-    billing.includes("syncOverdueInvoiceStatuses"),
+    "STAGE TWO: the read-path wrapper module is gone",
+    !existsSync("lib/database/services/invoice-billing.ts"),
   );
 
   check(
-    "the staged rollout is documented in the route",
-    /STAGE ONE OF TWO/.test(readFileSync("app/api/cron/billing-maintenance/route.ts", "utf8")),
+    "the sweep passes its own client down, so it can actually write",
+    /syncOverdueInvoiceStatuses\([\s\S]{0,160}?client,\s*\)/.test(sweepService),
   );
 }
 

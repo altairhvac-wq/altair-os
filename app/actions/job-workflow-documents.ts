@@ -16,7 +16,6 @@ import {
   getInvoiceDeleteDependencies,
 } from "@/lib/database/queries/invoices";
 import { getJobById } from "@/lib/database/queries/jobs";
-import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
 import { isSmsSendingConfigured } from "@/lib/sms/env";
@@ -140,10 +139,7 @@ export async function loadJobWorkflowInvoiceDocumentAction(
     deleteDependencies,
     onlinePaymentsEnabled,
   ] = await Promise.all([
-    ensureInvoiceBillingStatesSynced(
-      context.company.id,
-      context.company.timezone,
-    ).then(() => getInvoiceById(context.company.id, invoiceId)),
+    getInvoiceById(context.company.id, invoiceId),
     listInvoiceActivitiesForInvoice(context.company.id, invoiceId),
     listPaymentsForInvoice(context.company.id, invoiceId),
     getBillingSignatureForEntity(context.company.id, "invoice", invoiceId),

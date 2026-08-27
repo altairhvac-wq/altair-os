@@ -20,7 +20,7 @@ import {
 } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
-import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
+import { listInvoices } from "@/lib/database/queries/invoices";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SalesHubPageView } from "@/shared/components/sales/SalesHubPageView";
@@ -106,9 +106,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   ] = await Promise.all([
     listEstimates(companyId, { includeArchived: true }),
     listDeletedEstimates(companyId),
-    listInvoicesWithBillingSync(companyId, timeZone, {
-      includeArchived: true,
-    }),
+    listInvoices(companyId, { includeArchived: true }),
     listDeletedInvoices(companyId),
     listInvoicePayments(companyId),
     getPaymentsThisWeekSummary(companyId, timeZone),

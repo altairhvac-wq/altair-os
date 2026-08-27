@@ -115,9 +115,12 @@ export async function runOverdueInvoiceSweep(options?: {
       return page.map((row) => ({ id: row.id, created_at: row.created_at }));
     },
     processCompany: async (companyId) => {
+      // The service-role client, explicitly. There is no user session in a cron
+      // request, so the default cookie client would match nothing.
       const updated = await syncOverdueInvoiceStatuses(
         companyId,
         timeZoneByCompany.get(companyId),
+        client,
       );
       invoicesMarkedOverdue += updated;
     },

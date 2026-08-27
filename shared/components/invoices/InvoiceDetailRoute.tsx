@@ -4,7 +4,6 @@ import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { formatDemoDisplayName } from "@/shared/lib/demo-display-name";
-import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
 import {
@@ -37,10 +36,7 @@ export async function InvoiceDetailRoute({
 
   const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled, smsSendingConfigured] =
     await Promise.all([
-    ensureInvoiceBillingStatesSynced(
-      companyContext.company.id,
-      companyContext.company.timezone,
-    ).then(() => getInvoiceById(companyContext.company.id, invoiceId)),
+    getInvoiceById(companyContext.company.id, invoiceId),
     listInvoiceActivitiesForInvoice(companyContext.company.id, invoiceId),
     listPaymentsForInvoice(companyContext.company.id, invoiceId),
     getBillingSignatureForEntity(

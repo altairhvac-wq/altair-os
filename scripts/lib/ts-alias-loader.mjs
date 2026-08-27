@@ -24,15 +24,44 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CANDIDATE_SUFFIXES = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 
-/** Bundler-only guards with no runtime meaning outside Next. */
-const STUBBED = new Set(["server-only", "client-only"]);
+/**
+ * Specifiers that only exist inside Next's runtime or bundler.
+ *
+ * server-only and client-only are build-time guards with no runtime behaviour.
+ * next/headers is different: it is real, and a verifier genuinely has no request
+ * context. Its stub therefore THROWS on use rather than returning something
+ * empty — a verifier is meant to inject its own client, and code that falls
+ * through to the cookie-scoped one is exercising a path that cannot work in the
+ * context being tested. That is the 4F defect exactly, so it must fail loudly.
+ */
+const STUBBED = new Map([
+  ["server-only", "empty-module.mjs"],
+  ["client-only", "empty-module.mjs"],
+  ["next/headers", "next-headers-stub.mjs"],
+]);
 
 export async function resolve(specifier, context, nextResolve) {
-  if (STUBBED.has(specifier)) {
-    return nextResolve(
-      pathToFileURL(join(ROOT, "scripts", "lib", "empty-module.mjs")).href,
-      context,
-    );
+  const stub = STUBBED.get(specifier);
+  if (stub) {
+    return nextResolve(pathToFileURL(join(ROOT, "scripts", "lib", stub)).href, context);
+  }
+
+  // Relative imports inside TypeScript sources omit the extension. Node's
+  // type stripping requires one, so the same lookup is applied to them.
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    const parentPath = context.parentURL?.startsWith("file:")
+      ? fileURLToPath(context.parentURL)
+      : null;
+    if (parentPath) {
+      const base = join(dirname(parentPath), specifier);
+      for (const suffix of CANDIDATE_SUFFIXES) {
+        const candidate = base + suffix;
+        if (suffix && existsSync(candidate)) {
+          return nextResolve(pathToFileURL(candidate).href, context);
+        }
+      }
+    }
+    return nextResolve(specifier, context);
   }
 
   if (!specifier.startsWith("@/")) {

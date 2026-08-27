@@ -10,7 +10,7 @@ import { listRecentExpensesForCustomer } from "@/lib/database/queries/expenses";
 import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-attachments";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { listInvoicePaymentsForCustomer } from "@/lib/database/queries/invoice-payments";
-import { listInvoicesByCustomerWithBillingSync } from "@/lib/database/services/invoice-billing";
+import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import {
@@ -69,10 +69,9 @@ export default async function CustomerDetailPage({
         )
       : Promise.resolve([]),
     canViewBillingData
-      ? listInvoicesByCustomerWithBillingSync(
+      ? listInvoicesByCustomer(
           companyContext.company.id,
           customerId,
-          companyContext.company.timezone,
           CUSTOMER_360_RECORD_LIMIT,
         )
       : Promise.resolve([]),

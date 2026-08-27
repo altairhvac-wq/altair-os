@@ -932,8 +932,17 @@ type OverdueInvoiceCandidate = {
 export async function syncOverdueInvoiceStatuses(
   companyId: string,
   timeZone?: string,
+  db?: DbClient,
 ): Promise<number> {
-  const supabase = await createClient();
+  // The client is injectable because this runs from two very different places.
+  //
+  // On a page render the caller is a signed-in user and the cookie client is
+  // right. From the scheduled sweep there is NO user session — a cron request
+  // carries no cookies — so defaulting to the cookie client there would leave
+  // every statement unauthenticated and RLS would match nothing. The sweep
+  // would report success while marking zero invoices overdue, and removing the
+  // read-path call would silently stop overdue transitions altogether.
+  const supabase = await resolveDbClient(db);
   const today = getTodayDateOnly(new Date(), timeZone);
 
   const { data, error } = await supabase

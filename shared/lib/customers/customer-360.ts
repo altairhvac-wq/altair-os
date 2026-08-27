@@ -3,7 +3,7 @@ import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/operational-activities";
-import { listInvoicesByCustomerWithBillingSync } from "@/lib/database/services/invoice-billing";
+import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { getCustomerLifecycleState } from "@/shared/lib/customer-lifecycle";
 import {
   resolveJobCompletionDate,
@@ -592,12 +592,7 @@ export async function getCustomer360Data(
       : Promise.resolve([]),
     includeBilling
       ? preloaded?.invoices ??
-        listInvoicesByCustomerWithBillingSync(
-          companyId,
-          customerId,
-          timeZone,
-          CUSTOMER_360_RECORD_LIMIT,
-        )
+        listInvoicesByCustomer(companyId, customerId, CUSTOMER_360_RECORD_LIMIT)
       : Promise.resolve([]),
     preloaded?.equipment ??
       listCustomerEquipment(companyId, customerId, { includeInactive: true }),

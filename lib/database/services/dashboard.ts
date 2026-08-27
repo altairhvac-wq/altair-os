@@ -41,7 +41,7 @@ import {
   UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
 } from "@/shared/lib/unpaid-invoice-follow-up";
 import { listExpenses } from "@/lib/database/queries/expenses";
-import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
+import { listInvoices } from "@/lib/database/queries/invoices";
 import {
   getPaymentsLast7DaysDailyTotals,
   getPaymentsThisMonthSummary,
@@ -442,7 +442,7 @@ export async function getDashboardData(
       ? listActiveTechnicianTimeEntries(companyId)
       : Promise.resolve([]),
     access.canViewBilling
-      ? listInvoicesWithBillingSync(companyId, context.company.timezone)
+      ? listInvoices(companyId)
       : Promise.resolve([]),
     access.canViewBilling ? listEstimates(companyId) : Promise.resolve([]),
     access.canViewCompanyExpenses

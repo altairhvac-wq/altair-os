@@ -14,7 +14,6 @@ import {
   listLeadAssignableMembers,
   listLeadsWithReferrals,
 } from "@/lib/database/queries/leads";
-import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { CustomersHubPageView } from "@/shared/components/customers/CustomersHubPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { resolveCustomersHubTab } from "@/shared/lib/customers/customers-hub";
@@ -49,15 +48,6 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const activeTab = resolveCustomersHubTab(params.tab);
   const canViewCustomerBilling = canViewBilling(companyContext);
   const companyTimeZone = companyContext.company.timezone;
-
-  // Sync overdue invoice statuses before the ops-stats invoice pass so Past Due
-  // matches Invoices page read behavior (Customers previously skipped this).
-  if (canViewCustomerBilling) {
-    await ensureInvoiceBillingStatesSynced(
-      companyContext.company.id,
-      companyTimeZone,
-    );
-  }
 
   // Both customer tabs are served one page at a time, filtered, sorted and
   // counted by the database. Nothing here loads the customer book into memory:
