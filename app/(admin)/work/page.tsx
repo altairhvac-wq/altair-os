@@ -11,6 +11,7 @@ import {
 import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
+import { listJobsPage } from "@/lib/database/queries/list-pages";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { parseJobsPageSearchParams } from "@/shared/lib/jobs-page-filters";
 import type { JobFormData } from "@/shared/types/job";
@@ -53,13 +54,19 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
 
   const canDispatchJobs = companyContext.permissions.dispatchJobs;
 
+  // The All Jobs tab is served one page at a time, with lifecycle, status,
+  // priority and assignment applied in SQL. Search is separate: it ranks, and
+  // the ranking stays in the browser over candidates the server draws from the
+  // whole tenant — see searchJobCandidates.
+  const jobsPage = await listJobsPage(companyContext.company.id, {
+    statusFilter: pageFilters.statusFilter,
+    priorityFilter: pageFilters.priorityFilter,
+    unassignedOnly: pageFilters.unassignedOnly,
+    assignedTechnicianId: canViewAll ? null : companyContext.user.id,
+  });
+
   const [jobs, deletedJobs, todayJobs, customers, technicians] = await Promise.all([
-    canViewAll
-      ? listJobs(companyContext.company.id, { includeArchived: true })
-      : listAssignedJobs(
-          companyContext.company.id,
-          companyContext.user.id,
-        ),
+    Promise.resolve(jobsPage.rows),
     canViewAll
       ? listDeletedJobs(companyContext.company.id)
       : Promise.resolve([]),
@@ -99,6 +106,7 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
   return (
     <JobsPageView
       initialJobs={[...jobs, ...deletedJobs]}
+      serverPage={jobsPage}
       initialTodayJobs={todayJobs}
       companyTimeZone={companyContext.company.timezone}
       customers={customers}

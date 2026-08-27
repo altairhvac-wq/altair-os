@@ -80,6 +80,13 @@ import { JobsBulkActionBar } from "./JobsBulkActionBar";
 import { JobsEmptyState } from "./JobsEmptyState";
 import { JobsStatStrip } from "./JobsStatStrip";
 import { JobsTable } from "./JobsTable";
+import type { PagedListSnapshot } from "@/shared/components/lists/usePagedList";
+import { loadJobsPageAction, searchJobsAction } from "@/app/actions/list-pages";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
+import { usePagedList } from "@/shared/components/lists/usePagedList";
+
+/** Mirrors SEARCH_CANDIDATE_LIMIT in lib/database/queries/list-pages.ts. */
+const SEARCH_RESULT_CAP = 500;
 import { JobsTodayCardList } from "./JobsTodayCardList";
 import { jobMissionClasses as jm } from "./job-list-presentation";
 import {
@@ -92,6 +99,15 @@ type PanelMode = "create" | "empty";
 
 type JobsPageViewProps = {
   initialJobs: Job[];
+  /**
+   * One server-paged page of the "all jobs" tab.
+   *
+   * When present the list is authoritative from the server: rows are already
+   * scoped by lifecycle, status, priority and assignment, so the client-side
+   * equivalents are skipped rather than run a second time. Ranking still happens
+   * here — see serverSearchCandidates.
+   */
+  serverPage?: PagedListSnapshot<Job>;
   initialTodayJobs: Job[];
   companyTimeZone: string;
   customers: Customer[];
@@ -142,7 +158,34 @@ export function JobsPageView({
   initialPriorityFilter = "all",
   initialUnassignedOnly = false,
   billingSummaries,
+  serverPage,
 }: JobsPageViewProps) {
+  const isServerPaged = Boolean(serverPage);
+
+  const snapshot = useMemo<PagedListSnapshot<Job>>(
+    () =>
+      serverPage ?? {
+        rows: initialJobs,
+        nextCursor: null,
+        totalCount: initialJobs.length,
+        hasMore: false,
+      },
+    [serverPage, initialJobs],
+  );
+
+  /**
+   * Candidates for a ranked search, fetched from the whole tenant.
+   *
+   * Search and browse are genuinely different modes here. Browsing is paged;
+   * searching is ranked, and ranking needs its candidates up front rather than
+   * a page at a time. Keeping them separate is what lets the existing
+   * rankAndSortRecords keep working untouched over rows that now come from the
+   * whole book instead of the most recent thousand.
+   */
+  const [searchCandidates, setSearchCandidates] = useState<Job[] | null>(null);
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const [isFetchingCandidates, startSearchTransition] = useTransition();
+
   const [jobs, setJobs] = useState(initialJobs);
   const [todayJobs, setTodayJobs] = useState(initialTodayJobs);
   const [search, setSearch] = useState("");
@@ -155,6 +198,27 @@ export function JobsPageView({
     initialPriorityFilter,
   );
   const [unassignedOnly, setUnassignedOnly] = useState(initialUnassignedOnly);
+
+  /**
+   * Browse-mode paging for the All Jobs tab.
+   *
+   * "Load more" must continue the SAME list the server rendered page one from,
+   * so it repeats the active filters. Sending different ones would silently
+   * splice a second list onto the bottom of the first.
+   */
+  const paged = usePagedList<Job>(
+    snapshot,
+    useCallback(
+      (cursor) =>
+        loadJobsPageAction({
+          cursor,
+          statusFilter,
+          priorityFilter,
+          unassignedOnly,
+        }),
+      [priorityFilter, statusFilter, unassignedOnly],
+    ),
+  );
   const [lifecycleFilter, setLifecycleFilter] =
     useState<JobLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
@@ -182,10 +246,76 @@ export function JobsPageView({
   const companyTimeZoneFromContext = useCompanyTimezone();
   const companyTimeZone = companyTimeZoneProp || companyTimeZoneFromContext;
 
-  useEffect(() => {
-    setJobs(initialJobs);
+  // Adjust during render rather than in an effect. Setting state inside an
+  // effect makes React render once with the stale list and again with the new
+  // one, which lint flags as a cascading render — and on this page the stale
+  // frame is a list of the wrong jobs.
+  const [seenJobsSource, setSeenJobsSource] = useState<Job[] | null>(null);
+  const incomingJobs = isServerPaged ? paged.rows : initialJobs;
+  if (seenJobsSource !== incomingJobs) {
+    setSeenJobsSource(incomingJobs);
+    setJobs(incomingJobs);
+  }
+
+  const [seenTodayJobs, setSeenTodayJobs] = useState<Job[] | null>(null);
+  if (seenTodayJobs !== initialTodayJobs) {
+    setSeenTodayJobs(initialTodayJobs);
     setTodayJobs(initialTodayJobs);
-  }, [initialJobs, initialTodayJobs]);
+  }
+
+  /**
+   * Fetch ranked-search candidates when the term settles.
+   *
+   * Debounced through useDeferredValue, which the search box already used, so
+   * the request rate is unchanged from the client-side version. What changed is
+   * where the rows come from: the whole tenant rather than the page in memory.
+   */
+  useEffect(() => {
+    if (!isServerPaged) return;
+
+    // An empty term is not a state to store — it is the absence of a search, and
+    // allJobsSource derives that from the term directly. Clearing state here
+    // instead would set state synchronously in an effect for the most common
+    // keystroke of all: the last backspace.
+    const term = deferredSearch.trim();
+    if (!term) return;
+
+    let cancelled = false;
+    startSearchTransition(async () => {
+      const result = await searchJobsAction({
+        search: term,
+        statusFilter,
+        priorityFilter,
+        unassignedOnly,
+      });
+      if (cancelled) return;
+      setSearchCandidates(result.jobs ?? []);
+      setSearchTruncated(Boolean(result.truncated));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    deferredSearch,
+    isServerPaged,
+    priorityFilter,
+    statusFilter,
+    unassignedOnly,
+  ]);
+
+  /**
+   * While a search is active the list ranks over the server's candidates; with
+   * no term it browses the current page. Two modes, one list.
+   */
+  const hasSearchTerm = deferredSearch.trim().length > 0;
+  const allJobsSource = useMemo(
+    () =>
+      isServerPaged && hasSearchTerm && searchCandidates !== null
+        ? searchCandidates
+        : jobs,
+    [hasSearchTerm, isServerPaged, jobs, searchCandidates],
+  );
 
   useEffect(() => {
     const parsed = parseJobsPageSearchParams({
@@ -279,8 +409,9 @@ export function JobsPageView({
   );
 
   const lifecycleFilteredJobs = useMemo(
-    () => jobs.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
-    [jobs, lifecycleFilter],
+    () =>
+      allJobsSource.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
+    [allJobsSource, lifecycleFilter],
   );
 
   const activeTodayCount = useMemo(
@@ -377,14 +508,21 @@ export function JobsPageView({
   ]);
 
   const filteredAllResult = useMemo(() => {
-    const filtered = filterJobsByPageFilters(
-      lifecycleFilteredJobs,
-      statusFilter,
-      priorityFilter,
-      unassignedOnly,
-    );
+    // Server-paged: the rows already have lifecycle, status, priority and
+    // assignment applied in SQL, so re-running those predicates here would be a
+    // second, weaker copy of the same rule over a subset of the data. Ranking
+    // still runs, over candidates the server drew from the whole tenant.
+    const filtered = isServerPaged
+      ? lifecycleFilteredJobs
+      : filterJobsByPageFilters(
+          lifecycleFilteredJobs,
+          statusFilter,
+          priorityFilter,
+          unassignedOnly,
+        );
     return applyJobSearch(filtered);
   }, [
+    isServerPaged,
     applyJobSearch,
     lifecycleFilteredJobs,
     statusFilter,
@@ -910,6 +1048,22 @@ export function JobsPageView({
 
     return (
       <>
+        {isServerPaged && hasSearchTerm && isFetchingCandidates ? (
+          <p className="px-4 py-2 text-xs text-altair-ink-on-paper-secondary" aria-live="polite">
+            Searching all jobs…
+          </p>
+        ) : null}
+        {isServerPaged && hasSearchTerm && searchTruncated ? (
+          /*
+            Said plainly rather than left implicit. The whole defect this page is
+            recovering from was a list that looked complete and was not, so a
+            capped result set has to announce itself.
+          */
+          <p className="px-4 py-2 text-xs text-altair-ink-on-paper-secondary" role="status">
+            Showing the first {SEARCH_RESULT_CAP.toLocaleString()} matches. Narrow
+            the search to see the rest.
+          </p>
+        ) : null}
         <JobsTable
           jobs={filteredAllJobs}
           onSelect={handleSelectJob}
@@ -922,6 +1076,22 @@ export function JobsPageView({
           matchReasons={searchMatchReasons}
           companyTimeZone={companyTimeZone}
         />
+        {/*
+          Browse mode only. A ranked search is not a page — it is the whole
+          matching set, ordered by relevance, and offering "load more" under it
+          would imply a next page that does not exist.
+        */}
+        {isServerPaged && !hasSearchTerm ? (
+          <PagedListFooter
+            loadedCount={paged.loadedCount}
+            totalCount={paged.totalCount}
+            hasMore={paged.hasMore}
+            isLoadingMore={paged.isLoadingMore}
+            error={paged.error}
+            onLoadMore={paged.loadMore}
+            noun="jobs"
+          />
+        ) : null}
         {selectionEnabled && lifecycleFilter === "active" ? (
           <JobsBulkActionBar
             selectedJobs={selectedJobs}

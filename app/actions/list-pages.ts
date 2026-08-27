@@ -101,7 +101,7 @@ export async function loadEstimatesPageAction(
 }
 
 export async function loadJobsPageAction(
-  params: ListPageRequest,
+  params: ListPageRequest & JobPageFilterRequest,
 ): Promise<PageResult<Job>> {
   const context = await getActiveCompanyContext();
   if (!context) return { error: "No active company workspace." };
