@@ -40,7 +40,7 @@ function resolveProfileName(
   return profile.full_name?.trim() || profile.email;
 }
 
-function mapLeadRowToLead(
+export function mapLeadRowToLead(
   row: LeadRowWithRelations,
   latestActivity?: { createdAt: string; label: string },
 ): Lead {

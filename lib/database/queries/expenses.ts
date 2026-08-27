@@ -34,7 +34,7 @@ function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
 }
 
-function mapExpenseRow(row: ExpenseRowWithRelations): Expense {
+export function mapExpenseRow(row: ExpenseRowWithRelations): Expense {
   return {
     id: row.id,
     expenseNumber: row.expense_number,
