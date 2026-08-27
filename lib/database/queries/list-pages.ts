@@ -11,9 +11,14 @@ import {
 import { escapeFilterValue, normalizeSearchTerm } from "@/lib/database/queries/pagination";
 import { mapInvoiceRowToInvoice } from "@/lib/database/queries/invoices";
 import { mapEstimateRowToEstimate } from "@/lib/database/queries/estimates";
-import { mapJobRowToJob } from "@/lib/database/queries/jobs";
+import { mapJobRowToJob } from "@/lib/database/mappers/job";
 import { mapExpenseRow } from "@/lib/database/queries/expenses";
 import { mapLeadRowToLead } from "@/lib/database/queries/leads";
+import {
+  applyJobPageFilters,
+  JOB_SEARCH_COLUMNS,
+  type JobPageFilterRequest,
+} from "@/lib/database/queries/job-page-filters";
 
 /**
  * Server-paged versions of the remaining list surfaces.
@@ -229,10 +234,11 @@ const JOB_SELECT = `
   assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
 `;
 
-export type JobsPageRequest = ListPageRequest & {
-  /** Technicians see only their own work; this is enforced here, not in the UI. */
-  assignedTechnicianId?: string | null;
-};
+export type JobsPageRequest = ListPageRequest &
+  JobPageFilterRequest & {
+    /** Technicians see only their own work; this is enforced here, not in the UI. */
+    assignedTechnicianId?: string | null;
+  };
 
 export async function listJobsPage(
   companyId: string,
@@ -250,9 +256,11 @@ export async function listJobsPage(
     select: JOB_SELECT,
     sortable: ["created_at", "scheduled_at"],
     defaultSort: "scheduled_at",
-    searchColumns: ["job_number", "service_address", "city", "job_type", "description"],
+    searchColumns: JOB_SEARCH_COLUMNS,
     applyFilters: (query, req) => {
-      let scoped = applyScopeAndStatus(query, req);
+      // applyLifecycle only — the status filter comes from applyJobPageFilters,
+      // which knows about the dispatch board's two-status In Progress case.
+      let scoped = applyJobPageFilters(applyLifecycle(query, req), req);
       if (req.assignedTechnicianId) {
         scoped = scoped.eq("assigned_technician_id", req.assignedTechnicianId);
       }

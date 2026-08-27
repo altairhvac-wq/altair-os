@@ -28,22 +28,16 @@ import type {
 } from "@/shared/types/job-workflow";
 
 import {
-  resolveOptionalSubjectAttributionName,
-  type ProfileSummary,
-} from "@/shared/lib/profile-attribution";
+  mapJobRowToJob,
+  type JobRowWithCustomer,
+  type JobRowWithTechnician,
+} from "@/lib/database/mappers/job";
 
-type JobRowWithCustomer = JobRow & {
-  customers: {
-    name: string;
-    email?: string;
-    phone?: string;
-    company_name?: string | null;
-  } | null;
-};
-
-type JobRowWithTechnician = JobRowWithCustomer & {
-  assigned_technician: ProfileSummary | null;
-};
+/**
+ * Re-exported from lib/database/mappers/job.ts, which has no server imports so
+ * the job filter differential can run the real mapper.
+ */
+export { mapJobRowToJob };
 
 const JOB_TECHNICIAN_SELECT = `
   *,
@@ -56,58 +50,6 @@ const JOB_DETAIL_SELECT = `
   customers(name, email, phone, company_name),
   assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
 `;
-
-function toDateOnly(value: string): string {
-  return value.split("T")[0] ?? value;
-}
-
-function resolveAssignedTechnician(row: JobRowWithTechnician): {
-  assignedTechnicianId?: string;
-  assignedTechnician?: string;
-} {
-  if (!row.assigned_technician_id) {
-    return {};
-  }
-
-  return {
-    assignedTechnicianId: row.assigned_technician_id,
-    assignedTechnician: resolveOptionalSubjectAttributionName({
-      profile: row.assigned_technician,
-      subjectUserId: row.assigned_technician_id,
-    }),
-  };
-}
-
-export function mapJobRowToJob(row: JobRowWithTechnician): Job {
-  const technician = resolveAssignedTechnician(row);
-
-  return {
-    id: row.id,
-    jobNumber: row.job_number,
-    customerId: row.customer_id,
-    customerName: row.customers?.name ?? "Unknown customer",
-    serviceAddress: row.service_address,
-    city: row.city,
-    state: row.state,
-    zip: row.postal_code,
-    jobType: row.job_type,
-    scheduledDate: row.scheduled_at,
-    status: row.status,
-    priority: row.priority,
-    description: row.description ?? undefined,
-    notes: row.notes ?? undefined,
-    arrivedAt: row.arrived_at ?? undefined,
-    workStartedAt: row.work_started_at ?? undefined,
-    completedAt: row.completed_at ?? undefined,
-    completionNotes: row.completion_notes ?? undefined,
-    followUpNotes: row.follow_up_notes ?? undefined,
-    createdAt: toDateOnly(row.created_at),
-    archivedAt: row.archived_at ?? undefined,
-    deletedAt: row.deleted_at ?? undefined,
-    deleteAfter: row.delete_after ?? undefined,
-    ...technician,
-  };
-}
 
 export type ListJobsOptions = {
   includeArchived?: boolean;
