@@ -23,6 +23,12 @@ import {
   type ExpenseListFilterRequest,
 } from "@/lib/database/queries/expense-list-filters";
 import type { ExpenseWorkQueue } from "@/shared/components/expenses/expense-work-queues";
+import type { InvoiceWorkQueue } from "@/shared/components/invoices/invoice-work-queues";
+import type { EstimateWorkQueue } from "@/shared/components/estimates/estimate-work-queues";
+import {
+  applyEstimateQueueFilters,
+  applyInvoiceQueueFilters,
+} from "@/lib/database/queries/document-queue-filters";
 import { mapLeadRowToLead } from "@/lib/database/queries/leads";
 import {
   applyJobPageFilters,
@@ -49,6 +55,15 @@ export type ListPageRequest = PageRequest & {
   scope?: LifecycleScope;
   /** Entity status filter, already validated against that entity's enum. */
   status?: string | null;
+};
+
+export type InvoicesPageRequest = ListPageRequest & {
+  /** Header filter pill. Carries its own lifecycle rule — see document-queue-filters. */
+  queue?: InvoiceWorkQueue | null;
+};
+
+export type EstimatesPageRequest = ListPageRequest & {
+  queue?: EstimateWorkQueue | null;
 };
 
 function applyLifecycle<Q extends FilterableQuery<Q>>(
@@ -153,7 +168,7 @@ const INVOICE_SELECT = `
 
 export async function listInvoicesPage(
   companyId: string,
-  request: ListPageRequest,
+  request: InvoicesPageRequest,
 ): Promise<PaginatedResult<ReturnType<typeof mapInvoiceRowToInvoice>>> {
   const supabase = (await createClient()) as unknown as PagedClient;
   const term = normalizeSearchTerm(request.search);
@@ -171,7 +186,11 @@ export async function listInvoicesPage(
     defaultSort: "created_at",
     searchColumns: ["invoice_number", "notes"],
     applyFilters: (query, req) => {
-      const scoped = applyScopeAndStatus(query, req);
+      // The queue owns the lifecycle — a voided invoice is Past, not archived —
+      // so applyScopeAndStatus is only used when no queue pill is active.
+      const scoped = req.queue
+        ? applyInvoiceQueueFilters(query, req.queue)
+        : applyScopeAndStatus(query, req);
       const byCustomer = customerIdFilter(customerIds);
       // Widen the search to documents belonging to matching customers. Adding
       // it as its own `or` keeps it ANDed with the scope filters above.
@@ -204,7 +223,7 @@ const ESTIMATE_SELECT = `
 
 export async function listEstimatesPage(
   companyId: string,
-  request: ListPageRequest,
+  request: EstimatesPageRequest,
 ): Promise<PaginatedResult<ReturnType<typeof mapEstimateRowToEstimate>>> {
   const supabase = (await createClient()) as unknown as PagedClient;
   const term = normalizeSearchTerm(request.search);
@@ -220,7 +239,9 @@ export async function listEstimatesPage(
     defaultSort: "created_at",
     searchColumns: ["estimate_number", "notes"],
     applyFilters: (query, req) => {
-      const scoped = applyScopeAndStatus(query, req);
+      const scoped = req.queue
+        ? applyEstimateQueueFilters(query, req.queue)
+        : applyScopeAndStatus(query, req);
       const byCustomer = customerIdFilter(customerIds);
       return byCustomer && term
         ? scoped.or(
