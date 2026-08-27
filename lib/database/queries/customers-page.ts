@@ -159,9 +159,16 @@ export async function listCustomersPage(
  * requests are cheap (~170 ms each, run together) and, unlike the array, they
  * count the whole book.
  */
+export type CustomerCounts = {
+  byQueue: Record<CustomerWorkQueue, number>;
+  total: number;
+  newThisMonth: number;
+};
+
 export async function getCustomerQueueCounts(
   companyId: string,
-): Promise<Record<CustomerWorkQueue, number>> {
+  options?: { monthStartIso?: string },
+): Promise<CustomerCounts> {
   const supabase = await createClient();
   const queues: CustomerWorkQueue[] = ["active", "needs-info", "inactive", "past"];
 
@@ -187,5 +194,35 @@ export async function getCustomerQueueCounts(
     }),
   );
 
-  return Object.fromEntries(results) as Record<CustomerWorkQueue, number>;
+  // Total and New This Month are the two summary figures on the strip. They are
+  // counted over the lifecycle-active book, matching what "Total Customers"
+  // meant when it was array.length before the list was paged.
+  const totalPromise = supabase
+    .from("customers")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .is("archived_at", null);
+
+  const monthStart = options?.monthStartIso;
+  const newThisMonthPromise = monthStart
+    ? supabase
+        .from("customers")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .is("deleted_at", null)
+        .is("archived_at", null)
+        .gte("created_at", monthStart)
+    : Promise.resolve({ count: 0, error: null });
+
+  const [totalResult, newResult] = await Promise.all([
+    totalPromise,
+    newThisMonthPromise,
+  ]);
+
+  return {
+    byQueue: Object.fromEntries(results) as Record<CustomerWorkQueue, number>,
+    total: totalResult.count ?? 0,
+    newThisMonth: newResult.count ?? 0,
+  };
 }

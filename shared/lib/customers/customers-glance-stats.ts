@@ -38,6 +38,20 @@ export function buildCustomersGlanceStats(input: {
   queues?: readonly CustomerWorkQueue[];
   /** When false, omit Total / New This Month (Archived tab). Default true. */
   includeSummaryStats?: boolean;
+  /**
+   * Counts taken over the WHOLE tenant by the database.
+   *
+   * Without these the numbers are derived from `customers`, which is now one
+   * page of results rather than the entire book — so the stat strip would report
+   * "50 customers" to a company with 5,000. Before pagination it derived them
+   * from an array that PostgREST had silently capped at 1,000, which was the
+   * same lie with a larger number. Supplying these is what makes the strip true.
+   */
+  serverCounts?: {
+    byQueue: Record<CustomerWorkQueue, number>;
+    total: number;
+    newThisMonth: number;
+  };
 }): CustomersGlanceStat[] {
   const { customers, timeZone } = input;
   const reference = input.reference ?? new Date();
@@ -45,12 +59,17 @@ export function buildCustomersGlanceStats(input: {
   const queues = input.queues ?? CUSTOMER_WORK_QUEUE_ORDER;
   const includeSummaryStats = input.includeSummaryStats !== false;
 
-  const totalCustomers = customers.length;
-  let newThisMonth = 0;
+  const serverCounts = input.serverCounts;
+  let totalCustomers = serverCounts?.total ?? customers.length;
+  let newThisMonth = serverCounts?.newThisMonth ?? 0;
 
-  for (const customer of customers) {
-    if (customer.createdAt.slice(0, 7) === currentMonth) {
-      newThisMonth += 1;
+  if (!serverCounts) {
+    totalCustomers = customers.length;
+    newThisMonth = 0;
+    for (const customer of customers) {
+      if (customer.createdAt.slice(0, 7) === currentMonth) {
+        newThisMonth += 1;
+      }
     }
   }
 
@@ -62,7 +81,9 @@ export function buildCustomersGlanceStats(input: {
   };
 
   const queueStats: CustomersGlanceStat[] = queues.map((queue) => {
-    const count = countCustomersForWorkQueue([...customers], queue);
+    const count = serverCounts
+      ? serverCounts.byQueue[queue]
+      : countCustomersForWorkQueue([...customers], queue);
     return {
       id: queue,
       label: CUSTOMER_WORK_QUEUE_LABELS[queue],

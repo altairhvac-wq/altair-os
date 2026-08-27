@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, UserPlus } from "lucide-react";
 import {
@@ -11,6 +11,14 @@ import {
   bulkRestoreCustomersFromTrashAction,
 } from "@/app/actions/customers-bulk";
 import { createCustomerAction } from "@/app/actions/customers";
+import { loadCustomersPageAction } from "@/app/actions/list-pages";
+import { useSearchParams } from "next/navigation";
+import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
+import {
+  usePagedList,
+  useUrlParamState,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
@@ -72,6 +80,22 @@ type CustomersPageViewProps = {
   onRegisterCreateHandler?: (handler: () => void) => void;
   /** Deep-link work queue from ?queue= (book scope only). */
   initialWorkQueue?: string | null;
+  /**
+   * One server-paged page of customers.
+   *
+   * When present the list is authoritative from the server: the rows have
+   * already been scoped to the queue, filtered by the search term and ordered,
+   * so the client-side equivalents below are skipped rather than run twice.
+   * Without it the component keeps its old behaviour over whatever array it was
+   * handed — which is only correct for a tenant small enough to send whole.
+   */
+  serverPage?: PagedListSnapshot<Customer>;
+  /** Counts over the WHOLE tenant, not this page. */
+  serverCounts?: {
+    byQueue: Record<CustomerWorkQueue, number>;
+    total: number;
+    newThisMonth: number;
+  };
 };
 
 function filterCustomersBySearch(
@@ -104,15 +128,63 @@ export function CustomersPageView({
   lifecycleScope = "book",
   onRegisterCreateHandler,
   initialWorkQueue = null,
+  serverPage,
+  serverCounts,
 }: CustomersPageViewProps) {
   const isArchivedScope = lifecycleScope === "archived";
-  const [customers, setCustomers] = useState(initialCustomers);
-  const [customersProp, setCustomersProp] = useState(initialCustomers);
-  if (initialCustomers !== customersProp) {
-    setCustomersProp(initialCustomers);
-    setCustomers(initialCustomers);
-  }
-  const [search, setSearch] = useState("");
+  const isServerPaged = Boolean(serverPage);
+
+  // Hooks cannot be conditional, so the unpaged path gets a snapshot describing
+  // the array it was handed. Memoised because usePagedList treats a new
+  // snapshot object as "the server sent a fresh first page" and resets.
+  const snapshot = useMemo<PagedListSnapshot<Customer>>(
+    () =>
+      serverPage ?? {
+        rows: initialCustomers,
+        nextCursor: null,
+        totalCount: initialCustomers.length,
+        hasMore: false,
+      },
+    [serverPage, initialCustomers],
+  );
+
+  const [locallyCreated, setLocallyCreated] = useState<Customer[]>([]);
+
+  // What the server actually filtered this page by. Read from the URL rather
+  // than from local input state, which may be mid-debounce.
+  const searchParams = useSearchParams();
+  const searchParamValue = searchParams.get("q") ?? "";
+
+  const paged = usePagedList<Customer>(
+    snapshot,
+    useCallback(
+      (cursor) =>
+        // The queue must match the one the server used for the first page, or
+        // "load more" continues a different list from where this one stopped.
+        loadCustomersPageAction({
+          queue: isArchivedScope
+            ? "past"
+            : resolveInitialCustomerWorkQueue(initialWorkQueue),
+          search: searchParamValue,
+          cursor,
+        }),
+      [initialWorkQueue, isArchivedScope, searchParamValue],
+    ),
+  );
+
+  // A customer created in this session is prepended locally so it appears
+  // immediately, without re-querying the whole page.
+  const customers = useMemo(
+    () => (locallyCreated.length ? [...locallyCreated, ...paged.rows] : paged.rows),
+    [locallyCreated, paged.rows],
+  );
+
+  const [urlSearch, setUrlSearch] = useUrlParamState("q", "", {
+    debounceMs: 300,
+  });
+  const [localSearch, setLocalSearch] = useState("");
+  const search = isServerPaged ? urlSearch : localSearch;
+  const setSearch = isServerPaged ? setUrlSearch : setLocalSearch;
   const timeZone = useCompanyTimezone();
   const [workQueue, setWorkQueue] = useState<CustomerWorkQueue>(() =>
     isArchivedScope
@@ -201,8 +273,13 @@ export function CustomersPageView({
       customers: bookCustomers,
       timeZone,
       queues: CUSTOMER_BOOK_QUEUE_ORDER,
+      // Counted by the database over the whole book. Without this the strip
+      // reports the size of the current page, and before the list was paged it
+      // reported the size of a silently truncated array — the same lie with a
+      // bigger number.
+      serverCounts,
     });
-  }, [bookCustomers, customers, isArchivedScope, timeZone]);
+  }, [bookCustomers, customers, isArchivedScope, serverCounts, timeZone]);
 
   const effectiveWorkQueue: CustomerWorkQueue = isArchivedScope
     ? "past"
@@ -211,8 +288,11 @@ export function CustomersPageView({
       : workQueue;
 
   const queueScopedCustomers = useMemo(
-    () => filterCustomersForWorkQueue(customers, effectiveWorkQueue),
-    [customers, effectiveWorkQueue],
+    () =>
+      isServerPaged
+        ? customers
+        : filterCustomersForWorkQueue(customers, effectiveWorkQueue),
+    [customers, effectiveWorkQueue, isServerPaged],
   );
 
   const lifecycleScopedCustomers = useMemo(() => {
@@ -226,8 +306,11 @@ export function CustomersPageView({
   }, [pastLifecycleFilter, queueScopedCustomers, effectiveWorkQueue]);
 
   const filteredCustomers = useMemo(
-    () => filterCustomersBySearch(lifecycleScopedCustomers, search),
-    [lifecycleScopedCustomers, search],
+    () =>
+      isServerPaged
+        ? lifecycleScopedCustomers
+        : filterCustomersBySearch(lifecycleScopedCustomers, search),
+    [isServerPaged, lifecycleScopedCustomers, search],
   );
 
   const bulkLifecycleFilter = resolveCustomerBulkLifecycleFilter(
@@ -443,7 +526,7 @@ export function CustomersPageView({
         return;
       }
 
-      setCustomers((previous) => [result.customer!, ...previous]);
+      setLocallyCreated((previous) => [result.customer!, ...previous]);
       setPanelMode("empty");
       router.push(`/customers/${result.customer.id}`);
     });
@@ -482,7 +565,9 @@ export function CustomersPageView({
               <CustomerSearchFilterBar
                 search={search}
                 onSearchChange={setSearch}
-                resultCount={filteredCustomers.length}
+                resultCount={
+                  isServerPaged ? paged.totalCount : filteredCustomers.length
+                }
                 showPastLifecycleFilter={effectiveWorkQueue === "past"}
                 pastLifecycleFilter={pastLifecycleFilter}
                 onPastLifecycleFilterChange={setPastLifecycleFilter}
@@ -516,15 +601,28 @@ export function CustomersPageView({
           ) : hasNoQueueCustomers || hasNoResults ? (
             <CustomersEmptyState variant="no-results" />
           ) : (
-            <CustomersTable
-              customers={filteredCustomers}
-              showRevenueStats={false}
-              selectionEnabled={selectionEnabled}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleSelection}
-              onToggleAllVisible={toggleAllVisible}
-              canManageCustomers={canManageCustomers}
-            />
+            <>
+              <CustomersTable
+                customers={filteredCustomers}
+                showRevenueStats={false}
+                selectionEnabled={selectionEnabled}
+                selectedIds={selectedIds}
+                onToggleSelection={toggleSelection}
+                onToggleAllVisible={toggleAllVisible}
+                canManageCustomers={canManageCustomers}
+              />
+              {isServerPaged ? (
+                <PagedListFooter
+                  loadedCount={paged.loadedCount}
+                  totalCount={paged.totalCount}
+                  hasMore={paged.hasMore}
+                  isLoadingMore={paged.isLoadingMore}
+                  error={paged.error}
+                  onLoadMore={paged.loadMore}
+                  noun="customers"
+                />
+              ) : null}
+            </>
           )}
         </div>
 

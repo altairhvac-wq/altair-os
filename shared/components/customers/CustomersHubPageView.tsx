@@ -29,6 +29,18 @@ const LEAD_STATUS_FILTERS = new Set<LeadStatus>([
 
 type CustomersHubPageViewProps = {
   initialCustomers: Customer[];
+  /** One server-paged page of customers, plus tenant-wide counts. */
+  customersPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Customer>;
+  /** The archived/deleted tab is paged separately — it is its own query. */
+  archivedPage?: import("@/shared/components/lists/usePagedList").PagedListSnapshot<Customer>;
+  customerCounts?: {
+    byQueue: Record<
+      import("@/shared/components/customers/customer-work-queues").CustomerWorkQueue,
+      number
+    >;
+    total: number;
+    newThisMonth: number;
+  };
   canManageCustomers: boolean;
   initialLeads: Lead[];
   activitiesByLeadId: Record<string, LeadActivity[]>;
@@ -59,6 +71,9 @@ function hubSubtitle(tab: CustomersHubTabId): string {
 
 export function CustomersHubPageView({
   initialCustomers,
+  customersPage,
+  archivedPage,
+  customerCounts,
   canManageCustomers,
   initialLeads,
   activitiesByLeadId,
@@ -183,6 +198,8 @@ export function CustomersHubPageView({
       {activeTab === "customers" ? (
         <CustomersPageView
           initialCustomers={initialCustomers}
+          serverPage={customersPage}
+          serverCounts={customerCounts}
           canManageCustomers={canManageCustomers}
           embedded
           lifecycleScope="book"
@@ -194,6 +211,8 @@ export function CustomersHubPageView({
       {activeTab === "archived" ? (
         <CustomersPageView
           initialCustomers={initialCustomers}
+          serverPage={archivedPage}
+          serverCounts={customerCounts}
           canManageCustomers={canManageCustomers}
           embedded
           lifecycleScope="archived"
