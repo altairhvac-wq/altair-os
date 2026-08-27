@@ -49,7 +49,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const MIGRATIONS_DIR = "supabase/migrations";
-const FIRST_CHECKED = 148;
+const FIRST_CHECKED = 1;
 
 /**
  * Functions intended to be callable by anon. Each needs a reason: these are the
@@ -68,6 +68,35 @@ const INTENTIONALLY_PUBLIC = new Map([
   [
     "submit_public_estimate_approval",
     "Customer submits an approval without an account. Authorizes on a raw token.",
+  ],
+]);
+
+/**
+ * SECURITY DEFINER functions that deliberately grant EXECUTE to NOBODY.
+ *
+ * ============================== WHY THAT IS THE STRONGEST SETTING ==============================
+ * A function called only from inside other SECURITY DEFINER functions never
+ * needs a grant: the caller already executes as the owner, so the nested call is
+ * authorized as the owner. Revoking from PUBLIC and granting to no role at all
+ * means the function has no reachable surface whatsoever — which is stricter
+ * than granting it to `authenticated`, not weaker.
+ *
+ * The general rule still holds and should: a definer function that names nobody
+ * is usually an oversight, and the two below are on this list precisely so that
+ * "nobody" stays a decision. Each was checked: every call site is inside another
+ * definer function in the same migration set, and nothing in app/ or lib/ calls
+ * either one.
+ */
+const INTENTIONALLY_UNGRANTED = new Map([
+  [
+    "hash_estimate_approval_token",
+    "Called only from get_public_estimate_approval_view and " +
+      "submit_public_estimate_approval, both SECURITY DEFINER. No role needs it.",
+  ],
+  [
+    "hash_invoice_payment_token",
+    "Called only from get_public_invoice_payment_view, which is SECURITY " +
+      "DEFINER. No role needs it.",
   ],
 ]);
 
@@ -120,7 +149,22 @@ const files = readdirSync(MIGRATIONS_DIR)
 
 const ungranted = [];
 const definerWithoutGrant = [];
-let inspected = 0;
+
+/**
+ * One record per FUNCTION, accumulated across every migration.
+ *
+ * ============================== WHY NOT PER FILE ==============================
+ * CREATE OR REPLACE PRESERVES a function's existing privileges. A migration
+ * that rewrites a body therefore has no reason to repeat the revoke, and
+ * demanding one would teach people to paste a line that does nothing — which
+ * is how a check stops being read. clear_company_demo_data alone is replaced
+ * by five migrations; none of them is a defect.
+ *
+ * The question that matters is about the function, over the whole history:
+ * does anything revoke PUBLIC EXECUTE on it, and does anything name who may
+ * call it? Asked that way, the check covers migration 1 onwards.
+ */
+const functions = new Map();
 
 for (const file of files) {
   const sql = stripSql(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
@@ -137,27 +181,60 @@ for (const file of files) {
     if (/returns\s+trigger/i.test(header)) continue;
     if (INTENTIONALLY_PUBLIC.has(name)) continue;
 
-    inspected += 1;
+    const entry = functions.get(name) ?? {
+      name,
+      firstFile: file,
+      lastFile: file,
+      isDefiner: false,
+      revoked: false,
+      granted: false,
+    };
+    entry.lastFile = file;
+    if (/security\s+definer/i.test(header)) entry.isDefiner = true;
+    functions.set(name, entry);
+  }
+}
 
-    const suppliedLater = PRIVILEGES_SUPPLIED_LATER.get(`${file}:${name}`);
+// A second pass for the privileges, because they may be stated in a migration
+// that does not create the function — which is the legitimate 158/159 shape.
+for (const file of files) {
+  const sql = stripSql(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
 
-    const revoked = new RegExp(
-      `revoke[\\s\\S]{0,80}?on\\s+function\\s+public\\.${name}\\s*\\([^)]*\\)[\\s\\S]{0,40}?from\\s+public`,
-      "i",
-    ).test(sql);
-    if (!revoked && !suppliedLater) ungranted.push({ file, name });
-
-    if (/security\s+definer/i.test(header)) {
-      const granted = new RegExp(
-        `grant\\s+execute\\s+on\\s+function\\s+public\\.${name}\\s*\\([^)]*\\)[\\s\\S]{0,80}?to\\s+\\w`,
+  for (const entry of functions.values()) {
+    if (
+      new RegExp(
+        `revoke[\\s\\S]{0,80}?on\\s+function\\s+public\\.${entry.name}\\s*\\([^)]*\\)[\\s\\S]{0,40}?from\\s+public`,
         "i",
-      ).test(sql);
-      if (!granted && !suppliedLater) definerWithoutGrant.push({ file, name });
+      ).test(sql)
+    ) {
+      entry.revoked = true;
+      entry.privilegesFile = file;
+    }
+
+    if (
+      new RegExp(
+        `grant\\s+execute\\s+on\\s+function\\s+public\\.${entry.name}\\s*\\([^)]*\\)[\\s\\S]{0,80}?to\\s+\\w`,
+        "i",
+      ).test(sql)
+    ) {
+      entry.granted = true;
     }
   }
 }
 
-console.log(`\nEvery function created by migrations ${FIRST_CHECKED}+ states its callers`);
+const inspected = functions.size;
+
+for (const entry of functions.values()) {
+  if (!entry.revoked) {
+    ungranted.push({ file: entry.lastFile, name: entry.name });
+    continue;
+  }
+  if (entry.isDefiner && !entry.granted && !INTENTIONALLY_UNGRANTED.has(entry.name)) {
+    definerWithoutGrant.push({ file: entry.privilegesFile ?? entry.lastFile, name: entry.name });
+  }
+}
+
+console.log("\nEvery function the migrations create states its callers");
 console.log(`  (${files.length} migrations, ${inspected} callable functions)`);
 
 check(
@@ -205,6 +282,16 @@ for (const [key, supplier] of PRIVILEGES_SUPPLIED_LATER) {
 
 // The exemption list is a record of the unauthenticated surface, so it should be
 // short and each entry should say why.
+console.log("\nDefiner functions granted to nobody, and why");
+for (const [name, reason] of INTENTIONALLY_UNGRANTED) {
+  console.log(`  ${name}`);
+  console.log(`    ${reason}`);
+}
+check(
+  "every ungranted definer function carries a reason",
+  [...INTENTIONALLY_UNGRANTED.values()].every((reason) => reason.length > 20),
+);
+
 console.log("\nThe deliberately-public list stays a decision, not a default");
 check(
   "every intentionally public function carries a reason",
