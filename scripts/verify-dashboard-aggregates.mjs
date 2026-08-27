@@ -38,7 +38,13 @@
  */
 import { readFileSync } from "node:fs";
 
-const MIGRATION = "supabase/migrations/151_dashboard_aggregate_rpcs.sql";
+// 158 supersedes 151: 151 referenced invoices.sent_at, invoices.issued_at and
+// estimates.sent_at, none of which exist, so every call raised. MIGRATION is the
+// EFFECTIVE definition — verifying 151 would be verifying SQL that no longer
+// runs. PAIR is both files, for the invariants that span them: 151 still carries
+// the design rationale, and its GRANT survives 158's CREATE OR REPLACE.
+const MIGRATION = "supabase/migrations/158_dashboard_aggregate_column_fix.sql";
+const ORIGINAL = "supabase/migrations/151_dashboard_aggregate_rpcs.sql";
 const QUERY_MODULE = "lib/database/queries/dashboard-aggregates.ts";
 
 let failures = 0;
@@ -72,6 +78,7 @@ function loadSql(path) {
 }
 
 const sql = loadSql(MIGRATION);
+const pair = readFileSync(ORIGINAL, "utf8") + String.fromCharCode(10) + readFileSync(MIGRATION, "utf8");
 
 // ===========================================================================
 // PART A — the SQL has not drifted from the TypeScript it transcribes
@@ -155,9 +162,10 @@ check(
   /status\s*<>\s*'void'::public\.invoice_status/.test(sql),
 );
 check(
+  // Reads BOTH files: 158 replaced the function body, but 151 still carries the
+  // design rationale and there is no reason to duplicate it.
   "the migration explains why 'cancelled' is not enumerated in SQL",
-  /cancelled/.test(readFileSync(MIGRATION, "utf8")) &&
-    /not.{0,40}member of public\.invoice_status/is.test(readFileSync(MIGRATION, "utf8")),
+  /cancelled/.test(pair) && /not.{0,40}member of public\.invoice_status/is.test(pair),
 );
 
 // ===========================================================================
@@ -415,9 +423,12 @@ check(
 );
 
 check(
+  // Across BOTH files. A CREATE OR REPLACE keeps the existing grant, so
+  // counting only 158 would report zero and counting only 151 would miss a
+  // grant that 158 added. Exactly one, and it is for this function.
   "no new helper function is granted to authenticated (the 148 leak shape)",
-  (sql.match(/grant execute on function/g) ?? []).length === 1 &&
-    /grant execute on function public\.get_company_dashboard_aggregates/.test(sql),
+  (pair.match(/grant execute on function/g) ?? []).length === 1 &&
+    /grant execute on function public\.get_company_dashboard_aggregates/.test(pair),
 );
 
 check(
@@ -466,8 +477,7 @@ check(
 
 check(
   "customers and leads are documented as deliberately excluded",
-  /validateCustomerFormData/.test(readFileSync(MIGRATION, "utf8")) &&
-    /lead pipeline metrics/i.test(readFileSync(MIGRATION, "utf8")),
+  /validateCustomerFormData/.test(pair) && /lead pipeline metrics/i.test(pair),
 );
 
 console.log(

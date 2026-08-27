@@ -69,6 +69,7 @@ steps.push(
   { name: "phase4-controls", script: "scripts/verify-phase4-controls.mjs" },
   { name: "storage-matrix", script: "scripts/verify-storage-matrix.mjs" },
   { name: "postgrest-in-limits", script: "scripts/verify-postgrest-in-limits.mjs" },
+  { name: "migration-columns", script: "scripts/verify-migration-columns.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
