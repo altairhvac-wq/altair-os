@@ -16,6 +16,10 @@ import {
   type JobRowWithTechnician,
 } from "@/lib/database/mappers/job";
 import { mapExpenseRow } from "@/lib/database/queries/expenses";
+import {
+  applyExpenseListFilters,
+  type ExpenseListFilterRequest,
+} from "@/lib/database/queries/expense-list-filters";
 import { mapLeadRowToLead } from "@/lib/database/queries/leads";
 import {
   applyJobPageFilters,
@@ -385,10 +389,11 @@ const EXPENSE_SELECT_LIST = `
   job:jobs(job_number, customer_id)
 `;
 
-export type ExpensesPageRequest = ListPageRequest & {
-  /** Field staff see only their own expenses. Enforced here. */
-  technicianId?: string | null;
-};
+export type ExpensesPageRequest = ListPageRequest &
+  ExpenseListFilterRequest & {
+    /** Field staff see only their own expenses. Enforced here. */
+    technicianId?: string | null;
+  };
 
 export async function listExpensesPage(
   companyId: string,
@@ -408,13 +413,79 @@ export async function listExpensesPage(
     defaultSort: "created_at",
     searchColumns: ["expense_number", "merchant", "notes"],
     applyFilters: (query, req) => {
-      const scoped = applyScopeAndStatus(query, req);
+      // The queue carries its own lifecycle rule — "past" deliberately includes
+      // archived and deleted — so applyLifecycle is only used when no queue is
+      // selected. Applying both would make "past" return nothing.
+      const base = req.queue ? query : applyLifecycle(query, req);
+      const scoped = applyExpenseListFilters(base, req);
       return req.technicianId ? scoped.eq("technician_id", req.technicianId) : scoped;
     },
     map: mapExpenseRow,
     sortValue: (row, column) =>
       column === "amount" ? Number(row.amount) : row.created_at,
   }, request);
+}
+
+/**
+ * Options for the expenses page's technician and job dropdowns.
+ *
+ * These were previously derived from the loaded expense array, which is exactly
+ * the pattern paging breaks: with 50 rows on screen the dropdowns would offer
+ * whichever handful of technicians and jobs happened to appear, and a filter the
+ * user needs would simply not be listed.
+ *
+ * Each now has its own bounded source. Technicians come from the membership
+ * roster, which is bounded by the size of the company rather than by its
+ * history. Jobs are the distinct jobs that actually have expenses, most recent
+ * first and capped — an unbounded job picker is the same defect wearing a
+ * different hat.
+ */
+export const EXPENSE_JOB_OPTION_LIMIT = 200;
+
+export async function listExpenseFilterOptions(
+  companyId: string,
+): Promise<{
+  technicians: { id: string; name: string }[];
+  jobs: { id: string; jobNumber: string }[];
+}> {
+  const supabase = (await createClient()) as unknown as PagedClient;
+
+  const [members, expenseJobs] = await Promise.all([
+    supabase
+      .from("company_memberships")
+      .select<{ user_id: string; profiles: { full_name: string | null; email: string } | null }>(
+        "user_id, profiles:profiles!company_memberships_user_id_fkey(full_name, email)",
+      )
+      .eq("company_id", companyId)
+      .eq("status", "active"),
+    supabase
+      .from("expenses")
+      .select<{ job_id: string | null; job: { job_number: string } | null }>(
+        "job_id, job:jobs(job_number)",
+      )
+      .eq("company_id", companyId)
+      .not("job_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(EXPENSE_JOB_OPTION_LIMIT * 5),
+  ]);
+
+  const technicians = (members.data ?? [])
+    .filter((row) => row.user_id)
+    .map((row) => ({
+      id: row.user_id,
+      name: row.profiles?.full_name?.trim() || row.profiles?.email || "Unknown",
+    }));
+
+  const seen = new Set<string>();
+  const jobs = [];
+  for (const row of expenseJobs.data ?? []) {
+    if (!row.job_id || seen.has(row.job_id) || !row.job?.job_number) continue;
+    seen.add(row.job_id);
+    jobs.push({ id: row.job_id, jobNumber: row.job.job_number });
+    if (jobs.length >= EXPENSE_JOB_OPTION_LIMIT) break;
+  }
+
+  return { technicians, jobs };
 }
 
 // ---------------------------------------------------------------------------
