@@ -1,6 +1,9 @@
 "use client";
 
-import { loadEstimatesPageAction } from "@/app/actions/list-pages";
+import {
+  loadEstimatesPageAction,
+  searchEstimatesAction,
+} from "@/app/actions/list-pages";
 import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
   usePagedList,
@@ -234,6 +237,22 @@ export function EstimatesPageView({
   }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+
+  // ============================== SEARCH LOOKS PAST THE PAGE ==============================
+  // Paging fixed the browsing and left the searching behind: ranking in the
+  // browser could only ever see the fifty estimates in front of it, so a search
+  // for a estimate on any other page answered "no results" about a record that
+  // exists. That is a worse answer than a truncated list, because the user
+  // asked a direct question and got a confident no.
+  //
+  // The database now draws candidates from the whole tenant and the SAME
+  // ranker scores them, so there is still one definition of a best match.
+  const [searchCandidates, setSearchCandidates] = useState<Estimate[] | null>(
+    null,
+  );
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const [, startSearchTransition] = useTransition();
+
   const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>(
     () => serverQueue ?? resolveDefaultEstimateWorkQueue(),
   );
@@ -305,7 +324,47 @@ export function EstimatesPageView({
     [serverQueueMetrics, estimates],
   );
 
+
+  /**
+   * Fetch candidates when the term settles.
+   *
+   * useDeferredValue already debounces the box, so the request rate matches
+   * what the client-side version cost. An empty term is not stored — the
+   * absence of a search is derived from the term, so clearing the box does
+   * not write state on the most common keystroke of all, the last backspace.
+   */
+  useEffect(() => {
+    if (!isServerPaged) return;
+
+    const term = deferredSearch.trim();
+    if (!term) return;
+
+    let cancelled = false;
+    startSearchTransition(async () => {
+      const result = await searchEstimatesAction({
+        search: term,
+        queue: serverQueue,
+      });
+      if (cancelled) return;
+      setSearchCandidates(result.estimates ?? []);
+      setSearchTruncated(Boolean(result.truncated));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deferredSearch, isServerPaged, serverQueue]);
+
+  const hasSearchTerm = deferredSearch.trim().length > 0;
+
   const queueScopedEstimates = useMemo(() => {
+    // While a search is active the list ranks over the server's candidates,
+    // which already carry the queue the server applied. With no term it
+    // browses the current page. Two modes, one list.
+    if (isServerPaged && hasSearchTerm && searchCandidates !== null) {
+      return searchCandidates;
+    }
+
     // Archived / recently deleted are reached via the lifecycle filter;
     // status pills only scope the active book.
     if (lifecycleFilter !== "active") {
@@ -316,7 +375,14 @@ export function EstimatesPageView({
     return isServerPaged
       ? estimates
       : filterEstimatesForWorkQueue(estimates, workQueue);
-  }, [estimates, isServerPaged, lifecycleFilter, workQueue]);
+  }, [
+    estimates,
+    hasSearchTerm,
+    isServerPaged,
+    lifecycleFilter,
+    searchCandidates,
+    workQueue,
+  ]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -809,7 +875,22 @@ export function EstimatesPageView({
             />
           )}
 
-          {isServerPaged ? (
+          {isServerPaged && hasSearchTerm ? (
+            /*
+              While a search is running the footer must not report the
+              queue's total: the list underneath is search results, and
+              "Estimates: 12,480" beside forty matches is the same
+              looks-complete-and-is-not failure in a different place.
+            */
+            <p
+              className="border-t border-altair-border/70 px-4 py-4 text-center text-xs text-altair-ink-on-paper-secondary"
+              role="status"
+            >
+              {searchTruncated
+                ? `Showing the first ${filteredEstimates.length.toLocaleString()} matches across all estimates. Narrow the search to see the rest.`
+                : `${filteredEstimates.length.toLocaleString()} matching estimates across the whole company`}
+            </p>
+          ) : isServerPaged ? (
             <PagedListFooter
               loadedCount={paged.loadedCount}
               totalCount={paged.totalCount}

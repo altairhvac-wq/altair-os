@@ -21,6 +21,8 @@ import {
   listExpensesPage,
   listInvoicesPage,
   listJobsPage,
+  searchEstimateCandidates,
+  searchInvoiceCandidates,
   searchJobCandidates,
   type EstimatesPageRequest,
   type ExpensesPageRequest,
@@ -157,6 +159,42 @@ export async function searchJobsAction(
   });
 
   return { jobs: result.rows, truncated: result.truncated };
+}
+
+/**
+ * Ranked search over the WHOLE tenant for the two Sales lists.
+ *
+ * The lists are paged, so a browser-side search could only ever see the
+ * fifty rows in front of it — and would answer "no results" about an invoice
+ * that exists. The database narrows to candidates; the shipped ranker still
+ * decides, so there is one definition of a best match.
+ */
+export async function searchInvoicesAction(
+  params: InvoicesPageRequest,
+): Promise<{ error?: string; invoices?: Invoice[]; truncated?: boolean }> {
+  const context = await getActiveCompanyContext();
+  if (!context) return { error: "No active company workspace." };
+
+  if (!canViewBilling(context)) {
+    return { error: "You do not have permission to view invoices." };
+  }
+
+  const result = await searchInvoiceCandidates(context.company.id, params);
+  return { invoices: result.rows, truncated: result.truncated };
+}
+
+export async function searchEstimatesAction(
+  params: EstimatesPageRequest,
+): Promise<{ error?: string; estimates?: Estimate[]; truncated?: boolean }> {
+  const context = await getActiveCompanyContext();
+  if (!context) return { error: "No active company workspace." };
+
+  if (!canViewBilling(context)) {
+    return { error: "You do not have permission to view estimates." };
+  }
+
+  const result = await searchEstimateCandidates(context.company.id, params);
+  return { estimates: result.rows, truncated: result.truncated };
 }
 
 export async function loadExpensesPageAction(

@@ -4,7 +4,9 @@ import { canViewBilling } from "@/lib/database/access-control";
 import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
-import { listCustomers } from "@/lib/database/queries/customers";
+import { getCustomerById } from "@/lib/database/queries/customers";
+import { listInvoiceDocumentRefsForEstimates } from "@/lib/database/queries/invoices";
+import { listCustomerOptions } from "@/lib/database/queries/customers-page";
 import {
   listEstimates,
 } from "@/lib/database/queries/estimates";
@@ -14,9 +16,8 @@ import {
   listInvoicePayments,
 } from "@/lib/database/queries/invoice-payments";
 import {
-  listInvoiceDocumentRefs,
 } from "@/lib/database/queries/invoices";
-import { listJobs } from "@/lib/database/queries/jobs";
+import { getJobById, listJobOptions } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import {
   getDocumentQueueMetrics,
@@ -141,10 +142,9 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     paymentsLedger,
     paymentsThisWeek,
     paymentsThisMonth,
-    customers,
-    jobs,
+    customerOptions,
+    jobOptions,
     serviceItems,
-    invoiceDocumentRefs,
   ] = await Promise.all([
     // The two list tabs are paged; the pipeline tab is an aggregate and gets its
     // own bounded-but-complete read instead — a cohort computed from one page is
@@ -162,22 +162,44 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     listInvoicePayments(companyId),
     getPaymentsThisWeekSummary(companyId, timeZone),
     getPaymentsThisMonthSummary(companyId, timeZone),
-    listCustomers(companyId),
-    listJobs(companyId),
+    // Pickers and search, not books. These three were 1,000 rows each of
+    // PostgREST's cap -- 12,000 jobs and 10,000 invoices reduced to an
+    // arbitrary thousand -- and they were most of this page's 1.79 MB. They
+    // were also wrong: a picker cannot offer what it was never sent.
+    listCustomerOptions(companyId),
+    listJobOptions(companyId),
     listActiveServiceItems(companyId),
-    listInvoiceDocumentRefs(companyId),
   ]);
 
-  const preselectedCustomer = customerId
-    ? customers.find((customer) => customer.id === customerId)
-    : undefined;
+  const customers = customerOptions.customers;
+  const jobs = jobOptions.jobs;
+
+  // The estimate list shows an "invoiced as INV-1234" badge. That needs the
+  // invoices belonging to the estimates ON THIS PAGE, not to the company:
+  // reading all of them was 1,000 refs per render out of 10,000 invoices, and
+  // an estimate outside that thousand showed no badge even though it had been
+  // invoiced.
+  const invoiceDocumentRefs = await listInvoiceDocumentRefsForEstimates(
+    companyId,
+    estimatesPage.rows.map((estimate) => estimate.id),
+  );
+
+  // By primary key. A deep link names a specific customer and job, and the
+  // bounded option lists are the most recent twenty-five — there is no reason
+  // for either to contain the one the link is about.
+  const [preselectedCustomer, preselectedJob] = await Promise.all([
+    customerId
+      ? getCustomerById(companyId, customerId).then((c) => c ?? undefined)
+      : Promise.resolve(undefined),
+    jobId
+      ? getJobById(companyId, jobId).then((j) => j ?? undefined)
+      : Promise.resolve(undefined),
+  ]);
 
   const estimatePreselectedJob =
-    jobId && preselectedCustomer
-      ? jobs.find(
-          (job) =>
-            job.id === jobId && job.customerId === preselectedCustomer.id,
-        )
+    preselectedJob && preselectedCustomer &&
+    preselectedJob.customerId === preselectedCustomer.id
+      ? preselectedJob
       : undefined;
 
   const billingDefaults = getCompanyBillingDefaultsFromRow(
@@ -197,9 +219,8 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       : undefined,
   );
 
-  const invoicePreselectedJob = jobId
-    ? jobs.find((job) => job.id === jobId)
-    : undefined;
+  // Already fetched by id above; the bounded option list is not a lookup table.
+  const invoicePreselectedJob = preselectedJob;
 
   const customerJobMismatch = Boolean(
     preselectedCustomer &&

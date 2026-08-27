@@ -764,3 +764,160 @@ export async function getDocumentQueueMetrics(
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Ranked search for the Sales documents
+// ---------------------------------------------------------------------------
+
+/**
+ * Candidates for the invoice and estimate list searches.
+ *
+ * ============================== THE GAP THIS CLOSES ==============================
+ * Paging the Sales lists fixed the browsing. It did NOT fix the searching: the
+ * views rank in the browser, over whatever page happened to be loaded. So on a
+ * tenant with 10,000 invoices, typing an invoice number that is not on the
+ * current fifty rows returns "no results" — about a document that exists. That
+ * is a worse answer than the truncated list was, because the user asked a direct
+ * question and got a confident no.
+ *
+ * ============================== WHY NOT JUST SEARCH IN SQL ==============================
+ * The ranking is the product. rankAndSortRecords scores across the document
+ * number, the customer, the job address, the totals and the status, and returns
+ * a reason for each hit — none of which an ilike reproduces, and re-implementing
+ * it in SQL would create a second definition of "best match" that drifts.
+ *
+ * So the database narrows and the shipped ranker decides, exactly as
+ * searchJobCandidates already does: candidates come from the WHOLE tenant, are
+ * capped, and the cap is reported rather than silently applied.
+ */
+const DOCUMENT_SEARCH_LIMIT = SEARCH_CANDIDATE_LIMIT;
+
+/** The builder slice the document search needs, closed over itself so the
+ *  queue filters and applyScopeAndStatus both typecheck against it. */
+interface DocumentSearchQuery extends FilterableQuery<DocumentSearchQuery> {
+  order: (
+    column: string,
+    options: { ascending: boolean },
+  ) => DocumentSearchQuery;
+  limit: (count: number) => DocumentSearchQuery;
+}
+
+async function searchDocumentCandidates<TRow, TDomain>(
+  label: string,
+  table: "invoices" | "estimates",
+  select: string,
+  ownColumns: readonly string[],
+  companyId: string,
+  request: ListPageRequest & { queue?: string | null },
+  applyQueue: <Q extends FilterableQuery<Q>>(query: Q, queue: string) => Q,
+  map: (row: TRow) => TDomain,
+  db?: PagedClient,
+): Promise<SearchCandidates<TDomain>> {
+  const supabase = db ?? ((await createClient()) as unknown as PagedClient);
+  const term = normalizeSearchTerm(request.search);
+  if (!term) return { rows: [], truncated: false };
+
+  const customerIds = await resolveCustomerIdsForSearch(supabase, companyId, term);
+  const escaped = escapeFilterValue(`%${term}%`);
+  const byCustomer = customerIdFilter(customerIds);
+
+  const columns = ownColumns
+    .map((column) => `${column}.ilike.${escaped}`)
+    .join(",");
+
+  let query = supabase
+    .from(table)
+    .select<TRow>(select)
+    .eq("company_id", companyId) as unknown as DocumentSearchQuery;
+
+  query = request.queue
+    ? applyQueue(query, request.queue)
+    : applyScopeAndStatus(query, request);
+
+  const { data, error } = await (
+    query as unknown as {
+      or: (filter: string) => {
+        order: (
+          column: string,
+          options: { ascending: boolean },
+        ) => {
+          order: (
+            column: string,
+            options: { ascending: boolean },
+          ) => {
+            limit: (count: number) => PromiseLike<{
+              data: TRow[] | null;
+              error: { code?: string; message: string } | null;
+            }>;
+          };
+        };
+      };
+    }
+  )
+    .or(byCustomer ? `${columns},${byCustomer}` : columns)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(DOCUMENT_SEARCH_LIMIT + 1);
+
+  if (error) {
+    console.error(`[${label}] query failed:`, {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { rows: [], truncated: false };
+  }
+
+  const rows = data ?? [];
+  const truncated = rows.length > DOCUMENT_SEARCH_LIMIT;
+  if (truncated) {
+    console.warn(
+      `[${label}] more than ${DOCUMENT_SEARCH_LIMIT} records match; ranking ` +
+        `sees the first ${DOCUMENT_SEARCH_LIMIT}.`,
+      { companyId },
+    );
+  }
+
+  return {
+    rows: (truncated ? rows.slice(0, DOCUMENT_SEARCH_LIMIT) : rows).map(map),
+    truncated,
+  };
+}
+
+export async function searchInvoiceCandidates(
+  companyId: string,
+  request: InvoicesPageRequest,
+  db?: PagedClient,
+): Promise<SearchCandidates<ReturnType<typeof mapInvoiceRowToInvoice>>> {
+  return searchDocumentCandidates(
+    "searchInvoiceCandidates",
+    "invoices",
+    INVOICE_SELECT,
+    ["invoice_number", "notes"],
+    companyId,
+    request,
+    (query, queue) =>
+      applyInvoiceQueueFilters(query, queue as InvoiceWorkQueue),
+    (row) => mapInvoiceRowToInvoice(row as Parameters<typeof mapInvoiceRowToInvoice>[0]),
+    db,
+  );
+}
+
+export async function searchEstimateCandidates(
+  companyId: string,
+  request: EstimatesPageRequest,
+  db?: PagedClient,
+): Promise<SearchCandidates<ReturnType<typeof mapEstimateRowToEstimate>>> {
+  return searchDocumentCandidates(
+    "searchEstimateCandidates",
+    "estimates",
+    ESTIMATE_SELECT,
+    ["estimate_number", "notes"],
+    companyId,
+    request,
+    (query, queue) =>
+      applyEstimateQueueFilters(query, queue as EstimateWorkQueue),
+    (row) => mapEstimateRowToEstimate(row as Parameters<typeof mapEstimateRowToEstimate>[0]),
+    db,
+  );
+}

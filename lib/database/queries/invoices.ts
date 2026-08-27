@@ -565,39 +565,6 @@ export const listInvoices = cache(async function listInvoices(
   }).map(mapInvoiceRowToInvoice);
 });
 
-/** Lightweight refs for relationship-aware search (no line items / totals). */
-// unbounded-ok: [debt] four columns per invoice, for relationship-aware
-// search on the sales hub. Small per row and still unbounded in rows: past
-// 1,000 invoices the search stops finding the older links. Wants the same
-// server-side treatment the lists got.
-export async function listInvoiceDocumentRefs(
-  companyId: string,
-): Promise<InvoiceDocumentRef[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoices")
-    .select("id, invoice_number, estimate_id, job_id")
-    .eq("company_id", companyId)
-    .is("deleted_at", null);
-
-  if (error) {
-    console.error("[listInvoiceDocumentRefs] query failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-    });
-    return [];
-  }
-
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    invoiceNumber: row.invoice_number,
-    estimateId: row.estimate_id ?? undefined,
-    jobId: row.job_id ?? undefined,
-  }));
-}
-
 export type ListInvoicesByCustomerOptions = {
   includeArchived?: boolean;
   includeDeleted?: boolean;
@@ -1808,4 +1775,62 @@ export async function permanentlyDeleteInvoice(
   }
 
   return { success: true, error: null };
+}
+
+/**
+ * Invoice refs for a specific set of estimates.
+ *
+ * ============================== WHY THIS REPLACED THE WHOLE-BOOK VERSION ==============================
+ * listInvoiceDocumentRefs reads four columns for every invoice in the company.
+ * The only consumer is one badge on the Estimates list -- "this estimate became
+ * invoice INV-1234" -- and that badge only ever needs the invoices belonging to
+ * the estimates currently on screen.
+ *
+ * The old shape was 1,000 invoice refs in every Sales render (PostgREST's cap,
+ * out of 10,000), which is both the largest single contributor to that page's
+ * payload and quietly wrong: an estimate outside the first thousand invoices
+ * showed no badge even though it had been invoiced.
+ *
+ * Scoped to the page's estimate ids, it is bounded by the page. selectInChunks
+ * keeps the request line under PostgREST's limit, which is 396 uuids -- measured,
+ * not assumed; see chunked-in.ts.
+ */
+export async function listInvoiceDocumentRefsForEstimates(
+  companyId: string,
+  estimateIds: string[],
+): Promise<InvoiceDocumentRef[]> {
+  if (estimateIds.length === 0) return [];
+
+  const supabase = await createClient();
+
+  const { data: rows, error } = await selectInChunks<{
+    id: string;
+    invoice_number: string;
+    estimate_id: string | null;
+    job_id: string | null;
+  }>(estimateIds, (chunk) =>
+    supabase
+      .from("invoices")
+      .select("id, invoice_number, estimate_id, job_id")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .in("estimate_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listInvoiceDocumentRefsForEstimates] query failed:", {
+      companyId,
+      estimateCount: estimateIds.length,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return rows.map((row) => ({
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    estimateId: row.estimate_id ?? undefined,
+    jobId: row.job_id ?? undefined,
+  }));
 }

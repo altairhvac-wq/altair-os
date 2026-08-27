@@ -1,6 +1,9 @@
 "use client";
 
-import { loadInvoicesPageAction } from "@/app/actions/list-pages";
+import {
+  loadInvoicesPageAction,
+  searchInvoicesAction,
+} from "@/app/actions/list-pages";
 import { PagedListFooter } from "@/shared/components/lists/PagedListFooter";
 import {
   usePagedList,
@@ -250,6 +253,22 @@ export function InvoicesPageView({
   }
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+
+  // ============================== SEARCH LOOKS PAST THE PAGE ==============================
+  // Paging fixed the browsing and left the searching behind: ranking in the
+  // browser could only ever see the fifty invoices in front of it, so a search
+  // for a invoice on any other page answered "no results" about a record that
+  // exists. That is a worse answer than a truncated list, because the user
+  // asked a direct question and got a confident no.
+  //
+  // The database now draws candidates from the whole tenant and the SAME
+  // ranker scores them, so there is still one definition of a best match.
+  const [searchCandidates, setSearchCandidates] = useState<Invoice[] | null>(
+    null,
+  );
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const [, startSearchTransition] = useTransition();
+
   // The server chose and applied the queue when it paged the list, and that
   // choice wins. Re-resolving it from the loaded array would pick a queue
   // from fifty rows and then show rows filtered by a different one.
@@ -365,7 +384,47 @@ export function InvoicesPageView({
     [serverQueueMetrics, invoices, initialPayments],
   );
 
+
+  /**
+   * Fetch candidates when the term settles.
+   *
+   * useDeferredValue already debounces the box, so the request rate matches
+   * what the client-side version cost. An empty term is not stored — the
+   * absence of a search is derived from the term, so clearing the box does
+   * not write state on the most common keystroke of all, the last backspace.
+   */
+  useEffect(() => {
+    if (!isServerPaged) return;
+
+    const term = deferredSearch.trim();
+    if (!term) return;
+
+    let cancelled = false;
+    startSearchTransition(async () => {
+      const result = await searchInvoicesAction({
+        search: term,
+        queue: serverQueue,
+      });
+      if (cancelled) return;
+      setSearchCandidates(result.invoices ?? []);
+      setSearchTruncated(Boolean(result.truncated));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deferredSearch, isServerPaged, serverQueue]);
+
+  const hasSearchTerm = deferredSearch.trim().length > 0;
+
   const queueScopedInvoices = useMemo(() => {
+    // While a search is active the list ranks over the server's candidates,
+    // which already carry the queue the server applied. With no term it
+    // browses the current page. Two modes, one list.
+    if (isServerPaged && hasSearchTerm && searchCandidates !== null) {
+      return searchCandidates;
+    }
+
     // Archived / recently deleted / voided lifecycle are reached via the
     // lifecycle filter; status pills only scope the active book.
     if (lifecycleFilter !== "active") {
@@ -378,7 +437,14 @@ export function InvoicesPageView({
     return isServerPaged
       ? invoices
       : filterInvoicesForWorkQueue(invoices, workQueue);
-  }, [invoices, isServerPaged, lifecycleFilter, workQueue]);
+  }, [
+    hasSearchTerm,
+    invoices,
+    isServerPaged,
+    lifecycleFilter,
+    searchCandidates,
+    workQueue,
+  ]);
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -898,7 +964,22 @@ export function InvoicesPageView({
             />
           )}
 
-          {isServerPaged ? (
+          {isServerPaged && hasSearchTerm ? (
+            /*
+              While a search is running the footer must not report the
+              queue's total: the list underneath is search results, and
+              "Invoices: 12,480" beside forty matches is the same
+              looks-complete-and-is-not failure in a different place.
+            */
+            <p
+              className="border-t border-altair-border/70 px-4 py-4 text-center text-xs text-altair-ink-on-paper-secondary"
+              role="status"
+            >
+              {searchTruncated
+                ? `Showing the first ${filteredInvoices.length.toLocaleString()} matches across all invoices. Narrow the search to see the rest.`
+                : `${filteredInvoices.length.toLocaleString()} matching invoices across the whole company`}
+            </p>
+          ) : isServerPaged ? (
             <PagedListFooter
               loadedCount={paged.loadedCount}
               totalCount={paged.totalCount}

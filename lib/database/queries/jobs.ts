@@ -4,6 +4,10 @@ import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildSearchFilter,
+  normalizeSearchTerm,
+} from "@/lib/database/queries/pagination";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
   reactivateDispatchAssignmentForReopenedJob,
@@ -1136,4 +1140,73 @@ export async function permanentlyDeleteJob(
   }
 
   return { success: true, error: null };
+}
+
+/**
+ * A bounded job list for pickers and typeaheads.
+ *
+ * The Sales hub was handed every job in the company so the create-invoice job
+ * picker could filter them in the browser: 1,000 rows of PostgREST's cap out of
+ * 12,000, which was most of that page's payload AND meant the picker could not
+ * offer eleven thousand of the company's jobs.
+ *
+ * Same shape as listCustomerOptions: search the WHOLE tenant, return the top
+ * matches, report the cap. Putting .limit(25) on listJobs would have been the
+ * same defect with a smaller number.
+ */
+export type JobOptionsResult = {
+  jobs: Job[];
+  /** True when more jobs matched than were returned. */
+  truncated: boolean;
+};
+
+export const JOB_OPTION_LIMIT = 25;
+
+const JOB_OPTION_SEARCH_COLUMNS = [
+  "job_number",
+  "title",
+  "service_address",
+  "city",
+] as const;
+
+export async function listJobOptions(
+  companyId: string,
+  options?: { search?: string | null; limit?: number },
+): Promise<JobOptionsResult> {
+  const supabase = await createClient();
+  const limit = Math.min(Math.max(options?.limit ?? JOB_OPTION_LIMIT, 1), 100);
+  const term = normalizeSearchTerm(options?.search);
+
+  let query = supabase
+    .from("jobs")
+    .select(JOB_TECHNICIAN_SELECT)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .is("archived_at", null);
+
+  if (term) {
+    query = query.or(buildSearchFilter(JOB_OPTION_SEARCH_COLUMNS, term));
+  }
+
+  const { data, error } = await query
+    .order("scheduled_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit + 1);
+
+  if (error) {
+    console.error("[listJobOptions] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { jobs: [], truncated: false };
+  }
+
+  const rows = (data ?? []) as JobRowWithTechnician[];
+  const truncated = rows.length > limit;
+
+  return {
+    jobs: (truncated ? rows.slice(0, limit) : rows).map(mapJobRowToJob),
+    truncated,
+  };
 }
