@@ -215,6 +215,9 @@ async function generateStandaloneEstimateNumber(
   return allocateDocumentNumber(companyId, "estimate", db);
 }
 
+// unbounded-ok: the like filter is EST-<one job's reference core>-%, so
+// this reads the estimates belonging to a single job. Bounded by that job,
+// not by the company. See migration 148 for the allocator this feeds.
 async function generateJobLinkedEstimateNumberValue(
   companyId: string,
   jobNumber: string,
@@ -428,6 +431,13 @@ export type ListEstimatesOptions = {
   includeDeleted?: boolean;
 };
 
+// unbounded-ok: [debt] reads the company's whole book. It feeds the reports
+// and dashboard aggregates, which have not been moved into SQL yet -- the
+// dashboard has an aggregate RPC (migration 158) behind
+// ALTAIR_DASHBOARD_AGGREGATES and reports have no equivalent at all. Past
+// PostgREST's 1,000-row ceiling every figure derived from this is short, and
+// nothing surfaces that. Tracked as Phase 5 work; listed by
+// scripts/verify-bounded-reads.mjs so it stays counted rather than assumed.
 export const listEstimates = cache(async function listEstimates(
   companyId: string,
   options?: ListEstimatesOptions,
@@ -1090,27 +1100,6 @@ export async function updateEstimateStatus(
     estimate,
     error: estimate ? null : "Failed to load updated estimate.",
   };
-}
-
-export async function listDeletedEstimates(companyId: string): Promise<Estimate[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("estimates")
-    .select(ESTIMATE_LIST_SELECT)
-    .eq("company_id", companyId)
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false });
-
-  if (error) {
-    console.error("[listDeletedEstimates] query failed:", { companyId, error });
-    return [];
-  }
-
-  return enrichEstimatesWithLifecycleTimestamps(
-    companyId,
-    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
-  );
 }
 
 export async function getEstimateDeleteDependencies(

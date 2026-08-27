@@ -208,6 +208,10 @@ async function loadCompanyTimeZone(
   return resolveCompanyTimeZone(data?.timezone);
 }
 
+// unbounded-ok: a reminder sweep that skipped rows would silently stop
+// reminding about them. It runs on the cron, not in a request, and its
+// scalability is measured by scripts/verify-cron-scalability-live.mjs
+// (wall-clock budget, checkpointed resume, no skips, no duplicates).
 async function loadInvoicesForEvaluation(
   client: DbClient,
   companyId: string,
@@ -304,6 +308,7 @@ async function loadEstimatesForEvaluation(
   return mergeEstimateLifecycleTimestampsBatch(estimates, timestampsByEstimateId);
 }
 
+// unbounded-ok: same sweep, same reason — see loadInvoicesForEvaluation.
 async function loadLeadsForEvaluation(
   client: DbClient,
   companyId: string,
@@ -346,6 +351,7 @@ async function loadLeadsForEvaluation(
   }));
 }
 
+// unbounded-ok: same sweep, same reason — see loadInvoicesForEvaluation.
 async function loadJobsForEvaluation(
   client: DbClient,
   companyId: string,

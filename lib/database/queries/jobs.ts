@@ -925,6 +925,9 @@ export async function reopenCompletedJob(
   };
 }
 
+// unbounded-ok: the recycle bin. Rows here carry delete_after and are
+// purged, so the set is bounded by the retention window rather than by the
+// company's history.
 export async function listDeletedJobs(companyId: string): Promise<Job[]> {
   const supabase = await createClient();
 

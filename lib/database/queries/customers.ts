@@ -3,7 +3,7 @@ import { countInChunks } from "@/lib/database/queries/chunked-in";
 import { mapCustomerRowToCustomer } from "@/lib/database/mappers/customer";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { phonesMatch } from "@/shared/lib/phone";
+import { normalizePhoneDigits } from "@/shared/lib/phone";
 import type {
   CustomerInsert,
   CustomerRow,
@@ -82,6 +82,11 @@ export type ListCustomersOptions = {
   includeDeleted?: boolean;
 };
 
+// unbounded-ok: [debt] reads every customer. Two live uses: the reports and
+// dashboard aggregates (Phase 5), and the customer pickers on the sales and
+// work create forms -- which need the bounded-option-source treatment the
+// expenses dropdowns already have, not a bigger limit. Past 1,000 customers
+// the picker silently cannot offer the rest.
 export async function listCustomers(
   companyId: string,
   options?: ListCustomersOptions,
@@ -127,11 +132,48 @@ export async function listCustomerImportContacts(
 ): Promise<{ contacts: { email: string; phone: string }[]; error: string | null }> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("customers")
-    .select("email, phone")
-    .eq("company_id", companyId)
-    .is("deleted_at", null);
+  // ============================== READ TO COMPLETION, IN PAGES ==============================
+  // This one genuinely needs every contact: it is the duplicate check an import
+  // runs against, and a partial list turns "already a customer" into "new
+  // customer" for everybody it did not see. It cannot be a page.
+  //
+  // So it is a range walk rather than an unbounded select. Same rows, same
+  // answer, except that PostgREST's 1,000-row ceiling no longer truncates it
+  // into a quietly wrong one. The cap below is a runaway guard, not a limit on
+  // correctness: it is far above any plausible customer book, and reaching it
+  // is logged rather than ignored.
+  const PAGE = 1000;
+  const MAX_ROWS = 200_000;
+  const rows: { email: string; phone: string }[] = [];
+  let error: { code?: string; message: string; details?: string } | null = null;
+
+  for (let from = 0; from < MAX_ROWS; from += PAGE) {
+    const page = await supabase
+      .from("customers")
+      .select("email, phone")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (page.error) {
+      error = page.error;
+      break;
+    }
+
+    const batch = (page.data ?? []) as { email: string; phone: string }[];
+    rows.push(...batch);
+    if (batch.length < PAGE) break;
+
+    if (from + PAGE >= MAX_ROWS) {
+      console.error("[listCustomerImportContacts] hit the runaway guard:", {
+        companyId,
+        rows: rows.length,
+      });
+    }
+  }
+
+  const data = rows;
 
   if (error) {
     console.error("[listCustomerImportContacts] query failed:", {
@@ -153,57 +195,26 @@ export async function listCustomerImportContacts(
   };
 }
 
-export async function listArchivedCustomers(
-  companyId: string,
-): Promise<Customer[]> {
-  const supabase = await createClient();
+/**
+ * A ceiling on the match lookups.
+ *
+ * Two is already a conflict — the function refuses to guess and asks the user
+ * to link manually — so anything above that is only ever used to say "more than
+ * one". Reading five is enough to say it and cannot become a page-sized read.
+ */
+const CONTACT_MATCH_LIMIT = 5;
 
-  const { data, error } = await supabase
-    .from("customers")
-    .select("*")
-    .eq("company_id", companyId)
-    .not("archived_at", "is", null)
-    .is("deleted_at", null)
-    .order("archived_at", { ascending: false });
-
-  if (error) {
-    console.error("[listArchivedCustomers] query failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
-    return [];
-  }
-
-  return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
-}
-
-export async function listDeletedCustomers(
-  companyId: string,
-): Promise<Customer[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("customers")
-    .select("*")
-    .eq("company_id", companyId)
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false });
-
-  if (error) {
-    console.error("[listDeletedCustomers] query failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
-    return [];
-  }
-
-  return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
+/**
+ * The stored phone_match_key for a value being searched for.
+ *
+ * Deliberately derived from the same two rules migration 163 encodes, and
+ * deliberately NOT a second definition of "do these phones match": both sides
+ * reduce to a key and the database compares the keys.
+ */
+function buildPhoneMatchKey(phone: string): string {
+  const digits = normalizePhoneDigits(phone);
+  if (!digits) return "";
+  return digits.length >= 10 ? digits.slice(-10) : digits;
 }
 
 export async function findCustomerByContact(
@@ -218,11 +229,43 @@ export async function findCustomerByContact(
     return { customer: null };
   }
 
-  const { data, error } = await supabase
-    .from("customers")
-    .select("*")
-    .eq("company_id", companyId)
-    .is("deleted_at", null);
+  // ============================== TWO LOOKUPS, NOT THE WHOLE BOOK ==============================
+  // This used to read every customer in the company and filter the array. That
+  // is the query that decides whether converting a lead LINKS to an existing
+  // customer or CREATES a new one, and PostgREST capped it at 1,000 rows — so
+  // past a thousand customers it reported "no match" for people who were
+  // already there and silently duplicated them, oldest first.
+  //
+  // Migration 163 added phone_match_key and email_match_key as stored generated
+  // columns. phone_match_key is the phonesMatch rule itself, not an
+  // approximation of it (the derivation is written out in that migration), so
+  // this is an equality lookup on an index rather than a heuristic followed by
+  // a re-check. The "more than one match" conflict path below still works
+  // because both lookups return every match, not the first.
+  const phoneKey = buildPhoneMatchKey(phone);
+
+  const [emailResult, phoneResult] = await Promise.all([
+    email
+      ? supabase
+          .from("customers")
+          .select("*")
+          .eq("company_id", companyId)
+          .is("deleted_at", null)
+          .eq("email_match_key", email)
+          .limit(CONTACT_MATCH_LIMIT)
+      : Promise.resolve({ data: [], error: null }),
+    phoneKey
+      ? supabase
+          .from("customers")
+          .select("*")
+          .eq("company_id", companyId)
+          .is("deleted_at", null)
+          .eq("phone_match_key", phoneKey)
+          .limit(CONTACT_MATCH_LIMIT)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const error = emailResult.error ?? phoneResult.error;
 
   if (error) {
     console.error("[findCustomerByContact] query failed:", {
@@ -237,13 +280,8 @@ export async function findCustomerByContact(
     };
   }
 
-  const rows = (data ?? []) as CustomerRow[];
-  const emailMatches = email
-    ? rows.filter((row) => row.email.trim().toLowerCase() === email)
-    : [];
-  const phoneMatches = phone
-    ? rows.filter((row) => phonesMatch(row.phone, phone))
-    : [];
+  const emailMatches = (emailResult.data ?? []) as CustomerRow[];
+  const phoneMatches = (phoneResult.data ?? []) as CustomerRow[];
 
   if (emailMatches.length > 1 || phoneMatches.length > 1) {
     return {
@@ -447,117 +485,6 @@ export async function getCustomerOperationalStats(
     completedJobs,
     invoices,
   });
-}
-
-export async function listCustomerOperationalStatsByCompany(
-  companyId: string,
-): Promise<Map<string, CustomerOperationalStats>> {
-  const supabase = await createClient();
-
-  const [jobsResult, invoicesResult] = await Promise.all([
-    supabase
-      .from("jobs")
-      .select("customer_id, status, completed_at, scheduled_at")
-      .eq("company_id", companyId)
-      .is("deleted_at", null)
-      .is("archived_at", null),
-    supabase
-      .from("invoices")
-      .select("customer_id, status, amount_paid, total, balance_due")
-      .eq("company_id", companyId)
-      .is("deleted_at", null)
-      .is("archived_at", null),
-  ]);
-
-  if (jobsResult.error) {
-    console.error("[listCustomerOperationalStatsByCompany] jobs failed:", {
-      companyId,
-      code: jobsResult.error.code,
-      message: jobsResult.error.message,
-    });
-  }
-
-  if (invoicesResult.error) {
-    console.error(
-      "[listCustomerOperationalStatsByCompany] invoices failed:",
-      {
-        companyId,
-        code: invoicesResult.error.code,
-        message: invoicesResult.error.message,
-      },
-    );
-  }
-
-  const jobsByCustomer = new Map<
-    string,
-    Array<{
-      status: string;
-      completedAt?: string;
-      scheduledDate: string;
-    }>
-  >();
-  const invoicesByCustomer = new Map<
-    string,
-    Array<{
-      status: InvoiceStatus;
-      total: number;
-      amountPaid: number;
-      balanceDue: number;
-    }>
-  >();
-
-  for (const row of jobsResult.data ?? []) {
-    const jobs = jobsByCustomer.get(row.customer_id) ?? [];
-    jobs.push({
-      status: row.status,
-      completedAt: row.completed_at ?? undefined,
-      scheduledDate: row.scheduled_at,
-    });
-    jobsByCustomer.set(row.customer_id, jobs);
-  }
-
-  for (const row of invoicesResult.data ?? []) {
-    if (!isActiveInvoice({ status: row.status })) {
-      continue;
-    }
-
-    const invoices = invoicesByCustomer.get(row.customer_id) ?? [];
-    invoices.push({
-      status: row.status as InvoiceStatus,
-      total: Number(row.total),
-      amountPaid: Number(row.amount_paid),
-      balanceDue: Number(row.balance_due),
-    });
-    invoicesByCustomer.set(row.customer_id, invoices);
-  }
-
-  const statsByCustomer = new Map<string, CustomerOperationalStats>();
-  const customerIds = new Set([
-    ...jobsByCustomer.keys(),
-    ...invoicesByCustomer.keys(),
-  ]);
-
-  for (const customerId of customerIds) {
-    const jobs = jobsByCustomer.get(customerId) ?? [];
-    const completedJobs = jobs
-      .filter((job) => job.status === "completed")
-      .map((job) => ({
-        status: "completed" as const,
-        completedAt: job.completedAt,
-        scheduledDate: job.scheduledDate,
-      }));
-
-    statsByCustomer.set(
-      customerId,
-      computeCustomerOperationalStatsFromRecords({
-        jobCount: jobs.length,
-        completedJobs,
-        invoices: invoicesByCustomer.get(customerId) ?? [],
-      }),
-    );
-  }
-
-  return statsByCustomer;
 }
 
 export function applyCustomerOperationalStats(

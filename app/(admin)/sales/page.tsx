@@ -6,7 +6,6 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listCustomers } from "@/lib/database/queries/customers";
 import {
-  listDeletedEstimates,
   listEstimates,
 } from "@/lib/database/queries/estimates";
 import {
@@ -15,7 +14,6 @@ import {
   listInvoicePayments,
 } from "@/lib/database/queries/invoice-payments";
 import {
-  listDeletedInvoices,
   listInvoiceDocumentRefs,
 } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";

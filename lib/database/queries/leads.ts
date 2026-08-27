@@ -134,6 +134,10 @@ export type ListLeadsOptions = {
   includeLatestActivity?: boolean;
 };
 
+// unbounded-ok: [debt] the Leads LIST no longer uses this -- that path is
+// listLeadsPage, which is keyset-paged and aggregated by migration 160.
+// What is left are the reports and dashboard callers, which reduce the
+// whole book into figures and are Phase 5 work.
 export async function listLeads(
   companyId: string,
   options?: ListLeadsOptions,

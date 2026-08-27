@@ -115,6 +115,13 @@ export type ListExpensesOptions = {
   includeDeleted?: boolean;
 };
 
+// unbounded-ok: [debt] reads the company's whole book. It feeds the reports
+// and dashboard aggregates, which have not been moved into SQL yet -- the
+// dashboard has an aggregate RPC (migration 158) behind
+// ALTAIR_DASHBOARD_AGGREGATES and reports have no equivalent at all. Past
+// PostgREST's 1,000-row ceiling every figure derived from this is short, and
+// nothing surfaces that. Tracked as Phase 5 work; listed by
+// scripts/verify-bounded-reads.mjs so it stays counted rather than assumed.
 export const listExpenses = cache(async function listExpenses(
   companyId: string,
   options?: ListExpensesOptions,
@@ -431,25 +438,6 @@ export async function updateExpenseStatus(
     expense,
     error: expense ? null : "Failed to load updated expense.",
   };
-}
-
-export async function listDeletedExpenses(companyId: string): Promise<Expense[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("expenses")
-    .select(EXPENSE_SELECT)
-    .eq("company_id", companyId)
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false });
-
-  if (error) {
-    console.error("[listDeletedExpenses] query failed:", { companyId, error });
-    return [];
-  }
-
-  const expenses = ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
-  return attachReceiptSignedUrls(expenses);
 }
 
 export async function archiveExpense(

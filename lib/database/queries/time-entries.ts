@@ -201,6 +201,9 @@ export async function getTodayTimeEntriesForTechnician(
   };
 }
 
+// unbounded-ok: bounded by the working day and the size of the crew, not
+// by how long the company has been trading. A tenant would need a thousand
+// time entries started since local midnight to reach the row ceiling.
 export async function listTodayTimeEntriesForCompany(
   companyId: string,
   timeZone?: string,
@@ -303,6 +306,9 @@ export async function listOpenJobLaborEntriesForJob(
   return entries.filter((entry) => entry.endedAt == null);
 }
 
+// unbounded-ok: ended_at is null, so this is the set of clocks currently
+// running. It is bounded by headcount and self-clearing; a thousand
+// simultaneously-open entries is a data problem, not a page size.
 export async function listActiveTechnicianTimeEntries(
   companyId: string,
 ): Promise<TimeEntry[]> {
@@ -329,6 +335,8 @@ export async function listActiveTechnicianTimeEntries(
   );
 }
 
+// unbounded-ok: same as above, narrowed further to clock entries. Open
+// clocks are bounded by headcount.
 export async function listOpenClockEntriesForCompany(
   companyId: string,
 ): Promise<TimeEntry[]> {

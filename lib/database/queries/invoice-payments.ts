@@ -112,6 +112,9 @@ type InvoicePaymentRowWithCustomerInvoice = InvoicePaymentRowWithRecorder & {
   invoice: { customer_id: string } | null;
 };
 
+// unbounded-ok: one customer's payment history. Bounded by that customer's
+// trading relationship rather than by the company's, and it is rendered as
+// a history rather than reduced into a headline figure.
 export async function listInvoicePaymentsForCustomer(
   companyId: string,
   customerId: string,
@@ -177,6 +180,10 @@ function mapPaymentRowWithInvoice(
   };
 }
 
+// unbounded-ok: [debt] reads the whole payment ledger. Same Phase 5
+// aggregate work as the lists above, and the same failure: a truncated
+// ledger understates collected revenue without saying so. The date-ranged
+// summaries beside it already walk to completion for exactly that reason.
 export const listInvoicePayments = cache(async function listInvoicePayments(
   companyId: string,
 ): Promise<RecentInvoicePayment[]> {
@@ -234,17 +241,94 @@ function getTodayDateOnly(reference = new Date(), timeZone?: string): string {
   return getDateOnlyInTimeZone(reference, timeZone);
 }
 
+/**
+ * Every payment row matching a filter, read to completion.
+ *
+ * ============================== WHY A WALK AND NOT A LIMIT ==============================
+ * These reads produce MONEY TOTALS. A limit would make them fast and wrong: the
+ * page would show a smaller figure with no indication that anything was left
+ * out, which is the failure mode this whole pass exists to remove. A date filter
+ * is not a bound either — a busy company can take more than a thousand payments
+ * in a month, and that is exactly the company whose totals matter.
+ *
+ * So it walks. PostgREST's ceiling stops applying once you ask for explicit
+ * ranges, and the loop stops as soon as a page comes back short.
+ *
+ * The guard is a runaway backstop, not a correctness limit: it sits far above
+ * any plausible payment volume for one date range, and reaching it is logged
+ * rather than silently absorbed.
+ */
+const PAYMENT_PAGE = 1000;
+const PAYMENT_WALK_MAX = 200_000;
+
+async function walkPaymentRows<T>(
+  label: string,
+  companyId: string,
+  columns: string,
+  narrow: (query: PaymentWalkQuery) => PaymentWalkQuery,
+): Promise<{ rows: T[]; error: PaymentWalkError | null }> {
+  const supabase = await createClient();
+  const rows: T[] = [];
+
+  for (let from = 0; from < PAYMENT_WALK_MAX; from += PAYMENT_PAGE) {
+    const page = await narrow(
+      supabase
+        .from("invoice_payments")
+        .select(columns)
+        .eq("company_id", companyId) as unknown as PaymentWalkQuery,
+    )
+      .order("id", { ascending: true })
+      .range(from, from + PAYMENT_PAGE - 1);
+
+    if (page.error) {
+      return { rows, error: page.error };
+    }
+
+    const batch = (page.data ?? []) as T[];
+    rows.push(...batch);
+    if (batch.length < PAYMENT_PAGE) break;
+
+    if (from + PAYMENT_PAGE >= PAYMENT_WALK_MAX) {
+      console.error(`[${label}] hit the runaway guard:`, {
+        companyId,
+        rows: rows.length,
+      });
+    }
+  }
+
+  return { rows, error: null };
+}
+
+type PaymentWalkError = { code?: string; message: string };
+
+/** The slice of the builder walkPaymentRows needs. Structural, so no `any`. */
+type PaymentWalkQuery = {
+  eq: (column: string, value: string) => PaymentWalkQuery;
+  gte: (column: string, value: string) => PaymentWalkQuery;
+  lte: (column: string, value: string) => PaymentWalkQuery;
+  order: (
+    column: string,
+    options: { ascending: boolean },
+  ) => PaymentWalkQuery;
+  range: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{
+    data: unknown[] | null;
+    error: PaymentWalkError | null;
+  }>;
+};
+
 export async function getPaymentsSummaryForDate(
   companyId: string,
   paymentDate: string,
 ): Promise<{ count: number; total: number }> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoice_payments")
-    .select("amount")
-    .eq("company_id", companyId)
-    .eq("payment_date", paymentDate);
+  const { rows: payments, error } = await walkPaymentRows<{ amount: number }>(
+    "getPaymentsSummaryForDate",
+    companyId,
+    "amount",
+    (query) => query.eq("payment_date", paymentDate),
+  );
 
   if (error) {
     console.error("[getPaymentsSummaryForDate] query failed:", {
@@ -255,8 +339,6 @@ export async function getPaymentsSummaryForDate(
     });
     return { count: 0, total: 0 };
   }
-
-  const payments = data ?? [];
 
   return {
     count: payments.length,
@@ -288,14 +370,13 @@ export async function getPaymentsSummaryForDateRange(
   startDateOnly: string,
   endDateOnly: string,
 ): Promise<{ count: number; total: number }> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoice_payments")
-    .select("amount")
-    .eq("company_id", companyId)
-    .gte("payment_date", startDateOnly)
-    .lte("payment_date", endDateOnly);
+  const { rows: payments, error } = await walkPaymentRows<{ amount: number }>(
+    "getPaymentsSummaryForDateRange",
+    companyId,
+    "amount",
+    (query) =>
+      query.gte("payment_date", startDateOnly).lte("payment_date", endDateOnly),
+  );
 
   if (error) {
     console.error("[getPaymentsSummaryForDateRange] query failed:", {
@@ -307,8 +388,6 @@ export async function getPaymentsSummaryForDateRange(
     });
     return { count: 0, total: 0 };
   }
-
-  const payments = data ?? [];
 
   return {
     count: payments.length,
@@ -378,14 +457,16 @@ export async function getPaymentsDailyTotalsForDateRange(
   startDateOnly: string,
   endDateOnly: string,
 ): Promise<DailyPaymentTotal[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoice_payments")
-    .select("payment_date, amount")
-    .eq("company_id", companyId)
-    .gte("payment_date", startDateOnly)
-    .lte("payment_date", endDateOnly);
+  const { rows: payments, error } = await walkPaymentRows<{
+    payment_date: string;
+    amount: number;
+  }>(
+    "getPaymentsDailyTotalsForDateRange",
+    companyId,
+    "payment_date, amount",
+    (query) =>
+      query.gte("payment_date", startDateOnly).lte("payment_date", endDateOnly),
+  );
 
   if (error) {
     console.error("[getPaymentsDailyTotalsForDateRange] query failed:", {
@@ -400,7 +481,7 @@ export async function getPaymentsDailyTotalsForDateRange(
 
   const totalsByDate = new Map<string, { total: number; count: number }>();
 
-  for (const row of data ?? []) {
+  for (const row of payments) {
     const paymentDate = toDateOnly(String(row.payment_date));
     const amount = Number(row.amount) || 0;
     const existing = totalsByDate.get(paymentDate) ?? { total: 0, count: 0 };

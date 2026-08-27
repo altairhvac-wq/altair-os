@@ -1521,6 +1521,28 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_platform_company_rollups: migration 164 — wire into Database types
+      // on next gen types run. Granted to service_role ONLY: it deliberately
+      // crosses tenants, which nothing reachable from a user session may do.
+      // bigint columns arrive as strings; the caller coerces.
+      get_platform_company_rollups: {
+        Args: Record<string, never>;
+        Returns: {
+          company_id: string;
+          job_count: number | string;
+          customer_count: number | string;
+          estimate_count: number | string;
+          invoice_count: number | string;
+          real_job_count: number | string;
+          real_customer_count: number | string;
+          real_estimate_count: number | string;
+          real_invoice_count: number | string;
+          payment_count: number | string;
+          max_job_updated_at: string | null;
+          max_job_activity_at: string | null;
+          first_invoice_at: string | null;
+        }[];
+      };
       // allocate_company_document_number: migration 148 — wire into Database
       // types on next gen types run. Returns bigint; PostgREST may serialize
       // that as a JSON number or a string, so the caller

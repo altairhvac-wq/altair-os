@@ -219,6 +219,8 @@ async function generateStandaloneInvoiceNumber(
   return allocateDocumentNumber(companyId, "invoice", db);
 }
 
+// unbounded-ok: the like filter is INV-<one job's reference core>-%, so
+// this reads the invoices belonging to a single job. Bounded by that job.
 async function generateJobLinkedInvoiceNumberValue(
   companyId: string,
   jobNumber: string,
@@ -516,6 +518,13 @@ export type ListInvoicesOptions = {
   includeDeleted?: boolean;
 };
 
+// unbounded-ok: [debt] reads the company's whole book. It feeds the reports
+// and dashboard aggregates, which have not been moved into SQL yet -- the
+// dashboard has an aggregate RPC (migration 158) behind
+// ALTAIR_DASHBOARD_AGGREGATES and reports have no equivalent at all. Past
+// PostgREST's 1,000-row ceiling every figure derived from this is short, and
+// nothing surfaces that. Tracked as Phase 5 work; listed by
+// scripts/verify-bounded-reads.mjs so it stays counted rather than assumed.
 export const listInvoices = cache(async function listInvoices(
   companyId: string,
   options?: ListInvoicesOptions,
@@ -557,6 +566,10 @@ export const listInvoices = cache(async function listInvoices(
 });
 
 /** Lightweight refs for relationship-aware search (no line items / totals). */
+// unbounded-ok: [debt] four columns per invoice, for relationship-aware
+// search on the sales hub. Small per row and still unbounded in rows: past
+// 1,000 invoices the search stops finding the older links. Wants the same
+// server-side treatment the lists got.
 export async function listInvoiceDocumentRefs(
   companyId: string,
 ): Promise<InvoiceDocumentRef[]> {
@@ -1630,24 +1643,6 @@ export async function convertEstimateToInvoice(
   }
 
   return { invoice, error: null };
-}
-
-export async function listDeletedInvoices(companyId: string): Promise<Invoice[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoices")
-    .select(INVOICE_LIST_SELECT)
-    .eq("company_id", companyId)
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false });
-
-  if (error) {
-    console.error("[listDeletedInvoices] query failed:", { companyId, error });
-    return [];
-  }
-
-  return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
 }
 
 export async function getInvoiceDeleteDependencies(

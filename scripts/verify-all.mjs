@@ -73,6 +73,7 @@ steps.push(
   { name: "function-grants", script: "scripts/verify-function-grants.mjs" },
   { name: "read-path-writes", script: "scripts/verify-read-path-writes.mjs" },
   { name: "error-boundaries", script: "scripts/verify-error-boundaries.mjs" },
+  { name: "bounded-reads", script: "scripts/verify-bounded-reads.mjs" },
   {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",

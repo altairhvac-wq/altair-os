@@ -34,11 +34,7 @@ const VALID_BUG_REPORT_STATUSES = new Set<BetaFeedbackStatus>([
   "ignored",
 ]);
 
-type CompanyIdRow = { company_id: string };
-type CompanyDemoRow = { company_id: string; is_demo: boolean | null };
-type CompanyActivityRow = { company_id: string; updated_at?: string | null; created_at?: string | null };
 type CompanySettingsRow = { id: string; settings: Json | null };
-type InvoiceCreatedRow = { company_id: string; created_at: string };
 
 type CountResult = { count: number; error: string | null };
 
@@ -185,23 +181,125 @@ async function fetchOpenPriorityBugReports(
   return { blocking, high };
 }
 
-async function fetchPaymentCountsByCompany(
+/**
+ * Per-company usage, counted in the database (migration 164).
+ *
+ * ============================== WHAT THIS REPLACED ==============================
+ * Eleven cross-tenant selects, counted into Maps in JavaScript:
+ *
+ *     jobs / customers / estimates / invoices          -> company_id, counted
+ *     the same four again with is_demo                 -> "real" counts
+ *     job_activities.created_at, jobs.updated_at       -> last activity
+ *     invoice_payments                                 -> payment counts
+ *     invoices.created_at                              -> first invoice
+ *
+ * PostgREST caps each of those at 1,000 rows -- not per company, in total across
+ * the platform. So once the platform held more than a thousand jobs, this
+ * screen's per-company counts came from an arbitrary thousand of them and every
+ * company below the cut read as zero. On a page whose purpose is judging which
+ * tenants are active, that is not a slow query; it is a wrong answer that looks
+ * like a finding.
+ *
+ * bigint comes back from PostgREST as a string. Every count is coerced here
+ * rather than at each use, because a string that reaches a comparison sorts
+ * lexicographically and "9" > "10".
+ */
+type PlatformCompanyRollup = {
+  companyId: string;
+  jobCount: number;
+  customerCount: number;
+  estimateCount: number;
+  invoiceCount: number;
+  realJobCount: number;
+  realCustomerCount: number;
+  realEstimateCount: number;
+  realInvoiceCount: number;
+  paymentCount: number;
+  maxJobUpdatedAt: string | null;
+  maxJobActivityAt: string | null;
+  firstInvoiceAt: string | null;
+};
+
+type PlatformCompanyRollupRow = {
+  company_id: string;
+  job_count: number | string;
+  customer_count: number | string;
+  estimate_count: number | string;
+  invoice_count: number | string;
+  real_job_count: number | string;
+  real_customer_count: number | string;
+  real_estimate_count: number | string;
+  real_invoice_count: number | string;
+  payment_count: number | string;
+  max_job_updated_at: string | null;
+  max_job_activity_at: string | null;
+  first_invoice_at: string | null;
+};
+
+function toCount(value: number | string | null | undefined): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+async function fetchPlatformCompanyRollups(
   diagnostics: string[],
-): Promise<{ counts: Map<string, number>; queryable: boolean }> {
+): Promise<{ rollups: PlatformCompanyRollup[]; queryable: boolean }> {
   const supabase = createServiceRoleClient();
 
-  const { data, error } = await supabase
-    .from("invoice_payments")
-    .select("company_id");
+  const { data, error } = await supabase.rpc("get_platform_company_rollups");
 
   if (error) {
-    const message = formatQueryError("invoice_payments query failed", error);
+    const message = formatQueryError("company rollups query failed", error);
     console.error(`[platform-admin] ${message}`);
     pushDiagnostic(diagnostics, message);
-    return { counts: new Map(), queryable: false };
+    return { rollups: [], queryable: false };
   }
 
-  return { counts: countByCompanyId(data), queryable: true };
+  const rows = (data ?? []) as PlatformCompanyRollupRow[];
+
+  return {
+    queryable: true,
+    rollups: rows.map((row) => ({
+      companyId: row.company_id,
+      jobCount: toCount(row.job_count),
+      customerCount: toCount(row.customer_count),
+      estimateCount: toCount(row.estimate_count),
+      invoiceCount: toCount(row.invoice_count),
+      realJobCount: toCount(row.real_job_count),
+      realCustomerCount: toCount(row.real_customer_count),
+      realEstimateCount: toCount(row.real_estimate_count),
+      realInvoiceCount: toCount(row.real_invoice_count),
+      paymentCount: toCount(row.payment_count),
+      maxJobUpdatedAt: row.max_job_updated_at,
+      maxJobActivityAt: row.max_job_activity_at,
+      firstInvoiceAt: row.first_invoice_at,
+    })),
+  };
+}
+
+/** company_id -> count, for one field of the rollup. */
+function rollupCounts(
+  rollups: PlatformCompanyRollup[],
+  pick: (entry: PlatformCompanyRollup) => number,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const entry of rollups) counts.set(entry.companyId, pick(entry));
+  return counts;
+}
+
+/** company_id -> epoch millis, skipping companies with no such timestamp. */
+function rollupTimestamps(
+  rollups: PlatformCompanyRollup[],
+  pick: (entry: PlatformCompanyRollup) => string | null,
+): Map<string, number> {
+  const stamps = new Map<string, number>();
+  for (const entry of rollups) {
+    const raw = pick(entry);
+    if (!raw) continue;
+    const parsed = Date.parse(raw);
+    if (!Number.isNaN(parsed)) stamps.set(entry.companyId, parsed);
+  }
+  return stamps;
 }
 
 async function fetchRecentBugReports(
@@ -307,51 +405,6 @@ function formatQueryError(context: string, error: { message: string; code?: stri
   return `${context}: ${error.message}${code}`;
 }
 
-function countRealByCompanyId(rows: CompanyDemoRow[] | null): Map<string, number> {
-  const counts = new Map<string, number>();
-
-  for (const row of rows ?? []) {
-    if (row.is_demo === true) {
-      continue;
-    }
-
-    counts.set(row.company_id, (counts.get(row.company_id) ?? 0) + 1);
-  }
-
-  return counts;
-}
-
-function buildRealCountsByCompany(
-  customers: CompanyDemoRow[] | null,
-  jobs: CompanyDemoRow[] | null,
-  estimates: CompanyDemoRow[] | null,
-  invoices: CompanyDemoRow[] | null,
-): Map<
-  string,
-  { customers: number; jobs: number; estimates: number; invoices: number }
-> {
-  const customerCounts = countRealByCompanyId(customers);
-  const jobCounts = countRealByCompanyId(jobs);
-  const estimateCounts = countRealByCompanyId(estimates);
-  const invoiceCounts = countRealByCompanyId(invoices);
-  const companyIds = collectDistinctCompanyIds(customers, jobs, estimates, invoices);
-  const result = new Map<
-    string,
-    { customers: number; jobs: number; estimates: number; invoices: number }
-  >();
-
-  for (const companyId of companyIds) {
-    result.set(companyId, {
-      customers: customerCounts.get(companyId) ?? 0,
-      jobs: jobCounts.get(companyId) ?? 0,
-      estimates: estimateCounts.get(companyId) ?? 0,
-      invoices: invoiceCounts.get(companyId) ?? 0,
-    });
-  }
-
-  return result;
-}
-
 function buildCompanyDemoFlags(
   companies: CompanySettingsRow[],
 ): Map<string, boolean> {
@@ -362,26 +415,6 @@ function buildCompanyDemoFlags(
   }
 
   return flags;
-}
-
-function buildFirstInvoiceAtByCompany(
-  invoices: InvoiceCreatedRow[] | null,
-  paymentCounts: Map<string, number>,
-): Map<string, string> {
-  const earliest = new Map<string, string>();
-
-  for (const row of invoices ?? []) {
-    if ((paymentCounts.get(row.company_id) ?? 0) > 0) {
-      continue;
-    }
-
-    const current = earliest.get(row.company_id);
-    if (!current || Date.parse(row.created_at) < Date.parse(current)) {
-      earliest.set(row.company_id, row.created_at);
-    }
-  }
-
-  return earliest;
 }
 
 async function fetchStripeConnectedCompanyIds(
@@ -403,54 +436,6 @@ async function fetchStripeConnectedCompanyIds(
   }
 
   return new Set((data ?? []).map((row) => row.company_id));
-}
-
-function countByCompanyId(rows: CompanyIdRow[] | null): Map<string, number> {
-  const counts = new Map<string, number>();
-
-  for (const row of rows ?? []) {
-    counts.set(row.company_id, (counts.get(row.company_id) ?? 0) + 1);
-  }
-
-  return counts;
-}
-
-function collectDistinctCompanyIds(...rowSets: (CompanyIdRow[] | null)[]): Set<string> {
-  const ids = new Set<string>();
-
-  for (const rows of rowSets) {
-    for (const row of rows ?? []) {
-      ids.add(row.company_id);
-    }
-  }
-
-  return ids;
-}
-
-function maxTimestampPerCompany(
-  rows: CompanyActivityRow[] | null,
-  field: "updated_at" | "created_at",
-): Map<string, number> {
-  const maxByCompany = new Map<string, number>();
-
-  for (const row of rows ?? []) {
-    const raw = row[field];
-    if (!raw) {
-      continue;
-    }
-
-    const parsed = Date.parse(raw);
-    if (Number.isNaN(parsed)) {
-      continue;
-    }
-
-    const current = maxByCompany.get(row.company_id) ?? 0;
-    if (parsed > current) {
-      maxByCompany.set(row.company_id, parsed);
-    }
-  }
-
-  return maxByCompany;
 }
 
 function mergeActivityTimestamps(
@@ -600,13 +585,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     memberships,
     recentBugReports,
     openPriorityBugs,
-    paymentCountsResult,
-    jobsCompanyIdsResult,
-    customersCompanyIdsResult,
-    estimatesCompanyIdsResult,
-    invoicesCompanyIdsResult,
-    jobActivityTimestampsResult,
-    jobUpdatedTimestampsResult,
+    rollupResult,
     companiesCount,
     profilesCount,
     activeMembersCount,
@@ -614,10 +593,6 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     customersCount,
     estimatesCount,
     invoicesCount,
-    realCustomersResult,
-    realJobsResult,
-    realEstimatesResult,
-    realInvoicesResult,
     stripeConnectedCompanyIds,
   ] = await Promise.all([
     authUsersPromise,
@@ -632,13 +607,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     fetchMembershipRows(diagnostics),
     fetchRecentBugReports(diagnostics),
     fetchOpenPriorityBugReports(diagnostics),
-    fetchPaymentCountsByCompany(diagnostics),
-    supabase.from("jobs").select("company_id"),
-    supabase.from("customers").select("company_id"),
-    supabase.from("estimates").select("company_id"),
-    supabase.from("invoices").select("company_id"),
-    supabase.from("job_activities").select("company_id, created_at"),
-    supabase.from("jobs").select("company_id, updated_at"),
+    fetchPlatformCompanyRollups(diagnostics),
     countAll("companies"),
     countAll("profiles"),
     countAll("company_memberships", { column: "status", value: "active" }),
@@ -646,10 +615,6 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     countAll("customers"),
     countAll("estimates"),
     countAll("invoices"),
-    supabase.from("customers").select("company_id, is_demo"),
-    supabase.from("jobs").select("company_id, is_demo"),
-    supabase.from("estimates").select("company_id, is_demo"),
-    supabase.from("invoices").select("company_id, is_demo, created_at"),
     fetchStripeConnectedCompanyIds(diagnostics),
   ]);
 
@@ -685,18 +650,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     }
   }
 
-  for (const [label, result] of [
-    ["customers is_demo", realCustomersResult],
-    ["jobs is_demo", realJobsResult],
-    ["estimates is_demo", realEstimatesResult],
-    ["invoices is_demo", realInvoicesResult],
-  ] as const) {
-    if (result.error) {
-      const message = formatQueryError(`${label} query failed`, result.error);
-      console.error(`[platform-admin] ${message}`);
-      pushDiagnostic(diagnostics, message);
-    }
-  }
+  const rollups = rollupResult.rollups;
 
   const companies = companiesResult.data ?? [];
   const profiles = profilesResult.data ?? [];
@@ -713,11 +667,16 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     );
   }
 
-  const usageCompanyIds = collectDistinctCompanyIds(
-    jobsCompanyIdsResult.data,
-    customersCompanyIdsResult.data,
-    estimatesCompanyIdsResult.data,
-    invoicesCompanyIdsResult.data,
+  const usageCompanyIds = new Set(
+    rollups
+      .filter(
+        (entry) =>
+          entry.jobCount > 0 ||
+          entry.customerCount > 0 ||
+          entry.estimateCount > 0 ||
+          entry.invoiceCount > 0,
+      )
+      .map((entry) => entry.companyId),
   );
 
   if (companies.length === 0 && usageCompanyIds.size > 0) {
@@ -737,12 +696,12 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     authUserById.set(authUser.id, authUser);
   }
 
-  const jobCounts = countByCompanyId(jobsCompanyIdsResult.data);
-  const customerCounts = countByCompanyId(customersCompanyIdsResult.data);
-  const estimateCounts = countByCompanyId(estimatesCompanyIdsResult.data);
-  const invoiceCounts = countByCompanyId(invoicesCompanyIdsResult.data);
-  const paymentCounts = paymentCountsResult.counts;
-  const paymentsQueryable = paymentCountsResult.queryable;
+  const jobCounts = rollupCounts(rollups, (entry) => entry.jobCount);
+  const customerCounts = rollupCounts(rollups, (entry) => entry.customerCount);
+  const estimateCounts = rollupCounts(rollups, (entry) => entry.estimateCount);
+  const invoiceCounts = rollupCounts(rollups, (entry) => entry.invoiceCount);
+  const paymentCounts = rollupCounts(rollups, (entry) => entry.paymentCount);
+  const paymentsQueryable = rollupResult.queryable;
 
   const memberCounts = new Map<string, number>();
   const ownerCounts = new Map<string, number>();
@@ -772,8 +731,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
 
   const lastActivityByCompany = mergeActivityTimestamps(
     companyUpdatedAt,
-    maxTimestampPerCompany(jobUpdatedTimestampsResult.data, "updated_at"),
-    maxTimestampPerCompany(jobActivityTimestampsResult.data, "created_at"),
+    rollupTimestamps(rollups, (entry) => entry.maxJobUpdatedAt),
+    rollupTimestamps(rollups, (entry) => entry.maxJobActivityAt),
   );
 
   const recentCompanies: PlatformAdminRecentCompany[] = companies
@@ -856,17 +815,27 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     })),
   );
 
-  const realCountsByCompany = buildRealCountsByCompany(
-    realCustomersResult.error ? null : (realCustomersResult.data as CompanyDemoRow[]),
-    realJobsResult.error ? null : (realJobsResult.data as CompanyDemoRow[]),
-    realEstimatesResult.error ? null : (realEstimatesResult.data as CompanyDemoRow[]),
-    realInvoicesResult.error ? null : (realInvoicesResult.data as CompanyDemoRow[]),
+  const realCountsByCompany = new Map(
+    rollups.map((entry) => [
+      entry.companyId,
+      {
+        customers: entry.realCustomerCount,
+        jobs: entry.realJobCount,
+        estimates: entry.realEstimateCount,
+        invoices: entry.realInvoiceCount,
+      },
+    ]),
   );
 
-  const firstInvoiceAtByCompany = buildFirstInvoiceAtByCompany(
-    realInvoicesResult.error ? null : (realInvoicesResult.data as InvoiceCreatedRow[]),
-    paymentCounts,
-  );
+  // The "no payments yet" rule stays here rather than in SQL: it is about what
+  // the figure is FOR (a company that has invoiced but never been paid), not
+  // about which rows exist.
+  const firstInvoiceAtByCompany = new Map<string, string>();
+  for (const entry of rollups) {
+    if (!entry.firstInvoiceAt) continue;
+    if (entry.paymentCount > 0) continue;
+    firstInvoiceAtByCompany.set(entry.companyId, entry.firstInvoiceAt);
+  }
 
   const totalAuthUsers = authUsersError ? 0 : authUsers.length;
 

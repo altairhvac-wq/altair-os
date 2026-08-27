@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { canViewCompanyExpenses } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listDeletedExpenses, listExpenses } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { ExpensesPageView } from "@/shared/components/expenses/ExpensesPageView";
 import {

@@ -291,6 +291,14 @@ export type CustomerRow = {
   delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
+  /**
+   * Generated (migration 163). The phonesMatch rule, stored: the last 10
+   * digits when there are at least 10, otherwise all of them. Read-only —
+   * writing to a generated column is an error, which is the point.
+   */
+  phone_match_key: string;
+  /** Generated (migration 163). lower(btrim(email)). */
+  email_match_key: string;
 };
 
 export type CustomerInsert = {
