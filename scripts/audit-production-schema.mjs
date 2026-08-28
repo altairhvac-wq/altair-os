@@ -182,6 +182,46 @@ const FUNCTIONS = [
     serviceRoleOnly: true,
   },
   {
+    name: "get_company_reports_summary",
+    migration: "169",
+    // Written and validated on scratch; NOT applied to production. Reported
+    // rather than failed, because a pending migration is a deployment step and
+    // not a mismatch between belief and reality. It must still be visible: the
+    // deployed code calls this the moment it ships, and /reports throws rather
+    // than rendering zeros if it is absent.
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_start_date: "2026-01-01",
+      p_end_date: "2026-12-31",
+      p_prev_start_date: "2025-01-01",
+      p_prev_end_date: "2025-12-31",
+      p_today: "2026-12-31",
+      p_follow_up_cutoff: new Date().toISOString(),
+      p_limit: 5,
+    },
+  },
+  {
+    name: "get_company_report_daily_series",
+    migration: "170",
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_start_date: "2026-01-01",
+      p_end_date: "2026-12-31",
+    },
+  },
+  {
+    name: "get_company_payment_ledger_totals",
+    migration: "171",
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_start_date: null,
+      p_end_date: null,
+    },
+  },
+  {
     name: "get_company_operations_summary",
     migration: "166",
     args: { p_company_id: NOWHERE },
@@ -189,11 +229,6 @@ const FUNCTIONS = [
   {
     name: "get_company_dashboard_lists",
     migration: "167",
-    // Written and validated on scratch; NOT applied to production. Reported
-    // rather than failed, because a pending migration is a deployment step
-    // and not a mismatch between belief and reality. It must still be
-    // visible: the deployed code calls this the moment it ships.
-    expectPending: true,
     args: {
       p_company_id: NOWHERE,
       p_reference: new Date().toISOString(),
@@ -205,7 +240,6 @@ const FUNCTIONS = [
   {
     name: "get_company_job_completeness_summary",
     migration: "168",
-    expectPending: true,
     args: {
       p_company_id: NOWHERE,
       p_reference: new Date().toISOString(),
@@ -607,8 +641,14 @@ async function main() {
     for (const entry of pending) console.log(`    - ${entry}`);
     console.log(
       "\n    The deployed code calls these. They must be applied BEFORE the\n" +
-        "    branch that uses them ships, or the dashboard falls back to empty\n" +
-        "    panels and logs an RPC failure per render.",
+        "    branch that uses them ships. What happens without them differs by\n" +
+        "    call site, which is worth knowing before choosing an order:\n" +
+        "      167, 168  the dashboard falls back to empty panels and logs\n" +
+        "                an RPC failure per render\n" +
+        "      169, 170  /reports THROWS to its error boundary rather than\n" +
+        "                rendering zeros, because an empty report is\n" +
+        "                indistinguishable from a company with no business\n" +
+        "      171       the Sales hub reads $0 all-time collected",
     );
   }
 
