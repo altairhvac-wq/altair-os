@@ -182,14 +182,54 @@ const FUNCTIONS = [
     serviceRoleOnly: true,
   },
   {
+    name: "get_company_operational_inconsistencies",
+    migration: "172",
+    // Written and validated on scratch; NOT applied to production. The
+    // dashboard's data-integrity scan calls this the moment it ships, and
+    // without it the scan reports unavailable rather than clean.
+    expectPending: true,
+    args: { p_company_id: NOWHERE, p_limit: 5, p_offset: 0 },
+  },
+  {
+    name: "check_public_request_rate_limit",
+    migration: "173",
+    expectPending: true,
+    args: {
+      p_scope: "audit.probe",
+      p_dimension: "ip",
+      p_subject_hash: "0000000000000000000000000000000000000000000000000000000000000000",
+      p_window_seconds: 60,
+      p_limit: 1,
+    },
+  },
+  {
+    name: "record_security_audit_event",
+    migration: "174",
+    expectPending: true,
+    args: {
+      p_event_type: "audit.probe",
+      p_outcome: "failed",
+      p_user_id: null,
+      p_company_id: NOWHERE,
+      p_subject_hash: null,
+      p_address_hash: null,
+      p_reason: null,
+      p_metadata: {},
+    },
+  },
+  {
+    name: "request_company_deletion",
+    migration: "175",
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_confirmation: "not-a-real-company-name",
+      p_grace_days: 30,
+    },
+  },
+  {
     name: "get_company_reports_summary",
     migration: "169",
-    // Written and validated on scratch; NOT applied to production. Reported
-    // rather than failed, because a pending migration is a deployment step and
-    // not a mismatch between belief and reality. It must still be visible: the
-    // deployed code calls this the moment it ships, and /reports throws rather
-    // than rendering zeros if it is absent.
-    expectPending: true,
     args: {
       p_company_id: NOWHERE,
       p_start_date: "2026-01-01",
@@ -204,7 +244,6 @@ const FUNCTIONS = [
   {
     name: "get_company_report_daily_series",
     migration: "170",
-    expectPending: true,
     args: {
       p_company_id: NOWHERE,
       p_start_date: "2026-01-01",
@@ -214,7 +253,6 @@ const FUNCTIONS = [
   {
     name: "get_company_payment_ledger_totals",
     migration: "171",
-    expectPending: true,
     args: {
       p_company_id: NOWHERE,
       p_start_date: null,
@@ -643,12 +681,12 @@ async function main() {
       "\n    The deployed code calls these. They must be applied BEFORE the\n" +
         "    branch that uses them ships. What happens without them differs by\n" +
         "    call site, which is worth knowing before choosing an order:\n" +
-        "      167, 168  the dashboard falls back to empty panels and logs\n" +
-        "                an RPC failure per render\n" +
-        "      169, 170  /reports THROWS to its error boundary rather than\n" +
-        "                rendering zeros, because an empty report is\n" +
-        "                indistinguishable from a company with no business\n" +
-        "      171       the Sales hub reads $0 all-time collected",
+        "      172  the dashboard reports data integrity as UNAVAILABLE\n" +
+        "           rather than clean, which is correct but unhelpful\n" +
+        "      173  every unauthenticated surface is unlimited. The limiter\n" +
+        "           fails OPEN and records rate_limit.degraded\n" +
+        "      174  no authentication event is recorded at all\n" +
+        "      175  a workspace cannot be scheduled for deletion",
     );
   }
 
