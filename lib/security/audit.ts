@@ -49,7 +49,10 @@ export type SecurityAuditEventType =
   | "public_estimate_approval.submitted"
   | "public_estimate_approval.rate_limited"
   | "public_invoice_checkout.created"
-  | "public_invoice_checkout.rate_limited";
+  | "public_invoice_checkout.rate_limited"
+  // An export is the single largest disclosure the product can perform.
+  | "workspace_export.completed"
+  | "workspace_export.failed";
 
 export type SecurityAuditOutcome = "succeeded" | "failed" | "refused";
 
