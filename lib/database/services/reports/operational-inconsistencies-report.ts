@@ -84,10 +84,10 @@ export const getCompanyOperationalInconsistenciesReport = cache(
     });
 
     if (!scan.ok || !scan.summary) {
-      // A failed scan must not read as a clean company. Zeroes here would be
-      // indistinguishable from "no integrity problems", which is the exact
-      // false reassurance this whole change exists to remove -- so the counts
-      // are zero AND hasMore is true, and the caller can tell the difference.
+      // A failed scan must not read as a clean company. Every count is zero,
+      // and zero is what a healthy tenant looks like -- so `unavailable` is
+      // what tells the difference, and the dashboard says "could not check"
+      // rather than "clear".
       return buildOperationalInconsistenciesReport({
         totalCount: 0,
         criticalCount: 0,
@@ -98,6 +98,7 @@ export const getCompanyOperationalInconsistenciesReport = cache(
         multiKindJobCount: 0,
         entries: [],
         hasMore: true,
+        unavailable: true,
       });
     }
 

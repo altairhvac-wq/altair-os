@@ -72,6 +72,18 @@ export type DailyOperationsCompletedWorkReviewSnapshot = {
   resolutionTrend: QueueResolutionTrendSummary;
 };
 
+/**
+ * The data-integrity scan's own state.
+ *
+ * `unavailable` exists because zero problems and a scan that could not run
+ * produce identical numbers, and only one of them means the company is fine.
+ */
+export type DailyOperationsDataIntegritySnapshot = {
+  jobCount: number;
+  criticalJobCount: number;
+  unavailable: boolean;
+};
+
 export type DailyOperationsProfitabilityWarningsSnapshot = {
   jobsWithWarnings: number;
   materialCostExceedsCollectedCount: number;
@@ -86,6 +98,7 @@ export type DailyOperationsSummarySections = {
   completedAwaitingInvoicing: DailyOperationsCompletedAwaitingInvoicingSnapshot;
   completedWorkReview: DailyOperationsCompletedWorkReviewSnapshot;
   profitabilityWarnings: DailyOperationsProfitabilityWarningsSnapshot;
+  dataIntegrity: DailyOperationsDataIntegritySnapshot;
 };
 
 export type DailyOperationsSummary = {

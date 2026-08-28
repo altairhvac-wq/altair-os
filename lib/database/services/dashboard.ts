@@ -315,6 +315,7 @@ const EMPTY_OPERATIONAL_INSIGHTS: DailyOperationsSummary = {
       resolvedThisWeek: 0,
       resolutionTrend: EMPTY_RESOLUTION_TREND,
     },
+    dataIntegrity: { jobCount: 0, criticalJobCount: 0, unavailable: false },
     profitabilityWarnings: {
       jobsWithWarnings: 0,
       materialCostExceedsCollectedCount: 0,

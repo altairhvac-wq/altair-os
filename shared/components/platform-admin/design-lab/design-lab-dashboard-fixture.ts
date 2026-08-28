@@ -719,6 +719,7 @@ export const designLabFixtureDashboardData: DashboardData = {
         resolvedThisWeek: 4,
         resolutionTrend: RESOLUTION_TREND,
       },
+      dataIntegrity: { jobCount: 0, criticalJobCount: 0, unavailable: false },
       profitabilityWarnings: {
         jobsWithWarnings: 1,
         materialCostExceedsCollectedCount: 0,

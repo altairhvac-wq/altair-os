@@ -456,6 +456,48 @@ async function main() {
           "reachable and the aggregate does not reproduce it",
     );
 
+    // ---------------- a failed scan is not a clean one ----------------
+    console.log("\n=== a failure is distinguishable from a clean result ===\n");
+
+    const { buildOperationalInconsistenciesReport } = await import(
+      "@/shared/types/operational-inconsistencies"
+    );
+    const failed = buildOperationalInconsistenciesReport({
+      totalCount: 0,
+      criticalCount: 0,
+      warningCount: 0,
+      byKind: {},
+      jobCount: 0,
+      criticalJobCount: 0,
+      multiKindJobCount: 0,
+      entries: [],
+      hasMore: true,
+      unavailable: true,
+    });
+    const clean = buildOperationalInconsistenciesReport({
+      totalCount: 0,
+      criticalCount: 0,
+      warningCount: 0,
+      byKind: {},
+      jobCount: 0,
+      criticalJobCount: 0,
+      multiKindJobCount: 0,
+      entries: [],
+      hasMore: false,
+      unavailable: false,
+    });
+    check(
+      "a failed scan and a genuinely clean company produce identical counts",
+      failed.summary.totalCount === clean.summary.totalCount &&
+        failed.summary.jobCount === clean.summary.jobCount,
+      "if these differed there would be no need for the flag",
+    );
+    check(
+      "and are told apart only by `unavailable`",
+      failed.summary.unavailable === true && clean.summary.unavailable === false,
+      "without this the dashboard would render a failed scan as Clear",
+    );
+
     // ---------------- privileges ----------------
     console.log("\n=== privileges ===\n");
     const rpcArgs = { p_company_id: companyId, p_limit: 5, p_offset: 0 };

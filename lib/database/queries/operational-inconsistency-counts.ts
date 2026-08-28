@@ -209,6 +209,7 @@ export async function getCompanyInconsistencyScan(
       multiKindJobCount: num(aggregate.counts.multiKindJobCount),
       entries: detected.entries,
       hasMore: aggregate.hasMore === true,
+      unavailable: false,
     },
   };
 }

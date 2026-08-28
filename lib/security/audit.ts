@@ -56,7 +56,13 @@ export type SecurityAuditEventType =
   // Deletion is the one irreversible action. Every step of it is recorded.
   | "company_deletion.requested"
   | "company_deletion.request_refused"
-  | "company_deletion.cancelled";
+  | "company_deletion.cancelled"
+  // ============================== A CONTROL THAT IS OFF, RECORDED ==============================
+  // The rate limiter fails open on purpose: a database blip must not stop
+  // everyone signing in. But "open" means every public surface is unlimited
+  // for as long as it lasts, and a Sentry event only exists if monitoring is
+  // configured. This makes the degraded window a durable fact.
+  | "rate_limit.degraded";
 
 export type SecurityAuditOutcome = "succeeded" | "failed" | "refused";
 

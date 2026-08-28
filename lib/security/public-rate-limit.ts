@@ -237,6 +237,23 @@ export async function enforcePublicRateLimit(
     if (!decision.allowed && !refused) refused = decision;
   }
 
+  if (degraded) {
+    // Recorded as its own fact rather than folded into the caller's result.
+    // Every call site checks `allowed` and none checks `degraded`, so without
+    // this a period with no rate limiting at all leaves no trace outside a
+    // Sentry event that may not be configured.
+    //
+    // Imported lazily: lib/security/audit imports this module for its hashing,
+    // and a top-level import would be a cycle.
+    const { recordSecurityAuditEvent } = await import("@/lib/security/audit");
+    await recordSecurityAuditEvent({
+      event: "rate_limit.degraded",
+      outcome: "failed",
+      reason: "check_unavailable",
+      metadata: { scope },
+    });
+  }
+
   if (refused) {
     captureMonitoredEvent({
       event: "rate_limit.refused",

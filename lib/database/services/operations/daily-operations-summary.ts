@@ -182,6 +182,7 @@ function buildHighlights(input: {
   materialCostExceedsCollectedCount: number;
   dataIntegrityJobCount: number;
   criticalDataIntegrityCount: number;
+  dataIntegrityUnavailable: boolean;
   todayPaymentCount: number;
   activeLaborEntries: number;
 }): DailyOperationsSummaryHighlight[] {
@@ -257,7 +258,25 @@ function buildHighlights(input: {
     });
   }
 
-  if (input.dataIntegrityJobCount > 0) {
+  // ============================== "COULD NOT CHECK" IS NOT "NOTHING FOUND" ==============================
+  // A failed scan reports zero of everything, which is exactly what a healthy
+  // company reports. Saying nothing here would render as a clean bill of
+  // health that was never earned — the failure this whole area exists to
+  // remove — so the absence of an answer gets its own highlight.
+  if (input.dataIntegrityUnavailable) {
+    addHighlight(highlights, {
+      id: "data-integrity-unavailable",
+      severity: "warning",
+      category: "data_integrity",
+      count: 0,
+      message:
+        "Data integrity could not be checked on this load. This is not a " +
+        "clean result — retry, and if it persists the integrity scan is down.",
+      href: "/reports?queue=integrity",
+    });
+  }
+
+  if (!input.dataIntegrityUnavailable && input.dataIntegrityJobCount > 0) {
     const severity: DailyOperationsSummarySeverity =
       input.criticalDataIntegrityCount > 0 ? "critical" : "warning";
     addHighlight(highlights, {
@@ -493,6 +512,12 @@ export const getDailyOperationsSummary = cache(
       resolvedThisWeek: resolutionTrend.resolvedThisWeek,
       resolutionTrend,
     },
+    dataIntegrity: {
+      jobCount: dataIntegrityJobCount,
+      criticalJobCount: criticalDataIntegrityCount,
+      // Zero problems and a scan that could not run are the same numbers.
+      unavailable: operationalInconsistencies.summary.unavailable,
+    },
     profitabilityWarnings: {
       jobsWithWarnings: completeness.jobsWithWarnings,
       // ============================== THE ONE FIGURE THAT IS STILL MONEY ==============================
@@ -521,6 +546,7 @@ export const getDailyOperationsSummary = cache(
       sections.profitabilityWarnings.materialCostExceedsCollectedCount,
     dataIntegrityJobCount,
     criticalDataIntegrityCount,
+    dataIntegrityUnavailable: operationalInconsistencies.summary.unavailable,
     todayPaymentCount: sections.revenue.todayPaymentCount,
     activeLaborEntries: sections.activeTechnicians.activeLaborEntries,
   });

@@ -72,6 +72,16 @@ export type OperationalInconsistenciesSummary = {
   entries: OperationalInconsistencyEntry[];
   /** True when offending jobs exist beyond the ones in `entries`. */
   hasMore: boolean;
+  /**
+   * ============================== A FAILED SCAN IS NOT A CLEAN ONE ==============================
+   * True when the scan could not run at all. Every count above is then zero,
+   * and zero is exactly what a healthy company looks like — so without this
+   * flag a failed integrity scan renders as "Clear", which is the single most
+   * dangerous thing this report can say.
+   *
+   * Anything that turns these counts into a message must check it first.
+   */
+  unavailable: boolean;
 };
 
 export type OperationalInconsistenciesReport = {
@@ -441,6 +451,8 @@ export function detectOperationalInconsistencies(
     // The array path sees every row it was given, so there is never more.
     // The aggregate path sets this from the database.
     hasMore: false,
+    // The detector ran, so the answer is real even when it is zero.
+    unavailable: false,
   };
 }
 
