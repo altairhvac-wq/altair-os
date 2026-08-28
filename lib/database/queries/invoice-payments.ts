@@ -397,6 +397,54 @@ export async function getPaymentsSummaryForDateRange(
   };
 }
 
+/**
+ * All-time collected, counted rather than sliced.
+ *
+ * ============================== WHY THIS EXISTS ==============================
+ * The Sales hub's "Total collected" glance stat was computed in the browser as
+ * `sumCollectedRevenue(payments)` over the array the page had been handed --
+ * listInvoicePayments, capped by PostgREST at 1,000 rows. On a tenant with
+ * 7,857 payments it reported $2,310,475 of $17,946,072 and a count of 1,000,
+ * under a label that reads "All-time collected from the payment ledger".
+ *
+ * The first fix walked the ledger a page at a time reading one column -- correct,
+ * and the same shape as the week and month summaries beside it, but all-time is
+ * eight sequential round trips each evaluating the RLS policy over every row.
+ * That put the Payments tab at 16.4 s.
+ *
+ * A sum is not a read. Migration 171 does it in the database.
+ */
+export async function getPaymentsAllTimeSummary(
+  companyId: string,
+): Promise<{ count: number; total: number }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc(
+    "get_company_payment_ledger_totals",
+    { p_company_id: companyId, p_start_date: null, p_end_date: null },
+  );
+
+  if (error) {
+    console.error("[getPaymentsAllTimeSummary] rpc failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { count: 0, total: 0 };
+  }
+
+  const totals = data as unknown as {
+    authorized?: boolean;
+    count?: number;
+    total?: number;
+  } | null;
+
+  return {
+    count: Number(totals?.count ?? 0),
+    total: roundCurrency(Number(totals?.total ?? 0)),
+  };
+}
+
 function getDayOfWeekInTimeZone(reference: Date, timeZone: string): number {
   const weekday = new Intl.DateTimeFormat("en-US", {
     timeZone,

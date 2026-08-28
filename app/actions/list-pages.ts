@@ -28,7 +28,10 @@ import {
   type ExpensesPageRequest,
   type InvoicesPageRequest,
   type ListPageRequest,
+  listInvoicePaymentsPage,
+  type PaymentsPageRequest,
 } from "@/lib/database/queries/list-pages";
+import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-payments";
 import type { JobPageFilterRequest } from "@/lib/database/queries/job-page-filters";
 import type { PaginatedResult } from "@/lib/database/queries/pagination";
 import type { CustomerWorkQueue } from "@/shared/components/customers/customer-work-queues";
@@ -195,6 +198,26 @@ export async function searchEstimatesAction(
 
   const result = await searchEstimateCandidates(context.company.id, params);
   return { estimates: result.rows, truncated: result.truncated };
+}
+
+/**
+ * Next page of the payment ledger.
+ *
+ * Gated on canViewBilling, the same permission the Sales hub's Payments tab is
+ * gated on. The action is the boundary, not the tab: hiding a tab is not
+ * authorization.
+ */
+export async function loadPaymentsPageAction(
+  params: PaymentsPageRequest,
+): Promise<PageResult<RecentInvoicePayment>> {
+  const context = await getActiveCompanyContext();
+  if (!context) return { error: "No active company workspace." };
+
+  if (!canViewBilling(context)) {
+    return { error: "You do not have permission to view payments." };
+  }
+
+  return { page: await listInvoicePaymentsPage(context.company.id, params) };
 }
 
 export async function loadExpensesPageAction(

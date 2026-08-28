@@ -13,7 +13,7 @@ import {
 import {
   getPaymentsThisMonthSummary,
   getPaymentsThisWeekSummary,
-  listInvoicePayments,
+  getPaymentsAllTimeSummary,
 } from "@/lib/database/queries/invoice-payments";
 import {
 } from "@/lib/database/queries/invoices";
@@ -24,6 +24,8 @@ import {
   listEstimatePipelineData,
   listEstimatesPage,
   listInvoicesPage,
+  listInvoicePaymentsPage,
+  listPipelinePayments,
 } from "@/lib/database/queries/list-pages";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -34,6 +36,7 @@ import {
 } from "@/shared/lib/company-billing-defaults";
 import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 import { resolveSalesHubTab } from "@/shared/lib/sales/sales-hub";
+import { buildEstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
 import {
   isInvoiceWorkQueue,
   resolveDefaultInvoiceWorkQueueFromMetrics,
@@ -139,7 +142,9 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     pipelineData,
     invoicesPage,
     deletedInvoices,
-    paymentsLedger,
+    paymentsPage,
+    pipelinePayments,
+    paymentsAllTime,
     paymentsThisWeek,
     paymentsThisMonth,
     customerOptions,
@@ -159,7 +164,24 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       : Promise.resolve({ estimates: [], invoices: [] }),
     listInvoicesPage(companyId, { queue: resolvedInvoiceQueue }),
     Promise.resolve([]),
-    listInvoicePayments(companyId),
+    // ============================== ONE PAGE, NOT THE LEDGER ==============================
+    // This was listInvoicePayments(companyId) -- the whole ledger, unbounded,
+    // loaded on all four tabs. PostgREST capped it at 1,000 rows, so the
+    // Payments tab showed the newest thousand of 7,857 and said "of 1000",
+    // and the "All-time collected" stat above it was summed from the same
+    // thousand. Now: one server page with an exact count for the tab that
+    // renders it, and nothing at all for the tabs that do not.
+    activeTab === "payments"
+      ? listInvoicePaymentsPage(companyId, {})
+      : Promise.resolve(null),
+    // The pipeline needs payments as a two-year cohort, not a list, so it gets
+    // its own bounded-but-complete read on the tab that uses it.
+    activeTab === "estimate-pipeline"
+      ? listPipelinePayments(companyId)
+      : Promise.resolve([]),
+    activeTab === "payments"
+      ? getPaymentsAllTimeSummary(companyId)
+      : Promise.resolve({ count: 0, total: 0 }),
     getPaymentsThisWeekSummary(companyId, timeZone),
     getPaymentsThisMonthSummary(companyId, timeZone),
     // Pickers and search, not books. These three were 1,000 rows each of
@@ -170,6 +192,24 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
     listJobOptions(companyId),
     listActiveServiceItems(companyId),
   ]);
+
+  // ============================== REDUCED HERE, NOT IN THE BROWSER ==============================
+  // The pipeline tab renders a dozen numbers and a cohort table. It used to
+  // receive the three arrays those are computed from -- two years of estimates,
+  // two years of invoices and the payment ledger -- because the reduction ran
+  // in a client component, which meant every row had to be serialised into the
+  // RSC payload to get there: 6.7 MB and 34 seconds on the scale-seeded tenant.
+  //
+  // buildEstimatePipelineMetrics is pure, so it runs here instead and only its
+  // result crosses the boundary.
+  const estimatePipelineMetrics =
+    activeTab === "estimate-pipeline"
+      ? buildEstimatePipelineMetrics({
+          estimates: pipelineData.estimates,
+          invoices: pipelineData.invoices,
+          payments: pipelinePayments,
+        })
+      : null;
 
   const customers = customerOptions.customers;
   const jobs = jobOptions.jobs;
@@ -263,10 +303,9 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       invoices={invoicesPage.rows}
       estimatesPage={estimatesPage}
       invoicesPage={invoicesPage}
-      pipelineEstimates={pipelineData.estimates}
-      pipelineInvoices={pipelineData.invoices}
-      invoicePayments={paymentsLedger}
-      paymentsLedger={paymentsLedger}
+      estimatePipelineMetrics={estimatePipelineMetrics}
+      paymentsPage={paymentsPage}
+      paymentsAllTime={paymentsAllTime}
       paymentsThisWeek={paymentsThisWeek}
       paymentsThisMonth={paymentsThisMonth}
       customers={customers}

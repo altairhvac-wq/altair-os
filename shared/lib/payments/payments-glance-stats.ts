@@ -58,3 +58,39 @@ export function buildPaymentsGlanceStats(input: {
     },
   ];
 }
+
+/**
+ * The same stats, from summaries instead of an array.
+ *
+ * buildPaymentsGlanceStats above reduces over every payment the caller holds,
+ * which was only ever right while the caller held every payment. The Sales hub
+ * now pages the ledger, so the all-time figure comes from its own count and sum
+ * (getPaymentsAllTimeSummary) rather than from the page on screen. Every label,
+ * every empty-state sentence and the currency formatting are shared with the
+ * array version by construction: this delegates to it.
+ */
+export function buildPaymentsGlanceStatsFromSummaries(input: {
+  allTime: { count: number; total: number };
+  thisWeek: { count: number; total: number };
+  thisMonth: { count: number; total: number };
+}): PaymentsGlanceStat[] {
+  const stats = buildPaymentsGlanceStats({
+    payments: [],
+    thisWeek: input.thisWeek,
+    thisMonth: input.thisMonth,
+  });
+
+  return stats.map((stat) =>
+    stat.id === "total-collected"
+      ? {
+          ...stat,
+          count: String(input.allTime.count),
+          amount: formatCurrency(input.allTime.total),
+          detail:
+            input.allTime.count === 0
+              ? "No payments recorded yet"
+              : "All-time collected from the payment ledger",
+        }
+      : stat,
+  );
+}

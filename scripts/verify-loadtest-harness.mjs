@@ -210,9 +210,48 @@ check(
     /customers/.test(seeder),
 );
 
+/**
+ * Parses CLEAN_ORDER rather than comparing raw string offsets.
+ *
+ * The previous form searched for the literal `"customers",\n  "company_..."`,
+ * which silently stopped matching the moment the file was written with CRLF
+ * line endings -- and then reported a deletion-order defect that did not exist.
+ * A check that fails for a reason unrelated to what it is checking is worse
+ * than no check. This one is line-ending agnostic and asserts the order of the
+ * actual array.
+ */
+const cleanOrder = (() => {
+  const match = seeder.match(/const CLEAN_ORDER = \[([\s\S]*?)\];/);
+  if (!match) return [];
+  return [...match[1].matchAll(/"([a-z_]+)"/g)].map((entry) => entry[1]);
+})();
+
+check(
+  "CLEAN_ORDER is parseable",
+  cleanOrder.length > 5,
+  `parsed ${cleanOrder.length} entries`,
+);
+
 check(
   "clean removes invoices before customers (customer_id is ON DELETE RESTRICT)",
-  seeder.indexOf('"invoices"') < seeder.indexOf('"customers",\n  "company_document_counters"'),
+  cleanOrder.indexOf("invoices") >= 0 &&
+    cleanOrder.indexOf("customers") >= 0 &&
+    cleanOrder.indexOf("invoices") < cleanOrder.indexOf("customers"),
+  `order: ${cleanOrder.join(" -> ")}`,
+);
+
+check(
+  "clean removes jobs before customers (jobs.customer_id is ON DELETE RESTRICT too)",
+  cleanOrder.indexOf("jobs") >= 0 &&
+    cleanOrder.indexOf("jobs") < cleanOrder.indexOf("customers"),
+  `order: ${cleanOrder.join(" -> ")}`,
+);
+
+check(
+  "clean removes the subscription row the seeder inserts",
+  cleanOrder.includes("company_subscriptions"),
+  "the seeder inserts company_subscriptions so the tenant is reachable at all; " +
+    "leaving it behind blocks the company delete",
 );
 
 check(

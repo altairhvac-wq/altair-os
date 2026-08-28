@@ -655,6 +655,7 @@ async function countsForCompany(client, companyId) {
  * fail. Children are removed explicitly, deepest first.
  */
 const CLEAN_ORDER = [
+  "company_subscriptions",
   "invoice_payments",
   "invoice_line_items",
   "estimate_line_items",
@@ -810,6 +811,30 @@ async function runSeed(client, args) {
     });
   if (membershipError) throw new Error(`create membership: ${membershipError.message}`);
   console.log(`    membership: owner ${ownerUserId}`);
+
+  // ---- app access -----------------------------------------------------------
+  //
+  // Without this row the whole application redirects to /activate-subscription
+  // and the tenant cannot be benchmarked or viewed at all. The first seeded
+  // tenant needed the row added by hand afterwards, and nothing recorded that
+  // it had been -- so the second one redirected on every request and the
+  // benchmark reported an 8-second 307 as if it were a page.
+  //
+  // beta_comped is the grant the shipped policy already treats as full access
+  // (companyHasFullApplicationAccess); no Stripe object is created or
+  // referenced, so this touches nothing outside the database.
+  const { error: subscriptionError } = await client
+    .from("company_subscriptions")
+    .insert({
+      company_id: companyId,
+      plan_key: "beta",
+      status: "active",
+      access_grant: "beta_comped",
+    });
+  if (subscriptionError) {
+    throw new Error(`create subscription: ${subscriptionError.message}`);
+  }
+  console.log("    app access: beta_comped");
 
   const technicians = await seedTechnicians(client, {
     companyId,

@@ -4,6 +4,8 @@ import { useCallback, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-payments";
+import type { PagedListSnapshot } from "@/shared/components/lists/usePagedList";
+import type { EstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
 import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
 import { PaymentsPageView } from "@/shared/components/payments/PaymentsPageView";
@@ -25,6 +27,13 @@ import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
 
+/**
+ * InvoicesPageView takes payments only as a fallback for its glance stats, and
+ * the Sales hub always passes serverQueueMetrics -- so the fallback never runs
+ * and the ledger it used to receive was loaded on every tab for nothing.
+ */
+const EMPTY_PAYMENTS: InvoicePayment[] = [];
+
 type SalesHubPageViewProps = {
   estimates: Estimate[];
   invoices: Invoice[];
@@ -43,10 +52,11 @@ type SalesHubPageViewProps = {
    * page are not cohorts, and quietly reusing the paged arrays here is exactly
    * how these numbers would go wrong again.
    */
-  pipelineEstimates?: Estimate[];
-  pipelineInvoices?: Invoice[];
-  invoicePayments: InvoicePayment[];
-  paymentsLedger: RecentInvoicePayment[];
+  /** Reduced on the server; see EstimatePipelinePageView for why. */
+  estimatePipelineMetrics: EstimatePipelineMetrics | null;
+  /** One server page of the ledger plus its exact count. Payments tab only. */
+  paymentsPage: PagedListSnapshot<RecentInvoicePayment> | null;
+  paymentsAllTime: { count: number; total: number };
   paymentsThisWeek: { count: number; total: number };
   paymentsThisMonth: { count: number; total: number };
   customers: Customer[];
@@ -99,10 +109,9 @@ export function SalesHubPageView({
   queueMetrics,
   invoiceQueue,
   estimateQueue,
-  pipelineEstimates,
-  pipelineInvoices,
-  invoicePayments,
-  paymentsLedger,
+  estimatePipelineMetrics,
+  paymentsPage,
+  paymentsAllTime,
   paymentsThisWeek,
   paymentsThisMonth,
   customers,
@@ -223,7 +232,7 @@ export function SalesHubPageView({
           serverPage={invoicesPage}
           serverQueueMetrics={queueMetrics?.invoices}
           serverQueue={invoiceQueue}
-          initialPayments={invoicePayments}
+          initialPayments={EMPTY_PAYMENTS}
           customers={customers}
           jobs={jobs}
           serviceItems={serviceItems}
@@ -241,9 +250,10 @@ export function SalesHubPageView({
         />
       ) : null}
 
-      {activeTab === "payments" ? (
+      {activeTab === "payments" && paymentsPage ? (
         <PaymentsPageView
-          payments={paymentsLedger}
+          serverPage={paymentsPage}
+          allTime={paymentsAllTime}
           thisWeek={paymentsThisWeek}
           thisMonth={paymentsThisMonth}
           canManageCustomers={canManageCustomers}
@@ -251,12 +261,8 @@ export function SalesHubPageView({
         />
       ) : null}
 
-      {activeTab === "estimate-pipeline" ? (
-        <EstimatePipelinePageView
-          estimates={pipelineEstimates ?? estimates}
-          invoices={pipelineInvoices ?? invoices}
-          payments={invoicePayments}
-        />
+      {activeTab === "estimate-pipeline" && estimatePipelineMetrics ? (
+        <EstimatePipelinePageView metrics={estimatePipelineMetrics} />
       ) : null}
     </MasterListPageLayout>
   );

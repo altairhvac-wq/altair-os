@@ -1557,6 +1557,17 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_payment_ledger_totals: migration 171 — wire into Database
+      // types on next gen types run. Count and sum over the payment ledger,
+      // optionally windowed; null bounds mean all time.
+      get_company_payment_ledger_totals: {
+        Args: {
+          p_company_id: string;
+          p_start_date: string | null;
+          p_end_date: string | null;
+        };
+        Returns: Json;
+      };
       // get_company_reports_summary: migration 169 — wire into Database types
       // on next gen types run. Every scalar, group and top-N the reports page
       // needs, with the aging reference date and the follow-up cutoff passed in

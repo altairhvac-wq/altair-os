@@ -553,6 +553,15 @@ async function main() {
       p_start_date: bounds.startDate,
       p_end_date: bounds.endDate,
     };
+    // Migration 171. Gated on can_manage_billing rather than the reports
+    // predicate, because the payment ledger is billing data -- so a technician
+    // is refused here for a DIFFERENT reason than above, and that difference is
+    // worth testing rather than assuming.
+    const ledgerArgs = {
+      p_company_id: companyId,
+      p_start_date: null,
+      p_end_date: null,
+    };
 
     const anon = createClient(url, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -561,6 +570,7 @@ async function main() {
     for (const [fn, callArgs] of [
       ["get_company_reports_summary", summaryArgs],
       ["get_company_report_daily_series", seriesArgs],
+      ["get_company_payment_ledger_totals", ledgerArgs],
     ]) {
       const { error } = await anon.rpc(fn, callArgs);
       check(
@@ -589,6 +599,7 @@ async function main() {
     for (const [fn, callArgs] of [
       ["get_company_reports_summary", summaryArgs],
       ["get_company_report_daily_series", seriesArgs],
+      ["get_company_payment_ledger_totals", ledgerArgs],
     ]) {
       const { error } = await outsider.rpc(fn, callArgs);
       check(
@@ -606,6 +617,7 @@ async function main() {
     for (const [fn, callArgs] of [
       ["get_company_reports_summary", summaryArgs],
       ["get_company_report_daily_series", seriesArgs],
+      ["get_company_payment_ledger_totals", ledgerArgs],
     ]) {
       const { data, error } = await technician.rpc(fn, callArgs);
       check(
@@ -614,6 +626,27 @@ async function main() {
         error ? `raised: ${error.message}` : `authorized=${data?.authorized}`,
       );
     }
+
+    // The owner CAN read it, and the total must equal every payment row the
+    // oracle read -- the figure the Sales hub prints as "All-time collected",
+    // which used to be summed from the newest thousand.
+    const { data: ledger, error: ledgerError } = await owner.rpc(
+      "get_company_payment_ledger_totals",
+      ledgerArgs,
+    );
+    const oracleTotal =
+      Math.round(
+        datasets.payments.reduce((sum, payment) => sum + payment.amount, 0) * 100,
+      ) / 100;
+    check(
+      "the ledger total equals every payment row, to the cent",
+      ledgerError == null &&
+        Number(ledger?.count) === datasets.payments.length &&
+        Math.round(Number(ledger?.total) * 100) / 100 === oracleTotal,
+      ledgerError
+        ? ledgerError.message
+        : `rpc ${ledger?.count}/${ledger?.total} vs oracle ${datasets.payments.length}/${oracleTotal}`,
+    );
 
   } finally {
     for (const userId of created) {

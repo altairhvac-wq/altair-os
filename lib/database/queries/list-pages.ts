@@ -13,6 +13,10 @@ import { escapeFilterValue, normalizeSearchTerm } from "@/lib/database/queries/p
 import { mapInvoiceRowToInvoice } from "@/lib/database/queries/invoices";
 import { mapEstimateRowToEstimate } from "@/lib/database/queries/estimates";
 import {
+  INVOICE_PAYMENT_LIST_SELECT,
+  mapPaymentRowWithInvoice,
+} from "@/lib/database/queries/invoice-payments";
+import {
   mapJobRowToJob,
   type JobRowWithTechnician,
 } from "@/lib/database/mappers/job";
@@ -265,6 +269,60 @@ export async function listEstimatesPage(
     sortValue: (row, column) =>
       column === "total" ? Number(row.total) : row.created_at,
   }, request, countClient());
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+//
+// ============================== THE LAST TRUNCATED LIST ==============================
+// The Sales hub's Payments tab was handed listInvoicePayments(companyId) -- the
+// whole ledger, no .limit() -- and paged it in the browser with
+// `payments.slice(0, visibleCount)` under a "Showing 25 of N" label. PostgREST
+// caps that read at 1,000 rows, so on a tenant with 7,857 payments the tab
+// showed the newest 1,000, reported "of 1000", and had no way to reach the
+// other 6,857. The ledger was also loaded on all four tabs, including the two
+// that never render it.
+//
+// Same treatment as the invoice and estimate lists: one page from the server
+// with an exact count beside it, and a cursor for the rest.
+// ---------------------------------------------------------------------------
+
+// The shipped select, imported rather than restated: mapPaymentRowWithInvoice
+// reads invoice.invoice_number and invoice.customers, and a select written a
+// second time here would drift from it silently.
+const PAYMENT_SELECT = INVOICE_PAYMENT_LIST_SELECT;
+
+export type PaymentsPageRequest = ListPageRequest;
+
+export async function listInvoicePaymentsPage(
+  companyId: string,
+  request: PaymentsPageRequest,
+): Promise<PaginatedResult<ReturnType<typeof mapPaymentRowWithInvoice>>> {
+  const supabase = (await createClient()) as unknown as PagedClient;
+
+  return fetchPagedList(
+    supabase,
+    companyId,
+    {
+      label: "listInvoicePaymentsPage",
+      table: "invoice_payments",
+      select: PAYMENT_SELECT,
+      // payment_date is a date, so many rows share a value; the keyset adds id
+      // as a second key, which is what makes the cursor unambiguous.
+      sortable: ["payment_date", "created_at", "amount"],
+      defaultSort: "payment_date",
+      searchColumns: ["reference", "notes"],
+      map: mapPaymentRowWithInvoice,
+      sortValue: (row, column) =>
+        column === "amount"
+          ? Number(row.amount)
+          : column === "created_at"
+            ? row.created_at
+            : row.payment_date,
+    },
+    request,
+    countClient(),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -631,6 +689,43 @@ async function readAllRows<TRow>(
     rows.push(...batch);
     if (batch.length < PAGE) return rows;
   }
+}
+
+/**
+ * Payments for the estimate-pipeline cohort, over the same window.
+ *
+ * The pipeline view reduces estimates, invoices and payments into cohort
+ * conversion figures. Its estimates and invoices were already read to
+ * completion for exactly that reason -- "a cohort computed from one page is not
+ * a cohort" -- while its payments came from the Sales hub's whole-ledger read,
+ * which PostgREST truncated at 1,000. So two of the three inputs were complete
+ * and the third silently was not.
+ *
+ * Bounded by the same PIPELINE_MONTHS window rather than by a row cap.
+ */
+export async function listPipelinePayments(
+  companyId: string,
+  monthsBack: number = PIPELINE_MONTHS,
+): Promise<ReturnType<typeof mapPaymentRowWithInvoice>[]> {
+  const supabase = (await createClient()) as unknown as PagedClient;
+
+  const since = new Date();
+  since.setMonth(since.getMonth() - monthsBack);
+  const sinceDateOnly = since.toISOString().slice(0, 10);
+
+  const rows = await readAllRows<Parameters<typeof mapPaymentRowWithInvoice>[0]>(
+    (from, to) =>
+      supabase
+        .from("invoice_payments")
+        .select<Parameters<typeof mapPaymentRowWithInvoice>[0]>(PAYMENT_SELECT)
+        .eq("company_id", companyId)
+        .gte("payment_date", sinceDateOnly)
+        .order("payment_date", { ascending: false })
+        .range(from, to),
+    "pipeline.payments",
+  );
+
+  return rows.map(mapPaymentRowWithInvoice);
 }
 
 export async function listEstimatePipelineData(

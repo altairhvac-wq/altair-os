@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { CreditCard } from "lucide-react";
 import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-payments";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
@@ -12,16 +12,33 @@ import {
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { buildPaymentsGlanceStats } from "@/shared/lib/payments/payments-glance-stats";
+import { buildPaymentsGlanceStatsFromSummaries } from "@/shared/lib/payments/payments-glance-stats";
+import {
+  usePagedList,
+  type PagedListSnapshot,
+} from "@/shared/components/lists/usePagedList";
+import { loadPaymentsPageAction } from "@/app/actions/list-pages";
 import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import { PaymentsStatStrip } from "./PaymentsStatStrip";
 import { PaymentsTable } from "./PaymentsTable";
 
-/** Initial visible rows; matches “Load more” rather than rendering the full ledger. */
-const PAYMENTS_PAGE_SIZE = 50;
-
+/**
+ * ============================== THIS LIST USED TO BE A SLICE OF A TRUNCATED ARRAY ==============================
+ * The Sales hub handed this component listInvoicePayments(companyId) -- the
+ * whole ledger, no .limit() -- and it paged in the browser with
+ * `payments.slice(0, visibleCount)` under "Showing 25 of N". PostgREST caps
+ * that read at 1,000 rows, so on a tenant with 7,857 payments the tab showed
+ * the newest 1,000, told the reader there were 1,000, and offered no way to
+ * reach the rest. The "Total collected" stat above it was summed from the same
+ * thousand and labelled "All-time".
+ *
+ * It is now a server-paged list like Invoices and Estimates: one page plus an
+ * exact count, and a cursor for the rest. The all-time figure comes from its
+ * own count and sum rather than from whatever is on screen.
+ */
 type PaymentsPageViewProps = {
-  payments: RecentInvoicePayment[];
+  serverPage: PagedListSnapshot<RecentInvoicePayment>;
+  allTime: { count: number; total: number };
   thisWeek: { count: number; total: number };
   thisMonth: { count: number; total: number };
   canManageCustomers: boolean;
@@ -33,28 +50,35 @@ type PaymentsPageViewProps = {
 };
 
 export function PaymentsPageView({
-  payments,
+  serverPage,
+  allTime,
   thisWeek,
   thisMonth,
   canManageCustomers,
   embedded = false,
 }: PaymentsPageViewProps) {
   const northStar = isNorthStarShellEnabled();
-  const [visibleCount, setVisibleCount] = useState(PAYMENTS_PAGE_SIZE);
+
+  const paged = usePagedList<RecentInvoicePayment>(
+    serverPage,
+    useCallback((cursor) => loadPaymentsPageAction({ cursor }), []),
+  );
 
   const glanceStats = useMemo(
     () =>
-      buildPaymentsGlanceStats({
-        payments,
+      buildPaymentsGlanceStatsFromSummaries({
+        allTime,
         thisWeek,
         thisMonth,
       }),
-    [payments, thisWeek, thisMonth],
+    [allTime, thisWeek, thisMonth],
   );
 
-  const visiblePayments = payments.slice(0, visibleCount);
-  const hasMore = visibleCount < payments.length;
-  const hasNoPayments = payments.length === 0;
+  const visiblePayments = paged.rows;
+  const hasMore = paged.hasMore;
+  // The empty state is the tenant having no payments at all, which is the
+  // server's exact count -- not "this page came back empty".
+  const hasNoPayments = serverPage.totalCount === 0;
 
   const panelBody = (
     <MasterPageSurface
@@ -87,23 +111,23 @@ export function PaymentsPageView({
 
             <div className="flex flex-col items-center gap-2 border-t border-altair-border px-3.5 py-3 sm:flex-row sm:justify-between">
               <p className="text-xs text-altair-ink-on-paper-muted">
-                Showing {visiblePayments.length} of {payments.length}
+                Showing {visiblePayments.length} of {serverPage.totalCount}
               </p>
+              {paged.error ? (
+                <p className="text-xs text-altair-danger">{paged.error}</p>
+              ) : null}
               {hasMore ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    setVisibleCount((count) =>
-                      Math.min(count + PAYMENTS_PAGE_SIZE, payments.length),
-                    )
-                  }
+                  disabled={paged.isLoadingMore}
+                  onClick={paged.loadMore}
                   className={
                     northStar
                       ? lt.secondaryAction
                       : "inline-flex items-center justify-center rounded-md border border-altair-border bg-[var(--surface-tile)] px-3 py-1.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-[var(--surface-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
                   }
                 >
-                  Load more
+                  {paged.isLoadingMore ? "Loading…" : "Load more"}
                 </button>
               ) : null}
             </div>

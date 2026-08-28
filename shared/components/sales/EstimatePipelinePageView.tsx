@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { GitBranch } from "lucide-react";
 import {
   EmptyState,
@@ -17,17 +16,24 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
-import { buildEstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
+import type { EstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
 import { formatPercent } from "@/shared/types/analytics";
 import { formatCurrency } from "@/shared/types/customer";
-import type { Estimate } from "@/shared/types/estimate";
-import type { Invoice } from "@/shared/types/invoice";
-import type { InvoicePayment } from "@/shared/types/invoice-payment";
 
+/**
+ * ============================== THE ROWS DO NOT COME HERE ANY MORE ==============================
+ * This took three arrays -- two years of estimates, two years of invoices and
+ * the payment ledger -- and reduced them to `metrics` in a useMemo. Nothing
+ * else on the tab read them. Because this is a client component, every one of
+ * those rows had to be serialised into the RSC payload to reach the reduction:
+ * 6.7 MB and 34 seconds on the scale-seeded tenant, to render a dozen numbers
+ * and a cohort table.
+ *
+ * buildEstimatePipelineMetrics is pure, so it now runs on the server and only
+ * its result crosses the boundary. Same function, same inputs, same output.
+ */
 type EstimatePipelinePageViewProps = {
-  estimates: Estimate[];
-  invoices: Invoice[];
-  payments: InvoicePayment[];
+  metrics: EstimatePipelineMetrics;
 };
 
 function formatRate(value: number | null): string {
@@ -43,20 +49,8 @@ function formatRate(value: number | null): string {
  * invoice + payment ledger. MC v2 light paper; no Reports dark chrome.
  */
 export function EstimatePipelinePageView({
-  estimates,
-  invoices,
-  payments,
+  metrics,
 }: EstimatePipelinePageViewProps) {
-  const metrics = useMemo(
-    () =>
-      buildEstimatePipelineMetrics({
-        estimates,
-        invoices,
-        payments,
-      }),
-    [estimates, invoices, payments],
-  );
-
   const hasCohorts = metrics.cohorts.length > 0;
 
   const summaryTiles = [
