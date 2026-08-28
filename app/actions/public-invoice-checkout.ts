@@ -1,6 +1,11 @@
 "use server";
 
 import { getPublicInvoiceCheckoutContext } from "@/lib/database/queries/invoice-payment-tokens";
+import {
+  enforcePublicRateLimit,
+  rateLimitMessage,
+  resolveRequestAddress,
+} from "@/lib/security/public-rate-limit";
 import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
   buildPublicInvoiceCheckoutUrls,
@@ -21,6 +26,19 @@ export async function createPublicInvoiceCheckoutSessionAction(
 
   if (!trimmedToken) {
     return { error: "This payment link is invalid." };
+  }
+
+  // ============================== THIS ACTION SPENDS ==============================
+  // It creates a Stripe checkout session from a token in a URL. Unlimited
+  // attempts is a token-guessing oracle that also runs up work at a payment
+  // provider, so the limit is applied BEFORE the token is resolved -- checking
+  // the token first would make the response time itself a signal.
+  const checkoutLimit = await enforcePublicRateLimit(
+    "public.invoice_checkout",
+    { token: trimmedToken, ip: await resolveRequestAddress() },
+  );
+  if (!checkoutLimit.allowed) {
+    return { error: rateLimitMessage(checkoutLimit) };
   }
 
   const checkoutContext = await getPublicInvoiceCheckoutContext(trimmedToken);

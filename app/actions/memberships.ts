@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  enforcePublicRateLimit,
+  rateLimitMessage,
+  resolveRequestAddress,
+} from "@/lib/security/public-rate-limit";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { assertTeamManagementAccess } from "@/lib/database/access-control";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
@@ -111,6 +116,17 @@ export async function acceptInviteAction(
   membershipId: string,
   next?: string | null,
 ): Promise<AcceptInviteActionResult> {
+  // A session is required below, so this is not strictly unauthenticated --
+  // but the membership id is the only thing that selects WHICH invitation, and
+  // an authenticated attacker can try as many as they like. The address
+  // dimension bounds that walk.
+  const inviteLimit = await enforcePublicRateLimit("auth.invite_accept", {
+    ip: await resolveRequestAddress(),
+  });
+  if (!inviteLimit.allowed) {
+    return { error: rateLimitMessage(inviteLimit) };
+  }
+
   const normalizedMembershipId = normalizeMembershipId(membershipId);
 
   if (!normalizedMembershipId) {

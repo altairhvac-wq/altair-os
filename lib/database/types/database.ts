@@ -1557,6 +1557,25 @@ export type Database = {
         };
         Returns: Json;
       };
+      // check_public_request_rate_limit: migration 173 — wire into Database
+      // types on next gen types run. Advances one durable counter atomically
+      // and returns the post-update decision. service_role only.
+      check_public_request_rate_limit: {
+        Args: {
+          p_scope: string;
+          p_dimension: string;
+          p_subject_hash: string;
+          p_window_seconds: number;
+          p_limit: number;
+        };
+        Returns: Json;
+      };
+      // sweep_public_request_rate_limits: migration 173. Removes counters that
+      // can no longer affect a decision.
+      sweep_public_request_rate_limits: {
+        Args: { p_older_than_hours: number };
+        Returns: number;
+      };
       // get_company_operational_inconsistencies: migration 172 — wire into
       // Database types on next gen types run. Whole-tenant counts for the
       // data-integrity scan plus a bounded page of offending jobs carrying the

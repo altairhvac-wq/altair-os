@@ -1,6 +1,11 @@
 "use server";
 
 import type { User } from "@supabase/supabase-js";
+import {
+  enforcePublicRateLimit,
+  rateLimitMessage,
+  resolveRequestAddress,
+} from "@/lib/security/public-rate-limit";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PASSWORD_RESET_RATE_LIMIT_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
@@ -102,6 +107,22 @@ export async function loginAction(
     return { error: "Email and password are required." };
   }
 
+  // ============================== BEFORE THE CREDENTIAL IS CHECKED ==============================
+  // Two dimensions: the address stops one client working through many
+  // accounts, and the email stops many clients working through one. Either
+  // alone leaves the other open.
+  //
+  // The refusal message is identical whichever dimension refused and does not
+  // say whether the account exists -- a limiter that distinguishes them is an
+  // enumeration oracle.
+  const loginLimit = await enforcePublicRateLimit("auth.login", {
+    email,
+    ip: await resolveRequestAddress(),
+  });
+  if (!loginLimit.allowed) {
+    return { error: rateLimitMessage(loginLimit) };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -135,6 +156,16 @@ export async function signupAction(
   _prevState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  // Address only: there is no account yet, so there is no identity dimension
+  // to limit, and limiting by the submitted email would let an attacker pick a
+  // fresh one per attempt.
+  const signupLimit = await enforcePublicRateLimit("auth.signup", {
+    ip: await resolveRequestAddress(),
+  });
+  if (!signupLimit.allowed) {
+    return { error: rateLimitMessage(signupLimit) };
+  }
+
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -380,6 +411,19 @@ export async function requestPasswordResetAction(
     return { error: "Email is required." };
   }
 
+  // The address dimension is the one that matters here: the mail goes to
+  // whoever was named, so without it anyone's inbox can be flooded from
+  // anywhere. The refusal is returned as the same generic success-shaped
+  // message the rest of this action uses, so it still reveals nothing about
+  // whether the account exists.
+  const resetLimit = await enforcePublicRateLimit(
+    "auth.password_reset_request",
+    { email, ip: await resolveRequestAddress() },
+  );
+  if (!resetLimit.allowed) {
+    return { error: rateLimitMessage(resetLimit) };
+  }
+
   const { origin, source } = await resolveAuthRedirectOrigin();
 
   if (!origin) {
@@ -459,6 +503,16 @@ export async function updatePasswordAction(
   _prevState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  // Completing a reset consumes a recovery session, so this is where a stolen
+  // or guessed recovery link is spent. Address only: the actor has no
+  // established identity at this point.
+  const updateLimit = await enforcePublicRateLimit("auth.password_update", {
+    ip: await resolveRequestAddress(),
+  });
+  if (!updateLimit.allowed) {
+    return { error: rateLimitMessage(updateLimit) };
+  }
+
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   const next = String(formData.get("next") ?? "").trim() || null;

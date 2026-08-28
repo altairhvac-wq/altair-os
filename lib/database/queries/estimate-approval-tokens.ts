@@ -1,4 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  enforcePublicRateLimit,
+  resolveRequestAddress,
+} from "@/lib/security/public-rate-limit";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { DbClient } from "@/lib/database/db-client";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -197,6 +201,23 @@ export async function getPublicEstimateApprovalView(
   rawToken: string,
 ): Promise<PublicEstimateApprovalView> {
   const supabase = await createClient();
+
+  // ============================== ENUMERATION GUARD ==============================
+  // The token is the only credential. Without a limit, a client can walk the
+  // token space at whatever rate the platform allows, and every attempt is a
+  // read of a customer's document.
+  //
+  // A refused caller gets the SAME "invalid" state a wrong token gets. That is
+  // deliberate: an enumeration guard that announces itself tells the attacker
+  // exactly when to slow down, and the two responses must be
+  // indistinguishable. The threshold is high enough that a person opening
+  // their own link -- or a mail client prefetching it -- never reaches it.
+  const viewLimit = await enforcePublicRateLimit("public.token_view", {
+    ip: await resolveRequestAddress(),
+  });
+  if (!viewLimit.allowed) {
+    return { state: "invalid" };
+  }
 
   const { data, error } = await supabase.rpc(
     "get_public_estimate_approval_view",

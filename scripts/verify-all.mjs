@@ -83,6 +83,10 @@ steps.push(
     // Imports the shipped crypto and env modules, so it needs the alias loader.
     typescript: true,
   },
+  {
+    name: "public-surface-limits",
+    script: "scripts/verify-public-surface-limits.mjs",
+  },
   { name: "bounded-reads", script: "scripts/verify-bounded-reads.mjs" },
   { name: "rls-count-cost", script: "scripts/verify-rls-count-cost.mjs" },
   {
