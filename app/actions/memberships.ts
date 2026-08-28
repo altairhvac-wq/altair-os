@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
   enforcePublicRateLimit,
   rateLimitMessage,
@@ -120,10 +121,17 @@ export async function acceptInviteAction(
   // but the membership id is the only thing that selects WHICH invitation, and
   // an authenticated attacker can try as many as they like. The address
   // dimension bounds that walk.
+  const inviteAddress = await resolveRequestAddress();
   const inviteLimit = await enforcePublicRateLimit("auth.invite_accept", {
-    ip: await resolveRequestAddress(),
+    ip: inviteAddress,
   });
   if (!inviteLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "invite.accept_rate_limited",
+      outcome: "refused",
+      address: inviteAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(inviteLimit) };
   }
 

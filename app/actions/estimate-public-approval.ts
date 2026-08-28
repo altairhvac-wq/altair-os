@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
   enforcePublicRateLimit,
   rateLimitMessage,
@@ -25,11 +26,19 @@ export async function submitPublicEstimateApprovalAction(
   //
   // The token dimension bounds attempts against one estimate; the address
   // dimension bounds a client working through many tokens.
+  const approvalAddress = await resolveRequestAddress();
   const approvalLimit = await enforcePublicRateLimit(
     "public.estimate_approval",
-    { token: rawToken, ip: await resolveRequestAddress() },
+    { token: rawToken, ip: approvalAddress },
   );
   if (!approvalLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "public_estimate_approval.rate_limited",
+      outcome: "refused",
+      subject: rawToken,
+      address: approvalAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(approvalLimit) };
   }
 
@@ -63,6 +72,16 @@ export async function submitPublicEstimateApprovalAction(
   if (result.error) {
     return { error: result.error };
   }
+
+  // A signature was recorded and an estimate may have become a job, on the
+  // strength of a token in a URL. The token is hashed, so this says "this link
+  // was used, from this address, at this time" and nothing more.
+  await recordSecurityAuditEvent({
+    event: "public_estimate_approval.submitted",
+    outcome: "succeeded",
+    subject: rawToken,
+    address: approvalAddress,
+  });
 
   if (result.estimateId) {
     revalidatePath("/estimates");

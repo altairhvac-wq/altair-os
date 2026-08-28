@@ -1557,6 +1557,28 @@ export type Database = {
         };
         Returns: Json;
       };
+      // record_security_audit_event: migration 174 — wire into Database types
+      // on next gen types run. Writes one authentication/security event.
+      // Hashes only; no address, email or token reaches it. service_role only.
+      record_security_audit_event: {
+        Args: {
+          p_event_type: string;
+          p_outcome: string;
+          p_user_id: string | null;
+          p_company_id: string | null;
+          p_subject_hash: string | null;
+          p_address_hash: string | null;
+          p_reason: string | null;
+          p_metadata: Json;
+        };
+        Returns: string;
+      };
+      // sweep_security_audit_events: migration 174. Retention sweep; not
+      // scheduled, because the retention period is a policy decision.
+      sweep_security_audit_events: {
+        Args: { p_retain_days: number };
+        Returns: number;
+      };
       // check_public_request_rate_limit: migration 173 — wire into Database
       // types on next gen types run. Advances one durable counter atomically
       // and returns the post-update decision. service_role only.

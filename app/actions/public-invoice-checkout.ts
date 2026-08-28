@@ -1,6 +1,7 @@
 "use server";
 
 import { getPublicInvoiceCheckoutContext } from "@/lib/database/queries/invoice-payment-tokens";
+import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
   enforcePublicRateLimit,
   rateLimitMessage,
@@ -33,11 +34,19 @@ export async function createPublicInvoiceCheckoutSessionAction(
   // attempts is a token-guessing oracle that also runs up work at a payment
   // provider, so the limit is applied BEFORE the token is resolved -- checking
   // the token first would make the response time itself a signal.
+  const checkoutAddress = await resolveRequestAddress();
   const checkoutLimit = await enforcePublicRateLimit(
     "public.invoice_checkout",
-    { token: trimmedToken, ip: await resolveRequestAddress() },
+    { token: trimmedToken, ip: checkoutAddress },
   );
   if (!checkoutLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "public_invoice_checkout.rate_limited",
+      outcome: "refused",
+      subject: trimmedToken,
+      address: checkoutAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(checkoutLimit) };
   }
 
@@ -83,6 +92,17 @@ export async function createPublicInvoiceCheckoutSessionAction(
       invoice,
       connectedAccountId: account.providerAccountId!,
       urls: checkoutUrls,
+    });
+
+    // A payment session now exists at the provider, created from a token in a
+    // URL. The token is hashed; the company is not, because it is the tenant
+    // whose record this is.
+    await recordSecurityAuditEvent({
+      event: "public_invoice_checkout.created",
+      outcome: "succeeded",
+      companyId,
+      subject: trimmedToken,
+      address: checkoutAddress,
     });
 
     return { checkoutUrl };

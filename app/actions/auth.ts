@@ -1,6 +1,7 @@
 "use server";
 
 import type { User } from "@supabase/supabase-js";
+import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
   enforcePublicRateLimit,
   rateLimitMessage,
@@ -115,11 +116,19 @@ export async function loginAction(
   // The refusal message is identical whichever dimension refused and does not
   // say whether the account exists -- a limiter that distinguishes them is an
   // enumeration oracle.
+  const address = await resolveRequestAddress();
   const loginLimit = await enforcePublicRateLimit("auth.login", {
     email,
-    ip: await resolveRequestAddress(),
+    ip: address,
   });
   if (!loginLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "login.rate_limited",
+      outcome: "refused",
+      subject: email,
+      address,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(loginLimit) };
   }
 
@@ -130,8 +139,25 @@ export async function loginAction(
   });
 
   if (error) {
+    // The provider's message is NOT recorded: those have been known to echo
+    // the submitted address. `reason` is the error CODE, which is bounded.
+    await recordSecurityAuditEvent({
+      event: "login.failed",
+      outcome: "failed",
+      subject: email,
+      address,
+      reason: error.code ?? "sign_in_failed",
+    });
     return { error: mapAuthError(error) };
   }
+
+  await recordSecurityAuditEvent({
+    event: "login.succeeded",
+    outcome: "succeeded",
+    userId: data.user?.id ?? null,
+    subject: email,
+    address,
+  });
 
   const companyName = data.user
     ? getCompanyNameFromUserMetadata(data.user)
@@ -159,10 +185,17 @@ export async function signupAction(
   // Address only: there is no account yet, so there is no identity dimension
   // to limit, and limiting by the submitted email would let an attacker pick a
   // fresh one per attempt.
+  const signupAddress = await resolveRequestAddress();
   const signupLimit = await enforcePublicRateLimit("auth.signup", {
-    ip: await resolveRequestAddress(),
+    ip: signupAddress,
   });
   if (!signupLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "signup.rate_limited",
+      outcome: "refused",
+      address: signupAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(signupLimit) };
   }
 
@@ -416,13 +449,31 @@ export async function requestPasswordResetAction(
   // anywhere. The refusal is returned as the same generic success-shaped
   // message the rest of this action uses, so it still reveals nothing about
   // whether the account exists.
+  const resetAddress = await resolveRequestAddress();
   const resetLimit = await enforcePublicRateLimit(
     "auth.password_reset_request",
-    { email, ip: await resolveRequestAddress() },
+    { email, ip: resetAddress },
   );
   if (!resetLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "password_reset.rate_limited",
+      outcome: "refused",
+      subject: email,
+      address: resetAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(resetLimit) };
   }
+
+  // Recorded whether or not the address belongs to anyone: "a reset was
+  // requested for this account" is the fact worth having, and the action
+  // deliberately does not reveal which case it was.
+  await recordSecurityAuditEvent({
+    event: "password_reset.requested",
+    outcome: "succeeded",
+    subject: email,
+    address: resetAddress,
+  });
 
   const { origin, source } = await resolveAuthRedirectOrigin();
 
@@ -506,10 +557,17 @@ export async function updatePasswordAction(
   // Completing a reset consumes a recovery session, so this is where a stolen
   // or guessed recovery link is spent. Address only: the actor has no
   // established identity at this point.
+  const updateAddress = await resolveRequestAddress();
   const updateLimit = await enforcePublicRateLimit("auth.password_update", {
-    ip: await resolveRequestAddress(),
+    ip: updateAddress,
   });
   if (!updateLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "password.update_rate_limited",
+      outcome: "refused",
+      address: updateAddress,
+      reason: "rate_limited",
+    });
     return { error: rateLimitMessage(updateLimit) };
   }
 
@@ -535,8 +593,24 @@ export async function updatePasswordAction(
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
+    await recordSecurityAuditEvent({
+      event: "password.update_failed",
+      outcome: "failed",
+      userId: user.id,
+      address: updateAddress,
+      reason: error.code ?? "update_failed",
+    });
     return { error: mapAuthError(error) };
   }
+
+  // The single most security-relevant thing that can happen to an account
+  // short of a role change, and nothing recorded it.
+  await recordSecurityAuditEvent({
+    event: "password.updated",
+    outcome: "succeeded",
+    userId: user.id,
+    address: updateAddress,
+  });
 
   return redirectAfterAuth(next);
 }

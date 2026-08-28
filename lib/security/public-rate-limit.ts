@@ -105,21 +105,38 @@ export type PublicRateLimitDecision = {
 /**
  * A hash of the subject, never the subject.
  *
- * Scoped by dimension so the same string used as two different kinds of subject
- * cannot collide into one bucket.
+ * Namespaced so the same string used as two different kinds of subject cannot
+ * collide into one bucket.
+ *
+ * Exported so the security audit trail hashes the same way.
+ *
+ * Two subsystems that hash the same email differently could not be correlated
+ * with each other, which is most of the value of having both — "this address
+ * was refused eleven times and then signed in" is only a sentence if the two
+ * records share a key.
  */
-function hashSubject(
-  dimension: PublicRateLimitDimension,
-  value: string,
-): string {
+export function hashAuditSubject(namespace: string, value: string): string {
+  return hashWithNamespace(namespace, value);
+}
+
+function hashWithNamespace(namespace: string, value: string): string {
   const normalized =
-    dimension === "email" ? value.trim().toLowerCase() : value.trim();
-  const material = `${dimension}:${normalized}`;
+    namespace === "email" || namespace === "subject"
+      ? value.trim().toLowerCase()
+      : value.trim();
+  const material = `${namespace}:${normalized}`;
   const secret = process.env[HASH_SECRET_ENV]?.trim();
 
   return secret
     ? createHmac("sha256", secret).update(material).digest("hex")
     : createHash("sha256").update(material).digest("hex");
+}
+
+function hashSubject(
+  dimension: PublicRateLimitDimension,
+  value: string,
+): string {
+  return hashWithNamespace(dimension, value);
 }
 
 /**
