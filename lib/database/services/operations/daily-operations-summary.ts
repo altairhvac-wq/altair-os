@@ -1,17 +1,16 @@
 import { getPaymentsTodaySummary } from "@/lib/database/queries/invoice-payments";
+import {
+  getCompanyOperationsSummaryAggregates,
+} from "@/lib/database/queries/operations-summary";
 import { loadCompanyOperationalDatasets } from "@/lib/database/services/operations/company-operational-datasets";
 import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
 import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
 import { getJobReviewBlockerResolutionTrendSummary } from "@/lib/database/services/job-review-resolution";
-import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
-import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import {
   getCompanyProfitabilityReportWithOperationalCounts,
 } from "@/lib/database/services/reports/profitability-report";
-import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
-import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import {
   computeJobProfitability,
   jobMaterialCostExceedsCollectedRevenue,
@@ -279,6 +278,23 @@ function collectLimitations(input: {
  * TODO: Predictive operational alerts (stall risk, margin erosion) — separate pipeline.
  * TODO: Owner morning digest emails using this summary as the structured payload.
  */
+/**
+ * ============================== FOUR BUILDERS REPLACED BY ONE ROUND TRIP ==============================
+ * getCompanyRevenueReport, getCompanyExpenseReport, getCompanyJobActivityReport
+ * and getCompanyTechnicianLaborReport contributed six numbers between them, and
+ * to produce those six they loaded every invoice, every payment, every expense,
+ * every job and every job-labour entry the company has.
+ *
+ * Migration 166 returns the same six in a single call, measured at 503 ms
+ * against the 12,000-job scratch tenant. The predicates are copied field by
+ * field — the migration names the TypeScript each one reproduces — and
+ * scripts/verify-operations-summary-live.mjs asserts equality against the
+ * ORIGINAL builders on real data, so this is checked rather than asserted.
+ *
+ * The remaining builders stay because they depend on computeJobProfitability,
+ * which is 473 lines of business rule that must not acquire a second
+ * implementation in SQL.
+ */
 export async function getDailyOperationsSummary(
   companyId: string,
   timeZone?: string,
@@ -286,11 +302,8 @@ export async function getDailyOperationsSummary(
   const datasets = await loadCompanyOperationalDatasets(companyId);
 
   const [
-    revenueReport,
-    expenseReport,
-    jobActivityReport,
+    aggregates,
     stalledJobsReport,
-    technicianLaborReport,
     profitabilityResult,
     paymentsToday,
     completedWorkReport,
@@ -298,11 +311,8 @@ export async function getDailyOperationsSummary(
     resolutionTrend,
     operationalInconsistencies,
   ] = await Promise.all([
-    getCompanyRevenueReport(companyId, REPORT_OPTIONS),
-    getCompanyExpenseReport(companyId, REPORT_OPTIONS),
-    getCompanyJobActivityReport(companyId, REPORT_OPTIONS),
+    getCompanyOperationsSummaryAggregates(companyId),
     getCompanyStalledJobsReport(companyId),
-    getCompanyTechnicianLaborReport(companyId, REPORT_OPTIONS),
     getCompanyProfitabilityReportWithOperationalCounts(companyId, {
       ...REPORT_OPTIONS,
       datasets,
@@ -329,13 +339,13 @@ export async function getDailyOperationsSummary(
 
   const sections = {
     revenue: {
-      collectedRevenue: revenueReport.summary.collectedRevenue,
-      outstandingRevenue: revenueReport.summary.outstandingRevenue,
+      collectedRevenue: aggregates.revenue.collectedRevenue,
+      outstandingRevenue: aggregates.revenue.outstandingRevenue,
       todayCollectedRevenue: paymentsToday.total,
       todayPaymentCount: paymentsToday.count,
     },
     openJobs: {
-      count: jobActivityReport.summary.openJobs,
+      count: aggregates.jobs.openCount,
     },
     stalledJobs: {
       count: stalledJobsReport.summary.stalledCount,
@@ -344,12 +354,12 @@ export async function getDailyOperationsSummary(
       stalledJobs: stalledJobsReport.summary.stalledJobs,
     },
     pendingExpenses: {
-      count: expenseReport.summary.submitted.count,
-      totalAmount: expenseReport.summary.submitted.totalAmount,
+      count: aggregates.expenses.submittedCount,
+      totalAmount: aggregates.expenses.submittedTotal,
     },
     activeTechnicians: {
-      activeLaborEntries: technicianLaborReport.summary.activeLaborEntries,
-      technicianCount: technicianLaborReport.summary.technicianCount,
+      activeLaborEntries: aggregates.labor.activeLaborEntries,
+      technicianCount: aggregates.labor.technicianCount,
     },
     completedAwaitingInvoicing: {
       count: completedWorkReport.summary.count,
@@ -390,12 +400,23 @@ export async function getDailyOperationsSummary(
     sections,
     highlights,
     limitations: collectLimitations({
+      // ============================== THE FOUR REPLACED REPORTS CONTRIBUTED NOTHING HERE ==============================
+      // Their limitation lists are dropped, and that is provable rather than
+      // assumed. This summary calls every report with dateRange "all", so
+      // resolveReportDateBounds returns null, and in all four the only pushes
+      // are guarded:
+      //
+      //   revenue-report          if (dateBounds)
+      //   technician-labor-report if (dateBounds)   x2
+      //   job-activity-report     inside the if (dateBounds) branch
+      //   expense-report          if (usedCreatedDateFallback), and that flag
+      //                           is only ever set inside if (dateBounds)
+      //
+      // So each returned an empty array on this path. verify-operations-summary-live
+      // asserts the whole limitation list is byte-identical to the old one
+      // rather than trusting this reading.
       reportLimitations: [
-        revenueReport.meta.limitations,
-        expenseReport.meta.limitations,
-        jobActivityReport.meta.limitations,
         stalledJobsReport.meta.limitations,
-        technicianLaborReport.meta.limitations,
         completedWorkReport.meta.limitations,
         completedWorkReviewReport.meta.limitations,
         operationalInconsistencies.meta.limitations,

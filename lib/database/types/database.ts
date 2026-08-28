@@ -1521,6 +1521,16 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_operations_summary: migration 166 — wire into Database
+      // types on next gen types run. Returns a jsonb envelope of the dashboard
+      // operations-summary counts and sums, plus candidate counts for the
+      // sections that must stay in TypeScript.
+      get_company_operations_summary: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: Json;
+      };
       // get_platform_company_rollups: migration 164 — wire into Database types
       // on next gen types run. Granted to service_role ONLY: it deliberately
       // crosses tenants, which nothing reachable from a user session may do.
