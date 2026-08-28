@@ -1531,6 +1531,52 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_dashboard_lists: migration 167 — wire into Database types
+      // on next gen types run. Returns the dashboard's card lists bounded by
+      // p_limit, with the two business thresholds passed in so they stay
+      // defined once, in TypeScript.
+      get_company_dashboard_lists: {
+        Args: {
+          p_company_id: string;
+          p_reference: string;
+          p_follow_up_days: number;
+          p_recovery_days: number;
+          p_limit: number;
+        };
+        Returns: Json;
+      };
+      // get_company_job_completeness_summary: migration 168 — wire into
+      // Database types on next gen types run. The structural half of job
+      // profitability, counted in SQL; the money half stays in TypeScript.
+      get_company_job_completeness_summary: {
+        Args: {
+          p_company_id: string;
+          p_reference: string;
+          p_stalled_days: number;
+          p_limit: number;
+        };
+        Returns: Json;
+      };
+      // get_company_job_completeness_counters: migration 168. Per-job raw
+      // counters, for the differential only — the application does not call it.
+      get_company_job_completeness_counters: {
+        Args: {
+          p_company_id: string;
+          p_offset: number;
+          p_limit: number;
+        };
+        Returns: {
+          job_id: string;
+          job_status: string;
+          active_invoice_count: number | string;
+          materials_missing_unit_cost: number | string;
+          pending_expense_count: number | string;
+          rejected_expense_count: number | string;
+          materials_expense_count: number | string;
+          expenses_missing_amount: number | string;
+          open_labor_entry_count: number | string;
+        }[];
+      };
       // get_platform_company_rollups: migration 164 — wire into Database types
       // on next gen types run. Granted to service_role ONLY: it deliberately
       // crosses tenants, which nothing reachable from a user session may do.

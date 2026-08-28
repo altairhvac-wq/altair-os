@@ -1,5 +1,25 @@
 import { selectDashboardAggregates } from "@/lib/database/services/dashboard-aggregate-bridge";
 import {
+  getCompanyDashboardLists,
+  EMPTY_DASHBOARD_LISTS,
+  type DashboardListInvoice,
+  type DashboardListEstimate,
+  type DashboardListExpense,
+} from "@/lib/database/queries/dashboard-lists";
+import type {
+  DashboardOverdueInvoicePreview,
+  DashboardUnsentInvoicePreview,
+  DashboardUnpaidInvoiceFollowUpPreview,
+  DashboardUnsentEstimatePreview,
+  DashboardStaleSentEstimatePreview,
+} from "@/shared/types/dashboard";
+import type { InvoiceStatus } from "@/shared/types/invoice";
+import type { Expense } from "@/shared/types/expense";
+import {
+  isDashboardAggregatesEnabled,
+  isDashboardAggregatesShadowCompareEnabled,
+} from "@/lib/database/queries/dashboard-aggregates";
+import {
   canViewCompanyTimeEntries,
   getCompanyAccessScope,
   type CompanyAccessScope,
@@ -85,6 +105,15 @@ import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-
 import type { Estimate } from "@/shared/types/estimate";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
+
+/**
+ * What the card lists ask the database for.
+ *
+ * The largest slice any card takes is ten. Asking for exactly that is the
+ * whole point: the previous path filtered every invoice, estimate and expense
+ * the company had and then took ten off the end.
+ */
+const DASHBOARD_LIST_FETCH_LIMIT = 10;
 
 const TODAY_JOBS_LIMIT = 8;
 const PENDING_EXPENSES_LIMIT = 5;
@@ -389,12 +418,124 @@ async function buildAcceptedEstimatesNeedingSchedulingSnapshot(
   };
 }
 
+
+/**
+ * ============================== FROM SQL ROWS TO CARD PREVIEWS ==============================
+ * Migration 167 returns the rows each card renders, in the order the shipped
+ * predicate produced them. These turn them into the preview shapes the payload
+ * already used — the same fields, from a bounded query instead of a filter over
+ * every invoice, estimate and expense the company has.
+ *
+ * The legacy path still exists and still produces these from arrays. Both are
+ * kept because "off" and "shadow" need the arrays anyway, and because a rollout
+ * with no way back is not a rollout.
+ */
+function toOverdueInvoicePreview(
+  row: DashboardListInvoice,
+): DashboardOverdueInvoicePreview {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    customerName: row.customer_name ?? "",
+    customerEmail: row.customer_email ?? undefined,
+    balanceDue: Number(row.balance_due ?? 0),
+    dueDate: row.due_date ?? "",
+    status: row.status as InvoiceStatus,
+  };
+}
+
+function toUnsentInvoicePreview(
+  row: DashboardListInvoice,
+): DashboardUnsentInvoicePreview {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    customerName: row.customer_name ?? "",
+    customerEmail: row.customer_email ?? undefined,
+    jobId: row.job_id ?? undefined,
+    total: Number(row.total ?? 0),
+    status: row.status as InvoiceStatus,
+  };
+}
+
+function toFollowUpInvoicePreview(
+  row: DashboardListInvoice,
+): DashboardUnpaidInvoiceFollowUpPreview {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    customerName: row.customer_name ?? "",
+    customerEmail: row.customer_email ?? undefined,
+    balanceDue: Number(row.balance_due ?? 0),
+    // sentAt is not a column and mapInvoiceRowToInvoice never populated it —
+    // see migration 158, which found the same thing. The legacy preview carried
+    // undefined here for every invoice, so this does too rather than
+    // substituting the issue date and quietly changing what the card shows.
+    sentAt: undefined,
+    issueDate: row.issue_date ?? "",
+    daysUnpaid: Number(row.days_unpaid ?? 0),
+    status: row.status as InvoiceStatus,
+  };
+}
+
+function toUnsentEstimatePreview(
+  row: DashboardListEstimate,
+): DashboardUnsentEstimatePreview {
+  return {
+    id: row.id,
+    estimateNumber: row.estimate_number,
+    customerName: row.customer_name ?? "",
+    customerEmail: row.customer_email ?? undefined,
+    jobId: row.job_id ?? undefined,
+    total: Number(row.total ?? 0),
+    status: row.status as Estimate["status"],
+  };
+}
+
+function toStaleSentEstimatePreview(
+  row: DashboardListEstimate,
+): DashboardStaleSentEstimatePreview {
+  return {
+    id: row.id,
+    estimateNumber: row.estimate_number,
+    customerName: row.customer_name ?? "",
+    customerEmail: row.customer_email ?? undefined,
+    jobId: row.job_id ?? undefined,
+    total: Number(row.total ?? 0),
+    status: row.status as Estimate["status"],
+    sentAt: row.sent_at ?? "",
+    daysSinceSent: Number(row.days_since_sent ?? 0),
+  };
+}
+
+function toExpensePreview(row: DashboardListExpense): Expense {
+  return {
+    id: row.id,
+    expenseNumber: row.expense_number,
+    merchant: row.merchant ?? "",
+    amount: Number(row.amount ?? 0),
+    category: row.category as Expense["category"],
+    purchaseDate: row.purchase_date ?? undefined,
+    receiptStatus: row.receipt_status as Expense["receiptStatus"],
+    jobId: row.job_id ?? undefined,
+    technicianId: row.technician_id ?? undefined,
+    status: row.status as Expense["status"],
+    createdAt: row.created_at,
+  } as Expense;
+}
+
 export async function getDashboardData(
   context: ActiveCompanyContext,
 ): Promise<DashboardData> {
   const access = getCompanyAccessScope(context);
   const companyId = context.company.id;
   const userId = context.user.id;
+
+  // "off" keeps legacy authoritative; "shadow" computes both to compare them.
+  // Only those two need the whole-book arrays.
+  const needsLegacyArrays =
+    !isDashboardAggregatesEnabled() ||
+    isDashboardAggregatesShadowCompareEnabled();
 
   const allTodayJobs = await listDispatchJobsForToday(companyId, {
     timeZone: context.company.timezone,
@@ -434,6 +575,7 @@ export async function getDashboardData(
     openClockEntries,
     paymentDisputes,
     cardFailureAttempts,
+    dashboardLists,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -441,11 +583,20 @@ export async function getDashboardData(
     access.canViewTechnicianRoster
       ? listActiveTechnicianTimeEntries(companyId)
       : Promise.resolve([]),
-    access.canViewBilling
+    // ============================== THE FLAG NOW SELECTS AN ARCHITECTURE ==============================
+    // In "on" mode every figure these arrays produced comes from SQL: the ten
+    // aggregate fields from migration 158, and the card lists from 167. The
+    // arrays are loaded only for the two modes that still need to compute the
+    // legacy numbers — "off", where legacy is authoritative, and "shadow",
+    // which exists precisely to compare the two. Verification costs more than
+    // production, which is the right way round.
+    access.canViewBilling && needsLegacyArrays
       ? listInvoices(companyId)
       : Promise.resolve([]),
-    access.canViewBilling ? listEstimates(companyId) : Promise.resolve([]),
-    access.canViewCompanyExpenses
+    access.canViewBilling && needsLegacyArrays
+      ? listEstimates(companyId)
+      : Promise.resolve([]),
+    access.canViewCompanyExpenses && needsLegacyArrays
       ? listExpenses(companyId)
       : Promise.resolve([]),
     access.canViewBilling
@@ -498,6 +649,11 @@ export async function getDashboardData(
     access.canViewBilling
       ? listCompanyCardFailureAttentionAttempts(companyId, { limit: 50 })
       : Promise.resolve([]),
+    access.canViewBilling
+      ? getCompanyDashboardLists(companyId, {
+          limit: DASHBOARD_LIST_FETCH_LIMIT,
+        })
+      : Promise.resolve(EMPTY_DASHBOARD_LISTS),
   ]);
 
   const leadPipelineDateBounds = resolveReportDateBounds(
@@ -638,6 +794,12 @@ export async function getDashboardData(
   // are computed from a fraction of the data and understate by roughly 90%.
   // selectDashboardAggregates decides whether that stays authoritative, whether
   // the SQL aggregates are compared against it, or whether they replace it.
+  //
+  // In "on" mode the arrays are not loaded at all, so these would every one be
+  // zero. They are not passed as "legacy" in that case: selectDashboardAggregates
+  // would compare real SQL numbers against zeros and report drift on every
+  // field. That is the same trap shadow mode fell into, one layer up, and it is
+  // avoided by not asking the question when there is nothing to compare.
   const legacyAggregateFields = {
     unpaidCount: unpaidInvoices.length,
     unpaidTotal: invoiceSummary.unpaidTotal,
@@ -725,7 +887,8 @@ export async function getDashboardData(
             createdAt: payment.createdAt,
           })),
           approvedEstimates,
-          overdueInvoices: overdueInvoices
+          overdueInvoices: needsLegacyArrays
+            ? overdueInvoices
             .slice(0, OVERDUE_INVOICES_DASHBOARD_LIMIT)
             .map((invoice) => ({
               id: invoice.id,
@@ -735,9 +898,11 @@ export async function getDashboardData(
               balanceDue: invoice.balanceDue,
               dueDate: invoice.dueDate,
               status: invoice.status,
-            })),
+              }))
+            : dashboardLists.overdueInvoices.map(toOverdueInvoicePreview),
           unpaidInvoiceFollowUpCount: totals.unpaidInvoiceFollowUpCount,
-          unpaidInvoicesNeedingFollowUp: unpaidInvoiceFollowUpEntries
+          unpaidInvoicesNeedingFollowUp: needsLegacyArrays
+            ? unpaidInvoiceFollowUpEntries
             .slice(0, UNPAID_INVOICE_FOLLOW_UP_DASHBOARD_LIMIT)
             .map((entry) => ({
               id: entry.invoiceId,
@@ -749,11 +914,13 @@ export async function getDashboardData(
               issueDate: entry.issueDate,
               daysUnpaid: entry.daysUnpaid,
               status: entry.status,
-            })),
+              }))
+            : dashboardLists.followUpInvoices.map(toFollowUpInvoicePreview),
           unpaidInvoiceFollowUpThresholdDays:
             UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
           unsentInvoiceCount: totals.unsentInvoiceCount,
-          unsentInvoices: unsentInvoices
+          unsentInvoices: needsLegacyArrays
+            ? unsentInvoices
             .slice(0, UNSENT_INVOICES_DASHBOARD_LIMIT)
             .map((invoice) => ({
               id: invoice.id,
@@ -763,9 +930,11 @@ export async function getDashboardData(
               jobId: invoice.jobId,
               total: invoice.total,
               status: invoice.status,
-            })),
+              }))
+            : dashboardLists.unsentInvoices.map(toUnsentInvoicePreview),
           unsentEstimateCount: totals.unsentEstimateCount,
-          unsentEstimates: unsentEstimates
+          unsentEstimates: needsLegacyArrays
+            ? unsentEstimates
             .slice(0, UNSENT_ESTIMATES_DASHBOARD_LIMIT)
             .map((estimate) => ({
               id: estimate.id,
@@ -775,9 +944,11 @@ export async function getDashboardData(
               jobId: estimate.jobId,
               total: estimate.total,
               status: estimate.status,
-            })),
+              }))
+            : dashboardLists.unsentEstimates.map(toUnsentEstimatePreview),
           staleSentEstimateCount: totals.staleSentEstimateCount,
-          staleSentEstimates: staleSentEstimateEntries
+          staleSentEstimates: needsLegacyArrays
+            ? staleSentEstimateEntries
             .slice(0, STALE_SENT_ESTIMATES_DASHBOARD_LIMIT)
             .map((entry) => ({
               id: entry.estimateId,
@@ -789,7 +960,8 @@ export async function getDashboardData(
               status: entry.status,
               sentAt: entry.sentAt,
               daysSinceSent: entry.daysSinceSent,
-            })),
+              }))
+            : dashboardLists.staleSentEstimates.map(toStaleSentEstimatePreview),
           staleSentEstimateThresholdDays: ESTIMATE_RECOVERY_THRESHOLD_DAYS,
         }
       : EMPTY_MONEY,
@@ -797,11 +969,19 @@ export async function getDashboardData(
       ? {
           submittedCount: totals.expenseSubmittedCount,
           submittedTotal: totals.expenseSubmittedTotal,
-          rejectedCount: expenses.filter(
-            (expense) => expense.status === "rejected",
-          ).length,
-          recentReceipts,
-          pendingExpenses: submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT),
+          rejectedCount: needsLegacyArrays
+            ? expenses.filter((expense) => expense.status === "rejected").length
+            : dashboardLists.rejectedExpenseCount,
+          recentReceipts: needsLegacyArrays
+            ? recentReceipts
+            : dashboardLists.recentReceipts
+                .slice(0, RECENT_RECEIPTS_LIMIT)
+                .map(toExpensePreview),
+          pendingExpenses: needsLegacyArrays
+            ? submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT)
+            : dashboardLists.pendingExpenses
+                .slice(0, PENDING_EXPENSES_LIMIT)
+                .map(toExpensePreview),
         }
       : EMPTY_EXPENSES,
     notifications: {

@@ -1,3 +1,4 @@
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { mapDemoDataError } from "@/lib/database/errors";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
@@ -28,12 +29,22 @@ type DemoPatternTable =
   | DemoCountableTable
   | "service_items";
 
+/**
+ * Counted with the policy bypassed — see the note in
+ * lib/database/queries/onboarding-snapshot.ts. This module alone issues
+ * fourteen exact head counts on one dashboard render, and an exact count
+ * under RLS re-evaluates the policy per row.
+ *
+ * The caller is gated on canManageDemoData (owner or admin, active
+ * membership, matching company) before reaching here, and every query is
+ * pinned to that company id.
+ */
 async function countCompanyRows(
   table: DemoCountableTable,
   companyId: string,
   options: { demoOnly?: boolean } = {},
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   let query = supabase
     .from(table)
@@ -62,7 +73,7 @@ async function countCompanyRows(
 async function fetchCompanySettingsMarker(
   companyId: string,
 ): Promise<CompanyDemoDataSettings | null> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
     .from("companies")
@@ -93,7 +104,7 @@ async function countDemoIdentifierRows(
   table: DemoPatternTable,
   companyId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   let query = supabase
     .from(table)

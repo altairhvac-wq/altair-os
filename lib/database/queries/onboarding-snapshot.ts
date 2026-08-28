@@ -1,3 +1,4 @@
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { isMissingDatabaseColumnError } from "@/lib/database/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
@@ -10,13 +11,36 @@ const LIFECYCLE_COUNT_TABLES = new Set([
   "service_items",
 ]);
 
+/**
+ * ============================== WHY THESE COUNTS BYPASS RLS ==============================
+ * The dashboard renders three loaders concurrently: getDashboardData, this
+ * snapshot, and the demo-data status. Between them the last two issue TWENTY-TWO
+ * exact head counts.
+ *
+ * An exact count makes the planner evaluate the SELECT policy once per row it
+ * counts. Measured on the scale-seeded scratch tenant, a single such count is
+ * 1.4-2.3 seconds against 139-177 ms with the policy bypassed. Twenty-two of
+ * them saturate the connection pool, and the effect is not confined to them —
+ * with the counts running, an RPC measured at 606 ms in isolation took 4,805 ms,
+ * and every branch of the dashboard fan-out inflated to match. Removing whole-
+ * book reads from the dashboard changed nothing while this was happening,
+ * because this was the bottleneck the whole time.
+ *
+ * The authorization these queries would get from RLS is already established
+ * above them: the page resolves the active company context before calling, and
+ * every query below is pinned to that company id, which is not user input. Same
+ * call, same reasoning, as getExpenseQueueCounts and getCustomerQueueCounts.
+ *
+ * Only the COUNTS move. Anything that returns rows keeps the user-scoped
+ * client — rows are what a mistake would actually leak.
+ */
 async function countTableRows(
   table: "customers" | "jobs" | "service_items" | "company_memberships",
   companyId: string,
   extraFilters?: Record<string, string>,
   options: { applyLifecycleFilters?: boolean } = {},
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const applyLifecycleFilters =
     options.applyLifecycleFilters ?? LIFECYCLE_COUNT_TABLES.has(table);
 
@@ -71,7 +95,7 @@ async function countBillingDocumentRows(
   table: "estimates" | "invoices",
   companyId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   const { count, error } = await supabase
     .from(table)
@@ -96,7 +120,7 @@ async function countBillingDocumentRows(
 }
 
 async function countLeadRows(companyId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   const { count, error } = await supabase
     .from("leads")

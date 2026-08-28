@@ -264,6 +264,12 @@ export type JobSchedulingSnapshot = {
   id: string;
   status: JobStatus;
   assignedTechnicianId?: string | null;
+  /**
+   * Added for the office review queue, which needs to label a few dozen rows
+   * with their customer and was loading every job in the company to do it.
+   * One more column on a query that already runs.
+   */
+  customerId?: string | null;
 };
 
 export async function getJobSchedulingSnapshotsByIds(
@@ -285,10 +291,11 @@ export async function getJobSchedulingSnapshotsByIds(
     id: string;
     status: JobStatus;
     assigned_technician_id: string | null;
+    customer_id: string | null;
   }>(uniqueJobIds, (chunk) =>
     supabase
       .from("jobs")
-      .select("id, status, assigned_technician_id")
+      .select("id, status, assigned_technician_id, customer_id")
       .eq("company_id", companyId)
       .in("id", chunk),
   );
@@ -310,6 +317,7 @@ export async function getJobSchedulingSnapshotsByIds(
       id: row.id,
       status: row.status as JobStatus,
       assignedTechnicianId: row.assigned_technician_id,
+      customerId: row.customer_id,
     });
   }
 
