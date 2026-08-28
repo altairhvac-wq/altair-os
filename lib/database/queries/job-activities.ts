@@ -1,3 +1,4 @@
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
@@ -109,11 +110,26 @@ export async function listJobActivitiesForJob(
   return ((data ?? []) as JobActivityRowWithActor[]).map(mapJobActivityRow);
 }
 
+/**
+ * Counted with the policy bypassed.
+ *
+ * An exact count re-evaluates the SELECT policy once per row it counts —
+ * measured at 1.4-2.3 s on the scale-seeded tenant against 139-177 ms without.
+ * These run on the dashboard alongside two dozen others, and the cost is not
+ * confined to them: they hold connections while they work, and everything else
+ * on the page slows to match. See scripts/verify-rls-count-cost.mjs.
+ *
+ * The caller resolves the active company context and its permission before
+ * reaching here, and the query is pinned to that company id, which is not user
+ * input. No rows are returned — head:true — so a mistake here could not leak a
+ * record even in principle; the worst case is a number for the wrong company,
+ * and company_id comes from the resolved context.
+ */
 export async function countJobReviewBlockerResolutionsSince(
   companyId: string,
   sinceIso: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   const { count, error } = await supabase
     .from("job_activities")

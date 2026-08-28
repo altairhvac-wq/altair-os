@@ -74,6 +74,7 @@ steps.push(
   { name: "read-path-writes", script: "scripts/verify-read-path-writes.mjs" },
   { name: "error-boundaries", script: "scripts/verify-error-boundaries.mjs" },
   { name: "bounded-reads", script: "scripts/verify-bounded-reads.mjs" },
+  { name: "rls-count-cost", script: "scripts/verify-rls-count-cost.mjs" },
   {
     name: "shadow-report",
     script: "scripts/verify-shadow-report.mjs",

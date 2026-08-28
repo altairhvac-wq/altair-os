@@ -1,3 +1,4 @@
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { getLatestLeadActivityForLeads } from "@/lib/database/queries/lead-activities";
@@ -316,8 +317,23 @@ export async function listLeadsNeedingFollowUp(
   return attachLatestActivity(companyId, (data ?? []) as LeadRowWithRelations[]);
 }
 
+/**
+ * Counted with the policy bypassed.
+ *
+ * An exact count re-evaluates the SELECT policy once per row it counts —
+ * measured at 1.4-2.3 s on the scale-seeded tenant against 139-177 ms without.
+ * These run on the dashboard alongside two dozen others, and the cost is not
+ * confined to them: they hold connections while they work, and everything else
+ * on the page slows to match. See scripts/verify-rls-count-cost.mjs.
+ *
+ * The caller resolves the active company context and its permission before
+ * reaching here, and the query is pinned to that company id, which is not user
+ * input. No rows are returned — head:true — so a mistake here could not leak a
+ * record even in principle; the worst case is a number for the wrong company,
+ * and company_id comes from the resolved context.
+ */
 function activeLeadCountQuery(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createServiceRoleClient>,
   companyId: string,
 ) {
   return supabase
@@ -329,7 +345,7 @@ function activeLeadCountQuery(
 }
 
 export async function countActiveLeads(companyId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { count, error } = await activeLeadCountQuery(supabase, companyId);
 
   if (error) {
@@ -421,7 +437,8 @@ export async function countLeadsNeedingFollowUp(
   companyId: string,
   options?: { reference?: Date; timeZone?: string },
 ): Promise<number> {
-  const supabase = await createClient();
+  // Same reason as countActiveLeads above.
+  const supabase = createServiceRoleClient();
   const reference = options?.reference ?? new Date();
   const followUpDueCutoff = getLeadFollowUpDueCutoff(
     reference,
