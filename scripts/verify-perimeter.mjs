@@ -352,6 +352,66 @@ check(
 );
 
 // ============================================================ P1-7 config
+console.log("\nP1-8 — Stripe cannot be in the wrong mode without saying so");
+
+const stripeConfig = await import(
+  "../lib/system-check/production-config.ts"
+).catch(() => null);
+
+if (stripeConfig?.classifyStripeMode) {
+  const classify = stripeConfig.classifyStripeMode;
+
+  // ============================== THE FOOT-GUN ==============================
+  // A live key in a development or scratch environment is a real charge
+  // against a real card away from a test click. A test key in production is a
+  // billing system that silently takes no money. Both are one copied .env line
+  // away, and the application behaves normally in both cases.
+  check(
+    "a LIVE key outside production is flagged",
+    classify("sk_live_example", false).ok === false &&
+      /real charge/i.test(classify("sk_live_example", false).message),
+  );
+  check(
+    "a TEST key in production is flagged",
+    classify("sk_test_example", true).ok === false &&
+      /takes no money/i.test(classify("sk_test_example", true).message),
+  );
+  check(
+    "a LIVE key in production is accepted",
+    classify("sk_live_example", true).ok === true,
+  );
+  check(
+    "a TEST key outside production is accepted",
+    classify("sk_test_example", false).ok === true,
+  );
+  check(
+    "a missing key is a production failure and a development non-event",
+    classify(undefined, true).ok === false && classify(undefined, false).ok === true,
+  );
+  check(
+    "an unrecognised key is flagged rather than assumed safe",
+    classify("not-a-stripe-key", false).ok === false &&
+      classify("not-a-stripe-key", true).ok === false,
+  );
+  check(
+    "the classifier never echoes the key",
+    ["sk_live_SECRETVALUE", "sk_test_SECRETVALUE"].every(
+      (key) =>
+        !classify(key, true).message.includes("SECRETVALUE") &&
+        !classify(key, false).message.includes("SECRETVALUE"),
+    ),
+    "a configuration report that echoed a secret would be a worse problem " +
+      "than the one it diagnoses",
+  );
+
+  // Restricted keys carry the same mode marker and the same consequences.
+  check(
+    "restricted keys are classified by mode too",
+    classify("rk_live_example", false).ok === false &&
+      classify("rk_test_example", false).ok === true,
+  );
+}
+
 console.log("\nP1-7 — every declared production variable is documented");
 
 const configModule = await import(

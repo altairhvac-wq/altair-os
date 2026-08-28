@@ -182,7 +182,35 @@ export const PRODUCTION_CONFIG: readonly ConfigVariable[] = [
     classification: "optional",
     group: "Integrations",
     consequence:
-      "Required before any Facebook/Meta connection. Without it Connect fails; changing it makes every stored OAuth token undecryptable.",
+      "Required before any Facebook/Meta connection. Without it Connect fails. Replacing it is now a supported rotation rather than a data loss — see INTEGRATIONS_ENCRYPTION_KEY_PREVIOUS.",
+  },
+  {
+    name: "INTEGRATIONS_ENCRYPTION_KEY_VERSION",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Names the current key. Defaults to 1. Every ciphertext records the version it was written with, so this is what tells a stored secret which key opens it.",
+  },
+  {
+    name: "INTEGRATIONS_ENCRYPTION_KEY_PREVIOUS",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "The outgoing key during a rotation. Set only while one is in progress, and removed only after scripts/rotate-integration-secrets.mjs reports nothing outstanding — removing it early makes every not-yet-migrated secret permanently unreadable.",
+  },
+  {
+    name: "INTEGRATIONS_ENCRYPTION_KEY_PREVIOUS_VERSION",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Names the outgoing key. Defaults to one below the current version; it must differ from it, or a ciphertext would name both.",
+  },
+  {
+    name: "PUBLIC_RATE_LIMIT_HASH_SECRET",
+    classification: "optional",
+    group: "Security",
+    consequence:
+      "Upgrades the rate limiter's and audit trail's subject hashes from SHA-256 to HMAC. Without it no raw address, email or token is stored either way, but an attacker holding the database could confirm a GUESSED address by hashing it.",
   },
   {
     name: "FACEBOOK_APP_ID",
@@ -346,4 +374,68 @@ export function assertProductionConfiguration(): void {
         .join(", ")}`,
     );
   }
+}
+
+/**
+ * Stripe mode coherence.
+ *
+ * ============================== THE FOOT-GUN ==============================
+ * A live Stripe key in a development or scratch environment is a real charge
+ * against a real card away from a test click, and a test key in production is
+ * an entire billing system that silently takes no money. Both are one copied
+ * .env line away, and neither announces itself: the application behaves
+ * normally in both cases.
+ *
+ * Stripe encodes the mode in the key itself, so this is answerable without
+ * calling Stripe and without reading the secret: only the prefix is inspected,
+ * and only the classification is returned.
+ */
+export type StripeModeFinding = {
+  ok: boolean;
+  mode: "test" | "live" | "unknown" | "absent";
+  message: string;
+};
+
+export function classifyStripeMode(
+  secretKey: string | undefined,
+  isProduction: boolean,
+): StripeModeFinding {
+  const key = secretKey?.trim();
+
+  if (!key) {
+    return {
+      ok: !isProduction,
+      mode: "absent",
+      message: isProduction
+        ? "STRIPE_SECRET_KEY is not set. No customer can pay and no company can subscribe."
+        : "STRIPE_SECRET_KEY is not set. Payment flows are unavailable in this environment.",
+    };
+  }
+
+  if (key.startsWith("sk_live_") || key.startsWith("rk_live_")) {
+    return {
+      ok: isProduction,
+      mode: "live",
+      message: isProduction
+        ? "Stripe is in live mode, as production requires."
+        : "A LIVE Stripe key is configured outside production. A test click here is a real charge against a real card. Replace it with an sk_test_ key.",
+    };
+  }
+
+  if (key.startsWith("sk_test_") || key.startsWith("rk_test_")) {
+    return {
+      ok: !isProduction,
+      mode: "test",
+      message: isProduction
+        ? "A TEST Stripe key is configured in production. Checkout appears to work and takes no money."
+        : "Stripe is in test mode, which is correct outside production."
+    };
+  }
+
+  return {
+    ok: false,
+    mode: "unknown",
+    message:
+      "STRIPE_SECRET_KEY does not look like a Stripe secret key. Neither mode can be confirmed, so neither can be trusted.",
+  };
 }
