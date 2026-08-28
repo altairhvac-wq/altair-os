@@ -73,6 +73,10 @@ steps.push(
   { name: "function-grants", script: "scripts/verify-function-grants.mjs" },
   { name: "read-path-writes", script: "scripts/verify-read-path-writes.mjs" },
   { name: "error-boundaries", script: "scripts/verify-error-boundaries.mjs" },
+  {
+    name: "responsive-loading",
+    script: "scripts/verify-responsive-loading-states.mjs",
+  },
   { name: "bounded-reads", script: "scripts/verify-bounded-reads.mjs" },
   { name: "rls-count-cost", script: "scripts/verify-rls-count-cost.mjs" },
   {
