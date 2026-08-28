@@ -42,13 +42,15 @@
  *   node scripts/audit-production-schema.mjs --confirm <production-ref>
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
 let failures = 0;
 let checks = 0;
 const findings = [];
+const pending = [];
 
 function check(name, condition, detail = "") {
   checks += 1;
@@ -129,12 +131,32 @@ const anon = createClient(url, anonKey, {
 /** A uuid that belongs to no company. Every RPC probe uses it. */
 const NOWHERE = randomUUID();
 
+/** Functions a customer reaches from an emailed link, authorized by token. */
+const PUBLIC_BY_DESIGN = new Set([
+  "get_public_estimate_approval_view",
+  "get_public_invoice_payment_view",
+  "submit_public_estimate_approval",
+  "get_public_network_invite_preview",
+]);
+
 /**
  * Functions the migrations are believed to have delivered, with the migration
  * that owns each and the arguments a probe needs.
  *
  * `expectAnonDenied` is the privilege half. `publicByDesign` marks the three
  * customer-facing token flows, which are SUPPOSED to answer without a session.
+ */
+/**
+ * ============================== WHY THE SET IS ALSO DISCOVERED ==============================
+ * The entries below carry the arguments a probe needs, which cannot be
+ * inferred from migration text reliably. But a hardcoded list is exactly how
+ * an audit stops covering things: migrations 166, 167 and 168 each added a
+ * function and none would have appeared here.
+ *
+ * So this list is a source of ARGUMENTS, and the set of functions to check
+ * comes from the migrations themselves. Anything discovered without an entry
+ * here is still probed as anon, which cannot prove it exists but does prove
+ * it is not answering strangers.
  */
 const FUNCTIONS = [
   {
@@ -158,6 +180,38 @@ const FUNCTIONS = [
     args: {},
     // service_role only: `authenticated` is revoked because it crosses tenants.
     serviceRoleOnly: true,
+  },
+  {
+    name: "get_company_operations_summary",
+    migration: "166",
+    args: { p_company_id: NOWHERE },
+  },
+  {
+    name: "get_company_dashboard_lists",
+    migration: "167",
+    // Written and validated on scratch; NOT applied to production. Reported
+    // rather than failed, because a pending migration is a deployment step
+    // and not a mismatch between belief and reality. It must still be
+    // visible: the deployed code calls this the moment it ships.
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_reference: new Date().toISOString(),
+      p_follow_up_days: 7,
+      p_recovery_days: 7,
+      p_limit: 10,
+    },
+  },
+  {
+    name: "get_company_job_completeness_summary",
+    migration: "168",
+    expectPending: true,
+    args: {
+      p_company_id: NOWHERE,
+      p_reference: new Date().toISOString(),
+      p_stalled_days: 3,
+      p_limit: 5,
+    },
   },
   {
     name: "current_user_profile_email",
@@ -266,11 +320,25 @@ async function auditFunctions() {
         /could not find the function|does not exist|schema cache/i.test(
           error.message,
         );
-      check(
-        `${fn.name.padEnd(40)} present and executable  (${fn.migration})`,
-        !missing,
-        missing ? `PostgREST: ${error.message}` : "",
-      );
+      if (fn.expectPending) {
+        if (missing) {
+          console.log(
+            `  PEND  ${fn.name.padEnd(40)} not applied yet  (${fn.migration})`,
+          );
+          pending.push(`${fn.name}  — migration ${fn.migration}`);
+        } else {
+          check(
+            `${fn.name.padEnd(40)} present  (${fn.migration}, was pending)`,
+            true,
+          );
+        }
+      } else {
+        check(
+          `${fn.name.padEnd(40)} present and executable  (${fn.migration})`,
+          !missing,
+          missing ? `PostgREST: ${error.message}` : "",
+        );
+      }
       if (error && !missing) {
         note(
           fn.name,
@@ -298,6 +366,70 @@ async function auditFunctions() {
           `granted to PUBLIC or anon.`,
     );
   }
+}
+
+/** Every function the migrations create, read from the migration files. */
+function discoverMigrationFunctions() {
+  const names = new Set();
+  const dir = "supabase/migrations";
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql"))) {
+    const sql = readFileSync(join(dir, file), "utf8");
+    const pattern =
+      /create\s+(?:or\s+replace\s+)?function\s+public\.([a-z0-9_]+)\s*\(/gi;
+    let match;
+    while ((match = pattern.exec(sql)) !== null) {
+      names.add(match[1].toLowerCase());
+    }
+  }
+  return names;
+}
+
+/**
+ * Everything the migrations create that the argument list does not name.
+ *
+ * This cannot prove presence: an argumentless call to a function that takes
+ * arguments returns the same PGRST202, with a null hint, as one that does not
+ * exist — the trap that made this audit report migration 155 as "partial" on
+ * its first run. What it does prove is that none of them answers an anonymous
+ * caller, which is the half that matters for a privilege audit.
+ */
+async function auditDiscoveredFunctions() {
+  const named = new Set(FUNCTIONS.map((fn) => fn.name));
+  const discovered = [...discoverMigrationFunctions()]
+    .filter((name) => !named.has(name))
+    // The three customer-facing token flows are SUPPOSED to answer without a
+    // session — an emailed estimate-approval or payment link carries its own
+    // token instead. They are excluded here and asserted separately by
+    // scripts/verify-function-grants.mjs, which keeps that list a decision.
+    .filter((name) => !PUBLIC_BY_DESIGN.has(name))
+    .sort();
+
+  console.log(
+    `\nEvery other function the migrations create refuses anon (${discovered.length})`,
+  );
+
+  let denied = 0;
+  const answered = [];
+  for (const name of discovered) {
+    const { error, status } = await anon.rpc(name, {});
+    const isDenied =
+      error != null &&
+      (status === 401 ||
+        status === 403 ||
+        status === 404 ||
+        /permission denied|could not find the function|does not exist|schema cache/i.test(
+          error.message,
+        ));
+    if (isDenied) denied += 1;
+    else answered.push(name);
+  }
+
+  check(
+    `all ${discovered.length} refuse an anonymous caller`,
+    answered.length === 0,
+    answered.map((name) => `        ${name} ANSWERED anon`).join("\n"),
+  );
+  void denied;
 }
 
 async function auditColumns() {
@@ -455,6 +587,7 @@ async function main() {
   );
 
   await auditFunctions();
+  await auditDiscoveredFunctions();
   await auditColumns();
   await auditTables();
   await auditMigration155();
@@ -465,6 +598,19 @@ async function main() {
     `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} production ` +
       `schema checks passed (${checks} total).`,
   );
+
+  if (pending.length > 0) {
+    console.log(
+      `\n  ${pending.length} migration(s) written and validated but NOT applied ` +
+        `to production:`,
+    );
+    for (const entry of pending) console.log(`    - ${entry}`);
+    console.log(
+      "\n    The deployed code calls these. They must be applied BEFORE the\n" +
+        "    branch that uses them ships, or the dashboard falls back to empty\n" +
+        "    panels and logs an RPC failure per render.",
+    );
+  }
 
   if (failures > 0) {
     console.error("\nMismatches between believed-deployed and actual state:");
