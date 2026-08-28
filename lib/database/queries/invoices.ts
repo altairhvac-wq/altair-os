@@ -79,7 +79,7 @@ type InvoiceRowWithRelations = InvoiceRow & {
   invoice_line_items?: InvoiceLineItemRow[] | InvoiceLineItemRowMinimal[];
 };
 
-const INVOICE_LIST_SELECT = `
+export const INVOICE_LIST_SELECT = `
   *,
   customers(name, email),
   jobs(job_number),

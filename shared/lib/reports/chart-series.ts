@@ -1,8 +1,24 @@
-import { listExpenses } from "@/lib/database/queries/expenses";
-import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
-import { listInvoices } from "@/lib/database/queries/invoices";
-import { listJobs } from "@/lib/database/queries/jobs";
-import { listTimeEntries } from "@/lib/database/queries/time-entries";
+/**
+ * The reports charts, as a pure function of the rows.
+ *
+ * ===================== WHY THIS WAS SPLIT OUT =====================
+ * getCompanyReportChartSeries loaded five whole books -- every invoice, every
+ * payment, every expense, every job and every job-labor entry the company has
+ * ever had -- and then reduced them into four charts of at most a few dozen
+ * points each. The loading and the reducing were one function, which had two
+ * consequences:
+ *
+ *   1. Nothing could compute these charts from rows it already had. The Reports
+ *      page loads the same five datasets a second time for its other figures.
+ *   2. Nothing could TEST them. A differential test needs to run the shipped
+ *      reduction over ground-truth rows; while the reduction could only be
+ *      reached through the loader, and the loader is capped at 1,000 rows per
+ *      table by PostgREST, the only available input was the truncated one --
+ *      the defect itself as the oracle.
+ *
+ * The reduction is unchanged, line for line. Only its input moved from a
+ * Promise.all to a parameter.
+ */
 import type { Expense } from "@/shared/types/expense";
 import { roundCurrency, type Invoice, type InvoiceStatus } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
@@ -23,7 +39,10 @@ import {
   type ReportChartSeriesBundle,
   type ReportOperationalChart,
 } from "@/shared/types/reports";
-import { resolveClosedJobLaborMinutes } from "@/shared/types/time-entry";
+import {
+  resolveClosedJobLaborMinutes,
+  type TimeEntry,
+} from "@/shared/types/time-entry";
 
 const EXCLUDED_INVOICE_STATUSES: ReadonlySet<InvoiceStatus> = new Set([
   "void",
@@ -129,10 +148,18 @@ function buildChartSeries(
   };
 }
 
-export async function getCompanyReportChartSeries(
-  companyId: string,
+export type ReportChartDatasets = {
+  invoices: Invoice[];
+  payments: { paymentDate?: string; amount: number }[];
+  expenses: Expense[];
+  jobs: Job[];
+  laborEntries: TimeEntry[];
+};
+
+export function buildReportChartSeriesBundle(
+  datasets: ReportChartDatasets,
   options: ReportChartSeriesOptions = {},
-): Promise<ReportChartSeriesBundle> {
+): ReportChartSeriesBundle {
   const dateRange = options.dateRange ?? "30d";
   const bucketSize = resolveReportChartBucketSize(dateRange);
   const chartBounds = resolveReportChartDateBounds(dateRange);
@@ -147,20 +174,7 @@ export async function getCompanyReportChartSeries(
     );
   }
 
-  const [
-    invoices,
-    payments,
-    expenses,
-    jobs,
-    laborEntries,
-  ] = await Promise.all([
-    listInvoices(companyId),
-    listInvoicePayments(companyId),
-    listExpenses(companyId),
-    listJobs(companyId),
-    listTimeEntries(companyId, { entryType: "job_labor" }),
-  ]);
-
+  const { invoices, payments, expenses, jobs, laborEntries } = datasets;
   const activeInvoices = invoices.filter(isActiveInvoice);
 
   const collectedSeries = createSeriesAccumulator(

@@ -163,13 +163,13 @@ export type RecentInvoicePayment = InvoicePayment & {
   customerId?: string;
 };
 
-const INVOICE_PAYMENT_LIST_SELECT = `
+export const INVOICE_PAYMENT_LIST_SELECT = `
   *,
   recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email),
   invoice:invoices(invoice_number, customers(id, name))
 `;
 
-function mapPaymentRowWithInvoice(
+export function mapPaymentRowWithInvoice(
   row: InvoicePaymentRowWithInvoice,
 ): RecentInvoicePayment {
   return {

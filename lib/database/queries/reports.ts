@@ -1,51 +1,28 @@
-import { listCustomers } from "@/lib/database/queries/customers";
-import { listExpenses } from "@/lib/database/queries/expenses";
-import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
-import { listInvoices } from "@/lib/database/queries/invoices";
-import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
-import { listEstimates } from "@/lib/database/queries/estimates";
-import { listJobs } from "@/lib/database/queries/jobs";
-import { listLeads } from "@/lib/database/queries/leads";
+import { createClient } from "@/lib/supabase/server";
 import {
-  listCompanyJobLaborEntries,
+  getCompanyReportDailySeries,
+  getCompanyReportsSummary,
+} from "@/lib/database/queries/reports-aggregates";
+import {
   listOpenClockEntriesForCompany,
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
-import { createClient } from "@/lib/supabase/server";
-import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
-import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
-import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
-import { buildReportsPageData } from "@/shared/lib/reports/report-metrics";
-import { attachReportPageSparklines } from "@/shared/lib/reports/sparkline-series";
+import { resolvePreviousReportDateBounds } from "@/shared/lib/reports/report-metrics";
+import { buildReportsPageDataFromAggregates } from "@/shared/lib/reports/report-metrics-aggregates";
+import {
+  attachReportPageSparklinesFromAggregates,
+  buildReportChartSeriesFromDailySeries,
+} from "@/shared/lib/reports/chart-series-aggregates";
+import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
+import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
+import {
+  resolveProfitabilityReportDateBounds,
+  resolveReportDateBounds,
+} from "@/shared/types/reports";
 import type {
   ReportsPageData,
   ReportsPageDateRange,
 } from "@/shared/types/reports-page";
-import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
-import { getTodayOperationsSummary } from "@/shared/types/dashboard";
-import type { JobStatus } from "@/shared/types/job";
-import {
-  getInvoiceSummary,
-  hasInvoiceUnpaidBalance,
-  isActiveInvoice,
-} from "@/shared/types/invoice";
-import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
-import { roundJobMaterialAmount } from "@/shared/types/job-material";
-import { summarizeTodayEntries } from "@/shared/types/time-entry";
-import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
-
-
-const TIME_RELATED_INCONSISTENCY_KINDS = new Set([
-  "open_labor_on_cancelled_job",
-]);
-
-const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
-  "completed",
-  "cancelled",
-]);
-
-const RECENT_TIME_CLOCK_LIMIT = 10;
-const TIME_CLOCK_FETCH_LIMIT = 100;
 
 async function listTechnicianLaborCostRates(
   companyId: string,
@@ -83,6 +60,51 @@ async function listTechnicianLaborCostRates(
   return rates;
 }
 
+/**
+ * The aging reference date.
+ *
+ * buildInvoiceAging measured "today" with `toDateOnly(new Date())` using local
+ * getFullYear / getMonth / getDate, so the reference is the SERVER's local
+ * calendar date. It is resolved here and passed to the aggregate rather than
+ * computed in SQL, for the same reason migration 160 takes a follow-up cutoff
+ * instead of a time-zone name: one definition of the rule, in TypeScript.
+ */
+function resolveAgingReferenceDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * The reports page.
+ *
+ * ============================== WHAT THIS REPLACED ==============================
+ * This loaded twelve datasets with no .limit() -- every invoice, payment,
+ * estimate, job, expense, lead, customer and labour entry -- and reduced them
+ * through buildReportsPageData. PostgREST caps each of those reads at 1,000
+ * rows and reports the cut only in a header nothing reads, so past that ceiling
+ * the page rendered real money computed from a fraction of the book.
+ *
+ * Measured on a scale-seeded tenant of 10,000 invoices:
+ *
+ *   Outstanding invoices        $992,872   against  $11,304,791
+ *   90+ day aging bucket        $0 / none  against  $10,076,347 / 3,598
+ *   Sales tax collected         $141,567   against     $353,851
+ *   Repeat customer rate             13%   against          73%
+ *
+ * Every error ran the same way: less debt outstanding, a better collection
+ * rate, a cleaner book. And the 90+ bucket read exactly zero because
+ * listInvoices ordered created_at desc -- so the rows the ceiling dropped were
+ * the oldest, which is the only thing an aging report is for.
+ *
+ * The counting now happens in the database (migrations 169 and 170) and the
+ * shipped builders derive everything else from those counts.
+ *
+ * ============================== WHAT STILL READS ROWS ==============================
+ * The two time-tracking reads. Both are bounded by what they select -- clocks
+ * currently open, and today's entries -- and neither grows with the tenant.
+ */
 export async function getReportsPageData(
   companyId: string,
   companyName: string,
@@ -94,41 +116,55 @@ export async function getReportsPageData(
   } = {},
 ): Promise<ReportsPageData> {
   const showLeadPipeline = options.showLeadPipeline ?? false;
+  const dateBounds =
+    resolveReportDateBounds(dateRange) ??
+    resolveProfitabilityReportDateBounds(dateRange);
 
-  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates, openClockEntries, todayTimeEntries, customers] =
-    await Promise.all([
-      listInvoices(companyId),
-      listInvoicePayments(companyId),
-      listEstimates(companyId),
-      listJobs(companyId),
-      listExpenses(companyId),
-      showLeadPipeline ? listLeads(companyId) : Promise.resolve([]),
-      getCompanyReportChartSeries(companyId, { dateRange }),
-      listCompanyJobLaborEntries(companyId),
-      listTechnicianLaborCostRates(companyId),
-      listOpenClockEntriesForCompany(companyId),
-      listTodayTimeEntriesForCompany(companyId, options.timeZone),
-      listCustomers(companyId),
-    ]);
+  const [
+    summary,
+    dailySeries,
+    laborCostRates,
+    openClockEntries,
+    todayTimeEntries,
+  ] = await Promise.all([
+    getCompanyReportsSummary(companyId, {
+      dateBounds,
+      previousBounds: resolvePreviousReportDateBounds(dateBounds),
+      today: resolveAgingReferenceDate(),
+      // The same helper migration 160 was built around: the cutoff is the last
+      // instant of today in the company's zone, resolved once here.
+      followUpCutoff: getLeadFollowUpDueCutoff(new Date(), options.timeZone),
+    }),
+    getCompanyReportDailySeries(companyId, dateBounds),
+    listTechnicianLaborCostRates(companyId),
+    listOpenClockEntriesForCompany(companyId),
+    listTodayTimeEntriesForCompany(companyId, options.timeZone),
+  ]);
 
-  const report = buildReportsPageData({
+  if (!summary.ok || !summary.data || !dailySeries.ok || !dailySeries.data) {
+    // A failed aggregate must not render as a company with no business. The
+    // failure is logged and reported by the query layer; returning an empty
+    // report here would be indistinguishable from a brand-new tenant, which is
+    // the exact confusion the dashboard shadow rollout produced once already.
+    // The route's error boundary shows a failure instead.
+    throw new Error(
+      `[getReportsPageData] reports aggregates unavailable for ${companyId} ` +
+        `(summary=${summary.errorCode ?? "ok"}, series=${dailySeries.errorCode ?? "ok"})`,
+    );
+  }
+
+  const chartSeries = buildReportChartSeriesFromDailySeries(dailySeries.data, {
+    dateRange,
+  });
+
+  const report = buildReportsPageDataFromAggregates({
     companyName,
     dateRange,
+    aggregate: summary.data,
+    chartSeries,
+    laborCostRates,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
     showLeadPipeline,
-    timeZone: options.timeZone,
-    totalCustomerCount: customers.length,
-    datasets: {
-      invoices,
-      payments,
-      estimates,
-      jobs,
-      expenses,
-      leads,
-      chartSeries,
-      laborEntries,
-      laborCostRates,
-    },
   });
 
   const withTimeTracking: ReportsPageData = {
@@ -140,122 +176,8 @@ export async function getReportsPageData(
     }),
   };
 
-  return attachReportPageSparklines(withTimeTracking, {
-    payments,
-    estimates,
-    invoices,
+  return attachReportPageSparklinesFromAggregates(withTimeTracking, {
+    series: dailySeries.data,
     chartSeries,
   });
-}
-
-export async function getReportsFoundationData(
-  companyId: string,
-  timeZone?: string,
-): Promise<ReportsFoundationData> {
-  const [jobs, invoices, estimates, timeClockEntries, openClockEntries, todayJobs, operations, laborEntries, todayTimeEntries, inconsistenciesReport] =
-    await Promise.all([
-      listJobs(companyId),
-      listInvoices(companyId),
-      listEstimates(companyId),
-      listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
-      listOpenClockEntriesForCompany(companyId),
-      listDispatchJobsForToday(companyId, { timeZone }),
-      getDailyOperationsSummary(companyId, timeZone),
-      listCompanyJobLaborEntries(companyId),
-      listTodayTimeEntriesForCompany(companyId, timeZone),
-      getCompanyOperationalInconsistenciesReport(companyId),
-    ]);
-
-  const todayJobsSummary = getTodayOperationsSummary(todayJobs);
-  const openJobs = jobs.filter((job) => !CLOSED_JOB_STATUSES.has(job.status));
-  const activeInvoices = invoices.filter(isActiveInvoice);
-  const unpaidInvoices = activeInvoices.filter(hasInvoiceUnpaidBalance);
-  const overdueInvoices = activeInvoices.filter(
-    (invoice) => invoice.status === "overdue",
-  );
-  const invoiceTotals = getInvoiceSummary(invoices);
-  const clockedInUsers = openClockEntries.map((entry) => ({
-    id: entry.id,
-    companyId: entry.companyId,
-    userId: entry.technicianId,
-    userName: entry.technicianName,
-    clockInAt: entry.startedAt,
-    clockOutAt: entry.endedAt,
-    status: "open" as const,
-    notes: entry.notes,
-    createdAt: entry.createdAt,
-    updatedAt: entry.updatedAt,
-  }));
-  const activeLaborEntries = laborEntries.filter((entry) => entry.endedAt == null);
-  const openBreakEntries = todayTimeEntries.filter(
-    (entry) => entry.entryType === "break" && entry.endedAt == null,
-  );
-  const todayTimeSummary = summarizeTodayEntries(todayTimeEntries);
-  const totalHoursToday = roundJobMaterialAmount(
-    todayTimeSummary.clockMinutes / 60,
-  );
-  const startedTodayTechnicians = new Set(
-    todayTimeEntries
-      .filter((entry) => entry.entryType === "clock")
-      .map((entry) => entry.technicianId),
-  );
-  const timeExceptions = inconsistenciesReport.summary.entries.filter(
-    (entry) => TIME_RELATED_INCONSISTENCY_KINDS.has(entry.kind),
-  );
-
-  return {
-    jobs: {
-      jobsToday: todayJobsSummary.totalJobsToday,
-      openJobs: openJobs.length,
-      completedJobs: jobs.filter((job) => job.status === "completed").length,
-      unassignedJobs: openJobs.filter((job) => !job.assignedTechnicianId).length,
-    },
-    invoices: {
-      unpaidCount: unpaidInvoices.length,
-      unpaidTotal: invoiceTotals.unpaidTotal,
-      paidTotal: invoiceTotals.paidTotal,
-      overdueCount: overdueInvoices.length,
-      overdueTotal: invoiceTotals.overdueTotal,
-    },
-    estimates: {
-      draftCount: estimates.filter((estimate) => estimate.status === "draft")
-        .length,
-      sentCount: estimates.filter((estimate) => estimate.status === "sent")
-        .length,
-      approvedCount: estimates.filter(
-        (estimate) => estimate.status === "approved",
-      ).length,
-    },
-    labor: {
-      currentlyWorkingCount: activeLaborEntries.length,
-      currentlyWorking: activeLaborEntries.map((entry) => ({
-        id: entry.id,
-        technicianName: entry.technicianName,
-        jobNumber: entry.jobNumber,
-        startedAt: entry.startedAt,
-      })),
-      startedTodayCount: startedTodayTechnicians.size,
-      totalHoursToday,
-      openEntryCount:
-        clockedInUsers.length + activeLaborEntries.length + openBreakEntries.length,
-      exceptionCount: timeExceptions.length,
-    },
-    timeClock: {
-      clockedInCount: clockedInUsers.length,
-      clockedInUsers,
-      recentEntries: timeClockEntries.slice(0, RECENT_TIME_CLOCK_LIMIT),
-    },
-    operations: {
-      highlights: operations.highlights,
-      todayCollectedRevenue: operations.sections.revenue.todayCollectedRevenue,
-      todayPaymentCount: operations.sections.revenue.todayPaymentCount,
-      openJobs: operations.sections.openJobs.count,
-      stalledJobs: operations.sections.stalledJobs.count,
-      pendingExpenseCount: operations.sections.pendingExpenses.count,
-      activeLaborEntries:
-        operations.sections.activeTechnicians.activeLaborEntries,
-      completedAwaitingInvoicing:
-        operations.sections.completedAwaitingInvoicing.count,
-    },
-  };
 }

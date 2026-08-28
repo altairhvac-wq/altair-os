@@ -82,7 +82,7 @@ async function attachReceiptSignedUrls(expenses: Expense[]): Promise<Expense[]> 
   }));
 }
 
-const EXPENSE_SELECT = `
+export const EXPENSE_SELECT = `
   *,
   technician:profiles!expenses_technician_id_fkey(full_name, email),
   job:jobs(job_number, customer_id)

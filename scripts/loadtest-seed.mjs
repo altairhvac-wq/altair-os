@@ -82,6 +82,20 @@ import { createClient } from "@supabase/supabase-js";
 const COMPANY_NAME_PREFIX = "[LOADTEST]";
 const COMPANY_SLUG_PREFIX = "loadtest-";
 const CUSTOMER_NAME_PREFIX = "[LOADTEST]";
+/**
+ * Technician accounts this script creates.
+ *
+ * It creates auth users, which the owner path deliberately does not. The
+ * difference is ownership: the owner is an account a person signs in with, so
+ * the script refuses to invent one. These are fixtures — jobs.assigned_technician_id
+ * and time_entries.technician_id are both foreign keys to profiles, profiles.id
+ * is a foreign key to auth.users, so a labour fixture is impossible without
+ * them. They carry the load-test label in the address, use an unroutable
+ * .invalid domain, and --clean removes them.
+ */
+const TECHNICIAN_EMAIL_PREFIX = "loadtest-tech-";
+const TECHNICIAN_EMAIL_DOMAIN = "@loadtest.invalid";
+const DEFAULT_TECHNICIAN_COUNT = 6;
 
 const URL_ENV = "ALTAIR_LOADTEST_SUPABASE_URL";
 const KEY_ENV = "ALTAIR_LOADTEST_SERVICE_ROLE_KEY";
@@ -326,6 +340,264 @@ async function insertChunked(client, table, rows, label) {
   return written;
 }
 
+
+// ---------------------------------------------------------------------------
+// Technicians, payments and labour
+//
+// ============================== WHY THESE WERE MISSING ==============================
+// The first version of this seeder produced customers, jobs, invoices,
+// estimates, expenses and leads -- every table the LIST pages read. It produced
+// no invoice_payments and no time_entries, and left assigned_technician_id,
+// completed_at and work_started_at null on every job.
+//
+// That is most of the money path. On the seeded tenant:
+//
+//   kpis.revenue                     sum of payments in period    -> $0
+//   kpis.averageTicket               mean payment                 -> null
+//   accountantSummary.*              collected, tax, method split -> $0 / empty
+//   operationsSnapshot.topCustomers  grouped by payment           -> empty
+//   technicianProfitability          assignment + labour + rate   -> empty
+//   workCompleted.avgCompletion      workStartedAt + completedAt  -> null
+//
+// So the fixture that exists to prove the reports page could not exercise the
+// figures the reports page is FOR. Every one of them returned the same value
+// whether the code was right or wrong, which is the worst property a fixture
+// can have: it is quiet either way.
+//
+// The generators below fill that in, and deliberately include the awkward cases
+// rather than a clean sweep -- a technician with no labour rate, completed jobs
+// with no completedAt, completed jobs with no workStartedAt, invoices settled
+// across two payments -- because those are the branches that decide whether a
+// figure is null, skipped, or counted twice.
+// ---------------------------------------------------------------------------
+
+const PAYMENT_METHODS = [
+  ["card", 44],
+  ["check", 22],
+  ["bank_transfer", 16],
+  ["cash", 12],
+  ["other", 6],
+];
+
+function technicianEmail(slug, index) {
+  return `${TECHNICIAN_EMAIL_PREFIX}${slug}-${index}${TECHNICIAN_EMAIL_DOMAIN}`;
+}
+
+/**
+ * Creates the technician auth users, profiles and memberships.
+ *
+ * One technician is left WITHOUT a labour cost rate on purpose. Technician
+ * gross profit is null when the rate is missing and a number when it is
+ * present, and the reports page adds a limitation line for the null case; a
+ * fixture where every technician has a rate never renders that branch.
+ */
+async function seedTechnicians(client, { companyId, slug, count, rnd, asOf }) {
+  const technicians = [];
+
+  for (let i = 0; i < count; i += 1) {
+    const email = technicianEmail(slug, i);
+    const password = `Loadtest!tech-${slug}-${i}`;
+
+    let userId = null;
+    const { data: created, error: createError } =
+      await client.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+    if (createError) {
+      // Re-running against a project that still holds the accounts is not a
+      // failure; find the existing one rather than aborting the seed.
+      if (!/already been registered|already exists/i.test(createError.message)) {
+        throw new Error(`create technician ${i}: ${createError.message}`);
+      }
+      const { data: existing } = await client
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      if (!existing) {
+        throw new Error(`create technician ${i}: ${createError.message}`);
+      }
+      userId = existing.id;
+    } else {
+      userId = created.user.id;
+    }
+
+    const fullName = `${COMPANY_NAME_PREFIX} Tech ${rnd.pick(FIRST_NAMES)} ${i}`;
+    const { error: profileError } = await client
+      .from("profiles")
+      .upsert({ id: userId, email, full_name: fullName });
+    if (profileError) {
+      throw new Error(`technician profile ${i}: ${profileError.message}`);
+    }
+
+    const { error: membershipError } = await client
+      .from("company_memberships")
+      .insert({
+        company_id: companyId,
+        user_id: userId,
+        role: "technician",
+        status: "active",
+        joined_at: asOf.toISOString(),
+        // The last technician has no rate. See the note above.
+        labor_cost_rate_cents: i === count - 1 ? null : rnd.int(2800, 6500),
+      });
+    if (membershipError) {
+      throw new Error(`technician membership ${i}: ${membershipError.message}`);
+    }
+
+    technicians.push({ id: userId, name: fullName });
+  }
+
+  console.log(`    technicians: ${technicians.length}`);
+  return technicians;
+}
+
+/** Removes only accounts whose address carries both load-test markers. */
+async function cleanTechnicianAccounts(client, slug) {
+  const prefix = `${TECHNICIAN_EMAIL_PREFIX}${slug}-`;
+  const { data, error } = await client
+    .from("profiles")
+    .select("id, email")
+    .like("email", `${prefix}%`);
+  if (error) throw new Error(`technician lookup: ${error.message}`);
+
+  let removed = 0;
+  for (const row of data ?? []) {
+    if (!row.email.startsWith(prefix)) continue;
+    if (!row.email.endsWith(TECHNICIAN_EMAIL_DOMAIN)) continue;
+    const { error: deleteError } = await client.auth.admin.deleteUser(row.id);
+    if (deleteError && !/not found/i.test(deleteError.message)) {
+      throw new Error(`delete technician ${row.email}: ${deleteError.message}`);
+    }
+    removed += 1;
+  }
+  if (removed > 0) {
+    process.stdout.write(`    cleared ${removed} technician accounts\n`);
+  }
+}
+
+/**
+ * Payment rows that reconcile to the invoice they belong to.
+ *
+ * amount_paid was already being written on the invoice; the ledger that is
+ * supposed to explain it did not exist. A reports fixture where
+ * sum(invoice_payments.amount) does not equal sum(invoices.amount_paid) is
+ * worse than no fixture at all, because collected revenue and cash health would
+ * disagree for a reason that has nothing to do with the code under test.
+ *
+ * Paid invoices settle in one or two payments; the two-payment case is the one
+ * that catches code counting invoices where it means payments.
+ */
+function buildInvoicePayments({
+  invoices,
+  companyId,
+  ownerUserId,
+  seedValue,
+  rnd,
+  asOf,
+}) {
+  const payments = [];
+
+  for (const invoice of invoices) {
+    if (!(invoice.amount_paid > 0)) continue;
+    if (invoice.status === "void" || invoice.status === "cancelled") continue;
+
+    const issuedOffset = Math.round(
+      (new Date(invoice.issue_date).getTime() - asOf.getTime()) / 86_400_000,
+    );
+    const split = invoice.status === "paid" && rnd.next() < 0.25;
+    const first = split
+      ? Math.round(invoice.amount_paid * 0.55 * 100) / 100
+      : invoice.amount_paid;
+    const rest = Math.round((invoice.amount_paid - first) * 100) / 100;
+    const parts = rest > 0 ? [first, rest] : [first];
+
+    parts.forEach((amount, index) => {
+      const offset = Math.min(0, issuedOffset + rnd.int(1, 40) + index * 7);
+      payments.push({
+        id: deterministicUuid(seedValue, "payment", payments.length),
+        company_id: companyId,
+        invoice_id: invoice.id,
+        amount,
+        payment_method: rnd.weighted(PAYMENT_METHODS),
+        payment_date: dateOnlyAtOffsetDays(asOf, offset),
+        recorded_by: ownerUserId,
+        source: "manual",
+        status: "succeeded",
+        created_at: isoAtOffsetDays(asOf, offset),
+      });
+    });
+  }
+
+  return payments;
+}
+
+/**
+ * Completion timestamps and technician assignment, applied to the job rows
+ * before they are inserted.
+ *
+ * Roughly one completed job in six gets no completedAt, which sends
+ * jobCompletedInBounds down its scheduledDate fallback, and one in five no
+ * workStartedAt, which is the branch deciding whether a job contributes to
+ * average completion time. Both fallbacks are shipped behaviour; neither was
+ * reachable while the timestamps were null everywhere.
+ */
+function applyJobCompletion(jobs, { technicians, rnd, asOf }) {
+  for (const job of jobs) {
+    if (technicians.length > 0 && rnd.next() < 0.92) {
+      job.assigned_technician_id = rnd.pick(technicians).id;
+    }
+
+    if (job.status !== "completed") continue;
+
+    const scheduled = new Date(job.scheduled_at).getTime();
+    if (!Number.isFinite(scheduled) || scheduled > asOf.getTime()) continue;
+
+    if (rnd.next() >= 0.84) continue;
+
+    const workHours = rnd.int(1, 9);
+    const started = scheduled + rnd.int(0, 180) * 60_000;
+    if (rnd.next() < 0.8) {
+      job.work_started_at = new Date(started).toISOString();
+    }
+    job.completed_at = new Date(started + workHours * 3_600_000).toISOString();
+  }
+}
+
+/** job_labor entries for completed, assigned jobs. */
+function buildTimeEntries({ jobs, companyId, seedValue, rnd, asOf }) {
+  const entries = [];
+
+  for (const job of jobs) {
+    if (job.status !== "completed" || !job.assigned_technician_id) continue;
+    if (rnd.next() > 0.75) continue;
+
+    const ended = new Date(job.completed_at ?? job.scheduled_at).getTime();
+    if (!Number.isFinite(ended) || ended > asOf.getTime()) continue;
+
+    const minutes = rnd.int(45, 480);
+    const started = ended - minutes * 60_000;
+
+    entries.push({
+      id: deterministicUuid(seedValue, "labor", entries.length),
+      company_id: companyId,
+      technician_id: job.assigned_technician_id,
+      job_id: job.id,
+      entry_type: "job_labor",
+      started_at: new Date(started).toISOString(),
+      ended_at: new Date(ended).toISOString(),
+      duration_minutes: minutes,
+      created_at: new Date(started).toISOString(),
+      updated_at: new Date(ended).toISOString(),
+    });
+  }
+
+  return entries;
+}
+
 // ---------------------------------------------------------------------------
 // Modes
 // ---------------------------------------------------------------------------
@@ -432,6 +704,10 @@ async function runClean(client) {
       }
       process.stdout.write(`    cleared ${table}\n`);
     }
+    // Technician auth users are removed after the memberships that referenced
+    // them, and only ones whose address carries both load-test markers.
+    await cleanTechnicianAccounts(client, company.slug);
+
     const { error: companyError } = await client
       .from("companies")
       .delete()
@@ -476,6 +752,10 @@ async function runSeed(client, args) {
   const estimateCount = Number.parseInt(String(args.estimates ?? Math.round(invoiceCount * 0.6)), 10);
   const expenseCount = Number.parseInt(String(args.expenses ?? 2000), 10);
   const leadCount = Number.parseInt(String(args.leads ?? 800), 10);
+  const technicianCount = Number.parseInt(
+    String(args.technicians ?? DEFAULT_TECHNICIAN_COUNT),
+    10,
+  );
   const seedValue = Number.parseInt(String(args["seed-value"] ?? DEFAULT_SEED_VALUE), 10);
   const asOf = new Date(String(args["as-of"] ?? DEFAULT_AS_OF));
 
@@ -500,7 +780,8 @@ async function runSeed(client, args) {
   console.log(`\nSeeding load-test tenant "${slug}"`);
   console.log(
     `  customers=${customerCount} jobs=${jobCount} invoices=${invoiceCount} ` +
-      `estimates=${estimateCount} expenses=${expenseCount} leads=${leadCount}`,
+      `estimates=${estimateCount} expenses=${expenseCount} leads=${leadCount} ` +
+      `technicians=${technicianCount}`,
   );
   console.log(`  deterministic seed=${seedValue}  as-of=${asOf.toISOString()}\n`);
 
@@ -529,6 +810,14 @@ async function runSeed(client, args) {
     });
   if (membershipError) throw new Error(`create membership: ${membershipError.message}`);
   console.log(`    membership: owner ${ownerUserId}`);
+
+  const technicians = await seedTechnicians(client, {
+    companyId,
+    slug,
+    count: technicianCount,
+    rnd,
+    asOf,
+  });
 
   // ---- customers -----------------------------------------------------------
   const customerIds = [];
@@ -583,6 +872,9 @@ async function runSeed(client, args) {
       created_at: isoAtOffsetDays(asOf, -rnd.int(1, 1000)),
     });
   }
+  // Assignment and completion timestamps are applied to the in-memory rows
+  // before the insert, so the seed stays a single write per table.
+  applyJobCompletion(jobs, { technicians, rnd, asOf });
   await insertChunked(client, "jobs", jobs, "jobs");
 
   // ---- invoices ------------------------------------------------------------
@@ -651,6 +943,21 @@ async function runSeed(client, args) {
     "invoice line items",
   );
 
+  const invoicePayments = buildInvoicePayments({
+    invoices,
+    companyId,
+    ownerUserId,
+    seedValue,
+    rnd,
+    asOf,
+  });
+  await insertChunked(
+    client,
+    "invoice_payments",
+    invoicePayments,
+    "invoice payments",
+  );
+
   // ---- estimates -----------------------------------------------------------
   const estimates = [];
   const estimateLineItems = [];
@@ -717,6 +1024,15 @@ async function runSeed(client, args) {
     });
   }
   await insertChunked(client, "expenses", expenses, "expenses");
+
+  const timeEntries = buildTimeEntries({
+    jobs,
+    companyId,
+    seedValue,
+    rnd,
+    asOf,
+  });
+  await insertChunked(client, "time_entries", timeEntries, "labour entries");
 
   // ---- leads ---------------------------------------------------------------
   const leads = [];

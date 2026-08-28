@@ -43,7 +43,7 @@ import {
  */
 export { mapJobRowToJob };
 
-const JOB_TECHNICIAN_SELECT = `
+export const JOB_TECHNICIAN_SELECT = `
   *,
   customers(name),
   assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)

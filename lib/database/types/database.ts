@@ -1557,6 +1557,34 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_reports_summary: migration 169 — wire into Database types
+      // on next gen types run. Every scalar, group and top-N the reports page
+      // needs, with the aging reference date and the follow-up cutoff passed in
+      // so the time-zone rules stay defined once, in TypeScript.
+      get_company_reports_summary: {
+        Args: {
+          p_company_id: string;
+          p_start_date: string;
+          p_end_date: string;
+          p_prev_start_date: string;
+          p_prev_end_date: string;
+          p_today: string;
+          p_follow_up_cutoff: string;
+          p_limit: number;
+        };
+        Returns: Json;
+      };
+      // get_company_report_daily_series: migration 170 — wire into Database
+      // types on next gen types run. Per-DAY totals for the four charts and the
+      // sparklines, so the bucketing rules stay in TypeScript.
+      get_company_report_daily_series: {
+        Args: {
+          p_company_id: string;
+          p_start_date: string;
+          p_end_date: string;
+        };
+        Returns: Json;
+      };
       // get_company_job_completeness_counters: migration 168. Per-job raw
       // counters, for the differential only — the application does not call it.
       get_company_job_completeness_counters: {

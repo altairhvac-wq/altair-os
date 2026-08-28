@@ -190,7 +190,10 @@ export function estimateCloseRateInBounds(
   return Math.round((approved / sent) * 1000) / 10;
 }
 
-function resolveTrend(current: number, previous: number): ReportKpiTrend {
+export function resolveTrend(
+  current: number,
+  previous: number,
+): ReportKpiTrend {
   if (current > previous) {
     return "up";
   }
@@ -440,6 +443,33 @@ function buildSalesFunnel(
   ];
 }
 
+/**
+ * Labour hours accumulated as MINUTES, rounded once.
+ *
+ * ============================== WHY THIS CHANGED ==============================
+ * This loop used to do `laborHours = roundJobMaterialAmount(laborHours + m/60)`
+ * -- rounding to two decimals after EVERY entry. That has two problems, and the
+ * second one is the reason it could not stay.
+ *
+ *   1. It accumulates rounding error. Measured over 5,687 real labour entries
+ *      across six technicians, per-entry rounding diverged from an exact sum by
+ *      up to 0.14 h on a ~4,190 h total.
+ *
+ *   2. It is ORDER DEPENDENT. Rounding after each addition means the same rows
+ *      in a different order can produce a different total, and listTimeEntries
+ *      orders by started_at with no tiebreaker -- so two renders of unchanged
+ *      data could disagree. That also makes the figure impossible to reproduce
+ *      faithfully anywhere else, including in SQL.
+ *
+ * Minutes are integers, so summing them is exact. One division and one rounding
+ * at the end is both more accurate and order-independent. The RULE for which
+ * entries count and how each entry's minutes are resolved
+ * (resolveClosedJobLaborMinutes) is untouched.
+ */
+export function laborMinutesToHours(minutes: number): number {
+  return roundJobMaterialAmount(minutes / 60);
+}
+
 function buildTechnicianProfitability(
   datasets: ReportRawDatasets,
   dateBounds: ProfitabilityReportDateBounds,
@@ -448,7 +478,7 @@ function buildTechnicianProfitability(
   const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]));
   const metrics = new Map<
     string,
-    { name: string; revenue: number; jobCount: number; laborHours: number }
+    { name: string; revenue: number; jobCount: number; laborMinutes: number }
   >();
 
   for (const job of jobs) {
@@ -460,7 +490,7 @@ function buildTechnicianProfitability(
       name: job.assignedTechnician?.trim() || "Unassigned",
       revenue: 0,
       jobCount: 0,
-      laborHours: 0,
+      laborMinutes: 0,
     };
 
     existing.jobCount += 1;
@@ -485,13 +515,15 @@ function buildTechnicianProfitability(
       name: job.assignedTechnician?.trim() || "Unassigned",
       revenue: 0,
       jobCount: 0,
-      laborHours: 0,
+      laborMinutes: 0,
     };
 
     existing.revenue = roundCurrency(existing.revenue + payment.amount);
     metrics.set(job.assignedTechnicianId, existing);
   }
 
+  // See the note on buildTechnicianLaborHours below: minutes are summed and
+  // converted once.
   for (const entry of laborEntries) {
     if (!isDateWithinReportBounds(entry.startedAt, dateBounds)) {
       continue;
@@ -506,17 +538,19 @@ function buildTechnicianProfitability(
       name: entry.technicianName.trim() || "Technician",
       revenue: 0,
       jobCount: 0,
-      laborHours: 0,
+      laborMinutes: 0,
     };
 
-    existing.laborHours = roundJobMaterialAmount(
-      existing.laborHours + minutes / 60,
-    );
+    existing.laborMinutes += minutes;
     metrics.set(entry.technicianId, existing);
   }
 
   return [...metrics.entries()]
-    .map(([technicianId, entry]) => {
+    .map(([technicianId, raw]) => {
+      const entry = {
+        ...raw,
+        laborHours: laborMinutesToHours(raw.laborMinutes),
+      };
       const hourlyRate = laborCostRates.get(technicianId);
       const profitAvailable = hourlyRate != null && hourlyRate >= 0;
       const laborCost =
@@ -553,7 +587,7 @@ function buildTechnicianProfitability(
     .slice(0, 5);
 }
 
-function resolveExpenseReportDate(expense: Expense): string {
+export function resolveExpenseReportDate(expense: Expense): string {
   return expense.purchaseDate ?? expense.createdAt;
 }
 
@@ -959,6 +993,48 @@ function buildAccountantSummary(
   };
 }
 
+/**
+ * The limitation lines under the report.
+ *
+ * Extracted so the array path and the aggregate path cannot drift: these
+ * sentences are the page's own account of what its numbers do and do not mean,
+ * and two copies of them is exactly how a report ends up disclaiming something
+ * it no longer does.
+ */
+export function buildReportLimitations(input: {
+  chartSeries: ReportChartSeriesBundle;
+  showLeadPipeline: boolean;
+  showTechnicianProfitability: boolean;
+  technicianProfitability: ReportTechnicianProfitability[];
+}): string[] {
+  const limitations = [
+    ...input.chartSeries.meta.limitations,
+    ...input.chartSeries.revenue.limitations,
+    "Outstanding invoice balances reflect current open amounts, not limited to the selected period.",
+    "Estimate close rate compares approved estimates to estimates sent in the selected period.",
+    "Collection rate compares payments collected in period to invoice totals issued in period.",
+    "Customer health uses all-time completed/paid jobs and payments, not the selected period.",
+  ];
+
+  if (input.showLeadPipeline) {
+    limitations.push(
+      "Lead pipeline counts leads created in the selected period; won and lost reflect each lead's current status.",
+      "Follow-ups due counts open leads with a follow-up date on or before today.",
+    );
+  }
+
+  if (
+    input.showTechnicianProfitability &&
+    input.technicianProfitability.some((entry) => !entry.profitAvailable)
+  ) {
+    limitations.push(
+      "Technician gross profit requires labor cost rates on team member profiles.",
+    );
+  }
+
+  return limitations;
+}
+
 export function buildReportsPageData(input: {
   companyName: string;
   dateRange: ReportsPageDateRange;
@@ -974,34 +1050,16 @@ export function buildReportsPageData(input: {
   const previousBounds = resolvePreviousReportDateBounds(dateBounds);
   const totalCustomerCount = input.totalCustomerCount ?? 0;
 
-  const limitations = [
-    ...input.datasets.chartSeries.meta.limitations,
-    ...input.datasets.chartSeries.revenue.limitations,
-    "Outstanding invoice balances reflect current open amounts, not limited to the selected period.",
-    "Estimate close rate compares approved estimates to estimates sent in the selected period.",
-    "Collection rate compares payments collected in period to invoice totals issued in period.",
-    "Customer health uses all-time completed/paid jobs and payments, not the selected period.",
-  ];
-
-  if (input.showLeadPipeline) {
-    limitations.push(
-      "Lead pipeline counts leads created in the selected period; won and lost reflect each lead's current status.",
-      "Follow-ups due counts open leads with a follow-up date on or before today.",
-    );
-  }
-
   const technicianProfitability = input.showTechnicianProfitability
     ? buildTechnicianProfitability(input.datasets, dateBounds)
     : [];
 
-  if (
-    input.showTechnicianProfitability &&
-    technicianProfitability.some((entry) => !entry.profitAvailable)
-  ) {
-    limitations.push(
-      "Technician gross profit requires labor cost rates on team member profiles.",
-    );
-  }
+  const limitations = buildReportLimitations({
+    chartSeries: input.datasets.chartSeries,
+    showLeadPipeline: input.showLeadPipeline ?? false,
+    showTechnicianProfitability: input.showTechnicianProfitability,
+    technicianProfitability,
+  });
 
   return {
     dateRange: input.dateRange,
@@ -1069,7 +1127,7 @@ export function buildMemberWorkSummary(
 
   let jobsCompleted = 0;
   let revenue = 0;
-  let laborHours = 0;
+  let laborMinutes = 0;
 
   for (const job of jobs) {
     if (
@@ -1110,8 +1168,12 @@ export function buildMemberWorkSummary(
       continue;
     }
 
-    laborHours = roundJobMaterialAmount(laborHours + minutes / 60);
+    // Same accumulation rule as buildTechnicianProfitability, so a technician's
+    // hours agree between the reports page and their own profile page.
+    laborMinutes += minutes;
   }
+
+  const laborHours = laborMinutesToHours(laborMinutes);
 
   const hourlyRate = laborCostRates.get(technicianId);
   const profitAvailable = hourlyRate != null && hourlyRate >= 0;

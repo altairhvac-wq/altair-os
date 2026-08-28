@@ -59,7 +59,7 @@ type EstimateRowWithRelations = EstimateRow & {
   estimate_line_items?: EstimateLineItemRow[] | EstimateLineItemRowMinimal[];
 };
 
-const ESTIMATE_LIST_SELECT = `
+export const ESTIMATE_LIST_SELECT = `
   *,
   customers(name, email),
   jobs(job_number),
