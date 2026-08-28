@@ -263,13 +263,17 @@ function resolveReadinessBlockersAction(
     (area) => area.id === "workflow_readiness",
   );
   const readinessScore = workflowReadiness?.score ?? 100;
+  // Readiness 0 is only reachable for completed-work review and overdue
+  // stalled jobs, which arrive as five-row previews; it selects severity
+  // wording rather than a printed number.
   const criticalReadinessItems = input.officeReviewQueue.summary.items.filter(
     (item) => item.readinessScore === 0,
   ).length;
-  const lowReadinessItems = input.officeReviewQueue.summary.items.filter(
-    (item) => item.readinessScore > 0 && item.readinessScore <= 50,
-  ).length;
-  const blockerCount = criticalReadinessItems + lowReadinessItems;
+  // blockerCount is everything scoring 50 or below, which is exactly what
+  // lowReadinessCount counts — exact for the data-integrity half, and no longer
+  // the length of a preview for any of it.
+  const blockerCount = input.officeReviewQueue.summary.lowReadinessCount;
+  const lowReadinessItems = Math.max(0, blockerCount - criticalReadinessItems);
 
   if (blockerCount === 0 && readinessScore >= 70) {
     return null;

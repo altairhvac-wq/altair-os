@@ -102,6 +102,23 @@ export function buildJobsCompletedSparkline(
   return buckets.map((bucket) => counts.get(bucket.bucketStart) ?? 0);
 }
 
+/**
+ * Average payment per bucket.
+ *
+ * ============================== WHY CENTS ==============================
+ * The sum here used to accumulate dollars as IEEE doubles. That is fine for a
+ * single implementation and not fine for two: the aggregate path sums each
+ * DAY's total (already summed exactly in Postgres) while this one sums each
+ * PAYMENT, and adding the same money in a different order lands on a different
+ * double. On a 90-day range over 7,600 payments the two means differed by one
+ * cent -- $2,098.06 against $2,098.07 -- which verify-reports-live caught.
+ *
+ * Payment amounts are two-decimal, so their cent values are exact integers, and
+ * a day's total is the exact sum of its payments' cents. Accumulating integers
+ * makes the two paths agree by construction rather than by luck, and removes a
+ * class of intermittent verifier failure that would otherwise appear whenever
+ * the fixture changed.
+ */
 export function buildAvgTicketSparkline(
   payments: InvoicePayment[],
   bounds: ProfitabilityReportDateBounds,
@@ -130,7 +147,7 @@ export function buildAvgTicketSparkline(
       continue;
     }
 
-    existing.sum += payment.amount;
+    existing.sum += Math.round(payment.amount * 100);
     existing.count += 1;
   }
 
@@ -139,7 +156,7 @@ export function buildAvgTicketSparkline(
     if (!entry || entry.count === 0) {
       return 0;
     }
-    return roundCurrency(entry.sum / entry.count);
+    return roundCurrency(entry.sum / 100 / entry.count);
   });
 }
 

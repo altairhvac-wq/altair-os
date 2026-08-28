@@ -451,8 +451,64 @@ async function seedTechnicians(client, { companyId, slug, count, rnd, asOf }) {
     technicians.push({ id: userId, name: fullName });
   }
 
-  console.log(`    technicians: ${technicians.length}`);
-  return technicians;
+  // One more, whose membership is suspended rather than active. Jobs assigned
+  // to them are what makes invalid_assigned_technician reachable at all --
+  // is_active_company_member is false for a suspended row, and the rule tests
+  // exactly that.
+  const removedEmail = technicianEmail(slug, "removed");
+  let removedId = null;
+  const { data: removedCreated, error: removedError } =
+    await client.auth.admin.createUser({
+      email: removedEmail,
+      password: `Loadtest!tech-${slug}-removed`,
+      email_confirm: true,
+    });
+  if (removedError) {
+    if (!/already been registered|already exists/i.test(removedError.message)) {
+      throw new Error(`create removed technician: ${removedError.message}`);
+    }
+    const { data: existing } = await client
+      .from("profiles")
+      .select("id")
+      .eq("email", removedEmail)
+      .maybeSingle();
+    removedId = existing?.id ?? null;
+  } else {
+    removedId = removedCreated.user.id;
+  }
+
+  let removedTechnician = null;
+  if (removedId) {
+    await client
+      .from("profiles")
+      .upsert({
+        id: removedId,
+        email: removedEmail,
+        full_name: `${COMPANY_NAME_PREFIX} Tech Departed`,
+      });
+    const { error: removedMembershipError } = await client
+      .from("company_memberships")
+      .insert({
+        company_id: companyId,
+        user_id: removedId,
+        role: "technician",
+        status: "suspended",
+        joined_at: asOf.toISOString(),
+        labor_cost_rate_cents: 3900,
+      });
+    if (removedMembershipError) {
+      throw new Error(
+        `removed technician membership: ${removedMembershipError.message}`,
+      );
+    }
+    removedTechnician = { id: removedId, name: "Departed" };
+  }
+
+  console.log(
+    `    technicians: ${technicians.length} active` +
+      (removedTechnician ? " + 1 suspended" : ""),
+  );
+  return { technicians, removedTechnician };
 }
 
 /** Removes only accounts whose address carries both load-test markers. */
@@ -598,6 +654,213 @@ function buildTimeEntries({ jobs, companyId, seedValue, rnd, asOf }) {
   return entries;
 }
 
+
+// ---------------------------------------------------------------------------
+// Dispatch, and the data-integrity signals
+//
+// ============================== WHY THIS IS HERE ==============================
+// getCompanyOperationalInconsistenciesReport applies nine rules. On the fixture
+// as it stood, exactly TWO of them could ever fire:
+//
+//   completed_missing_completed_at        1,498   (seeded deliberately)
+//   job_assigned_without_active_dispatch  2,953   (every assigned open job,
+//                                                  because dispatch_assignments
+//                                                  was empty)
+//   the other seven                           0
+//
+// Both numbers are artefacts of an absent table rather than a plausible tenant.
+// A company that uses dispatch has assignment rows for its open work, so the
+// second rule should be rare, not universal -- and the seven rules with no data
+// at all returned the same answer whether the code was right or wrong.
+//
+// So dispatch is seeded normally, and each rule gets a small, deliberate
+// population of genuine violations. The counts are small on purpose: this is a
+// fixture for an INTEGRITY scan, and a tenant where a third of the jobs are
+// broken would let a wrong implementation look right by sheer volume.
+// ---------------------------------------------------------------------------
+
+const INTEGRITY_TARGETS = {
+  /** status not completed/cancelled, completed_at set. */
+  completedAtStatusMismatch: 12,
+  /** terminal job carrying an active assignment. */
+  staleDispatchOnTerminal: 9,
+  /** active assignment, job has no assigned technician. */
+  dispatchWithoutAssignment: 7,
+  /** active assignment for a different technician than the job. */
+  technicianMismatch: 6,
+  // NO concurrent-dispatch target. dispatch_assignments carries
+  // dispatch_assignments_one_active_per_job_idx -- a unique index on job_id
+  // WHERE status = 'active' -- so a second active assignment on the same job is
+  // rejected by the database. Seeding one fails the insert outright, which is
+  // how this was found.
+  //
+  // That makes detectOperationalInconsistencies' `activeAssignments.length > 1`
+  // branch unreachable through any normal write path, and it also means
+  // `activeAssignments[0]` is never ambiguous: there is at most one. The rule
+  // stays in the detector as a guard against data loaded around the index, and
+  // the aggregate reproduces it, but neither can be exercised by a fixture that
+  // respects the schema.
+  /** cancelled job with an open (never ended) labour entry. */
+  openLaborOnCancelled: 5,
+  /** amount_paid + balance_due != total. */
+  invoiceBalanceMismatch: 8,
+  /** assigned to a technician whose membership is not active. */
+  invalidAssignedTechnician: 10,
+};
+
+/**
+ * Dispatch rows for open assigned work, plus the deliberate violations.
+ *
+ * Mutates the in-memory job rows, so it runs BEFORE the jobs insert. Returns
+ * the assignment rows to insert afterwards, because they carry a job_id foreign
+ * key.
+ */
+function buildDispatchAndIntegritySignals(
+  jobs,
+  { technicians, removedTechnician, companyId, seedValue, rnd, asOf },
+) {
+  const assignments = [];
+  if (technicians.length === 0) return assignments;
+
+  const OPEN = (job) => job.status !== "completed" && job.status !== "cancelled";
+  const openAssigned = jobs.filter((job) => OPEN(job) && job.assigned_technician_id);
+  const terminal = jobs.filter((job) => !OPEN(job));
+  const cancelled = jobs.filter((job) => job.status === "cancelled");
+
+  let cursor = 0;
+  const take = (list, n) => list.slice(cursor, cursor + n);
+
+  function pushAssignment(job, technicianId, status) {
+    assignments.push({
+      id: deterministicUuid(seedValue, "dispatch", assignments.length),
+      company_id: companyId,
+      job_id: job.id,
+      technician_id: technicianId,
+      status,
+      scheduled_start: job.scheduled_at,
+      assigned_at: job.scheduled_at,
+      sort_order: 0,
+    });
+  }
+
+  // ---- the normal case: open assigned work has an active assignment --------
+  // A handful are left without one on purpose, so
+  // job_assigned_without_active_dispatch has a realistic population rather than
+  // being either universal or empty.
+  const missingDispatch = new Set(
+    openAssigned.slice(0, 11).map((job) => job.id),
+  );
+  for (const job of openAssigned) {
+    if (missingDispatch.has(job.id)) continue;
+    pushAssignment(job, job.assigned_technician_id, "active");
+  }
+
+  // ---- completed_at on a job that is neither completed nor cancelled -------
+  const openForMismatch = jobs.filter(
+    (job) => OPEN(job) && job.completed_at == null,
+  );
+  for (const job of openForMismatch.slice(0, INTEGRITY_TARGETS.completedAtStatusMismatch)) {
+    const scheduled = new Date(job.scheduled_at).getTime();
+    if (scheduled > asOf.getTime()) continue;
+    job.completed_at = new Date(scheduled + 3 * 3_600_000).toISOString();
+  }
+
+  // ---- active assignment left on a terminal job ---------------------------
+  for (const job of take(terminal, INTEGRITY_TARGETS.staleDispatchOnTerminal)) {
+    pushAssignment(job, rnd.pick(technicians).id, "active");
+  }
+  cursor += INTEGRITY_TARGETS.staleDispatchOnTerminal;
+
+  // ---- active assignment, no technician on the job ------------------------
+  const openUnassigned = jobs.filter((job) => OPEN(job) && !job.assigned_technician_id);
+  for (const job of openUnassigned.slice(0, INTEGRITY_TARGETS.dispatchWithoutAssignment)) {
+    pushAssignment(job, rnd.pick(technicians).id, "active");
+  }
+
+  // ---- assignment names a different technician than the job ---------------
+  // Skips the ones already left without a dispatch row, or the job would be
+  // counted by two rules and the fixture would stop isolating them.
+  const mismatchCandidates = openAssigned.filter(
+    (job) => !missingDispatch.has(job.id),
+  );
+  for (const job of mismatchCandidates.slice(0, INTEGRITY_TARGETS.technicianMismatch)) {
+    const other = technicians.find((tech) => tech.id !== job.assigned_technician_id);
+    if (!other) continue;
+    const existing = assignments.find(
+      (row) => row.job_id === job.id && row.status === "active",
+    );
+    if (existing) existing.technician_id = other.id;
+  }
+
+  // ---- assigned to a member who is no longer active -----------------------
+  if (removedTechnician) {
+    const from = INTEGRITY_TARGETS.technicianMismatch;
+    for (const job of mismatchCandidates.slice(
+      from,
+      from + INTEGRITY_TARGETS.invalidAssignedTechnician,
+    )) {
+      job.assigned_technician_id = removedTechnician.id;
+      const existing = assignments.find(
+        (row) => row.job_id === job.id && row.status === "active",
+      );
+      if (existing) existing.technician_id = removedTechnician.id;
+    }
+  }
+
+  void cancelled;
+  return assignments;
+}
+
+/** Open (never-ended) labour entries on cancelled jobs. */
+function buildOpenLaborOnCancelledJobs(
+  jobs,
+  { technicians, companyId, seedValue, startIndex },
+) {
+  const entries = [];
+  if (technicians.length === 0) return entries;
+
+  const cancelled = jobs
+    .filter((job) => job.status === "cancelled")
+    .slice(0, INTEGRITY_TARGETS.openLaborOnCancelled);
+
+  for (const job of cancelled) {
+    entries.push({
+      id: deterministicUuid(seedValue, "labor", startIndex + entries.length),
+      company_id: companyId,
+      technician_id: technicians[entries.length % technicians.length].id,
+      job_id: job.id,
+      entry_type: "job_labor",
+      started_at: job.scheduled_at,
+      ended_at: null,
+      duration_minutes: null,
+      created_at: job.scheduled_at,
+      updated_at: job.scheduled_at,
+    });
+  }
+
+  return entries;
+}
+
+/**
+ * Breaks the balance identity on a few invoices.
+ *
+ * isInvoiceBalanceConsistent is amount_paid + balance_due === total, so this
+ * moves balance_due without touching total. It runs before the insert, and the
+ * payment ledger is built from amount_paid, which is left alone -- so the
+ * ledger still reconciles and only the identity this rule tests is broken.
+ */
+function applyInvoiceBalanceMismatches(invoices) {
+  const eligible = invoices.filter(
+    (invoice) =>
+      ["sent", "partially_paid", "paid", "overdue"].includes(invoice.status) &&
+      invoice.job_id != null,
+  );
+
+  for (const invoice of eligible.slice(0, INTEGRITY_TARGETS.invoiceBalanceMismatch)) {
+    invoice.balance_due = Math.round((invoice.balance_due + 12.34) * 100) / 100;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Modes
 // ---------------------------------------------------------------------------
@@ -656,6 +919,7 @@ async function countsForCompany(client, companyId) {
  */
 const CLEAN_ORDER = [
   "company_subscriptions",
+  "dispatch_assignments",
   "invoice_payments",
   "invoice_line_items",
   "estimate_line_items",
@@ -836,7 +1100,7 @@ async function runSeed(client, args) {
   }
   console.log("    app access: beta_comped");
 
-  const technicians = await seedTechnicians(client, {
+  const { technicians, removedTechnician } = await seedTechnicians(client, {
     companyId,
     slug,
     count: technicianCount,
@@ -900,7 +1164,23 @@ async function runSeed(client, args) {
   // Assignment and completion timestamps are applied to the in-memory rows
   // before the insert, so the seed stays a single write per table.
   applyJobCompletion(jobs, { technicians, rnd, asOf });
+  // Mutates the job rows (completed_at, assigned_technician_id) and returns the
+  // dispatch rows, which are inserted after the jobs they reference.
+  const dispatchAssignments = buildDispatchAndIntegritySignals(jobs, {
+    technicians,
+    removedTechnician,
+    companyId,
+    seedValue,
+    rnd,
+    asOf,
+  });
   await insertChunked(client, "jobs", jobs, "jobs");
+  await insertChunked(
+    client,
+    "dispatch_assignments",
+    dispatchAssignments,
+    "dispatch assignments",
+  );
 
   // ---- invoices ------------------------------------------------------------
   //
@@ -960,6 +1240,7 @@ async function runSeed(client, args) {
       })),
     );
   }
+  applyInvoiceBalanceMismatches(invoices);
   await insertChunked(client, "invoices", invoices, "invoices");
   await insertChunked(
     client,
@@ -1057,6 +1338,14 @@ async function runSeed(client, args) {
     rnd,
     asOf,
   });
+  timeEntries.push(
+    ...buildOpenLaborOnCancelledJobs(jobs, {
+      technicians,
+      companyId,
+      seedValue,
+      startIndex: timeEntries.length,
+    }),
+  );
   await insertChunked(client, "time_entries", timeEntries, "labour entries");
 
   // ---- leads ---------------------------------------------------------------

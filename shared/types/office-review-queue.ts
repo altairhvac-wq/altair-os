@@ -135,15 +135,73 @@ export type OfficeReviewQueueAgingBucketCounts = Record<
   number
 >;
 
+/**
+ * Exact whole-tenant counts for each source that feeds the queue.
+ *
+ * ============================== WHY THESE EXIST ==============================
+ * The queue is assembled from four reports, and every one of them hands it a
+ * BOUNDED preview: completed-work review, awaiting-invoicing and stalled jobs
+ * are five rows each (OPERATIONS_SUMMARY_JOB_LIMIT), and the data-integrity
+ * scan is a bounded page of jobs from migration 172. So `items` has never been
+ * the whole queue, and totals derived from `items.length` have never been the
+ * tenant's real numbers -- they were the size of the preview.
+ *
+ * These are the real numbers, and they come from SQL.
+ */
+export type OfficeReviewQueueSourceTotals = {
+  completedWorkReview: number;
+  criticalCompletedWorkReview: number;
+  awaitingInvoicing: number;
+  stalledJobs: number;
+  integrityJobs: number;
+  integrityCriticalJobs: number;
+  /** Integrity jobs with 2+ distinct kinds — readiness 50 or below. */
+  integrityMultiKindJobs: number;
+};
+
 export type OfficeReviewQueueSummary = {
+  /**
+   * ============================== EXACT, AND WHAT IT COUNTS ==============================
+   * The sum of the four source totals across the whole tenant. A job that
+   * appears in two sources -- a completed job with no invoice is in both
+   * completed-work review and awaiting-invoicing -- counts once per source, so
+   * this is a count of queue REASONS rather than of distinct jobs. That is what
+   * the card wording says ("N items"), and a distinct-job total would need a
+   * union across two migrations' rule sets for a number nothing displays.
+   *
+   * Previously this was `items.length`: the size of a preview, presented as a
+   * total.
+   */
   totalCount: number;
+  /** Exact: critical completed-work reviews plus integrity jobs with a critical kind. */
   criticalCount: number;
+  /** Exact: totalCount minus criticalCount. */
   needsAttentionCount: number;
+  /**
+   * ============================== THESE THREE ARE PREVIEW-SCOPED ==============================
+   * Aging buckets and the aging group are derived from each item's timestamps,
+   * which only the previewed rows carry. They describe the preview, not the
+   * tenant, and are named here so nothing reads them as totals. Making them
+   * exact would need per-source aging aggregates that nothing currently
+   * displays.
+   */
   agingCount: number;
   agingBucketCounts: OfficeReviewQueueAgingBucketCounts;
+  /**
+   * Queue items scoring 50 or below on readiness. The integrity half is exact
+   * (migration 172 counts jobs with two or more kinds, which is precisely what
+   * scoreOperationalInconsistency maps to 50 or below); the rest is
+   * preview-scoped for the same reason as the aging buckets.
+   */
+  lowReadinessCount: number;
+  /** Exact per-source totals. Prefer these to anything derived from `items`. */
+  sourceTotals: OfficeReviewQueueSourceTotals;
+  /** True when offending records exist beyond the previewed `items`. */
+  hasMore: boolean;
   resolvedThisWeek: number;
   resolutionTrend: QueueResolutionTrendSummary;
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
+  /** A bounded preview. Never a total — see totalCount and sourceTotals. */
   items: OfficeReviewQueueItem[];
 };
 
@@ -1048,6 +1106,12 @@ export function buildOfficeReviewQueueReport(input: {
   awaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
   stalledJobs: StalledJobsReport;
   operationalInconsistencies?: OperationalInconsistencyEntry[];
+  /**
+   * Exact whole-tenant counts. Required: the summary is built from these
+   * rather than from the length of the previewed items, which is the defect
+   * this parameter exists to close.
+   */
+  sourceTotals: OfficeReviewQueueSourceTotals;
   resolutionTrend: QueueResolutionTrendSummary;
   customerIdByJobId: Map<string, string>;
   sortMode?: OfficeReviewQueueSortMode;
@@ -1138,13 +1202,33 @@ export function buildOfficeReviewQueueReport(input: {
   // TODO(office-review-queue-readiness-v2): Predictive workflow risk scoring.
   // TODO(office-review-queue-readiness-v2): Operational health scoring across report sections.
 
+  const totals = input.sourceTotals;
+  const totalCount =
+    totals.completedWorkReview +
+    totals.awaitingInvoicing +
+    totals.stalledJobs +
+    totals.integrityJobs;
+  const criticalCount =
+    totals.criticalCompletedWorkReview + totals.integrityCriticalJobs;
+
+  // Exact for the integrity half; the other three sources contribute only what
+  // their previews show, which is stated on the field.
+  const previewLowReadinessOutsideIntegrity = items.filter(
+    (item) =>
+      item.kind !== "operational_inconsistency" && item.readinessScore <= 50,
+  ).length;
+
   return {
     summary: {
-      totalCount: items.length,
-      criticalCount: groups.critical.length,
-      needsAttentionCount: groups.needs_attention.length,
+      totalCount,
+      criticalCount,
+      needsAttentionCount: Math.max(0, totalCount - criticalCount),
       agingCount: groups.aging.length,
       agingBucketCounts: countOfficeReviewQueueAgingBuckets(items),
+      lowReadinessCount:
+        totals.integrityMultiKindJobs + previewLowReadinessOutsideIntegrity,
+      sourceTotals: totals,
+      hasMore: totalCount > items.length,
       resolvedThisWeek: input.resolutionTrend.resolvedThisWeek,
       resolutionTrend: input.resolutionTrend,
       groups,

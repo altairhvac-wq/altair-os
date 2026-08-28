@@ -59,6 +59,14 @@ export type DailyOperationsCompletedAwaitingInvoicingSnapshot = {
 
 export type DailyOperationsCompletedWorkReviewSnapshot = {
   count: number;
+  /**
+   * Exact whole-tenant count of reviews whose severity is critical.
+   *
+   * It used to be derived by filtering `jobs`, which is a five-row preview --
+   * so a tenant with two hundred critical reviews reported at most five. The
+   * number comes from migration 168 now; `jobs` remains the preview.
+   */
+  criticalCount: number;
   jobs: CompletedWorkReviewEntry[];
   resolvedThisWeek: number;
   resolutionTrend: QueueResolutionTrendSummary;

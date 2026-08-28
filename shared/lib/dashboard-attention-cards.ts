@@ -253,9 +253,13 @@ function resolveReadinessCard(
     (area) => area.id === "workflow_readiness",
   );
   const readinessScore = workflowReadiness?.score ?? 100;
-  const lowReadinessItems = input.officeReviewQueue.summary.items.filter(
-    (item) => item.readinessScore <= 50,
-  ).length;
+  // lowReadinessCount is exact for the data-integrity half of the queue and
+  // preview-scoped for the other three sources; counting `items` here was
+  // preview-scoped for all four. See OfficeReviewQueueSummary.
+  const lowReadinessItems = input.officeReviewQueue.summary.lowReadinessCount;
+  // Readiness 0 is only reachable for completed-work review and overdue stalled
+  // jobs, both of which arrive as five-row previews, so this stays a preview
+  // count. It picks wording, not a number the card prints.
   const criticalReadinessItems = input.officeReviewQueue.summary.items.filter(
     (item) => item.readinessScore === 0,
   ).length;

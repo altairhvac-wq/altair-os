@@ -45,7 +45,33 @@ export type OperationalInconsistenciesSummary = {
   criticalCount: number;
   warningCount: number;
   byKind: Partial<Record<OperationalInconsistencyKind, number>>;
+  /**
+   * ============================== THESE THREE ARE WHOLE-TENANT ==============================
+   * `entries` below is a bounded preview on the aggregate path, so anything
+   * that needs a real number has to read it from here rather than count the
+   * array. The dashboard needs exactly these three:
+   *
+   *   jobCount           dataIntegrityJobCount on the daily operations summary
+   *   criticalJobCount   criticalDataIntegrityCount, which drives card severity
+   *   multiKindJobCount  jobs with 2+ distinct kinds. The office queue sets
+   *                      blockerCount = kinds.length, and readiness scores an
+   *                      inconsistency item 25 at 3+, 50 at 2, 75 at 1 -- so
+   *                      "readinessScore <= 50" is exactly "2 or more kinds",
+   *                      which is what three dashboard derivations count.
+   *
+   * A job with several mismatched invoices contributes ONE kind, not several:
+   * they are all invoice_balance_mismatch.
+   */
+  jobCount: number;
+  criticalJobCount: number;
+  multiKindJobCount: number;
+  /**
+   * Severity-ordered, and BOUNDED on the aggregate path. Never treat
+   * `entries.length` as a total; use totalCount, and the three counts above.
+   */
   entries: OperationalInconsistencyEntry[];
+  /** True when offending jobs exist beyond the ones in `entries`. */
+  hasMore: boolean;
 };
 
 export type OperationalInconsistenciesReport = {
@@ -388,24 +414,76 @@ export function detectOperationalInconsistencies(
     }
   }
 
-  entries.sort((left, right) => {
-    if (left.severity !== right.severity) {
-      return left.severity === "critical" ? -1 : 1;
-    }
+  entries.sort(compareOperationalInconsistencyEntries);
 
-    return left.jobNumber.localeCompare(right.jobNumber, undefined, {
-      numeric: true,
-      sensitivity: "base",
-    });
-  });
+  const kindsByJob = new Map<string, Set<OperationalInconsistencyKind>>();
+  const criticalJobs = new Set<string>();
+  for (const entry of entries) {
+    const kinds = kindsByJob.get(entry.jobId) ?? new Set();
+    kinds.add(entry.kind);
+    kindsByJob.set(entry.jobId, kinds);
+    if (entry.severity === "critical") {
+      criticalJobs.add(entry.jobId);
+    }
+  }
 
   return {
     totalCount: entries.length,
     criticalCount,
     warningCount,
     byKind,
+    jobCount: kindsByJob.size,
+    criticalJobCount: criticalJobs.size,
+    multiKindJobCount: [...kindsByJob.values()].filter(
+      (kinds) => kinds.size >= 2,
+    ).length,
     entries,
+    // The array path sees every row it was given, so there is never more.
+    // The aggregate path sets this from the database.
+    hasMore: false,
   };
+}
+
+/**
+ * Severity first, then job number, then kind, then invoice.
+ *
+ * ============================== WHY THE LAST TWO KEYS EXIST ==============================
+ * The shipped comparator was severity then jobNumber and nothing else. A job
+ * that trips several rules produces several entries with identical keys, so
+ * their relative order was whatever the rule evaluation happened to emit --
+ * stable within one process, and impossible to reproduce anywhere else. That is
+ * the same class of defect as the untiebroken list orderings found in the
+ * dashboard and reports work: two implementations can both be right and still
+ * disagree.
+ *
+ * kind and invoiceId make the order total. Nothing renders this order today, so
+ * adding them changes no visible output -- it makes the order expressible in
+ * SQL, which is what lets migration 172's preview be checked against it.
+ *
+ * localeCompare with numeric: true is kept exactly: it compares embedded digit
+ * runs numerically, so "JOB-9" sorts before "JOB-10".
+ */
+export function compareOperationalInconsistencyEntries(
+  left: OperationalInconsistencyEntry,
+  right: OperationalInconsistencyEntry,
+): number {
+  if (left.severity !== right.severity) {
+    return left.severity === "critical" ? -1 : 1;
+  }
+
+  const byNumber = left.jobNumber.localeCompare(right.jobNumber, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+  if (byNumber !== 0) {
+    return byNumber;
+  }
+
+  if (left.kind !== right.kind) {
+    return left.kind < right.kind ? -1 : 1;
+  }
+
+  return (left.invoiceId ?? "").localeCompare(right.invoiceId ?? "");
 }
 
 export function detectOperationalInconsistenciesForJob(

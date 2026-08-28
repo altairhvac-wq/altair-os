@@ -89,6 +89,17 @@ function buildDemoOfficeReviewQueue(): OfficeReviewQueueReport {
       needsAttentionCount: 1,
       agingCount: 0,
       agingBucketCounts: { fresh: 1, aging: 1, overdue: 0 },
+      lowReadinessCount: 1,
+      sourceTotals: {
+        completedWorkReview: 1,
+        criticalCompletedWorkReview: 1,
+        awaitingInvoicing: 0,
+        stalledJobs: 0,
+        integrityJobs: 1,
+        integrityCriticalJobs: 0,
+        integrityMultiKindJobs: 1,
+      },
+      hasMore: false,
       resolvedThisWeek: 4,
       resolutionTrend: RESOLUTION_TREND,
       groups: {
@@ -703,6 +714,7 @@ export const designLabFixtureDashboardData: DashboardData = {
       completedAwaitingInvoicing: { count: 3, jobs: [] },
       completedWorkReview: {
         count: 2,
+        criticalCount: 1,
         jobs: [],
         resolvedThisWeek: 4,
         resolutionTrend: RESOLUTION_TREND,

@@ -248,6 +248,17 @@ const EMPTY_OFFICE_REVIEW_QUEUE: OfficeReviewQueueReport = {
     needsAttentionCount: 0,
     agingCount: 0,
     agingBucketCounts: { fresh: 0, aging: 0, overdue: 0 },
+    lowReadinessCount: 0,
+    sourceTotals: {
+      completedWorkReview: 0,
+      criticalCompletedWorkReview: 0,
+      awaitingInvoicing: 0,
+      stalledJobs: 0,
+      integrityJobs: 0,
+      integrityCriticalJobs: 0,
+      integrityMultiKindJobs: 0,
+    },
+    hasMore: false,
     resolvedThisWeek: 0,
     resolutionTrend: EMPTY_RESOLUTION_TREND,
     groups: {
@@ -299,6 +310,7 @@ const EMPTY_OPERATIONAL_INSIGHTS: DailyOperationsSummary = {
     completedAwaitingInvoicing: { count: 0, jobs: [] },
     completedWorkReview: {
       count: 0,
+      criticalCount: 0,
       jobs: [],
       resolvedThisWeek: 0,
       resolutionTrend: EMPTY_RESOLUTION_TREND,

@@ -1557,6 +1557,18 @@ export type Database = {
         };
         Returns: Json;
       };
+      // get_company_operational_inconsistencies: migration 172 — wire into
+      // Database types on next gen types run. Whole-tenant counts for the
+      // data-integrity scan plus a bounded page of offending jobs carrying the
+      // facts the shipped detector needs to rebuild its entries.
+      get_company_operational_inconsistencies: {
+        Args: {
+          p_company_id: string;
+          p_limit: number;
+          p_offset: number;
+        };
+        Returns: Json;
+      };
       // get_company_payment_ledger_totals: migration 171 — wire into Database
       // types on next gen types run. Count and sum over the payment ledger,
       // optionally windowed; null bounds mean all time.

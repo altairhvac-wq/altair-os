@@ -45,9 +45,10 @@ function pluralize(count: number, singular: string, plural = `${singular}s`): st
 }
 
 function countReadinessBlockers(input: DispatchPressureInput): number {
-  return input.officeReviewQueue.summary.items.filter(
-    (item) => item.readinessScore <= 50,
-  ).length;
+  // Was a filter over `items`, which is a bounded preview of four sources.
+  // lowReadinessCount is exact for the data-integrity half and preview-scoped
+  // for the rest — see OfficeReviewQueueSummary.
+  return input.officeReviewQueue.summary.lowReadinessCount;
 }
 
 function resolvePipelineFlowScore(input: DispatchPressureInput): number | null {

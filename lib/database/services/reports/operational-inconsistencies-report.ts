@@ -1,14 +1,11 @@
 import { cache } from "react";
+import { listDispatchAssignmentsForJob } from "@/lib/database/queries/dispatch";
+import { listInvoicesForJob } from "@/lib/database/queries/invoices";
+import { listTimeEntries } from "@/lib/database/queries/time-entries";
 import {
-  listDispatchAssignmentsForCompany,
-  listDispatchAssignmentsForJob,
-} from "@/lib/database/queries/dispatch";
-import { listInvoices, listInvoicesForJob } from "@/lib/database/queries/invoices";
-import { listJobs } from "@/lib/database/queries/jobs";
-import {
-  listCompanyJobLaborEntries,
-  listTimeEntries,
-} from "@/lib/database/queries/time-entries";
+  getCompanyInconsistencyScan,
+  INTEGRITY_SCAN_PREVIEW_LIMIT,
+} from "@/lib/database/queries/operational-inconsistency-counts";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildOperationalInconsistenciesReport,
@@ -47,77 +44,73 @@ async function listActiveCompanyMemberUserIds(
 }
 
 /**
- * ============================== THIS IS THE DASHBOARD'S REMAINING COST ==============================
- * Measured by instrumenting the dashboard's own fan-out on the scale-seeded
- * scratch tenant (12,000 jobs / 10,000 invoices / 7,857 payments / 5,687 labour
- * entries), with ALTAIR_DASHBOARD_AGGREGATES=on -- so the aggregate path, not
- * the legacy arrays. Three consecutive renders, times in ms:
+ * The company-wide data-integrity scan.
  *
- *   officeReview   7018  6878  6901     <- awaits this report
- *   opsSummary     6595  6486  6505     <- awaits this report
- *   leads          1786  1681  1479
- *   customers      1711  1571  1608
- *   ...every other loader below 1200
+ * ============================== WHAT THIS REPLACED ==============================
+ * It loaded listJobs and listInvoices -- every job and every invoice with their
+ * joins -- plus every dispatch assignment and every job-labor entry, and ran
+ * nine structural rules over them in Node.
  *
- * The two leaders are the same work. getDailyOperationsSummary and
- * getCompanyOfficeReviewQueueReport both await this function; React cache()
- * collapses it to one call, and that one call is ~6.5 s of a 9.1 s page. It is
- * what is left after migrations 166, 167 and 168 removed the rest.
+ * PostgREST caps each of those reads at 1,000 rows. On the scale-seeded tenant
+ * that meant scanning 1,000 of 12,000 jobs and reporting a clean bill of health
+ * for the other 11,000 -- and because listJobs orders scheduled_at desc, the
+ * rows it dropped were the OLDEST, which is where unresolved integrity problems
+ * accumulate. An integrity scan that misses the old problems is missing the
+ * only ones it exists to find.
  *
- * ============================== AND IT IS ALSO WRONG ==============================
- * listJobs and listInvoices are capped at 1,000 rows by PostgREST. This is an
- * INTEGRITY SCAN, so a scan that reads 8% of the jobs and reports no problems in
- * the other 92% is worse than no scan. On the seeded tenant the full data holds
- * 4,451 inconsistencies and this reports roughly 371 of them -- and because
- * listJobs orders scheduled_at desc, the ones it drops are the oldest, which is
- * where unresolved integrity problems accumulate.
+ * It was also the dashboard's largest single cost: about 6.5 s of a 9.1 s page,
+ * awaited by both getDailyOperationsSummary and getCompanyOfficeReviewQueueReport.
  *
- * ============================== WHY IT WAS NOT FIXED HERE ==============================
- * The obvious move -- narrow to candidate jobs in SQL and run the unchanged
- * detector over them -- fixes the reads but not the shape: the entry list has no
- * cap at all, so on the seeded tenant a correct version would ship 4,451 entries
- * into the RSC payload and into the office review queue. Making it correct makes
- * the payload worse.
+ * ============================== WHAT IT DOES NOW ==============================
+ * Migration 172 counts the whole tenant and returns a bounded, severity-ordered
+ * page of the offending JOBS. The counts on the summary are exact; `entries` is
+ * a preview of at most INTEGRITY_SCAN_PREVIEW_LIMIT jobs' worth, and `hasMore`
+ * says whether there are more. Nothing may treat `entries.length` as a total --
+ * the summary carries jobCount, criticalJobCount and multiKindJobCount for
+ * exactly that reason.
  *
- * So it needs the same treatment as migrations 167 and 169: exact counts for the
- * whole tenant plus a bounded, severity-ordered slice of entries. That in turn
- * means buildOfficeReviewQueueReport must take its summary counts from those
- * counts rather than from `items.length`, which is the part that makes this a
- * piece of work rather than a patch. Its counts are already wrong today for the
- * same truncation reason, so that is a fix and not a regression -- but it is a
- * user-visible change to a queue and deserves its own differential rather than
- * being tacked onto something else.
- *
- * detectOperationalInconsistencies itself should not move to SQL. Every rule is
- * a structural predicate over one job and its assignments, labour and invoices,
- * and the detail strings embed counts -- so SQL should return the offending
- * jobs and their counts, and buildEntry should keep producing the messages.
+ * The entries themselves are still produced by the shipped detector, run over
+ * the previewed jobs. No rule, detail string, severity or guidance line is
+ * duplicated.
  */
 export const getCompanyOperationalInconsistenciesReport = cache(
   async function getCompanyOperationalInconsistenciesReport(
     companyId: string,
+    options?: { limit?: number; offset?: number },
   ): Promise<OperationalInconsistenciesReport> {
-  const [jobs, assignments, laborEntries, invoices, activeMemberUserIds] =
-    await Promise.all([
-      listJobs(companyId),
-      listDispatchAssignmentsForCompany(companyId),
-      listCompanyJobLaborEntries(companyId),
-      listInvoices(companyId),
-      listActiveCompanyMemberUserIds(companyId),
-    ]);
+    const scan = await getCompanyInconsistencyScan(companyId, {
+      limit: options?.limit ?? INTEGRITY_SCAN_PREVIEW_LIMIT,
+      offset: options?.offset ?? 0,
+    });
 
-  const summary = detectOperationalInconsistencies({
-    jobs,
-    assignments,
-    laborEntries,
-    invoices,
-    activeMemberUserIds,
-  });
+    if (!scan.ok || !scan.summary) {
+      // A failed scan must not read as a clean company. Zeroes here would be
+      // indistinguishable from "no integrity problems", which is the exact
+      // false reassurance this whole change exists to remove -- so the counts
+      // are zero AND hasMore is true, and the caller can tell the difference.
+      return buildOperationalInconsistenciesReport({
+        totalCount: 0,
+        criticalCount: 0,
+        warningCount: 0,
+        byKind: {},
+        jobCount: 0,
+        criticalJobCount: 0,
+        multiKindJobCount: 0,
+        entries: [],
+        hasMore: true,
+      });
+    }
 
-  return buildOperationalInconsistenciesReport(summary);
+    return buildOperationalInconsistenciesReport(scan.summary);
   },
 );
 
+/**
+ * One job's inconsistencies, for the job detail page.
+ *
+ * Unchanged: every read here is already scoped to a single job, so none of them
+ * can be truncated by the row ceiling.
+ */
 export async function getJobOperationalInconsistencies(
   companyId: string,
   job: Job,

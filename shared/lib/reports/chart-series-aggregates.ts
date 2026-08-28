@@ -273,7 +273,10 @@ export function buildAvgTicketSparklineFromDailySeries(
     series.payments,
     () => ({ sum: 0, count: 0 }),
     (acc: { sum: number; count: number }, row: { amount: number; count: number }) => {
-      acc.sum += num(row.amount);
+      // Integer cents, for the reason on buildAvgTicketSparkline: this sums a
+      // day's total where the array path sums each payment, and the two orders
+      // land on different doubles.
+      acc.sum += Math.round(num(row.amount) * 100);
       acc.count += num(row.count);
     },
   );
@@ -283,7 +286,7 @@ export function buildAvgTicketSparklineFromDailySeries(
     if (!entry || entry.count === 0) {
       return 0;
     }
-    return roundCurrency(entry.sum / entry.count);
+    return roundCurrency(entry.sum / 100 / entry.count);
   });
 }
 

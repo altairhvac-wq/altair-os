@@ -80,6 +80,22 @@ export async function getCompanyOfficeReviewQueueReport(
     awaitingInvoicing,
     stalledJobs,
     operationalInconsistencies: operationalInconsistencies.summary.entries,
+    // ============================== THE COUNTS COME FROM SQL, NOT THE PREVIEWS ==============================
+    // Every list above is bounded: five jobs each from the completeness
+    // summary, and a bounded page of jobs from the integrity scan. The queue
+    // used to report `items.length` as its total, which meant the dashboard's
+    // office-queue card described the size of a preview.
+    sourceTotals: {
+      completedWorkReview: summary.sections.completedWorkReview.count,
+      criticalCompletedWorkReview:
+        summary.sections.completedWorkReview.criticalCount,
+      awaitingInvoicing: summary.sections.completedAwaitingInvoicing.count,
+      stalledJobs: summary.sections.stalledJobs.count,
+      integrityJobs: operationalInconsistencies.summary.jobCount,
+      integrityCriticalJobs: operationalInconsistencies.summary.criticalJobCount,
+      integrityMultiKindJobs:
+        operationalInconsistencies.summary.multiKindJobCount,
+    },
     resolutionTrend,
     customerIdByJobId,
     sortMode: options?.sortMode,

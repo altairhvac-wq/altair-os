@@ -389,14 +389,15 @@ export const getDailyOperationsSummary = cache(
   ]);
 
 
-  const integrityJobIds = new Set(
-    operationalInconsistencies.summary.entries.map((entry) => entry.jobId),
-  );
-  const criticalDataIntegrityCount = new Set(
-    operationalInconsistencies.summary.entries
-      .filter((entry) => entry.severity === "critical")
-      .map((entry) => entry.jobId),
-  ).size;
+  // ============================== EXACT, NOT COUNTED FROM THE PREVIEW ==============================
+  // These were `new Set(entries.map(...)).size` over the entry list. That list
+  // is a bounded preview on the aggregate path -- and even before it was
+  // bounded, it came from a scan that had read 1,000 of 12,000 jobs. Migration
+  // 172 counts distinct offending jobs and distinct critical ones across the
+  // whole tenant; the preview is for showing, not for counting.
+  const dataIntegrityJobCount = operationalInconsistencies.summary.jobCount;
+  const criticalDataIntegrityCount =
+    operationalInconsistencies.summary.criticalJobCount;
 
   const sections = {
     revenue: {
@@ -448,6 +449,7 @@ export const getDailyOperationsSummary = cache(
     },
     completedWorkReview: {
       count: completeness.completedWorkReviewCount,
+      criticalCount: completeness.criticalCompletedWorkReviewCount,
       jobs: completeness.completedWorkReviewJobs.map((job) => {
         // The REASONS come back as the four booleans the SQL evaluated, and are
         // reassembled here in the shipped order rather than re-derived, so the
@@ -513,13 +515,11 @@ export const getDailyOperationsSummary = cache(
     completedAwaitingInvoicingCount:
       sections.completedAwaitingInvoicing.count,
     completedWorkReviewCount: sections.completedWorkReview.count,
-    criticalCompletedWorkReviewCount: sections.completedWorkReview.jobs.filter(
-      (job) => job.severity === "critical",
-    ).length,
+    criticalCompletedWorkReviewCount: sections.completedWorkReview.criticalCount,
     jobsWithWarnings: sections.profitabilityWarnings.jobsWithWarnings,
     materialCostExceedsCollectedCount:
       sections.profitabilityWarnings.materialCostExceedsCollectedCount,
-    dataIntegrityJobCount: integrityJobIds.size,
+    dataIntegrityJobCount,
     criticalDataIntegrityCount,
     todayPaymentCount: sections.revenue.todayPaymentCount,
     activeLaborEntries: sections.activeTechnicians.activeLaborEntries,
