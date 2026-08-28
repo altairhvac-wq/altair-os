@@ -352,6 +352,115 @@ async function main() {
       "if these matched on a tenant above the ceiling, the comparison would be vacuous",
     );
 
+    // ============================== TENANT ISOLATION ==============================
+    // A signed-in user is not enough. The function must refuse a real, valid,
+    // ACTIVE member of a different company — the failure that would put one
+    // tenant's receivables on another's dashboard, and the one an anon test
+    // cannot detect because anon fails for an entirely different reason.
+    console.log("\nA member of another company is refused");
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const { data: otherCo, error: otherCoError } = await admin
+      .from("companies")
+      .insert({
+        name: `[OPSSUMMARY-OTHER] ${suffix}`,
+        slug: `loadtest-opsother-${suffix}`,
+        trade: "hvac",
+      })
+      .select("id")
+      .single();
+    if (otherCoError) throw new Error(`other company: ${otherCoError.message}`);
+
+    const outsiderEmail = `opsoutsider-${suffix}@opssummary.invalid`;
+    const outsiderPassword = `Ops!outsider-${suffix}-Zq9`;
+    const { data: outsiderCreated, error: outsiderError } =
+      await admin.auth.admin.createUser({
+        email: outsiderEmail,
+        password: outsiderPassword,
+        email_confirm: true,
+      });
+    if (outsiderError) throw new Error(`outsider: ${outsiderError.message}`);
+    const outsider = outsiderCreated.user;
+
+    try {
+      await admin.from("profiles").upsert({
+        id: outsider.id,
+        email: outsiderEmail,
+        full_name: "Ops Outsider",
+      });
+      await admin.from("company_memberships").insert({
+        company_id: otherCo.id,
+        user_id: outsider.id,
+        role: "owner",
+        status: "active",
+        joined_at: new Date().toISOString(),
+      });
+
+      const outsiderClient = createClient(url, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { error: outsiderSignIn } =
+        await outsiderClient.auth.signInWithPassword({
+          email: outsiderEmail,
+          password: outsiderPassword,
+        });
+      if (outsiderSignIn) {
+        throw new Error(`outsider sign-in: ${outsiderSignIn.message}`);
+      }
+
+      // Sanity first: without this, "refused" could mean the outsider simply
+      // cannot call the function at all, and the isolation test would pass for
+      // the wrong reason.
+      const { error: ownError } = await outsiderClient.rpc(
+        "get_company_operations_summary",
+        { p_company_id: otherCo.id },
+      );
+      check(
+        "the outsider IS able to read their OWN company",
+        ownError == null,
+        ownError
+          ? `${ownError.message} — if this fails, the check below proves nothing`
+          : "",
+      );
+
+      const { data: crossData, error: crossError } = await outsiderClient.rpc(
+        "get_company_operations_summary",
+        { p_company_id: companyId },
+      );
+      check(
+        "and is refused the seeded company",
+        crossError != null,
+        crossError
+          ? ""
+          : `the call SUCCEEDED and returned ${JSON.stringify(crossData?.revenue ?? {})}`,
+      );
+    } finally {
+      await admin
+        .from("company_memberships")
+        .delete()
+        .eq("company_id", otherCo.id);
+      await admin.from("companies").delete().eq("id", otherCo.id);
+      await admin.auth.admin.deleteUser(outsider.id);
+    }
+
+    // service_role holds EXECUTE, but auth.uid() is null under it, so the
+    // function returns its zeros envelope rather than crossing tenants. That is
+    // the documented fail-closed branch, asserted rather than assumed.
+    console.log("\nservice_role executes but gets nothing without an actor");
+    const { data: svcData, error: svcError } = await admin.rpc(
+      "get_company_operations_summary",
+      { p_company_id: companyId },
+    );
+    check(
+      "service_role is permitted to execute",
+      svcError == null,
+      svcError?.message ?? "",
+    );
+    check(
+      "and receives the zeros envelope, not the company's figures",
+      Number(svcData?.revenue?.outstandingRevenue ?? 0) === 0,
+      `got ${JSON.stringify(svcData?.revenue ?? {})}`,
+    );
+
     console.log("\nAnon cannot call it");
     const anon = createClient(url, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
