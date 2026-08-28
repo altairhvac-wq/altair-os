@@ -75,6 +75,11 @@ steps.push(
   { name: "error-boundaries", script: "scripts/verify-error-boundaries.mjs" },
   { name: "bounded-reads", script: "scripts/verify-bounded-reads.mjs" },
   {
+    name: "shadow-report",
+    script: "scripts/verify-shadow-report.mjs",
+    typescript: true,
+  },
+  {
     name: "payment-reconciliation",
     script: "scripts/test-payment-reconciliation-classification.mjs",
   },
@@ -90,10 +95,25 @@ const results = [];
 let failed = false;
 
 for (const step of steps) {
-  const result = spawnSync(process.execPath, [step.script, ...(step.args ?? [])], {
-    stdio: "inherit",
-    env: { ...process.env, ALTAIR_VERIFY_OFFLINE: "1" },
-  });
+  const nodeArgs = step.typescript
+    ? [
+        // The shipped modules this step imports are TypeScript. Loading them
+        // through the same alias loader the live verifiers use is what makes it
+        // a test of the REAL classifier rather than a copy of it.
+        "--experimental-strip-types",
+        "--import",
+        "./scripts/lib/ts-alias-loader-register.mjs",
+      ]
+    : [];
+
+  const result = spawnSync(
+    process.execPath,
+    [...nodeArgs, step.script, ...(step.args ?? [])],
+    {
+      stdio: "inherit",
+      env: { ...process.env, ALTAIR_VERIFY_OFFLINE: "1" },
+    },
+  );
   const status = result.error ? 1 : (result.status ?? 1);
   if (result.error) {
     console.error(`\n${step.name}: could not start — ${result.error.message}`);

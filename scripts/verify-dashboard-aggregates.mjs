@@ -472,7 +472,30 @@ check(
 
 check(
   "an RPC failure degrades to zeros rather than throwing the page down",
-  /return EMPTY_DASHBOARD_AGGREGATES;/.test(queryModule),
+  /EMPTY_DASHBOARD_AGGREGATES/.test(queryModule) &&
+    !/throw new Error/.test(queryModule),
+);
+
+// ============================== THE ZEROS MUST BE DISTINGUISHABLE ==============================
+// Degrading to zeros is right for RENDERING and wrong for COMPARING. Shadow
+// mode compared them anyway, so a failed RPC produced drift on every non-zero
+// field and was reported as evidence the legacy path was understating — a
+// missing migration would have read as confirmation the new path worked.
+//
+// So the contract is now BOTH: zeros on failure, and a caller able to tell.
+check(
+  "and the caller can tell zeros-from-failure apart from a genuinely empty tenant",
+  /ok:\s*false/.test(queryModule) && /ok:\s*true/.test(queryModule),
+  "getCompanyDashboardAggregatesResult must report ok, or shadow mode cannot " +
+    "distinguish a failure from drift",
+);
+
+check(
+  "an RPC failure reaches the monitor, not only the runtime log",
+  /captureMonitoredEvent/.test(queryModule) &&
+    /dashboard\.aggregate_rpc_failed/.test(queryModule),
+  "a console line on Vercel is short-lived and cannot be searched by tag; a " +
+    "permission failure on this RPC is exactly what a rollout must see",
 );
 
 check(

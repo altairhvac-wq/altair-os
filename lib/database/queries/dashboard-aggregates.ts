@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { captureMonitoredEvent } from "@/lib/operations/monitoring";
 
 /**
  * Exact dashboard aggregates, computed in SQL.
@@ -168,18 +169,38 @@ function readExpenses(raw: unknown): DashboardExpenseAggregates {
 }
 
 /**
+ * The outcome of one aggregate fetch, with success distinguishable from zeros.
+ *
+ * ============================== WHY THIS TYPE EXISTS ==============================
+ * This function returns ZEROS on failure, deliberately: the dashboard is a
+ * read-only overview and a transient database error should degrade one panel
+ * rather than take the page down. That is the right behaviour for RENDERING and
+ * the wrong shape for COMPARING, because a caller cannot tell an all-zero
+ * tenant from a failed call.
+ *
+ * Shadow mode compared them anyway. A failed RPC produced drift on every
+ * non-zero field, reported as evidence that the legacy path was understating —
+ * so a missing migration or a revoked grant would have read as confirmation
+ * that the new path was working. `ok` is what stops that.
+ */
+export type DashboardAggregatesResult = {
+  aggregates: DashboardAggregates;
+  /** False when the RPC failed and `aggregates` is the zeros fallback. */
+  ok: boolean;
+  /** Postgres/PostgREST code, for classification. Never a message with data in it. */
+  errorCode?: string;
+};
+
+/**
  * Fetches the aggregates for one company.
  *
- * Returns zeros on failure rather than throwing. The dashboard is a read-only
- * overview: a transient database error should degrade one panel, not take the
- * whole page down. The failure is logged, and — unlike the situation before
- * Phase 2 — that log now reaches the error monitor through the operations
- * framework when the caller runs inside `runOperation`.
+ * Returns zeros on failure rather than throwing — see DashboardAggregatesResult
+ * for why the caller is told which it got.
  */
-export async function getCompanyDashboardAggregates(
+export async function getCompanyDashboardAggregatesResult(
   companyId: string,
   reference: Date = new Date(),
-): Promise<DashboardAggregates> {
+): Promise<DashboardAggregatesResult> {
   const supabase = await createClient();
 
   const { data, error } = await supabase.rpc(
@@ -198,14 +219,54 @@ export async function getCompanyDashboardAggregates(
       details: error.details,
       hint: error.hint,
     });
-    return EMPTY_DASHBOARD_AGGREGATES;
+
+    // Reaches the monitor as well as the runtime log. A console line on Vercel
+    // is short-lived and cannot be searched by tag; a permission failure on this
+    // RPC is precisely the thing a rollout needs to see, and it used to be
+    // visible only to whoever happened to be tailing logs at the time.
+    captureMonitoredEvent({
+      event: "dashboard.aggregate_rpc_failed",
+      level: "error",
+      companyId,
+      meta: {
+        // Codes and flags only. The message can echo SQL and identifiers.
+        code: error.code ?? null,
+        // 42501 is permission denied; PGRST202 is a missing function. Both mean
+        // a migration or a grant did not land, not a transient fault.
+        likelyDeploymentFault:
+          error.code === "42501" || error.code === "PGRST202",
+      },
+    });
+
+    return {
+      aggregates: EMPTY_DASHBOARD_AGGREGATES,
+      ok: false,
+      errorCode: error.code ?? undefined,
+    };
   }
 
   const payload = (data ?? {}) as Record<string, unknown>;
 
   return {
-    invoices: readInvoices(payload.invoices),
-    estimates: readEstimates(payload.estimates),
-    expenses: readExpenses(payload.expenses),
+    aggregates: {
+      invoices: readInvoices(payload.invoices),
+      estimates: readEstimates(payload.estimates),
+      expenses: readExpenses(payload.expenses),
+    },
+    ok: true,
   };
+}
+
+/**
+ * Back-compatible shape for callers that only render.
+ *
+ * Kept so the rendering path is unchanged: it wants zeros on failure and does
+ * not care which it got. Only the comparison path needs `ok`.
+ */
+export async function getCompanyDashboardAggregates(
+  companyId: string,
+  reference: Date = new Date(),
+): Promise<DashboardAggregates> {
+  const result = await getCompanyDashboardAggregatesResult(companyId, reference);
+  return result.aggregates;
 }
