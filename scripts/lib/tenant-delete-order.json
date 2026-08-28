@@ -1,0 +1,399 @@
+[
+  {
+    "table": "agent_marketing_decisions",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "agent_marketing_snapshots",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "ai_rate_limit_counters",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "ai_usage_events",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "alpha_tracker_items",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "beta_feedback_reports",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "billing_signatures",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_ai_limits",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_document_counters",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_payment_accounts",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_subscriptions",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_billing_accounts",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "customer_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "customer_equipment",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "design_lab_themes",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "dispatch_assignments",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "estimate_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "estimate_approval_tokens",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "estimate_line_items",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "expense_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "expenses",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "invoice_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "invoice_line_items",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "invoice_payment_tokens",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "job_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "job_attachments",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "job_materials",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "lead_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "leads",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_channel_deliveries",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_connected_account_secrets",
+    "scope": {
+      "via": {
+        "parentTable": "marketing_connected_accounts",
+        "childKey": "connected_account_id",
+        "parentKey": "id"
+      }
+    }
+  },
+  {
+    "table": "marketing_connected_accounts",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_directives",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_items",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_metrics",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_oauth_states",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_posts",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_media_assets",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "marketing_runs",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "membership_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "company_memberships",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "network_help_offers",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "network_help_requests",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "network_invites",
+    "scope": {
+      "columns": [
+        "source_company_id",
+        "accepted_company_id"
+      ]
+    }
+  },
+  {
+    "table": "network_partners",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "network_profiles",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "notifications",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "payment_disputes",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "invoice_payments",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "payment_reconciliations",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "payment_attempts",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "invoices",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "estimates",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "payment_provider_events",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "platform_founder_signal_actions",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "security_audit_events",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "service_items",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "sms_opt_outs",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "subscription_event_ledger",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "time_activities",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "time_clock_entries",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "time_entries",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "jobs",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "customers",
+    "scope": {
+      "column": "company_id"
+    }
+  },
+  {
+    "table": "workflow_reminders",
+    "scope": {
+      "column": "company_id"
+    }
+  }
+]

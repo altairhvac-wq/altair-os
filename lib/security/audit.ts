@@ -52,7 +52,11 @@ export type SecurityAuditEventType =
   | "public_invoice_checkout.rate_limited"
   // An export is the single largest disclosure the product can perform.
   | "workspace_export.completed"
-  | "workspace_export.failed";
+  | "workspace_export.failed"
+  // Deletion is the one irreversible action. Every step of it is recorded.
+  | "company_deletion.requested"
+  | "company_deletion.request_refused"
+  | "company_deletion.cancelled";
 
 export type SecurityAuditOutcome = "succeeded" | "failed" | "refused";
 

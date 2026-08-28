@@ -1557,6 +1557,37 @@ export type Database = {
         };
         Returns: Json;
       };
+      // Company deletion lifecycle: migration 175 — wire into Database types
+      // on next gen types run. Requesting and cancelling are customer actions;
+      // claim/progress/finish are operator machinery and service_role only.
+      request_company_deletion: {
+        Args: {
+          p_company_id: string;
+          p_confirmation: string;
+          p_grace_days: number;
+        };
+        Returns: Json;
+      };
+      cancel_company_deletion: {
+        Args: { p_company_id: string };
+        Returns: Json;
+      };
+      claim_company_deletion: {
+        Args: { p_company_id: string };
+        Returns: Json;
+      };
+      record_company_deletion_progress: {
+        Args: { p_company_id: string; p_progress: Json };
+        Returns: undefined;
+      };
+      finish_company_deletion: {
+        Args: {
+          p_company_id: string;
+          p_status: string;
+          p_failure_reason: string | null;
+        };
+        Returns: undefined;
+      };
       // record_security_audit_event: migration 174 — wire into Database types
       // on next gen types run. Writes one authentication/security event.
       // Hashes only; no address, email or token reaches it. service_role only.
