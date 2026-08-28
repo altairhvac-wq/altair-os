@@ -1,8 +1,5 @@
 import "server-only";
 
-import { listEstimates } from "@/lib/database/queries/estimates";
-import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
-import { listJobs } from "@/lib/database/queries/jobs";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import {
   averageTicketInBounds,
@@ -96,7 +93,7 @@ export function resolvePriorCalendarMonthBounds(
   };
 }
 
-function resolveSparklineBucketSize(
+export function resolveSparklineBucketSize(
   bounds: ProfitabilityReportDateBounds,
 ): ReportChartBucketSize {
   const start = parseDateOnly(bounds.startDate).getTime();
@@ -178,35 +175,20 @@ export function buildDashboardKpiStripFromDatasets(
 }
 
 /**
- * Loads jobs, payments, and estimates once and computes Mission Control KPI-strip
- * metrics for the current and prior calendar months, including sparkline buckets.
+ * ============================== THE LOADER IS GONE ==============================
+ * getDashboardKpiStripData lived here. It loaded listJobs, listInvoicePayments
+ * and listEstimates -- three whole books -- and reduced them into the Mission
+ * Control v2 KPI strip.
+ *
+ * Nothing called it. Nothing called buildMissionControlV2KpiStrip either, and
+ * no route renders the strip: it was a closed island of three unbounded reads
+ * that would have been wrong the moment anything wired it up, because each of
+ * those reads is capped at 1,000 rows by PostgREST and says nothing about the
+ * rest.
+ *
+ * The metric BUILDERS below stay, because they are the definition of what the
+ * strip's numbers mean and re-deriving them later would be worse than keeping
+ * them. Whoever wires the strip up needs a bounded source for them -- an
+ * aggregate in the shape of migrations 158 and 169 -- not another fan-out of
+ * whole-book reads.
  */
-export async function getDashboardKpiStripData(
-  companyId: string,
-  timeZone: string,
-  reference: Date = new Date(),
-): Promise<DashboardKpiStripData> {
-  const currentBounds = resolveCurrentCalendarMonthBounds(timeZone, reference);
-  const previousBounds = resolvePriorCalendarMonthBounds(currentBounds);
-  const bucketSize = resolveSparklineBucketSize(currentBounds);
-
-  const [jobs, payments, estimates] = await Promise.all([
-    listJobs(companyId),
-    listInvoicePayments(companyId),
-    listEstimates(companyId),
-  ]);
-
-  return {
-    currentBounds,
-    previousBounds,
-    bucketSize,
-    metrics: buildDashboardKpiStripFromDatasets(
-      jobs,
-      payments,
-      estimates,
-      currentBounds,
-      previousBounds,
-      bucketSize,
-    ),
-  };
-}
