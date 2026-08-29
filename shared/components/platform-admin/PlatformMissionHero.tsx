@@ -142,7 +142,7 @@ export function PlatformMissionHero({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
-                <Brain className="h-4 w-4 text-[#C9A44D]" aria-hidden="true" />
+                <Brain className="h-4 w-4 text-[#C2A05A]" aria-hidden="true" />
                 <span className={t.eyebrowAccent}>Founder brain</span>
               </div>
               <h1 className={`mt-2 ${t.heroTitle}`}>{missionHero.title}</h1>

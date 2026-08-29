@@ -3,7 +3,7 @@ import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 type LegalPageShellProps = {
   title: string;
@@ -23,7 +23,7 @@ export function LegalPageShell({
   children,
 }: LegalPageShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#08090c]">
+    <div className="flex min-h-screen flex-col bg-[#080907]">
       <header className="border-b border-[rgba(222,228,236,0.08)] px-5 py-4 sm:px-8">
         <div className="mx-auto flex max-w-[90rem] items-center justify-between">
           <Link
@@ -42,7 +42,7 @@ export function LegalPageShell({
             </Link>
             <Link
               href="/login"
-              className={`rounded-sm font-medium text-[#c9a44d] transition-colors hover:text-[#e6d092] ${focusRing}`}
+              className={`rounded-sm font-medium text-[#c2a05a] transition-colors hover:text-[#e8d9ac] ${focusRing}`}
             >
               Sign In
             </Link>
@@ -52,13 +52,13 @@ export function LegalPageShell({
 
       <main className="flex-1 bg-[#fbf7ef] px-5 py-12 sm:px-8 sm:py-16">
         <article className="mx-auto max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#977d2a]">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#77591b]">
             Altair OS
           </p>
           <h1 className="mt-3 font-[family-name:var(--font-altair-display)] text-4xl tracking-tight text-[#17130e] sm:text-5xl">
             {title}
           </h1>
-          <p className="mt-2 text-sm text-[#64748b]">
+          <p className="mt-2 text-sm text-[#7c7259]">
             Effective {effectiveDate}
           </p>
           <p className="mt-6 text-base leading-relaxed text-[#4f4638]">

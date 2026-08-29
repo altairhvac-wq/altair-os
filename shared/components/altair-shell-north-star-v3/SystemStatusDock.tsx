@@ -16,11 +16,11 @@ export function SystemStatusDock({ health }: SystemStatusDockProps) {
 
   return (
     <div
-      className={`${v3FooterSectionClass} flex items-center gap-4 border-t border-[rgba(184,148,63,0.10)] px-4 py-4 lg:border-l lg:border-t-0 lg:px-5`}
+      className={`${v3FooterSectionClass} flex items-center gap-4 border-t border-[rgba(194,160,90,0.10)] px-4 py-4 lg:border-l lg:border-t-0 lg:px-5`}
     >
       <div className="relative h-11 w-11 shrink-0">
         <svg className="h-full w-full -rotate-90" viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(184,148,63,0.18)" strokeWidth="3" />
+          <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(194,160,90,0.18)" strokeWidth="3" />
           <circle
             cx="24"
             cy="24"

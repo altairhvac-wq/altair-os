@@ -272,7 +272,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
                   </span>
                 ) : null}
                 <ChevronRight
-                  className="h-4 w-4 text-[#8A6324]"
+                  className="h-4 w-4 text-[#77591B]"
                   aria-hidden="true"
                 />
               </div>

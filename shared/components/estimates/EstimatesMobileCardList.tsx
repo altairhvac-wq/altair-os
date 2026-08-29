@@ -42,7 +42,7 @@ export function EstimatesMobileCardList({
     <ul
       className={`md:hidden ${
         northStar
-          ? "estimate-north-star-mobile-list divide-y divide-[rgba(138,99,36,0.12)]"
+          ? "estimate-north-star-mobile-list divide-y divide-[rgba(119,89,27,0.12)]"
           : "divide-y divide-slate-100"
       }`}
     >
@@ -59,7 +59,7 @@ export function EstimatesMobileCardList({
           <ul
             className={
               northStar
-                ? "divide-y divide-[rgba(138,99,36,0.12)]"
+                ? "divide-y divide-[rgba(119,89,27,0.12)]"
                 : "divide-y divide-slate-100"
             }
           >
@@ -129,7 +129,7 @@ export function EstimatesMobileCardList({
                             canManageCustomers={canManageCustomers}
                             linkClassName={
                               northStar
-                                ? "text-sm font-medium text-[#4F4638] transition-colors hover:text-[#8A6324]"
+                                ? "text-sm font-medium text-[#4F4638] transition-colors hover:text-[#77591B]"
                                 : "text-sm text-slate-600 transition-colors hover:text-cyan-700"
                             }
                             stopRowNavigation
@@ -172,7 +172,7 @@ export function EstimatesMobileCardList({
                         </p>
                         <ChevronRight
                           className={
-                            northStar ? "h-4 w-4 text-[#8A6324]" : "h-4 w-4 text-slate-300"
+                            northStar ? "h-4 w-4 text-[#77591B]" : "h-4 w-4 text-slate-300"
                           }
                         />
                       </div>

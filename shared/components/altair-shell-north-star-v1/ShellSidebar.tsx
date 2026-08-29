@@ -22,7 +22,7 @@ export function ShellSidebar() {
   return (
     <aside
       aria-label="Altair shell navigation"
-      className="hidden w-[15.5rem] shrink-0 flex-col border-r border-slate-800/60 bg-gradient-to-b from-[#070b12] via-slate-950 to-[#0a0f18] lg:flex"
+      className="hidden w-[15.5rem] shrink-0 flex-col border-r border-slate-800/60 bg-gradient-to-b from-[#0a0b09] via-slate-950 to-[#0d100c] lg:flex"
     >
       <div className="border-b border-slate-800/60 px-5 py-5">
         <div className="flex items-center gap-3">

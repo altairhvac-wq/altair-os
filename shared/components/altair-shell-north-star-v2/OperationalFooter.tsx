@@ -74,7 +74,7 @@ export function OperationalFooter({ metrics, activities, health, momentum }: Ope
         <div className="flex items-center gap-4 border-b border-slate-200/70 px-4 py-3.5 lg:border-b-0 lg:border-r lg:px-5">
           <div className="relative h-12 w-12 shrink-0">
             <svg className="h-full w-full -rotate-90" viewBox="0 0 52 52" aria-hidden="true">
-              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(148,163,184,0.3)" strokeWidth="3.5" />
+              <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(176,168,143,0.3)" strokeWidth="3.5" />
               <circle
                 cx="26"
                 cy="26"
@@ -89,7 +89,7 @@ export function OperationalFooter({ metrics, activities, health, momentum }: Ope
               <defs>
                 <linearGradient id="footer-health-score" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#059669" />
-                  <stop offset="100%" stopColor="#0891b2" />
+                  <stop offset="100%" stopColor="#918465" />
                 </linearGradient>
               </defs>
             </svg>

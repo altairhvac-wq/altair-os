@@ -29,7 +29,7 @@ function getServiceItemsSummary(serviceItems: ServiceItem[]) {
   };
 }
 
-const northStarMetricIconClass = "[&_svg]:text-[#8A6324]";
+const northStarMetricIconClass = "[&_svg]:text-[#77591B]";
 
 export function ServiceItemsSummaryCards({
   serviceItems,
@@ -83,9 +83,9 @@ export function ServiceItemsSummaryCards({
         {cards.map((card) => (
           <div
             key={card.label}
-            className={`rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
+            className={`rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
               card.highlighted
-                ? "border-[rgba(138,99,36,0.28)] bg-[#FFF9EA] ring-1 ring-[rgba(138,99,36,0.16)]"
+                ? "border-[rgba(119,89,27,0.28)] bg-[#FFF9EA] ring-1 ring-[rgba(119,89,27,0.16)]"
                 : ""
             }`}
           >
@@ -102,7 +102,7 @@ export function ServiceItemsSummaryCards({
                 ) : null}
               </div>
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] ${northStarMetricIconClass} ${card.iconClassName}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)] ${northStarMetricIconClass} ${card.iconClassName}`}
               >
                 <card.icon className="h-4 w-4" />
               </div>

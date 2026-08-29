@@ -18,7 +18,7 @@ export function BillingMobileAmountHeader({
       <div
         className={
           northStar
-            ? "flex min-w-0 items-center justify-between gap-3 rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-2.5"
+            ? "flex min-w-0 items-center justify-between gap-3 rounded-lg border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] px-3 py-2.5"
             : "flex min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5"
         }
       >

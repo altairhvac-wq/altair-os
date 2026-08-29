@@ -1,7 +1,7 @@
 /** Shared visual tokens for the Altair OS shell concept — premium dark operating system. */
 
 /** Root shell background — dark navy / graphite. */
-export const shellRootClass = "bg-[#0a0f18]";
+export const shellRootClass = "bg-[#0d100c]";
 
 /** Main command canvas with subtle cyan horizon glow. */
 export const shellCanvasClass =
@@ -19,7 +19,7 @@ export const shellZoneClass =
 
 /** Dominant command deck — one primary canvas. */
 export const shellCommandDeckClass =
-  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0c1220] via-slate-950 to-[#0a0f18] p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6";
+  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#10130f] via-slate-950 to-[#0d100c] p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6";
 
 /** Nested frosted inset surface inside a zone. */
 export const shellInsetClass =

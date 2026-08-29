@@ -19,14 +19,14 @@ export function JobAdditionalWorkflowControls({
     <details
       className={
         northStar
-          ? "min-w-0 rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[rgba(255,249,234,0.45)] open:bg-[rgba(255,249,234,0.7)]"
+          ? "min-w-0 rounded-lg border border-dashed border-[rgba(119,89,27,0.22)] bg-[rgba(255,249,234,0.45)] open:bg-[rgba(255,249,234,0.7)]"
           : "w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/70 open:bg-slate-50 lg:max-w-md"
       }
     >
       <summary
         className={
           northStar
-            ? "cursor-pointer list-none px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8A6324] marker:content-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] [&::-webkit-details-marker]:hidden"
+            ? "cursor-pointer list-none px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#77591B] marker:content-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A] [&::-webkit-details-marker]:hidden"
             : "cursor-pointer list-none px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 marker:content-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 [&::-webkit-details-marker]:hidden"
         }
       >
@@ -34,7 +34,7 @@ export function JobAdditionalWorkflowControls({
         <span
           className={
             northStar
-              ? "ml-1.5 font-normal normal-case tracking-normal text-[#8A6324]/80"
+              ? "ml-1.5 font-normal normal-case tracking-normal text-[#77591B]/80"
               : "ml-1.5 font-normal normal-case tracking-normal text-slate-400"
           }
         >
@@ -45,7 +45,7 @@ export function JobAdditionalWorkflowControls({
         className="space-y-2 border-t px-3 py-2.5 opacity-90"
         style={{
           borderColor: northStar
-            ? "rgba(138,99,36,0.14)"
+            ? "rgba(119,89,27,0.14)"
             : "rgb(226 232 240)",
         }}
         aria-label="Additional workflow controls"

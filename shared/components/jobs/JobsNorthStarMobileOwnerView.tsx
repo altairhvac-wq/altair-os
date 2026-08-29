@@ -347,7 +347,7 @@ export function JobsNorthStarMobileOwnerView({
   const laterTodayJobs = todayJobs.slice(1);
 
   const filterSelectClass =
-    "h-11 w-full min-h-11 appearance-none rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
+    "h-11 w-full min-h-11 appearance-none rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-[rgba(194,160,90,0.45)] focus:ring-2 focus:ring-[rgba(194,160,90,0.18)]";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -370,7 +370,7 @@ export function JobsNorthStarMobileOwnerView({
             <Filter className="h-3.5 w-3.5" aria-hidden />
             Filters
             {hasActiveFilters ? (
-              <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-[#C6A757]" />
+              <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-[#C2A05A]" />
             ) : null}
           </button>
         </div>

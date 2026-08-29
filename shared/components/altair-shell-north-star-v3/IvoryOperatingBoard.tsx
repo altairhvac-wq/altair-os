@@ -36,7 +36,7 @@ export function IvoryOperatingBoard({
 }: IvoryOperatingBoardProps) {
   return (
     <section aria-label="Operating board" className={v3OperatingBoardClass}>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(184,148,63,0.45)] to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(194,160,90,0.45)] to-transparent" />
 
       <div className={v3BoardHeaderClass}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -51,7 +51,7 @@ export function IvoryOperatingBoard({
             {connections.map((link) => (
               <div key={link.id} className={v3ConnectionChipClass}>
                 <span>{link.from}</span>
-                <ArrowRight className="h-3 w-3 text-[#B8943F]" aria-hidden="true" />
+                <ArrowRight className="h-3 w-3 text-[#C2A05A]" aria-hidden="true" />
                 <span>{link.to}</span>
                 <span className="hidden text-[rgba(41,34,24,0.45)] sm:inline">· {link.note}</span>
               </div>

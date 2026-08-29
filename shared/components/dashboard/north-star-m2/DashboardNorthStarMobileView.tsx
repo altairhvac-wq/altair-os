@@ -131,7 +131,7 @@ function NorthStarMobileSupportingSection({ data }: { data: DashboardData }) {
                 {activities.map((item) => (
                   <li key={item.id} className="flex items-baseline gap-2">
                     <span
-                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#B8943F]"
+                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C2A05A]"
                       aria-hidden="true"
                     />
                     <span className={`min-w-0 flex-1 ${t.activityTitle}`}>

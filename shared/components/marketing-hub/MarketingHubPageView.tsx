@@ -128,7 +128,7 @@ function MarketingPostTemplateIdeas({
       } ${
         northStar
           ? compact
-            ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/40"
+            ? "border-[rgba(176,168,143,0.18)] bg-[#FAF6EE]/40"
             : ""
           : compact
             ? "border-slate-100/90 bg-slate-50/50"
@@ -162,7 +162,7 @@ function MarketingPostTemplateIdeas({
             <div
               className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
                 northStar
-                  ? "border-[rgba(148,163,184,0.22)] bg-white/80"
+                  ? "border-[rgba(176,168,143,0.22)] bg-white/80"
                   : "border-slate-200/90 bg-white"
               }`}
             >
@@ -197,7 +197,7 @@ function MarketingPostTemplateIdeas({
           <div
             className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
               northStar
-                ? "border-[rgba(148,163,184,0.22)] bg-white/80"
+                ? "border-[rgba(176,168,143,0.22)] bg-white/80"
                 : "border-slate-200/90 bg-white"
             }`}
           >
@@ -260,7 +260,7 @@ function MarketingPostTemplateIdeas({
                 <div
                   className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
                     northStar
-                      ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/70"
+                      ? "border-[rgba(164,130,58,0.28)] bg-[#FAF6EE]/70"
                       : "border-amber-200/70 bg-amber-50/40"
                   }`}
                 >
@@ -507,7 +507,7 @@ export function MarketingHubPageView({
             <div
               className={`shrink-0 border-b px-3 py-2 sm:px-4 ${
                 northStar
-                  ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+                  ? "border-[rgba(176,168,143,0.18)] bg-[#FAF6EE]/50"
                   : "border-slate-100/90 bg-white"
               }`}
             >
@@ -595,14 +595,14 @@ export function MarketingHubPageView({
                   <div
                     className={
                       northStar
-                        ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
+                        ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]"
                         : "admin-empty-icon mx-auto"
                     }
                   >
                     <Megaphone
                       className={
                         northStar
-                          ? "h-6 w-6 text-[#8A6324]"
+                          ? "h-6 w-6 text-[#77591B]"
                           : "h-7 w-7 text-slate-400"
                       }
                     />
@@ -690,7 +690,7 @@ export function MarketingHubPageView({
                           <span
                             className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                               northStar
-                                ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
+                                ? "bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
                                 : "bg-slate-100 text-slate-700"
                             }`}
                           >

@@ -50,8 +50,8 @@ function SummaryChip({ label, value, active = false, onClick }: SummaryChipProps
   const baseClass =
     "min-w-0 rounded-[1rem] border px-3 py-2.5 text-left transition-colors sm:px-3.5 sm:py-3";
   const surfaceClass = active
-    ? "border-[rgba(201,164,77,0.42)] bg-[#FFF9EA] shadow-[inset_3px_0_0_0_#C9A44D] ring-1 ring-[rgba(201,164,77,0.22)]"
-    : "border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_2px_8px_rgba(3,7,12,0.08)] hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA]";
+    ? "border-[rgba(194,160,90,0.42)] bg-[#FFF9EA] shadow-[inset_3px_0_0_0_#C2A05A] ring-1 ring-[rgba(194,160,90,0.22)]"
+    : "border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] shadow-[0_2px_8px_rgba(3,7,12,0.08)] hover:border-[rgba(194,160,90,0.28)] hover:bg-[#FFF9EA]";
 
   const content = (
     <>
@@ -130,12 +130,12 @@ export function LeadsPipelineSummary({
               onClick={() => onStatusFilterChange(status)}
               className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
                 isActive
-                  ? "border-[rgba(201,164,77,0.42)] bg-[#FFF9EA] text-[#17130E] ring-1 ring-[rgba(201,164,77,0.22)]"
-                  : "border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] text-[#4F4638] hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA]"
+                  ? "border-[rgba(194,160,90,0.42)] bg-[#FFF9EA] text-[#17130E] ring-1 ring-[rgba(194,160,90,0.22)]"
+                  : "border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] text-[#4F4638] hover:border-[rgba(194,160,90,0.28)] hover:bg-[#FFF9EA]"
               }`}
             >
               <span>{formatLeadStatus(status)}</span>
-              <span className="tabular-nums text-[#64748B]">{count}</span>
+              <span className="tabular-nums text-[#7C7259]">{count}</span>
             </button>
           );
         })}

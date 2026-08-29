@@ -127,14 +127,14 @@ export function ExpenseSearchFilterBar({
     hasActivePrimaryFilters || hasActivePanelFilters;
 
   const clearFiltersClass = northStar
-    ? "inline-flex items-center gap-1 rounded-full border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
+    ? "inline-flex items-center gap-1 rounded-full border border-[rgba(119,89,27,0.22)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C2A05A] hover:bg-[#F3EBDD]"
     : "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50";
 
   const filtersToggleClass = northStar
     ? `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
         filtersExpanded || hasActiveSecondaryFilters
-          ? "border-[#C9A44D] bg-[#FFF9EA] text-[#4F4638]"
-          : "border-[rgba(138,99,36,0.22)] bg-white text-[#4F4638] hover:border-[#C9A44D] hover:bg-[#FFF9EA]"
+          ? "border-[#C2A05A] bg-[#FFF9EA] text-[#4F4638]"
+          : "border-[rgba(119,89,27,0.22)] bg-white text-[#4F4638] hover:border-[#C2A05A] hover:bg-[#FFF9EA]"
       }`
     : `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
         filtersExpanded || hasActiveSecondaryFilters

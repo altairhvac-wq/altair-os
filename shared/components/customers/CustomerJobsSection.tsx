@@ -143,13 +143,13 @@ export function CustomerJobsSection({
                     <MapPin
                       className={
                         northStar
-                          ? "mt-0.5 h-4 w-4 shrink-0 text-[#8A6324]"
+                          ? "mt-0.5 h-4 w-4 shrink-0 text-[#77591B]"
                           : "mt-0.5 h-4 w-4 shrink-0 text-slate-400"
                       }
                     />
                     <div>
                       <p>{job.serviceAddress}</p>
-                      <p className={northStar ? "text-xs text-[#64748B]" : "text-xs text-slate-500"}>
+                      <p className={northStar ? "text-xs text-[#7C7259]" : "text-xs text-slate-500"}>
                         {formatCityStateZip(job.city, job.state, job.zip)}
                       </p>
                     </div>

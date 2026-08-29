@@ -44,10 +44,10 @@ export function NetworkProfileEditForm({
   const optionalClass = isNorthStar ? st.formLabelOptional : legacyOptionalClass;
   const saveClass = isNorthStar ? st.saveButton : "admin-btn-primary";
   const shellClass = isNorthStar
-    ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4"
+    ? "rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-4"
     : "rounded-2xl border border-slate-200 bg-white p-4";
   const groupClass = isNorthStar
-    ? "space-y-3 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/60 p-3"
+    ? "space-y-3 rounded-xl border border-[rgba(119,89,27,0.10)] bg-[#FFF9EA]/60 p-3"
     : "space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3";
   const groupTitleClass = isNorthStar
     ? "text-[11px] font-semibold uppercase tracking-wide text-[#6B6255]"
@@ -56,7 +56,7 @@ export function NetworkProfileEditForm({
     ? "mt-1 text-[11px] leading-snug text-[#6B6255]"
     : "mt-1 text-[11px] leading-snug text-slate-500";
   const footerClass = isNorthStar
-    ? "flex shrink-0 flex-wrap items-center gap-3 border-t border-[rgba(138,99,36,0.10)] pt-3"
+    ? "flex shrink-0 flex-wrap items-center gap-3 border-t border-[rgba(119,89,27,0.10)] pt-3"
     : "flex shrink-0 flex-wrap items-center gap-3 border-t border-slate-200 pt-3";
   const cancelClass = isNorthStar ? st.cancelButton : masterSecondaryActionClass;
 

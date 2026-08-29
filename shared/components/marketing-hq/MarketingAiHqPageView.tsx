@@ -916,7 +916,7 @@ function QueueItemCard({
                 {fieldSpec.label}
                 <span
                   className={`ml-2 font-normal ${
-                    over ? "text-rose-600" : "text-slate-400"
+                    over ? "text-rose-700" : "text-slate-400"
                   }`}
                 >
                   {value.length}/{fieldSpec.maxChars}
@@ -1806,7 +1806,7 @@ function RunsTab({ runs }: RunsTabProps) {
                     : ""}
                 </p>
                 {run.errorSummary ? (
-                  <p className="mt-0.5 text-xs text-rose-600">
+                  <p className="mt-0.5 text-xs text-rose-700">
                     {run.errorSummary}
                   </p>
                 ) : null}

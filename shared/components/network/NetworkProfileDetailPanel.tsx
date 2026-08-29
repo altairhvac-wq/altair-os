@@ -60,7 +60,7 @@ function ProfileEmptyState({
     <div
       className={
         isNorthStar
-          ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.20)] bg-[#FFF9EA]/70 px-3.5 py-3"
+          ? "rounded-xl border border-dashed border-[rgba(119,89,27,0.20)] bg-[#FFF9EA]/70 px-3.5 py-3"
           : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-3"
       }
     >
@@ -143,7 +143,7 @@ export function NetworkProfileDetailPanel({
     ? st.detailPanelEmptyBody
     : "mt-1 max-w-[260px] text-xs leading-relaxed text-slate-500";
   const avatarClass = isNorthStar
-    ? "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-base font-bold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.16)] ring-1 ring-[rgba(138,99,36,0.16)]"
+    ? "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-base font-bold text-[#17130E] shadow-[0_2px_10px_rgba(119,89,27,0.16)] ring-1 ring-[rgba(119,89,27,0.16)]"
     : "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white";
   const tradeClass = isNorthStar
     ? "text-sm font-semibold text-[#4F4638]"
@@ -152,7 +152,7 @@ export function NetworkProfileDetailPanel({
     ? "mt-1.5 flex items-start gap-1.5 text-xs text-[#6B6255]"
     : "mt-1.5 flex items-start gap-1.5 text-xs text-slate-500";
   const metaClass = isNorthStar
-    ? "mt-2 text-[11px] text-[#64748B]"
+    ? "mt-2 text-[11px] text-[#7C7259]"
     : "mt-2 text-[11px] text-slate-500";
   const networkButtonClass = isNorthStar
     ? `${st.cardActionAccentFull} min-h-10 disabled:opacity-60 sm:min-h-[44px]`
@@ -164,7 +164,7 @@ export function NetworkProfileDetailPanel({
     ? st.detailPanelConnectedBadge
     : "rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800";
   const permissionClass = isNorthStar
-    ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-3 text-xs text-[#6B6255]"
+    ? "rounded-xl border border-dashed border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-4 py-3 text-xs text-[#6B6255]"
     : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500";
 
   const locationLine = detailProfile

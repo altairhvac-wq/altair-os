@@ -320,7 +320,7 @@ export function LeadDetailPanel({
                       canManageCustomers
                       linkClassName={
                         northStar
-                          ? "text-lg font-bold text-[#17130E] transition-colors hover:text-[#B88A2E]"
+                          ? "text-lg font-bold text-[#17130E] transition-colors hover:text-[#5F4715]"
                           : "text-lg font-bold text-slate-900 transition-colors hover:text-cyan-700"
                       }
                     />

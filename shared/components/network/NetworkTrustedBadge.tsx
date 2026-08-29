@@ -12,7 +12,7 @@ export function NetworkTrustedBadge({
 }: NetworkTrustedBadgeProps) {
   const badgeClass =
     surface === "north-star"
-      ? "inline-flex items-center gap-1 rounded-full bg-[rgba(201,164,77,0.12)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.22)]"
+      ? "inline-flex items-center gap-1 rounded-full bg-[rgba(194,160,90,0.12)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#77591B] ring-1 ring-[rgba(194,160,90,0.22)]"
       : "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200";
 
   return (

@@ -15,10 +15,10 @@ export function SettingsFutureCard({
 }: SettingsFutureCardProps) {
   if (northStar) {
     return (
-      <div className="min-w-0 rounded-[1rem] border border-dashed border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] p-3.5 sm:p-4">
+      <div className="min-w-0 rounded-[1rem] border border-dashed border-[rgba(119,89,27,0.22)] bg-[#FFF9EA] p-3.5 sm:p-4">
         <div className="flex items-start gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]">
-            <Icon className="h-4 w-4 text-[#8A6324]" aria-hidden="true" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]">
+            <Icon className="h-4 w-4 text-[#77591B]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-[#17130E]">{title}</h3>

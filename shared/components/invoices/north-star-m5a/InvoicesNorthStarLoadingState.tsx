@@ -35,14 +35,14 @@ function DesktopLoadingSkeleton() {
             <Skeleton dark className="h-3 w-56 max-w-full" />
           </div>
         </div>
-        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]" />
+        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(194,160,90,0.22)]" />
       </header>
 
       <div className="hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, index) => (
           <Skeleton
             key={index}
-            className="h-[4.75rem] rounded-[1rem] border border-[rgba(138,99,36,0.12)]"
+            className="h-[4.75rem] rounded-[1rem] border border-[rgba(119,89,27,0.12)]"
           />
         ))}
       </div>

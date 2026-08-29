@@ -66,10 +66,10 @@ export function SendReferralForm({
     ? "text-xs text-[#6B6255]"
     : "text-xs text-slate-500";
   const sectionShellClass = isDialog
-    ? "space-y-4 border-t border-[rgba(138,99,36,0.10)] pt-5"
+    ? "space-y-4 border-t border-[rgba(119,89,27,0.10)] pt-5"
     : "space-y-4";
   const receiverCardClass = isNorthStar
-    ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4"
+    ? "rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] p-4"
     : "rounded-2xl border border-slate-200 bg-white p-4";
   const receiverLabelClass = isNorthStar
     ? "text-xs font-semibold uppercase tracking-wide text-[#6B6255]"
@@ -81,7 +81,7 @@ export function SendReferralForm({
     ? "mt-0.5 text-sm text-[#6B6255]"
     : "mt-0.5 text-sm text-slate-500";
   const incentiveSectionClass = isNorthStar
-    ? "space-y-3 rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-4 sm:p-5"
+    ? "space-y-3 rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] p-4 sm:p-5"
     : "space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4 sm:p-5";
   const incentiveNoteClass = isNorthStar
     ? "text-xs leading-relaxed text-[#6B6255]"

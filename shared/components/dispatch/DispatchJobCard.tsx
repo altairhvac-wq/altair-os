@@ -150,7 +150,7 @@ export const DispatchJobCard = memo(function DispatchJobCard({
           >
             {formatDispatchTime(job.scheduledDate)}
           </span>
-          <span className={northStar ? "text-[#AEB6C2]" : "text-slate-400"}>
+          <span className={northStar ? "text-[#BCB5A5]" : "text-slate-400"}>
             ·
           </span>
           <Calendar

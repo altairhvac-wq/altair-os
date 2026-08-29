@@ -36,7 +36,7 @@ function DesktopLoadingSkeleton() {
           </div>
         </div>
         <Skeleton
-          className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]"
+          className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(194,160,90,0.22)]"
         />
       </header>
 
@@ -45,7 +45,7 @@ function DesktopLoadingSkeleton() {
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton
               key={index}
-              className="h-[4.5rem] rounded-[1rem] border border-[rgba(138,99,36,0.12)]"
+              className="h-[4.5rem] rounded-[1rem] border border-[rgba(119,89,27,0.12)]"
             />
           ))}
         </div>

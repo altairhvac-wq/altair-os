@@ -142,11 +142,11 @@ export function PaymentSettingsCard({
     isConnected && canRefreshStripeStatus;
 
   const shellClass = northStar
-    ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
+    ? "min-w-0 rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
     : `min-w-0 ${altairMcCardClass} ${altairMcCardPadClass}`;
 
   const iconWrapClass = northStar
-    ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)] sm:flex"
+    ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)] sm:flex"
     : "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-altair-brass/10 text-altair-brass sm:flex";
 
   const titleClass = northStar
@@ -154,15 +154,15 @@ export function PaymentSettingsCard({
     : "text-sm font-semibold text-altair-ink sm:text-base";
 
   const helperClass = northStar
-    ? "mt-0.5 text-xs text-[#64748B] sm:text-sm"
+    ? "mt-0.5 text-xs text-[#7C7259] sm:text-sm"
     : "mt-0.5 text-xs text-altair-ink-secondary sm:text-sm";
 
   const noticeClass = northStar
-    ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
+    ? "rounded-lg border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
     : "rounded-none border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
 
   const subtleNoticeClass = northStar
-    ? "text-xs text-[#64748B] sm:text-sm"
+    ? "text-xs text-[#7C7259] sm:text-sm"
     : "text-xs text-altair-ink-muted sm:text-sm";
 
   const errorNoticeClass = northStar
@@ -178,11 +178,11 @@ export function PaymentSettingsCard({
   const destructiveButtonClass = buttonClassName("destructive", "sm");
 
   const statusBadgeClass = northStar
-    ? "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.16)]"
+    ? "inline-flex items-center rounded-full bg-[rgba(119,89,27,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.16)]"
     : "inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-600 ring-1 ring-slate-200";
 
   const detailListClass = northStar
-    ? "mt-3 divide-y divide-[rgba(138,99,36,0.10)] rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA] px-3 py-1"
+    ? "mt-3 divide-y divide-[rgba(119,89,27,0.10)] rounded-lg border border-[rgba(119,89,27,0.10)] bg-[#FFF9EA] px-3 py-1"
     : "mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1";
 
   function handleStartStripeSetup() {

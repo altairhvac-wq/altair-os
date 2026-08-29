@@ -39,7 +39,7 @@ function DesktopLoadingSkeleton() {
               </div>
             </div>
             <Skeleton dark className="h-20 w-full rounded-lg" />
-            <div className="grid gap-3 border-t border-[rgba(201,164,77,0.14)] pt-4 sm:grid-cols-4">
+            <div className="grid gap-3 border-t border-[rgba(194,160,90,0.14)] pt-4 sm:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="space-y-2">
                   <Skeleton dark className="h-2.5 w-16" />

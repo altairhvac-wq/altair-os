@@ -17,9 +17,9 @@ const positionStyles: Record<LightBeamPosition, string> = {
 const beamStyles: Record<LightBeamTone, { vertical: string; horizon: string }> = {
   neutral: {
     vertical:
-      "bg-[linear-gradient(to_bottom,rgba(148,163,184,0.12)_0%,rgba(148,163,184,0.04)_40%,transparent_85%)]",
+      "bg-[linear-gradient(to_bottom,rgba(176,168,143,0.12)_0%,rgba(176,168,143,0.04)_40%,transparent_85%)]",
     horizon:
-      "bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(148,163,184,0.10),transparent_70%)]",
+      "bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(176,168,143,0.10),transparent_70%)]",
   },
   cyan: {
     vertical:

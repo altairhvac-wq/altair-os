@@ -54,7 +54,7 @@ export function QuickNavigationDrawer({
             >
               {companyName}
             </p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-[#d4af37]">
+            <p className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-[#c2a05a]">
               Navigation
             </p>
           </div>
@@ -63,7 +63,7 @@ export function QuickNavigationDrawer({
             data-mobile-sheet-initial-focus
             aria-label="Close quick navigation"
             onClick={onClose}
-            className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-[#9b9fa6] transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+            className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-[#9b9fa6] transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2a05a]"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -76,7 +76,7 @@ export function QuickNavigationDrawer({
           <ul className="flex flex-col gap-6">
             {groups.map((group) => (
               <li key={group.id}>
-                <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">
+                <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
                   {group.label}
                 </p>
                 <ul className="flex flex-col gap-0.5">
@@ -89,22 +89,22 @@ export function QuickNavigationDrawer({
                           href={item.href}
                           aria-current={item.active ? "page" : undefined}
                           onClick={onClose}
-                          className={`flex min-h-11 touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37] ${
+                          className={`flex min-h-11 touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2a05a] ${
                             item.active
-                              ? "bg-[#d4af37]/[0.14] font-semibold text-white ring-1 ring-inset ring-[#d4af37]/25"
-                              : "font-medium text-[#c6cad0] hover:bg-white/[0.06] hover:text-white active:bg-white/[0.1]"
+                              ? "bg-[#c2a05a]/[0.14] font-semibold text-white ring-1 ring-inset ring-[#c2a05a]/25"
+                              : "font-medium text-[#cdc9c2] hover:bg-white/[0.06] hover:text-white active:bg-white/[0.1]"
                           }`}
                         >
                           <Icon
                             className={`h-4 w-4 shrink-0 ${
-                              item.active ? "text-[#d4af37]" : "text-[#82868c]"
+                              item.active ? "text-[#c2a05a]" : "text-[#82868c]"
                             }`}
                             aria-hidden="true"
                           />
                           <span className="truncate">{item.label}</span>
                           {item.active ? (
                             <span
-                              className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4af37]"
+                              className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#c2a05a]"
                               aria-hidden
                             />
                           ) : null}

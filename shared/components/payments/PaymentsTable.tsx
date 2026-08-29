@@ -111,7 +111,7 @@ export function PaymentsTable({
                 key={payment.id}
                 onClick={() => router.push(`/invoices/${payment.invoiceId}`)}
                 className={
-                  northStar ? "hover:bg-[rgba(138,99,36,0.04)]" : undefined
+                  northStar ? "hover:bg-[rgba(119,89,27,0.04)]" : undefined
                 }
               >
                 <AltairTableCell

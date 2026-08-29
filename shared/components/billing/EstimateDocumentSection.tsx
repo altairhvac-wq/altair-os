@@ -122,7 +122,7 @@ export function EstimateDocumentSection({
     ? "mt-2.5 border-t pt-2.5 sm:mt-3 sm:pt-3 print:mt-2 print:pt-2"
     : "mt-3 border-t pt-3 sm:mt-4 sm:pt-4 print:mt-2 print:pt-2";
   const sectionBorderClass = northStar
-    ? "border-[rgba(138,99,36,0.12)]"
+    ? "border-[rgba(119,89,27,0.12)]"
     : "border-slate-200";
 
   const metadataGridClass = northStar
@@ -162,7 +162,7 @@ export function EstimateDocumentSection({
       </div>
 
       <div
-        className={`order-3 ${northStar ? "mt-2 border-t border-[rgba(138,99,36,0.12)] pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:pt-1.5" : `${sectionDividerGap} ${sectionBorderClass}`}`}
+        className={`order-3 ${northStar ? "mt-2 border-t border-[rgba(119,89,27,0.12)] pt-2 sm:mt-2.5 sm:pt-2.5 print:mt-1.5 print:pt-1.5" : `${sectionDividerGap} ${sectionBorderClass}`}`}
       >
         <p
           className={

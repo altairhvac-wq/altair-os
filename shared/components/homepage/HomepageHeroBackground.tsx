@@ -92,7 +92,7 @@ export function HomepageHeroBackground({ media }: HomepageHeroBackgroundProps) {
           />
         ) : (
           <div
-            className="absolute inset-0 bg-[#0c0e12]"
+            className="absolute inset-0 bg-[#0c0f0b]"
             role="img"
             aria-label={alt}
           />

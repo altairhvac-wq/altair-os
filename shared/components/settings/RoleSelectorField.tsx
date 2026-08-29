@@ -84,7 +84,7 @@ export function RoleSelectorField({
             </p>
             <p
               className={`mt-0.5 text-[11px] leading-snug ${
-                northStar ? "text-[#64748B]" : "text-slate-500"
+                northStar ? "text-[#7C7259]" : "text-slate-500"
               }`}
             >
               {description.access}
@@ -94,7 +94,7 @@ export function RoleSelectorField({
           <div
             className={
               northStar
-                ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2.5"
+                ? "rounded-lg border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] px-3 py-2.5"
                 : "rounded-lg border border-slate-100 bg-white px-3 py-2.5"
             }
           >
@@ -107,7 +107,7 @@ export function RoleSelectorField({
             </p>
             <p
               className={`mt-1 text-xs ${
-                northStar ? "text-[#64748B]" : "text-slate-500"
+                northStar ? "text-[#7C7259]" : "text-slate-500"
               }`}
             >
               {description.access}

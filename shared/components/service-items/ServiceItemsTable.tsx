@@ -34,7 +34,7 @@ const northStarStatusStyles = {
 } as const;
 
 const northStarTableHeaderRow =
-  "border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] text-xs font-semibold text-[#4F4638]";
+  "border-b border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] text-xs font-semibold text-[#4F4638]";
 
 const northStarTableHeaderCell = "admin-table-cell text-xs font-semibold text-[#4F4638]";
 
@@ -44,12 +44,12 @@ const northStarItemDescriptionClass =
   "mt-0.5 line-clamp-2 text-sm leading-snug text-[#4F4638]";
 
 const northStarCategoryChipClass =
-  "inline-flex rounded-md bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]";
+  "inline-flex rounded-md bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.14)]";
 
-const northStarMissingValueClass = "text-sm text-[#64748B]";
+const northStarMissingValueClass = "text-sm text-[#7C7259]";
 
 const northStarMissingCostBadgeClass =
-  "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]";
+  "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.12)]";
 
 const northStarInternalCostClass = "text-sm font-medium tabular-nums text-[#4F4638]";
 
@@ -152,7 +152,7 @@ export function ServiceItemsTable({
         <tbody
           className={
             northStar
-              ? "divide-y divide-[rgba(138,99,36,0.12)]"
+              ? "divide-y divide-[rgba(119,89,27,0.12)]"
               : "divide-y divide-slate-50"
           }
         >

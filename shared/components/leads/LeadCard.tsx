@@ -37,10 +37,10 @@ export function LeadCard({
       <button
         type="button"
         onClick={() => onSelect(lead)}
-        className={`w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] ${
+        className={`w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.35)] ${
           selected
-            ? `border-[rgba(201,164,77,0.42)] bg-[rgba(201,164,77,0.10)] shadow-[inset_3px_0_0_0_#C9A44D] ring-1 ring-[rgba(201,164,77,0.22)]`
-            : "border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA]"
+            ? `border-[rgba(194,160,90,0.42)] bg-[rgba(194,160,90,0.10)] shadow-[inset_3px_0_0_0_#C2A05A] ring-1 ring-[rgba(194,160,90,0.22)]`
+            : "border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] hover:border-[rgba(194,160,90,0.28)] hover:bg-[#FFF9EA]"
         }`}
       >
         <div className="flex items-start gap-3">
@@ -63,13 +63,13 @@ export function LeadCard({
             <div className="mt-2 space-y-1 text-xs text-[#4F4638]">
               {lead.phone ? (
                 <div className="flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-[#8A6324]" />
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-[#77591B]" />
                   <span>{lead.phone}</span>
                 </div>
               ) : null}
               {lead.email ? (
                 <div className="flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-[#8A6324]" />
+                  <Mail className="h-3.5 w-3.5 shrink-0 text-[#77591B]" />
                   <span className="truncate">{lead.email}</span>
                 </div>
               ) : null}
@@ -96,7 +96,7 @@ export function LeadCard({
               </div>
             </div>
 
-            <p className="mt-2 line-clamp-2 text-[11px] text-[#64748B]">
+            <p className="mt-2 line-clamp-2 text-[11px] text-[#7C7259]">
               {getLeadLastActivityLabel(lead)}
             </p>
           </div>

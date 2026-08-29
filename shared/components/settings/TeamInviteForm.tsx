@@ -231,7 +231,7 @@ export function TeamInviteForm({
     <div
       className={`min-w-0 max-w-full border-b ${
         northStar
-          ? "border-[rgba(138,99,36,0.12)] px-3 py-2.5 sm:px-4 sm:py-3"
+          ? "border-[rgba(119,89,27,0.12)] px-3 py-2.5 sm:px-4 sm:py-3"
           : "border-slate-100 px-3 py-3 sm:px-6 sm:py-4"
       } ${collapsible ? (northStar ? "md:px-4 md:py-3" : "md:px-6 md:py-4") : ""}`}
     >
@@ -244,7 +244,7 @@ export function TeamInviteForm({
         {!collapsible ? (
           <div className="flex items-center gap-2">
             <UserPlus
-              className={`h-4 w-4 ${northStar ? "text-[#8A6324]" : "text-cyan-600"}`}
+              className={`h-4 w-4 ${northStar ? "text-[#77591B]" : "text-cyan-600"}`}
               aria-hidden="true"
             />
             <h3
@@ -293,7 +293,7 @@ export function TeamInviteForm({
                 <p className="text-xs leading-snug text-[#4F4638]">
                   {roleDescription.summary}
                 </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-[#64748B]">
+                <p className="mt-0.5 text-[11px] leading-snug text-[#7C7259]">
                   {roleDescription.access}
                 </p>
               </div>
@@ -349,7 +349,7 @@ export function TeamInviteForm({
         <p
           className={`text-xs ${
             northStar
-              ? "hidden leading-snug text-[#64748B] lg:block"
+              ? "hidden leading-snug text-[#7C7259] lg:block"
               : "hidden leading-relaxed text-slate-500 sm:block"
           }`}
         >

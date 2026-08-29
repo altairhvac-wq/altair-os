@@ -15,9 +15,9 @@ export function TimeNorthStarReviewQueueHeading({
 
   return (
     <div
-      className={`shrink-0 border-b border-[rgba(138,99,36,0.12)] px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5 ${className}`}
+      className={`shrink-0 border-b border-[rgba(119,89,27,0.12)] px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5 ${className}`}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">
         Payroll review
       </p>
       <h2 className="mt-0.5 text-sm font-bold text-[#17130E]">Time ledger</h2>

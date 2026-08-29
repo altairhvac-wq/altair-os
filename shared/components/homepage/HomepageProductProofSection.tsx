@@ -76,7 +76,7 @@ export function HomepageProductProofSection() {
 
       <div className="relative mx-auto max-w-[90rem]">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             One system, visible at every stage
           </p>
           <h2
@@ -121,7 +121,7 @@ export function HomepageProductProofSection() {
                   />
                   <div className="px-1 pb-1 pt-5 sm:px-2">
                     <Icon
-                      className="h-5 w-5 text-[#c9a44d]"
+                      className="h-5 w-5 text-[#c2a05a]"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />

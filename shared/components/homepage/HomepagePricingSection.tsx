@@ -5,7 +5,7 @@ import {
 } from "@/lib/saas-billing/catalog";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 export function HomepagePricingSection() {
   const plans = listPublicSaasCatalogPlans();
@@ -23,7 +23,7 @@ export function HomepagePricingSection() {
 
       <div className="relative mx-auto max-w-[72rem]">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             Simple plans for growing service businesses
           </p>
           <h2
@@ -48,12 +48,12 @@ export function HomepagePricingSection() {
                 className={[
                   "relative flex flex-col rounded-2xl border p-5 sm:p-6",
                   featured
-                    ? "border-[rgba(201,164,77,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,16,20,0.96))] shadow-[0_24px_60px_-38px_rgba(201,164,77,0.55)]"
+                    ? "border-[rgba(194,160,90,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,16,20,0.96))] shadow-[0_24px_60px_-38px_rgba(194,160,90,0.55)]"
                     : "border-[rgba(222,228,236,0.12)] bg-[linear-gradient(165deg,rgba(32,36,44,0.72),rgba(14,16,20,0.92))]",
                 ].join(" ")}
               >
                 {featured ? (
-                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c9a44d]">
+                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c2a05a]">
                     Most popular
                   </p>
                 ) : null}
@@ -71,7 +71,7 @@ export function HomepagePricingSection() {
                   href="/signup"
                   className={`mt-6 inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
                     featured
-                      ? "bg-[#b88a2e] text-[#08090c] hover:bg-[#c9a44d]"
+                      ? "bg-[#a4823a] text-[#080907] hover:bg-[#c2a05a]"
                       : "border border-[rgba(222,228,236,0.18)] text-[#f3ebdd] hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.55)]"
                   } ${focusRing}`}
                 >
@@ -89,7 +89,7 @@ export function HomepagePricingSection() {
           </p>
           <Link
             href="/pricing"
-            className={`mt-3 inline-flex rounded-sm text-sm font-semibold text-[#c9a44d] hover:text-[#e6d092] ${focusRing}`}
+            className={`mt-3 inline-flex rounded-sm text-sm font-semibold text-[#c2a05a] hover:text-[#e8d9ac] ${focusRing}`}
           >
             Compare plans and annual pricing
           </Link>

@@ -79,7 +79,7 @@ export function JobCustomerEquipmentSection({
           </p>
         </div>
       ) : (
-        <ul className={`mt-4 ${northStar ? "divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-100"}`}>
+        <ul className={`mt-4 ${northStar ? "divide-[rgba(119,89,27,0.12)]" : "divide-y divide-slate-100"}`}>
           {visibleEquipment.map((item) => {
             const warrantyStatus = getWarrantyStatus(item.warrantyExpiresAt);
             const addedOnJob = item.jobId === jobId;

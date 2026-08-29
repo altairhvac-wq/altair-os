@@ -27,13 +27,13 @@ export function ServiceItemsEmptyState({
     return (
       <div className={adminEmptyWrapClass}>
         <div className={`${lt.emptyState} w-full max-w-md text-center`}>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]">
-            <Icon className="h-6 w-6 text-[#8A6324]" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]">
+            <Icon className="h-6 w-6 text-[#77591B]" />
           </div>
 
           <h3 className="mt-4 text-base font-semibold text-[#17130E]">{title}</h3>
 
-          <p className="mt-2 text-sm text-[#64748B]">{description}</p>
+          <p className="mt-2 text-sm text-[#7C7259]">{description}</p>
 
           {!isNoResults && onCreateItem ? (
             <button

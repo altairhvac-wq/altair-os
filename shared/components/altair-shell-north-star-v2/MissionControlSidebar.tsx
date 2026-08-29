@@ -23,7 +23,7 @@ export function MissionControlSidebar() {
   return (
     <aside
       aria-label="Altair mission control navigation"
-      className="hidden w-[16rem] shrink-0 flex-col border-r border-slate-800/40 bg-gradient-to-b from-[#0a101c] via-[#0b1220] to-[#0f1729] lg:flex"
+      className="hidden w-[16rem] shrink-0 flex-col border-r border-slate-800/40 bg-gradient-to-b from-[#0e110d] via-[#10130f] to-[#151813] lg:flex"
     >
       <div className="border-b border-slate-800/40 px-5 py-5">
         <div className="flex items-center gap-3">

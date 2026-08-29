@@ -223,7 +223,7 @@ export function JobTechnicianAssignment({
               disabled={isPending}
               className={
                 northStar
-                  ? "w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:opacity-60"
+                  ? "w-full rounded-lg border border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] outline-none focus:border-[#A4823A] focus:ring-2 focus:ring-[rgba(194,160,90,0.22)] disabled:opacity-60"
                   : "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
               }
             >
@@ -258,7 +258,7 @@ export function JobTechnicianAssignment({
             </button>
           </div>
         ) : (
-          <p className={northStar ? "text-sm text-[#64748B]" : "text-sm text-slate-500"}>
+          <p className={northStar ? "text-sm text-[#7C7259]" : "text-sm text-slate-500"}>
             No team members are available to assign. Add active company members
             to enable assignments.
           </p>
@@ -266,7 +266,7 @@ export function JobTechnicianAssignment({
       ) : null}
 
       {!canAssign ? (
-        <p className={northStar ? "text-sm text-[#64748B]" : "text-sm text-slate-500"}>
+        <p className={northStar ? "text-sm text-[#7C7259]" : "text-sm text-slate-500"}>
           You do not have permission to assign technicians to this job.
         </p>
       ) : null}

@@ -355,7 +355,7 @@ function FounderScreenshotPreview({
     <div
       className={`rounded-lg border px-3 py-2.5 ${
         northStar
-          ? "border-[rgba(148,163,184,0.18)] bg-white"
+          ? "border-[rgba(176,168,143,0.18)] bg-white"
           : "border-slate-200/80 bg-white"
       }`}
     >
@@ -367,7 +367,7 @@ function FounderScreenshotPreview({
         Founder screenshot
       </p>
       {showImagePreview ? (
-        <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-md border border-black/10 bg-[#0a1018]">
+        <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-md border border-black/10 bg-[#0e100d]">
           <Image
             src={trimmed}
             alt="Founder marketing screenshot preview"
@@ -472,7 +472,7 @@ function PostPreviewPanel({
     <aside
       className={`flex flex-col gap-4 rounded-xl border p-4 sm:p-5 ${
         northStar
-          ? "border-[rgba(148,163,184,0.22)] bg-[#FAF6EE]/80"
+          ? "border-[rgba(176,168,143,0.22)] bg-[#FAF6EE]/80"
           : "border-slate-200/90 bg-slate-50/70"
       }`}
     >
@@ -496,7 +496,7 @@ function PostPreviewPanel({
       <div
         className={`min-h-[10rem] flex-1 rounded-lg border px-3.5 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
           northStar
-            ? "border-[rgba(148,163,184,0.18)] bg-white text-[#17130E]"
+            ? "border-[rgba(176,168,143,0.18)] bg-white text-[#17130E]"
             : "border-slate-200/80 bg-white text-slate-800"
         }`}
       >
@@ -524,13 +524,13 @@ function PostPreviewPanel({
       <ul
         className={`space-y-2 border-t pt-4 text-xs leading-relaxed ${
           northStar
-            ? "border-[rgba(148,163,184,0.18)] text-[#6B6255]"
+            ? "border-[rgba(176,168,143,0.18)] text-[#6B6255]"
             : "border-slate-200/80 text-slate-500"
         }`}
       >
         {PREVIEW_GUIDANCE.map((tip) => (
           <li key={tip} className="flex gap-2">
-            <span aria-hidden="true" className="shrink-0 text-[#B88A2E]">
+            <span aria-hidden="true" className="shrink-0 text-[#A4823A]">
               •
             </span>
             <span>{tip}</span>
@@ -638,11 +638,11 @@ export function MarketingPostDraftForm({
     isStaleFounderScreenshotCatalogPath(founderScreenshotPath);
 
   const inputClassName = northStar
-    ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
+    ? "mt-1.5 w-full rounded-lg border border-[rgba(176,168,143,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#151914] shadow-sm transition-colors placeholder:text-[#777164] focus:border-[#A4823A] focus:outline-none focus:ring-2 focus:ring-[rgba(194,160,90,0.22)]"
     : "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200/80";
 
   const cardClassName = northStar
-    ? "overflow-hidden rounded-[1.25rem] border border-[rgba(148,163,184,0.22)] bg-[#FFFBF5] shadow-[0_8px_30px_rgba(138,99,36,0.08)] ring-1 ring-[rgba(100,116,139,0.12)]"
+    ? "overflow-hidden rounded-[1.25rem] border border-[rgba(176,168,143,0.22)] bg-[#FFFBF5] shadow-[0_8px_30px_rgba(119,89,27,0.08)] ring-1 ring-[rgba(124,114,89,0.12)]"
     : "overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[var(--shadow-card)]";
 
   function updateField<K extends keyof DraftFormData>(
@@ -933,7 +933,7 @@ export function MarketingPostDraftForm({
         <header
           className={`border-b px-5 py-5 sm:px-7 sm:py-6 ${
             northStar
-              ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+              ? "border-[rgba(176,168,143,0.18)] bg-[#FAF6EE]/50"
               : "border-slate-100 bg-slate-50/50"
           }`}
         >
@@ -1210,7 +1210,7 @@ export function MarketingPostDraftForm({
               <div
                 className={`rounded-xl border p-4 sm:p-5 ${
                   northStar
-                    ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/50"
+                    ? "border-[rgba(164,130,58,0.28)] bg-[#FAF6EE]/50"
                     : "border-amber-200/70 bg-amber-50/30"
                 }`}
               >
@@ -1334,7 +1334,7 @@ export function MarketingPostDraftForm({
               <div
                 className={`rounded-xl border p-4 sm:p-5 ${
                   northStar
-                    ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/50"
+                    ? "border-[rgba(164,130,58,0.28)] bg-[#FAF6EE]/50"
                     : "border-amber-200/70 bg-amber-50/30"
                 }`}
               >
@@ -1457,7 +1457,7 @@ export function MarketingPostDraftForm({
               <div
                 className={`rounded-xl border p-4 sm:p-5 ${
                   northStar
-                    ? "border-[rgba(184,138,46,0.35)] bg-[#FAF6EE]/60"
+                    ? "border-[rgba(164,130,58,0.35)] bg-[#FAF6EE]/60"
                     : "border-amber-200/80 bg-amber-50/40"
                 }`}
               >
@@ -1609,7 +1609,7 @@ export function MarketingPostDraftForm({
             <div
               className={`flex flex-col gap-3 border-t pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${
                 northStar
-                  ? "border-[rgba(148,163,184,0.18)]"
+                  ? "border-[rgba(176,168,143,0.18)]"
                   : "border-slate-100"
               }`}
             >
@@ -1725,7 +1725,7 @@ export function MarketingPostDraftForm({
                           type="button"
                           disabled={isActionPending || showRecurringForm}
                           onClick={handleOpenRecurringForm}
-                          className="admin-btn-secondary border-[#B88A2E]/40 text-[#6B4E1A] hover:border-[#B88A2E]/60 hover:bg-[#FAF6EE]"
+                          className="admin-btn-secondary border-[#A4823A]/40 text-[#77591B] hover:border-[#A4823A]/60 hover:bg-[#FAF6EE]"
                         >
                           Schedule recurring
                         </button>

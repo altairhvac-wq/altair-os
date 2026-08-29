@@ -103,13 +103,13 @@ function OperationsClearCard() {
           <div className="mt-3 flex flex-wrap gap-3">
             <Link
               href="/dispatch?focus=today"
-              className="text-xs font-medium text-[#C6A757] transition-colors hover:text-[#E8DDC2]"
+              className="text-xs font-medium text-[#C2A05A] transition-colors hover:text-[#E8D9AC]"
             >
               Today&apos;s dispatch board
             </Link>
             <Link
               href="/reports"
-              className="text-xs font-medium text-[#C6A757] transition-colors hover:text-[#E8DDC2]"
+              className="text-xs font-medium text-[#C2A05A] transition-colors hover:text-[#E8D9AC]"
             >
               View reports
             </Link>

@@ -32,7 +32,7 @@ const ONBOARDING_ITEMS: { title: string; detail: string; icon: LucideIcon }[] = 
 ];
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 export function HomepageOnboardingSection() {
   return (
@@ -46,20 +46,20 @@ export function HomepageOnboardingSection() {
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-x-[12%] top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(201,164,77,0.09),transparent_72%)]"
+        className="pointer-events-none absolute inset-x-[12%] top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(194,160,90,0.09),transparent_72%)]"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto grid max-w-[78rem] gap-8 rounded-2xl border border-[rgba(222,228,236,0.12)] bg-[linear-gradient(145deg,rgba(31,35,43,0.8),rgba(12,14,18,0.9))] p-5 shadow-[0_1px_0_rgba(222,228,236,0.08)_inset] sm:p-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12 lg:p-10">
         <div className="lg:py-2">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[rgba(201,164,77,0.35)] bg-[rgba(184,138,46,0.1)]">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[rgba(194,160,90,0.35)] bg-[rgba(164,130,58,0.1)]">
             <Video
-              className="h-5 w-5 text-[#c9a44d]"
+              className="h-5 w-5 text-[#c2a05a]"
               strokeWidth={1.5}
               aria-hidden="true"
             />
           </span>
-          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             Included customer success
           </p>
           <h2
@@ -75,7 +75,7 @@ export function HomepageOnboardingSection() {
           </p>
           <Link
             href="/signup"
-            className={`mc-cta-primary mt-6 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#b88a2e] px-5 py-3 text-sm font-semibold text-[#08090c] transition-colors hover:bg-[#c9a44d] ${focusRing}`}
+            className={`mc-cta-primary mt-6 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-5 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
           >
             Start Your 14-Day Free Trial
           </Link>
@@ -88,7 +88,7 @@ export function HomepageOnboardingSection() {
               className="rounded-xl border border-[rgba(222,228,236,0.1)] bg-[rgba(8,9,12,0.46)] p-4 sm:p-5"
             >
               <Icon
-                className="h-4.5 w-4.5 text-[#c9a44d]"
+                className="h-4.5 w-4.5 text-[#c2a05a]"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />

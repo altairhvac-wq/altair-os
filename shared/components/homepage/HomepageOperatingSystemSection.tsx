@@ -77,7 +77,7 @@ export function HomepageOperatingSystemSection() {
 
       <div className="relative mx-auto max-w-[90rem]">
         <div id="why-altair" className="mx-auto max-w-3xl scroll-mt-28 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             One operating system. One continuous workflow.
           </p>
           <h2
@@ -106,7 +106,7 @@ export function HomepageOperatingSystemSection() {
             aria-hidden="true"
           />
           <div
-            className="mc-os-spine-rail absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] origin-left bg-[linear-gradient(to_right,rgba(184,138,46,0.25),rgba(201,164,77,0.95)_55%,rgba(201,164,77,1))]"
+            className="mc-os-spine-rail absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] origin-left bg-[linear-gradient(to_right,rgba(164,130,58,0.25),rgba(194,160,90,0.95)_55%,rgba(194,160,90,1))]"
             aria-hidden="true"
           />
           <ol className="relative grid grid-cols-9 gap-1">
@@ -119,19 +119,19 @@ export function HomepageOperatingSystemSection() {
                   className="mc-os-node flex flex-col items-center text-center"
                   style={{ animationDelay: `${index * 70}ms` }}
                 >
-                  <span className="mb-2 text-[10px] font-semibold tracking-[0.18em] text-[#c9a44d]">
+                  <span className="mb-2 text-[10px] font-semibold tracking-[0.18em] text-[#c2a05a]">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span
                     className={[
                       "relative flex items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
                       isOutcome
-                        ? "h-16 w-16 border-[rgba(201,164,77,0.65)] shadow-[0_0_36px_-6px_rgba(201,164,77,0.55)]"
-                        : "h-14 w-14 border-[rgba(201,164,77,0.4)] shadow-[0_0_28px_-10px_rgba(201,164,77,0.4)]",
+                        ? "h-16 w-16 border-[rgba(194,160,90,0.65)] shadow-[0_0_36px_-6px_rgba(194,160,90,0.55)]"
+                        : "h-14 w-14 border-[rgba(194,160,90,0.4)] shadow-[0_0_28px_-10px_rgba(194,160,90,0.4)]",
                     ].join(" ")}
                   >
                     <Icon
-                      className={isOutcome ? "h-6 w-6 text-[#c9a44d]" : "h-5 w-5 text-[#c9a44d]"}
+                      className={isOutcome ? "h-6 w-6 text-[#c2a05a]" : "h-5 w-5 text-[#c2a05a]"}
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
@@ -164,7 +164,7 @@ export function HomepageOperatingSystemSection() {
                 className={[
                   "mc-os-node relative flex items-start gap-3 rounded-xl border px-3 py-3",
                   isOutcome
-                    ? "border-[rgba(201,164,77,0.45)] bg-[rgba(184,138,46,0.08)]"
+                    ? "border-[rgba(194,160,90,0.45)] bg-[rgba(164,130,58,0.08)]"
                     : "border-[rgba(222,228,236,0.1)] bg-[rgba(14,16,20,0.55)]",
                 ].join(" ")}
                 style={{ animationDelay: `${index * 70}ms` }}
@@ -173,12 +173,12 @@ export function HomepageOperatingSystemSection() {
                   className={[
                     "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
                     isOutcome
-                      ? "border-[rgba(201,164,77,0.65)]"
-                      : "border-[rgba(201,164,77,0.35)]",
+                      ? "border-[rgba(194,160,90,0.65)]"
+                      : "border-[rgba(194,160,90,0.35)]",
                   ].join(" ")}
                 >
                   <Icon
-                    className="h-4 w-4 text-[#c9a44d]"
+                    className="h-4 w-4 text-[#c2a05a]"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />

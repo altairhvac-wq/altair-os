@@ -31,7 +31,7 @@ export function PrimaryActionPanel({
             {topPriority.label}
           </p>
           {topPriority.metric ? (
-            <p className="mt-1.5 text-base font-medium tabular-nums text-[#E8DDC2]">
+            <p className="mt-1.5 text-base font-medium tabular-nums text-[#E8D9AC]">
               {topPriority.metric}
             </p>
           ) : null}

@@ -27,7 +27,7 @@ const nodeToneStyles = {
   },
   slate: {
     ring: "ring-slate-300/40",
-    glow: "shadow-[0_0_16px_rgba(148,163,184,0.15)]",
+    glow: "shadow-[0_0_16px_rgba(176,168,143,0.15)]",
     dot: "bg-slate-400",
     label: "text-slate-600",
   },
@@ -59,7 +59,7 @@ export function OperatingMap({ nodes, links }: OperatingMapProps) {
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)",
+            "linear-gradient(rgba(176,168,143,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(176,168,143,0.08) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
         }}
       />

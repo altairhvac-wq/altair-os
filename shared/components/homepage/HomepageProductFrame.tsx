@@ -47,7 +47,7 @@ export function HomepageProductFrame({
       >
         <div
           className={[
-            "relative w-full overflow-hidden rounded-[0.7rem] bg-[#0a0c10] sm:rounded-[0.95rem]",
+            "relative w-full overflow-hidden rounded-[0.7rem] bg-[#0b0c0a] sm:rounded-[0.95rem]",
             isHero ? "aspect-[16/10] sm:aspect-[16/9.5]" : "aspect-[16/10]",
           ].join(" ")}
         >

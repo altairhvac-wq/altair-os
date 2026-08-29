@@ -157,15 +157,15 @@ const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
 };
 
 const NS_ICON_BRASS =
-  "bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-[rgba(201,164,77,0.24)]";
+  "bg-[rgba(194,160,90,0.18)] text-[#77591B] ring-[rgba(194,160,90,0.24)]";
 const NS_ICON_NEUTRAL =
-  "bg-[#EFE4CB] text-[#6B6255] ring-[rgba(138,99,36,0.14)]";
+  "bg-[#EFE4CB] text-[#6B6255] ring-[rgba(119,89,27,0.14)]";
 const NS_ICON_COMM =
-  "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.16)]";
+  "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(119,89,27,0.16)]";
 const NS_ICON_SUCCESS =
   "bg-[rgba(16,120,85,0.10)] text-emerald-800 ring-emerald-700/15";
 const NS_ICON_WARNING =
-  "bg-[rgba(180,120,30,0.12)] text-[#9A7028] ring-[rgba(138,99,36,0.20)]";
+  "bg-[rgba(180,120,30,0.12)] text-[#77591B] ring-[rgba(119,89,27,0.20)]";
 const NS_ICON_DANGER =
   "bg-[rgba(190,50,50,0.10)] text-rose-800 ring-rose-700/15";
 

@@ -5,7 +5,7 @@
  * Same Altair brand materials (Graphite, Border, Brass, Ink) — different
  * surface register for the Reports operating brief.
  *
- * Background: Graphite (`--altair-graphite` / `#1A2029`) is the existing
+ * Background: Graphite (`--altair-graphite` / `#1C211A`) is the existing
  * dark elevated chrome tone — one shade lighter than the North Star deep
  * canvas — matching the moon-graphite "Surface 2/3 — Card/Tile" lift used
  * across Dispatch/list frames. Do not invent a parallel hex.

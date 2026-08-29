@@ -101,7 +101,7 @@ export function HomepageRealitySection() {
 
       <div className="relative mx-auto max-w-[90rem]">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             The reality of running a business
           </p>
           <h2
@@ -145,7 +145,7 @@ export function HomepageRealitySection() {
                 style={{ animationDelay: `${index * 90}ms` }}
               >
                 <Icon
-                  className="h-5 w-5 text-[#c9a44d]"
+                  className="h-5 w-5 text-[#c2a05a]"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -180,7 +180,7 @@ export function HomepageRealitySection() {
                 aria-hidden={!active}
               >
                 <Icon
-                  className="h-5 w-5 text-[#c9a44d]"
+                  className="h-5 w-5 text-[#c2a05a]"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -202,7 +202,7 @@ export function HomepageRealitySection() {
                 key={item.id}
                 className={[
                   "h-1.5 w-1.5 rounded-full transition-colors",
-                  index === activeIndex ? "bg-[#c9a44d]" : "bg-[#2a303a]",
+                  index === activeIndex ? "bg-[#c2a05a]" : "bg-[#2b3227]",
                 ].join(" ")}
               />
             ))}

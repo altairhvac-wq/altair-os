@@ -173,7 +173,7 @@ export function MarketingReelPublishControls({
     <div
       className={`w-full rounded-xl border px-3.5 py-3 ${
         northStar
-          ? "border-[rgba(148,163,184,0.22)] bg-[#FAF6EE]/70"
+          ? "border-[rgba(176,168,143,0.22)] bg-[#FAF6EE]/70"
           : "border-slate-200/90 bg-slate-50/80"
       }`}
     >
@@ -199,7 +199,7 @@ export function MarketingReelPublishControls({
             <label className="flex flex-col gap-1.5">
               <span
                 className={`text-xs font-medium ${
-                  northStar ? "text-[#6B4E1A]" : "text-slate-700"
+                  northStar ? "text-[#77591B]" : "text-slate-700"
                 }`}
               >
                 Facebook Page
@@ -214,7 +214,7 @@ export function MarketingReelPublishControls({
                 }}
                 className={
                   northStar
-                    ? "w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3 py-2 text-sm text-[#101827]"
+                    ? "w-full rounded-lg border border-[rgba(176,168,143,0.24)] bg-white px-3 py-2 text-sm text-[#151914]"
                     : "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
                 }
               >

@@ -29,24 +29,36 @@ export const altairMcGridGapClass = "gap-0";
 export const altairMcHairlineGridClass =
   "grid gap-px bg-[var(--north-star-plate-border)]";
 
-/** Surface 1 section card shell (no padding). */
+/**
+ * Surface 1 section card shell (no padding).
+ *
+ * PRESTIGE: carries the canonical elevation ramp. Before, an MC card was a fill
+ * plus a hairline and nothing else, which is why the dashboard read flat next
+ * to the quality reference — the computed box-shadow was literally transparent.
+ * `--elev-hairline` is the inset top highlight (lit from above); `--elev-1` is
+ * the contact + ambient pair.
+ */
 export const altairMcCardClass =
-  "rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-section)]";
+  "rounded-[var(--radius-card)] border border-[var(--north-star-plate-border)] bg-[var(--surface-section)] shadow-[var(--elev-hairline),var(--elev-1)]";
 
 /** Standard inner padding for MC cards and callouts. */
 export const altairMcCardPadClass = "p-3.5";
 
-/** Surface 3 tile — KPI / metric blocks with padding included. */
+/** Surface 3 tile — KPI / metric blocks with padding included. A tile sits
+ * INSIDE a card, so it is recessed rather than elevated: no drop shadow, just
+ * the quiet inset that reads as a well. */
 export const altairMcTileClass =
-  "rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3.5";
+  "rounded-[var(--radius-control)] border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3.5";
 
 /** Surface 2 list container. */
 export const altairMcListClass =
-  "overflow-hidden rounded-[var(--radius-section)] border border-[var(--north-star-plate-border)] bg-[var(--surface-card)]";
+  "overflow-hidden rounded-[var(--radius-card)] border border-[var(--north-star-plate-border)] bg-[var(--surface-card)] shadow-[var(--elev-hairline),var(--elev-1)]";
 
-/** Surface 4 list row. */
+/** Surface 4 list row. PRESTIGE: the hover was a raw slate-100 at 55% — the one
+ * hardcoded colour left in this otherwise fully tokenised primitive, and a cool
+ * one. Now a warm ink wash that works on any surface tone. */
 export const altairMcListRowClass =
-  "min-h-11 px-3.5 py-2.5 transition-colors hover:bg-[rgb(241_245_249_/_0.55)]";
+  "min-h-11 px-3.5 py-2.5 transition-colors hover:bg-[rgb(28_25_19_/_0.04)]";
 
 /** Compact uppercase metric / eyebrow label. */
 export const altairMcMetricLabelClass =

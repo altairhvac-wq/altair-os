@@ -35,7 +35,7 @@ export function WorkFlowRail({ jobs }: WorkFlowRailProps) {
   return (
     <section
       aria-label="Work in motion"
-      className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-white/70 p-4 shadow-[0_8px_40px_-16px_rgba(15,23,42,0.12),0_0_0_1px_rgba(148,163,184,0.08)] backdrop-blur-sm sm:p-5"
+      className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-white/70 p-4 shadow-[0_8px_40px_-16px_rgba(15,23,42,0.12),0_0_0_1px_rgba(176,168,143,0.08)] backdrop-blur-sm sm:p-5"
     >
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>

@@ -23,7 +23,7 @@ export function SystemHealthDock({ health }: SystemHealthDockProps) {
         </div>
         <div className="relative h-14 w-14 shrink-0">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(148,163,184,0.1)" strokeWidth="4" />
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(176,168,143,0.1)" strokeWidth="4" />
             <circle
               cx="32"
               cy="32"
@@ -38,7 +38,7 @@ export function SystemHealthDock({ health }: SystemHealthDockProps) {
             <defs>
               <linearGradient id="health-score" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#34d399" />
-                <stop offset="100%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#c8c0af" />
               </linearGradient>
             </defs>
           </svg>

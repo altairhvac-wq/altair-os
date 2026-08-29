@@ -13,7 +13,7 @@ export type AtmosphereBackgroundProps = {
 
 const glowStyles: Record<AtmosphereTone, { primary: string; secondary: string }> = {
   neutral: {
-    primary: "bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(148,163,184,0.18),transparent_70%)]",
+    primary: "bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(176,168,143,0.18),transparent_70%)]",
     secondary: "bg-[radial-gradient(ellipse_60%_50%_at_80%_20%,rgba(203,213,225,0.12),transparent_65%)]",
   },
   cyan: {

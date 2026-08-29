@@ -50,7 +50,7 @@ export function NetworkNorthStarLoadingState() {
           </div>
 
           <div className="space-y-4 p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
-            <div className="rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 px-4 py-4">
+            <div className="rounded-[1.25rem] border border-[rgba(119,89,27,0.10)] bg-[#FBF7EF]/80 px-4 py-4">
               <Skeleton className="h-3 w-28" />
               <Skeleton className="mt-3 h-5 w-64 max-w-full" />
               <Skeleton className="mt-2 h-3 w-80 max-w-full" />
@@ -74,7 +74,7 @@ export function NetworkNorthStarLoadingState() {
                 {Array.from({ length: 3 }).map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="h-14 rounded-lg border border-[rgba(138,99,36,0.12)]"
+                    className="h-14 rounded-lg border border-[rgba(119,89,27,0.12)]"
                   />
                 ))}
               </div>

@@ -25,18 +25,22 @@ export const reportIconChipClass =
  * severity — Outstanding/Overdue share red even when the period is healthy.
  */
 export const reportIconTintClass: Record<ReportIconTintCategory, string> = {
+  /* PRESTIGE: these chips were raw Tailwind hues (sky/violet/teal) that sat
+   * outside the palette. They now draw from the canonical `--chart-*` series
+   * ramp, so the chip behind an icon and the line on its chart are the same
+   * colour — one categorical language instead of two. */
   /** Revenue / Collected */
-  revenue: "bg-sky-500/25",
+  revenue: "bg-[var(--chart-1)]/25",
   /** Profit / Net income */
-  profit: "bg-emerald-500/25",
+  profit: "bg-[var(--chart-2)]/25",
   /** Outstanding / Overdue balances */
-  outstanding: "bg-rose-500/25",
+  outstanding: "bg-altair-danger/25",
   /** Jobs / workload volume */
-  jobs: "bg-violet-500/25",
+  jobs: "bg-[var(--chart-3)]/25",
   /** Average ticket */
-  avgTicket: "bg-amber-500/25",
+  avgTicket: "bg-[var(--chart-4)]/25",
   /** Conversion / close rate */
-  conversion: "bg-teal-500/25",
+  conversion: "bg-[var(--chart-5)]/25",
 };
 
 export function reportIconChipClassName(

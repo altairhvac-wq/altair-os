@@ -4,7 +4,7 @@ import { HomepageProductFrame } from "@/shared/components/homepage/HomepageProdu
 import { HOMEPAGE_SCREENSHOTS } from "@/shared/components/homepage/homepage-tokens";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 const TRUST_ITEMS = [
   "14-day free trial",
@@ -52,7 +52,7 @@ export function HomepageHero() {
           <div className="ah-hero-fade ah-hero-fade-4 mt-7 flex flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-3.5">
             <Link
               href="/signup"
-              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#b88a2e] px-8 py-3.5 text-sm font-semibold text-[#08090c] transition-[background-color,transform] duration-200 hover:bg-[#c9a44d] active:translate-y-px motion-reduce:transition-none motion-reduce:active:translate-y-0 sm:w-auto ${focusRing}`}
+              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#a4823a] px-8 py-3.5 text-sm font-semibold text-[#080907] transition-[background-color,transform] duration-200 hover:bg-[#c2a05a] active:translate-y-px motion-reduce:transition-none motion-reduce:active:translate-y-0 sm:w-auto ${focusRing}`}
             >
               Start Your 14-Day Free Trial
             </Link>
@@ -71,7 +71,7 @@ export function HomepageHero() {
                 className="flex items-center gap-1.5 text-[12px] text-[#8e826f]/88 sm:text-[13px]"
               >
                 <Check
-                  className="h-3 w-3 shrink-0 text-[#c9a44d]/65"
+                  className="h-3 w-3 shrink-0 text-[#c2a05a]/65"
                   strokeWidth={2.25}
                   aria-hidden="true"
                 />

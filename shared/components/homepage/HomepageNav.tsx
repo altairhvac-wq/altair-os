@@ -14,7 +14,7 @@ const NAV_LINKS = [
 ] as const;
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0e12]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0f0b]";
 
 function isHomepagePath(pathname: string) {
   return pathname === "/" || pathname === "/welcome";
@@ -110,7 +110,7 @@ export function HomepageNav() {
           </Link>
           <Link
             href="/signup"
-            className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-2.5 text-[13px] font-semibold text-[#08090c] transition-colors duration-200 hover:bg-[#c9a44d] motion-reduce:transition-none ${focusRing}`}
+            className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#a4823a] px-4 py-2.5 text-[13px] font-semibold text-[#080907] transition-colors duration-200 hover:bg-[#c2a05a] motion-reduce:transition-none ${focusRing}`}
           >
             Start Your 14-Day Free Trial
           </Link>
@@ -169,7 +169,7 @@ export function HomepageNav() {
             <Link
               href="/signup"
               onClick={() => setMenuOpen(false)}
-              className={`mt-2 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-3 text-sm font-semibold text-[#08090c] hover:bg-[#c9a44d] ${focusRing}`}
+              className={`mt-2 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-4 py-3 text-sm font-semibold text-[#080907] hover:bg-[#c2a05a] ${focusRing}`}
             >
               Start Your 14-Day Free Trial
             </Link>

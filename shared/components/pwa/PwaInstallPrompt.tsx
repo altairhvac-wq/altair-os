@@ -17,7 +17,7 @@ type PwaInstallPromptProps = {
 };
 
 const ctaFocusClass =
-  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#C2A05A]/20";
 
 function PlatformInstallInstructions({ className = "" }: { className?: string }) {
   const platform = getInstallPlatformCategory();
@@ -160,7 +160,7 @@ export function PwaInstallPrompt({
           type="button"
           onClick={handleInstallClick}
           disabled={installing}
-          className={`inline-flex min-h-[56px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#0A0A0A] px-6 py-4 text-base font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-70 ${ctaFocusClass}`}
+          className={`inline-flex min-h-[56px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#0A0A0A] px-6 py-4 text-base font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(194,160,90,0.2)] ring-1 ring-[#C2A05A]/30 transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-70 ${ctaFocusClass}`}
         >
           <Download className="h-5 w-5" aria-hidden />
           {installing ? "Installing…" : "Install Altair"}

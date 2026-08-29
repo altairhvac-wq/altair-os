@@ -38,7 +38,7 @@ export function InvoicesMobileCardList({
   return (
     <ul
       className={`md:hidden ${
-        northStar ? "invoice-north-star-mobile-list divide-y divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-100"
+        northStar ? "invoice-north-star-mobile-list divide-y divide-[rgba(119,89,27,0.12)]" : "divide-y divide-slate-100"
       }`}
     >
       {sections.map((section) => (
@@ -54,7 +54,7 @@ export function InvoicesMobileCardList({
           <ul
             className={
               northStar
-                ? "divide-y divide-[rgba(138,99,36,0.12)]"
+                ? "divide-y divide-[rgba(119,89,27,0.12)]"
                 : "divide-y divide-slate-100"
             }
           >
@@ -125,7 +125,7 @@ export function InvoicesMobileCardList({
                             canManageCustomers={canManageCustomers}
                             linkClassName={
                               northStar
-                                ? "text-sm font-medium text-[#4F4638] transition-colors hover:text-[#8A6324]"
+                                ? "text-sm font-medium text-[#4F4638] transition-colors hover:text-[#77591B]"
                                 : "text-sm text-slate-600 transition-colors hover:text-cyan-700"
                             }
                             stopRowNavigation
@@ -178,7 +178,7 @@ export function InvoicesMobileCardList({
                           ) : (
                             <p
                               className={
-                                northStar ? "text-xs text-[#64748B]" : "text-xs text-slate-400"
+                                northStar ? "text-xs text-[#7C7259]" : "text-xs text-slate-400"
                               }
                             >
                               Paid
@@ -187,7 +187,7 @@ export function InvoicesMobileCardList({
                         </div>
                         <ChevronRight
                           className={
-                            northStar ? "h-4 w-4 text-[#8A6324]" : "h-4 w-4 text-slate-300"
+                            northStar ? "h-4 w-4 text-[#77591B]" : "h-4 w-4 text-slate-300"
                           }
                         />
                       </div>

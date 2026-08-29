@@ -10,13 +10,13 @@ import { HomepageRealitySection } from "@/shared/components/homepage/HomepageRea
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 export function MissionControlHomepage() {
   return (
     <div className="mc-homepage relative min-h-dvh overflow-x-clip text-[#f3ebdd]">
       <div className="mc-atmosphere pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute inset-0 bg-[#08090c]" />
+        <div className="absolute inset-0 bg-[#080907]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_130%_85%_at_50%_-20%,#1a1f28_0%,transparent_58%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_52%_at_50%_18%,rgba(210,216,224,0.11)_0%,rgba(210,216,224,0.035)_42%,transparent_68%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_42%_at_86%_26%,rgba(196,205,216,0.05),transparent_58%)]" />
@@ -28,7 +28,7 @@ export function MissionControlHomepage() {
 
       <a
         href="#mc-main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-[#b88a2e] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#08090c]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-[#a4823a] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#080907]"
       >
         Skip to content
       </a>
@@ -64,7 +64,7 @@ export function MissionControlHomepage() {
             <div className="mt-7">
               <Link
                 href="/signup"
-                className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-5 py-3.5 text-sm font-semibold text-[#08090c] transition-colors hover:bg-[#c9a44d] ${focusRing}`}
+                className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#a4823a] px-5 py-3.5 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
               >
                 Start Your 14-Day Free Trial
                 <span className="ml-1.5 opacity-70" aria-hidden="true">

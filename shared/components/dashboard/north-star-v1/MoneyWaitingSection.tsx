@@ -24,7 +24,7 @@ export function MoneyWaitingSection({ lanes }: MoneyWaitingSectionProps) {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_100%_0%,rgba(148,163,184,0.08),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_100%_0%,rgba(176,168,143,0.08),transparent_60%)]"
       />
 
       <div className="relative flex flex-col gap-6">

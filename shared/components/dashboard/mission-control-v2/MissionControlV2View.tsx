@@ -104,24 +104,24 @@ const EXCEPTION_URGENCY: Record<
   }
 > = {
   low: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-sm`,
-    iconCircle: "bg-altair-success text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`,
+    iconCircle: "altair-icon-well bg-altair-success text-white",
     count: "text-altair-ink-on-paper",
     link: "text-altair-success-foreground",
     divider: "border-altair-border/40",
     rowHover: "hover:bg-black/[0.03]",
   },
   medium: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-warning/25 bg-altair-warning-surface shadow-sm`,
-    iconCircle: "bg-altair-warning text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-warning/25 bg-altair-warning-surface shadow-[var(--elev-hairline),var(--elev-2)]`,
+    iconCircle: "altair-icon-well bg-altair-warning text-white",
     count: "text-altair-warning-foreground",
     link: "text-altair-warning-foreground",
     divider: "border-altair-warning/20",
     rowHover: "hover:bg-altair-warning/10",
   },
   high: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-danger/25 bg-altair-danger-surface shadow-sm`,
-    iconCircle: "bg-altair-danger text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-danger/25 bg-altair-danger-surface shadow-[var(--elev-hairline),var(--elev-2)]`,
+    iconCircle: "altair-icon-well bg-altair-danger text-white",
     count: "text-altair-danger",
     link: "text-altair-danger",
     divider: "border-altair-danger/20",
@@ -285,7 +285,10 @@ export function MissionControlV2NeedsAttentionHeader({
           </h2>
           {totalCount > 0 ? (
             <span
-              className="inline-flex min-w-6 items-center justify-center rounded-full bg-altair-paper/20 px-2 py-0.5 text-[11px] font-bold tabular-nums leading-none text-altair-paper ring-1 ring-inset ring-altair-paper/35"
+              /* PRESTIGE: was paper-on-paper (light ink + light fill), which
+               * was invisible once the canvas became light parchment. A count
+               * chip is quiet metadata, so it reads as recessed neutral. */
+              className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--surface-recessed)] px-2 py-0.5 text-[11px] font-bold tabular-nums leading-none text-[var(--ink-secondary)] ring-1 ring-inset ring-[var(--border-strong)]"
               aria-label={`${totalCount} items need attention`}
             >
               {totalCount}
@@ -360,12 +363,12 @@ const INFORMATIONAL_BUCKET_TONE: Record<
   { iconCircle: string; link: string; muted: string }
 > = {
   success: {
-    iconCircle: "bg-altair-success text-white",
+    iconCircle: "altair-icon-well bg-altair-success text-white",
     link: "text-altair-success-foreground",
     muted: "text-altair-ink-on-paper-muted",
   },
   warning: {
-    iconCircle: "bg-altair-warning text-white",
+    iconCircle: "altair-icon-well bg-altair-warning text-white",
     link: "text-altair-warning-foreground",
     muted: "text-altair-ink-on-paper-muted",
   },
@@ -394,7 +397,7 @@ function InformationalBucketShell({
 
   return (
     <details
-      className={`group ${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-sm`}
+      className={`group ${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`}
     >
       <summary
         className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}

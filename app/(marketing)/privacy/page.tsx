@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
         <p>
           Questions about this policy:{" "}
           <a
-            className="font-medium text-[#977d2a] underline underline-offset-2"
+            className="font-medium text-[#77591b] underline underline-offset-2"
             href="mailto:altairhvac@gmail.com"
           >
             altairhvac@gmail.com

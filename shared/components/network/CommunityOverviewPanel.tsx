@@ -209,7 +209,7 @@ export function CommunityOverviewPanel({
       <section
         className={
           hasAttention
-            ? "rounded-[1.25rem] border border-[rgba(201,164,77,0.32)] bg-[#FFF9EA] p-4 sm:p-5"
+            ? "rounded-[1.25rem] border border-[rgba(194,160,90,0.32)] bg-[#FFF9EA] p-4 sm:p-5"
             : `${st.sectionSurface} p-4 sm:p-5`
         }
         aria-labelledby="community-attention-heading"
@@ -315,14 +315,14 @@ export function CommunityOverviewPanel({
             {pulseMetrics.map((metric) => {
               const content = (
                 <>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#77591B]">
                     {metric.label}
                   </p>
                   <p className="mt-1 text-xl font-bold tabular-nums leading-none text-[#17130E] sm:text-2xl">
                     {metric.value}
                   </p>
                   {metric.hint ? (
-                    <p className="mt-1.5 truncate text-[10px] leading-snug text-[#64748B]">
+                    <p className="mt-1.5 truncate text-[10px] leading-snug text-[#7C7259]">
                       {metric.hint}
                     </p>
                   ) : null}
@@ -334,7 +334,7 @@ export function CommunityOverviewPanel({
                   <div
                     key={metric.id}
                     role="listitem"
-                    className="rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/70 px-3 py-2.5"
+                    className="rounded-lg border border-[rgba(119,89,27,0.10)] bg-[#FFF9EA]/70 px-3 py-2.5"
                   >
                     {content}
                   </div>
@@ -347,7 +347,7 @@ export function CommunityOverviewPanel({
                   type="button"
                   role="listitem"
                   onClick={metric.onClick}
-                  className="rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/70 px-3 py-2.5 text-left transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[#FFFDF5]"
+                  className="rounded-lg border border-[rgba(119,89,27,0.10)] bg-[#FFF9EA]/70 px-3 py-2.5 text-left transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[#FFFDF5]"
                 >
                   {content}
                 </button>
@@ -377,9 +377,9 @@ export function CommunityOverviewPanel({
               <button
                 type="button"
                 onClick={onStartSendReferral}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.12)] hover:text-[#17130E]"
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(194,160,90,0.12)] hover:text-[#17130E]"
               >
-                <Send className="h-3.5 w-3.5 text-[#8A6324]" aria-hidden="true" />
+                <Send className="h-3.5 w-3.5 text-[#77591B]" aria-hidden="true" />
                 Send Referral
               </button>
             ) : null}
@@ -387,10 +387,10 @@ export function CommunityOverviewPanel({
               <button
                 type="button"
                 onClick={onOpenInvitations}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.12)] hover:text-[#17130E]"
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(194,160,90,0.12)] hover:text-[#17130E]"
               >
                 <UserPlus
-                  className="h-3.5 w-3.5 text-[#8A6324]"
+                  className="h-3.5 w-3.5 text-[#77591B]"
                   aria-hidden="true"
                 />
                 Invite a Business
@@ -400,10 +400,10 @@ export function CommunityOverviewPanel({
               <button
                 type="button"
                 onClick={onOpenDirectory}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.12)] hover:text-[#17130E]"
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(194,160,90,0.12)] hover:text-[#17130E]"
               >
                 <Search
-                  className="h-3.5 w-3.5 text-[#8A6324]"
+                  className="h-3.5 w-3.5 text-[#77591B]"
                   aria-hidden="true"
                 />
                 Browse Directory
@@ -413,10 +413,10 @@ export function CommunityOverviewPanel({
               <button
                 type="button"
                 onClick={onOpenRelationships}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.12)] hover:text-[#17130E]"
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#4F4638] transition-colors hover:bg-[rgba(194,160,90,0.12)] hover:text-[#17130E]"
               >
                 <Users
-                  className="h-3.5 w-3.5 text-[#8A6324]"
+                  className="h-3.5 w-3.5 text-[#77591B]"
                   aria-hidden="true"
                 />
                 Relationships
@@ -470,7 +470,7 @@ export function CommunityOverviewPanel({
               ) : null}
             </div>
           ) : (
-            <ul className="mt-3 divide-y divide-[rgba(138,99,36,0.08)]">
+            <ul className="mt-3 divide-y divide-[rgba(119,89,27,0.08)]">
               {recentReferrals.map(({ referral, direction }) => {
                 const partnerName =
                   direction === "sent"
@@ -502,7 +502,7 @@ export function CommunityOverviewPanel({
                           {formatDate(referral.updatedAt, timeZone)}
                         </span>
                       </span>
-                      <span className="shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]">
+                      <span className="shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#77591B]">
                         {direction === "sent" ? "Out" : "In"}
                       </span>
                     </button>
@@ -525,7 +525,7 @@ export function CommunityOverviewPanel({
               <h2 id="community-relationships-heading" className={st.sectionTitle}>
                 Relationships Snapshot
               </h2>
-              <p className="mt-1 text-xs text-[#64748B]">
+              <p className="mt-1 text-xs text-[#7C7259]">
                 {relationships.length === 0
                   ? "Businesses you trust for referrals and overflow work."
                   : `${relationships.length} active relationship${
@@ -546,7 +546,7 @@ export function CommunityOverviewPanel({
 
           {relationships.length === 0 ? (
             <div className={`${st.emptyState} ${st.emptyStateStrong} mt-3`}>
-              <Users className="mx-auto h-7 w-7 text-[#8A6324]" aria-hidden="true" />
+              <Users className="mx-auto h-7 w-7 text-[#77591B]" aria-hidden="true" />
               <p className={`${st.emptyTitle} mt-2`}>
                 No relationships yet.
               </p>
@@ -639,7 +639,7 @@ export function CommunityOverviewPanel({
         <section
           className={
             profileReadiness
-              ? "rounded-[1.25rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] p-4 sm:p-5"
+              ? "rounded-[1.25rem] border border-[rgba(194,160,90,0.28)] bg-[#FFF9EA] p-4 sm:p-5"
               : `${st.sectionSurface} p-4 sm:p-5`
           }
           aria-labelledby="community-profile-readiness-heading"

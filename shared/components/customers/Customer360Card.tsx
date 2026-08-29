@@ -63,7 +63,7 @@ const northStarSeverityStyles: Record<
   Customer360Opportunity["severity"],
   string
 > = {
-  info: "border-[rgba(138,99,36,0.12)] bg-[#FFF9EA]",
+  info: "border-[rgba(119,89,27,0.12)] bg-[#FFF9EA]",
   warning: "border-[rgba(245,158,11,0.35)] bg-[rgba(254,243,199,0.55)]",
   critical: "border-[rgba(244,63,94,0.25)] bg-[rgba(254,226,226,0.55)]",
 };
@@ -221,7 +221,7 @@ function CustomerFactsSection({
                     : "inline-flex items-center gap-0.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
                 }
               >
-                <Tag className={northStar ? "h-2.5 w-2.5 text-[#8A6324]" : "h-2.5 w-2.5 text-slate-400"} />
+                <Tag className={northStar ? "h-2.5 w-2.5 text-[#77591B]" : "h-2.5 w-2.5 text-slate-400"} />
                 {tag}
               </span>
             ))}
@@ -322,7 +322,7 @@ function IdentitySection({
                   : "inline-flex items-center gap-0.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
               }
             >
-              <Tag className={northStar ? "h-2.5 w-2.5 text-[#8A6324]" : "h-2.5 w-2.5 text-slate-400"} />
+              <Tag className={northStar ? "h-2.5 w-2.5 text-[#77591B]" : "h-2.5 w-2.5 text-slate-400"} />
               {tag}
             </span>
           ))}
@@ -423,7 +423,7 @@ function EquipmentSection({
               key={item.id}
               className={
                 northStar
-                  ? "flex flex-wrap items-center justify-between gap-2 rounded-md border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-2 py-1.5"
+                  ? "flex flex-wrap items-center justify-between gap-2 rounded-md border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] px-2 py-1.5"
                   : "flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-white px-2 py-1.5"
               }
             >
@@ -560,7 +560,7 @@ function RecentActivitySection({
               key={activity.id}
               className={
                 northStar
-                  ? "rounded-md border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-2 py-1.5"
+                  ? "rounded-md border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] px-2 py-1.5"
                   : "rounded-md border border-slate-100 bg-white px-2 py-1.5"
               }
             >
@@ -568,7 +568,7 @@ function RecentActivitySection({
                 <History
                   className={
                     northStar
-                      ? "mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8A6324]"
+                      ? "mt-0.5 h-3.5 w-3.5 shrink-0 text-[#77591B]"
                       : "mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"
                   }
                 />
@@ -583,7 +583,7 @@ function RecentActivitySection({
                     }
                     timestampClassName={
                       northStar
-                        ? "shrink-0 text-[11px] text-[#64748B]"
+                        ? "shrink-0 text-[11px] text-[#7C7259]"
                         : "shrink-0 text-[11px] text-slate-400"
                     }
                     detailsClassName={
@@ -593,7 +593,7 @@ function RecentActivitySection({
                     }
                     attributionClassName={
                       northStar
-                        ? "mt-0.5 text-[11px] text-[#64748B]"
+                        ? "mt-0.5 text-[11px] text-[#7C7259]"
                         : "mt-0.5 text-[11px] text-slate-400"
                     }
                   />
@@ -718,7 +718,7 @@ function OpportunityRow({
       <li>
         <Link
           href={opportunity.href}
-          className={`${className} transition-colors ${northStar ? "hover:border-[rgba(201,164,77,0.28)]" : "hover:bg-white"}`}
+          className={`${className} transition-colors ${northStar ? "hover:border-[rgba(194,160,90,0.28)]" : "hover:bg-white"}`}
         >
           {content}
         </Link>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { MetaPixel } from "@/shared/components/analytics/MetaPixel";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import "./globals.css";
@@ -14,10 +14,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * Altair Prestige display face.
+ *
+ * Instrument Serif was already in the project but scoped to the marketing
+ * layout, so the product itself was set entirely in one sans — a large part of
+ * why the admin read as generic next to the brand surfaces. Promoting it to the
+ * root layout gives the whole product a display register for page identity
+ * (greetings, page titles) while Geist keeps every functional role.
+ *
+ * Self-hosted by next/font, one weight, `display: swap`.
+ */
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-altair-display",
+  display: "swap",
+});
+
 /** Matches `--surface-canvas` in globals.css */
-const APP_SHELL_BACKGROUND = "#f4f7fa";
+const APP_SHELL_BACKGROUND = "#f8f7f4";
 /** Premium slate accent used across auth/admin surfaces */
-const APP_THEME_COLOR = "#0f172a";
+/* Matches `--chrome` (--pg-graphite-900). The browser status bar sits directly
+ * above the app's own chrome, so any drift between them reads as a seam. */
+const APP_THEME_COLOR = "#1c211a";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -79,7 +99,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-clip antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full overflow-x-clip antialiased`}
       style={{ backgroundColor: APP_SHELL_BACKGROUND }}
     >
       <body

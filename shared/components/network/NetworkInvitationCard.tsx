@@ -139,7 +139,7 @@ export function NetworkInvitationCard({
   const emailClass = isNorthStar ? st.cardMuted : "mt-1 text-xs text-slate-500";
   const showPendingActions = invite.status === "pending" && !connectedViaPartners;
   const statusBadgeClass = isNorthStar
-    ? "rounded-full bg-[rgba(201,164,77,0.12)] px-2.5 py-1 text-xs font-semibold text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.22)]"
+    ? "rounded-full bg-[rgba(194,160,90,0.12)] px-2.5 py-1 text-xs font-semibold text-[#77591B] ring-1 ring-[rgba(194,160,90,0.22)]"
     : "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700";
   const dlClass = isNorthStar
     ? "mt-4 grid gap-2 text-xs text-[#4F4638] sm:grid-cols-2"

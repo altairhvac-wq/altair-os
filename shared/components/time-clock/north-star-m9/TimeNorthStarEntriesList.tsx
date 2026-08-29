@@ -55,8 +55,8 @@ function MobileEntryCard({
     <article
       className={`time-north-star-mobile-entry rounded-xl border px-3.5 py-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] ${
         highlighted
-          ? "border-[rgba(201,164,77,0.35)] bg-[rgba(201,164,77,0.08)] ring-1 ring-[rgba(201,164,77,0.18)]"
-          : "border-[rgba(138,99,36,0.14)] bg-[#FBF7EF]"
+          ? "border-[rgba(194,160,90,0.35)] bg-[rgba(194,160,90,0.08)] ring-1 ring-[rgba(194,160,90,0.18)]"
+          : "border-[rgba(119,89,27,0.14)] bg-[#FBF7EF]"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -70,7 +70,7 @@ function MobileEntryCard({
         </div>
         <EntryStatusBadge entry={entry} />
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[rgba(138,99,36,0.10)] pt-2.5 text-xs">
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[rgba(119,89,27,0.10)] pt-2.5 text-xs">
         <div>
           <dt className="font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
             Started
@@ -98,9 +98,9 @@ export function TimeNorthStarActiveTechnicianCard({ entry }: { entry: TimeEntry 
   const state = resolveTechnicianState(entry);
 
   return (
-    <article className="time-north-star-active-card relative overflow-hidden rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] px-3.5 py-3.5 shadow-[0_3px_12px_rgba(3,7,12,0.08)] sm:px-4 sm:py-4">
+    <article className="time-north-star-active-card relative overflow-hidden rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] px-3.5 py-3.5 shadow-[0_3px_12px_rgba(3,7,12,0.08)] sm:px-4 sm:py-4">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(201,164,77,0.35)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(194,160,90,0.35)] to-transparent"
         aria-hidden="true"
       />
       <div className="flex items-start justify-between gap-3">
@@ -121,11 +121,11 @@ export function TimeNorthStarActiveTechnicianCard({ entry }: { entry: TimeEntry 
           {formatTechnicianTimeState(state)}
         </span>
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[rgba(138,99,36,0.10)] pt-2.5">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[rgba(119,89,27,0.10)] pt-2.5">
         <p className="text-xs text-[#6B6255]">
           Started {formatDateTime(entry.startedAt)}
         </p>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#77591B]">
           On clock
         </p>
       </div>

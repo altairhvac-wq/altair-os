@@ -67,7 +67,7 @@ export function ExpenseDetailNorthStarHeader({
 
       <div className={dt.metaStrip}>
         <div className={`${dt.metaRow} text-[#D7CDBD]`}>
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-[#D6BE78]" />
+          <Calendar className="h-3.5 w-3.5 shrink-0 text-[#D9C188]" />
           <span
             className={
               purchaseDate.missing ? `text-xs ${northStarDarkMissingValueClass}` : undefined
@@ -77,9 +77,9 @@ export function ExpenseDetailNorthStarHeader({
           </span>
         </div>
         <div className={`mt-1 ${dt.metaRow} text-[#D7CDBD]`}>
-          <CreditCard className="h-3.5 w-3.5 shrink-0 text-[#D6BE78]" />
+          <CreditCard className="h-3.5 w-3.5 shrink-0 text-[#D9C188]" />
           <span>{formatExpensePaymentMethod(expense.paymentMethod)}</span>
-          <span className="text-[#D6BE78]">·</span>
+          <span className="text-[#D9C188]">·</span>
           <span
             className={
               expense.isReimbursable
@@ -91,7 +91,7 @@ export function ExpenseDetailNorthStarHeader({
           </span>
         </div>
         <div className={`mt-1 ${dt.metaRow} text-[#D7CDBD]`}>
-          <Store className="h-3.5 w-3.5 shrink-0 text-[#D6BE78]" />
+          <Store className="h-3.5 w-3.5 shrink-0 text-[#D9C188]" />
           <span
             className={
               merchant.missing ? `text-xs ${northStarDarkMissingValueClass}` : undefined

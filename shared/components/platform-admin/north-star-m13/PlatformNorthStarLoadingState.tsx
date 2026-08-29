@@ -36,7 +36,7 @@ export function PlatformNorthStarLoadingState() {
       />
 
       <MasterContentStack density="compact" className={pt.workspaceStack}>
-        <Skeleton className="h-20 rounded-[1rem] border border-[rgba(138,99,36,0.12)]" />
+        <Skeleton className="h-20 rounded-[1rem] border border-[rgba(119,89,27,0.12)]" />
 
         <div className={`${pt.sectionSurface}`}>
           <div className={pt.panelHeader}>
@@ -48,7 +48,7 @@ export function PlatformNorthStarLoadingState() {
             {Array.from({ length: 7 }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="h-24 rounded-[1rem] border border-[rgba(138,99,36,0.12)]"
+                className="h-24 rounded-[1rem] border border-[rgba(119,89,27,0.12)]"
               />
             ))}
           </div>
@@ -61,7 +61,7 @@ export function PlatformNorthStarLoadingState() {
             <Skeleton className="mt-1.5 h-3 w-56 max-w-full" />
           </div>
           <div className="p-3 sm:p-4 lg:px-5">
-            <Skeleton className="h-16 rounded-[1rem] border border-[rgba(138,99,36,0.12)]" />
+            <Skeleton className="h-16 rounded-[1rem] border border-[rgba(119,89,27,0.12)]" />
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export function PlatformNorthStarLoadingState() {
               <Skeleton className="mt-1.5 h-3 w-72 max-w-full" />
             </div>
             <div className="px-3 py-3 sm:px-4 sm:py-4 lg:px-5">
-              <Skeleton className="h-48 rounded-[1rem] border border-[rgba(138,99,36,0.12)]" />
+              <Skeleton className="h-48 rounded-[1rem] border border-[rgba(119,89,27,0.12)]" />
             </div>
           </div>
         ))}

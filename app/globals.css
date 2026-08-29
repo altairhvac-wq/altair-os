@@ -25,27 +25,240 @@
 /* Components, design-system primitives, and class-string token modules. */
 @source "../shared";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ALTAIR PRESTIGE — canonical visual foundation
+ * Documentation: ui-audit/ALTAIR-PRESTIGE.md
+ *
+ * This block is the ONLY place raw colour is authored. Everything below it —
+ * the legacy `--surface-*`, `--north-star-*`, and `--altair-*` families — is
+ * re-pointed at these roles, so the whole product repaints from here.
+ *
+ * Two layers, deliberately separated:
+ *
+ *   1. MATERIALS  raw pigment. Never consumed by a component directly.
+ *   2. ROLES      meaning ("canvas", "chrome", "ink-muted"). Components and
+ *                 the legacy variable families consume only these.
+ *
+ * Rule: if you are about to write a hex value anywhere else in this codebase,
+ * add or reuse a role here instead.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── 1. MATERIALS ──────────────────────────────────────────────────────── */
+
+  /* Graphite-olive: the chrome material. A warm, desaturated forest-graphite —
+   * dark enough to frame content, warm enough never to read as cold slate.
+   * Hue held around 95° at very low saturation so it reads as "dark", with
+   * warmth you notice only beside a true neutral. */
+  --pg-graphite-950: #14180f;
+  --pg-graphite-900: #1c211a;
+  --pg-graphite-850: #232922;
+  --pg-graphite-800: #2b322a;
+  --pg-graphite-700: #3a4238;
+  --pg-graphite-600: #4d5749;
+
+  /* Parchment: the canvas material. Warm mineral paper the content sits on.
+   * Lighter and less saturated than the old #DAD2BE tan so cards separate
+   * from it cleanly and ink keeps its contrast. */
+  --pg-parchment-100: #ece7d9;
+  --pg-parchment-200: #e2dcca;
+  --pg-parchment-300: #d5cdb7;
+
+  /* Porcelain: the surface material. Content planes — warm, never clinical
+   * pure white except at the highest elevation. */
+  --pg-porcelain-000: #ffffff;
+  --pg-porcelain-050: #fdfbf7;
+  --pg-porcelain-100: #f9f6ef;
+
+  /* Brass / champagne: the single brand metal. Champagne (light) is for
+   * hairlines, rails and highlights on dark chrome; brass (dark) is the only
+   * one legible as TEXT on light surfaces. */
+  --pg-brass-700: #77591b;
+  --pg-brass-600: #a4823a;
+  --pg-brass-500: #c2a05a;
+  --pg-champagne-400: #d9c188;
+  --pg-champagne-300: #e8d9ac;
+
+  /* Emerald: semantic positive + the dimensional icon-well green. Deep and
+   * slightly blue-shifted so it stays distinct from the olive chrome. */
+  --pg-emerald-800: #1f4733;
+  --pg-emerald-700: #2a5c42;
+  --pg-emerald-600: #35755a;
+  --pg-emerald-500: #3f8a63;
+
+  /* Warm ink: text. Near-black with a brown cast — pairs with parchment
+   * without the blue chill of slate. */
+  --pg-ink-900: #1c1913;
+  --pg-ink-700: #453f33;
+  --pg-ink-500: #655e4e;
+  --pg-ink-300: #8f887a;
+
+  /* Light ink: text on dark chrome. */
+  --pg-chalk-100: #f4f1e8;
+  --pg-chalk-300: #d3cec0;
+  --pg-chalk-500: #a49d8c;
+
+  /* ── 2. ROLES ──────────────────────────────────────────────────────────── */
+
+  /* Ground */
+  --canvas: var(--pg-parchment-100);
+  --canvas-sunken: var(--pg-parchment-200);
+
+  /* Content planes. `surface` is the default card; `raised` is the one the
+   * user is acting on; `recessed` is a well INSIDE a surface (inputs, tracks). */
+  --surface: var(--pg-porcelain-050);
+  --surface-raised: var(--pg-porcelain-000);
+  --surface-recessed: var(--pg-porcelain-100);
+
+  /* Chrome — the application frame. Opaque by rule: chrome must define its own
+   * colour, never inherit through translucency from whatever sits behind it. */
+  --chrome: var(--pg-graphite-900);
+  --chrome-elevated: var(--pg-graphite-850);
+  --chrome-sunken: var(--pg-graphite-950);
+  --chrome-edge: rgb(201 169 97 / 0.22);
+
+  /* Ink on light */
+  --ink: var(--pg-ink-900);
+  --ink-secondary: var(--pg-ink-700);
+  --ink-muted: var(--pg-ink-500);
+
+  /* Ink on chrome */
+  --ink-on-chrome: var(--pg-chalk-100);
+  --ink-on-chrome-secondary: var(--pg-chalk-300);
+  --ink-on-chrome-muted: var(--pg-chalk-500);
+
+  /* Separation */
+  --border: rgb(28 25 19 / 0.10);
+  --border-strong: rgb(28 25 19 / 0.18);
+  --border-on-chrome: rgb(244 241 232 / 0.10);
+
+  /* Brand metal */
+  --brand-metal: var(--pg-brass-600);
+  --brand-metal-text: var(--pg-brass-700);
+  --brand-metal-bright: var(--pg-champagne-400);
+  --brand-metal-hairline: rgb(201 169 97 / 0.30);
+
+  /* Focus — one ring for the whole product. */
+  --focus-ring: var(--pg-brass-600);
+
+  /* ── 3. ELEVATION ──────────────────────────────────────────────────────────
+   * Why cards read flat today: their computed box-shadow resolves to fully
+   * transparent. Real objects need two shadows — a tight CONTACT shadow that
+   * anchors the edge, and a broad AMBIENT shadow that gives it air — plus a
+   * 1px inset top highlight so the surface looks lit from above.
+   * Kept cheap: small blur radii, no backdrop-filter, no filter stacks. */
+  --elev-hairline: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --elev-1:
+    0 1px 2px rgb(28 25 19 / 0.05),
+    0 1px 1px rgb(28 25 19 / 0.03);
+  --elev-2:
+    0 1px 2px rgb(28 25 19 / 0.06),
+    0 4px 10px -3px rgb(28 25 19 / 0.07);
+  --elev-3:
+    0 2px 4px rgb(28 25 19 / 0.06),
+    0 10px 24px -8px rgb(28 25 19 / 0.12);
+  /* On dark chrome the same idea, but the highlight is metal not white. */
+  --elev-chrome-hairline: inset 0 1px 0 rgb(232 217 172 / 0.08);
+  --elev-chrome-2:
+    0 1px 2px rgb(0 0 0 / 0.30),
+    0 6px 16px -6px rgb(0 0 0 / 0.35);
+
+  /* ── 4. RADIUS ─────────────────────────────────────────────────────────────
+   * Four steps, architectural rather than pill-soft. */
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-panel: 0.875rem;
+  --radius-frame: 1.25rem;
+
+  /* ── 5. ATMOSPHERE ─────────────────────────────────────────────────────────
+   * Barely-perceptible environmental geometry so empty canvas reads as
+   * authored rather than unfinished. Target ~2% prominence: you should notice
+   * it only if you look for it.
+   *
+   * Implemented as repeating-linear-gradients, NOT images or SVG filters —
+   * it costs one paint, scrolls with the page, needs no network request, and
+   * no blur/backdrop-filter is involved. */
+  --atmosphere-ink: rgb(28 25 19 / 0.012);
+  --atmosphere-ink-faint: rgb(28 25 19 / 0.008);
+
+  /* ── 6. DATA VISUALISATION ─────────────────────────────────────────────────
+   * A categorical series ramp that belongs to the Prestige palette instead of
+   * fighting it. The previous chart colours were raw Tailwind-400 hexes
+   * (#38BDF8 sky, #34D399 emerald, #A78BFA violet …) authored directly in a
+   * style module: the single loudest off-brand element left in the product.
+   *
+   * These are tuned to sit on the dark report card: distinguishable from each
+   * other, all within the warm/olive/brass family, none of them neon. Series 1
+   * is brass because the first series is usually the primary metric. */
+  --chart-1: #c2a05a;
+  --chart-2: #3f8a63;
+  --chart-3: #8a9b5e;
+  --chart-4: #b5763f;
+  --chart-5: #6f8f92;
+  --chart-6: #9a7fa8;
+  /* Emphasis point on a trend line. */
+  --chart-accent: #e8d9ac;
+
+  /* ── 7. TYPOGRAPHY ─────────────────────────────────────────────────────────
+   * The audit counted 27 distinct font sizes across 4,353 call sites with no
+   * system behind them — 73% of the product is `text-xs`/`text-sm`, and the
+   * de-facto label register is an arbitrary `text-[10px]` repeated 414 times
+   * with 12 different letter-spacings.
+   *
+   * This is the deliberate hierarchy. It does NOT enlarge the product: the
+   * operator-density sizes are kept exactly where they are (12/14px carry the
+   * interface). What it adds is a real DISPLAY step and one canonical label
+   * treatment, so scanning has a top end and micro-copy stops drifting.
+   *
+   * Roles, largest to smallest:
+   *   display   page identity — greeting, hero numbers. Serif.
+   *   title     page + major section titles
+   *   heading   card and sub-section titles
+   *   body      default reading size
+   *   meta      secondary/supporting copy
+   *   label     uppercase eyebrows, table headers, chips  (ONE tracking)
+   */
+  /* NOTE: the display face is registered in `@theme inline` below as
+   * `--font-altair`, not here. `--font-*` is a reserved Tailwind v4 theme
+   * namespace, so declaring it in a plain `:root` gets shadowed and resolves
+   * empty at runtime — the utility then silently falls back to the sans. */
+
+  --text-display: 1.75rem;
+  --text-display-lh: 1.15;
+  --text-title: 1.125rem;
+  --text-heading: 0.9375rem;
+  --text-body: 0.875rem;
+  --text-meta: 0.8125rem;
+  --text-label: 0.6875rem;
+  --tracking-label: 0.12em;
+}
+
 :root {
   /* Surface Hierarchy — Canvas (Surface 0): warm gray, never pure white */
-  --background: #f3f5f7;
-  --foreground: #0f172a;
-  --surface-canvas: #f3f5f7;
-  --surface-section: #eef1f4;
-  --surface-panel: #fafbfc;
-  --surface-card: #fafbfc;
-  --surface-tile: #f7f8fa;
-  --surface-muted: #e8ecf0;
-  --border-subtle: rgb(203 213 225 / 0.42);
-  --border-strong: rgb(148 163 184 / 0.32);
-  --radius-panel: 0.875rem;
-  --radius-section: 0.75rem;
-  --accent-teal: #0891b2;
-  --accent-teal-hover: #0e7490;
-  --accent-teal-muted: rgb(8 145 178 / 0.1);
-  /* Prefer tonal hierarchy; shadows are supporting cues only */
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.018);
-  --shadow-panel: 0 1px 3px rgb(15 23 42 / 0.02);
-  --shadow-sticky: 0 -2px 10px -4px rgb(15 23 42 / 0.05);
+  --background: #f6f5f2;
+  --foreground: #151913;
+  /* Legacy surface family — now a thin alias layer over the Prestige roles.
+   * These names are still referenced by ~80 rules below and by component class
+   * strings; re-pointing them here repaints every one of those call sites
+   * without touching them. Do not author new colour here. */
+  --surface-canvas: var(--canvas);
+  --surface-section: var(--surface);
+  --surface-panel: var(--surface-raised);
+  --surface-card: var(--surface-raised);
+  --surface-tile: var(--surface-recessed);
+  --surface-muted: var(--canvas-sunken);
+  --border-subtle: var(--border);
+  /* `--border-strong` is intentionally NOT redefined here — the canonical role
+   * above owns it, and redefining it in this later block would shadow it. */
+  --radius-section: var(--radius-card);
+  /* Retired: the pre-brass cyan accent. Mapped to the brand metal so any
+   * un-migrated call site inherits the current identity instead of cyan. */
+  --accent-teal: var(--brand-metal-text);
+  --accent-teal-hover: var(--pg-brass-600);
+  --accent-teal-muted: rgb(164 130 58 / 0.1);
+  /* Elevation aliases → the canonical two-shadow ramp. */
+  --shadow-card: var(--elev-1);
+  --shadow-panel: var(--elev-2);
+  --shadow-sticky: 0 -2px 10px -4px rgb(28 25 19 / 0.06);
   /*
    * Retuned Aug 2026 — the old olive/khaki "North Star" V1 chrome is retired
    * per BRAND_GUIDELINES.md; these variables now carry the approved Platinum
@@ -54,36 +267,42 @@
    * blue against the reference. Every neutral below is now a pure Black
    * (#0A0A0A) + Steel (#71767D) mix — zero hue — so the chrome reads as
    * true black/gray, not blue-black. Ink roles mix Platinum/Steel/White.
-   * Gold roles are unchanged (already derived from Gold Accent #D4AF37).
+   * Gold roles were derived from Gold Accent #D4AF37; PRESTIGE has since
+   * retired that value from the UI in favour of the canonical brass ramp
+   * (brass-500 #C2A05A). The logo mark still carries #D4AF37 — see
+   * shared/components/brand/brand-assets.ts.
    */
   /* Sidebar/topbar stay true black (#0A0A0A-family) — kept as-is per feedback.
    * Canvas layers below are lifted with Platinum instead, so the content
    * area visibly separates from the black frame instead of reading as one
    * flat mass. Each step is a Black + Platinum mix — still zero extra hue. */
-  --north-star-root: #212122;
-  --north-star-sidebar: #0a0a0a;
-  --north-star-topbar: #131414;
-  --north-star-panel: #303132;
+  /* PRESTIGE: this family is now an alias layer over the canonical roles.
+   * It is consumed by ~200 rules below plus component class strings, so
+   * re-pointing it here is what actually repaints the shell. */
+  --north-star-root: var(--canvas);
+  --north-star-sidebar: var(--chrome);
+  --north-star-topbar: var(--chrome-elevated);
+  --north-star-panel: var(--chrome-elevated);
   /* Chrome / structural hairline (sidebar edge, page-header, Settings strip) */
-  --north-star-border: rgb(200 205 211 / 0.16);
+  --north-star-border: var(--chrome-edge);
   /* MC section band dividers (Needs attention / Schedule bands) */
-  --north-star-section-divider: rgb(200 205 211 / 0.12);
+  --north-star-section-divider: var(--border);
   /* mc-surface plate / card / tile / list borders */
-  --north-star-plate-border: rgb(200 205 211 / 0.14);
+  --north-star-plate-border: var(--border);
   /* Two-tone canvas — header/section strip vs main content well */
-  --north-star-header-strip: #0a0a0a;
-  --north-star-content-well: #212122;
+  --north-star-header-strip: var(--chrome);
+  --north-star-content-well: var(--canvas);
   /* Next Recommended “caught up” card fill — independent from page canvas */
-  --north-star-caught-up-fill: #303132;
-  --north-star-bronze: #9a7209;
-  --north-star-brass: #b8912f;
-  --north-star-gold: #d4af37;
-  --north-star-champagne: #f5e6a3;
-  --north-star-ivory: #fbfbfb;
-  --north-star-ivory-strong: #ffffff;
-  --north-star-text-dark: #101011;
-  --north-star-text-secondary: #292a2c;
-  --north-star-text-muted: #64748b;
+  --north-star-caught-up-fill: var(--pg-emerald-100);
+  --north-star-bronze: var(--pg-brass-700);
+  --north-star-brass: var(--pg-brass-600);
+  --north-star-gold: var(--pg-brass-500);
+  --north-star-champagne: var(--pg-champagne-300);
+  --north-star-ivory: var(--pg-porcelain-050);
+  --north-star-ivory-strong: var(--pg-porcelain-000);
+  --north-star-text-dark: var(--ink);
+  --north-star-text-secondary: var(--ink-secondary);
+  --north-star-text-muted: var(--ink-muted);
   /*
    * Light ink roles (formerly bundled as --north-star-text-light):
    *   topbar-heading  — Premium header / hub strip / Settings titles
@@ -91,9 +310,13 @@
    *   link-hover      — canvas link hover + header sign-out hover
    * Legacy aliases keep stray refs readable; Design Lab edits the role tokens.
    */
-  --north-star-topbar-heading: #d0d4da;
-  --north-star-section-title: #d0d4da;
-  --north-star-link-hover: #d0d4da;
+  /* Ink split by GROUND, not by name. `topbar-*` sits on dark chrome and stays
+   * light; `section-*` / `link` sit on the (now light) parchment canvas and
+   * must be dark ink. Getting this wrong renders invisible headings — the
+   * exact "flipping ink role" failure the Foundation documents. */
+  --north-star-topbar-heading: var(--ink-on-chrome);
+  --north-star-section-title: var(--ink);
+  --north-star-link-hover: var(--ink);
   --north-star-text-light: var(--north-star-section-title);
   /*
    * Muted light ink roles (formerly --north-star-text-light-muted):
@@ -102,23 +325,23 @@
    *   link               — canvas link base (.altair-canvas-ink-link)
    *   topbar-icon        — header search / bell / calendar / sign-out base
    */
-  --north-star-topbar-subcopy: #8f949b;
-  --north-star-section-secondary: #8f949b;
-  --north-star-link: #8f949b;
-  --north-star-topbar-icon: #8f949b;
+  --north-star-topbar-subcopy: var(--ink-on-chrome-secondary);
+  --north-star-section-secondary: var(--ink-secondary);
+  --north-star-link: var(--ink-secondary);
+  --north-star-topbar-icon: var(--ink-on-chrome-secondary);
   --north-star-text-light-muted: var(--north-star-section-secondary);
   --north-star-graphite-base: var(--north-star-sidebar);
   --north-star-graphite-mid: var(--north-star-topbar);
   --north-star-graphite-border: var(--north-star-border);
   --north-star-brass-rail: var(--north-star-gold);
-  --north-star-brass-ring: rgb(212 175 55 / 0.28);
+  --north-star-brass-ring: var(--brand-metal-hairline);
   --north-star-sidebar-width: 14.5rem;
-  --north-star-sidebar-label: var(--north-star-gold);
-  --north-star-sidebar-link: #8f949b;
+  --north-star-sidebar-label: var(--brand-metal-bright);
+  --north-star-sidebar-link: var(--ink-on-chrome-secondary);
   /* Literal — do not alias through text-light / link-hover */
-  --north-star-sidebar-link-hover: #d0d4da;
-  --north-star-sidebar-link-active: var(--north-star-ivory-strong);
-  --north-star-sidebar-icon: #878c92;
+  --north-star-sidebar-link-hover: var(--ink-on-chrome);
+  --north-star-sidebar-link-active: var(--pg-porcelain-000);
+  --north-star-sidebar-icon: var(--ink-on-chrome-muted);
   --north-star-sidebar-icon-hover: var(--north-star-champagne);
   --north-star-sidebar-icon-active: var(--north-star-champagne);
 }
@@ -147,19 +370,19 @@
  */
 :root {
   /* Stone — secondary structural backing between Graphite and Paper. */
-  --altair-stone: #dce3ec;
+  --altair-stone: var(--canvas-sunken);
 
   /* Paper — the work surface: cards, panels, forms, documents. */
-  --altair-paper: #fbf7ef;
+  --altair-paper: var(--surface);
   /* Paper Elevated — the brightest Paper tone; the surface currently active/focused. */
-  --altair-paper-elevated: #ffffff;
+  --altair-paper-elevated: var(--surface-raised);
   /* Paper Subtle — Paper's palest, quietest register; a resting canvas plane. */
-  --altair-paper-subtle: #eef2f6;
+  --altair-paper-subtle: var(--surface-recessed);
 
   /* Graphite — the operating shell: chrome that asserts Altair's own structure.
-     Re-tuned Aug 2026 to a neutral Black+Platinum mix — was blue-tinted (#1a2029),
-     visible on Dispatch's operations board; now matches the rest of the chrome. */
-  --altair-graphite: #303132;
+     PRESTIGE: now the canonical chrome role (graphite-olive), replacing both the
+     retired blue-black #1a2029 and the interim neutral #303132. */
+  --altair-graphite: var(--chrome);
 
   /* Ink — text and numerals, at three strengths, on the theme's dominant surface. */
   --altair-ink: #17130e;
@@ -167,13 +390,13 @@
   /*
    * Muted Ink carries most of the product's metadata, timestamps, and 10-11px
    * eyebrow labels, so it is measured against the *whole* surface hierarchy,
-   * not just white. The previous #64748B cleared 4.5:1 only on
+   * not just white. The previous #7C7259 cleared 4.5:1 only on
    * `paper-elevated` (#FFFFFF, 4.76:1) and failed on every other sanctioned
    * ground — paper 4.45:1, paper-subtle 4.23:1, stone 3.68:1. #556070 keeps
    * the same slate character while clearing AA on all of them (stone 4.93:1,
    * white 6.38:1).
    */
-  --altair-ink-muted: #556070;
+  --altair-ink-muted: #665F4D;
 
   /*
    * Ink-on-Paper — the same three Ink strengths, but anchored to Paper-family
@@ -190,7 +413,7 @@
    */
   --altair-ink-on-paper: #17130e;
   --altair-ink-on-paper-secondary: #4f4638;
-  --altair-ink-on-paper-muted: #556070;
+  --altair-ink-on-paper-muted: #665F4D;
 
   /*
    * Ink-on-Graphite — the Ink strengths anchored to Graphite-family surfaces
@@ -203,23 +426,37 @@
    */
   --altair-ink-on-graphite: #f3ebdd;
   --altair-ink-on-graphite-secondary: #d7cdbd;
-  --altair-ink-on-graphite-muted: #aeb6c2;
+  --altair-ink-on-graphite-muted: #bcb5a5;
 
   /* Border — quiet separation; Border Strong — deliberate emphasis (selection, focus). */
   --altair-border: rgb(100 116 139 / 0.18);
   --altair-border-strong: rgb(148 163 184 / 0.35);
 
   /* Brass — the one primary command per screen; Brass Interactive — its hover/active state.
-     Retuned Aug 2026 to derive from the locked Platinum Circuit Gold Accent (#D4AF37):
-     a darkened mix for AA-safe contrast on light Paper, and the pure accent for hover. */
-  --altair-brass: #977d2a;
-  --altair-brass-interactive: #d4af37;
+     PRESTIGE: the hover state was #D4AF37, a bright metallic gold measured at
+     ΔE 22.8 from the canonical brass ramp — far enough to read as a second,
+     cheaper gold sitting beside the real one. It now resolves to brass-500, so
+     the accent is one colour everywhere. Base stays darker than hover for
+     AA-safe contrast on light Paper. */
+  --altair-brass: #77591b;
+  --altair-brass-interactive: #c2a05a;
 
-  /* Status roles — conventional hues, deliberately distinct from Brass. */
-  --altair-success: #059669;
-  --altair-warning: #d97706;
-  --altair-danger: #dc2626;
-  --altair-information: #2563eb;
+  /* Status roles — conventional hues, deliberately distinct from Brass.
+   *
+   * PRESTIGE tuning. Two rules govern this set:
+   *   1. Semantic colour is NOT brand colour. Brass never means "good".
+   *   2. Loudness must track consequence. `information` marks the most ROUTINE
+   *      state in the product (a scheduled job, a normal-priority dispatch
+   *      block), so it must be the quietest of the four. It was #2563EB —
+   *      generic SaaS blue, and by far the loudest thing on the Dispatch
+   *      board, where it out-shouted overdue money. It is now a calm slate-
+   *      teal: still readable as "cool / informational", no longer a shout.
+   * Success moves onto the Prestige emerald; warning and danger keep their
+   * warm hues, which already sit inside the palette. */
+  --altair-success: var(--pg-emerald-600);
+  --altair-warning: #c07617;
+  --altair-danger: #c0392f;
+  --altair-information: #55707a;
 
   /*
    * Status foreground/surface pairs — small-text-safe reading of each status
@@ -235,17 +472,17 @@
    * (see --altair-paper below) — the same precedent already set for Paper.
    */
   --altair-success-foreground: #047653;
-  --altair-success-surface: #ecfdf5;
+  --altair-success-surface: #edf5f0;
   --altair-warning-foreground: #9f5704;
-  --altair-warning-surface: #fffbeb;
+  --altair-warning-surface: #fbf5e6;
   --altair-danger-foreground: #d32222;
-  --altair-danger-surface: #fff1f2;
-  --altair-information-foreground: #1a5bea;
-  --altair-information-surface: #f0f9ff;
+  --altair-danger-surface: #f9eeec;
+  --altair-information-foreground: #3f5a63;
+  --altair-information-surface: #eef2f3;
 }
 
 [data-theme="dark"] {
-  --altair-stone: #1f2a38;
+  --altair-stone: #252b22;
 
   --altair-paper: #fbf7ef;
   --altair-paper-elevated: #ffffff;
@@ -257,41 +494,262 @@
   /* Ink flips to light, warm text for legibility against dark Graphite/Stone chrome. */
   --altair-ink: #f3ebdd;
   --altair-ink-secondary: #d7cdbd;
-  --altair-ink-muted: #aeb6c2;
+  --altair-ink-muted: #bcb5a5;
 
   /* Paper-anchored — identical to :root. See the comment on these roles above. */
   --altair-ink-on-paper: #17130e;
   --altair-ink-on-paper-secondary: #4f4638;
-  --altair-ink-on-paper-muted: #556070;
+  --altair-ink-on-paper-muted: #665F4D;
 
   /* Graphite-anchored — identical to :root. See the comment on these roles above. */
   --altair-ink-on-graphite: #f3ebdd;
   --altair-ink-on-graphite-secondary: #d7cdbd;
-  --altair-ink-on-graphite-muted: #aeb6c2;
+  --altair-ink-on-graphite-muted: #bcb5a5;
 
   --altair-border: rgb(174 182 194 / 0.18);
   --altair-border-strong: rgb(174 182 194 / 0.35);
 
   /* Brass runs brighter against the dark field — this is where it does its most important work.
-     Retuned Aug 2026 to the locked Platinum Circuit Gold Accent (#D4AF37), with a
-     white-mixed highlight for hover — same source hue as the logo and login surfaces. */
-  --altair-brass: #d4af37;
-  --altair-brass-interactive: #e3cb7d;
+     PRESTIGE: was #D4AF37. On dark chrome the canonical brass-500 still carries
+     6.6:1, so the brighter metallic bought nothing legibility could not, and
+     cost the accent its consistency with every light surface. The champagne
+     highlight for hover is unchanged. */
+  --altair-brass: #c2a05a;
+  --altair-brass-interactive: #d9c188;
 
   --altair-success: #34d399;
   --altair-warning: #fbbf24;
   --altair-danger: #f87171;
-  --altair-information: #60a5fa;
+  --altair-information: #aca288;
 
   /* Paper-anchored — identical to :root. See the comment on these roles above. */
   --altair-success-foreground: #047653;
-  --altair-success-surface: #ecfdf5;
+  --altair-success-surface: #edf5f0;
   --altair-warning-foreground: #9f5704;
-  --altair-warning-surface: #fffbeb;
+  --altair-warning-surface: #fbf5e6;
   --altair-danger-foreground: #d32222;
-  --altair-danger-surface: #fff1f2;
-  --altair-information-foreground: #1a5bea;
-  --altair-information-surface: #f0f9ff;
+  --altair-danger-surface: #f9eeec;
+  --altair-information-foreground: #3f5a63;
+  --altair-information-surface: #eef2f3;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PRESTIGE — palette remap
+ *
+ * The audit's key structural finding: this product is NOT painted by its design
+ * tokens. It is painted by raw Tailwind palette utilities —
+ *   border-slate-200 ×447 · bg-white ×664 · bg-slate-50 ×272 · text-slate-* ×2966
+ *   · cyan-* ×669
+ * — roughly 1,400 surface/border call sites that bypass every `--altair-*` and
+ * `--north-star-*` token. Re-pointing the token layer alone would therefore
+ * have repainted almost nothing.
+ *
+ * Rather than codemod ~1,400 class strings across hundreds of files (a huge,
+ * regression-prone diff) or grow the `!important` override engine the audit
+ * criticised, we redefine what those palette names MEAN. Tailwind v4 generates
+ * its palette from `--color-*` theme variables, so overriding them here
+ * repaints every existing call site with zero component edits and zero
+ * override rules.
+ *
+ *   slate → warm stone/graphite  (kills the cool-blue neutral cast globally)
+ *   cyan  → brass/champagne      (retires the pre-brass accent globally)
+ *
+ * Hues are held near the Prestige olive/brass axis; LIGHTNESS AND ORDERING ARE
+ * PRESERVED at each step, so every existing contrast relationship — including
+ * the Phase 0 accessibility fixes — survives the remap.
+ *
+ * Consequence to know: `slate` and `cyan` are no longer literal. Treat them as
+ * "the neutral ramp" and "the accent ramp". New work should still prefer the
+ * semantic roles above.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* Neutral ramp — warm stone replacing cool slate. Lightness matched to
+   * Tailwind's slate steps so contrast ratios are preserved. */
+  --color-slate-50: #f7f4ed;
+  --color-slate-100: #f0ece1;
+  --color-slate-200: #e2ddcd;
+  --color-slate-300: #cdc6b2;
+  --color-slate-400: #a49d8a;
+  --color-slate-500: #7d7767;
+  --color-slate-600: #5f5a4d;
+  --color-slate-700: #474338;
+  --color-slate-800: #2f2c25;
+  --color-slate-900: #1f1d18;
+  --color-slate-950: #14120f;
+
+  /* `gray` and `zinc` are used incidentally in the same neutral role. */
+  --color-gray-50: #f7f4ed;
+  --color-gray-100: #f0ece1;
+  --color-gray-200: #e2ddcd;
+  --color-gray-300: #cdc6b2;
+  --color-gray-400: #a49d8a;
+  --color-gray-500: #7d7767;
+  --color-gray-600: #5f5a4d;
+  --color-gray-700: #474338;
+  --color-gray-800: #2f2c25;
+  --color-gray-900: #1f1d18;
+
+  /* Accent ramp — the retired cyan/teal identity becomes brass. */
+  --color-cyan-50: #faf5e8;
+  --color-cyan-100: #f3e9cc;
+  --color-cyan-200: #e8d9ac;
+  --color-cyan-300: #d9c188;
+  --color-cyan-400: #c2a05a;
+  --color-cyan-500: #a4823a;
+  --color-cyan-600: #8a6a25;
+  --color-cyan-700: #70551d;
+  --color-cyan-800: #574216;
+  --color-cyan-900: #3f3010;
+
+  /* Emerald pulled slightly deeper/warmer so semantic success sits inside the
+   * Prestige palette instead of glowing against it. */
+  --color-emerald-50: #edf5f0;
+  --color-emerald-100: #d7e9de;
+  --color-emerald-500: #3f8a63;
+  --color-emerald-600: #35755a;
+  --color-emerald-700: #2a5c42;
+  --color-emerald-800: #1f4733;
+
+  /* Categorical hues still used to DISTINGUISH things (activity types, review
+   * queues, funnel stages). They must stay mutually distinguishable, so they
+   * are not collapsed into one colour — they are desaturated onto two calm
+   * ramps that coexist with parchment and brass instead of glowing against
+   * them. Lightness steps mirror Tailwind's so contrast is preserved.
+   *
+   * steel  ← sky · blue · teal   (cool, informational)
+   * plum   ← indigo · violet · purple  (distinct, non-competing) */
+  --color-sky-50: #eef2f3;
+  --color-sky-100: #dde5e7;
+  --color-sky-200: #c3d0d3;
+  --color-sky-300: #a1b4b9;
+  --color-sky-400: #78939a;
+  --color-sky-500: #55707a;
+  --color-sky-600: #465c64;
+  --color-sky-700: #3a4a51;
+  --color-sky-800: #2f3b40;
+  --color-sky-900: #26302f;
+
+  --color-blue-50: #eef2f3;
+  --color-blue-100: #dde5e7;
+  --color-blue-200: #c3d0d3;
+  --color-blue-300: #a1b4b9;
+  --color-blue-400: #78939a;
+  --color-blue-500: #55707a;
+  --color-blue-600: #465c64;
+  --color-blue-700: #3a4a51;
+  --color-blue-800: #2f3b40;
+  --color-blue-900: #26302f;
+
+  --color-teal-50: #eef3f2;
+  --color-teal-100: #dae7e4;
+  --color-teal-200: #bdd2ce;
+  --color-teal-300: #97b4ae;
+  --color-teal-400: #6f958d;
+  --color-teal-500: #4f7871;
+  --color-teal-600: #41625c;
+  --color-teal-700: #364e4a;
+  --color-teal-800: #2c3e3b;
+  --color-teal-900: #24322f;
+
+  --color-indigo-50: #f3f0f4;
+  --color-indigo-100: #e7e1ea;
+  --color-indigo-200: #d4cbda;
+  --color-indigo-300: #b9acc4;
+  --color-indigo-400: #9a89a8;
+  --color-indigo-500: #7f6c8e;
+  --color-indigo-600: #675875;
+  --color-indigo-700: #53475e;
+  --color-indigo-800: #43394b;
+  --color-indigo-900: #362f3c;
+
+  --color-violet-50: #f3f0f4;
+  --color-violet-100: #e7e1ea;
+  --color-violet-200: #d4cbda;
+  --color-violet-300: #b9acc4;
+  --color-violet-400: #9a89a8;
+  --color-violet-500: #7f6c8e;
+  --color-violet-600: #675875;
+  --color-violet-700: #53475e;
+  --color-violet-800: #43394b;
+  --color-violet-900: #362f3c;
+
+  --color-purple-50: #f3f0f4;
+  --color-purple-100: #e7e1ea;
+  --color-purple-500: #7f6c8e;
+  --color-purple-600: #675875;
+  --color-purple-700: #53475e;
+
+  /* Amber is the single largest off-palette family in the product (684 call
+   * sites) and Tailwind's amber is a bright, high-chroma gold. Sitting beside
+   * real champagne brass it read as the cheaper of two golds — the product
+   * effectively had a second, louder brand accent. Amber now IS the brass
+   * ramp, so gold appears once in the product and always means the same
+   * thing. */
+  --color-amber-50: #fbf7ec;
+  --color-amber-100: #f5edd6;
+  --color-amber-200: #ecdfb4;
+  --color-amber-300: #e0cd8c;
+  --color-amber-400: #cfb46a;
+  --color-amber-500: #b8994c;
+  /* Slightly deeper than `--pg-brass-600` on purpose: this step is what the
+   * product paints metric icons with, and stock brass fell just under the 3:1
+   * non-text bar against the sunken canvas. */
+  --color-amber-600: #987836;
+  --color-amber-700: #77591b;
+  --color-amber-800: #5f4715;
+  --color-amber-900: #4a370f;
+  --color-amber-950: #33260a;
+
+  /* Orange carries "warning" and keeps a genuinely orange hue so it stays
+   * distinguishable from the gold above — but pulled well off Tailwind's
+   * near-fluorescent #F97316. */
+  --color-orange-50: #fcf3e8;
+  --color-orange-100: #f8e5cd;
+  --color-orange-200: #f0c99c;
+  --color-orange-300: #e5a866;
+  --color-orange-400: #d88a3a;
+  --color-orange-500: #c47119;
+  --color-orange-600: #a95f13;
+  --color-orange-700: #874c10;
+  --color-orange-800: #6d3e0e;
+  --color-orange-900: #58330c;
+  --color-orange-950: #3d240a;
+
+  /* Red carries "bad news". Deepened onto the Prestige danger hue so an
+   * overdue badge stops being the most saturated pixel on a parchment page. */
+  --color-red-50: #faeeec;
+  --color-red-100: #f4dad6;
+  --color-red-200: #e8bab3;
+  --color-red-300: #d9938a;
+  --color-red-400: #cc6a5e;
+  --color-red-500: #bf4a3c;
+  --color-red-600: #ab3a2e;
+  --color-red-700: #8f2f25;
+  --color-red-800: #74271f;
+  --color-red-900: #5d211b;
+  --color-red-950: #421713;
+
+  /* Rose is NOT collapsed into red. The receivables-aging ramp uses rose as
+   * the tier immediately below danger, so the two must stay tellable apart.
+   * Rose becomes terracotta — the same family as `--chart-4` — which keeps
+   * severity reading as one escalating warm progression. */
+  --color-rose-50: #fbf0ea;
+  --color-rose-100: #f6dfd3;
+  --color-rose-200: #ecc3ae;
+  --color-rose-300: #dfa082;
+  --color-rose-400: #d07c58;
+  --color-rose-500: #bf6039;
+  --color-rose-600: #a64f2d;
+  --color-rose-700: #8a4126;
+  --color-rose-800: #6f3520;
+  --color-rose-900: #5a2c1c;
+  --color-rose-950: #482316;
+
+  --color-pink-50: #fbf0ea;
+  --color-pink-100: #f6dfd3;
+  --color-pink-500: #bf6039;
+  --color-pink-600: #a64f2d;
+  --color-pink-700: #8a4126;
 }
 
 @theme inline {
@@ -299,6 +757,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Altair Prestige display face → generates the `font-altair` utility.
+   * `@theme inline` (not plain `@theme`) so the utility resolves the live
+   * next/font variable set on <html> rather than copying its value. */
+  --font-altair: var(--font-altair-display), ui-serif, Georgia, serif;
 
   /* Altair Design Foundation semantic tokens — see block above for values/docs. */
   --color-altair-stone: var(--altair-stone);
@@ -478,8 +940,8 @@ a[href] {
 .auth-panel-bg {
   background-image:
     linear-gradient(to bottom, rgba(248, 250, 252, 0.6), rgba(255, 255, 255, 1) 40%),
-    linear-gradient(to right, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(176, 168, 143, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(176, 168, 143, 0.04) 1px, transparent 1px);
   background-size: auto, 64px 64px, 64px 64px;
 }
 
@@ -541,7 +1003,7 @@ a[href] {
 .login-access-panel input:-webkit-autofill:focus {
   -webkit-text-fill-color: rgb(241 245 249);
   caret-color: rgb(241 245 249);
-  box-shadow: 0 0 0 1000px #0d1724 inset;
+  box-shadow: 0 0 0 1000px #141712 inset;
   transition: background-color 9999s ease-out;
 }
 
@@ -561,7 +1023,7 @@ a[href] {
   background: linear-gradient(
     115deg,
     transparent 25%,
-    rgb(227 203 125 / 0.035) 48%,
+    rgb(217 193 136 / 0.035) 48%,
     transparent 70%
   );
   transform: translateX(-100%);
@@ -572,7 +1034,7 @@ a[href] {
   background: linear-gradient(
     90deg,
     transparent 5%,
-    rgb(227 203 125 / 0.5) 48%,
+    rgb(217 193 136 / 0.5) 48%,
     transparent 95%
   );
 }
@@ -586,8 +1048,8 @@ a[href] {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgb(212 175 55 / 0.18),
-    rgb(227 203 125 / 0.5),
+    rgb(194 160 90 / 0.18),
+    rgb(217 193 136 / 0.5),
     rgb(14 116 144 / 0.28)
   );
 }
@@ -603,8 +1065,8 @@ a[href] {
   border-radius: 9999px;
   background: #dabb55;
   box-shadow:
-    0 0 0 4px rgb(212 175 55 / 0.08),
-    0 0 16px rgb(227 203 125 / 0.9);
+    0 0 0 4px rgb(194 160 90 / 0.08),
+    0 0 16px rgb(217 193 136 / 0.9);
   animation: login-control-loop-signal 8s ease-in-out infinite;
 }
 
@@ -662,13 +1124,13 @@ a[href] {
 @keyframes design-lab-spotlight-pulse {
   0% {
     box-shadow:
-      0 0 0 4px rgba(201, 164, 77, 0.45),
-      0 0 28px rgba(201, 164, 77, 0.55);
+      0 0 0 4px rgba(194, 160, 90, 0.45),
+      0 0 28px rgba(194, 160, 90, 0.55);
   }
   100% {
     box-shadow:
-      0 0 0 4px rgba(201, 164, 77, 0.28),
-      0 0 24px rgba(201, 164, 77, 0.45);
+      0 0 0 4px rgba(194, 160, 90, 0.28),
+      0 0 24px rgba(194, 160, 90, 0.45);
   }
 }
 
@@ -778,7 +1240,7 @@ a[href] {
 
 .mc-homepage {
   color-scheme: dark;
-  background-color: #08090c;
+  background-color: #080907;
 }
 
 /* Homepage hero — centered product-forward entrance */
@@ -1036,59 +1498,74 @@ a[href] {
 
 /* North Star shell scope — Platinum Circuit graphite chrome (always applied by AdminShell) */
 .admin-north-star-shell {
-  --north-star-root: #212122;
-  --north-star-sidebar: #0a0a0a;
-  --north-star-topbar: #131414;
-  --north-star-panel: #303132;
-  --north-star-border: rgb(200 205 211 / 0.16);
-  --north-star-section-divider: rgb(200 205 211 / 0.12);
-  --north-star-plate-border: rgb(200 205 211 / 0.14);
-  --north-star-header-strip: #0a0a0a;
-  --north-star-content-well: #212122;
-  --north-star-caught-up-fill: #303132;
-  --north-star-bronze: #9a7209;
-  --north-star-brass: #b8912f;
-  --north-star-gold: #d4af37;
-  --north-star-champagne: #f5e6a3;
-  --north-star-ivory: #fbfbfb;
-  --north-star-ivory-strong: #ffffff;
-  --north-star-text-dark: #101011;
-  --north-star-text-secondary: #292a2c;
-  --north-star-text-muted: var(--north-star-work-text-muted);
-  --north-star-topbar-heading: #d0d4da;
-  --north-star-section-title: #d0d4da;
-  --north-star-link-hover: #d0d4da;
+  /* PRESTIGE: this scope re-declares the chrome family and OUTRANKS `:root`,
+   * so it is the block that actually decides what the shell looks like. It is
+   * now aliased to the same canonical roles as `:root` — the two must never
+   * drift apart again. (Keeping the block rather than deleting it preserves
+   * the cascade order the Design Lab live-theme override depends on.) */
+  --north-star-root: var(--canvas);
+  --north-star-sidebar: var(--chrome);
+  --north-star-topbar: var(--chrome-elevated);
+  --north-star-panel: var(--chrome-elevated);
+  --north-star-border: var(--chrome-edge);
+  --north-star-section-divider: var(--border);
+  --north-star-plate-border: var(--border);
+  --north-star-header-strip: var(--chrome);
+  --north-star-content-well: var(--canvas);
+  --north-star-caught-up-fill: var(--pg-emerald-100);
+  --north-star-bronze: var(--pg-brass-700);
+  --north-star-brass: var(--pg-brass-600);
+  --north-star-gold: var(--pg-brass-500);
+  --north-star-champagne: var(--pg-champagne-300);
+  --north-star-ivory: var(--pg-porcelain-050);
+  --north-star-ivory-strong: var(--pg-porcelain-000);
+  --north-star-text-dark: var(--ink);
+  --north-star-text-secondary: var(--ink-secondary);
+  --north-star-text-muted: var(--ink-muted);
+  /* Ink split by GROUND, not by name. `topbar-*` sits on dark chrome and stays
+   * light; `section-*` / `link` sit on the (now light) parchment canvas and
+   * must be dark ink. Getting this wrong renders invisible headings — the
+   * exact "flipping ink role" failure the Foundation documents. */
+  --north-star-topbar-heading: var(--ink-on-chrome);
+  --north-star-section-title: var(--ink);
+  --north-star-link-hover: var(--ink);
   --north-star-text-light: var(--north-star-section-title);
-  --north-star-topbar-subcopy: #8f949b;
-  --north-star-section-secondary: #8f949b;
-  --north-star-link: #8f949b;
-  --north-star-topbar-icon: #8f949b;
+  --north-star-topbar-subcopy: var(--ink-on-chrome-secondary);
+  --north-star-section-secondary: var(--ink-secondary);
+  --north-star-link: var(--ink-secondary);
+  --north-star-topbar-icon: var(--ink-on-chrome-secondary);
   --north-star-text-light-muted: var(--north-star-section-secondary);
-  --north-star-sidebar-link-hover: #d0d4da;
-  --north-star-work-surface: #e8edf3;
-  --north-star-work-band: #dce3ec;
-  --north-star-work-row: #ffffff;
-  --north-star-work-row-hover: #f2f5f8;
-  --north-star-work-input: #ffffff;
-  --north-star-work-border: rgb(100 116 139 / 0.18);
-  --north-star-work-border-strong: rgb(148 163 184 / 0.24);
-  --north-star-work-text: #101827;
-  --north-star-work-text-secondary: #4b5563;
-  --north-star-work-text-muted: #64748b;
-  --north-star-work-placeholder: #6b7280;
+  --north-star-sidebar-link-hover: var(--ink-on-chrome);
+  /* The "work" family paints dense ledger surfaces (tables, filter bars,
+   * inputs). It was an independent cool blue-grey palette — the main reason
+   * list pages read colder than the rest of the product. Now warm. */
+  --north-star-work-surface: var(--surface);
+  --north-star-work-band: var(--canvas-sunken);
+  --north-star-work-row: var(--surface-raised);
+  --north-star-work-row-hover: var(--surface-recessed);
+  --north-star-work-input: var(--surface-raised);
+  --north-star-work-border: var(--border);
+  --north-star-work-border-strong: var(--border-strong);
+  --north-star-work-text: var(--ink);
+  --north-star-work-text-secondary: var(--ink-secondary);
+  --north-star-work-text-muted: var(--ink-muted);
+  --north-star-work-placeholder: var(--pg-ink-300);
 
   /* Layer 1 — floating page canvas. Re-tuned Aug 2026 from the old "moon
    * graphite" BLUE-black family to a true neutral Black (#0A0A0A) + Platinum
-   * (#C8CDD3) mix, matching the Platinum Circuit reference exactly — no blue
+   * (#D0CCC4) mix, matching the Platinum Circuit reference exactly — no blue
    * hue left anywhere in the chrome, and the canvas now visibly lifts off
    * the black frame instead of reading flat. See ALTAIR_ARCHITECTURE.md —
    * Shell Layer Model. */
-  --page-canvas-top: #303132;
-  --page-canvas-mid: #212122;
-  --page-canvas-deep: #0a0a0a;
-  --page-canvas-border: rgb(200 205 211 / 0.18);
-  --page-header-top: #131414;
-  --page-header-bottom: #0f0f10;
+  /* PRESTIGE: the floating page canvas is the plane a list/detail page sits on.
+   * It reads as a shallow warm well inside the parchment frame — a very slight
+   * top-to-bottom fall, not the old three-stop dark graphite ramp. */
+  --page-canvas-top: var(--surface);
+  --page-canvas-mid: var(--surface);
+  --page-canvas-deep: var(--surface-recessed);
+  --page-canvas-border: var(--border);
+  --page-header-top: var(--chrome-elevated);
+  --page-header-bottom: var(--chrome);
 }
 
 /*
@@ -1115,7 +1592,7 @@ a[href] {
 }
 
 .admin-north-star-shell .bg-\[\#EDE3C8\] {
-  background-color: #d7dee8 !important;
+  background-color: #e1ddd4 !important;
 }
 
 .admin-north-star-shell .hover\:bg-\[\#FFF9EA\]:hover,
@@ -1147,13 +1624,20 @@ a[href] {
     );
 }
 
-/* Admin header — CSS owns surface (mobile light / desktop NS olive-graphite) */
+/* Admin header.
+ *
+ * PRESTIGE: this was white on mobile and dark chrome only from 768px up — the
+ * shell rule that paints it lives inside a `min-width: 768px` block — so the
+ * same owner saw a light bar on their phone and a dark one on their desktop.
+ * The audit called this out as chrome varying by breakpoint rather than by
+ * role. It is now the chrome surface at every width; the tone props in
+ * Header.tsx were flipped to match. */
 .admin-premium-header {
   position: relative;
   isolation: isolate;
-  border-bottom: 1px solid rgb(226 232 240 / 0.9);
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 0.04);
+  border-bottom: 1px solid var(--chrome-edge);
+  background: var(--chrome-elevated);
+  box-shadow: var(--elev-chrome-hairline);
 }
 
 .admin-premium-header::before,
@@ -1204,6 +1688,27 @@ a[href] {
      * sage band between chrome and canvas is gone. */
     background-color: var(--north-star-root);
     padding: 0.75rem 0.875rem 0.875rem 0.75rem;
+  }
+
+  /* PRESTIGE — page atmosphere.
+   * A faint blueprint/contour weave on the canvas so large empty regions read
+   * as designed surface rather than dead space. Two hairline grids at 90° with
+   * a wide period, plus one diagonal at a different period so the pattern
+   * never resolves into an obvious checkerboard. Fixed attachment keeps it
+   * feeling like an environment the content moves over.
+   * Cost: one extra background paint on a single element. */
+  .admin-north-star-shell .admin-shell-main {
+    background-image:
+      repeating-linear-gradient(
+        58deg,
+        var(--atmosphere-ink) 0 1px,
+        transparent 1px 168px
+      ),
+      repeating-linear-gradient(
+        -58deg,
+        var(--atmosphere-ink-faint) 0 1px,
+        transparent 1px 233px
+      );
   }
 
   /* Shell-wide slim scrollbars — sidebar rail, shell main, and nested list
@@ -1357,7 +1862,7 @@ a[href] {
     width: var(--north-star-sidebar-width);
     border-right: 1px solid var(--north-star-border);
     background: var(--north-star-sidebar);
-    box-shadow: inset -1px 0 0 rgb(201 164 77 / 0.1);
+    box-shadow: inset -1px 0 0 rgb(194 160 90 / 0.1);
   }
 
   .admin-north-star-sidebar::before {
@@ -1369,14 +1874,14 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(201 164 77 / 0.36) 50%,
+      rgb(194 160 90 / 0.36) 50%,
       transparent 100%
     );
     pointer-events: none;
   }
 
   .admin-north-star-shell .admin-premium-header {
-    border-bottom: 1px solid rgb(201 164 77 / 0.32);
+    border-bottom: 1px solid rgb(194 160 90 / 0.32);
     background: var(--north-star-topbar);
     box-shadow: none;
   }
@@ -1385,12 +1890,12 @@ a[href] {
     background:
       radial-gradient(
         ellipse 68% 50% at 14% -10%,
-        rgb(201 164 77 / 0.07) 0%,
+        rgb(194 160 90 / 0.07) 0%,
         transparent 58%
       ),
       radial-gradient(
         ellipse 40% 36% at 88% 0%,
-        rgb(230 208 146 / 0.05) 0%,
+        rgb(232 217 172 / 0.05) 0%,
         transparent 52%
       );
   }
@@ -1399,7 +1904,7 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(201 164 77 / 0.28) 48%,
+      rgb(194 160 90 / 0.28) 48%,
       transparent 100%
     );
   }
@@ -1417,7 +1922,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-search:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
     color: var(--north-star-champagne);
   }
 
@@ -1426,20 +1931,20 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-calendar:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
     color: var(--north-star-champagne);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-divider {
-    border-color: rgb(201 164 77 / 0.2);
+    border-color: rgb(194 160 90 / 0.2);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-avatar {
-    background: linear-gradient(180deg, #c9a44d 0%, #8a6324 100%);
+    background: linear-gradient(180deg, #c2a05a 0%, #77591b 100%);
     color: var(--north-star-text-dark);
     box-shadow:
       0 1px 4px rgb(0 0 0 / 0.28),
-      0 0 0 2px rgb(201 164 77 / 0.35);
+      0 0 0 2px rgb(194 160 90 / 0.35);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-signout {
@@ -1447,7 +1952,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-signout:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
     color: var(--north-star-link-hover);
   }
 
@@ -1462,12 +1967,12 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-company-switcher button:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-alpha {
-    border-color: rgb(201 164 77 / 0.28);
-    background-color: rgb(201 164 77 / 0.12);
+    border-color: rgb(194 160 90 / 0.28);
+    background-color: rgb(194 160 90 / 0.12);
     color: var(--north-star-champagne);
   }
 
@@ -1476,7 +1981,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-bell:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
     color: var(--north-star-champagne);
   }
 
@@ -1536,7 +2041,7 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher button:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(194 160 90 / 0.1);
   }
 
   /* Header dropdown panels — white panels need dark text, not header muted tan */
@@ -1592,7 +2097,7 @@ a[href] {
 
   .admin-north-star-sidebar-link:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+    box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
   }
 
   /* Active destination — no fill. Brass underline + icon mark "you are here." */
@@ -1662,7 +2167,7 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(214 190 120 / 0.22) 50%,
+      rgb(217 193 136 / 0.22) 50%,
       transparent 100%
     );
     pointer-events: none;
@@ -1673,7 +2178,7 @@ a[href] {
   position: relative;
   overflow: hidden;
   border-radius: 1.25rem;
-  border: 1px solid rgb(214 190 120 / 0.2);
+  border: 1px solid rgb(217 193 136 / 0.2);
   background: linear-gradient(
     180deg,
     var(--page-header-top) 0%,
@@ -1693,7 +2198,7 @@ a[href] {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(214 190 120 / 0.38) 50%,
+    rgb(217 193 136 / 0.38) 50%,
     transparent 100%
   );
   pointer-events: none;
@@ -1707,13 +2212,23 @@ a[href] {
   box-shadow: none;
 }
 
-/* MC v2 — sharp paper plates on olive canvas (all viewports) */
-.admin-north-star-shell .altair-surface-workspace,
+/* PRESTIGE: cards are objects, not plates.
+ * This rule previously squared every card inside the shell (`border-radius: 0`)
+ * and gave it the CHROME edge colour, which is a brass hairline meant for dark
+ * frame edges — too warm and too visible on a light card. Cards now keep the
+ * canonical card radius and the quiet content border. Ledger/table surfaces
+ * stay square deliberately (see `.north-star-list-surface`) so dense rows can
+ * run edge to edge. */
 .admin-north-star-shell .admin-card,
 .admin-north-star-shell .admin-panel,
 .admin-north-star-shell .admin-section-surface {
+  border-radius: var(--radius-card);
+  border-color: var(--border);
+}
+
+.admin-north-star-shell .altair-surface-workspace {
   border-radius: 0;
-  border-color: var(--north-star-border);
+  border-color: var(--border);
 }
 
 .admin-north-star-shell .job-north-star-view-tabs button {
@@ -1781,40 +2296,40 @@ a[href] {
 }
 
 .admin-north-star-shell .customer-north-star-ledger input[type="checkbox"] {
-  border-color: #b88a2e !important;
-  accent-color: #8a6324;
-  color: #c9a44d;
+  border-color: #a4823a !important;
+  accent-color: #77591b;
+  color: #c2a05a;
 }
 
 .admin-north-star-shell .customer-north-star-ledger input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-customers-secondary-action {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #d6be78 !important;
+  border: 1px solid #d9c188 !important;
   background: #fff9ea !important;
   color: #17130e !important;
   opacity: 1 !important;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-customers-secondary-action svg {
-  color: #8a6324 !important;
+  color: #77591b !important;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-customers-primary-action {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -1851,7 +2366,7 @@ a[href] {
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 /*
@@ -1911,12 +2426,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -1953,15 +2468,15 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 .admin-north-star-shell .job-north-star-filter-bar .job-north-star-clear-filters {
-  color: #8a6324;
+  color: #77591b;
 }
 
 .admin-north-star-shell .job-north-star-filter-bar .job-north-star-clear-filters:hover {
-  color: #6b5a2e;
+  color: #77591b;
 }
 
 .admin-north-star-shell .job-north-star-ledger thead tr {
@@ -2002,14 +2517,14 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-ledger input[type="checkbox"] {
-  border-color: #b88a2e !important;
-  accent-color: #8a6324;
-  color: #c9a44d;
+  border-color: #a4823a !important;
+  accent-color: #77591b;
+  color: #c2a05a;
 }
 
 .admin-north-star-shell .job-north-star-ledger input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
 }
 
 .admin-north-star-shell .job-north-star-today-list li {
@@ -2021,8 +2536,8 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-today-list .job-north-star-row-selected {
-  background-color: rgb(201 164 77 / 0.12) !important;
-  box-shadow: inset 3px 0 0 0 #c9a44d;
+  background-color: rgb(194 160 90 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Invoices list — billing ledger (M5A) */
@@ -2030,12 +2545,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -2072,7 +2587,7 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger thead tr {
@@ -2114,14 +2629,14 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-ledger input[type="checkbox"] {
-  border-color: #b88a2e !important;
-  accent-color: #8a6324;
-  color: #c9a44d;
+  border-color: #a4823a !important;
+  accent-color: #77591b;
+  color: #c2a05a;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list li {
@@ -2133,8 +2648,8 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list .invoice-north-star-row-selected {
-  background-color: rgb(201 164 77 / 0.12) !important;
-  box-shadow: inset 3px 0 0 0 #c9a44d;
+  background-color: rgb(194 160 90 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Estimates list — quote pipeline ledger (M5B) */
@@ -2142,12 +2657,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -2184,7 +2699,7 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger thead tr {
@@ -2221,14 +2736,14 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"] {
-  border-color: #b88a2e !important;
-  accent-color: #8a6324;
-  color: #c9a44d;
+  border-color: #a4823a !important;
+  accent-color: #77591b;
+  color: #c2a05a;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list li {
@@ -2240,8 +2755,8 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list .estimate-north-star-row-selected {
-  background-color: rgb(201 164 77 / 0.12) !important;
-  box-shadow: inset 3px 0 0 0 #c9a44d;
+  background-color: rgb(194 160 90 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Expenses list — spending ledger (M6A) */
@@ -2249,12 +2764,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -2265,7 +2780,7 @@ a[href] {
 }
 
 .admin-north-star-shell .north-star-expenses-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-expenses-page-header h1 {
@@ -2281,12 +2796,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -2300,18 +2815,18 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #d6be78 !important;
+  border: 1px solid #d9c188 !important;
   background: #fff9ea !important;
   color: #17130e !important;
   opacity: 1 !important;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-reports-secondary-action svg {
-  color: #8a6324 !important;
+  color: #77591b !important;
 }
 
 .admin-north-star-shell .north-star-reports-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-reports-page-header h1 {
@@ -2323,7 +2838,7 @@ a[href] {
 }
 
 .admin-north-star-shell .north-star-tax-summary-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-tax-summary-page-header h1 {
@@ -2339,12 +2854,12 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
   opacity: 1 !important;
@@ -2358,18 +2873,18 @@ a[href] {
   display: inline-flex !important;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #d6be78 !important;
+  border: 1px solid #d9c188 !important;
   background: #fff9ea !important;
   color: #17130e !important;
   opacity: 1 !important;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-time-secondary-action svg {
-  color: #8a6324 !important;
+  color: #77591b !important;
 }
 
 .admin-north-star-shell .north-star-time-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-time-page-header h1 {
@@ -2381,7 +2896,7 @@ a[href] {
 }
 
 .admin-north-star-shell .north-star-dispatch-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-dispatch-page-header h1 {
@@ -2448,15 +2963,15 @@ a[href] {
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 /* Dispatch detail panel — workflow + billing hints North Star (M15D) */
 .dispatch-north-star-workflow .bg-cyan-600,
 .dispatch-north-star-workflow a.bg-cyan-600,
 .dispatch-north-star-workflow button.bg-cyan-600 {
-  border: 1px solid rgb(201 164 77 / 0.32) !important;
-  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  border: 1px solid rgb(194 160 90 / 0.32) !important;
+  background: linear-gradient(to bottom, #2B3328 0%, #1c211a 100%) !important;
   color: #fff8e8 !important;
   box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
@@ -2464,21 +2979,21 @@ a[href] {
 .dispatch-north-star-workflow .bg-cyan-600:hover,
 .dispatch-north-star-workflow a.bg-cyan-600:hover,
 .dispatch-north-star-workflow button.bg-cyan-600:hover {
-  border-color: rgb(214 190 120 / 0.42) !important;
-  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  border-color: rgb(217 193 136 / 0.42) !important;
+  background: linear-gradient(to bottom, #423c2e 0%, #252b22 100%) !important;
   color: #fff8e8 !important;
 }
 
 .dispatch-north-star-workflow .bg-cyan-600:active,
 .dispatch-north-star-workflow button.bg-cyan-600:active {
-  background: #1a2029 !important;
+  background: #1c211a !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-600,
 .dispatch-north-star-workflow a.bg-indigo-600,
 .dispatch-north-star-workflow button.bg-indigo-600 {
-  border: 1px solid rgb(201 164 77 / 0.32) !important;
-  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  border: 1px solid rgb(194 160 90 / 0.32) !important;
+  background: linear-gradient(to bottom, #2B3328 0%, #1c211a 100%) !important;
   color: #fff8e8 !important;
   box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
@@ -2486,20 +3001,20 @@ a[href] {
 .dispatch-north-star-workflow .bg-indigo-600:hover,
 .dispatch-north-star-workflow a.bg-indigo-600:hover,
 .dispatch-north-star-workflow button.bg-indigo-600:hover {
-  border-color: rgb(214 190 120 / 0.42) !important;
-  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  border-color: rgb(217 193 136 / 0.42) !important;
+  background: linear-gradient(to bottom, #423c2e 0%, #252b22 100%) !important;
   color: #fff8e8 !important;
 }
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50 {
-  border-color: rgb(201 164 77 / 0.28) !important;
+  border-color: rgb(194 160 90 / 0.28) !important;
   background: rgb(39 49 64 / 0.55) !important;
   color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-800,
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-900 {
-  border-color: rgb(201 164 77 / 0.28) !important;
+  border-color: rgb(194 160 90 / 0.28) !important;
   background: rgb(39 49 64 / 0.55) !important;
   color: #f3ebdd !important;
 }
@@ -2512,7 +3027,7 @@ a[href] {
 /* Correct status card — dark elevated warning, restrained brass border */
 .dispatch-north-star-workflow .rounded-xl.border-dashed.border-amber-200,
 .dispatch-north-star-workflow .border-dashed.border-amber-200 {
-  border-color: rgb(201 164 77 / 0.28) !important;
+  border-color: rgb(194 160 90 / 0.28) !important;
   background: rgb(39 49 64 / 0.45) !important;
 }
 
@@ -2522,7 +3037,7 @@ a[href] {
 }
 
 .dispatch-north-star-workflow .text-amber-800 {
-  color: #e6d092 !important;
+  color: #e8d9ac !important;
 }
 
 .dispatch-north-star-workflow .text-amber-900,
@@ -2535,24 +3050,24 @@ a[href] {
 }
 
 .dispatch-north-star-workflow .border-amber-300 {
-  border-color: rgb(201 164 77 / 0.28) !important;
+  border-color: rgb(194 160 90 / 0.28) !important;
   background: rgb(39 49 64 / 0.45) !important;
   color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-amber-300:hover {
   background: rgb(39 49 64 / 0.65) !important;
-  border-color: rgb(201 164 77 / 0.38) !important;
+  border-color: rgb(194 160 90 / 0.38) !important;
 }
 
 .dispatch-north-star-workflow .border-amber-200.bg-amber-50 {
-  border-color: rgb(201 164 77 / 0.28) !important;
+  border-color: rgb(194 160 90 / 0.28) !important;
   background: rgb(39 49 64 / 0.45) !important;
   color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .text-slate-500 {
-  color: #aeb6c2 !important;
+  color: #bcb5a5 !important;
 }
 
 .dispatch-north-star-workflow .text-slate-600 {
@@ -2566,7 +3081,7 @@ a[href] {
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white:hover {
-  border-color: rgb(201 164 77 / 0.32) !important;
+  border-color: rgb(194 160 90 / 0.32) !important;
   background: rgb(39 49 64 / 0.65) !important;
 }
 
@@ -2608,9 +3123,9 @@ a[href] {
 /* Disabled assignment CTA — flat graphite, clearly inactive */
 .dispatch-north-star-detail-panel-body .north-star-dispatch-disabled-action:disabled {
   border-color: rgb(174 182 194 / 0.18) !important;
-  background: #2a3648 !important;
+  background: #3a3528 !important;
   background-image: none !important;
-  color: #aeb6c2 !important;
+  color: #bcb5a5 !important;
   box-shadow: none !important;
   cursor: not-allowed;
 }
@@ -2643,13 +3158,13 @@ a[href] {
 }
 
 .dispatch-north-star-section-sheet header button[aria-label="Close"]:hover {
-  border-color: rgb(201 164 77 / 0.28);
+  border-color: rgb(194 160 90 / 0.28);
   background: rgb(39 49 64 / 0.55);
   color: #fff8e8;
 }
 
 .dispatch-north-star-section-sheet header button[aria-label="Close"] svg {
-  color: #d6be78;
+  color: #d9c188;
 }
 
 /* Dispatch unassigned jobs sheet — dark shell, brass attention (M15E) */
@@ -2669,7 +3184,7 @@ a[href] {
 }
 
 .dispatch-north-star-unassigned-sheet header button[aria-label="Close"]:hover {
-  background: rgb(201 164 77 / 0.12);
+  background: rgb(194 160 90 / 0.12);
   color: #fff8e8;
 }
 
@@ -2737,9 +3252,9 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row-selected {
-  background-color: rgb(201 164 77 / 0.12) !important;
-  border-bottom: 1px solid rgb(138 99 36 / 0.1);
-  box-shadow: inset 3px 0 0 0 #c9a44d;
+  background-color: rgb(194 160 90 / 0.12) !important;
+  border-bottom: 1px solid rgb(119 89 27 / 0.1);
+  box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody td {
@@ -2756,7 +3271,7 @@ a[href] {
 
 /* North Star Settings (M10) — page header + team ledger scoped ownership */
 .admin-north-star-shell .north-star-settings-page-header > div > p:first-child {
-  color: #d6be78 !important;
+  color: #d9c188 !important;
 }
 
 .admin-north-star-shell .north-star-settings-page-header h1 {
@@ -2814,7 +3329,7 @@ a[href] {
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .rounded-full.bg-cyan-600 {
-  background: linear-gradient(135deg, #e6d092 0%, #c9a44d 55%, #b88a2e 100%) !important;
+  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%) !important;
   color: #17130e !important;
 }
 
@@ -2835,12 +3350,12 @@ a[href] {
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .bg-cyan-600 {
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
 }
@@ -2850,7 +3365,7 @@ a[href] {
     180deg,
     #f0e4b8 0%,
     #d4b05a 45%,
-    #9a7028 100%
+    #77591b 100%
   ) !important;
 }
 
@@ -2861,17 +3376,17 @@ a[href] {
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile .rounded-full.bg-cyan-600 {
-  background: linear-gradient(135deg, #e6d092 0%, #c9a44d 55%, #b88a2e 100%) !important;
+  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%) !important;
   color: #17130e !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile .bg-cyan-600 {
-  border: 1px solid #e6d092 !important;
+  border: 1px solid #e8d9ac !important;
   background: linear-gradient(
     180deg,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
+    #e8d9ac 0%,
+    #c2a05a 45%,
+    #a4823a 100%
   ) !important;
   color: #17130e !important;
 }
@@ -2903,7 +3418,7 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar svg {
-  color: #8a6324;
+  color: #77591b;
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar .expense-north-star-result-meta {
@@ -2943,14 +3458,14 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-ledger input[type="checkbox"] {
-  border-color: #b88a2e !important;
-  accent-color: #8a6324;
-  color: #c9a44d;
+  border-color: #a4823a !important;
+  accent-color: #77591b;
+  color: #c2a05a;
 }
 
 .admin-north-star-shell .expense-north-star-ledger input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+  box-shadow: 0 0 0 2px rgb(194 160 90 / 0.35);
 }
 
 /* North Star Expense detail panel — receipt review (M6B) */
@@ -2966,7 +3481,7 @@ a[href] {
 /* Portaled desktop drawer sits outside .admin-north-star-shell — restore ivory section surfaces */
 .expense-north-star-detail-panel-body .north-star-detail-section,
 .expense-north-star-detail-panel-body .north-star-detail-section-surface {
-  border: 1px solid rgb(138 99 36 / 0.1);
+  border: 1px solid rgb(119 89 27 / 0.1);
   background-color: var(--north-star-ivory);
   box-shadow: none;
 }
@@ -2979,7 +3494,7 @@ a[href] {
   .admin-north-star-shell .expense-north-star-detail-panel-mobile {
     border: 1px solid rgb(174 182 194 / 0.18);
     border-radius: 1rem;
-    background: #1a2029;
+    background: #1c211a;
     box-shadow: 0 10px 36px -12px rgb(3 7 12 / 0.32);
   }
 }
@@ -3015,7 +3530,7 @@ a[href] {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(214 190 120 / 0.22) 50%,
+      rgb(217 193 136 / 0.22) 50%,
       transparent 100%
     );
     pointer-events: none;
@@ -3023,7 +3538,7 @@ a[href] {
 }
 
 .north-star-detail-hero {
-  border: 1px solid rgb(214 190 120 / 0.16);
+  border: 1px solid rgb(217 193 136 / 0.16);
   background: linear-gradient(
     135deg,
     rgb(34 43 56 / 0.98) 0%,
@@ -3042,14 +3557,14 @@ a[href] {
 
 .north-star-detail-hero .border-indigo-200,
 .north-star-detail-hero .border-amber-200 {
-  border-color: rgb(214 190 120 / 0.28);
+  border-color: rgb(217 193 136 / 0.28);
   background-color: rgb(15 23 42 / 0.45);
   color: #f3ebdd;
 }
 
 .north-star-detail-hero .border-sky-200,
 .north-star-detail-hero .bg-sky-50\/60 {
-  border-color: rgb(214 190 120 / 0.28);
+  border-color: rgb(217 193 136 / 0.28);
   background-color: rgb(15 23 42 / 0.4);
   color: #f3ebdd;
 }
@@ -3065,7 +3580,7 @@ a[href] {
 }
 
 .north-star-detail-hero .border-sky-300 {
-  border-color: rgb(214 190 120 / 0.35);
+  border-color: rgb(217 193 136 / 0.35);
   background-color: rgb(39 49 64 / 0.55);
   color: #fff9ea;
 }
@@ -3076,18 +3591,18 @@ a[href] {
 
 .admin-north-star-shell .north-star-detail-section,
 .admin-north-star-shell .north-star-detail-section-surface {
-  border: 1px solid rgb(138 99 36 / 0.1);
+  border: 1px solid rgb(119 89 27 / 0.1);
   background-color: var(--north-star-ivory);
   box-shadow: none;
 }
 
 .admin-north-star-shell .north-star-detail-section-nav {
-  border-bottom: 1px solid rgb(138 99 36 / 0.1);
+  border-bottom: 1px solid rgb(119 89 27 / 0.1);
 }
 
 /* North Star Estimate detail document — ivory quote surface + warm ledger table (M5C) */
 .estimate-north-star-document .invoice-company-hero {
-  border-color: rgb(138 99 36 / 0.22);
+  border-color: rgb(119 89 27 / 0.22);
 }
 
 .estimate-north-star-document .invoice-company-hero h1,
@@ -3100,16 +3615,16 @@ a[href] {
 }
 
 .estimate-north-star-document .invoice-company-hero .text-slate-600 {
-  color: #64748b;
+  color: #7c7259;
 }
 
 .estimate-north-star-document .invoice-company-hero .border-slate-900,
 .estimate-north-star-document .invoice-company-hero .border-l-slate-900 {
-  border-color: rgb(138 99 36 / 0.35);
+  border-color: rgb(119 89 27 / 0.35);
 }
 
 .estimate-north-star-line-items table thead tr {
-  border-bottom: 2px solid rgb(138 99 36 / 0.22);
+  border-bottom: 2px solid rgb(119 89 27 / 0.22);
   background-color: #efe4cb;
 }
 
@@ -3118,7 +3633,7 @@ a[href] {
 }
 
 .estimate-north-star-line-items table tbody tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  border-bottom: 1px solid rgb(119 89 27 / 0.12);
   background-color: #fbf7ef;
 }
 
@@ -3136,13 +3651,13 @@ a[href] {
 }
 
 .estimate-north-star-line-items .rounded-lg.border-slate-200 {
-  border-color: rgb(138 99 36 / 0.12);
+  border-color: rgb(119 89 27 / 0.12);
   background-color: #fff9ea;
 }
 
 .north-star-estimate-overlay-body .north-star-detail-section,
 .north-star-estimate-overlay-body .north-star-detail-section-surface {
-  border: 1px solid rgb(138 99 36 / 0.1);
+  border: 1px solid rgb(119 89 27 / 0.1);
   background-color: var(--north-star-ivory);
   box-shadow: none;
 }
@@ -3174,7 +3689,7 @@ a[href] {
 
 /* North Star Invoice detail document — ivory invoice surface (M5D) */
 .invoice-north-star-document .invoice-company-hero {
-  border-color: rgb(138 99 36 / 0.22);
+  border-color: rgb(119 89 27 / 0.22);
   padding-bottom: 0.75rem;
 }
 
@@ -3188,16 +3703,16 @@ a[href] {
 }
 
 .invoice-north-star-document .invoice-company-hero .text-slate-600 {
-  color: #64748b;
+  color: #7c7259;
 }
 
 .invoice-north-star-document .invoice-company-hero .border-slate-900,
 .invoice-north-star-document .invoice-company-hero .border-l-slate-900 {
-  border-color: rgb(138 99 36 / 0.35);
+  border-color: rgb(119 89 27 / 0.35);
 }
 
 .invoice-north-star-line-items table thead tr {
-  border-bottom: 2px solid rgb(138 99 36 / 0.22);
+  border-bottom: 2px solid rgb(119 89 27 / 0.22);
   background-color: #efe4cb;
 }
 
@@ -3206,7 +3721,7 @@ a[href] {
 }
 
 .invoice-north-star-line-items table tbody tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  border-bottom: 1px solid rgb(119 89 27 / 0.12);
   background-color: #fbf7ef;
 }
 
@@ -3229,7 +3744,7 @@ a[href] {
 
 .north-star-invoice-overlay-body .north-star-detail-section,
 .north-star-invoice-overlay-body .north-star-detail-section-surface {
-  border: 1px solid rgb(138 99 36 / 0.1);
+  border: 1px solid rgb(119 89 27 / 0.1);
   background-color: var(--north-star-ivory);
   box-shadow: none;
 }
@@ -3257,7 +3772,7 @@ a[href] {
 
 .admin-north-star-shell .north-star-estimate-sticky-footer,
 .north-star-estimate-overlay-body .north-star-estimate-sticky-footer {
-  border-top: 1px solid rgb(138 99 36 / 0.14);
+  border-top: 1px solid rgb(119 89 27 / 0.14);
   background-color: #efe4cb;
 }
 
@@ -3268,7 +3783,7 @@ a[href] {
   background: linear-gradient(
     90deg,
     rgb(243 235 221 / 0.2) 0%,
-    rgb(230 208 146 / 0.24) 45%,
+    rgb(232 217 172 / 0.24) 45%,
     rgb(243 235 221 / 0.2) 90%
   );
   background-size: 200% 100%;
@@ -3277,9 +3792,9 @@ a[href] {
 .north-star-skeleton-dark {
   background: linear-gradient(
     90deg,
-    rgb(201 164 77 / 0.08) 0%,
-    rgb(201 164 77 / 0.12) 45%,
-    rgb(201 164 77 / 0.08) 90%
+    rgb(194 160 90 / 0.08) 0%,
+    rgb(194 160 90 / 0.12) 45%,
+    rgb(194 160 90 / 0.08) 90%
   );
   background-size: 200% 100%;
 }
@@ -3295,25 +3810,49 @@ a[href] {
   }
 }
 
+/* PRESTIGE: these three carried `box-shadow: none`, which is the single
+ * biggest reason the product read as flat — a card was a fill plus a hairline
+ * and nothing else. They now use the canonical elevation ramp: a tight contact
+ * shadow to anchor the edge, a broad ambient shadow for air, and a 1px inset
+ * highlight so the surface reads as lit from above. */
+/* PRESTIGE — dimensional icon well.
+ * Applied ON TOP of whatever fill a caller sets, so one class makes every icon
+ * disc read as a lit physical object without owning its colour: a diagonal
+ * sheen, a bright top inset, a dark bottom inset for thickness, and a contact
+ * shadow. Colour stays semantic and stays the caller's decision. */
+.altair-icon-well {
+  position: relative;
+  background-image: linear-gradient(
+    160deg,
+    rgb(255 255 255 / 0.20) 0%,
+    rgb(255 255 255 / 0.05) 42%,
+    transparent 68%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -1px 2px rgb(0 0 0 / 0.16),
+    0 1px 2px rgb(28 25 19 / 0.16);
+}
+
 .admin-card {
   border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-card);
-  box-shadow: none;
+  box-shadow: var(--elev-hairline), var(--elev-1);
 }
 
 .admin-panel {
   border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-panel);
-  box-shadow: none;
+  box-shadow: var(--elev-hairline), var(--elev-1);
 }
 
 .admin-section-surface {
   border-radius: var(--radius-section);
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-card);
-  box-shadow: none;
+  box-shadow: var(--elev-hairline), var(--elev-1);
 }
 
 /*
@@ -3502,14 +4041,14 @@ a[href] {
 
 .altair-surface-ns-card {
   border-radius: 1rem;
-  border: 1px solid rgb(138 99 36 / 0.1);
+  border: 1px solid rgb(119 89 27 / 0.1);
   background-color: var(--north-star-ivory);
   box-shadow: none;
 }
 
 .altair-surface-ns-tile {
   border-radius: 0.75rem;
-  border: 1px solid rgb(138 99 36 / 0.08);
+  border: 1px solid rgb(119 89 27 / 0.08);
   background-color: rgb(255 249 234 / 0.55);
   box-shadow: none;
 }
@@ -3575,7 +4114,7 @@ a[href] {
  * beat this file's defaults, in any build's class order, the same way
  * Button.tsx's README already flags Tailwind's cascade as unreliable for
  * className-based overrides otherwise. Without :where(), a North Star header
- * row's "bg-[#DCE3EC]" or a body row's "hover:bg-[#F2F5F8]" could lose to
+ * row's "bg-[#E5E2DA]" or a body row's "hover:bg-[#F6F5F2]" could lose to
  * these defaults depending on Tailwind's generated stylesheet order.
  *
  * "altair-table-header tr" only sets background — the header row's border
@@ -4017,7 +4556,7 @@ a[href] {
   align-items: center;
   justify-content: center;
   border-radius: 0.875rem;
-  background: linear-gradient(145deg, #f8fafc, var(--surface-muted));
+  background: linear-gradient(145deg, #fafaf8, var(--surface-muted));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.85),
     0 1px 2px rgb(15 23 42 / 0.04);
@@ -4180,7 +4719,7 @@ a[href] {
   padding: 0.25rem 0.625rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: #5C5340;
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
@@ -4188,7 +4727,7 @@ a[href] {
 }
 
 .admin-segmented-item:hover {
-  color: #0f172a;
+  color: #151913;
 }
 
 .admin-segmented-item:focus-visible {
@@ -4202,7 +4741,7 @@ a[href] {
 
 .admin-segmented-item-active {
   background: #ffffff;
-  color: #0f172a;
+  color: #151913;
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
   outline: 1px solid rgb(226 232 240 / 0.85);
 }
@@ -4237,7 +4776,7 @@ a[href] {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #64748b;
+  color: #7c7259;
 }
 
 .admin-card table tbody tr,
@@ -4270,13 +4809,16 @@ a[href] {
 .admin-page-header {
   border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
+  /* PRESTIGE: the two hardcoded stops here were cool blue-whites
+   * (rgb(241 248 252) / rgb(236 244 250)) — the reason this band read faintly
+   * lavender on an otherwise warm page. Now a warm porcelain fall. */
   background: linear-gradient(
     135deg,
-    var(--surface-panel) 0%,
-    rgb(241 248 252 / 0.94) 52%,
-    rgb(236 244 250 / 0.9) 100%
+    var(--surface-raised) 0%,
+    var(--surface) 52%,
+    var(--surface-recessed) 100%
   );
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--elev-hairline), var(--elev-1);
   padding: 0.875rem 1rem;
 }
 
@@ -4292,7 +4834,7 @@ a[href] {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #0891b2;
+  color: #918465;
 }
 
 .admin-card-body {
@@ -4342,7 +4884,7 @@ a[href] {
 .admin-skeleton {
   animation: admin-skeleton-pulse 1.8s ease-in-out infinite;
   border-radius: 0.5rem;
-  background: linear-gradient(90deg, #eef4f8 0%, #e2e8f0 45%, #eef4f8 90%);
+  background: linear-gradient(90deg, #f4f3f0 0%, #eae7e1 45%, #f4f3f0 90%);
   background-size: 200% 100%;
 }
 
@@ -4372,24 +4914,24 @@ a[href] {
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.2;
-  color: #0f172a;
+  color: #151913;
 }
 
 .admin-heading-section {
   font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: -0.015em;
-  color: #0f172a;
+  color: #151913;
 }
 
 .admin-text-muted {
-  color: #64748b;
+  color: #7c7259;
 }
 
 .admin-text-helper {
   font-size: 0.6875rem;
   line-height: 1.4;
-  color: #64748b;
+  color: #7c7259;
 }
 
 @media (min-width: 640px) {
@@ -4437,7 +4979,7 @@ a[href] {
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #64748b;
+  color: #7c7259;
 }
 
 @media (min-width: 640px) {
@@ -4452,7 +4994,7 @@ a[href] {
   font-weight: 800;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: #151913;
 }
 
 @media (min-width: 640px) {
@@ -4483,13 +5025,13 @@ a[href] {
 }
 
 .admin-metric-icon-neutral {
-  background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
-  color: #475569;
+  background: linear-gradient(145deg, #f6f4f2, #eae7e1);
+  color: #5C5340;
 }
 
 .admin-metric-icon-teal {
-  background: linear-gradient(145deg, #ecfeff, #cffafe);
-  color: #0e7490;
+  background: linear-gradient(145deg, #fbfaf9, #f3f2ee);
+  color: #746a51;
 }
 
 .admin-metric-icon-emerald {
@@ -4508,8 +5050,8 @@ a[href] {
 }
 
 .admin-metric-icon-slate {
-  background: linear-gradient(145deg, #f8fafc, #e2e8f0);
-  color: #334155;
+  background: linear-gradient(145deg, #fafaf8, #eae7e1);
+  color: #464031;
 }
 
 .admin-sticky-footer {
@@ -4629,7 +5171,7 @@ a[href] {
   }
 
   .overlay-form-root[data-overlay-surface="north-star"] {
-    background-color: #1a2029;
+    background-color: #1c211a;
   }
 
   .overlay-form-root .overlay-form-scroll,
@@ -4696,14 +5238,14 @@ a[href] {
 }
 
 .tech-canvas {
-  background-color: #f1f5f9;
+  background-color: #f6f4f2;
   background-image:
     radial-gradient(
       ellipse 90% 60% at 50% -15%,
       rgb(186 230 253 / 0.18) 0%,
       transparent 60%
     ),
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    linear-gradient(180deg, #fafaf8 0%, #f6f4f2 100%);
 }
 
 /*
@@ -4767,9 +5309,9 @@ a[href] {
   border: 1px solid rgb(51 65 85 / 0.45);
   background: linear-gradient(
     155deg,
-    #0f172a 0%,
-    #1e293b 48%,
-    #0f172a 100%
+    #151913 0%,
+    #242a21 48%,
+    #151913 100%
   );
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.04) inset,
@@ -4791,13 +5333,13 @@ a[href] {
     var(--shadow-card),
     0 0 0 1px rgb(255 255 255 / 0.5) inset,
     0 12px 32px -10px rgb(6 182 212 / 0.12);
-  color: #0f172a;
+  color: #151913;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .admin-skeleton {
     animation: none;
-    background: #e2e8f0;
+    background: #eae7e1;
   }
 
   .north-star-skeleton,
@@ -4905,7 +5447,7 @@ a[href] {
   [class*="text-orange-"],
   [class*="text-violet-"],
   [class*="text-blue-"] {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   [class*="ring-sky-"],
@@ -4917,14 +5459,14 @@ a[href] {
   [class*="ring-orange-"],
   [class*="ring-violet-"],
   [class*="ring-blue-"] {
-    --tw-ring-color: #94a3b8 !important;
+    --tw-ring-color: #aca187 !important;
   }
 
   /*
    * Document total chips print as a WHITE box with ink text.
    *
    * Both heroes paint their on-screen fill with a Tailwind gradient
-   * (`bg-gradient-to-br from-[#273140] …`), which is a `background-image`.
+   * (`bg-gradient-to-br from-[#2B3328] …`), which is a `background-image`.
    * The `background-color: #ffffff` resets below — and the components' own
    * `print:bg-white` utility — only touch `background-color`, so the dark
    * gradient kept painting over the white and the grand total (the one
@@ -4935,21 +5477,21 @@ a[href] {
   #estimate-document .estimate-total-hero {
     background-image: none !important;
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    color: #151913 !important;
     box-shadow: none !important;
   }
 
   /* Invoice document: preserve amount-due hierarchy on print */
   #invoice-document .invoice-amount-due-hero {
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 2px solid #0f172a !important;
+    color: #151913 !important;
+    border: 2px solid #151913 !important;
   }
 
   #invoice-document .invoice-amount-due-hero p,
   #invoice-document .invoice-amount-due-hero dt,
   #invoice-document .invoice-amount-due-hero dd {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #invoice-document .invoice-amount-due-hero .text-3xl,
@@ -4977,12 +5519,12 @@ a[href] {
 
   #estimate-document .estimate-total-hero {
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 2px solid #0f172a !important;
+    color: #151913 !important;
+    border: 2px solid #151913 !important;
   }
 
   #estimate-document .estimate-total-hero p {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #estimate-document .estimate-total-hero .text-3xl,
@@ -5091,15 +5633,15 @@ a[href] {
   #estimate-document.estimate-north-star-document .estimate-total-hero {
     background-image: none !important;
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 2px solid #0f172a !important;
+    color: #151913 !important;
+    border: 2px solid #151913 !important;
     break-inside: avoid;
     padding-top: 0.125rem !important;
     padding-bottom: 0.125rem !important;
   }
 
   #estimate-document.estimate-north-star-document .estimate-total-hero p {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #estimate-document.estimate-north-star-document table tbody tr,
@@ -5156,8 +5698,8 @@ a[href] {
   #invoice-document.invoice-north-star-document .invoice-amount-due-hero {
     background-image: none !important;
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 2px solid #0f172a !important;
+    color: #151913 !important;
+    border: 2px solid #151913 !important;
     break-inside: avoid;
     padding-top: 0.125rem !important;
     padding-bottom: 0.125rem !important;
@@ -5166,7 +5708,7 @@ a[href] {
   #invoice-document.invoice-north-star-document .invoice-amount-due-hero p,
   #invoice-document.invoice-north-star-document .invoice-amount-due-hero dt,
   #invoice-document.invoice-north-star-document .invoice-amount-due-hero dd {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #invoice-document.invoice-north-star-document .invoice-line-items,
@@ -5204,7 +5746,7 @@ a[href] {
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #tax-summary-document[data-north-star-tax-summary-document="true"] header,
@@ -5215,10 +5757,10 @@ a[href] {
   #tax-summary-document[data-north-star-tax-summary-document="true"] h1,
   #tax-summary-document[data-north-star-tax-summary-document="true"] span,
   #tax-summary-document[data-north-star-tax-summary-document="true"] p {
-    color: #0f172a !important;
+    color: #151913 !important;
   }
 
   #tax-summary-document[data-north-star-tax-summary-document="true"] [class*="border-"] {
-    border-color: #cbd5e1 !important;
+    border-color: #d9d4c8 !important;
   }
 }

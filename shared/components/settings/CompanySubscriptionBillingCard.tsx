@@ -50,7 +50,7 @@ const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
     "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
   info: "bg-altair-information-surface text-altair-information-foreground ring-altair-information/15",
   neutral: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
-  brass: "bg-[#FFF3D6] text-[#9C7424] ring-[rgba(138,99,36,0.18)]",
+  brass: "bg-[#FFF3D6] text-[#9C7424] ring-[rgba(119,89,27,0.18)]",
 };
 
 function formatDateLabel(value: string | null): string | null {
@@ -179,7 +179,7 @@ export function CompanySubscriptionBillingCard({
     effectiveSummary.status === "paused";
 
   const surfaceClass = northStar
-    ? "rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FFFCF5] p-4 sm:p-5"
+    ? "rounded-xl border border-[rgba(119,89,27,0.18)] bg-[#FFFCF5] p-4 sm:p-5"
     : `${altairMcCardClass} ${altairMcCardPadClass}`;
   const titleClass = northStar
     ? "text-base font-semibold text-[#17130E]"
@@ -194,7 +194,7 @@ export function CompanySubscriptionBillingCard({
     ? "text-sm font-medium text-[#17130E]"
     : "text-sm font-medium text-altair-ink";
   const fieldClass = northStar
-    ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
+    ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(119,89,27,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(164,130,58,0.35)]"
     : "mt-1 w-full min-h-10 rounded-none border border-[var(--north-star-plate-border)] bg-[var(--surface-card)] px-3 py-2 text-sm text-altair-ink focus:outline-none focus:ring-2 focus:ring-altair-brass/40";
   const primaryButtonClass = buttonClassName("primary", "md");
   const secondaryButtonClass = buttonClassName("secondary", "md");
@@ -468,7 +468,7 @@ export function CompanySubscriptionBillingCard({
       {/* ── Portal explanation ─────────────────────────────────────── */}
       {canManageSubscription && effectiveSummary.hasStripeSubscription ? (
         <p
-          className={`mt-2 text-xs ${northStar ? "text-[#64748b]" : "text-slate-400"}`}
+          className={`mt-2 text-xs ${northStar ? "text-[#7c7259]" : "text-slate-400"}`}
         >
           Payment methods, billing info, and subscription invoices are managed
           securely through Stripe.

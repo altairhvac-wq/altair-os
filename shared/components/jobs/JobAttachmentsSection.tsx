@@ -107,10 +107,10 @@ export function JobAttachmentsSection({
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                   isActive
                     ? northStar
-                      ? "bg-[#C9A44D] text-[#17130E]"
+                      ? "bg-[#C2A05A] text-[#17130E]"
                       : "bg-cyan-600 text-white"
                     : northStar
-                      ? "bg-[#EFE4CB] text-[#4F4638] hover:bg-[#E6D092]/40"
+                      ? "bg-[#EFE4CB] text-[#4F4638] hover:bg-[#E8D9AC]/40"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >

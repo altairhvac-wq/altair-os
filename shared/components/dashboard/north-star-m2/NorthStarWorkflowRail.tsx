@@ -67,7 +67,7 @@ export function NorthStarWorkflowRail({ data }: NorthStarWorkflowRailProps) {
     >
       <div className="flex items-end justify-between gap-4 border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 sm:px-5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8B7232]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
             Workflow pulse
           </p>
           <h2

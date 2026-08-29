@@ -38,7 +38,7 @@ function DayStatePanel({ dayState, signals }: { dayState: DayState; signals: Ope
               cy="50"
               r="42"
               fill="none"
-              stroke="rgba(148,163,184,0.15)"
+              stroke="rgba(176,168,143,0.15)"
               strokeWidth="6"
             />
             <circle
@@ -54,8 +54,11 @@ function DayStatePanel({ dayState, signals }: { dayState: DayState; signals: Ope
             />
             <defs>
               <linearGradient id="day-progress" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#38bdf8" />
+                {/* PRESTIGE: was a cyan→sky ramp authored as literal hexes,
+                    which no palette remap could reach. The day-progress ring
+                    is a brand moment, so it runs brass→champagne. */}
+                <stop offset="0%" stopColor="var(--chart-1)" />
+                <stop offset="100%" stopColor="var(--chart-accent)" />
               </linearGradient>
             </defs>
           </svg>

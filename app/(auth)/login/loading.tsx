@@ -4,7 +4,7 @@ import { LoginPageShell } from "@/shared/components/auth/LoginPageShell";
 function LoginMarketingSkeleton() {
   return (
     <section
-      className="relative min-h-dvh overflow-hidden bg-[#050b14] px-5 py-7 text-white sm:px-8 sm:py-9"
+      className="relative min-h-dvh overflow-hidden bg-[#0a0b09] px-5 py-7 text-white sm:px-8 sm:py-9"
       aria-hidden="true"
     >
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-30" />
@@ -12,7 +12,7 @@ function LoginMarketingSkeleton() {
         <AltairLogo variant="white" size="lg" showWordmark />
         <div className="mt-10 grid items-center gap-8 xl:grid-cols-[0.88fr_1.12fr]">
           <div className="space-y-4">
-            <div className="h-2.5 w-48 rounded-full bg-[#c9a44d]/20" />
+            <div className="h-2.5 w-48 rounded-full bg-[#c2a05a]/20" />
             <div className="h-14 w-full max-w-lg rounded-xl bg-white/[0.07]" />
             <div className="h-14 w-4/5 max-w-md rounded-xl bg-white/[0.05]" />
             <div className="h-16 w-full max-w-lg rounded-xl bg-white/[0.035]" />
@@ -48,7 +48,7 @@ function LoginFormSkeleton() {
           <div className="h-4 w-24 rounded bg-white/[0.08]" />
           <div className="h-12 rounded-lg bg-white/[0.06]" />
         </div>
-        <div className="h-12 rounded-lg bg-[#c9a44d]/35" />
+        <div className="h-12 rounded-lg bg-[#c2a05a]/35" />
       </div>
     </div>
   );

@@ -58,8 +58,8 @@ export default function GlobalError({
           gap: "0.75rem",
           padding: "2rem 1.5rem",
           textAlign: "center",
-          background: "#f4f7fa",
-          color: "#0f172a",
+          background: "#f8f7f4",
+          color: "#151913",
           fontFamily:
             "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
         }}
@@ -94,7 +94,7 @@ export default function GlobalError({
             maxWidth: "34rem",
             fontSize: "0.9375rem",
             lineHeight: 1.6,
-            color: "#475569",
+            color: "#5C5340",
           }}
         >
           Altair could not finish loading. Your data is safe and nothing was
@@ -108,7 +108,7 @@ export default function GlobalError({
               margin: 0,
               fontSize: "0.75rem",
               fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace",
-              color: "#64748b",
+              color: "#7c7259",
             }}
           >
             Reference: {error.digest}
@@ -135,8 +135,8 @@ export default function GlobalError({
               padding: "0.625rem 1.5rem",
               fontSize: "0.875rem",
               fontWeight: 600,
-              background: "#0f172a",
-              color: "#f4f7fa",
+              background: "#151913",
+              color: "#f8f7f4",
             }}
           >
             Try again
@@ -163,8 +163,8 @@ export default function GlobalError({
               fontSize: "0.875rem",
               fontWeight: 600,
               textDecoration: "none",
-              border: "1px solid #cbd5e1",
-              color: "#0f172a",
+              border: "1px solid #d9d4c8",
+              color: "#151913",
             }}
           >
             Reload Altair

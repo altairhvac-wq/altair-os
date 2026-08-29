@@ -49,8 +49,8 @@ function MobileEntryCard({
     <article
       className={`time-north-star-mobile-entry rounded-xl border px-3.5 py-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] ${
         highlighted
-          ? "border-[rgba(201,164,77,0.35)] bg-[rgba(201,164,77,0.08)] ring-1 ring-[rgba(201,164,77,0.18)]"
-          : "border-[rgba(138,99,36,0.14)] bg-[#FBF7EF]"
+          ? "border-[rgba(194,160,90,0.35)] bg-[rgba(194,160,90,0.08)] ring-1 ring-[rgba(194,160,90,0.18)]"
+          : "border-[rgba(119,89,27,0.14)] bg-[#FBF7EF]"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -64,7 +64,7 @@ function MobileEntryCard({
         </div>
         <EntryStatusBadge entry={entry} />
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[rgba(138,99,36,0.10)] pt-2.5 text-xs">
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[rgba(119,89,27,0.10)] pt-2.5 text-xs">
         <div>
           <dt className="font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
             Started

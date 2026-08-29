@@ -62,19 +62,19 @@ function stageMarkerClass(
     case "current":
       if (northStar) {
         return inline
-          ? "border-[#C9A44D] bg-gradient-to-b from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]"
-          : "border-[#C9A44D] bg-gradient-to-b from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.28)]";
+          ? "border-[#C2A05A] bg-gradient-to-b from-[#E8D9AC] to-[#A4823A] text-[#17130E] ring-1 ring-[rgba(194,160,90,0.28)]"
+          : "border-[#C2A05A] bg-gradient-to-b from-[#E8D9AC] to-[#A4823A] text-[#17130E] ring-2 ring-[rgba(194,160,90,0.28)]";
       }
       return inline
         ? "border-cyan-700 bg-cyan-600 text-white ring-1 ring-cyan-500/30 dark:border-cyan-300 dark:bg-cyan-500 dark:ring-cyan-400/30"
         : "border-cyan-700 bg-cyan-600 text-white ring-2 ring-cyan-500/30 dark:border-cyan-300 dark:bg-cyan-500 dark:ring-cyan-400/30";
     case "skipped":
       return northStar
-        ? "border-[rgba(138,99,36,0.22)] bg-[#F3EBDD] text-[#8A6324]"
+        ? "border-[rgba(119,89,27,0.22)] bg-[#F3EBDD] text-[#77591B]"
         : "border-slate-300 bg-slate-100 text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500";
     default:
       return northStar
-        ? "border-[rgba(138,99,36,0.28)] bg-[#FFF9EA] text-[#8A6324]"
+        ? "border-[rgba(119,89,27,0.28)] bg-[#FFF9EA] text-[#77591B]"
         : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-500";
   }
 }
@@ -94,11 +94,11 @@ function stageLabelClass(
         : "font-semibold text-slate-700 dark:text-slate-200";
     case "skipped":
       return northStar
-        ? "font-medium text-[#8A6324] line-through decoration-[rgba(138,99,36,0.35)]"
+        ? "font-medium text-[#77591B] line-through decoration-[rgba(119,89,27,0.35)]"
         : "font-medium text-slate-400 line-through dark:text-slate-500";
     default:
       return northStar
-        ? "font-medium text-[#64748B]"
+        ? "font-medium text-[#7C7259]"
         : "font-medium text-slate-500 dark:text-slate-400";
   }
 }
@@ -112,7 +112,7 @@ function connectorClass(
   if (northStar) {
     return filled
       ? "bg-[rgba(16,185,129,0.55)]"
-      : "bg-[rgba(138,99,36,0.18)]";
+      : "bg-[rgba(119,89,27,0.18)]";
   }
 
   return filled
@@ -258,7 +258,7 @@ function StageControl({
 
   const interactiveClass = `group flex w-[4.75rem] shrink-0 flex-col items-center gap-1 rounded-md px-0.5 py-0.5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 sm:w-auto sm:min-w-[4.5rem] sm:max-w-[5.5rem] ${
     northStar
-      ? "focus-visible:ring-[#C9A44D]"
+      ? "focus-visible:ring-[#C2A05A]"
       : "focus-visible:ring-cyan-600"
   }`;
 
@@ -530,7 +530,7 @@ export function JobWorkflowTimeline({
         <p
           id={explanationId}
           className={`mt-1.5 text-[11px] ${
-            northStar ? "text-[#8A6324]" : "text-slate-600"
+            northStar ? "text-[#77591B]" : "text-slate-600"
           }`}
           role="status"
           aria-live="polite"

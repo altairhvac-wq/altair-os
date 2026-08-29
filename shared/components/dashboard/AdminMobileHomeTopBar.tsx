@@ -7,7 +7,7 @@ import type { ActiveCompanyContext } from "@/lib/database/types";
 import { AdminQuickNavDrawer } from "@/shared/components/admin/AdminQuickNavDrawer";
 
 const GLASS_BUTTON_CLASS =
-  "inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-2xl bg-white/[0.08] text-[#d0d4da] ring-1 ring-inset ring-white/[0.12] transition-colors hover:text-white active:bg-white/[0.16] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]";
+  "inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-2xl bg-white/[0.08] text-[#d7d3cc] ring-1 ring-inset ring-white/[0.12] transition-colors hover:text-white active:bg-white/[0.16] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2a05a]";
 
 type AdminMobileHomeTopBarProps = {
   companyContext: ActiveCompanyContext;
@@ -43,7 +43,7 @@ export function AdminMobileHomeTopBar({
 
       <div className="min-w-0 flex-1 text-center">
         {dateEyebrow ? (
-          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-[#d4af37]">
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-[#c2a05a]">
             {dateEyebrow}
           </p>
         ) : null}

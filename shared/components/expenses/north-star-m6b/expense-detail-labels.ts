@@ -5,7 +5,7 @@ import {
 
 /** Missing-value placeholder on ivory section cards */
 export const northStarMissingValueClass =
-  "text-sm font-medium italic text-[#64748B]";
+  "text-sm font-medium italic text-[#7C7259]";
 
 /** Missing-value placeholder on dark hero / meta surfaces */
 export const northStarDarkMissingValueClass =

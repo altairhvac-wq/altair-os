@@ -180,7 +180,7 @@ export function JobNextActionCard({
 
   const statusBannerClass = cancelled
     ? northStar
-      ? "border-[rgba(100,116,139,0.35)] bg-[#F3EBDD] text-[#4F4638]"
+      ? "border-[rgba(124,114,89,0.35)] bg-[#F3EBDD] text-[#4F4638]"
       : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
     : waiting && !recordPayment
       ? northStar

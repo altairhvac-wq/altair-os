@@ -23,12 +23,12 @@ const categoryStyles: Record<ExpenseCategory, string> = {
 const northStarCategoryStyles: Record<ExpenseCategory, string> = {
   materials: "bg-amber-50 text-amber-800 ring-amber-600/20",
   fuel: "bg-orange-50 text-orange-800 ring-orange-600/20",
-  tools: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
+  tools: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(119,89,27,0.18)]",
   meals: "bg-pink-50 text-pink-800 ring-pink-600/20",
   lodging: "bg-indigo-50 text-indigo-800 ring-indigo-600/20",
-  vehicle: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.14)]",
+  vehicle: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(119,89,27,0.14)]",
   office: "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
-  other: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
+  other: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(119,89,27,0.12)]",
 };
 
 export function ExpenseCategoryBadge({

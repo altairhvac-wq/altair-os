@@ -26,7 +26,7 @@ export function AttentionRadar({ rails }: AttentionRadarProps) {
   return (
     <section
       aria-label="Attention radar"
-      className="relative overflow-hidden rounded-2xl bg-white/60 p-4 shadow-[0_8px_40px_-20px_rgba(15,23,42,0.08),0_0_0_1px_rgba(148,163,184,0.06)] backdrop-blur-sm sm:p-5 lg:p-6"
+      className="relative overflow-hidden rounded-2xl bg-white/60 p-4 shadow-[0_8px_40px_-20px_rgba(15,23,42,0.08),0_0_0_1px_rgba(176,168,143,0.06)] backdrop-blur-sm sm:p-5 lg:p-6"
     >
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>

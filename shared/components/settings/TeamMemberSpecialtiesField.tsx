@@ -34,7 +34,7 @@ function TeamMemberSpecialtyChips({
           key={label}
           className={
             northStar
-              ? `inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] font-medium text-[#4F4638] ${
+              ? `inline-flex items-center rounded-full border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] font-medium text-[#4F4638] ${
                   compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-0.5 text-xs"
                 }`
               : `inline-flex items-center rounded-full border border-slate-200 bg-slate-50 font-medium text-slate-700 ${
@@ -106,8 +106,8 @@ export function TeamMemberSpecialtiesField({
                   northStar
                     ? `inline-flex min-h-8 items-center rounded-full border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                         isSelected
-                          ? "border-[#B88A2E] bg-[#EFE4CB] text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]"
-                          : "border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-[#4F4638] hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
+                          ? "border-[#A4823A] bg-[#EFE4CB] text-[#17130E] ring-1 ring-[rgba(194,160,90,0.28)]"
+                          : "border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] text-[#4F4638] hover:border-[rgba(194,160,90,0.35)] hover:bg-[#F3EBDD]"
                       }`
                     : `inline-flex min-h-8 items-center rounded-full border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                         isSelected

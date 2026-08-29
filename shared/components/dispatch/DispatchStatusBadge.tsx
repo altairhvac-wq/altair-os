@@ -11,15 +11,15 @@ const NORTH_STAR_DISPATCH_STATUS_STYLES: Record<DispatchJobStatus, string> = {
   scheduled:
     "bg-[rgba(174,182,194,0.14)] text-[#D7CDBD] ring-[rgba(174,182,194,0.22)]",
   dispatched:
-    "bg-[rgba(201,164,77,0.14)] text-[#E6D092] ring-[rgba(201,164,77,0.24)]",
+    "bg-[rgba(194,160,90,0.14)] text-[#E8D9AC] ring-[rgba(194,160,90,0.24)]",
   arrived:
-    "bg-[rgba(201,164,77,0.18)] text-[#D6BE78] ring-[rgba(201,164,77,0.28)]",
+    "bg-[rgba(194,160,90,0.18)] text-[#D9C188] ring-[rgba(194,160,90,0.28)]",
   in_progress:
-    "bg-[rgba(201,164,77,0.22)] text-[#E6D092] ring-[rgba(201,164,77,0.30)]",
+    "bg-[rgba(194,160,90,0.22)] text-[#E8D9AC] ring-[rgba(194,160,90,0.30)]",
   completed:
     "bg-[rgba(16,185,129,0.16)] text-emerald-300 ring-[rgba(16,185,129,0.28)]",
   cancelled:
-    "bg-[rgba(174,182,194,0.10)] text-[#AEB6C2] ring-[rgba(174,182,194,0.16)]",
+    "bg-[rgba(174,182,194,0.10)] text-[#BCB5A5] ring-[rgba(174,182,194,0.16)]",
 };
 
 type DispatchStatusBadgeProps = {

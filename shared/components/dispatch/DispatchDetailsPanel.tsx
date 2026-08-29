@@ -163,7 +163,7 @@ export function DispatchDetailsPanel({
     : "space-y-3 border-b border-slate-100 pb-4";
 
   const addressIconClass = northStar
-    ? "mt-0.5 h-4 w-4 shrink-0 text-[#D6BE78]"
+    ? "mt-0.5 h-4 w-4 shrink-0 text-[#D9C188]"
     : "mt-0.5 h-4 w-4 shrink-0 text-slate-400";
 
   const assignmentCardClass = northStar
@@ -357,7 +357,7 @@ export function DispatchDetailsPanel({
                       <MapPin className="h-5 w-5" aria-hidden />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#D6BE78]">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#D9C188]">
                         Service address
                       </p>
                       <p className={`${dt.detailSiteContextAddress} mt-1 break-words`}>
