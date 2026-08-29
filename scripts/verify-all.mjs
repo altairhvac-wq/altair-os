@@ -77,6 +77,7 @@ steps.push(
     name: "responsive-loading",
     script: "scripts/verify-responsive-loading-states.mjs",
   },
+  { name: "pwa-offline", script: "scripts/verify-pwa-offline.mjs" },
   {
     name: "key-rotation",
     script: "scripts/verify-key-rotation.mjs",
