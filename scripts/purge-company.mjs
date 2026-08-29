@@ -231,6 +231,52 @@ async function main() {
     );
   }
 
+  // ---------------------------------------------------------------- fence
+  //
+  // The purge deletes Storage, verifies the buckets are empty, and then deletes
+  // the company row. An object arriving in that last interval survives as an
+  // orphan while this script reports success.
+  //
+  // Migration 177 closes it with a BEFORE INSERT trigger on storage.objects,
+  // which fires for every role — including service_role, which the
+  // marketing-media upload path uses and which RLS does not govern.
+  //
+  // This does not TRUST that the migration is applied. It proves it, by trying
+  // to write into the company's own prefix and requiring the refusal. A purge
+  // that ran against a database without the fence would be relying on the
+  // delete order to shut the RLS path, which is an accident rather than a rule.
+  const canaryPath = `company/${companyId}/purge-fence-canary/${Date.now()}.pdf`;
+  const { error: canaryError } = await admin.storage
+    .from("company-files")
+    .upload(canaryPath, Buffer.from("%PDF-1.4\nfence-canary"), {
+      upsert: true,
+      contentType: "application/pdf",
+    });
+
+  if (!canaryError) {
+    // Remove what we just proved should not exist, then stop.
+    await admin.storage.from("company-files").remove([canaryPath]);
+    fail(
+      "The Storage purge fence is NOT active: a write into this company's " +
+        "prefix succeeded while its deletion is in the purging state.\n\n" +
+        "Apply migration 177 before purging. Without it, an upload landing " +
+        "after the empty verification survives as an orphan and this script " +
+        "reports success over it.",
+    );
+  }
+
+  if (!/ALT77/.test(canaryError.message)) {
+    fail(
+      `A write into this company's prefix failed, but not with the fence's ` +
+        `own SQLSTATE: ${canaryError.message}\n\n` +
+        "Refusing to continue on an unexplained failure — it may be a bucket " +
+        "policy or a transient error rather than the fence, and the two are " +
+        "not interchangeable.",
+    );
+  }
+
+  console.log("\n  fence active (ALT77): no new object can reach this tenant\n");
+
   const progress = { ...(claim.progress ?? {}) };
 
   try {
