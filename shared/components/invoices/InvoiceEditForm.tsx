@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   formatTaxRate,
   type InvoiceDetail,
@@ -111,7 +111,7 @@ export function InvoiceEditForm({
         <p className="mt-1 text-sm text-slate-600">{invoice.customerName}</p>
         <p className="mt-2 text-xs text-slate-500">
           Tax rate {formatTaxRate(invoice.taxRate)}% · Current total{" "}
-          {formatCurrency(invoice.total)}
+          {formatCurrencyExact(invoice.total)}
         </p>
       </div>
 

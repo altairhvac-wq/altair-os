@@ -414,7 +414,7 @@ export function DispatchDetailsPanel({
                     className={unassignButtonClass}
                   >
                     <UserMinus className="h-4 w-4" />
-                    {isAssignmentBusy ? "Unassigning..." : "Unassign technician"}
+                    {isAssignmentBusy ? "Unassigning…" : "Unassign technician"}
                   </button>
                 ) : null}
 
@@ -456,7 +456,7 @@ export function DispatchDetailsPanel({
                       disabled={!canSubmitAssignment || isAssignmentControlsDisabled}
                       className={assignButtonClass}
                     >
-                      {isAssignmentBusy ? "Assigning..." : "Change technician"}
+                      {isAssignmentBusy ? "Assigning…" : "Change technician"}
                     </button>
                   </div>
                 ) : canDispatchJobs && (assignError || assignSuccess) ? (
@@ -524,7 +524,7 @@ export function DispatchDetailsPanel({
                       disabled={!canSubmitAssignment || isAssignmentControlsDisabled}
                       className={assignButtonClass}
                     >
-                      {isAssignmentBusy ? "Assigning..." : "Assign technician"}
+                      {isAssignmentBusy ? "Assigning…" : "Assign technician"}
                     </button>
                   </div>
                 ) : canDispatchJobs ? (

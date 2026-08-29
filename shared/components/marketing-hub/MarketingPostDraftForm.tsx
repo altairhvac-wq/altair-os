@@ -1585,7 +1585,7 @@ export function MarketingPostDraftForm({
                     className="admin-btn-primary"
                   >
                     {isRecurringPending
-                      ? "Creating scheduled copies..."
+                      ? "Creating scheduled copies…"
                       : "Create scheduled copies"}
                   </button>
                   <button
@@ -1621,7 +1621,7 @@ export function MarketingPostDraftForm({
                     className="admin-btn-primary"
                   >
                     {isPending
-                      ? "Saving..."
+                      ? "Saving…"
                       : isEditMode
                         ? "Save changes"
                         : "Save draft"}
@@ -1695,7 +1695,7 @@ export function MarketingPostDraftForm({
                         className="admin-btn-secondary"
                       >
                         {isMarkPostedPending
-                          ? "Marking posted..."
+                          ? "Marking posted…"
                           : "Mark posted manually"}
                       </button>
                     ) : null}
@@ -1707,7 +1707,7 @@ export function MarketingPostDraftForm({
                           onClick={handleReusePost}
                           className="admin-btn-secondary"
                         >
-                          {isReusePending ? "Creating copy..." : "Reuse post"}
+                          {isReusePending ? "Creating copy…" : "Reuse post"}
                         </button>
                         <p
                           className={`text-xs leading-relaxed ${
@@ -1748,7 +1748,7 @@ export function MarketingPostDraftForm({
                           className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
                         >
                           {isArchivePending
-                            ? "Moving to archive..."
+                            ? "Moving to archive…"
                             : "Move to archive"}
                         </button>
                         <p
@@ -1769,7 +1769,7 @@ export function MarketingPostDraftForm({
                           onClick={handleDeletePost}
                           className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
                         >
-                          {isDeletePending ? "Deleting..." : "Delete post"}
+                          {isDeletePending ? "Deleting…" : "Delete post"}
                         </button>
                         <p
                           className={`text-xs leading-relaxed ${

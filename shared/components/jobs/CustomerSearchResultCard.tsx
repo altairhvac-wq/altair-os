@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import { ChevronRight, MapPin } from "lucide-react";
 import {
   getCustomerInitials,
@@ -34,7 +35,7 @@ export function CustomerSearchResultCard({
           {customer.phone ? (
             <span className={`font-normal ${jm.secondaryText}`}>
               {" · "}
-              {customer.phone}
+              {formatPhoneForDisplay(customer.phone)}
             </span>
           ) : null}
         </p>

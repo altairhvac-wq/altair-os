@@ -36,8 +36,10 @@ export function InvoiceBatchSelectAllControl({
   }
 
   return (
+    // "Select all" (not "Check all") to match BulkSelectAllControl, which
+    // renders the identical affordance on every other ledger.
     <button type="button" onClick={onCheckAll} className={checkAllClass}>
-      Check all
+      Select all
     </button>
   );
 }

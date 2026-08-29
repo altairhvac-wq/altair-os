@@ -5,7 +5,7 @@ import {
 } from "@/shared/components/marketing/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · Altair OS",
+  title: "Privacy Policy",
   description:
     "How Altair OS collects, uses, and protects your data and your customers' data.",
 };

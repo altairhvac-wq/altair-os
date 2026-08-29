@@ -165,7 +165,7 @@ export function ExpenseSearchFilterBar({
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search vendor, notes, category, technician, job..."
+            placeholder="Search vendor, notes, category, technician, job…"
             className={searchInputClass}
           />
         </div>

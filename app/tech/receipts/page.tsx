@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listExpensesForTechnician } from "@/lib/database/queries/expenses";
@@ -5,6 +6,10 @@ import { TechnicianReceiptsView } from "@/shared/components/technician/Technicia
 
 type TechnicianReceiptsPageProps = {
   searchParams: Promise<{ selected?: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Receipts",
 };
 
 export default async function TechnicianReceiptsPage({

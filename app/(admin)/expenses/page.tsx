@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canViewCompanyExpenses } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -44,6 +45,10 @@ function parseExpenseStatusFilter(
 
   return value as ExpenseStatus;
 }
+
+export const metadata: Metadata = {
+  title: "Expenses",
+};
 
 export default async function ExpensesPage({ searchParams }: ExpensesPageProps) {
   const companyContext = await getActiveCompanyContext();

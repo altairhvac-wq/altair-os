@@ -121,7 +121,7 @@ export function TeamHubPageView({
       secondaryAction={
         canManagePermissions ? (
           <Button
-            href="/settings/team"
+            href="/settings/users"
             size="sm"
             variant="secondary"
             leadingIcon={<Shield className="h-3.5 w-3.5" />}

@@ -13,7 +13,7 @@ export const nsReportChart = {
   gridLine: "border-t border-white/[0.06]",
   track: "overflow-hidden rounded-md bg-white/[0.06]",
   trackSegmented: "flex gap-0.5 overflow-hidden rounded-md bg-white/[0.06] p-0.5",
-  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-altair-ink-muted",
+  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-altair-ink-on-graphite-muted",
   chartFrame: "relative overflow-hidden",
   chartPlot: "absolute inset-x-0 inset-y-1 sm:inset-y-2",
 
@@ -115,6 +115,6 @@ export const nsReportChart = {
   table: {
     row: "px-3 py-3 transition-colors hover:bg-white/[0.03] sm:px-4",
     header:
-      "text-[10px] font-bold uppercase tracking-[0.14em] text-altair-ink-muted",
+      "text-[10px] font-bold uppercase tracking-[0.14em] text-altair-ink-on-graphite-muted",
   },
 } as const;

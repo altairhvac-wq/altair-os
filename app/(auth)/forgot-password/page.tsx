@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/shared/components/auth/ForgotPasswordForm";
+
+export const metadata: Metadata = {
+  title: "Reset your password",
+};
 
 export default function ForgotPasswordPage() {
   return <ForgotPasswordForm />;

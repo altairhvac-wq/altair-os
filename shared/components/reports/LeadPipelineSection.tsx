@@ -132,7 +132,7 @@ export function LeadPipelineSection({
             <p className="text-sm font-semibold text-altair-paper">
               No leads created in this period.
             </p>
-            <p className="mt-1 text-xs text-altair-ink-muted">
+            <p className="mt-1 text-xs text-altair-ink-on-graphite-muted">
               Try a wider date range or add a new lead to see pipeline metrics.
             </p>
             <Link
@@ -157,7 +157,7 @@ export function LeadPipelineSection({
               ))}
             </div>
 
-            <p className="text-[11px] text-altair-ink-muted sm:text-xs">
+            <p className="text-[11px] text-altair-ink-on-graphite-muted sm:text-xs">
               Won and lost reflect each lead&apos;s current status, not when they
               closed.
             </p>
@@ -188,7 +188,7 @@ export function LeadPipelineSection({
 
               <ul className="divide-y divide-altair-border/60">
                 {metrics.sourcePerformance.length === 0 ? (
-                  <li className="px-3 py-4 text-center text-xs text-altair-ink-muted sm:px-4">
+                  <li className="px-3 py-4 text-center text-xs text-altair-ink-on-graphite-muted sm:px-4">
                     No lead source activity in this period.
                   </li>
                 ) : null}
@@ -201,7 +201,7 @@ export function LeadPipelineSection({
                       {formatLeadSource(entry.source)}
                     </p>
                     <div className="flex items-center justify-between gap-2 sm:contents">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted sm:hidden">
                         Leads
                       </span>
                       <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">
@@ -209,7 +209,7 @@ export function LeadPipelineSection({
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 sm:contents">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted sm:hidden">
                         Won
                       </span>
                       <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">
@@ -217,7 +217,7 @@ export function LeadPipelineSection({
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 sm:contents">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted sm:hidden">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted sm:hidden">
                         Close Rate
                       </span>
                       <span className="text-sm font-extrabold tabular-nums tracking-tight text-altair-paper sm:text-right">

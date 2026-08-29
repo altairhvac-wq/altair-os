@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { canAccessSystemCheck } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { runSystemChecks } from "@/lib/system-check/run-system-checks";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SystemCheckPageView } from "@/shared/components/settings/SystemCheckPageView";
+
+export const metadata: Metadata = {
+  title: "System check",
+};
 
 export default async function SystemCheckPage() {
   const companyContext = await getActiveCompanyContext();

@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 
 type InvoiceAmountDueHeroProps = {
   balanceDue: number;
@@ -29,7 +29,7 @@ export function InvoiceAmountDueHero({
         </p>
 
         <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-[#FFF9EA] sm:text-2xl print:mt-0 print:text-2xl print:text-slate-900">
-          {isPaidInFull ? "Paid in full" : formatCurrency(balanceDue)}
+          {isPaidInFull ? "Paid in full" : formatCurrencyExact(balanceDue)}
         </p>
 
         {!isPaidInFull ? (
@@ -43,14 +43,14 @@ export function InvoiceAmountDueHero({
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-[#B8AD9E] print:text-slate-600">Invoice total</dt>
               <dd className="font-semibold tabular-nums text-[#FFF8E8] print:text-slate-900">
-                {formatCurrency(total)}
+                {formatCurrencyExact(total)}
               </dd>
             </div>
             {amountPaid > 0 ? (
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-[#B8AD9E] print:text-slate-600">Amount paid</dt>
                 <dd className="font-semibold tabular-nums text-emerald-300 print:text-slate-900">
-                  {formatCurrency(amountPaid)}
+                  {formatCurrencyExact(amountPaid)}
                 </dd>
               </div>
             ) : null}
@@ -70,7 +70,7 @@ export function InvoiceAmountDueHero({
       </p>
 
       <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight sm:mt-2 sm:text-4xl md:text-5xl print:mt-1 print:text-3xl print:text-slate-900">
-        {isPaidInFull ? "Paid in full" : formatCurrency(balanceDue)}
+        {isPaidInFull ? "Paid in full" : formatCurrencyExact(balanceDue)}
       </p>
 
       {!isPaidInFull ? (
@@ -87,14 +87,14 @@ export function InvoiceAmountDueHero({
           <div className="flex items-baseline justify-between gap-4">
             <dt className="text-slate-400 print:text-slate-600">Invoice total</dt>
             <dd className="font-semibold tabular-nums text-slate-100 print:text-slate-900">
-              {formatCurrency(total)}
+              {formatCurrencyExact(total)}
             </dd>
           </div>
           {amountPaid > 0 ? (
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-slate-400 print:text-slate-600">Amount paid</dt>
               <dd className="font-semibold tabular-nums text-emerald-300 print:text-slate-900">
-                {formatCurrency(amountPaid)}
+                {formatCurrencyExact(amountPaid)}
               </dd>
             </div>
           ) : null}

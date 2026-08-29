@@ -59,7 +59,7 @@ export const altairReportRangeItemClass =
 
 /** Inactive range pill — muted ink on dark Graphite. */
 export const altairReportRangeItemIdleClass =
-  "text-altair-ink-muted hover:bg-white/[0.06] hover:text-altair-paper";
+  "text-altair-ink-on-graphite-muted hover:bg-white/[0.06] hover:text-altair-paper";
 
 /** Active range pill — brass-interactive (same treatment as sidebar active). */
 export const altairReportRangeItemActiveClass =
@@ -67,7 +67,7 @@ export const altairReportRangeItemActiveClass =
 
 /** Compact uppercase label on a dark report card. */
 export const altairReportMetricLabelClass =
-  "text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-muted";
+  "text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-graphite-muted";
 
 /** Large tabular value on a dark report card. */
 export const altairReportMetricValueClass =
@@ -75,4 +75,4 @@ export const altairReportMetricValueClass =
 
 /** Secondary / comparison line on a dark report card (neutral, not trend-colored). */
 export const altairReportMetricMetaClass =
-  "text-xs text-altair-ink-muted";
+  "text-xs text-altair-ink-on-graphite-muted";

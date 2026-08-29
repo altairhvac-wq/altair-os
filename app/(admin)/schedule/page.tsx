@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   canAccessOperationalJobsArea,
@@ -30,6 +31,10 @@ type SchedulePageProps = {
     date?: string;
     view?: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Schedule",
 };
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {

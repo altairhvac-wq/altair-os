@@ -112,9 +112,9 @@ export function DispatchMapPanel({
     return (
       <div className={dm.mapFrame}>
         <div className={dm.mapEmpty}>
-          <MapPin className="h-5 w-5 text-altair-ink-muted" />
+          <MapPin className="h-5 w-5 text-altair-ink-on-graphite-muted" />
           <p className="text-sm font-semibold text-altair-paper">Map unavailable</p>
-          <p className="max-w-sm text-xs text-altair-ink-muted">
+          <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted">
             {loadState.status === "error"
               ? loadState.message
               : "Set NEXT_PUBLIC_MAPBOX_TOKEN to show job locations."}
@@ -132,7 +132,7 @@ export function DispatchMapPanel({
           <p className="text-sm font-semibold text-altair-paper">
             Locating job addresses…
           </p>
-          <p className="text-xs text-altair-ink-muted">
+          <p className="text-xs text-altair-ink-on-graphite-muted">
             Geocoding with cache — job pins only, no tracking.
           </p>
         </div>
@@ -148,7 +148,7 @@ export function DispatchMapPanel({
           <p className="text-sm font-semibold text-altair-paper">
             Could not load map pins
           </p>
-          <p className="max-w-sm text-xs text-altair-ink-muted">
+          <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted">
             {loadState.message}
           </p>
         </div>
@@ -160,11 +160,11 @@ export function DispatchMapPanel({
     return (
       <div className={dm.mapFrame}>
         <div className={dm.mapEmpty}>
-          <MapPin className="h-5 w-5 text-altair-ink-muted" />
+          <MapPin className="h-5 w-5 text-altair-ink-on-graphite-muted" />
           <p className="text-sm font-semibold text-altair-paper">
             No mappable job locations
           </p>
-          <p className="max-w-sm text-xs text-altair-ink-muted">
+          <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted">
             {jobs.length === 0
               ? "There are no jobs on today’s board to place on the map."
               : "Addresses could not be geocoded. Check service address fields and try again."}

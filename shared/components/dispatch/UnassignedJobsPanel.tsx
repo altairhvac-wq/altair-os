@@ -14,7 +14,7 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 
 const PRIORITY_BADGE: Record<DispatchJobPriority, string> = {
-  low: "bg-white/10 text-altair-ink-muted ring-white/15",
+  low: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
   normal: "bg-white/10 text-altair-paper ring-white/20",
   high: "bg-altair-warning/30 text-altair-warning ring-altair-warning/45",
   urgent: "bg-altair-danger/30 text-altair-danger ring-altair-danger/45",
@@ -91,7 +91,7 @@ export const UnassignedJobsPanel = memo(function UnassignedJobsPanel({
               >
                 <div className="flex items-start justify-between gap-1.5">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted tabular-nums">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted tabular-nums">
                       {job.jobNumber}
                     </p>
                     <p className="truncate text-[12px] font-semibold text-altair-paper">
@@ -116,7 +116,7 @@ export const UnassignedJobsPanel = memo(function UnassignedJobsPanel({
                   </div>
                 </div>
 
-                <div className="mt-1 flex items-start gap-1 text-[10px] text-altair-ink-muted">
+                <div className="mt-1 flex items-start gap-1 text-[10px] text-altair-ink-on-graphite-muted">
                   <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
                   <span className="line-clamp-2 leading-snug">
                     {formatFullAddress(job)}

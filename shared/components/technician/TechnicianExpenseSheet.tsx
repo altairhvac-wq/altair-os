@@ -111,7 +111,7 @@ export function TechnicianExpenseSheet({
               <MobileSheetFooterActions
                 onCancel={onClose}
                 submitLabel="Save receipt"
-                submittingLabel="Saving..."
+                submittingLabel="Saving…"
                 submitForm="technician-expense-form"
                 isSubmitting={isSubmitting}
               />

@@ -168,12 +168,41 @@ export function getCustomerInitials(name: string): string {
   return initials || cleaned.slice(0, 1).toUpperCase() || "?";
 }
 
+/**
+ * Whole-dollar currency for GLANCE surfaces only — dashboard KPIs, stat
+ * strips, chart axes, report headline numbers. Rounds: $1,234.56 renders as
+ * "$1,235".
+ *
+ * Never use this where money changes hands or where figures must reconcile.
+ * Rounded line items visibly fail to sum against a rounded total, and a
+ * rounded "Pay now" amount does not match what the card is actually charged.
+ * Those surfaces use `formatCurrencyExact`.
+ */
 export function formatCurrency(amount: number): string {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
+  }).format(safeAmount);
+}
+
+/**
+ * Exact currency, always two decimals — the required formatter for every
+ * surface where an amount is transacted, reconciled, or read as a figure of
+ * record: invoice and estimate documents (line items, subtotal, tax, total,
+ * balance), payment capture and history, and billing emails.
+ *
+ * Stripe charges the exact balance in cents, so the amount shown above a
+ * "Pay now" control must be the exact amount too.
+ */
+export function formatCurrencyExact(amount: number): string {
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(safeAmount);
 }
 

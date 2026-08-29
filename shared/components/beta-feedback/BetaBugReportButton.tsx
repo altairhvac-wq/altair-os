@@ -251,7 +251,7 @@ export function BetaBugReportButton({
                   <MobileSheetFooterActions
                     onCancel={handleClose}
                     submitLabel="Send feedback"
-                    submittingLabel="Sending..."
+                    submittingLabel="Sending…"
                     submitForm={FORM_ID}
                     isSubmitting={isSubmitting}
                     submitDisabled={!message.trim()}

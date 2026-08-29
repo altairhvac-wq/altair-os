@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 
 type PublicBillingCompactAmountProps = {
   label: string;
@@ -51,7 +51,7 @@ export function PublicBillingCompactAmount({
           isPrimary ? "text-2xl text-white" : "text-xl text-slate-900"
         }`}
       >
-        {displayValue ?? formatCurrency(amount)}
+        {displayValue ?? formatCurrencyExact(amount)}
       </p>
     </div>
   );

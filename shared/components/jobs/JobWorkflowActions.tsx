@@ -202,7 +202,10 @@ export function JobWorkflowActions({
                 ?.label ?? "Status");
         setSuccessMessage(`${actionLabel} updated successfully.`);
         onStatusUpdated?.(result.job.status);
-        window.setTimeout(() => router.refresh(), 500);
+        // Refresh immediately: the action already revalidated every affected
+        // path server-side, so the old 500ms delay only kept stale data on
+        // screen after the mutation had visibly succeeded.
+        router.refresh();
       } catch {
         setError(
           formatConnectionCatchError(

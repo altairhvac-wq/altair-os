@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import { Building2, Mail, Phone } from "lucide-react";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { DemoCustomerInitials } from "@/shared/components/display/DemoCustomerInitials";
@@ -82,7 +83,7 @@ export function JobDetailSideRailCustomerCard({
               className="flex items-center gap-2 text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
             >
               <Phone className="h-3.5 w-3.5 shrink-0 text-altair-ink-on-paper-muted" />
-              <span>{phone}</span>
+              <span>{formatPhoneForDisplay(phone)}</span>
             </a>
           ) : null}
           {!email && !phone ? (

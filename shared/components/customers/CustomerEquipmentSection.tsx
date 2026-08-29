@@ -367,7 +367,7 @@ export function CustomerEquipmentSection({
                 disabled={isPending}
                 className="inline-flex flex-1 items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isPending ? "Saving..." : editingEquipment ? "Save changes" : "Add equipment"}
+                {isPending ? "Saving…" : editingEquipment ? "Save changes" : "Add equipment"}
               </button>
             </AltairDialogFooter>
           </form>

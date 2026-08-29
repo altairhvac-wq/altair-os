@@ -5,7 +5,7 @@ import {
 } from "@/shared/components/marketing/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Terms of Service · Altair OS",
+  title: "Terms of Service",
   description:
     "The terms that govern your use of Altair OS, the operating system for field service businesses.",
 };

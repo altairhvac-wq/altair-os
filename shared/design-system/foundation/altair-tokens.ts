@@ -37,6 +37,9 @@ export type AltairSemanticRole =
   | "inkOnPaper"
   | "inkOnPaperSecondary"
   | "inkOnPaperMuted"
+  | "inkOnGraphite"
+  | "inkOnGraphiteSecondary"
+  | "inkOnGraphiteMuted"
   | "border"
   | "borderStrong"
   | "brass"
@@ -67,6 +70,9 @@ export const altairTokenVar: Record<AltairSemanticRole, string> = {
   inkOnPaper: "--altair-ink-on-paper",
   inkOnPaperSecondary: "--altair-ink-on-paper-secondary",
   inkOnPaperMuted: "--altair-ink-on-paper-muted",
+  inkOnGraphite: "--altair-ink-on-graphite",
+  inkOnGraphiteSecondary: "--altair-ink-on-graphite-secondary",
+  inkOnGraphiteMuted: "--altair-ink-on-graphite-muted",
   border: "--altair-border",
   borderStrong: "--altair-border-strong",
   brass: "--altair-brass",
@@ -102,6 +108,9 @@ export const altairTokenClassName: Record<AltairSemanticRole, string> = {
   inkOnPaper: "altair-ink-on-paper",
   inkOnPaperSecondary: "altair-ink-on-paper-secondary",
   inkOnPaperMuted: "altair-ink-on-paper-muted",
+  inkOnGraphite: "altair-ink-on-graphite",
+  inkOnGraphiteSecondary: "altair-ink-on-graphite-secondary",
+  inkOnGraphiteMuted: "altair-ink-on-graphite-muted",
   border: "altair-border",
   borderStrong: "altair-border-strong",
   brass: "altair-brass",

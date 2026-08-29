@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
@@ -9,6 +10,10 @@ import {
   TECHNICIAN_NOTIFICATION_TYPES,
 } from "@/shared/types/notification";
 import { TechnicianNotificationsView } from "@/shared/components/notifications/TechnicianNotificationsView";
+
+export const metadata: Metadata = {
+  title: "Notifications",
+};
 
 export default async function TechnicianNotificationsPage() {
   const context = await getActiveCompanyContext();

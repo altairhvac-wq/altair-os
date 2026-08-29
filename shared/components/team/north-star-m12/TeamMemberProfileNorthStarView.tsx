@@ -100,7 +100,7 @@ export function TeamMemberProfileNorthStarView({
   canViewProfitability,
   canEditProfitability,
   canViewWorkSummary,
-  backHref = "/settings/team",
+  backHref = "/settings/users",
   backLabel = "Team",
 }: TeamMemberProfileNorthStarViewProps) {
   const [profile, setProfile] = useState(initialProfile);
@@ -569,7 +569,7 @@ export function TeamMemberProfileNorthStarView({
                         disabled={isPending}
                         className={tm.saveButton}
                       >
-                        {isPending ? "Saving..." : "Save rate"}
+                        {isPending ? "Saving…" : "Save rate"}
                       </button>
                     </div>
                   ) : hasLaborRate ? (

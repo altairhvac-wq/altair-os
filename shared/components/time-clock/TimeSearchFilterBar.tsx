@@ -27,7 +27,7 @@ export function TimeSearchFilterBar({
           type="search"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search time entries..."
+          placeholder="Search time entries…"
           className="w-full min-h-11 rounded-xl border border-altair-border bg-altair-paper-elevated py-2.5 pl-10 pr-3 text-sm text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated"
         />
       </div>

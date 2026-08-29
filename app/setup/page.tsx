@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
@@ -13,6 +14,10 @@ import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertB
 
 type SetupPageProps = {
   searchParams: Promise<{ next?: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Set up your company",
 };
 
 export default async function SetupPage({ searchParams }: SetupPageProps) {

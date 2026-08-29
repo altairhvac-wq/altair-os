@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { CreditCard } from "lucide-react";
 import { createPublicInvoiceCheckoutSessionAction } from "@/app/actions/public-invoice-checkout";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 
 type PublicInvoicePayNowCardProps = {
   token: string;
@@ -48,7 +48,7 @@ export function PublicInvoicePayNowCard({
     <div className="rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-sm">
       <p className="text-sm font-bold text-slate-900">Pay securely online</p>
       <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
-        {formatCurrency(balanceDue)}
+        {formatCurrencyExact(balanceDue)}
       </p>
       <p className="mt-1 text-xs text-slate-600">Amount due</p>
       <button

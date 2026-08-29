@@ -1,4 +1,5 @@
 import { Calendar, MapPin, User } from "lucide-react";
+import { formatAddressLine } from "@/shared/lib/address";
 import type { Technician } from "@/shared/types/dispatch";
 import type { JobDetail } from "@/shared/types/job";
 import { JobTechnicianAssignment } from "@/shared/components/jobs/JobTechnicianAssignment";
@@ -49,7 +50,7 @@ export function JobDetailSideRailDispatchCard({
             <div className="min-w-0">
               <p className={altairMcMetricLabelClass}>Location</p>
               <p className="mt-0.5 text-xs text-altair-ink-on-paper-secondary">
-                {job.serviceAddress}, {job.city}, {job.state} {job.zip}
+                {formatAddressLine(job.serviceAddress, job.city, job.state, job.zip)}
               </p>
             </div>
           </div>

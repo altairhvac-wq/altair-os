@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { getCurrentUser } from "@/lib/database/auth";
@@ -39,6 +40,10 @@ async function loadSummarySafely(companyId: string): Promise<{
     };
   }
 }
+
+export const metadata: Metadata = {
+  title: "Activate subscription",
+};
 
 export default async function ActivateSubscriptionPage({
   searchParams,

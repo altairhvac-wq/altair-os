@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import {
   AlertTriangle,
   ArrowRight,
@@ -286,7 +287,7 @@ function IdentitySection({
               <p className="break-all sm:hidden">{identity.email}</p>
             ) : null}
             {identity.phone ? (
-              <p className="sm:hidden">{identity.phone}</p>
+              <p className="sm:hidden">{formatPhoneForDisplay(identity.phone)}</p>
             ) : null}
             <p className="hidden break-words sm:block">
               {[identity.email, identity.phone].filter(Boolean).join(" · ") ||

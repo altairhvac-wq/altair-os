@@ -112,7 +112,9 @@ function HealthBanner({
         <p className="text-sm font-semibold text-altair-ink">
           {healthy
             ? `${companyName} is in good shape`
-            : `${attentionCount} item${attentionCount === 1 ? "" : "s"} need attention`}
+            : `${attentionCount} ${
+                attentionCount === 1 ? "item needs" : "items need"
+              } attention`}
         </p>
         <p className="mt-0.5 text-xs leading-5 text-altair-ink-secondary sm:text-sm">
           {healthy

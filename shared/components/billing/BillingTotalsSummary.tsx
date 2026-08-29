@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import { formatTaxRate } from "@/shared/types/estimate";
 import type { BillingDocumentStyle } from "@/shared/lib/billing-document-style";
 
@@ -98,7 +98,7 @@ export function BillingTotalsSummary({
         <div className="ml-auto w-full max-w-[280px] space-y-1 print:max-w-[220px]">
           <InvoiceTotalsRow
             label="Subtotal"
-            value={formatCurrency(subtotal)}
+            value={formatCurrencyExact(subtotal)}
             labelClassName={
               northStar
                 ? "text-xs text-[#4F4638] print:text-slate-600"
@@ -113,7 +113,7 @@ export function BillingTotalsSummary({
           {showTax ? (
             <InvoiceTotalsRow
               label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
-              value={formatCurrency(taxAmount)}
+              value={formatCurrencyExact(taxAmount)}
               labelClassName={
                 northStar
                   ? "text-xs text-[#4F4638] print:text-slate-600"
@@ -142,7 +142,7 @@ export function BillingTotalsSummary({
         <div className="ml-auto w-full max-w-[280px] space-y-1.5 print:max-w-[240px]">
           <InvoiceTotalsRow
             label="Subtotal"
-            value={formatCurrency(subtotal)}
+            value={formatCurrencyExact(subtotal)}
             labelClassName={premiumLabelClass}
             valueClassName={premiumValueClass}
           />
@@ -150,7 +150,7 @@ export function BillingTotalsSummary({
           {showTax ? (
             <InvoiceTotalsRow
               label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
-              value={formatCurrency(taxAmount)}
+              value={formatCurrencyExact(taxAmount)}
               labelClassName={premiumLabelClass}
               valueClassName={premiumValueClass}
             />
@@ -162,7 +162,7 @@ export function BillingTotalsSummary({
                 {totalLabel}
               </span>
               <span className={northStar ? "text-xl font-bold tabular-nums text-[#17130E] sm:text-2xl print:text-xl print:text-slate-900" : "text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl print:text-2xl"}>
-                {formatCurrency(total)}
+                {formatCurrencyExact(total)}
               </span>
             </div>
           ) : null}
@@ -172,7 +172,7 @@ export function BillingTotalsSummary({
               {amountPaid > 0 ? (
                 <InvoiceTotalsRow
                   label="Paid"
-                  value={formatCurrency(amountPaid)}
+                  value={formatCurrencyExact(amountPaid)}
                   labelClassName="text-xs font-medium text-emerald-800 print:text-slate-700"
                   valueClassName="text-xs font-semibold tabular-nums text-emerald-800 print:text-slate-900"
                 />
@@ -183,7 +183,7 @@ export function BillingTotalsSummary({
                     Balance due
                   </span>
                   <span className="text-xl font-bold tabular-nums text-slate-900 sm:text-2xl print:text-xl">
-                    {formatCurrency(balanceDue)}
+                    {formatCurrencyExact(balanceDue)}
                   </span>
                 </div>
               ) : null}
@@ -198,7 +198,7 @@ export function BillingTotalsSummary({
     <div className={containerClass}>
       <TotalsRow
         label="Subtotal"
-        value={formatCurrency(subtotal)}
+        value={formatCurrencyExact(subtotal)}
         className={rowClass}
       />
 
@@ -206,7 +206,7 @@ export function BillingTotalsSummary({
         <div className="mt-2.5">
           <TotalsRow
             label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
-            value={formatCurrency(taxAmount)}
+            value={formatCurrencyExact(taxAmount)}
             className={rowClass}
           />
         </div>
@@ -216,7 +216,7 @@ export function BillingTotalsSummary({
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
           <span className="text-sm font-semibold text-slate-700">Total</span>
           <span className="shrink-0 text-lg font-bold tabular-nums text-slate-900 sm:text-xl">
-            {formatCurrency(total)}
+            {formatCurrencyExact(total)}
           </span>
         </div>
       ) : null}
@@ -226,7 +226,7 @@ export function BillingTotalsSummary({
           {amountPaid > 0 ? (
             <TotalsRow
               label="Paid"
-              value={formatCurrency(amountPaid)}
+              value={formatCurrencyExact(amountPaid)}
               className="text-sm text-emerald-700 print:text-slate-700"
               valueClassName="font-semibold print:text-slate-900"
             />
@@ -237,7 +237,7 @@ export function BillingTotalsSummary({
                 Amount due
               </span>
               <span className="shrink-0 text-lg font-bold tabular-nums text-amber-900 print:text-slate-900">
-                {formatCurrency(balanceDue)}
+                {formatCurrencyExact(balanceDue)}
               </span>
             </div>
           ) : null}

@@ -319,7 +319,7 @@ function buildTodaysOperationsCards(data: DashboardData): MissionControlOperatio
       value: String(working),
       trend: `${technicians.length} on roster`,
       icon: Users,
-      href: "/time",
+      href: "/payroll",
       tone: working > 0 ? "success" : "neutral",
     });
   } else {

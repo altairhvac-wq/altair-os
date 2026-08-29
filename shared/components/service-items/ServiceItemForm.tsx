@@ -182,7 +182,7 @@ export function ServiceItemForm({
           loading={isSubmitting}
           className="flex-1"
         >
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? "Saving…" : submitLabel}
         </Button>
         <Button
           type="button"

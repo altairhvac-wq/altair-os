@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canViewOperationalReports } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -8,6 +9,10 @@ import { parseReportsPageDateRange } from "@/shared/types/reports-page";
 
 type TaxSummaryPageProps = {
   searchParams: Promise<{ range?: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Tax summary",
 };
 
 export default async function TaxSummaryPage({ searchParams }: TaxSummaryPageProps) {

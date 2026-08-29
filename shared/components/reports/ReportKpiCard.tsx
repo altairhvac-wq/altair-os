@@ -61,7 +61,7 @@ function TrendIcon({ trend }: { trend?: ReportKpiMetric["trend"] }) {
 
   if (trend === "flat") {
     return (
-      <Minus className="h-3.5 w-3.5 text-altair-ink-muted" aria-hidden="true" />
+      <Minus className="h-3.5 w-3.5 text-altair-ink-on-graphite-muted" aria-hidden="true" />
     );
   }
 

@@ -223,7 +223,7 @@ function PendingInvitesCardContent({
                 )}
               >
                 <UserCheck className="h-4 w-4" aria-hidden="true" />
-                {isAccepting ? "Accepting..." : "Accept invite"}
+                {isAccepting ? "Accepting…" : "Accept invite"}
               </button>
             </div>
           );

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -27,6 +28,10 @@ type WorkPageProps = {
 };
 
 /** Work hub — hosts the Jobs list (Today/All, status pills, filters) unchanged. */
+export const metadata: Metadata = {
+  title: "Work",
+};
+
 export default async function WorkPage({ searchParams }: WorkPageProps) {
   const companyContext = await getActiveCompanyContext();
 

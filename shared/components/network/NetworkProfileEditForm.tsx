@@ -398,7 +398,7 @@ export function NetworkProfileEditForm({
             <button type="submit" disabled={isPending} className={saveClass}>
               <AdminPendingLabel
                 pending={isPending}
-                pendingLabel="Saving..."
+                pendingLabel="Saving…"
                 idleLabel="Save Profile"
               />
             </button>

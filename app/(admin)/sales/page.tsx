@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { canViewBilling } from "@/lib/database/access-control";
@@ -67,6 +68,10 @@ type SalesPageProps = {
 };
 
 /** Sales hub — Estimates, Invoices, Payments, and Estimate Pipeline panels. */
+export const metadata: Metadata = {
+  title: "Sales",
+};
+
 export default async function SalesPage({ searchParams }: SalesPageProps) {
   const companyContext = await getActiveCompanyContext();
 

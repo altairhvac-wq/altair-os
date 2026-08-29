@@ -66,7 +66,7 @@ export function AiBusinessSummaryCard({
           ) : summary ? (
             <>
               {summary.fromCache ? (
-                <p className="text-[11px] font-medium text-altair-ink-muted">
+                <p className="text-[11px] font-medium text-altair-ink-on-graphite-muted">
                   Cached for this period · generated{" "}
                   {formatGeneratedAt(summary.generatedAt)}
                 </p>
@@ -95,7 +95,7 @@ export function AiBusinessSummaryCard({
 
               <div className="flex flex-wrap items-center gap-3 border-t border-altair-border pt-3">
                 {!summary.fromCache ? (
-                  <p className="text-[11px] text-altair-ink-muted">
+                  <p className="text-[11px] text-altair-ink-on-graphite-muted">
                     Generated {formatGeneratedAt(summary.generatedAt)}
                   </p>
                 ) : null}

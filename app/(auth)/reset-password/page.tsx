@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/database/auth";
 import { ResetPasswordForm } from "@/shared/components/auth/ResetPasswordForm";
+
+export const metadata: Metadata = {
+  title: "Set a new password",
+};
 
 export default async function ResetPasswordPage() {
   const user = await getCurrentUser();

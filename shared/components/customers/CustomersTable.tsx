@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatCityStateZip } from "@/shared/lib/address";
 import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
@@ -187,7 +188,7 @@ export function CustomersTable({
                   <AltairTableCell
                     className={`hidden lg:table-cell ${cm.metaText}`}
                   >
-                    {customer.city}, {customer.state}
+                    {formatCityStateZip(customer.city, customer.state)}
                   </AltairTableCell>
                   <AltairTableCell
                     align="right"

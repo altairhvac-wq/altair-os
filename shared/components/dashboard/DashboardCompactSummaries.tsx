@@ -407,7 +407,7 @@ export function DashboardCompactTechnicianSummary({
       eyebrow="Team"
       title="Technician status"
       description={`${clockedIn} clocked in · ${working} on job · ${onBreak} on break`}
-      href="/time"
+      href="/payroll"
       linkLabel="Time tracking"
       panelId="today"
       panelButtonLabel="Roster details"

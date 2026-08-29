@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatAddressLine, formatCityStateZip } from "@/shared/lib/address";
 import { Calendar, Mail, MapPin, Phone, Tag } from "lucide-react";
 import { CustomerEditControl } from "../CustomerEditControl";
 import { CustomerLifecycleControl } from "../CustomerLifecycleControl";
@@ -40,7 +41,7 @@ export function CustomerDetailNorthStarHero({
   archived,
 }: CustomerDetailNorthStarHeroProps) {
   const showFinancialSummary = canViewBilling && financialSummary != null;
-  const location = `${customer.city}, ${customer.state}`;
+  const location = formatCityStateZip(customer.city, customer.state);
 
   return (
     <div className={dt.heroShell}>
@@ -124,7 +125,7 @@ export function CustomerDetailNorthStarHero({
         <div className={dt.metaRow}>
           <MapPin className={dt.metaIcon} />
           <span>
-            {customer.address}, {customer.city}, {customer.state} {customer.zip}
+            {formatAddressLine(customer.address, customer.city, customer.state, customer.zip)}
           </span>
         </div>
         <div className={`mt-1 ${dt.metaRow}`}>

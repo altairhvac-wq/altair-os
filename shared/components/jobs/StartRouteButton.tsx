@@ -99,7 +99,7 @@ export function StartRouteButton({
   const buttonLabel = isEnRoute
     ? "Open Maps Again"
     : isPending
-      ? "Updating..."
+      ? "Updating…"
       : "Start Route";
 
   const routeDisabled = isPending || competingSheetActive;

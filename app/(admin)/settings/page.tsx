@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canAccessSystemCheck } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -494,6 +495,10 @@ function buildReadinessMetrics(
     },
   ];
 }
+
+export const metadata: Metadata = {
+  title: "Settings",
+};
 
 export default async function SettingsPage({
   searchParams,

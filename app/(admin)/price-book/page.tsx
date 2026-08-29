@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canViewBilling } from "@/lib/database/access-control";
 import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
@@ -9,6 +10,10 @@ import {
   listServiceItems,
 } from "@/lib/database/queries/service-items";
 import { ServiceItemsPageView } from "@/shared/components/service-items/ServiceItemsPageView";
+
+export const metadata: Metadata = {
+  title: "Price book",
+};
 
 export default async function PriceBookPage() {
   const companyContext = await getActiveCompanyContext();

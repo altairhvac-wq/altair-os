@@ -99,7 +99,7 @@ export function IncomingNetworkInvitesCard({
             className={acceptButtonClass}
           >
             <UserCheck className="h-4 w-4" aria-hidden="true" />
-            {isAccepting ? "Accepting..." : "Accept Invitation"}
+            {isAccepting ? "Accepting…" : "Accept Invitation"}
           </button>
         </div>
         {!canAccept ? (
@@ -204,7 +204,7 @@ export function IncomingNetworkInvitesCard({
                   className={`${acceptButtonClass} w-full sm:w-auto`}
                 >
                   <UserCheck className="h-4 w-4" aria-hidden="true" />
-                  {isAccepting ? "Accepting..." : "Accept"}
+                  {isAccepting ? "Accepting…" : "Accept"}
                 </button>
               </div>
             </article>

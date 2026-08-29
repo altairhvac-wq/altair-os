@@ -121,7 +121,7 @@ export function TechnicianEstimateSheet({
               <MobileSheetFooterActions
                 onCancel={onClose}
                 submitLabel="Save draft"
-                submittingLabel="Saving..."
+                submittingLabel="Saving…"
                 submitForm="technician-estimate-form"
                 isSubmitting={isSubmitting}
               />

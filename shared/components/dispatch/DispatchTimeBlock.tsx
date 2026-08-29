@@ -35,7 +35,7 @@ const BLOCK_PRIORITY_ACCENT: Record<DispatchJobPriority, string> = {
 };
 
 const BLOCK_PRIORITY_BADGE: Record<DispatchJobPriority, string> = {
-  low: "bg-white/10 text-altair-ink-muted ring-white/15",
+  low: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
   normal: "bg-altair-information/25 text-altair-paper ring-altair-information/40",
   high: "bg-altair-warning/30 text-altair-warning ring-altair-warning/45",
   urgent: "bg-altair-danger/30 text-altair-danger ring-altair-danger/45",
@@ -47,7 +47,7 @@ const BLOCK_STATUS_BADGE: Record<DispatchJobStatus, string> = {
   arrived: "bg-altair-information/30 text-altair-paper ring-altair-information/40",
   in_progress: "bg-altair-warning/30 text-altair-warning ring-altair-warning/40",
   completed: "bg-altair-success/25 text-altair-success ring-altair-success/40",
-  cancelled: "bg-white/10 text-altair-ink-muted ring-white/15",
+  cancelled: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
 };
 
 const BADGE_BASE =

@@ -25,7 +25,13 @@ export function AdminPendingLabel({
         className={`${spinnerClassName} shrink-0 animate-spin`}
         aria-hidden="true"
       />
-      <span>{pendingLabel}</span>
+      {/*
+       * `role="status"` (an implicit polite live region) so the swap from the
+       * idle label to "Saving…" is announced. Without it, a text change
+       * inside the button the user just activated is silent to screen
+       * readers, leaving no feedback that the submission started.
+       */}
+      <span role="status">{pendingLabel}</span>
     </>
   );
 }

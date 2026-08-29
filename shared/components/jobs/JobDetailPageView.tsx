@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
+import { formatCityStateZip } from "@/shared/lib/address";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { DemoCustomerInitials } from "@/shared/components/display/DemoCustomerInitials";
 import type { ReactNode } from "react";
@@ -203,7 +205,7 @@ function LegacyJobDetailBody({
                   {job.serviceAddress}
                   <span className="font-normal text-slate-600">
                     {" · "}
-                    {job.city}, {job.state} {job.zip}
+                    {formatCityStateZip(job.city, job.state, job.zip)}
                   </span>
                 </p>
                 <div className="mt-2">
@@ -309,7 +311,7 @@ function LegacyJobDetailBody({
                 className="inline-flex items-center gap-2 text-sm text-cyan-600 transition-colors hover:text-cyan-700"
               >
                 <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-                {customerPhone}
+                {formatPhoneForDisplay(customerPhone)}
               </a>
             ) : null}
             {!customerEmail && !customerPhone ? (

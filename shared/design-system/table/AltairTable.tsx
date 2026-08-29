@@ -121,11 +121,18 @@ export type AltairTableHeadProps = ThHTMLAttributes<HTMLTableCellElement> & {
 export function AltairTableHead({
   align = "left",
   className = "",
+  scope = "col",
   children,
   ...rest
 }: PropsWithChildren<AltairTableHeadProps>) {
   return (
     <th
+      // Ledgers here hide and reveal columns per breakpoint, so which cells
+      // sit under which header changes with viewport width. Explicit
+      // `scope="col"` keeps the screen-reader column association correct
+      // instead of relying on the browser's inference. Callers can still
+      // override it (e.g. `scope="row"` for a row-header cell).
+      scope={scope}
       className={[
         "admin-table-cell altair-table-head",
         align === "right" ? "text-right" : "",

@@ -201,7 +201,7 @@ export function JobTechnicianAssignment({
               >
                 <UserMinus className="h-4 w-4" />
                 {pendingAction === "unassign" && isPending
-                  ? "Unassigning..."
+                  ? "Unassigning…"
                   : "Unassign technician"}
               </button>
             ) : null}
@@ -251,7 +251,7 @@ export function JobTechnicianAssignment({
             >
               <UserPlus className="h-4 w-4" />
               {pendingAction === "assign" && isPending
-                ? "Saving..."
+                ? "Saving…"
                 : isAssigned
                   ? "Change technician"
                   : "Assign technician"}

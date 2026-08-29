@@ -3,7 +3,7 @@ import {
   formatBillingCompanyContactLines,
   type BillingCompanyContact,
 } from "@/shared/lib/billing-company-contact";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 import {
   calculateLineItemTotal,
   formatTaxRate,
@@ -142,7 +142,7 @@ export function formatEstimateTotalHeroHtml(input: {
             <tr>
               <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;">Estimated total</td>
               <td align="right" style="padding:0;color:#18181b;font-size:20px;font-weight:700;line-height:1.2;white-space:nowrap;">
-                ${escapeBillingEmailHtml(formatCurrency(input.total))}
+                ${escapeBillingEmailHtml(formatCurrencyExact(input.total))}
               </td>
             </tr>
             <tr>
@@ -169,7 +169,7 @@ export function formatInvoiceAmountDueHeroHtml(input: {
   const heroLabel = isPaidInFull ? "Status" : "Amount due";
   const heroValue = isPaidInFull
     ? "Paid in full"
-    : formatCurrency(input.balanceDue);
+    : formatCurrencyExact(input.balanceDue);
 
   const metaLines: string[] = [
     `Issued ${formatDate(input.issuedDate, input.timeZone)}`,
@@ -186,13 +186,13 @@ export function formatInvoiceAmountDueHeroHtml(input: {
       <tr>
         <td style="padding:4px 0 0;color:#71717a;font-size:12px;line-height:1.4;">Invoice total</td>
         <td align="right" style="padding:4px 0 0;color:#52525b;font-size:12px;line-height:1.4;white-space:nowrap;">
-          ${escapeBillingEmailHtml(formatCurrency(input.total))}
+          ${escapeBillingEmailHtml(formatCurrencyExact(input.total))}
         </td>
       </tr>
       <tr>
         <td style="padding:2px 0 0;color:#71717a;font-size:12px;line-height:1.4;">Amount paid</td>
         <td align="right" style="padding:2px 0 0;color:#52525b;font-size:12px;line-height:1.4;white-space:nowrap;">
-          ${escapeBillingEmailHtml(formatCurrency(input.amountPaid))}
+          ${escapeBillingEmailHtml(formatCurrencyExact(input.amountPaid))}
         </td>
       </tr>
     `.trim());
@@ -343,7 +343,7 @@ export function formatInvoicePaymentGuidanceHtml(input: {
       <tr>
         <td style="padding:10px 12px;border:1px solid #e4e4e7;background:#fafafa;color:#3f3f46;font-size:13px;line-height:1.5;">
           ${contactSentence}
-          Payment of ${escapeBillingEmailHtml(formatCurrency(input.balanceDue))}
+          Payment of ${escapeBillingEmailHtml(formatCurrencyExact(input.balanceDue))}
           is due by ${escapeBillingEmailHtml(formatDate(input.dueDate, input.timeZone))}.
         </td>
       </tr>
@@ -386,7 +386,7 @@ export function formatInvoicePaymentGuidanceText(input: {
   return [
     "How to pay",
     contactSentence,
-    `Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}.`,
+    `Payment of ${formatCurrencyExact(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}.`,
   ].join("\n");
 }
 
@@ -400,7 +400,7 @@ export function formatBillingEmailLineItemsText(
   return lineItems
     .map((item) => {
       const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
-      return `- ${item.name} · ${item.quantity} × ${formatCurrency(item.unitPrice)} = ${formatCurrency(lineTotal)}`;
+      return `- ${item.name} · ${item.quantity} × ${formatCurrencyExact(item.unitPrice)} = ${formatCurrencyExact(lineTotal)}`;
     })
     .join("\n");
 }
@@ -421,7 +421,7 @@ export function formatBillingEmailLineItemsHtml(
   const rows = lineItems
     .map((item) => {
       const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
-      const qtyRate = `${item.quantity} × ${formatCurrency(item.unitPrice)}`;
+      const qtyRate = `${item.quantity} × ${formatCurrencyExact(item.unitPrice)}`;
 
       return `
         <tr>
@@ -432,7 +432,7 @@ export function formatBillingEmailLineItemsHtml(
                   ${escapeBillingEmailHtml(item.name)}
                 </td>
                 <td align="right" valign="top" style="padding:0 0 0 12px;color:#18181b;font-size:14px;line-height:1.4;font-weight:600;white-space:nowrap;">
-                  ${escapeBillingEmailHtml(formatCurrency(lineTotal))}
+                  ${escapeBillingEmailHtml(formatCurrencyExact(lineTotal))}
                 </td>
               </tr>
               <tr>
@@ -473,22 +473,22 @@ export function formatBillingEmailTotalsText(input: {
   amountPaid?: number;
   balanceDue?: number;
 }): string {
-  const lines = [`Subtotal: ${formatCurrency(input.subtotal)}`];
+  const lines = [`Subtotal: ${formatCurrencyExact(input.subtotal)}`];
 
   if (input.taxRate > 0 || input.taxAmount > 0) {
     lines.push(
-      `Tax${input.taxRate > 0 ? ` (${formatTaxRate(input.taxRate)}%)` : ""}: ${formatCurrency(input.taxAmount)}`,
+      `Tax${input.taxRate > 0 ? ` (${formatTaxRate(input.taxRate)}%)` : ""}: ${formatCurrencyExact(input.taxAmount)}`,
     );
   }
 
-  lines.push(`Total: ${formatCurrency(input.total)}`);
+  lines.push(`Total: ${formatCurrencyExact(input.total)}`);
 
   if (typeof input.amountPaid === "number" && input.amountPaid > 0) {
-    lines.push(`Amount paid: ${formatCurrency(input.amountPaid)}`);
+    lines.push(`Amount paid: ${formatCurrencyExact(input.amountPaid)}`);
   }
 
   if (typeof input.balanceDue === "number" && input.balanceDue > 0) {
-    lines.push(`Balance due: ${formatCurrency(input.balanceDue)}`);
+    lines.push(`Balance due: ${formatCurrencyExact(input.balanceDue)}`);
   }
 
   return lines.join("\n");
@@ -524,21 +524,21 @@ export function formatBillingEmailTotalsHtml(input: {
     `.trim();
   };
 
-  const rows = [row("Subtotal", formatCurrency(input.subtotal))];
+  const rows = [row("Subtotal", formatCurrencyExact(input.subtotal))];
 
   if (input.taxRate > 0 || input.taxAmount > 0) {
     rows.push(
       row(
         `Tax${input.taxRate > 0 ? ` (${formatTaxRate(input.taxRate)}%)` : ""}`,
-        formatCurrency(input.taxAmount),
+        formatCurrencyExact(input.taxAmount),
       ),
     );
   }
 
-  rows.push(row("Total", formatCurrency(input.total), { strong: true }));
+  rows.push(row("Total", formatCurrencyExact(input.total), { strong: true }));
 
   if (typeof input.amountPaid === "number" && input.amountPaid > 0) {
-    rows.push(row("Amount paid", formatCurrency(input.amountPaid)));
+    rows.push(row("Amount paid", formatCurrencyExact(input.amountPaid)));
   }
 
   if (
@@ -547,7 +547,7 @@ export function formatBillingEmailTotalsHtml(input: {
     input.highlightBalance
   ) {
     rows.push(
-      row("Balance due", formatCurrency(input.balanceDue), { highlight: true }),
+      row("Balance due", formatCurrencyExact(input.balanceDue), { highlight: true }),
     );
   }
 

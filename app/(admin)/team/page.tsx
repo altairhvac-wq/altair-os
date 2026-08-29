@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   canCorrectCompanyTimeEntries,
@@ -64,6 +65,10 @@ function technicianRosterToTeamMembers(
       memberShareCode: null,
     }));
 }
+
+export const metadata: Metadata = {
+  title: "Team",
+};
 
 export default async function TeamPage() {
   const companyContext = await getActiveCompanyContext();

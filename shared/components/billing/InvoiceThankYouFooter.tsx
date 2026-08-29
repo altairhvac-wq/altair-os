@@ -1,4 +1,5 @@
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 
 type InvoiceThankYouFooterProps = {
   company: BillingCompanyContact;
@@ -47,7 +48,7 @@ export function InvoiceThankYouFooter({
             {phone ? (
               <>
                 Call{" "}
-                <span className="font-semibold text-slate-900">{phone}</span>
+                <span className="font-semibold text-slate-900">{formatPhoneForDisplay(phone)}</span>
               </>
             ) : null}
             {phone && email ? " or email " : email ? "Email " : null}

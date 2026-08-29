@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   canAccessCompanySettings,
   canManageDemoData,
@@ -35,6 +36,10 @@ async function loadDemoDataStatus(
  * timezone, connections, and workspace data. Former /settings/preferences,
  * /settings/documents, and /settings/integrations redirect here.
  */
+export const metadata: Metadata = {
+  title: "Company settings",
+};
+
 export default async function CompanySettingsPage() {
   const companyContext = await getActiveCompanyContext();
 

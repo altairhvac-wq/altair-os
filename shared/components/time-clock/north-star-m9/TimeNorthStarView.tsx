@@ -169,7 +169,7 @@ export function TimeNorthStarView({
         {initialJobId && initialJobLabel ? (
           <JobContextFilterBanner
             jobLabel={initialJobLabel}
-            clearHref="/time"
+            clearHref="/payroll"
           />
         ) : null}
 

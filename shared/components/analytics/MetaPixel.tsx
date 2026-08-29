@@ -18,7 +18,7 @@ let lastTrackedPathname: string | null = null;
 /**
  * Loads Meta Pixel once at the app root and tracks SPA navigations.
  *
- * Future Lead: fire `metaPixel.event("Lead", { content_name: "..." })`
+ * Future Lead: fire `metaPixel.event("Lead", { content_name: "…" })`
  * only after a successful demo-request / contact / signup acceptance —
  * never on form open, click, submit start, or failure.
  */

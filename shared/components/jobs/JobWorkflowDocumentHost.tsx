@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { formatAddressLine } from "@/shared/lib/address";
 import { createEstimateAction } from "@/app/actions/estimates";
 import { createInvoiceAction } from "@/app/actions/invoices";
 import { updateJobAction } from "@/app/actions/jobs";
@@ -136,7 +137,7 @@ function WorkScopePanel({
           Service address
         </h3>
         <p className="mt-1.5 text-sm text-slate-700">
-          {job.serviceAddress}, {job.city}, {job.state} {job.zip}
+          {formatAddressLine(job.serviceAddress, job.city, job.state, job.zip)}
         </p>
       </section>
       <dl className="grid grid-cols-3 gap-3 text-sm">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { ArrowLeft, Briefcase, FileText, Mail, Phone, Printer, User } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 import {
   canRecordInvoicePayment,
   getRecordPaymentBlockReason,
@@ -245,10 +245,10 @@ function LegacyInvoiceDetailPageView({
                   <>
                     <InvoiceStatusBadge status={invoice.status} />
                     <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
-                      {formatCurrency(invoice.total)}
+                      {formatCurrencyExact(invoice.total)}
                     </span>
                     <span className="hidden text-sm text-slate-500 sm:inline">
-                      Balance {formatCurrency(invoice.balanceDue)}
+                      Balance {formatCurrencyExact(invoice.balanceDue)}
                     </span>
                   </>
                 ) : null}

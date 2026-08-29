@@ -6,7 +6,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
@@ -108,7 +108,7 @@ export function EstimateDetailNorthStarSideRail({
             >
               <Receipt className="h-3.5 w-3.5 shrink-0" />
               <span className="min-w-0 break-words text-sm font-semibold text-altair-ink-on-paper">
-                {linkedInvoice.invoiceNumber} — {formatCurrency(linkedInvoice.total)}
+                {linkedInvoice.invoiceNumber} — {formatCurrencyExact(linkedInvoice.total)}
               </span>
             </Link>
           </div>

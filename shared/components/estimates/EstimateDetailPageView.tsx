@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { EstimateActivity } from "@/shared/types/estimate-activity";
@@ -232,7 +232,7 @@ function LegacyEstimateDetailPageView({
                   <>
                     <EstimateStatusBadge status={estimate.status} />
                     <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
-                      {formatCurrency(estimate.total)}
+                      {formatCurrencyExact(estimate.total)}
                     </span>
                   </>
                 ) : null}
@@ -353,7 +353,7 @@ function LegacyEstimateDetailPageView({
               >
                 <Receipt className="h-4 w-4 shrink-0" />
                 <span className="min-w-0 break-words">
-                  {linkedInvoice.invoiceNumber} — {formatCurrency(linkedInvoice.total)}
+                  {linkedInvoice.invoiceNumber} — {formatCurrencyExact(linkedInvoice.total)}
                 </span>
               </Link>
             </section>

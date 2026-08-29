@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getCurrentUser } from "@/lib/database/auth";
@@ -23,6 +24,10 @@ type MarketingPageProps = {
     facebook_error?: string;
     pages?: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Marketing",
 };
 
 export default async function MarketingPage({

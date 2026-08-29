@@ -110,7 +110,7 @@ export function TechnicianMaterialSheet({
               <MobileSheetFooterActions
                 onCancel={onClose}
                 submitLabel="Log material"
-                submittingLabel="Saving..."
+                submittingLabel="Saving…"
                 submitForm="technician-material-form"
                 isSubmitting={isSubmitting}
               />

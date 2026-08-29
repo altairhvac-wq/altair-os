@@ -187,7 +187,7 @@ export function CompleteJobEquipmentPanel({
                 className={technicianFieldCloseoutInputClass}
               >
                 <option value="">
-                  {loading ? "Loading equipment..." : "Choose equipment to update"}
+                  {loading ? "Loading equipment…" : "Choose equipment to update"}
                 </option>
                 {equipment.map((item) => (
                   <option key={item.id} value={item.id}>

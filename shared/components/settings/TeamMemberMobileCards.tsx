@@ -328,7 +328,7 @@ export function TeamMemberMobileCards({
               }
               className={buttonClassName("primary", "md")}
             >
-              {isPending ? "Updating..." : "Confirm role change"}
+              {isPending ? "Updating…" : "Confirm role change"}
             </button>
           </div>
         </SettingsAlertBanner>
@@ -515,7 +515,7 @@ export function TeamMemberMobileCards({
                           }`}
                         >
                           {isRowPending
-                            ? "Working..."
+                            ? "Working…"
                             : confirmingStatusAction === "suspend"
                               ? "Confirm suspend"
                               : confirmingStatusAction === "reactivate"

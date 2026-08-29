@@ -104,8 +104,8 @@ export function TechniciansPageView({
         {technicians.length === 0 && !loadError ? (
           <EmptyState
             title="No technicians yet"
-            description="Invite teammates with the Technician role from Settings → Team."
-            action={{ label: "Open team settings", href: "/settings/team" }}
+            description="Invite teammates with the Technician role from Settings → Users."
+            action={{ label: "Open team settings", href: "/settings/users" }}
           />
         ) : (
           <div className={altairMcListClass}>

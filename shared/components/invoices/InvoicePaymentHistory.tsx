@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 import { resolveAttributionDisplayLabel } from "@/shared/lib/profile-attribution";
 import {
   formatPaymentMethod,
@@ -62,7 +62,7 @@ export function InvoicePaymentHistory({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className={northStar ? "text-sm font-semibold text-emerald-800" : "text-sm font-semibold text-emerald-700"}>
-                    {formatCurrency(payment.amount)}
+                    {formatCurrencyExact(payment.amount)}
                   </p>
                   <p className={northStar ? `mt-0.5 text-sm ${dt.ivoryCardSecondary}` : "mt-0.5 text-sm text-slate-700"}>
                     {formatPaymentMethod(payment.paymentMethod)}
@@ -119,7 +119,7 @@ export function InvoicePaymentHistory({
                   {formatDate(payment.paymentDate)}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-emerald-700">
-                  {formatCurrency(payment.amount)}
+                  {formatCurrencyExact(payment.amount)}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
                   {formatPaymentMethod(payment.paymentMethod)}

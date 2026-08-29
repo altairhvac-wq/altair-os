@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
@@ -31,6 +32,10 @@ const TIME_STATE_DOT_CLASSES: Record<string, string> = {
   on_break: "bg-amber-400",
   working_job: "bg-cyan-400",
   off_clock: "bg-slate-400",
+};
+
+export const metadata: Metadata = {
+  title: "Home",
 };
 
 export default async function TechnicianPage({

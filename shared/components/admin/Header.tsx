@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Search } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   canAccessOperationalJobsArea,
   getCompanyAccessScope,
@@ -172,17 +172,14 @@ export function Header({
       </div>
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-        <button
-          type="button"
-          className={`hidden rounded-lg p-2 transition-colors sm:inline-flex ${
-            northStarChrome
-              ? "north-star-header-search"
-              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 md:text-slate-400 md:hover:bg-white/10 md:hover:text-slate-200"
-          }`}
-          aria-label="Search"
-        >
-          <Search className="h-5 w-5" />
-        </button>
+        {/*
+         * No global Search control here. A Search button used to ship in this
+         * slot with no onClick, no form, and no dialog — it was announced to
+         * screen readers as "Search, button" on every admin page and did
+         * nothing when activated. Global search does not exist yet (each list
+         * page owns its own search field); restore this only alongside a real
+         * command palette or search route.
+         */}
         <NotificationBell
           initialNotifications={notifications}
           initialUnreadCount={unreadNotificationCount}

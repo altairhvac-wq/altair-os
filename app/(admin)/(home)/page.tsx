@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { canManageDemoData } from "@/lib/database/access-control";
@@ -7,6 +8,10 @@ import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapsho
 import { getDashboardData } from "@/lib/database/services/dashboard";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function DashboardPage() {
   const companyContext = await getActiveCompanyContext();

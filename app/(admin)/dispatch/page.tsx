@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCompanyAccessScope, canAccessOperationalJobsArea, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -22,6 +23,10 @@ type DispatchPageProps = {
     date?: string;
     technicianId?: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Dispatch",
 };
 
 export default async function DispatchPage({ searchParams }: DispatchPageProps) {

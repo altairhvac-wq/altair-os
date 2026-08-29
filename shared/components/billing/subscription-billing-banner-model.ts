@@ -48,7 +48,29 @@ export function getSubscriptionBillingBannerModel(
   const graceEnds = formatDateLabel(access.graceEndsAt);
 
   switch (access.state) {
-    case "TRIAL":
+    case "TRIAL": {
+      // The resolver can still report TRIAL after `trialEndsAt` has passed
+      // (the state only moves when billing is re-evaluated), which left the
+      // shell promising "Trial ends Aug 13" for weeks after Aug 13.
+      //
+      // `trialHasEnded` is decided on the server and serialized with the rest
+      // of `access`. This function runs inside a "use client" banner, so it
+      // must NOT read the clock itself — server and client would evaluate it
+      // at different instants and render different text on either side of the
+      // trial boundary, which React reports as a hydration mismatch.
+      if (access.trialHasEnded && trialEnds) {
+        return {
+          tone: "warning",
+          title: "Trial ended",
+          shortLabel: `Trial ended ${trialEnds}`,
+          description: canManageBilling
+            ? `Your free trial ended ${trialEnds}. Contact support to set up billing and keep full access.`
+            : `Your company's free trial ended ${trialEnds}. An owner or admin can set up billing.`,
+          showManageAction: canManageBilling,
+          role: "status",
+        };
+      }
+
       return {
         tone: "info",
         title: "Trial period",
@@ -63,6 +85,7 @@ export function getSubscriptionBillingBannerModel(
         showManageAction: canManageBilling,
         role: "status",
       };
+    }
 
     case "GRACE":
       return {

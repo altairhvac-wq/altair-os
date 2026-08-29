@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   canManageOnlineCheckout,
   canRefreshStripePaymentAccountStatus,
@@ -148,6 +149,10 @@ async function loadCardFailuresSafely(companyId: string): Promise<{
     };
   }
 }
+
+export const metadata: Metadata = {
+  title: "Billing",
+};
 
 export default async function BillingSettingsPage({
   searchParams,

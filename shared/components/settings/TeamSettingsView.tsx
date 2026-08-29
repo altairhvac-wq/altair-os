@@ -140,7 +140,7 @@ export function TeamSettingsView({
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search members..."
+            placeholder="Search members…"
             aria-label="Search team members"
             className={`${fieldSearchClass} ml-auto w-full sm:w-auto sm:max-w-xs`}
           />

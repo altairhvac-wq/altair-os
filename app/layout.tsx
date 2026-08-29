@@ -36,7 +36,16 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Altair OS",
+  /**
+   * Route segments set only their own name (`title: "Customers"`); this
+   * template supplies the product suffix so browser tabs, history entries,
+   * and bookmarks are distinguishable in a multi-tab workflow. `default`
+   * covers segments that set no title of their own.
+   */
+  title: {
+    template: "%s · Altair OS",
+    default: "Altair OS",
+  },
   applicationName: "Altair OS",
   description: "Field service command center for trades companies",
   appleWebApp: {

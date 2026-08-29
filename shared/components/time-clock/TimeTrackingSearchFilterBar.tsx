@@ -41,7 +41,7 @@ export function TimeTrackingSearchFilterBar({
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search time entries..."
+              placeholder="Search time entries…"
               className={`${lt.filterSelect} w-full pl-9`}
             />
           </div>
@@ -88,7 +88,7 @@ export function TimeTrackingSearchFilterBar({
             type="search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search time entries..."
+            placeholder="Search time entries…"
             className={legacySearchClass}
           />
         </div>

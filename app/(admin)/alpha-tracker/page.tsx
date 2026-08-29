@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listAlphaTrackerItems } from "@/lib/database/queries/alpha-tracker-items";
 import { AlphaTrackerPageView } from "@/shared/components/alpha-tracker/AlphaTrackerPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+
+export const metadata: Metadata = {
+  title: "Feedback",
+};
 
 export default async function AlphaTrackerPage() {
   const companyContext = await getActiveCompanyContext();

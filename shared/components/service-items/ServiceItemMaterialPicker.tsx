@@ -101,7 +101,7 @@ export function ServiceItemMaterialPicker({
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search price book..."
+              placeholder="Search price book…"
               disabled={disabled}
               autoComplete="off"
               className={`${inputClass} pl-10`}

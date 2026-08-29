@@ -299,7 +299,7 @@ export function ReceiptUploadBox({
             </div>
             <p className="mt-3 text-sm font-semibold text-slate-800">
               {isPending
-                ? "Uploading receipt..."
+                ? "Uploading receipt…"
                 : displayFileName
                   ? displayFileName
                   : captureEnvironment

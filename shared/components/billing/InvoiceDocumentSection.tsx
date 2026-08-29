@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 import type { BillingDocumentLayoutVariant } from "@/shared/lib/billing-document-style";
@@ -184,7 +185,7 @@ export function InvoiceDocumentSection({
               {customerEmail ? (
                 <p className="break-all">{customerEmail}</p>
               ) : null}
-              {customerPhone ? <p>{customerPhone}</p> : null}
+              {customerPhone ? <p>{formatPhoneForDisplay(customerPhone)}</p> : null}
             </div>
           ) : null}
         </div>

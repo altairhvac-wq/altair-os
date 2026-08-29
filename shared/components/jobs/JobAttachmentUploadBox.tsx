@@ -245,7 +245,7 @@ export function JobAttachmentUploadBox({
         </div>
         <p className="mt-3 text-sm font-semibold text-slate-800">
           {isPending
-            ? "Uploading..."
+            ? "Uploading…"
             : captureEnvironment
               ? "Tap to take or upload photo"
               : "Tap to upload photo or file"}

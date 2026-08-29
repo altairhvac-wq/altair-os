@@ -90,7 +90,7 @@ export const DispatchTimeGrid = memo(function DispatchTimeGrid({
   if (technicians.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-altair-border px-4 py-8 text-center">
-        <p className="text-sm text-altair-ink-muted">
+        <p className="text-sm text-altair-ink-on-graphite-muted">
           No technicians to show on today&apos;s board.
         </p>
       </div>

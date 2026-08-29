@@ -109,7 +109,7 @@ function RevenueSourcesDonut({
         <span className="text-lg font-extrabold tabular-nums tracking-tight text-altair-paper">
           {formatCurrency(total)}
         </span>
-        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-altair-ink-muted">
+        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-altair-ink-on-graphite-muted">
           Total
         </span>
       </div>
@@ -150,7 +150,7 @@ function LegendList({
                 />
                 <span className="truncate">{item.label}</span>
               </span>
-              <span className="shrink-0 text-xs tabular-nums text-altair-ink-muted">
+              <span className="shrink-0 text-xs tabular-nums text-altair-ink-on-graphite-muted">
                 <span className={`font-semibold ${item.textClass}`}>
                   {formatCurrency(item.value)}
                 </span>
@@ -199,7 +199,7 @@ export function TopRevenueSourcesChartCard({
       <div className={`${altairReportCardClass} ${altairReportCardPadTier2Class}`}>
         {!hasData ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed border-altair-border bg-white/[0.03] px-4 py-6 text-center">
-            <p className="max-w-sm text-xs text-altair-ink-muted sm:text-sm">
+            <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted sm:text-sm">
               Service category revenue appears once jobs are completed and paid.
             </p>
           </div>

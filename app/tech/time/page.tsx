@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
@@ -5,6 +6,10 @@ import {
   getTodayTimeEntries,
 } from "@/lib/database/services/time-tracking";
 import { TechnicianTimeView } from "@/shared/components/technician/TechnicianTimeView";
+
+export const metadata: Metadata = {
+  title: "Time",
+};
 
 export default async function TechnicianTimePage() {
   const context = await getActiveCompanyContext();

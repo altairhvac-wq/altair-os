@@ -173,6 +173,18 @@ export type CompanyBillingAccess = {
   warnings: string[];
   trialEndsAt: string | null;
   graceEndsAt: string | null;
+  /**
+   * Whether `trialEndsAt` is already in the past, decided ONCE on the server
+   * against the same instant the policy decision used.
+   *
+   * `state` alone cannot answer this: it only moves when billing is
+   * re-evaluated, so a company can sit in `TRIAL` for days after its trial
+   * end date. Consumers must not recompute this from the clock — this object
+   * is serialized into client components, and a `Date.now()` read there
+   * produces different text on the server and on the client, which is a
+   * hydration mismatch.
+   */
+  trialHasEnded: boolean;
   isComped: boolean;
   planKey: SaasPlanKey;
   status: SaasSubscriptionStatus | null;

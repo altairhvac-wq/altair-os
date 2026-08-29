@@ -62,7 +62,7 @@ export function TopPerformersChartCard({
       <div className={`${altairReportCardClass} ${altairReportCardPadTier2Class}`}>
         {!hasData ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed border-altair-border bg-white/[0.03] px-4 py-6 text-center">
-            <p className="max-w-sm text-xs text-altair-ink-muted sm:text-sm">
+            <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted sm:text-sm">
               Technician performance appears once jobs and labor are recorded.
             </p>
           </div>
@@ -73,7 +73,7 @@ export function TopPerformersChartCard({
                 key={technician.technicianId}
                 className="flex items-start gap-3 rounded-lg border border-altair-border bg-white/[0.04] px-3 py-2.5"
               >
-                <span className="mt-1.5 w-4 shrink-0 text-center text-xs font-bold tabular-nums text-altair-ink-muted">
+                <span className="mt-1.5 w-4 shrink-0 text-center text-xs font-bold tabular-nums text-altair-ink-on-graphite-muted">
                   {index + 1}
                 </span>
 
@@ -85,7 +85,7 @@ export function TopPerformersChartCard({
                       <p className="truncate text-[13px] font-semibold text-altair-paper">
                         {technician.name}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-altair-ink-muted">
+                      <p className="mt-0.5 text-[11px] text-altair-ink-on-graphite-muted">
                         {formatJobCount(technician.jobCount)}
                       </p>
                     </div>
@@ -96,7 +96,7 @@ export function TopPerformersChartCard({
 
                   {technician.profitAvailable &&
                   technician.grossProfit != null ? (
-                    <p className="mt-1 text-[11px] tabular-nums text-altair-ink-muted">
+                    <p className="mt-1 text-[11px] tabular-nums text-altair-ink-on-graphite-muted">
                       <span className="font-semibold text-altair-success">
                         {formatCurrency(technician.grossProfit)} profit
                       </span>
@@ -105,7 +105,7 @@ export function TopPerformersChartCard({
                         : ""}
                     </p>
                   ) : (
-                    <p className="mt-1 text-[11px] leading-relaxed text-altair-ink-muted">
+                    <p className="mt-1 text-[11px] leading-relaxed text-altair-ink-on-graphite-muted">
                       Add labor cost rates to unlock profit reporting.
                     </p>
                   )}

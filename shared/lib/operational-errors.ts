@@ -195,7 +195,7 @@ export function formatInviteAcceptError(message: string): string {
     lower.includes("not found") ||
     lower.includes("no longer available")
   ) {
-    return "This invitation is invalid or has expired. Ask your office admin to resend the invite from Settings → Team.";
+    return "This invitation is invalid or has expired. Ask your office admin to resend the invite from Settings → Users.";
   }
 
   if (

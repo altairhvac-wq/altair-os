@@ -179,7 +179,7 @@ export function ExpenseWorkflowActions({
               disabled={isPending}
               className={buttonClassName("destructive", "md", "flex-1")}
             >
-              {isPending ? "Rejecting..." : "Confirm reject"}
+              {isPending ? "Rejecting…" : "Confirm reject"}
             </button>
           </div>
         </form>
@@ -201,7 +201,7 @@ export function ExpenseWorkflowActions({
                 )}
               >
                 {isPending
-                  ? "Working..."
+                  ? "Working…"
                   : EXPENSE_WORKFLOW_ACTION_LABELS[action]}
               </button>
             );

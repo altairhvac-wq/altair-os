@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   calculateInvoiceTotals,
   calculateLineItemTotal,
@@ -159,7 +159,7 @@ export function InvoiceLineItemsEditor({
                     <option value={CUSTOM_SERVICE_ITEM_ID}>Custom</option>
                     {serviceItems.map((serviceItem) => (
                       <option key={serviceItem.id} value={serviceItem.id}>
-                        {serviceItem.name} · {formatCurrency(serviceItem.unitPrice)}
+                        {serviceItem.name} · {formatCurrencyExact(serviceItem.unitPrice)}
                       </option>
                     ))}
                   </select>
@@ -233,7 +233,7 @@ export function InvoiceLineItemsEditor({
                 <div className="sm:col-span-3">
                   <label className={adminFormLabelClass}>Total</label>
                   <div className="flex min-h-11 items-center rounded-md border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-900">
-                    {formatCurrency(lineTotal)}
+                    {formatCurrencyExact(lineTotal)}
                   </div>
                 </div>
                 <div className="flex min-h-11 items-center sm:col-span-4">
@@ -258,17 +258,17 @@ export function InvoiceLineItemsEditor({
       <div className="space-y-1 rounded-md border border-slate-200 bg-white px-2.5 py-2">
         <div className="flex items-center justify-between text-sm text-slate-600">
           <span>Subtotal</span>
-          <span>{formatCurrency(totals.subtotal)}</span>
+          <span>{formatCurrencyExact(totals.subtotal)}</span>
         </div>
         {taxRate > 0 ? (
           <div className="flex items-center justify-between text-sm text-slate-600">
             <span>Tax ({taxRate}%)</span>
-            <span>{formatCurrency(totals.taxAmount)}</span>
+            <span>{formatCurrencyExact(totals.taxAmount)}</span>
           </div>
         ) : null}
         <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 text-sm font-bold text-slate-900">
           <span>Total</span>
-          <span>{formatCurrency(totals.total)}</span>
+          <span>{formatCurrencyExact(totals.total)}</span>
         </div>
       </div>
     </div>

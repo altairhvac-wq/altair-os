@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -17,6 +18,10 @@ type PayrollPageProps = {
  * legacy `/time` route redirects here. Active technicians, time entries,
  * and payroll review.
  */
+export const metadata: Metadata = {
+  title: "Payroll",
+};
+
 export default async function PayrollPage({ searchParams }: PayrollPageProps) {
   const context = await getActiveCompanyContext();
 

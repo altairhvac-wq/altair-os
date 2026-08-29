@@ -431,7 +431,7 @@ export function BillingDocumentDefaultsCard({
               disabled={isPending}
               className={st.saveButton}
             >
-              {isPending ? "Saving..." : "Save billing defaults"}
+              {isPending ? "Saving…" : "Save billing defaults"}
             </button>
           </div>
         ) : (

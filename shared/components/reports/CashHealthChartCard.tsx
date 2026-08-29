@@ -108,7 +108,7 @@ function CashHealthDonut({
         <span className="text-lg font-extrabold tabular-nums tracking-tight text-altair-paper">
           {formatCurrency(total)}
         </span>
-        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-altair-ink-muted">
+        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-altair-ink-on-graphite-muted">
           Total
         </span>
       </div>
@@ -182,7 +182,7 @@ export function CashHealthChartCard({
                       />
                       <span className="truncate">{item.label}</span>
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-altair-ink-muted">
+                    <span className="shrink-0 text-xs tabular-nums text-altair-ink-on-graphite-muted">
                       <span className={`font-semibold ${item.textClass}`}>
                         {formatCurrency(item.value)}
                       </span>
@@ -195,7 +195,7 @@ export function CashHealthChartCard({
           </div>
 
           <div className="flex items-center justify-between gap-3 border-t border-altair-border pt-3">
-            <span className="text-xs font-semibold text-altair-ink-muted">
+            <span className="text-xs font-semibold text-altair-ink-on-graphite-muted">
               Collection Rate
             </span>
             <span className="text-base font-extrabold tabular-nums tracking-tight text-altair-paper">

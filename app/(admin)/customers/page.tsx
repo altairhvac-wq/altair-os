@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { canViewBilling, getCompanyAccessScope } from "@/lib/database/access-control";
@@ -34,6 +35,10 @@ type CustomersPageProps = {
     /** Server-side customer search. */
     q?: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Customers",
 };
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {

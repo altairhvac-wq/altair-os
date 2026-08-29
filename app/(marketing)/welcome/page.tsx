@@ -4,7 +4,11 @@ import { getCurrentUser } from "@/lib/database/auth";
 import { MissionControlHomepage } from "@/shared/components/homepage/MissionControlHomepage";
 
 export const metadata: Metadata = {
-  title: "Altair OS · The Operating System for Field Service Businesses",
+  // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
+  // template — this title already leads with the product name.
+  title: {
+    absolute: "Altair OS · The Operating System for Field Service Businesses",
+  },
   description:
     "Connect leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one field service operating system.",
 };

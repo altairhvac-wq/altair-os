@@ -139,7 +139,16 @@
   /* Ink — text and numerals, at three strengths, on the theme's dominant surface. */
   --altair-ink: #17130e;
   --altair-ink-secondary: #4f4638;
-  --altair-ink-muted: #64748b;
+  /*
+   * Muted Ink carries most of the product's metadata, timestamps, and 10-11px
+   * eyebrow labels, so it is measured against the *whole* surface hierarchy,
+   * not just white. The previous #64748B cleared 4.5:1 only on
+   * `paper-elevated` (#FFFFFF, 4.76:1) and failed on every other sanctioned
+   * ground — paper 4.45:1, paper-subtle 4.23:1, stone 3.68:1. #556070 keeps
+   * the same slate character while clearing AA on all of them (stone 4.93:1,
+   * white 6.38:1).
+   */
+  --altair-ink-muted: #556070;
 
   /*
    * Ink-on-Paper — the same three Ink strengths, but anchored to Paper-family
@@ -156,7 +165,20 @@
    */
   --altair-ink-on-paper: #17130e;
   --altair-ink-on-paper-secondary: #4f4638;
-  --altair-ink-on-paper-muted: #64748b;
+  --altair-ink-on-paper-muted: #556070;
+
+  /*
+   * Ink-on-Graphite — the Ink strengths anchored to Graphite-family surfaces
+   * that stay dark in BOTH themes (Reports' elevated cards, the Dispatch
+   * board). The flipping `ink-muted` role is wrong there for the mirror
+   * reason `ink-on-paper` exists: on light-theme values it renders
+   * #556070 on #303132 — 1.9:1, effectively invisible. Graphite-anchored, so
+   * identical in :root and [data-theme="dark"] on purpose.
+   * Muted measures 6.37:1 on `--altair-graphite`.
+   */
+  --altair-ink-on-graphite: #f3ebdd;
+  --altair-ink-on-graphite-secondary: #d7cdbd;
+  --altair-ink-on-graphite-muted: #aeb6c2;
 
   /* Border — quiet separation; Border Strong — deliberate emphasis (selection, focus). */
   --altair-border: rgb(100 116 139 / 0.18);
@@ -215,7 +237,12 @@
   /* Paper-anchored — identical to :root. See the comment on these roles above. */
   --altair-ink-on-paper: #17130e;
   --altair-ink-on-paper-secondary: #4f4638;
-  --altair-ink-on-paper-muted: #64748b;
+  --altair-ink-on-paper-muted: #556070;
+
+  /* Graphite-anchored — identical to :root. See the comment on these roles above. */
+  --altair-ink-on-graphite: #f3ebdd;
+  --altair-ink-on-graphite-secondary: #d7cdbd;
+  --altair-ink-on-graphite-muted: #aeb6c2;
 
   --altair-border: rgb(174 182 194 / 0.18);
   --altair-border-strong: rgb(174 182 194 / 0.35);
@@ -260,6 +287,11 @@
   --color-altair-ink-on-paper: var(--altair-ink-on-paper);
   --color-altair-ink-on-paper-secondary: var(--altair-ink-on-paper-secondary);
   --color-altair-ink-on-paper-muted: var(--altair-ink-on-paper-muted);
+  --color-altair-ink-on-graphite: var(--altair-ink-on-graphite);
+  --color-altair-ink-on-graphite-secondary: var(
+    --altair-ink-on-graphite-secondary
+  );
+  --color-altair-ink-on-graphite-muted: var(--altair-ink-on-graphite-muted);
   --color-altair-border: var(--altair-border);
   --color-altair-border-strong: var(--altair-border-strong);
   --color-altair-brass: var(--altair-brass);
@@ -278,12 +310,16 @@
   --color-altair-information-surface: var(--altair-information-surface);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/*
+ * NOTE: there is deliberately no `prefers-color-scheme: dark` override here.
+ * The create-next-app boilerplate block that used to live at this spot flipped
+ * `--foreground` to #ededed for dark-OS users while `body` kept painting the
+ * light `--surface-canvas`, so any element relying on inherited color (error
+ * boundaries, third-party embeds, anything that forgets an explicit text
+ * class) rendered near-white on near-white. The app is explicitly light-first
+ * (`colorScheme: "light"` in app/layout.tsx); the real dark register is the
+ * `[data-theme="dark"]` scope above, which is opt-in and never OS-driven.
+ */
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -4859,6 +4895,25 @@ a[href] {
     --tw-ring-color: #94a3b8 !important;
   }
 
+  /*
+   * Document total chips print as a WHITE box with ink text.
+   *
+   * Both heroes paint their on-screen fill with a Tailwind gradient
+   * (`bg-gradient-to-br from-[#273140] …`), which is a `background-image`.
+   * The `background-color: #ffffff` resets below — and the components' own
+   * `print:bg-white` utility — only touch `background-color`, so the dark
+   * gradient kept painting over the white and the grand total (the one
+   * number on the page that must be readable) printed as dark-on-dark.
+   * Clear the image explicitly, for every document variant.
+   */
+  #invoice-document .invoice-amount-due-hero,
+  #estimate-document .estimate-total-hero {
+    background-image: none !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+
   /* Invoice document: preserve amount-due hierarchy on print */
   #invoice-document .invoice-amount-due-hero {
     background-color: #ffffff !important;
@@ -5009,9 +5064,17 @@ a[href] {
   }
 
   #estimate-document.estimate-north-star-document .estimate-total-hero {
+    background-image: none !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
     break-inside: avoid;
     padding-top: 0.125rem !important;
     padding-bottom: 0.125rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-total-hero p {
+    color: #0f172a !important;
   }
 
   #estimate-document.estimate-north-star-document table tbody tr,
@@ -5066,6 +5129,7 @@ a[href] {
   }
 
   #invoice-document.invoice-north-star-document .invoice-amount-due-hero {
+    background-image: none !important;
     background-color: #ffffff !important;
     color: #0f172a !important;
     border: 2px solid #0f172a !important;

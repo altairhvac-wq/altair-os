@@ -380,7 +380,7 @@ export function LeadForm({
                 : "admin-btn-primary w-full sm:flex-1"
             }
           >
-            {isPending ? "Saving..." : "Save lead"}
+            {isPending ? "Saving…" : "Save lead"}
           </button>
           <div ref={saveMenuRef} className="relative w-full sm:w-auto">
             <button
@@ -591,7 +591,7 @@ export function LeadForm({
           disabled={isPending}
           className={northStar ? ls.saveButton : "admin-btn-primary"}
         >
-          {isPending ? "Saving..." : "Save changes"}
+          {isPending ? "Saving…" : "Save changes"}
         </button>
         <button
           type="button"

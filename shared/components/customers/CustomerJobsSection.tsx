@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatCityStateZip } from "@/shared/lib/address";
 import { MapPin, Plus } from "lucide-react";
 import {
   formatScheduledDate,
@@ -149,7 +150,7 @@ export function CustomerJobsSection({
                     <div>
                       <p>{job.serviceAddress}</p>
                       <p className={northStar ? "text-xs text-[#64748B]" : "text-xs text-slate-500"}>
-                        {job.city}, {job.state} {job.zip}
+                        {formatCityStateZip(job.city, job.state, job.zip)}
                       </p>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import { calculateLineItemTotal } from "@/shared/types/estimate";
 import {
   isPremiumBillingDocumentStyle,
@@ -96,13 +96,13 @@ export function BillingLineItemsList({
                   <DemoDisplayName>{item.name}</DemoDisplayName>
                 </p>
                 <span className="shrink-0 text-sm font-bold tabular-nums text-slate-900">
-                  {formatCurrency(
+                  {formatCurrencyExact(
                     calculateLineItemTotal(item.quantity, item.unitPrice),
                   )}
                 </span>
               </div>
               <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">
-                {item.quantity} × {formatCurrency(item.unitPrice)}
+                {item.quantity} × {formatCurrencyExact(item.unitPrice)}
               </p>
               {item.description ? (
                 <p className={descriptionClass(compactDescriptions, true)}>
@@ -165,12 +165,12 @@ export function BillingLineItemsList({
                     <td
                       className={`${bodyCellClass} text-right tabular-nums text-slate-600`}
                     >
-                      {formatCurrency(item.unitPrice)}
+                      {formatCurrencyExact(item.unitPrice)}
                     </td>
                     <td
                       className={`${bodyCellClass} text-right font-semibold tabular-nums text-slate-900`}
                     >
-                      {formatCurrency(
+                      {formatCurrencyExact(
                         calculateLineItemTotal(item.quantity, item.unitPrice),
                       )}
                     </td>
@@ -228,12 +228,12 @@ export function BillingLineItemsList({
                 <td
                   className={`${bodyCellClass} text-right tabular-nums text-slate-600`}
                 >
-                  {formatCurrency(item.unitPrice)}
+                  {formatCurrencyExact(item.unitPrice)}
                 </td>
                 <td
                   className={`${bodyCellClass} text-right font-semibold tabular-nums text-slate-900`}
                 >
-                  {formatCurrency(
+                  {formatCurrencyExact(
                     calculateLineItemTotal(item.quantity, item.unitPrice),
                   )}
                 </td>
@@ -275,10 +275,10 @@ export function BillingLineItemsList({
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-slate-500">
             <span className="min-w-0 shrink truncate">
-              {item.quantity} × {formatCurrency(item.unitPrice)}
+              {item.quantity} × {formatCurrencyExact(item.unitPrice)}
             </span>
             <span className="shrink-0 font-semibold tabular-nums text-slate-700">
-              {formatCurrency(
+              {formatCurrencyExact(
                 calculateLineItemTotal(item.quantity, item.unitPrice),
               )}
             </span>

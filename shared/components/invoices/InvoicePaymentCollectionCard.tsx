@@ -8,7 +8,7 @@ import {
   sendInvoicePaymentLinkEmailAction,
   sendInvoicePaymentLinkSmsAction,
 } from "@/app/actions/invoice-payment-links";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   SectionHeader,
   altairMcCardClass,
@@ -229,7 +229,7 @@ export function InvoicePaymentCollectionCard({
         <p
           className={`font-semibold ${northStar ? "text-altair-ink-on-paper" : "mt-2 text-slate-900"}`}
         >
-          Amount due: {formatCurrency(balanceDue)}
+          Amount due: {formatCurrencyExact(balanceDue)}
         </p>
         <p className={`mt-2 ${bodyClass}`}>
           Have the customer scan this QR code or open the secure payment link.

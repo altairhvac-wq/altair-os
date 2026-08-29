@@ -13,7 +13,7 @@ import {
 } from "@/shared/components/ui/mobile-sheet";
 import { recordInvoicePaymentAction } from "@/app/actions/invoice-payments";
 import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import { roundCurrency, type InvoiceDetail } from "@/shared/types/invoice";
 import {
   canRecordInvoicePayment,
@@ -177,7 +177,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
         <MobileSheetHeader
           titleId={RECORD_PAYMENT_TITLE_ID}
           title="Record a payment against the balance due."
-          subtitle={`Amount due: ${formatCurrency(invoice.balanceDue)}`}
+          subtitle={`Amount due: ${formatCurrencyExact(invoice.balanceDue)}`}
           onClose={onClose}
           closeDisabled={closeDisabled}
           safeAreaTop

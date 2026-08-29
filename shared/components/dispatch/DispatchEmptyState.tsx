@@ -25,7 +25,7 @@ export function DispatchEmptyState({
         title={title}
         description={description}
         tone="neutral"
-        className="border-altair-border/60 bg-white/[0.04] text-altair-paper shadow-none [&_h3]:text-altair-paper [&_p]:text-altair-ink-muted [&_.rounded-xl]:border-altair-border [&_.rounded-xl]:bg-white/[0.06] [&_.rounded-xl]:text-altair-ink-muted"
+        className="border-altair-border/60 bg-white/[0.04] text-altair-paper shadow-none [&_h3]:text-altair-paper [&_p]:text-altair-ink-on-graphite-muted [&_.rounded-xl]:border-altair-border [&_.rounded-xl]:bg-white/[0.06] [&_.rounded-xl]:text-altair-ink-on-graphite-muted"
         icon={
           variant === "no-results" ? (
             <SearchX className="h-6 w-6" />

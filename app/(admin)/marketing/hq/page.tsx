@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -12,6 +13,10 @@ import {
   MarketingAiHqPageView,
   type MarketingDistributionStatus,
 } from "@/shared/components/marketing-hq/MarketingAiHqPageView";
+
+export const metadata: Metadata = {
+  title: "Marketing HQ",
+};
 
 export default async function MarketingAiHqPage() {
   await requirePlatformAdmin();

@@ -319,7 +319,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             ·
           </span>
           <Link
-            href="/time"
+            href="/payroll"
             className="font-semibold text-cyan-700 hover:text-cyan-800"
           >
             Time entries

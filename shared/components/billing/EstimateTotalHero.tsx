@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 
 type EstimateTotalHeroProps = {
   total: number;
@@ -20,7 +20,7 @@ export function EstimateTotalHero({
         </p>
 
         <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-[#FFF9EA] sm:text-2xl print:mt-0 print:text-2xl print:text-slate-900">
-          {formatCurrency(total)}
+          {formatCurrencyExact(total)}
         </p>
       </div>
     );
@@ -36,7 +36,7 @@ export function EstimateTotalHero({
       </p>
 
       <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight sm:mt-1 sm:text-3xl md:text-4xl print:mt-0 print:text-2xl print:text-slate-900">
-        {formatCurrency(total)}
+        {formatCurrencyExact(total)}
       </p>
     </div>
   );

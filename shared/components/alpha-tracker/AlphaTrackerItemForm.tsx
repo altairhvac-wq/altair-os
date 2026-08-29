@@ -173,7 +173,7 @@ export function AlphaTrackerItemForm({
           disabled={isSubmitting}
           className="admin-btn-primary inline-flex items-center gap-2 disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Add item"}
+          {isSubmitting ? "Saving…" : isEdit ? "Save changes" : "Add item"}
         </button>
         <button
           type="button"

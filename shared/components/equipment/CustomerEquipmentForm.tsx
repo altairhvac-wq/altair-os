@@ -64,7 +64,7 @@ export function CustomerEquipmentForm({
           type="text"
           value={data.equipmentType}
           onChange={(event) => updateField("equipmentType", event.target.value)}
-          placeholder="HVAC, water heater..."
+          placeholder="HVAC, water heater…"
           className={inputClass}
         />
       </div>
@@ -146,7 +146,7 @@ export function CustomerEquipmentForm({
           type="text"
           value={data.location}
           onChange={(event) => updateField("location", event.target.value)}
-          placeholder="Attic, basement, garage..."
+          placeholder="Attic, basement, garage…"
           className={inputClass}
         />
       </div>
@@ -160,7 +160,7 @@ export function CustomerEquipmentForm({
           rows={compact ? 2 : 3}
           value={data.notes}
           onChange={(event) => updateField("notes", event.target.value)}
-          placeholder="Additional details..."
+          placeholder="Additional details…"
           className={textareaClass}
         />
       </div>

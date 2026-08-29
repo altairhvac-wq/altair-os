@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Community admin route (`/community`) — Altair Community orientation shell
  * over the existing Network data/workflows (`NetworkReferralsPageView`).
@@ -32,6 +33,10 @@ import {
 } from "@/lib/database/queries/network-help-requests";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
+
+export const metadata: Metadata = {
+  title: "Community",
+};
 
 export default async function CommunityPage() {
   const companyContext = await getActiveCompanyContext();

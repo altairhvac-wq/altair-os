@@ -637,7 +637,7 @@ function buildWorkContent(data: DashboardData): NorthStarBoardWorkContent {
         }))
       : [],
     dispatchHref: DISPATCH_PAGE_TODAY_HREF,
-    timeHref: "/time",
+    timeHref: "/payroll",
     emptyMessage: "No work scheduled today",
   };
 }

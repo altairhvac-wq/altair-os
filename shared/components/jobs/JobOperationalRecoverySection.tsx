@@ -28,7 +28,7 @@ function resolveRecoveryHref(
     case "invalid_assigned_technician":
       return safeBuildQueueActionHref("/dispatch");
     case "open_labor_on_cancelled_job":
-      return safeBuildQueueActionHref("/time", { jobId });
+      return safeBuildQueueActionHref("/payroll", { jobId });
     case "invoice_balance_mismatch":
       return entry.invoiceId
         ? safeBuildQueueActionHref(`/invoices/${encodeURIComponent(entry.invoiceId)}`)
@@ -80,7 +80,7 @@ export function JobOperationalRecoverySection({
               const external =
                 href != null &&
                 (href.startsWith("/dispatch") ||
-                  href.startsWith("/time") ||
+                  href.startsWith("/payroll") ||
                   href.startsWith("/invoices") ||
                   href.startsWith("/sales"));
 

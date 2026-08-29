@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
@@ -6,6 +7,10 @@ import { listCustomerImportContacts } from "@/lib/database/queries/customers";
 import { CustomerImportPageView } from "@/shared/components/customers/CustomerImportPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+
+export const metadata: Metadata = {
+  title: "Import customers",
+};
 
 export default async function CustomerImportPage() {
   const companyContext = await getActiveCompanyContext();

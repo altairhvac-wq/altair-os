@@ -683,7 +683,7 @@ export function NetworkNorthStarView({
             >
               <UserMinus className="h-3.5 w-3.5" />
               {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
-                ? "Removing..."
+                ? "Removing…"
                 : "Remove"}
             </button>
           ) : null}

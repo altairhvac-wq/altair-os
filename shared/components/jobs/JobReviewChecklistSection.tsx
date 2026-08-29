@@ -265,7 +265,7 @@ function buildOfficeReviewActions(
     {
       id: "review_labor",
       label: "Review labor",
-      href: safeBuildQueueActionHref("/time", { jobId }) ?? "",
+      href: safeBuildQueueActionHref("/payroll", { jobId }) ?? "",
       external: true,
     },
     {

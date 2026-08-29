@@ -72,7 +72,7 @@ export function ServiceItemsSearchFilterBar({
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, description, or category..."
+            placeholder="Search by name, description, or category…"
             className={searchInputClass}
           />
         </div>

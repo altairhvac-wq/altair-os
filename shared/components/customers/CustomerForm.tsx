@@ -169,7 +169,7 @@ export function CustomerForm({
           className="min-h-11 flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting
-            ? "Saving..."
+            ? "Saving…"
             : isEdit
               ? "Save changes"
               : "Save customer"}

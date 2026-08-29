@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail, MapPin, Phone } from "lucide-react";
+import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { CustomerStatusBadge } from "@/shared/components/customers/CustomerStatusBadge";
 import {
@@ -59,7 +60,7 @@ export function CustomerCard({
         </div>
         <div className="flex items-center gap-2">
           <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-          <span>{customer.phone}</span>
+          <span>{formatPhoneForDisplay(customer.phone)}</span>
         </div>
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 shrink-0 text-slate-400" />

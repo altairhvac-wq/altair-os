@@ -27,11 +27,17 @@ export function InvoiceCompanyHeroHeader({
               />
             </div>
           ) : (
+            /*
+             * On screen this placeholder anchors the header and hints that a
+             * logo can be uploaded. On a printed/PDF'd document sent to a
+             * customer it is an empty box with a generic building glyph —
+             * it reads as a missing asset, so it is omitted from print.
+             */
             <div
               aria-hidden="true"
-              className="invoice-company-logo flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white sm:h-16 sm:w-16 md:h-20 md:w-20 print:h-14 print:w-14 print:rounded-lg print:border print:border-slate-300 print:border-solid print:bg-white"
+              className="invoice-company-logo flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white sm:h-16 sm:w-16 md:h-20 md:w-20 print:hidden"
             >
-              <Building2 className="h-6 w-6 text-slate-300 sm:h-8 sm:w-8 md:h-9 md:w-9 print:h-6 print:w-6 print:text-slate-400" />
+              <Building2 className="h-6 w-6 text-slate-300 sm:h-8 sm:w-8 md:h-9 md:w-9" />
             </div>
           )}
 

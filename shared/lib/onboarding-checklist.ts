@@ -51,7 +51,7 @@ export function buildOnboardingChecklist(
       title: "Invite your team",
       description:
         "Add technicians or office staff when you are ready — optional if you run solo.",
-      href: "/settings/team",
+      href: "/settings/users",
       completed: snapshot.hasInvitedOrActiveTeam,
       optional: true,
       tip: "Invites stay pending until the teammate signs up with the same email.",
@@ -99,7 +99,7 @@ export function buildOnboardingChecklist(
       title: "Review billing defaults",
       description:
         "Set tax rate, payment terms, and default notes once.",
-      href: "/settings/documents",
+      href: "/settings/company#documents",
       completed: snapshot.hasBillingDefaultsConfigured,
       optional: true,
       tip: "Defaults apply automatically on new billing documents.",

@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 
 type BillingMobileAmountHeaderProps = {
   total: number;
@@ -38,7 +38,7 @@ export function BillingMobileAmountHeader({
               : "text-lg font-bold tabular-nums text-slate-900"
           }
         >
-          {formatCurrency(total)}
+          {formatCurrencyExact(total)}
         </span>
       </div>
       {balanceDue > 0 ? (
@@ -47,7 +47,7 @@ export function BillingMobileAmountHeader({
             Amount due
           </span>
           <span className="text-lg font-bold tabular-nums text-amber-900">
-            {formatCurrency(balanceDue)}
+            {formatCurrencyExact(balanceDue)}
           </span>
         </div>
       ) : null}

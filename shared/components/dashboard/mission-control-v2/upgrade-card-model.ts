@@ -1,5 +1,6 @@
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { SAAS_PLAN_DESCRIPTIONS } from "@/shared/components/pricing/plan-descriptions";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 
 export type MissionControlUpgradeCardVariant =
   | "beta_comped"
@@ -30,7 +31,11 @@ function formatDateLabel(value: string | null): string | null {
   }
 
   // Same formatter as subscription-billing-banner-model (banner shortLabel).
-  return date.toLocaleDateString(undefined, {
+  // Must go through formatDateInTimeZone, not toLocaleDateString(undefined):
+  // this card server-renders, so an unqualified locale resolves to UTC on the
+  // server and the viewer's zone in the browser — the off-by-one-day text
+  // mismatch that throws a hydration error.
+  return formatDateInTimeZone(date, undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -73,11 +78,22 @@ export function getMissionControlUpgradeCardModel(
         ? `${daysLeft} ${daysLeft === 1 ? "day" : "days"} remaining`
         : null;
 
+    // `trialDaysRemaining` returns null once the end date has passed, so a
+    // null `daysLine` with a real end date means the trial is over — say
+    // "ended" rather than promising a date already in the past.
+    const trialElapsed = daysLine === null && trialEnds !== null;
+
     return {
       variant: "trial",
       sectionTitle: "Trial",
-      headline: trialEnds ? `Trial ends ${trialEnds}` : "Trial in progress",
-      description: daysLine ?? "Billing begins after the trial period ends.",
+      headline: trialElapsed
+        ? `Trial ended ${trialEnds}`
+        : trialEnds
+          ? `Trial ends ${trialEnds}`
+          : "Trial in progress",
+      description: trialElapsed
+        ? "Set up billing to keep full access."
+        : (daysLine ?? "Billing begins after the trial period ends."),
       href: "/settings/subscription",
       emphasis: "quiet",
     };

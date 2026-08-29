@@ -143,7 +143,7 @@ export function FounderScreenshotUploadControl({
         ) : (
           <Upload className="h-4 w-4" aria-hidden="true" />
         )}
-        {isPending ? "Uploading..." : "Upload screenshot"}
+        {isPending ? "Uploading…" : "Upload screenshot"}
       </button>
       <p
         className={`text-xs leading-relaxed ${

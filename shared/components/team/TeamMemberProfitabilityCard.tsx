@@ -107,7 +107,7 @@ export function TeamMemberProfitabilityCard({
               disabled={isPending}
               className={buttonClassName("primary", "md")}
             >
-              {isPending ? "Saving..." : "Save rate"}
+              {isPending ? "Saving…" : "Save rate"}
             </button>
           </div>
         </div>

@@ -220,7 +220,7 @@ export function ExpenseForm({
           loading={isPending}
           className="flex-1"
         >
-          {isPending ? "Saving..." : "Save draft expense"}
+          {isPending ? "Saving…" : "Save draft expense"}
         </Button>
         <Button
           type="button"

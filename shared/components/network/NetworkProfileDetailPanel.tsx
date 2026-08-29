@@ -380,7 +380,7 @@ export function NetworkProfileDetailPanel({
                       >
                         <UserMinus className="h-4 w-4" />
                         {isNetworkActionPending
-                          ? "Removing..."
+                          ? "Removing…"
                           : "Remove from Relationships"}
                       </button>
                     ) : null}
@@ -396,7 +396,7 @@ export function NetworkProfileDetailPanel({
                       >
                         <UserPlus className="h-4 w-4" />
                         {isNetworkActionPending
-                          ? "Connecting..."
+                          ? "Connecting…"
                           : "Connect"}
                       </button>
                     ) : null}

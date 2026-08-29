@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   canViewOperationalReports,
@@ -20,6 +21,10 @@ import {
 
 type ReportsPageProps = {
   searchParams: Promise<{ range?: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Reports",
 };
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {

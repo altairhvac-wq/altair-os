@@ -73,7 +73,7 @@ export function LeadSearchFilterBar({
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search leads..."
+              placeholder="Search leads…"
               className={lm.searchInput}
             />
           </label>

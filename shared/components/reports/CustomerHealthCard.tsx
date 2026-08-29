@@ -37,7 +37,7 @@ export function CustomerHealthCard({
       <div className={`${altairReportCardClass} ${altairReportCardPadTier2Class}`}>
         {!hasData ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed border-altair-border bg-white/[0.03] px-4 py-6 text-center">
-            <p className="max-w-sm text-xs text-altair-ink-muted sm:text-sm">
+            <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted sm:text-sm">
               Customer health appears once customers and payments are recorded.
             </p>
           </div>

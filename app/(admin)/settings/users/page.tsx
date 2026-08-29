@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { canManageTeamMembers } from "@/lib/database/access-control";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -27,6 +28,10 @@ async function loadPendingInvitesSafely(
     };
   }
 }
+
+export const metadata: Metadata = {
+  title: "Users",
+};
 
 export default async function UsersSettingsPage() {
   const [user, profile, companyContext] = await Promise.all([

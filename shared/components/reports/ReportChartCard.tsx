@@ -58,8 +58,8 @@ export function ReportChartCard({
       : "text-[13px] font-bold text-altair-paper";
   const subtitleClass =
     density === "tier3"
-      ? "mt-0.5 text-[11px] text-altair-ink-muted"
-      : "mt-0.5 text-xs text-altair-ink-muted";
+      ? "mt-0.5 text-[11px] text-altair-ink-on-graphite-muted"
+      : "mt-0.5 text-xs text-altair-ink-on-graphite-muted";
 
   if (northStar) {
     return (
@@ -75,7 +75,7 @@ export function ReportChartCard({
           <div className={`flex flex-1 flex-col ${chartHeightClassName}`}>
             {!hasData && emptyMessage ? (
               <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-altair-border bg-white/[0.03] px-4 py-6 text-center">
-                <p className="max-w-sm text-xs text-altair-ink-muted sm:text-sm">
+                <p className="max-w-sm text-xs text-altair-ink-on-graphite-muted sm:text-sm">
                   {emptyMessage}
                 </p>
               </div>

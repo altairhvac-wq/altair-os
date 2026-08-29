@@ -38,7 +38,7 @@ function SnapshotList({
           {title}
         </h4>
         {rows.length === 0 ? (
-          <p className="mt-2 text-[11px] leading-relaxed text-altair-ink-muted">
+          <p className="mt-2 text-[11px] leading-relaxed text-altair-ink-on-graphite-muted">
             {emptyMessage}
           </p>
         ) : (
@@ -69,7 +69,7 @@ function SnapshotList({
                     )}
                   </p>
                   {row.detail ? (
-                    <p className="mt-0.5 truncate text-[10px] text-altair-ink-muted">
+                    <p className="mt-0.5 truncate text-[10px] text-altair-ink-on-graphite-muted">
                       {row.detail}
                     </p>
                   ) : null}

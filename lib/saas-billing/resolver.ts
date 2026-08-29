@@ -86,6 +86,11 @@ export async function resolveCompanyBillingAccess(
   supabase?: SupabaseClient<Database>,
 ): Promise<CompanyBillingAccess> {
   const subscription = await getCompanySubscription(companyId, supabase);
+  // One clock read for the whole resolution: the policy decision and the
+  // derived trial flag below must describe the same instant, and this is the
+  // only place either is allowed to consult the clock (see
+  // `CompanyBillingAccess.trialHasEnded`).
+  const nowMs = Date.now();
   const decision = evaluateBillingPolicy(
     subscription
       ? {
@@ -96,7 +101,11 @@ export async function resolveCompanyBillingAccess(
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
         }
       : null,
+    nowMs,
   );
+
+  const trialEndsAt = subscription?.trial_ends_at ?? null;
+  const trialEndsMs = trialEndsAt ? Date.parse(trialEndsAt) : Number.NaN;
 
   return {
     state: decision.state,
@@ -104,8 +113,9 @@ export async function resolveCompanyBillingAccess(
     canMutateOperationalData: decision.canMutateOperationalData,
     canManageBilling: decision.canManageBilling,
     warnings: decision.warnings,
-    trialEndsAt: subscription?.trial_ends_at ?? null,
+    trialEndsAt,
     graceEndsAt: subscription?.grace_period_ends_at ?? null,
+    trialHasEnded: Number.isFinite(trialEndsMs) && trialEndsMs <= nowMs,
     isComped: decision.isComped,
     planKey: subscription?.plan_key ?? "beta",
     status: subscription?.status ?? null,

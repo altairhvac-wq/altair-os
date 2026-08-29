@@ -1,5 +1,7 @@
 "use client";
 
+import { pluralize } from "@/shared/lib/plural";
+
 /**
  * The "showing N of M" line and its Load more control.
  *
@@ -18,8 +20,13 @@ type PagedListFooterProps = {
   isLoadingMore: boolean;
   error: string | null;
   onLoadMore: () => void;
-  /** Plural noun for the records, e.g. "customers". */
+  /**
+   * Plural noun for the records, e.g. "customers". The singular is derived by
+   * dropping a trailing "s"; pass `nounSingular` for anything irregular.
+   */
   noun: string;
+  /** Explicit singular when trimming the trailing "s" would be wrong. */
+  nounSingular?: string;
 };
 
 export function PagedListFooter({
@@ -30,10 +37,18 @@ export function PagedListFooter({
   error,
   onLoadMore,
   noun,
+  nounSingular,
 }: PagedListFooterProps) {
   if (totalCount === 0) {
     return null;
   }
+
+  // The count line read "1 estimates" on every single-record ledger because
+  // the noun was always rendered plural. Agree the noun with the number it
+  // actually describes: the total when everything is loaded, and the loaded
+  // count in the "Showing N of M" form.
+  const singular = nounSingular ?? noun.replace(/s$/, "");
+  const nounFor = (count: number) => pluralize(count, singular, noun);
 
   return (
     <div className="flex flex-col items-center gap-2 border-t border-altair-border/70 px-4 py-4">
@@ -42,8 +57,8 @@ export function PagedListFooter({
         aria-live="polite"
       >
         {hasMore
-          ? `Showing ${loadedCount.toLocaleString()} of ${totalCount.toLocaleString()} ${noun}`
-          : `${totalCount.toLocaleString()} ${noun}`}
+          ? `Showing ${loadedCount.toLocaleString()} of ${totalCount.toLocaleString()} ${nounFor(totalCount)}`
+          : `${totalCount.toLocaleString()} ${nounFor(totalCount)}`}
       </p>
 
       {error ? (

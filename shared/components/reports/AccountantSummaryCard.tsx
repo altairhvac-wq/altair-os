@@ -34,7 +34,7 @@ export function AccountantSummaryCard({
               Export a printable bookkeeping summary based on records entered in
               Altair OS.
             </p>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-altair-ink-muted">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-altair-ink-on-graphite-muted">
               For bookkeeping review only. This does not replace tax or
               accounting advice.
             </p>

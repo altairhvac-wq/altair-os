@@ -41,7 +41,7 @@ export function DispatchSearchFilterBar({
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search jobs..."
+            placeholder="Search jobs…"
             className={dm.searchInput}
             aria-label="Search customer, job type, technician, address, or status"
           />

@@ -471,10 +471,10 @@ export function TeamMembersTable({
                   >
                     {isRowPending
                       ? confirmingStatusAction === "suspend"
-                        ? "Suspending..."
+                        ? "Suspending…"
                         : confirmingStatusAction === "reactivate"
-                          ? "Reactivating..."
-                          : "Cancelling..."
+                          ? "Reactivating…"
+                          : "Cancelling…"
                       : confirmingStatusAction === "suspend"
                         ? "Confirm suspend"
                         : confirmingStatusAction === "reactivate"
@@ -699,7 +699,7 @@ export function TeamMembersTable({
               }
               className={buttonClassName("primary", "md")}
             >
-              {isPending ? "Updating..." : "Confirm role change"}
+              {isPending ? "Updating…" : "Confirm role change"}
             </button>
           </div>
         </div>
