@@ -28,6 +28,7 @@
  */
 
 import { readFileSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 const URL_ENV = "ALTAIR_LOADTEST_SUPABASE_URL";
@@ -124,9 +125,8 @@ async function main() {
   console.log(`\nTarget project: ${ref}`);
   console.log(`Scope:          ${SCOPE}\n`);
 
-  const { enforcePublicRateLimit, PUBLIC_RATE_LIMITS } = await import(
-    "@/lib/security/public-rate-limit"
-  );
+  const { enforcePublicRateLimit, PUBLIC_RATE_LIMITS, FAIL_CLOSED_SCOPES, rateLimitMessage } =
+    await import("@/lib/security/public-rate-limit");
 
   try {
     console.log("Every unauthenticated surface has a rule\n");
@@ -212,6 +212,89 @@ async function main() {
       "the same subject in two dimensions does not share a bucket",
       Number(asIp.count) === 1 && Number(asEmail.count) === 1,
       `ip=${asIp.count} email=${asEmail.count}`,
+    );
+
+    console.log("\nWhen the guard itself is blind\n");
+
+    // The degraded branch, driven for real: a child process imports the same
+    // module with a service-role key that cannot authenticate, so the RPC
+    // genuinely errors and checkOne takes the path it takes in an outage. This
+    // is the condition the old behaviour was weakest in — an unauthenticated
+    // token-authorized WRITE proceeding with no limiter at all, during exactly
+    // the misconfigured deployment most likely to have caused it.
+    const probe = spawnSync(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        "--import",
+        "./scripts/lib/ts-alias-loader-register.mjs",
+        "--input-type=module",
+        "-e",
+        `const m = await import("@/lib/security/public-rate-limit");
+         const out = {};
+         for (const scope of ["public.estimate_approval", "public.invoice_checkout", "auth.login", "public.token_view"]) {
+           const d = await m.enforcePublicRateLimit(scope, { token: "t", email: "e@x.invalid", ip: "203.0.113.9" });
+           out[scope] = { allowed: d.allowed, degraded: d.degraded, message: m.rateLimitMessage(d) };
+         }
+         console.log("RESULT" + JSON.stringify(out));`,
+      ],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          // Well-formed and wrong: the module builds its client at call time,
+          // so this reaches PostgREST and comes back an error.
+          SUPABASE_SERVICE_ROLE_KEY: "not-a-valid-service-role-key",
+        },
+      },
+    );
+
+    const line = (probe.stdout ?? "").split(/\r?\n/).find((l) => l.startsWith("RESULT"));
+    const degradedResults = line ? JSON.parse(line.slice("RESULT".length)) : null;
+
+    check(
+      "the degraded path can be exercised at all",
+      degradedResults != null,
+      (probe.stderr || probe.stdout || "").slice(-300),
+    );
+
+    if (degradedResults) {
+      for (const scope of ["public.estimate_approval", "public.invoice_checkout"]) {
+        check(
+          `${scope.padEnd(26)} REFUSES while the limiter is unavailable`,
+          degradedResults[scope]?.degraded === true &&
+            degradedResults[scope]?.allowed === false,
+          `got ${JSON.stringify(degradedResults[scope])} — this scope authorizes ` +
+            `on a token in a URL and WRITES: an open window here is a window for ` +
+            `guessing tokens against operations that change customer records`,
+        );
+      }
+
+      for (const scope of ["auth.login", "public.token_view"]) {
+        check(
+          `${scope.padEnd(26)} still proceeds — refusing it would be a self-inflicted outage`,
+          degradedResults[scope]?.degraded === true &&
+            degradedResults[scope]?.allowed === true,
+          JSON.stringify(degradedResults[scope]),
+        );
+      }
+
+      check(
+        "a degraded refusal does not claim the caller tried too often",
+        !/too many/i.test(degradedResults["public.estimate_approval"]?.message ?? ""),
+        `said "${degradedResults["public.estimate_approval"]?.message}" to someone ` +
+          `who made one attempt`,
+      );
+    }
+
+    check(
+      "the fail-closed set is exactly the token-authorized writes",
+      FAIL_CLOSED_SCOPES.size === 2 &&
+        FAIL_CLOSED_SCOPES.has("public.estimate_approval") &&
+        FAIL_CLOSED_SCOPES.has("public.invoice_checkout"),
+      `got ${[...FAIL_CLOSED_SCOPES].join(", ")} — adding an auth scope here ` +
+        `turns a database hiccup into a total sign-in outage, which is a ` +
+        `business decision and not this module's to make quietly`,
     );
 
     console.log("\nNothing identifying is stored\n");

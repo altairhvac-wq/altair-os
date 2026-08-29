@@ -95,6 +95,33 @@ export const PUBLIC_RATE_LIMITS: Record<
   "public.token_view": [{ dimension: "ip", windowSeconds: 900, limit: 200 }],
 };
 
+/**
+ * Scopes that must be REFUSED when the limiter itself is unavailable.
+ *
+ * Failing open is the right default for most of this surface: if the counter is
+ * unreachable, refusing every sign-in turns a database hiccup into a total
+ * outage, and the same goes for password resets and for merely VIEWING a token
+ * page. The protection lost is real but the cure is worse.
+ *
+ * It is the wrong default for an unauthenticated request that WRITES. Public
+ * estimate approval records a signature and converts an estimate into a job;
+ * public invoice checkout opens a Stripe session. Both authorize on a token in
+ * a URL, so an open window is a window for guessing tokens against operations
+ * that change customer records — and that window opens during exactly the
+ * outage or misconfigured deployment most likely to have caused it. The cost of
+ * failing closed here is that a customer approving an estimate sees "try again
+ * shortly", which is recoverable in a way an unauthorized approval is not.
+ *
+ * Deliberately NOT listed: auth.login, auth.signup, auth.password_reset_request,
+ * auth.password_update, auth.invite_accept and public.token_view. Whether
+ * sign-in should fail closed is an availability decision for the business, not
+ * one this module should make quietly — it is called out in the launch handoff.
+ */
+export const FAIL_CLOSED_SCOPES: ReadonlySet<PublicRateLimitScope> = new Set([
+  "public.estimate_approval",
+  "public.invoice_checkout",
+]);
+
 export type PublicRateLimitDecision = {
   allowed: boolean;
   retryAfterSeconds: number;
@@ -198,7 +225,16 @@ async function checkOne(
           error.code === "42501" || error.code === "PGRST202",
       },
     });
-    return { allowed: true, retryAfterSeconds: 0, degraded: true };
+    const failClosed = FAIL_CLOSED_SCOPES.has(scope);
+    return {
+      // A refusal here is not a rate-limit refusal — the caller has done
+      // nothing wrong — but it is the only safe answer for a token-authorized
+      // write while the guard is blind. retryAfterSeconds is short because the
+      // condition is an outage, not a quota.
+      allowed: !failClosed,
+      retryAfterSeconds: failClosed ? 30 : 0,
+      degraded: true,
+    };
   }
 
   const result = data as unknown as {
@@ -269,6 +305,14 @@ export async function enforcePublicRateLimit(
 
 /** A user-facing message that leaks nothing about why. */
 export function rateLimitMessage(decision: PublicRateLimitDecision): string {
+  // A degraded refusal is not the caller doing anything too often — the guard
+  // is unavailable and a fail-closed scope will not proceed without it. Telling
+  // someone "too many attempts" when they have made one is a lie that sends
+  // them looking for a mistake they did not make.
+  if (decision.degraded) {
+    return "This is temporarily unavailable. Please try again in a moment.";
+  }
+
   const minutes = Math.max(1, Math.ceil(decision.retryAfterSeconds / 60));
   return `Too many attempts. Please try again in about ${minutes} minute${
     minutes === 1 ? "" : "s"
