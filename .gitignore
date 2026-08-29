@@ -66,3 +66,22 @@ next-env.d.ts
 /.scratch-sql.mjs
 /.env.scratch.local
 /.scratch-*
+
+# UI-audit evidence corpus. The reports, findings, and capture scripts under
+# ui-audit/ ARE tracked — they are the durable output. The screenshots are not:
+# they run to ~88 MB, and because they are captured from an authenticated
+# session they contain real tenant data (customer names, emails, phone numbers,
+# addresses, record ids). Regenerate them locally with ui-audit/capture-audit.mjs.
+/ui-audit/SCREENSHOTS/
+
+# Claude Code local machine settings (per-developer permission grants).
+# .claude/launch.json is intentionally tracked — it is the shared dev-server
+# definition and contains no machine-specific values.
+/.claude/settings.local.json
+
+# Supabase CLI scratch state.
+# NOTE: supabase/.temp/cli-latest is ALREADY TRACKED, so this rule does not
+# untrack it — it only stops new files under .temp/ being added. Untracking the
+# existing file needs a deliberate separate change:
+#   git rm --cached supabase/.temp/cli-latest
+/supabase/.temp/
