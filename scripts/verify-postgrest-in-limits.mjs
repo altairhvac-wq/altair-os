@@ -176,7 +176,34 @@ check(
   /does NOT fix/i.test(rowCap) && /pagination/i.test(rowCap),
 );
 
+/**
+ * The body of one exported function, near enough for reading its query shape.
+ *
+ * Whole-file matching would let a `.range(` anywhere in the module vouch for a
+ * function that has none — and these modules hold a dozen readers each.
+ */
+function extractFunction(source, name) {
+  const start = source.search(
+    new RegExp(`(export )?(const|async function|function) ${name}\\b`),
+  );
+  if (start === -1) return "";
+  const rest = source.slice(start + 1);
+  const next = rest.search(/\nexport (const|async function|function) /);
+  return next === -1 ? rest : rest.slice(0, next);
+}
+
 // The four company-wide lists a real tenant crosses first.
+//
+// A reader satisfies this by DETECTING the cap or by not having one. Detection
+// was the only option when this was written — every one of the four truncated,
+// and reportIfRowCapped made that visible without fixing it. listCustomers has
+// since been paged, and a paged reader has nothing to report: it does not come
+// back at the ceiling, it comes back with everything.
+//
+// Requiring the detector unconditionally would now fail a reader for being
+// FIXED, which is the wrong direction for a verifier to push. What must never
+// happen is the third state: no paging and no detection, a read that stops at
+// 1,000 and says nothing.
 for (const [file, label] of [
   ["lib/database/queries/customers.ts", "listCustomers"],
   ["lib/database/queries/invoices.ts", "listInvoices"],
@@ -184,17 +211,30 @@ for (const [file, label] of [
   ["lib/database/queries/jobs.ts", "listJobs"],
 ]) {
   const source = readFileSync(file, "utf8");
+  const body = extractFunction(source, label);
+
+  const detects =
+    /reportIfRowCapped/.test(source) && source.includes(`query: "${label}"`);
+  // `.range(` with a loop that advances an offset. A lone .range() is a page,
+  // not pagination, so the loop is part of the evidence.
+  const pages = /\.range\(/.test(body) && /for \(let \w+ = 0;/.test(body);
+
   check(
-    `${label} reports when it comes back at the ceiling`,
-    /reportIfRowCapped/.test(source) && source.includes(`query: "${label}"`),
+    `${label} either pages past the ceiling or reports hitting it`,
+    detects || pages,
+    "neither: this read stops at 1,000 rows and says nothing about it",
   );
+  if (pages) {
+    console.log(`        ${label} is paged, so there is no cap to report`);
+  }
 }
 
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} PostgREST .in() checks passed (${checks} total).`,
 );
 console.log(
-  "\n  NOT fixed here: the lists themselves are still truncated at 1000 rows.\n" +
-    "  Detection only makes that visible. The fix is pagination.\n",
+  "\n  Detection is not a fix. A reader that reports its cap is still\n" +
+    "  returning 1,000 rows as though they were all of them; the fix is\n" +
+    "  pagination, and the readers that have had it say so above.\n",
 );
 if (failures > 0) process.exit(1);

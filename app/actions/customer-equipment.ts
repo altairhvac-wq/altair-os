@@ -9,7 +9,8 @@ import {
   setCustomerEquipmentActive,
   updateCustomerEquipment,
 } from "@/lib/database/queries/customer-equipment";
-import { getJobById, listAssignedJobs } from "@/lib/database/queries/jobs";
+import { getJobById } from "@/lib/database/queries/jobs";
+import { createClient } from "@/lib/supabase/server";
 import { getCustomerById } from "@/lib/database/queries/customers";
 import {
   recordEquipmentAddedActivity,
@@ -148,13 +149,38 @@ async function assertCustomerEquipmentReadPermission(
     return "You do not have permission to view equipment.";
   }
 
-  const assignedJobs = await listAssignedJobs(
-    context.company.id,
-    context.user.id,
-  );
-  const hasAssignedJobForCustomer = assignedJobs.some(
-    (job) => job.customerId === customerId,
-  );
+  // Asked as a question, not answered by scanning a list.
+  //
+  // This used to call listAssignedJobs — the technician's ENTIRE job history,
+  // with no limit — and then look for the customer in it. That read stops at
+  // PostgREST's 1,000-row default, ordered scheduled_at descending, so for a
+  // technician past a thousand assigned jobs the OLDEST were missing and the
+  // check answered "no assigned job for this customer" about a customer they
+  // had worked for. It fails closed, so nothing was exposed; a technician was
+  // simply told they could not see equipment they were entitled to see.
+  //
+  // It is the same predicate migration 045 put in has_assigned_job_for_customer
+  // for the equipment RLS policies — company, customer, this technician — asked
+  // with .limit(1) so at most one row is ever read, whatever the history.
+  const supabase = await createClient();
+  const { data: assignedJobMatch, error: assignedJobError } = await supabase
+    .from("jobs")
+    .select("id")
+    .eq("company_id", context.company.id)
+    .eq("customer_id", customerId)
+    .eq("assigned_technician_id", context.user.id)
+    .limit(1);
+
+  const hasAssignedJobForCustomer = (assignedJobMatch ?? []).length > 0;
+
+  if (assignedJobError) {
+    console.error("[customer-equipment] assigned-job check failed:", {
+      companyId: context.company.id,
+      code: assignedJobError.code,
+      message: assignedJobError.message,
+    });
+    return "You do not have permission to view equipment.";
+  }
 
   if (!hasAssignedJobForCustomer) {
     return "You can only view equipment for customers on your assigned jobs.";

@@ -194,6 +194,54 @@ export async function listJobsForOperationalDay(
   return rows.map(mapJobRowToJob);
 }
 
+/** One PostgREST page. Explicit, because the default is what truncates. */
+const TECHNICIAN_JOB_PAGE = 1000;
+
+/**
+ * Every job assigned to one technician, PAGED.
+ *
+ * A technician is a high-cardinality parent: they accumulate jobs for as long
+ * as they are employed, so `.eq("assigned_technician_id", …)` is a filter and
+ * not a bound. The reads it replaced stopped at 1,000, ordered scheduled_at
+ * descending — so the OLDEST jobs vanished, and any figure derived from them
+ * came back short.
+ */
+export async function listJobsForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<Job[]> {
+  const supabase = await createClient();
+  const rows: JobRowWithTechnician[] = [];
+
+  for (let from = 0; ; from += TECHNICIAN_JOB_PAGE) {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select(JOB_TECHNICIAN_SELECT)
+      .eq("company_id", companyId)
+      .eq("assigned_technician_id", technicianId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+      .order("id", { ascending: true })
+      .range(from, from + TECHNICIAN_JOB_PAGE - 1);
+
+    if (error) {
+      console.error("[listJobsForTechnician] query failed:", {
+        companyId,
+        page: from / TECHNICIAN_JOB_PAGE,
+        code: error.code,
+        message: error.message,
+      });
+      return [];
+    }
+
+    const page = (data ?? []) as JobRowWithTechnician[];
+    rows.push(...page);
+    if (page.length < TECHNICIAN_JOB_PAGE) break;
+  }
+
+  return rows.map(mapJobRowToJob);
+}
+
 /**
  * Jobs by id, chunked.
  *

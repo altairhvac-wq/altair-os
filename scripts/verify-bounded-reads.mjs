@@ -328,7 +328,7 @@ if (debt.length === 0) {
  * Lower it when one is fixed. Raising it is a decision someone has to write
  * down, which is the point.
  */
-const DEBT_CEILING = 12;
+const DEBT_CEILING = 7;
 
 check(
   `no NEW unbounded read joins the debt list (${debt.length}/${DEBT_CEILING})`,

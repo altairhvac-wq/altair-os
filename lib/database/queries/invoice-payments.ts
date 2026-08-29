@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -178,6 +179,41 @@ export function mapPaymentRowWithInvoice(
     customerName: row.invoice?.customers?.name ?? "Unknown",
     customerId: row.invoice?.customers?.id,
   };
+}
+
+/** Payments for a bounded set of invoices. */
+export async function listInvoicePaymentsByInvoiceIds(
+  companyId: string,
+  invoiceIds: readonly string[],
+): Promise<InvoicePayment[]> {
+  if (invoiceIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<InvoicePaymentRowWithRecorder>(
+    invoiceIds,
+    (chunk) =>
+      supabase
+        .from("invoice_payments")
+        .select(
+          `
+      *,
+      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email)
+    `,
+        )
+        .eq("company_id", companyId)
+        .in("invoice_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listInvoicePaymentsByInvoiceIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map(mapPaymentRow);
 }
 
 // unbounded-ok: [debt] reads the whole payment ledger. Same Phase 5

@@ -1,5 +1,4 @@
 import { countInChunks } from "@/lib/database/queries/chunked-in";
-import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { mapCustomerRowToCustomer } from "@/lib/database/mappers/customer";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -82,7 +81,13 @@ export type ListCustomersOptions = {
   includeDeleted?: boolean;
 };
 
-// unbounded-ok: [debt] reads every customer. Two live uses: the reports and
+/** One PostgREST page. Explicit, because the default is what truncated. */
+const CUSTOMER_PAGE = 1000;
+
+// unbounded-ok: paged to completion — see the note inside. It reads every
+// customer because the job detail picker must be able to offer every customer;
+// what it no longer does is read the FIRST THOUSAND and present them as all.
+// [was-debt] reads every customer. Two live uses: the reports and
 // dashboard aggregates (Phase 5), and the customer pickers on the sales and
 // work create forms -- which need the bounded-option-source treatment the
 // expenses dropdowns already have, not a bigger limit. Past 1,000 customers
@@ -108,23 +113,41 @@ export async function listCustomers(
     query = query.is("archived_at", null);
   }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  // Paged. The job detail page renders this straight into a native <select> of
+  // every customer, so a read that stopped at PostgREST's 1,000-row default made
+  // customers 1,001+ UNSELECTABLE: a job could not be reassigned to them, and
+  // nothing on the page said why. reportIfRowCapped noticed the cap and logged
+  // it, which is not the same as not truncating.
+  //
+  // Completeness is the requirement here. The page weight it costs on a large
+  // tenant is real and is tracked separately — listCustomerOptions in
+  // customers-page.ts is the search-driven shape this picker should end up
+  // using, and the Work hub already moved to it.
+  const rows: CustomerRow[] = [];
+  for (let from = 0; ; from += CUSTOMER_PAGE) {
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, from + CUSTOMER_PAGE - 1);
 
-  if (error) {
-    console.error("[listCustomers] query failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
-    return [];
+    if (error) {
+      console.error("[listCustomers] query failed:", {
+        companyId,
+        page: from / CUSTOMER_PAGE,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      return [];
+    }
+
+    const page = (data ?? []) as CustomerRow[];
+    rows.push(...page);
+    if (page.length < CUSTOMER_PAGE) break;
   }
 
-  return reportIfRowCapped((data ?? []) as CustomerRow[], {
-    query: "listCustomers",
-    companyId,
-  }).map(mapCustomerRowToCustomer);
+  return rows.map(mapCustomerRowToCustomer);
 }
 
 export async function listCustomerImportContacts(

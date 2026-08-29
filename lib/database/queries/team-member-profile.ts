@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { listEstimates } from "@/lib/database/queries/estimates";
-import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
-import { listInvoices } from "@/lib/database/queries/invoices";
-import { listJobs } from "@/lib/database/queries/jobs";
+import { listEstimatesByJobIds } from "@/lib/database/queries/estimates";
+import { listInvoicePaymentsByInvoiceIds } from "@/lib/database/queries/invoice-payments";
+import { listInvoicesByJobIds } from "@/lib/database/queries/invoices";
+import { listJobsForTechnician } from "@/lib/database/queries/jobs";
 import {
   ensureTechnicianMemberShareCodes,
 } from "@/lib/database/queries/memberships";
-import { listCompanyJobLaborEntries } from "@/lib/database/queries/time-entries";
+import { listJobLaborEntriesByJobIds } from "@/lib/database/queries/time-entries";
 import {
   assertTeamMemberProfileEditAccess,
   assertTeamMemberProfileReadAccess,
@@ -221,9 +221,17 @@ async function buildTeamMemberActivity(
   companyId: string,
   userId: string,
 ): Promise<TeamMemberActivityItem[]> {
-  const [jobs, estimates, laborEntries] = await Promise.all([
-    listJobs(companyId, { assignedTechnicianId: userId }),
-    listEstimates(companyId),
+  // Narrowed to this member's own work, at the query.
+  //
+  // It used to read the member's jobs with listJobs — a filter on a parent that
+  // accumulates for the life of the employment, so it stopped at 1,000 with the
+  // OLDEST dropped — and then read the company's ENTIRE estimate book to find
+  // the few attached to those jobs.
+  const jobs = await listJobsForTechnician(companyId, userId);
+  const memberJobIds = jobs.map((job) => job.id);
+
+  const [estimates, laborEntries] = await Promise.all([
+    listEstimatesByJobIds(companyId, memberJobIds),
     listTimeEntries(companyId, {
       technicianId: userId,
       limit: 20,
@@ -416,16 +424,31 @@ async function buildWorkSummaryForTechnician(
           ? "Last 90 days"
           : "Last 30 days";
 
-  const [jobs, payments, invoices, laborEntries, laborCostRates] =
-    await Promise.all([
-      listJobs(companyId, { assignedTechnicianId: technicianId }),
-      listInvoicePayments(companyId),
-      listInvoices(companyId),
-      listCompanyJobLaborEntries(companyId),
-      includeProfitability
-        ? listTechnicianLaborCostRates(companyId)
-        : Promise.resolve(new Map<string, number>()),
-    ]);
+  // This is a MONEY figure on a person's profile, and it was built from three
+  // whole books: the company's entire payment ledger, its entire invoice book,
+  // and every job-labour entry it has — then reduced to the rows belonging to
+  // one technician. Each stopped at 1,000 rows, so on any real tenant the
+  // summary silently understated the revenue and profitability attributed to
+  // that member, and understated it most for the longest-serving ones.
+  //
+  // buildMemberWorkSummary only ever looks at a payment whose invoice belongs
+  // to one of this member's jobs, so the narrowing changes no figure it can
+  // legitimately produce — it removes the rows it would have discarded anyway.
+  const jobs = await listJobsForTechnician(companyId, technicianId);
+  const memberJobIds = jobs.map((job) => job.id);
+
+  const invoices = await listInvoicesByJobIds(companyId, memberJobIds);
+
+  const [payments, laborEntries, laborCostRates] = await Promise.all([
+    listInvoicePaymentsByInvoiceIds(
+      companyId,
+      invoices.map((invoice) => invoice.id),
+    ),
+    listJobLaborEntriesByJobIds(companyId, memberJobIds),
+    includeProfitability
+      ? listTechnicianLaborCostRates(companyId)
+      : Promise.resolve(new Map<string, number>()),
+  ]);
 
   const summary = buildMemberWorkSummary(
     technicianId,

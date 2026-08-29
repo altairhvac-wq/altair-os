@@ -189,7 +189,11 @@ export const listExpenses = cache(async function listExpenses(
   return attachReceiptSignedUrls(expenses);
 });
 
-// unbounded-ok: [debt] one technician's ENTIRE expense history, with no date
+/** One PostgREST page. Explicit, because the default is what truncated. */
+const TECHNICIAN_EXPENSE_PAGE = 1000;
+
+// unbounded-ok: paged to completion — see the note inside.
+// [was-debt] one technician's ENTIRE expense history, with no date
 // filter and no limit. A technician filing a few receipts a week passes 1,000
 // in about four years, and the oldest are the ones dropped because the order is
 // created_at desc. Filtering by technician_id is not a bound: unlike job_id or
@@ -201,25 +205,42 @@ export async function listExpensesForTechnician(
 ): Promise<Expense[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const query = supabase
     .from("expenses")
     .select(EXPENSE_SELECT)
     .eq("company_id", companyId)
     .eq("technician_id", technicianId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
-  if (error) {
-    console.error("[listExpensesForTechnician] query failed:", {
-      companyId,
-      technicianId,
-      code: error.code,
-      message: error.message,
-    });
-    return [];
+  // Paged. This is the technician receipts page: it stopped at the newest
+  // 1,000, offered no pagination control, and said nothing about the rest — so
+  // a technician a few years in simply could not reach their older receipts,
+  // which are the ones a person goes looking for.
+  const rows: ExpenseRowWithRelations[] = [];
+  for (let from = 0; ; from += TECHNICIAN_EXPENSE_PAGE) {
+    const { data, error } = await query.range(
+      from,
+      from + TECHNICIAN_EXPENSE_PAGE - 1,
+    );
+
+    if (error) {
+      console.error("[listExpensesForTechnician] query failed:", {
+        companyId,
+        technicianId,
+        page: from / TECHNICIAN_EXPENSE_PAGE,
+        code: error.code,
+        message: error.message,
+      });
+      return [];
+    }
+
+    const page = (data ?? []) as ExpenseRowWithRelations[];
+    rows.push(...page);
+    if (page.length < TECHNICIAN_EXPENSE_PAGE) break;
   }
 
-  const expenses = ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
-  return attachReceiptSignedUrls(expenses);
+  return attachReceiptSignedUrls(rows.map(mapExpenseRow));
 }
 
 export async function listExpensesForJob(

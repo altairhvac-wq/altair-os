@@ -365,12 +365,57 @@ export function sortActivitiesNewestFirst(
   );
 }
 
-// unbounded-ok: [debt] three unpaged id reads — every job, estimate and invoice
-// belonging to ONE customer — which then feed the activity lookups below. A
-// long-standing commercial customer passes 1,000 of any of them, and the effect
-// is not a short list but a WRONG one: the activity feed silently omits
-// everything attached to the truncated ids. customer_id is not a bound here for
-// the same reason it was not one in countCustomerInvoicePayments.
+/** One PostgREST page. Explicit, because the default is what truncated. */
+const CUSTOMER_ENTITY_PAGE = 1000;
+
+/**
+ * Every id of one kind belonging to one customer, paged.
+ *
+ * These three reads seed the activity lookups below, so truncating them does
+ * not shorten the feed — it produces a WRONG one, silently missing everything
+ * attached to the ids that fell off. A long-standing commercial customer passes
+ * a thousand jobs or invoices, and customer_id is not a bound: unlike job_id,
+ * a customer accumulates children for as long as they are a customer.
+ */
+async function listEntityIdsForCustomer(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "jobs" | "estimates" | "invoices",
+  companyId: string,
+  customerId: string,
+): Promise<string[]> {
+  const ids: string[] = [];
+
+  for (let from = 0; ; from += CUSTOMER_ENTITY_PAGE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("customer_id", customerId)
+      .order("id", { ascending: true })
+      .range(from, from + CUSTOMER_ENTITY_PAGE - 1);
+
+    if (error) {
+      console.error("[listEntityIdsForCustomer] query failed:", {
+        table,
+        companyId,
+        customerId,
+        page: from / CUSTOMER_ENTITY_PAGE,
+        code: error.code,
+        message: error.message,
+      });
+      return ids;
+    }
+
+    const page = (data ?? []) as { id: string }[];
+    ids.push(...page.map((row) => row.id));
+    if (page.length < CUSTOMER_ENTITY_PAGE) break;
+  }
+
+  return ids;
+}
+
+// unbounded-ok: the three id reads are paged to completion by
+// listEntityIdsForCustomer — see the note there.
 export async function listOperationalActivitiesForCustomer(
   companyId: string,
   customerId: string,
@@ -379,33 +424,17 @@ export async function listOperationalActivitiesForCustomer(
   const includeBillingActivities = options?.includeBillingActivities ?? true;
   const supabase = await createClient();
 
-  const [customerActivities, jobRows, estimateRows, invoiceRows] =
+  const [customerActivities, jobIds, estimateIds, invoiceIds] =
     await Promise.all([
       listCustomerActivitiesForCustomer(companyId, customerId),
-      supabase
-        .from("jobs")
-        .select("id")
-        .eq("company_id", companyId)
-        .eq("customer_id", customerId),
+      listEntityIdsForCustomer(supabase, "jobs", companyId, customerId),
       includeBillingActivities
-        ? supabase
-            .from("estimates")
-            .select("id")
-            .eq("company_id", companyId)
-            .eq("customer_id", customerId)
-        : Promise.resolve({ data: [] as { id: string }[] }),
+        ? listEntityIdsForCustomer(supabase, "estimates", companyId, customerId)
+        : Promise.resolve([] as string[]),
       includeBillingActivities
-        ? supabase
-            .from("invoices")
-            .select("id")
-            .eq("company_id", companyId)
-            .eq("customer_id", customerId)
-        : Promise.resolve({ data: [] as { id: string }[] }),
+        ? listEntityIdsForCustomer(supabase, "invoices", companyId, customerId)
+        : Promise.resolve([] as string[]),
     ]);
-
-  const jobIds = (jobRows.data ?? []).map((row) => row.id);
-  const estimateIds = (estimateRows.data ?? []).map((row) => row.id);
-  const invoiceIds = (invoiceRows.data ?? []).map((row) => row.id);
 
   const [jobActivities, estimateActivities, invoiceActivities, expenseActivities] =
     await Promise.all([

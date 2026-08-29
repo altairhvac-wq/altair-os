@@ -4,9 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById } from "@/lib/database/queries/customers";
 import { listCustomerOptions } from "@/lib/database/queries/customers-page";
 import {
-  listAssignedJobs,
   listDeletedJobs,
-  listJobs,
   listJobsForOperationalDay,
 } from "@/lib/database/queries/jobs";
 import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
