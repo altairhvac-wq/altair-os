@@ -70,7 +70,7 @@ export function HomepageProductProofSection() {
       className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16 lg:py-20"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.2),transparent)]"
         aria-hidden="true"
       />
 

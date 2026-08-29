@@ -231,6 +231,20 @@ const cases = [
    * near-black label — both checked here. Text on paper uses brass-700, and
    * link hover DEEPENS to amber-800 rather than brightening, which is what a
    * light ground requires. */
+  /*
+   * Focus indicators (WCAG 2.4.11) must clear 3:1 against the ground they sit
+   * on. These were translucent brass — 2px at 35-40% alpha — which cannot
+   * promise a ratio, because whatever it composites over decides the result.
+   * Measured in the running app, the primary sidebar navigation came out at
+   * 1.96:1. `--focus-ring` is solid and clears the bar on BOTH grounds, which
+   * is why one token can serve the whole product.
+   */
+  ["focus-ring on chrome (sidebar nav)", "#987836", T.chrome, UI],
+  ["focus-ring on chromeElevated", "#987836", T.chromeElevated, UI],
+  ["focus-ring on surface", "#987836", T.surface, UI],
+  ["focus-ring on canvas", "#987836", T.canvas, UI],
+  ["focus-ring on canvasSunken", "#987836", T.canvasSunken, UI],
+
   ["brass-600 status dot on paper #fbf7ef", "#a4823a", "#fbf7ef", UI],
   ["near-black label on brass-600 fill", "#080907", "#a4823a", AA],
   ["link hover amber-800 on paper #fbf7ef", "#5f4715", "#fbf7ef", AA],

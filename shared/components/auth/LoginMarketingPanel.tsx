@@ -253,7 +253,7 @@ export function LoginMarketingPanel() {
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-30" />
       <div className="auth-noise pointer-events-none absolute inset-0 opacity-20" />
       <div className="auth-gear-motif pointer-events-none absolute -right-52 -top-52 h-[44rem] w-[44rem] opacity-[0.05]" />
-      <div className="pointer-events-none absolute -left-56 top-24 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(14,116,144,0.1)_0%,transparent_68%)]" />
+      <div className="pointer-events-none absolute -left-56 top-24 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(116,106,81,0.1)_0%,transparent_68%)]" />
 
       <div className="relative mx-auto max-w-[1160px] px-5 py-7 sm:px-8 sm:py-9 lg:px-8 xl:px-10">
         <header className="flex items-center justify-between gap-4">

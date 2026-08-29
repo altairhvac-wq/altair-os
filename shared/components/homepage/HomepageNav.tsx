@@ -58,7 +58,7 @@ export function HomepageNav() {
       className={[
         "ah-nav ah-hero-fade ah-hero-fade-0 fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-500 ease-out motion-reduce:transition-none",
         solid
-          ? "border-b border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,12,0.92)] shadow-[0_1px_0_rgba(251,247,239,0.04)] backdrop-blur-md"
+          ? "border-b border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.92)] shadow-[0_1px_0_rgba(251,247,239,0.04)] backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
@@ -118,7 +118,7 @@ export function HomepageNav() {
 
         <button
           type="button"
-          className={`relative z-10 inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(251,247,239,0.14)] bg-[rgba(8,9,12,0.35)] p-2 text-[#fbf7ef] lg:hidden ${focusRing}`}
+          className={`relative z-10 inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(251,247,239,0.14)] bg-[rgba(8,9,7,0.35)] p-2 text-[#fbf7ef] lg:hidden ${focusRing}`}
           aria-expanded={menuOpen}
           aria-controls={menuId}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -135,7 +135,7 @@ export function HomepageNav() {
       {menuOpen ? (
         <div
           id={menuId}
-          className="border-t border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,12,0.94)] backdrop-blur-xl lg:hidden"
+          className="border-t border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.94)] backdrop-blur-xl lg:hidden"
         >
           <nav
             aria-label="Mobile"
@@ -150,7 +150,7 @@ export function HomepageNav() {
                   aria-current={active ? "page" : undefined}
                   onClick={() => setMenuOpen(false)}
                   className={[
-                    "rounded-lg px-3 py-3 text-base font-medium hover:bg-[rgba(23,27,34,0.85)]",
+                    "rounded-lg px-3 py-3 text-base font-medium hover:bg-[rgba(24,28,22,0.85)]",
                     active ? "text-[#fff9ea]" : "text-[#fbf7ef]",
                     focusRing,
                   ].join(" ")}
@@ -162,7 +162,7 @@ export function HomepageNav() {
             <Link
               href="/login"
               onClick={() => setMenuOpen(false)}
-              className={`rounded-lg px-3 py-3 text-base font-medium text-[#c9bfae] hover:bg-[rgba(23,27,34,0.85)] ${focusRing}`}
+              className={`rounded-lg px-3 py-3 text-base font-medium text-[#c9bfae] hover:bg-[rgba(24,28,22,0.85)] ${focusRing}`}
             >
               Sign In
             </Link>

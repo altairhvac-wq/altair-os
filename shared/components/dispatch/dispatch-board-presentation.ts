@@ -17,9 +17,9 @@ export const dispatchMissionClasses = {
     "dispatch-mission-filter-region shrink-0 border-b border-altair-border/70 bg-white/[0.03]",
   filterSearchBand: "px-3 pb-3 pt-2 sm:px-4",
   searchInput:
-    "h-11 w-full min-h-11 rounded-xl border border-altair-border bg-altair-graphite py-1.5 pl-9 pr-3 text-sm text-altair-paper placeholder:text-altair-ink-on-graphite-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-brass/50 focus-visible:ring-2 focus-visible:ring-altair-brass/35 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-ink md:h-10 md:min-h-10",
+    "h-11 w-full min-h-11 rounded-xl border border-altair-border bg-altair-graphite py-1.5 pl-9 pr-3 text-sm text-altair-paper placeholder:text-altair-ink-on-graphite-muted outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-brass/50 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-ink md:h-10 md:min-h-10",
   filterSelect:
-    "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-graphite py-1.5 pl-9 pr-8 text-sm font-medium text-altair-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-brass/50 focus-visible:ring-2 focus-visible:ring-altair-brass/35 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-ink sm:w-auto sm:pr-10 md:h-10 md:min-h-10",
+    "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-graphite py-1.5 pl-9 pr-8 text-sm font-medium text-altair-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-brass/50 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-ink sm:w-auto sm:pr-10 md:h-10 md:min-h-10",
   filterIcon: "text-altair-ink-on-graphite-muted",
   filterMeta: "mt-1.5 text-[11px] text-altair-ink-on-graphite-muted sm:text-xs",
 
@@ -79,7 +79,7 @@ export const dispatchMissionClasses = {
   unassignedSidebarList:
     "min-h-0 flex-1 overflow-y-auto overscroll-contain border-0 border-t border-altair-border/50",
   unassignedSidebarRow:
-    "w-full border-b border-altair-border/50 px-2.5 py-2 text-left transition-colors last:border-b-0 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-altair-brass/35",
+    "w-full border-b border-altair-border/50 px-2.5 py-2 text-left transition-colors last:border-b-0 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--focus-ring)]",
   unassignedSidebarRowSelected: "bg-altair-information/15 hover:bg-altair-information/20",
   unassignedSidebarEmpty:
     "flex flex-1 items-center justify-center px-3 py-6 text-center",

@@ -42,7 +42,7 @@ export function HomepageOnboardingSection() {
       className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.2),transparent)]"
         aria-hidden="true"
       />
       <div
@@ -50,7 +50,7 @@ export function HomepageOnboardingSection() {
         aria-hidden="true"
       />
 
-      <div className="relative mx-auto grid max-w-[78rem] gap-8 rounded-2xl border border-[rgba(222,228,236,0.12)] bg-[linear-gradient(145deg,rgba(31,35,43,0.8),rgba(12,14,18,0.9))] p-5 shadow-[0_1px_0_rgba(222,228,236,0.08)_inset] sm:p-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12 lg:p-10">
+      <div className="relative mx-auto grid max-w-[78rem] gap-8 rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(145deg,rgba(31,36,29,0.8),rgba(12,15,11,0.9))] p-5 shadow-[0_1px_0_rgba(230,227,220,0.08)_inset] sm:p-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12 lg:p-10">
         <div className="lg:py-2">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[rgba(194,160,90,0.35)] bg-[rgba(164,130,58,0.1)]">
             <Video
@@ -85,7 +85,7 @@ export function HomepageOnboardingSection() {
           {ONBOARDING_ITEMS.map(({ title, detail, icon: Icon }) => (
             <li
               key={title}
-              className="rounded-xl border border-[rgba(222,228,236,0.1)] bg-[rgba(8,9,12,0.46)] p-4 sm:p-5"
+              className="rounded-xl border border-[rgba(230,227,220,0.1)] bg-[rgba(8,9,7,0.46)] p-4 sm:p-5"
             >
               <Icon
                 className="h-4.5 w-4.5 text-[#c2a05a]"

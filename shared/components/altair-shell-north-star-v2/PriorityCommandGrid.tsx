@@ -6,7 +6,7 @@ import { missionEyebrowClass } from "./mission-tokens";
 const leverageStyles = {
   primary: {
     shell:
-      "col-span-full bg-gradient-to-br from-cyan-950/60 via-slate-900/80 to-indigo-950/50 ring-cyan-500/35 shadow-[0_12px_40px_-8px_rgba(34,211,238,0.15)] sm:col-span-1",
+      "col-span-full bg-gradient-to-br from-cyan-950/60 via-slate-900/80 to-indigo-950/50 ring-cyan-500/35 shadow-[0_12px_40px_-8px_rgba(200,192,175,0.15)] sm:col-span-1",
     label: "text-white",
     metric: "text-cyan-200/80",
     icon: "text-cyan-400",

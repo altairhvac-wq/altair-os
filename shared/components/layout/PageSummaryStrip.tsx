@@ -89,7 +89,7 @@ export function PageSummaryStrip({
           {cards.map((card) => (
             <div
               key={card.label}
-              className={`rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
+              className={`rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(6,7,5,0.08)] sm:px-4 sm:py-3.5 ${
                 card.highlighted
                   ? "border-[rgba(194,160,90,0.35)] bg-[#FFF9EA] ring-1 ring-[rgba(194,160,90,0.18)]"
                   : ""

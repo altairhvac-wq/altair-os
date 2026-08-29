@@ -21,7 +21,7 @@ export const ownerMobileSectionLabelClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400";
 
 export const ownerMobileHeroCardClass =
-  "overflow-hidden rounded-2xl border border-slate-300/45 bg-white shadow-[0_4px_20px_-6px_rgba(15,23,42,0.08)]";
+  "overflow-hidden rounded-2xl border border-slate-300/45 bg-white shadow-[0_4px_20px_-6px_rgba(21,25,19,0.08)]";
 
 export const ownerMobileHeroCardLiveClass =
   "ring-1 ring-inset ring-[rgba(194,160,90,0.22)]";
@@ -34,17 +34,17 @@ export const ownerMobileHeroSecondaryActionClass =
   buttonClassName("secondary", "md", "w-full touch-manipulation");
 
 export const ownerMobileUpNextRowClass =
-  "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.08)] transition-colors active:bg-slate-50/80";
+  "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(21,25,19,0.08)] transition-colors active:bg-slate-50/80";
 
 export const ownerMobileArchiveInputClass =
   "h-11 w-full min-h-11 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-colors focus:border-[rgba(194,160,90,0.45)] focus:ring-2 focus:ring-[rgba(194,160,90,0.18)]";
 
 export const ownerMobileArchiveResultRowClass =
-  "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.06)] transition-colors active:bg-slate-50/80";
+  "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(21,25,19,0.06)] transition-colors active:bg-slate-50/80";
 
 /** Dark compact hero — canonical secondary action. */
 export const ownerMobileFiltersButtonClass =
   buttonClassName("secondary", "sm", "shrink-0 touch-manipulation");
 
 export const ownerMobileEmptyCardClass =
-  "rounded-2xl border border-slate-200/70 bg-white px-5 py-8 text-center shadow-[0_1px_8px_-2px_rgba(15,23,42,0.06)]";
+  "rounded-2xl border border-slate-200/70 bg-white px-5 py-8 text-center shadow-[0_1px_8px_-2px_rgba(21,25,19,0.06)]";

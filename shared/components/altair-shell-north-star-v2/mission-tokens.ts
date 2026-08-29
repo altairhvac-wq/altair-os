@@ -44,7 +44,7 @@ export const missionConceptMarkerClass =
 /* ── Operating board (frosted light workspace) ────────────────── */
 
 export const missionOperatingBoardClass =
-  "relative overflow-hidden rounded-[1.75rem] bg-[#f9f8f6]/92 shadow-[0_4px_32px_-10px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.9)_inset] ring-1 ring-slate-200/80 backdrop-blur-xl";
+  "relative overflow-hidden rounded-[1.75rem] bg-[#f9f8f6]/92 shadow-[0_4px_32px_-10px_rgba(21,25,19,0.08),0_0_0_1px_rgba(255,255,255,0.9)_inset] ring-1 ring-slate-200/80 backdrop-blur-xl";
 
 /** Dark header dock — hierarchy anchor on light board. */
 export const missionBoardHeaderClass =
@@ -52,11 +52,11 @@ export const missionBoardHeaderClass =
 
 /** Light column section header — readable daily-use anchor. */
 export const missionColumnHeaderClass =
-  "rounded-xl border border-slate-200/90 bg-white/85 px-3.5 py-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)]";
+  "rounded-xl border border-slate-200/90 bg-white/85 px-3.5 py-3 shadow-[0_1px_3px_rgba(21,25,19,0.04)]";
 
 /** Light workspace list row — high readability for daily use. */
 export const missionRowClass =
-  "flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors hover:border-slate-300/90 hover:bg-white hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]";
+  "flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(21,25,19,0.03)] transition-colors hover:border-slate-300/90 hover:bg-white hover:shadow-[0_2px_8px_rgba(21,25,19,0.05)]";
 
 /** Text tokens — dark surfaces. */
 export const missionWorkspaceTitleClass = "text-lg font-semibold text-white sm:text-xl";
@@ -75,15 +75,15 @@ export const missionLinkClass =
 /* ── Footer (frosted light band) ──────────────────────────────── */
 
 export const missionFooterClass =
-  "relative overflow-hidden rounded-2xl border border-slate-200/80 bg-[#f9f8f6]/90 shadow-[0_2px_16px_-4px_rgba(15,23,42,0.06)] backdrop-blur-xl";
+  "relative overflow-hidden rounded-2xl border border-slate-200/80 bg-[#f9f8f6]/90 shadow-[0_2px_16px_-4px_rgba(21,25,19,0.06)] backdrop-blur-xl";
 
 /* ── Legacy tokens (unused in v2.3 layout, kept for compat) ─── */
 
 export const missionGlassCardClass =
-  "relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] backdrop-blur-xl sm:p-5";
+  "relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_2px_12px_rgba(21,25,19,0.04)] backdrop-blur-xl sm:p-5";
 
 export const missionZoneClass =
-  "relative overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-[#f9f8f6]/92 p-4 shadow-[0_4px_32px_-10px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5 lg:p-6";
+  "relative overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-[#f9f8f6]/92 p-4 shadow-[0_4px_32px_-10px_rgba(21,25,19,0.08)] backdrop-blur-xl sm:p-5 lg:p-6";
 
 export const missionDockClass =
-  "rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-[0_1px_4px_rgba(15,23,42,0.03)] backdrop-blur-xl sm:p-5";
+  "rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-[0_1px_4px_rgba(21,25,19,0.03)] backdrop-blur-xl sm:p-5";

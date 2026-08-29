@@ -23,9 +23,9 @@ const beamStyles: Record<LightBeamTone, { vertical: string; horizon: string }> =
   },
   cyan: {
     vertical:
-      "bg-[linear-gradient(to_bottom,rgba(34,211,238,0.14)_0%,rgba(14,165,233,0.05)_35%,transparent_80%)]",
+      "bg-[linear-gradient(to_bottom,rgba(200,192,175,0.14)_0%,rgba(166,154,127,0.05)_35%,transparent_80%)]",
     horizon:
-      "bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(34,211,238,0.12),transparent_70%)]",
+      "bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(200,192,175,0.12),transparent_70%)]",
   },
   warm: {
     vertical:

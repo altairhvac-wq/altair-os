@@ -16,7 +16,7 @@ const FOOTER_LINKS = [
 
 export function MarketingFooter() {
   return (
-    <footer className="relative border-t border-[rgba(222,228,236,0.08)] bg-[#080907] px-5 py-5 sm:px-8 sm:py-6">
+    <footer className="relative border-t border-[rgba(230,227,220,0.08)] bg-[#080907] px-5 py-5 sm:px-8 sm:py-6">
       <div className="mx-auto flex max-w-[90rem] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="max-w-sm">
           <Link

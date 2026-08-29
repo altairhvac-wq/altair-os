@@ -39,7 +39,7 @@ export function TaxSummaryNorthStarLoadingState() {
         className="min-w-0 px-3 pb-5 sm:px-3.5 lg:px-5 lg:pb-6"
       >
         <div className="mx-auto w-full max-w-5xl">
-          <div className="rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-6 py-8 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-10 sm:py-10">
+          <div className="rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-6 py-8 shadow-[0_4px_16px_rgba(6,7,5,0.08)] sm:px-10 sm:py-10">
             <div className="border-b border-[rgba(119,89,27,0.12)] pb-6">
               <Skeleton className="h-3 w-36" />
               <Skeleton className="mt-3 h-8 w-64 max-w-full" />

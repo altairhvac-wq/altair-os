@@ -53,7 +53,7 @@ function MobileEntryCard({
 }) {
   return (
     <article
-      className={`time-north-star-mobile-entry rounded-xl border px-3.5 py-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] ${
+      className={`time-north-star-mobile-entry rounded-xl border px-3.5 py-3.5 shadow-[0_2px_8px_rgba(6,7,5,0.06)] ${
         highlighted
           ? "border-[rgba(194,160,90,0.35)] bg-[rgba(194,160,90,0.08)] ring-1 ring-[rgba(194,160,90,0.18)]"
           : "border-[rgba(119,89,27,0.14)] bg-[#FBF7EF]"
@@ -98,7 +98,7 @@ export function TimeNorthStarActiveTechnicianCard({ entry }: { entry: TimeEntry 
   const state = resolveTechnicianState(entry);
 
   return (
-    <article className="time-north-star-active-card relative overflow-hidden rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] px-3.5 py-3.5 shadow-[0_3px_12px_rgba(3,7,12,0.08)] sm:px-4 sm:py-4">
+    <article className="time-north-star-active-card relative overflow-hidden rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] px-3.5 py-3.5 shadow-[0_3px_12px_rgba(6,7,5,0.08)] sm:px-4 sm:py-4">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(194,160,90,0.35)] to-transparent"
         aria-hidden="true"

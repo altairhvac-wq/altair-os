@@ -26,7 +26,7 @@ export function AttentionRadar({ rails }: AttentionRadarProps) {
   return (
     <section
       aria-label="Attention radar"
-      className="relative overflow-hidden rounded-2xl bg-white/60 p-4 shadow-[0_8px_40px_-20px_rgba(15,23,42,0.08),0_0_0_1px_rgba(176,168,143,0.06)] backdrop-blur-sm sm:p-5 lg:p-6"
+      className="relative overflow-hidden rounded-2xl bg-white/60 p-4 shadow-[0_8px_40px_-20px_rgba(21,25,19,0.08),0_0_0_1px_rgba(176,168,143,0.06)] backdrop-blur-sm sm:p-5 lg:p-6"
     >
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>
@@ -68,7 +68,7 @@ export function AttentionRadar({ rails }: AttentionRadarProps) {
                     <li key={item.id}>
                       <button
                         type="button"
-                        className="group inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50/80 px-3 py-2 text-left ring-1 ring-slate-200/50 transition-all hover:bg-white hover:shadow-[0_4px_16px_-4px_rgba(15,23,42,0.1)] hover:ring-slate-300/60"
+                        className="group inline-flex max-w-full items-center gap-2 rounded-xl bg-slate-50/80 px-3 py-2 text-left ring-1 ring-slate-200/50 transition-all hover:bg-white hover:shadow-[0_4px_16px_-4px_rgba(21,25,19,0.1)] hover:ring-slate-300/60"
                       >
                         <span
                           className={`h-2 w-2 shrink-0 rounded-full ${urgency.dot}`}

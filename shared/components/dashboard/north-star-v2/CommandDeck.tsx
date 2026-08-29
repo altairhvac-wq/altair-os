@@ -110,7 +110,7 @@ export function CommandDeck({
   return (
     <section
       aria-label="Command deck"
-      className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 shadow-[0_24px_80px_-24px_rgba(15,23,42,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6"
+      className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 shadow-[0_24px_80px_-24px_rgba(21,25,19,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6"
     >
       <div
         aria-hidden="true"

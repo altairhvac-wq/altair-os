@@ -26,7 +26,7 @@ function NorthStarExpenseMetricCards({ cards }: { cards: SummaryCard[] }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3 py-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-3.5 sm:py-3"
+          className="rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3 py-2.5 shadow-[0_2px_8px_rgba(6,7,5,0.08)] sm:px-3.5 sm:py-3"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

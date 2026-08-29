@@ -26,11 +26,11 @@ export function MoneyPipeline({ stages }: MoneyPipelineProps) {
   return (
     <section
       aria-label="Money pipeline"
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-sky-50/40 p-4 shadow-[0_8px_40px_-20px_rgba(15,23,42,0.1)] sm:p-5 lg:p-6"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-sky-50/40 p-4 shadow-[0_8px_40px_-20px_rgba(21,25,19,0.1)] sm:p-5 lg:p-6"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_0%_50%,rgba(34,211,238,0.06),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_0%_50%,rgba(200,192,175,0.06),transparent_60%)]"
       />
 
       <div className="relative mb-5 flex flex-wrap items-end justify-between gap-3">

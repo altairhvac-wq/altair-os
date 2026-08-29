@@ -89,7 +89,7 @@ const EXCEPTION_BUCKET_ICON: Record<DashboardExceptionBucketId, LucideIcon> = {
 
 /**
  * Soft light-card urgency chrome.
- * Low = cream + calm green circle; medium = amber tint; high = danger tint.
+ * Low = cream + neutral graphite circle; medium = amber tint; high = danger tint.
  * Urgency is expressed via full-card background tint + icon-circle color (not border).
  */
 const EXCEPTION_URGENCY: Record<
@@ -105,9 +105,17 @@ const EXCEPTION_URGENCY: Record<
 > = {
   low: {
     shell: `${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`,
-    iconCircle: "altair-icon-well bg-altair-success text-white",
+    /* PRESTIGE: this was success-green, which made the board say the opposite
+     * of what it means. Urgency here is derived from COUNT alone, so "low" is
+     * simply a small number — and on a panel titled "Needs attention" a single
+     * past-due invoice was rendering with the same green that means "on
+     * track". Green is load-bearing in this product; spending it on "not many
+     * of these" both lies and drowns the amber and red rows in a wall of it.
+     * Low is now neutral graphite, so escalation reads neutral -> amber -> red
+     * and colour only appears when it carries meaning. */
+    iconCircle: "altair-icon-well bg-[var(--chrome-elevated)] text-white",
     count: "text-altair-ink-on-paper",
-    link: "text-altair-success-foreground",
+    link: "text-[var(--brand-metal-text)]",
     divider: "border-altair-border/40",
     rowHover: "hover:bg-black/[0.03]",
   },
@@ -204,7 +212,7 @@ export function MissionControlV2ExceptionBucketCard({
     return (
       <Link
         href={bucket.href}
-        className={`block ${urgency.shell} ${altairMcCardPadClass} transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+        className={`block ${urgency.shell} ${altairMcCardPadClass} transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
       >
         {header}
       </Link>
@@ -215,7 +223,7 @@ export function MissionControlV2ExceptionBucketCard({
     <div className={urgency.shell}>
       <details className="group">
         <summary
-          className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+          className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] [&::-webkit-details-marker]:hidden`}
         >
           {header}
         </summary>
@@ -225,7 +233,7 @@ export function MissionControlV2ExceptionBucketCard({
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className={`flex items-start justify-between gap-3 py-2.5 transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+                  className={`flex items-start justify-between gap-3 py-2.5 transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-altair-ink-on-paper">
@@ -400,7 +408,7 @@ function InformationalBucketShell({
       className={`group ${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`}
     >
       <summary
-        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] [&::-webkit-details-marker]:hidden`}
       >
         <div className="flex items-center gap-3">
           <span
@@ -600,7 +608,7 @@ export function MissionControlV2ActivityBucketCard({
                 {row.href ? (
                   <Link
                     href={row.href}
-                    className="block transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+                    className="block transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                   >
                     {body}
                   </Link>

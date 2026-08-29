@@ -95,7 +95,7 @@ export function JobsMobileCardList({
                       customerName={job.customerName}
                       canManageCustomers={canManageCustomers}
                       className={jm.secondaryText}
-                      linkClassName={`${jm.secondaryText} hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+                      linkClassName={`${jm.secondaryText} hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
                       stopRowNavigation
                     />
                   </p>

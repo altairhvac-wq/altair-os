@@ -18,7 +18,7 @@ export function GrowthPipelinePanel({ stages }: GrowthPipelinePanelProps) {
     <section aria-label="Growth pipeline" className={shellZoneClass}>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_100%_0%,rgba(99,102,241,0.08),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_100%_0%,rgba(130,118,90,0.08),transparent_55%)]"
       />
 
       <div className="relative mb-5 flex flex-wrap items-end justify-between gap-3">

@@ -65,9 +65,9 @@ function NorthStarDesktopDrawer({
           aria-label="Close panel"
           onClick={onClose}
           disabled={closeDisabled}
-          className="absolute inset-0 bg-[rgba(3,7,12,0.45)] backdrop-blur-[1px] transition-opacity disabled:cursor-default"
+          className="absolute inset-0 bg-[rgba(6,7,5,0.45)] backdrop-blur-[1px] transition-opacity disabled:cursor-default"
         />
-        <aside className="expense-north-star-detail-panel relative ml-auto flex h-full w-[min(720px,58vw)] min-w-[min(100%,520px)] flex-col overflow-hidden border-l border-[rgba(174,182,194,0.18)] bg-[#1C211A] shadow-[0_22px_60px_rgba(3,7,12,0.42)]">
+        <aside className="expense-north-star-detail-panel relative ml-auto flex h-full w-[min(720px,58vw)] min-w-[min(100%,520px)] flex-col overflow-hidden border-l border-[rgba(188,181,165,0.18)] bg-[#1C211A] shadow-[0_22px_60px_rgba(6,7,5,0.42)]">
           <NorthStarPanelHeader onClose={onClose} closeDisabled={closeDisabled} />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="expense-north-star-detail-panel-body flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">

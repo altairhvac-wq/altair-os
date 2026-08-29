@@ -315,7 +315,7 @@ function TechnicianPreview() {
       description="The active job, customer details, and field actions in one view."
       icon={Smartphone}
     >
-      <div className="mx-auto flex h-full max-w-[18rem] flex-col rounded-[1.2rem] bg-slate-100 p-3 shadow-[0_14px_30px_rgba(15,23,42,0.16)]">
+      <div className="mx-auto flex h-full max-w-[18rem] flex-col rounded-[1.2rem] bg-slate-100 p-3 shadow-[0_14px_30px_rgba(21,25,19,0.16)]">
         <div className="flex flex-1 flex-col rounded-xl border-l-4 border-l-cyan-600 bg-gradient-to-br from-cyan-50 via-white to-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

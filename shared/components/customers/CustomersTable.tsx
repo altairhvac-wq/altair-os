@@ -45,7 +45,7 @@ function formatCustomerContactLines(customer: Customer): {
  * shared with Input/Select — brass command ring for Mission Briefing.
  */
 const customerNameLinkFocusClass =
-  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
 
 type CustomersTableProps = {
   customers: Customer[];

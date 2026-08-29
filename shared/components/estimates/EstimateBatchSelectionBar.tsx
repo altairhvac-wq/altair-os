@@ -62,7 +62,7 @@ export function EstimateBatchSelectionBar({
       className={
         northStar
           ? lt.bulkBar
-          : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-5"
+          : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(21,25,19,0.25)] backdrop-blur-sm sm:px-5"
       }
       role="region"
       aria-label="Batch estimate actions"

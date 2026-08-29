@@ -174,7 +174,7 @@ export function TechnicianWorkloadCards({
 
   if (northStar) {
     return (
-      <section className="rounded-xl border border-[rgba(194,160,90,0.28)] bg-[rgba(39,49,64,0.45)] p-2 shadow-sm ring-1 ring-[rgba(194,160,90,0.16)] sm:rounded-2xl sm:p-4">
+      <section className="rounded-xl border border-[rgba(194,160,90,0.28)] bg-[rgba(43,51,40,0.45)] p-2 shadow-sm ring-1 ring-[rgba(194,160,90,0.16)] sm:rounded-2xl sm:p-4">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#E8D9AC] sm:mb-3 sm:text-xs">
           Technician workload today
         </p>

@@ -60,7 +60,7 @@ export function SubscriptionBillingBanner({
       {model.showManageAction ? (
         <Link
           href={BILLING_SETTINGS_HREF}
-          className="inline-flex min-w-0 rounded-full transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+          className="inline-flex min-w-0 rounded-full transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           aria-label={`${label}. ${tooltip}`}
         >
           {pill}

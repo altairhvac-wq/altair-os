@@ -46,7 +46,7 @@ export function JobAdditionalWorkflowControls({
         style={{
           borderColor: northStar
             ? "rgba(119,89,27,0.14)"
-            : "rgb(226 232 240)",
+            : "rgb(234 231 225)",
         }}
         aria-label="Additional workflow controls"
       >

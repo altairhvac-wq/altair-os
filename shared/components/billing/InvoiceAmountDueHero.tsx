@@ -21,7 +21,7 @@ export function InvoiceAmountDueHero({
   if (northStar) {
     return (
       <div
-        className="invoice-amount-due-hero rounded-xl border border-[rgba(194,160,90,0.35)] bg-gradient-to-br from-[#2B3328] via-[#242A21] to-[#17130E] px-3 py-2 text-[#FFF9EA] shadow-[0_12px_40px_-16px_rgba(3,7,12,0.42)] sm:rounded-2xl sm:px-4 sm:py-3 print:rounded-none print:border-2 print:border-slate-900 print:bg-white print:px-0 print:py-1.5 print:text-slate-900 print:shadow-none"
+        className="invoice-amount-due-hero rounded-xl border border-[rgba(194,160,90,0.35)] bg-gradient-to-br from-[#2B3328] via-[#242A21] to-[#17130E] px-3 py-2 text-[#FFF9EA] shadow-[0_12px_40px_-16px_rgba(6,7,5,0.42)] sm:rounded-2xl sm:px-4 sm:py-3 print:rounded-none print:border-2 print:border-slate-900 print:bg-white print:px-0 print:py-1.5 print:text-slate-900 print:shadow-none"
         aria-label={isPaidInFull ? "Invoice paid in full" : "Amount due"}
       >
         <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#D9C188] sm:text-[10px] sm:tracking-[0.16em] print:text-slate-600">

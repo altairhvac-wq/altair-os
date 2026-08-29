@@ -1281,7 +1281,7 @@ function QueueBulkSelectionBar({
 
   return (
     <div
-      className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-violet-200 bg-violet-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:-mx-5 sm:px-5"
+      className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-violet-200 bg-violet-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(21,25,19,0.25)] backdrop-blur-sm sm:-mx-5 sm:px-5"
       role="region"
       aria-label="Bulk queue actions"
     >

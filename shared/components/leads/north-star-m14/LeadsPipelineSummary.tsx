@@ -51,7 +51,7 @@ function SummaryChip({ label, value, active = false, onClick }: SummaryChipProps
     "min-w-0 rounded-[1rem] border px-3 py-2.5 text-left transition-colors sm:px-3.5 sm:py-3";
   const surfaceClass = active
     ? "border-[rgba(194,160,90,0.42)] bg-[#FFF9EA] shadow-[inset_3px_0_0_0_#C2A05A] ring-1 ring-[rgba(194,160,90,0.22)]"
-    : "border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] shadow-[0_2px_8px_rgba(3,7,12,0.08)] hover:border-[rgba(194,160,90,0.28)] hover:bg-[#FFF9EA]";
+    : "border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] shadow-[0_2px_8px_rgba(6,7,5,0.08)] hover:border-[rgba(194,160,90,0.28)] hover:bg-[#FFF9EA]";
 
   const content = (
     <>

@@ -96,7 +96,7 @@ export const DispatchTimeBlock = memo(function DispatchTimeBlock({
         width: DISPATCH_TIME_BLOCK_WIDTH_PX,
         height: DISPATCH_TIME_BLOCK_HEIGHT_PX,
       }}
-      className={`absolute z-10 overflow-hidden rounded-md border text-left shadow-md shadow-black/25 transition-[border-color,box-shadow,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 ${BLOCK_PRIORITY_SURFACE[job.priority]} ${selectedClass} ${assigningClass}`}
+      className={`absolute z-10 overflow-hidden rounded-md border text-left shadow-md shadow-black/25 transition-[border-color,box-shadow,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${BLOCK_PRIORITY_SURFACE[job.priority]} ${selectedClass} ${assigningClass}`}
     >
       <span
         className={`absolute inset-y-0 left-0 w-1 ${BLOCK_PRIORITY_ACCENT[job.priority]}`}

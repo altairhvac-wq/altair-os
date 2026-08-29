@@ -20,7 +20,7 @@ export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
         <div className="auth-noise pointer-events-none absolute inset-0 opacity-20" />
         <div className="auth-gear-motif pointer-events-none absolute -bottom-40 -right-40 h-[26rem] w-[26rem] opacity-[0.06]" />
         <div className="pointer-events-none absolute -right-28 top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(194,160,90,0.09)_0%,transparent_70%)]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(14,116,144,0.07)_0%,transparent_72%)]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(116,106,81,0.07)_0%,transparent_72%)]" />
 
         <div className="relative flex min-h-full flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-8 lg:justify-center lg:px-8 lg:py-8 xl:px-12">
           <header className="flex items-center justify-between border-b border-white/[0.07] pb-4 lg:hidden">

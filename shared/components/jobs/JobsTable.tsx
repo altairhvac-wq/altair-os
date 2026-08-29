@@ -53,7 +53,7 @@ type JobsTableProps = {
  * with Customers Mission Briefing primary-cell links.
  */
 const jobNumberLinkFocusClass =
-  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
 
 function handleJobLinkClick(event: MouseEvent<HTMLAnchorElement>) {
   event.stopPropagation();

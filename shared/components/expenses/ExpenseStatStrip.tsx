@@ -52,7 +52,7 @@ export function ExpenseStatStrip({
             role="tab"
             aria-selected={isActive}
             onClick={() => onQueueChange(queue)}
-            className={`${altairMcTileClass} text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 ${
+            className={`${altairMcTileClass} text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
               isActive
                 ? "bg-[var(--surface-card)] ring-1 ring-inset ring-altair-brass/50"
                 : "hover:bg-[var(--surface-card)]"

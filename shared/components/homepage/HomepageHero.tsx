@@ -24,13 +24,13 @@ export function HomepageHero() {
     >
       {/* Soft graphite light — environment alive, product remains the brightest plane */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute inset-x-[6%] top-[12%] h-[42%] bg-[radial-gradient(ellipse_at_center,rgba(210,216,224,0.09)_0%,transparent_68%)]" />
-        <div className="absolute inset-x-[16%] bottom-0 h-[56%] bg-[radial-gradient(ellipse_at_bottom,rgba(210,216,224,0.07)_0%,transparent_70%)]" />
+        <div className="absolute inset-x-[6%] top-[12%] h-[42%] bg-[radial-gradient(ellipse_at_center,rgba(220,215,204,0.09)_0%,transparent_68%)]" />
+        <div className="absolute inset-x-[16%] bottom-0 h-[56%] bg-[radial-gradient(ellipse_at_bottom,rgba(220,215,204,0.07)_0%,transparent_70%)]" />
       </div>
 
       <div className="relative mx-auto w-full max-w-[96rem]">
         <div className="mx-auto max-w-3xl text-center lg:max-w-[52rem]">
-          <p className="ah-hero-fade ah-hero-fade-1 inline-flex items-center rounded-full border border-[rgba(222,228,236,0.14)] bg-[rgba(23,27,34,0.55)] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#c9bfae]">
+          <p className="ah-hero-fade ah-hero-fade-1 inline-flex items-center rounded-full border border-[rgba(230,227,220,0.14)] bg-[rgba(24,28,22,0.55)] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#c9bfae]">
             The Operating System for Field Service Businesses
           </p>
 
@@ -58,7 +58,7 @@ export function HomepageHero() {
             </Link>
             <Link
               href="/#product-proof"
-              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-[rgba(222,228,236,0.18)] bg-transparent px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-[border-color,background-color] duration-200 hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.45)] motion-reduce:transition-none sm:w-auto ${focusRing}`}
+              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-[rgba(230,227,220,0.18)] bg-transparent px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-[border-color,background-color] duration-200 hover:border-[rgba(230,227,220,0.32)] hover:bg-[rgba(24,28,22,0.45)] motion-reduce:transition-none sm:w-auto ${focusRing}`}
             >
               See Altair in Action
             </Link>
@@ -84,7 +84,7 @@ export function HomepageHero() {
         {/* Deliberate pause: screenshot is the reward after the mission */}
         <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-14 w-full max-w-none sm:mt-20 sm:w-[88%] lg:mt-24 lg:w-[90%]">
           <div
-            className="pointer-events-none absolute -inset-x-[6%] -inset-y-[8%] bg-[radial-gradient(ellipse_at_center,rgba(236,240,246,0.16)_0%,rgba(210,216,224,0.05)_46%,transparent_72%)]"
+            className="pointer-events-none absolute -inset-x-[6%] -inset-y-[8%] bg-[radial-gradient(ellipse_at_center,rgba(241,240,235,0.16)_0%,rgba(220,215,204,0.05)_46%,transparent_72%)]"
             aria-hidden="true"
           />
           <HomepageProductFrame

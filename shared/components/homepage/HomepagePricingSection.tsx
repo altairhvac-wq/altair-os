@@ -17,7 +17,7 @@ export function HomepagePricingSection() {
       className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.2),transparent)]"
         aria-hidden="true"
       />
 
@@ -48,8 +48,8 @@ export function HomepagePricingSection() {
                 className={[
                   "relative flex flex-col rounded-2xl border p-5 sm:p-6",
                   featured
-                    ? "border-[rgba(194,160,90,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,16,20,0.96))] shadow-[0_24px_60px_-38px_rgba(194,160,90,0.55)]"
-                    : "border-[rgba(222,228,236,0.12)] bg-[linear-gradient(165deg,rgba(32,36,44,0.72),rgba(14,16,20,0.92))]",
+                    ? "border-[rgba(194,160,90,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,17,13,0.96))] shadow-[0_24px_60px_-38px_rgba(194,160,90,0.55)]"
+                    : "border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72),rgba(14,17,13,0.92))]",
                 ].join(" ")}
               >
                 {featured ? (
@@ -72,7 +72,7 @@ export function HomepagePricingSection() {
                   className={`mt-6 inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
                     featured
                       ? "bg-[#a4823a] text-[#080907] hover:bg-[#c2a05a]"
-                      : "border border-[rgba(222,228,236,0.18)] text-[#f3ebdd] hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.55)]"
+                      : "border border-[rgba(230,227,220,0.18)] text-[#f3ebdd] hover:border-[rgba(230,227,220,0.32)] hover:bg-[rgba(24,28,22,0.55)]"
                   } ${focusRing}`}
                 >
                   Start Your 14-Day Free Trial

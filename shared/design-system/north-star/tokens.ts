@@ -150,7 +150,7 @@ export const northStarTokens: NorthStarDashboardTokens = {
   boardTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(194,160,90,0.38)] to-transparent",
   boardTitle: "text-lg font-semibold text-[#FFF8E8] sm:text-xl",
-  columnWell: "bg-[rgba(12,20,34,0.38)]",
+  columnWell: "bg-[rgba(18,21,16,0.38)]",
   columnHeader:
     "rounded-lg border border-white/[0.12] bg-[#FAF9F6] px-3.5 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.20)]",
   columnRail:
@@ -291,7 +291,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
   viewTabsItem:
     "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#5A5444] transition-colors hover:text-[#151914] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.35)] sm:flex-none sm:px-3",
   viewTabsItemActive:
-    "bg-[#FFFFFF] text-[#151914] shadow-[0_1px_4px_rgba(16,24,39,0.10)] ring-1 ring-[rgba(176,168,143,0.24)]",
+    "bg-[#FFFFFF] text-[#151914] shadow-[0_1px_4px_rgba(21,25,20,0.10)] ring-1 ring-[rgba(176,168,143,0.24)]",
   viewTabsCount: "ml-1.5 text-xs font-medium text-[#777164]",
   viewTabsCountActive: "ml-1.5 text-xs font-medium text-[#5A5444]",
   filterBar:
@@ -333,14 +333,14 @@ export const northStarListTokens: NorthStarListPageTokens = {
   badgeArchived:
     "inline-flex shrink-0 rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.12)]",
   bulkBar:
-    "sticky bottom-0 z-20 border-t border-[rgba(119,89,27,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
+    "sticky bottom-0 z-20 border-t border-[rgba(119,89,27,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
   bulkBarTitle: "text-sm font-bold text-[#17130E]",
   bulkClearButton: buttonClassName("quiet", "sm", "shrink-0"),
   bulkPrimaryAction: buttonClassName("primary", "sm"),
   bulkSecondaryAction: buttonClassName("secondary", "sm"),
   bulkDestructiveAction: buttonClassName("destructive", "sm"),
   emptyState:
-    "rounded-xl border border-[rgba(124,114,89,0.18)] bg-[#FFFFFF] px-6 py-8 shadow-[0_4px_16px_rgba(3,7,12,0.08)]",
+    "rounded-xl border border-[rgba(124,114,89,0.18)] bg-[#FFFFFF] px-6 py-8 shadow-[0_4px_16px_rgba(6,7,5,0.08)]",
   emptyStateAction: buttonClassName(
     "primary",
     "md",
@@ -444,7 +444,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   secondaryAction: buttonClassName("secondary", "sm", "shrink-0"),
   tertiaryAction: buttonClassName("quiet", "sm", "shrink-0"),
   metaStrip:
-    "mt-2.5 rounded-md border border-[rgba(194,160,90,0.1)] bg-[rgba(15,23,42,0.18)] px-2.5 py-2",
+    "mt-2.5 rounded-md border border-[rgba(194,160,90,0.1)] bg-[rgba(21,25,19,0.18)] px-2.5 py-2",
   metaRow: "flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#D4CFC2]",
   metaIcon: "h-3.5 w-3.5 shrink-0 text-[#77591B]",
   tagChip:
@@ -536,7 +536,7 @@ export type NorthStarInvoiceDocumentTokens = NorthStarEstimateDocumentTokens;
 
 export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
   documentSurface:
-    "invoice-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
+    "invoice-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(6,7,5,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
   documentSectionLabel:
     "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638] print:text-slate-600",
   documentCustomerCard:
@@ -563,14 +563,14 @@ export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
   overlayHeaderTitle: "break-words text-base font-bold text-[#FFF8E8] sm:text-lg",
   overlayHeaderSubtitle: "mt-0.5 text-sm text-[#D7CDBD]",
   overlayCloseButton:
-    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D9C188]",
+    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(43,51,40,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D9C188]",
   overlayPanel:
-    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1C211A] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
+    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1C211A] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(6,7,5,0.42)] lg:ring-1 lg:ring-[rgba(188,181,165,0.18)] print:bg-white print:shadow-none print:ring-0",
 };
 
 export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = {
   documentSurface:
-    "estimate-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
+    "estimate-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(6,7,5,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
   documentSectionLabel:
     "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638] print:text-slate-600",
   documentCustomerCard:
@@ -598,9 +598,9 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
   overlayHeaderTitle: "break-words text-base font-bold text-[#FFF8E8] sm:text-lg",
   overlayHeaderSubtitle: "mt-0.5 text-sm text-[#D7CDBD]",
   overlayCloseButton:
-    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D9C188]",
+    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(43,51,40,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D9C188]",
   overlayPanel:
-    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1C211A] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
+    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1C211A] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(6,7,5,0.42)] lg:ring-1 lg:ring-[rgba(188,181,165,0.18)] print:bg-white print:shadow-none print:ring-0",
 };
 
 /**
@@ -730,17 +730,17 @@ export type NorthStarDispatchTokens = {
 
 export const northStarDispatchTokens: NorthStarDispatchTokens = {
   sectionButton:
-    "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-2.5 py-2 text-xs font-semibold text-[#F3EBDD] shadow-[0_1px_3px_rgba(3,7,12,0.18)] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-[#D9C188]",
+    "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.45)] px-2.5 py-2 text-xs font-semibold text-[#F3EBDD] shadow-[0_1px_3px_rgba(6,7,5,0.18)] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(43,51,40,0.65)] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-[#D9C188]",
   sectionButtonActive:
     "border-[rgba(194,160,90,0.42)] bg-[rgba(194,160,90,0.16)] text-[#FFF8E8] ring-2 ring-[rgba(194,160,90,0.24)] [&_svg]:text-[#E8D9AC]",
   sectionButtonEmphasized:
     "border-[rgba(194,160,90,0.48)] bg-[rgba(194,160,90,0.20)] text-[#FFF8E8] ring-2 ring-[rgba(194,160,90,0.30)] [&_svg]:text-[#E8D9AC]",
   sectionButtonBadge:
-    "rounded-full bg-[rgba(174,182,194,0.14)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#BCB5A5] sm:px-2 sm:text-xs",
+    "rounded-full bg-[rgba(188,181,165,0.14)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#BCB5A5] sm:px-2 sm:text-xs",
   sectionButtonBadgeActive:
     "rounded-full bg-[rgba(194,160,90,0.22)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#E8D9AC] sm:px-2 sm:text-xs",
   focusBanner:
-    "flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[rgba(194,160,90,0.28)] bg-[rgba(39,49,64,0.55)] px-3 py-2 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:gap-3 sm:px-4 sm:py-3",
+    "flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[rgba(194,160,90,0.28)] bg-[rgba(43,51,40,0.55)] px-3 py-2 shadow-[0_2px_8px_rgba(6,7,5,0.18)] sm:gap-3 sm:px-4 sm:py-3",
   focusBannerIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(194,160,90,0.16)] text-[#E8D9AC] ring-1 ring-[rgba(194,160,90,0.24)] sm:h-9 sm:w-9 sm:rounded-xl",
   focusBannerTitle: "text-xs font-bold text-[#FFF8E8] sm:text-sm",
@@ -749,11 +749,11 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   focusBannerClear:
     "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#E8D9AC] transition-colors hover:text-[#F0E4B8]",
   statPill:
-    "rounded-full border border-[rgba(194,160,90,0.28)] bg-[rgba(39,49,64,0.45)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#F3EBDD] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
+    "rounded-full border border-[rgba(194,160,90,0.28)] bg-[rgba(43,51,40,0.45)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#F3EBDD] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
   statPillUnassigned:
     "rounded-full border border-[rgba(194,160,90,0.38)] bg-[rgba(194,160,90,0.14)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#E8D9AC] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
   boardSurface:
-    "relative flex min-h-0 min-w-0 max-w-full flex-col overflow-hidden rounded-[1.25rem] bg-gradient-to-b from-[#2B3328] via-[#1C211A] to-[#151913] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] ring-1 ring-[rgba(174,182,194,0.18)]",
+    "relative flex min-h-0 min-w-0 max-w-full flex-col overflow-hidden rounded-[1.25rem] bg-gradient-to-b from-[#2B3328] via-[#1C211A] to-[#151913] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] ring-1 ring-[rgba(188,181,165,0.18)]",
   boardSurfaceTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(217,193,136,0.38)] to-transparent",
   boardHeader:
@@ -769,16 +769,16 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "rounded-full bg-[rgba(194,160,90,0.22)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#FFF8E8]",
   boardEmphasisRing: "ring-2 ring-[rgba(194,160,90,0.28)]",
   filterBar:
-    "dispatch-north-star-filter-bar rounded-xl border border-[rgba(174,182,194,0.18)] bg-[#1C211A] px-3 py-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:rounded-2xl sm:px-4 sm:py-3",
+    "dispatch-north-star-filter-bar rounded-xl border border-[rgba(188,181,165,0.18)] bg-[#1C211A] px-3 py-2.5 shadow-[0_2px_8px_rgba(6,7,5,0.18)] sm:rounded-2xl sm:px-4 sm:py-3",
   filterBarCompact: "dispatch-north-star-filter-bar px-0 py-0",
   unassignedFilterButton:
     "col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(194,160,90,0.32)] bg-[rgba(194,160,90,0.14)] px-3 py-2 text-sm font-semibold text-[#E8D9AC] transition-colors hover:border-[rgba(194,160,90,0.42)] hover:bg-[rgba(194,160,90,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.30)] sm:col-span-1 sm:min-h-0 sm:py-2.5",
   unassignedFilterBadge:
     "rounded-full bg-[rgba(194,160,90,0.22)] px-2 py-0.5 text-xs font-bold tabular-nums text-[#FFF8E8]",
   lane:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] shadow-[0_2px_10px_rgba(3,7,12,0.22)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] shadow-[0_2px_10px_rgba(6,7,5,0.22)] sm:rounded-2xl",
   laneHeader:
-    "flex shrink-0 items-center gap-2 border-b border-[rgba(174,182,194,0.12)] bg-gradient-to-b from-[#2B3328] to-[#1C211A] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(194,160,90,0.14)] sm:px-3 sm:py-2.5 lg:w-48",
+    "flex shrink-0 items-center gap-2 border-b border-[rgba(188,181,165,0.12)] bg-gradient-to-b from-[#2B3328] to-[#1C211A] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(194,160,90,0.14)] sm:px-3 sm:py-2.5 lg:w-48",
   laneHeaderAvatar:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-xs font-bold text-[#17130E] shadow-[0_1px_4px_rgba(119,89,27,0.20)] ring-1 ring-[rgba(194,160,90,0.28)] sm:h-9 sm:w-9 sm:rounded-xl",
   laneHeaderName:
@@ -788,20 +788,20 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   laneHeaderNextJob:
     "hidden text-[10px] font-medium text-[#B8AD9E] sm:inline",
   laneHeaderCount:
-    "rounded-full border border-[rgba(194,160,90,0.22)] bg-[rgba(39,49,64,0.55)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[#F3EBDD]",
+    "rounded-full border border-[rgba(194,160,90,0.22)] bg-[rgba(43,51,40,0.55)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[#F3EBDD]",
   laneJobWell:
     "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#191e17] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
   laneEmptyWell:
-    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(174,182,194,0.18)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(188,181,165,0.18)] bg-[rgba(43,51,40,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
   laneEmptyText: "text-[11px] font-medium text-[#BCB5A5]",
   laneToggleButton:
-    "self-start rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-1.5 text-[11px] font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:text-xs",
+    "self-start rounded-lg border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.45)] px-3 py-1.5 text-[11px] font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(43,51,40,0.65)] sm:text-xs",
   laneToggleButtonDashed:
-    "self-start rounded-lg border border-dashed border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.28)] px-3 py-1.5 text-[11px] font-semibold text-[#D7CDBD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(39,49,64,0.45)] sm:text-xs",
+    "self-start rounded-lg border border-dashed border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.28)] px-3 py-1.5 text-[11px] font-semibold text-[#D7CDBD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(43,51,40,0.45)] sm:text-xs",
   unassignedLane:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(194,160,90,0.28)] bg-[#2B3227] shadow-[0_2px_10px_rgba(3,7,12,0.22)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(194,160,90,0.28)] bg-[#2B3227] shadow-[0_2px_10px_rgba(6,7,5,0.22)] sm:rounded-2xl",
   unassignedLaneEmphasis:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(194,160,90,0.42)] bg-[#3A3528] shadow-[0_4px_16px_rgba(3,7,12,0.24)] ring-1 ring-[rgba(194,160,90,0.22)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(194,160,90,0.42)] bg-[#3A3528] shadow-[0_4px_16px_rgba(6,7,5,0.24)] ring-1 ring-[rgba(194,160,90,0.22)] sm:rounded-2xl",
   unassignedLaneHeader:
     "flex shrink-0 items-center gap-2 border-b border-[rgba(194,160,90,0.18)] bg-gradient-to-b from-[#423C2E] to-[#2B3227] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(194,160,90,0.16)] sm:px-3 sm:py-2.5 lg:w-48",
   unassignedLaneIcon:
@@ -813,13 +813,13 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   unassignedJobWell:
     "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#191e17] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
   unassignedEmptyWell:
-    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(194,160,90,0.24)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(194,160,90,0.24)] bg-[rgba(43,51,40,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
   jobCard:
-    "snap-start w-full rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#2B3328] p-3.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.28)]",
+    "snap-start w-full rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#2B3328] p-3.5 text-left shadow-[0_2px_8px_rgba(6,7,5,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:shadow-[0_4px_14px_rgba(6,7,5,0.28)]",
   jobCardCompact:
-    "snap-start w-[12rem] shrink-0 rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#2B3328] p-2.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.28)] sm:w-[13.25rem] sm:p-3",
+    "snap-start w-[12rem] shrink-0 rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#2B3328] p-2.5 text-left shadow-[0_2px_8px_rgba(6,7,5,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:shadow-[0_4px_14px_rgba(6,7,5,0.28)] sm:w-[13.25rem] sm:p-3",
   jobCardSelected:
-    "border-[rgba(194,160,90,0.48)] bg-[#423C2E] shadow-[0_4px_16px_rgba(3,7,12,0.28)] ring-2 ring-[rgba(194,160,90,0.28)]",
+    "border-[rgba(194,160,90,0.48)] bg-[#423C2E] shadow-[0_4px_16px_rgba(6,7,5,0.28)] ring-2 ring-[rgba(194,160,90,0.28)]",
   jobCardAssigning:
     "border-[rgba(194,160,90,0.35)] bg-[#2B3227] opacity-90",
   jobCardJobNumber:
@@ -829,16 +829,16 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   jobCardMeta: "text-[#D7CDBD]",
   jobCardMetaIcon: "shrink-0 text-[#D9C188]",
   jobCardMetaTime: "font-semibold text-[#F3EBDD]",
-  jobCardFooter: "border-t border-[rgba(174,182,194,0.14)]",
+  jobCardFooter: "border-t border-[rgba(188,181,165,0.14)]",
   jobCardLoader: "h-3.5 w-3.5 animate-spin text-[#D9C188]",
   emptyState:
-    "flex w-full max-w-md flex-col items-center rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] px-6 py-8 text-center shadow-[0_4px_16px_rgba(3,7,12,0.22)]",
+    "flex w-full max-w-md flex-col items-center rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] px-6 py-8 text-center shadow-[0_4px_16px_rgba(6,7,5,0.22)]",
   emptyStateIcon:
     "flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(194,160,90,0.14)] ring-1 ring-[rgba(194,160,90,0.22)] [&_svg]:text-[#D9C188]",
   emptyStateTitle: "mt-3 text-base font-bold text-[#FFF8E8]",
   emptyStateDescription: "mt-1.5 text-sm text-[#BCB5A5]",
   detailPanelShell:
-    "dispatch-north-star-detail-panel relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl bg-[#1C211A] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] ring-1 ring-[rgba(174,182,194,0.18)] sm:rounded-2xl",
+    "dispatch-north-star-detail-panel relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl bg-[#1C211A] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] ring-1 ring-[rgba(188,181,165,0.18)] sm:rounded-2xl",
   detailPanelTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(217,193,136,0.38)] to-transparent",
   detailPanelHeader:
@@ -849,23 +849,23 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailPanelCustomerLink:
     "text-xs text-[#D7CDBD] transition-colors hover:text-[#E8D9AC]",
   detailPanelCloseButton:
-    "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] p-2 text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D9C188]",
+    "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.35)] p-2 text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.28)] hover:bg-[rgba(43,51,40,0.55)] [&_svg]:text-[#D9C188]",
   detailPanelBody:
     "dispatch-north-star-detail-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#191d16] pl-4 pr-5 py-4 pb-[max(6rem,calc(1.5rem+env(safe-area-inset-bottom)))] sm:pl-5 sm:pr-6 sm:py-5 sm:pb-[max(4.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] lg:pb-6",
   detailSectionLabel:
     "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#BCB5A5]",
   detailIdentityCard:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:p-4",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] p-3.5 shadow-[0_2px_8px_rgba(6,7,5,0.18)] sm:p-4",
   detailIdentityService: "text-sm font-medium text-[#D7CDBD]",
   detailIdentityMeta: "text-xs text-[#BCB5A5]",
   detailSiteContextCard:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-gradient-to-br from-[#2B3227] to-[#252B22] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:p-4",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-gradient-to-br from-[#2B3227] to-[#252B22] p-3.5 shadow-[0_2px_8px_rgba(6,7,5,0.18)] sm:p-4",
   detailSiteContextIconWrap:
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(194,160,90,0.14)] ring-1 ring-[rgba(194,160,90,0.22)] [&_svg]:text-[#D9C188]",
   detailSiteContextAddress: "text-sm font-medium leading-snug text-[#F3EBDD]",
-  detailSectionDivider: "border-[rgba(174,182,194,0.14)]",
+  detailSectionDivider: "border-[rgba(188,181,165,0.14)]",
   detailAssignmentCard:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] p-3 shadow-[0_2px_6px_rgba(3,7,12,0.16)]",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] p-3 shadow-[0_2px_6px_rgba(6,7,5,0.16)]",
   detailTechAvatar:
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(194,160,90,0.28)]",
   detailTechName: "text-sm font-semibold text-[#FFF8E8]",
@@ -886,14 +886,14 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailMutedText: "text-xs text-[#BCB5A5]",
   detailBodyText: "text-sm leading-relaxed text-[#D7CDBD]",
   detailFooterLink:
-    "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:py-2",
-  detailFooterDivider: "border-[rgba(174,182,194,0.14)]",
+    "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(188,181,165,0.22)] bg-[rgba(43,51,40,0.45)] px-3 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(194,160,90,0.32)] hover:bg-[rgba(43,51,40,0.65)] sm:py-2",
+  detailFooterDivider: "border-[rgba(188,181,165,0.14)]",
   detailPermissionNote:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] px-4 py-3 text-sm text-[#D7CDBD]",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] px-4 py-3 text-sm text-[#D7CDBD]",
   detailPendingNote: "text-xs font-medium text-[#E8D9AC]",
   pageCanvas: "north-star-dispatch-page-canvas",
   sectionSheetPanel:
-    "dispatch-north-star-section-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(174,182,194,0.18)] bg-[#1C211A] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[85dvh] sm:rounded-2xl",
+    "dispatch-north-star-section-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(188,181,165,0.18)] bg-[#1C211A] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[85dvh] sm:rounded-2xl",
   sectionSheetHeader:
     "border-b border-[rgba(194,160,90,0.14)] bg-gradient-to-b from-[#2B3328] to-[#1C211A]",
   sectionSheetHeaderIcon:
@@ -911,13 +911,13 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   unassignedSheetBadge:
     "rounded-full bg-[rgba(194,160,90,0.22)] px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#FFF8E8]",
   unassignedSheetEmpty:
-    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(194,160,90,0.24)] bg-[rgba(39,49,64,0.28)] px-4 py-10 text-center",
+    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(194,160,90,0.24)] bg-[rgba(43,51,40,0.28)] px-4 py-10 text-center",
   summaryMetricCard:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:rounded-2xl sm:p-4",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] p-2.5 shadow-[0_2px_8px_rgba(6,7,5,0.18)] sm:rounded-2xl sm:p-4",
   summaryMetricCardHighlight:
     "border-[rgba(194,160,90,0.32)] bg-[rgba(194,160,90,0.12)] ring-1 ring-[rgba(194,160,90,0.18)]",
   summaryMetricCardInteractive:
-    "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:bg-[#2B3227] hover:shadow-[0_4px_14px_rgba(3,7,12,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.30)]",
+    "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(194,160,90,0.32)] hover:bg-[#2B3227] hover:shadow-[0_4px_14px_rgba(6,7,5,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.30)]",
   summaryMetricLabel:
     "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#BCB5A5] sm:text-[11px]",
   summaryMetricValue:
@@ -926,13 +926,13 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   summaryMetricIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(194,160,90,0.14)] ring-1 ring-[rgba(194,160,90,0.22)] sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:text-[#D9C188]",
   workloadCard:
-    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#252B22] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4",
+    "rounded-xl border border-[rgba(188,181,165,0.16)] bg-[#252B22] p-2.5 shadow-[0_2px_8px_rgba(6,7,5,0.18)] transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4",
   workloadCardActive:
     "border-[rgba(194,160,90,0.42)] bg-[rgba(194,160,90,0.12)] ring-2 ring-[rgba(194,160,90,0.22)]",
   workloadCardOverloaded:
-    "border-[rgba(194,160,90,0.38)] bg-[rgba(194,160,90,0.10)] ring-2 ring-[rgba(194,160,90,0.18)] shadow-[0_4px_14px_rgba(3,7,12,0.22)]",
+    "border-[rgba(194,160,90,0.38)] bg-[rgba(194,160,90,0.10)] ring-2 ring-[rgba(194,160,90,0.18)] shadow-[0_4px_14px_rgba(6,7,5,0.22)]",
   workloadCardInteractive:
-    "min-h-11 cursor-pointer hover:border-[rgba(194,160,90,0.32)] hover:bg-[#2B3227] hover:shadow-[0_4px_14px_rgba(3,7,12,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.30)]",
+    "min-h-11 cursor-pointer hover:border-[rgba(194,160,90,0.32)] hover:bg-[#2B3227] hover:shadow-[0_4px_14px_rgba(6,7,5,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.30)]",
   workloadEmptyState:
-    "rounded-xl border border-dashed border-[rgba(174,182,194,0.18)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4",
+    "rounded-xl border border-dashed border-[rgba(188,181,165,0.18)] bg-[rgba(43,51,40,0.28)] px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4",
 };

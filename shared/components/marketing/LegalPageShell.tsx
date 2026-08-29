@@ -24,7 +24,7 @@ export function LegalPageShell({
 }: LegalPageShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#080907]">
-      <header className="border-b border-[rgba(222,228,236,0.08)] px-5 py-4 sm:px-8">
+      <header className="border-b border-[rgba(230,227,220,0.08)] px-5 py-4 sm:px-8">
         <div className="mx-auto flex max-w-[90rem] items-center justify-between">
           <Link
             href="/"

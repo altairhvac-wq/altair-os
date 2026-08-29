@@ -8,10 +8,10 @@ export const shellCanvasClass =
   "relative flex-1 overflow-y-auto bg-[linear-gradient(180deg,#0a0f18_0%,#0d1420_45%,#0a1019_100%)]";
 
 export const shellCanvasGlowClass =
-  "pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(34,211,238,0.09),transparent_65%)]";
+  "pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(200,192,175,0.09),transparent_65%)]";
 
 export const shellCanvasGlowSecondaryClass =
-  "pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_50%_80%_at_80%_0%,rgba(99,102,241,0.06),transparent_70%)]";
+  "pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_50%_80%_at_80%_0%,rgba(130,118,90,0.06),transparent_70%)]";
 
 /** Frosted dimensional panel — composed operating zone. */
 export const shellZoneClass =

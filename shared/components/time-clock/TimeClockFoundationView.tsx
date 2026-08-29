@@ -415,7 +415,7 @@ export function TimeClockFoundationView({
                           <button
                             type="button"
                             onClick={() => beginCorrection(entry)}
-                            className={`inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 ${
+                            className={`inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
                               stale
                                 ? "text-altair-danger-foreground hover:bg-altair-danger-surface"
                                 : "text-altair-ink-on-paper hover:bg-[var(--surface-tile)]"

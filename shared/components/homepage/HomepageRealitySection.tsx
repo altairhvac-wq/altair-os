@@ -91,11 +91,11 @@ export function HomepageRealitySection() {
       className="mc-reality relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.28),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.28),transparent)]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-x-[10%] top-0 h-20 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-[10%] top-0 h-20 bg-[radial-gradient(ellipse_at_top,rgba(220,215,204,0.07),transparent_70%)]"
         aria-hidden="true"
       />
 
@@ -211,7 +211,7 @@ export function HomepageRealitySection() {
       </div>
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.18),transparent)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.18),transparent)]"
         aria-hidden="true"
       />
     </section>

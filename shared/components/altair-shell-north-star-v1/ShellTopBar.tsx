@@ -14,7 +14,7 @@ export function ShellTopBar({ companyContext }: ShellTopBarProps) {
   return (
     <header className={shellTopBarClass}>
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-500 text-xs font-bold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.2)] lg:hidden">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-500 text-xs font-bold text-slate-950 shadow-[0_0_16px_rgba(200,192,175,0.2)] lg:hidden">
           A
         </div>
         <div className="min-w-0">

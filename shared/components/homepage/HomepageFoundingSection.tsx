@@ -31,7 +31,7 @@ export function HomepageFoundingSection() {
         className="mc-founding relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14"
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.22),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.22),transparent)]"
           aria-hidden="true"
         />
         <div
@@ -99,7 +99,7 @@ export function HomepageFoundingSection() {
         className="mc-switching relative px-5 py-10 sm:px-8 sm:py-12"
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.16),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.16),transparent)]"
           aria-hidden="true"
         />
 
@@ -115,7 +115,7 @@ export function HomepageFoundingSection() {
             {SWITCHING_POINTS.map(({ label, icon: Icon }) => (
               <li
                 key={label}
-                className="flex items-center gap-3 rounded-xl border border-[rgba(222,228,236,0.1)] bg-[rgba(14,16,20,0.45)] px-4 py-3 text-left"
+                className="flex items-center gap-3 rounded-xl border border-[rgba(230,227,220,0.1)] bg-[rgba(14,17,13,0.45)] px-4 py-3 text-left"
               >
                 <Icon
                   className="h-4 w-4 shrink-0 text-[#c2a05a]"
@@ -135,7 +135,7 @@ export function HomepageFoundingSection() {
         className="mc-about relative scroll-mt-28 px-5 py-20 sm:px-8 sm:py-28 lg:py-32"
       >
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.16),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.16),transparent)]"
           aria-hidden="true"
         />
         <div

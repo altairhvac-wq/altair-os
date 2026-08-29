@@ -348,7 +348,7 @@ export function TeamMemberProfileNorthStarView({
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 rounded-lg border border-[rgba(194,160,90,0.14)] bg-[rgba(15,23,42,0.28)] px-3 py-2">
+              <div className="flex shrink-0 items-center gap-2 rounded-lg border border-[rgba(194,160,90,0.14)] bg-[rgba(21,25,19,0.28)] px-3 py-2">
                 <Shield className="h-4 w-4 shrink-0 text-[#77591B]" />
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#D4CFC2]">

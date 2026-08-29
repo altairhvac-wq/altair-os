@@ -14,11 +14,11 @@ export type AtmosphereBackgroundProps = {
 const glowStyles: Record<AtmosphereTone, { primary: string; secondary: string }> = {
   neutral: {
     primary: "bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(176,168,143,0.18),transparent_70%)]",
-    secondary: "bg-[radial-gradient(ellipse_60%_50%_at_80%_20%,rgba(203,213,225,0.12),transparent_65%)]",
+    secondary: "bg-[radial-gradient(ellipse_60%_50%_at_80%_20%,rgba(217,212,200,0.12),transparent_65%)]",
   },
   cyan: {
-    primary: "bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(34,211,238,0.14),transparent_70%)]",
-    secondary: "bg-[radial-gradient(ellipse_55%_45%_at_15%_30%,rgba(14,165,233,0.10),transparent_65%)]",
+    primary: "bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(200,192,175,0.14),transparent_70%)]",
+    secondary: "bg-[radial-gradient(ellipse_55%_45%_at_15%_30%,rgba(166,154,127,0.10),transparent_65%)]",
   },
   warm: {
     primary: "bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(251,191,36,0.10),transparent_70%)]",
@@ -52,7 +52,7 @@ export function AtmosphereBackground({
       >
         <div className={`absolute inset-0 ${glow.primary}`} />
         <div className={`absolute inset-0 ${glow.secondary}`} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_100%,rgba(248,250,252,0.85),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_100%,rgba(250,250,248,0.85),transparent_60%)]" />
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-50/40 to-transparent" />
       </div>
 

@@ -47,7 +47,7 @@ export function InvoicesStatStrip({
                   aria-label={ariaLabel}
                   aria-pressed={isActive}
                   title={stat.detail}
-                  className={`inline-flex items-baseline gap-1 rounded-md px-1.5 py-0.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent ${
+                  className={`inline-flex items-baseline gap-1 rounded-md px-1.5 py-0.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-1 focus-visible:ring-offset-transparent ${
                     isActive
                       ? "bg-altair-paper-elevated text-altair-ink-on-paper shadow-sm ring-1 ring-altair-ink-on-paper/30"
                       : "bg-altair-ink-on-paper/[0.03] text-altair-ink-on-paper-muted ring-1 ring-altair-border/70 hover:bg-altair-ink-on-paper/5 hover:text-altair-ink-on-paper hover:ring-altair-border-strong"

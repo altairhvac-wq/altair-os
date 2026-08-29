@@ -109,7 +109,7 @@ export function LeadCard({
     <button
       type="button"
       onClick={() => onSelect(lead)}
-      className={`w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated ${
+      className={`w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated ${
         selected
           ? `border-altair-border-strong bg-altair-paper-elevated ${adminListRowSelectedClass} ring-1 ring-altair-ink-on-paper/20`
           : "border-altair-border bg-altair-paper-elevated hover:border-altair-border-strong hover:bg-altair-paper-subtle/80"

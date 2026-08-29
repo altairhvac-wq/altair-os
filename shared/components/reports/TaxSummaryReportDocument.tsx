@@ -124,7 +124,7 @@ export function TaxSummaryReportDocument({
     )?.label ?? summary.dateRange;
 
   const documentSurfaceClass = northStar
-    ? "rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-6 py-8 text-[#17130E] shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0"
+    ? "rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-6 py-8 text-[#17130E] shadow-[0_4px_16px_rgba(6,7,5,0.08)] sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0"
     : "bg-white px-6 py-8 text-slate-900 sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0";
 
   const headerBorderClass = northStar

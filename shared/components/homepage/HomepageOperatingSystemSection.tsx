@@ -71,7 +71,7 @@ export function HomepageOperatingSystemSection() {
       className="mc-os relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14 lg:py-16"
     >
       <div
-        className="pointer-events-none absolute inset-x-[8%] top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.05),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-[8%] top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(220,215,204,0.05),transparent_70%)]"
         aria-hidden="true"
       />
 
@@ -102,7 +102,7 @@ export function HomepageOperatingSystemSection() {
           aria-label="Workflow from lead to reporting"
         >
           <div
-            className="absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] bg-[rgba(222,228,236,0.1)]"
+            className="absolute left-[2%] right-[2%] top-[1.85rem] h-[2px] bg-[rgba(230,227,220,0.1)]"
             aria-hidden="true"
           />
           <div
@@ -124,7 +124,7 @@ export function HomepageOperatingSystemSection() {
                   </span>
                   <span
                     className={[
-                      "relative flex items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
+                      "relative flex items-center justify-center rounded-full border bg-[rgba(14,17,13,0.96)]",
                       isOutcome
                         ? "h-16 w-16 border-[rgba(194,160,90,0.65)] shadow-[0_0_36px_-6px_rgba(194,160,90,0.55)]"
                         : "h-14 w-14 border-[rgba(194,160,90,0.4)] shadow-[0_0_28px_-10px_rgba(194,160,90,0.4)]",
@@ -165,13 +165,13 @@ export function HomepageOperatingSystemSection() {
                   "mc-os-node relative flex items-start gap-3 rounded-xl border px-3 py-3",
                   isOutcome
                     ? "border-[rgba(194,160,90,0.45)] bg-[rgba(164,130,58,0.08)]"
-                    : "border-[rgba(222,228,236,0.1)] bg-[rgba(14,16,20,0.55)]",
+                    : "border-[rgba(230,227,220,0.1)] bg-[rgba(14,17,13,0.55)]",
                 ].join(" ")}
                 style={{ animationDelay: `${index * 70}ms` }}
               >
                 <span
                   className={[
-                    "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[rgba(14,16,20,0.96)]",
+                    "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-[rgba(14,17,13,0.96)]",
                     isOutcome
                       ? "border-[rgba(194,160,90,0.65)]"
                       : "border-[rgba(194,160,90,0.35)]",

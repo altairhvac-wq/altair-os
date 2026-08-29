@@ -111,7 +111,7 @@ export function MissionControlV2NextRecommendedCard({
         <div className={`h-auto ${NEXT_RECOMMENDED_CARD_CLASS} ${altairMcCardPadClass}`}>
           <Link
             href={nextStep.href}
-            className="flex items-start gap-3 rounded-lg transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+            className="flex items-start gap-3 rounded-lg transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-brass text-white">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
