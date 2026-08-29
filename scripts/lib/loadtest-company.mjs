@@ -25,6 +25,20 @@
 const SLUG_PREFIX = "loadtest-";
 
 /**
+ * The seeder builds its slug as SLUG_PREFIX + --seed-value, so a scale fixture
+ * is `loadtest-<digits>` and nothing else.
+ *
+ * The prefix alone is not specific enough. Other live verifiers create their
+ * own short-lived companies under the same prefix —
+ * verify-company-deletion-live makes loadtest-deletion-survivor-<suffix> — and
+ * a run that overlapped one of those resolved to a 1-job tenant. The minJobs
+ * guard refused rather than passing a truncation differential against a
+ * company that cannot truncate, which is the guard working; this stops it
+ * arising.
+ */
+const SCALE_SLUG = /^loadtest-\d+$/;
+
+/**
  * @param admin  a service-role Supabase client for the scratch project
  * @param options.slug     an exact slug, when a verifier wants one fixture
  * @param options.minJobs  refuse a tenant smaller than this
@@ -45,7 +59,9 @@ export async function resolveLoadtestCompany(admin, options = {}) {
     throw new Error(`resolving the load-test company: ${error.message}`);
   }
 
-  const companies = data ?? [];
+  const companies = (data ?? []).filter(
+    (company) => slug != null || SCALE_SLUG.test(company.slug),
+  );
   if (companies.length === 0) {
     throw new Error(
       `No load-test tenant found${slug ? ` with slug "${slug}"` : ""}.\n\n` +
