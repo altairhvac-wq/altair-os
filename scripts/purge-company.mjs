@@ -45,6 +45,10 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import {
+  deleteTenantStorageObjects,
+  listTenantStorageObjects,
+} from "./lib/storage-tenant-objects.mjs";
 
 import {
   TENANT_DELETE_ORDER,
@@ -61,7 +65,6 @@ const KEY_ENV = "SUPABASE_PURGE_SERVICE_ROLE_KEY";
  * Anything not listed is reported rather than swept: an unknown layout means
  * an unknown prefix, and a wrong prefix deletes another tenant's files.
  */
-const COMPANY_PREFIXED_BUCKETS = ["company-files", "marketing-media"];
 
 function parseArgs(argv) {
   const args = {};
@@ -181,18 +184,26 @@ async function main() {
   }
 
   // ----------------------------------------------------------------- storage
+  //
+  // Walks folders and pages each one, under the prefix the shipped path
+  // builders actually produce. A single flat list() of `<companyId>` found
+  // nothing in company-files (whose keys begin `company/<id>`) and found a
+  // FOLDER in marketing-media (whose keys are `<id>/video/<name>`) — and
+  // removing a folder prefix returns no error and deletes nothing.
   console.log("\n  storage");
-  const storagePlan = [];
-  for (const bucket of COMPANY_PREFIXED_BUCKETS) {
-    const { data: objects, error } = await admin.storage
-      .from(bucket)
-      .list(companyId, { limit: 1000 });
-    if (error) {
-      console.log(`    ${bucket.padEnd(38)} unreadable: ${error.message}`);
-      continue;
-    }
-    console.log(`    ${bucket.padEnd(38)} ${objects?.length ?? 0} objects`);
-    storagePlan.push({ bucket, objects: objects ?? [] });
+  let storagePlan;
+  try {
+    storagePlan = await listTenantStorageObjects(admin, companyId);
+  } catch (error) {
+    // Not a warning. An unreadable bucket cannot be confirmed empty, and
+    // finishing anyway is how a purge reports success over files it never saw.
+    fail(`storage could not be listed, so this tenant cannot be purged: ${error.message}`);
+  }
+  for (const entry of storagePlan) {
+    console.log(
+      `    ${entry.bucket.padEnd(38)} ${entry.objects.length} objects  ` +
+        `under ${entry.prefix}`,
+    );
   }
   console.log(
     "    NOTE: buckets whose paths are not company-prefixed are not swept.\n" +
@@ -250,13 +261,18 @@ async function main() {
       });
     }
 
-    for (const plan of storagePlan) {
-      if (plan.objects.length === 0) continue;
-      const paths = plan.objects.map((object) => `${companyId}/${object.name}`);
-      const { error } = await admin.storage.from(plan.bucket).remove(paths);
-      if (error) throw new Error(`storage ${plan.bucket}: ${error.message}`);
-      console.log(`    storage:${plan.bucket.padEnd(29)} removed ${paths.length}`);
-    }
+    // Re-lists afterwards and throws unless every bucket comes back empty.
+    // Every way this can go wrong is silent — a wrong prefix, an unwalked
+    // folder, a truncated page and a no-op remove all look exactly like "there
+    // was nothing to delete". An empty final listing is the only observation
+    // that tells them apart.
+    const removedObjects = await deleteTenantStorageObjects(
+      admin,
+      companyId,
+      (bucket, count) =>
+        console.log(`    storage:${bucket.padEnd(29)} removed ${count}`),
+    );
+    console.log(`    storage total                          ${removedObjects}`);
 
     // The company row LAST. Everything referencing it is gone, and its own
     // deletion cascades the request row.

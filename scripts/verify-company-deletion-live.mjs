@@ -30,6 +30,7 @@
  *        scripts/verify-company-deletion-live.mjs --confirm <ref>
  */
 
+import { randomUUID } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -42,10 +43,75 @@ import {
   countTenantRows,
   deleteTenantRows,
 } from "./lib/tenant-purge.mjs";
+import { deleteTenantStorageObjects } from "./lib/storage-tenant-objects.mjs";
 
 // The verifier counts and deletes through the SAME helpers the purge script
 // uses. Counting a different way would let a purge that missed a table still
 // pass — the verifier would simply not look where the purge did not go.
+//
+// That reasoning holds for the tables and it does NOT hold for Storage, where
+// sharing a helper is exactly how implementation and verifier agree on the
+// same blind spot. The storage assertions below therefore build their ground
+// truth independently: they upload objects at the key layouts the SHIPPED path
+// builders produce, and afterwards list the buckets with a walk written here,
+// not with the walk the purge uses. The purge's own re-listing check is a
+// second, separate safeguard, not the thing being trusted.
+
+/** Key layouts from lib/storage/company-files.ts and marketing-media.ts. */
+function tenantObjectFixtures(companyId, jobId, expenseId) {
+  return [
+    {
+      bucket: "company-files",
+      // buildJobAttachmentStoragePath
+      path: `company/${companyId}/jobs/${jobId}/${expenseId}/attachment.pdf`,
+      contentType: "application/pdf",
+    },
+    {
+      bucket: "company-files",
+      // buildExpenseReceiptStoragePath
+      path: `company/${companyId}/expenses/${expenseId}/receipt.pdf`,
+      contentType: "application/pdf",
+    },
+    {
+      bucket: "marketing-media",
+      // buildMarketingMediaObjectKey
+      path: `${companyId}/video/reel.mp4`,
+      contentType: "video/mp4",
+    },
+  ];
+}
+
+/** An independent recursive walk. Deliberately not the purge's. */
+async function walkBucket(bucket, prefix) {
+  const out = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data } = await admin.storage
+      .from(bucket)
+      .list(prefix, { limit: 1000, offset });
+    const entries = data ?? [];
+    for (const entry of entries) {
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.id === null || entry.metadata == null) {
+        out.push(...(await walkBucket(bucket, path)));
+      } else {
+        out.push(path);
+      }
+    }
+    if (entries.length < 1000) break;
+  }
+  return out;
+}
+
+async function objectsForCompany(companyId) {
+  return [
+    ...(await walkBucket("company-files", `company/${companyId}`)).map(
+      (path) => `company-files/${path}`,
+    ),
+    ...(await walkBucket("marketing-media", companyId)).map(
+      (path) => `marketing-media/${path}`,
+    ),
+  ];
+}
 const DELETE_ORDER = TENANT_DELETE_ORDER;
 
 let failures = 0;
@@ -336,6 +402,37 @@ async function main() {
 
     console.log("\nPurging\n");
 
+    // Files at the real key layouts, for the doomed company AND the survivor.
+    // The survivor's copies are the cross-tenant assertion: a sweep that
+    // deleted by a broader prefix would take them too.
+    const doomedFixtures = tenantObjectFixtures(
+      doomed.companyId,
+      randomUUID(),
+      randomUUID(),
+    );
+    const survivorFixtures = tenantObjectFixtures(
+      survivor.companyId,
+      randomUUID(),
+      randomUUID(),
+    );
+    for (const fixture of [...doomedFixtures, ...survivorFixtures]) {
+      const { error } = await admin.storage
+        .from(fixture.bucket)
+        .upload(fixture.path, Buffer.from("%PDF-1.4\ndeletion-drill"), {
+          upsert: true,
+          contentType: fixture.contentType,
+        });
+      if (error) throw new Error(`seeding ${fixture.bucket}: ${error.message}`);
+    }
+
+    const storageBefore = await objectsForCompany(doomed.companyId);
+    check(
+      "the doomed company has Storage objects to destroy",
+      storageBefore.length === doomedFixtures.length,
+      `found ${storageBefore.length}, expected ${doomedFixtures.length} — ` +
+        `a deletion test with no files proves nothing about files`,
+    );
+
     const before = await countRows(doomed.companyId);
     const survivorBefore = await countRows(survivor.companyId);
     console.log(`  doomed holds ${before.total} rows across ${before.nonEmpty.length} tables`);
@@ -380,6 +477,41 @@ async function main() {
       "every table in the delete order can actually be deleted",
       deleteFailure === null,
       deleteFailure ?? "",
+    );
+
+    let storageFailure = null;
+    let storageRemoved = 0;
+    try {
+      storageRemoved = await deleteTenantStorageObjects(admin, doomed.companyId);
+    } catch (error) {
+      storageFailure = error.message;
+    }
+    check(
+      "the tenant's Storage objects are deleted",
+      storageFailure === null,
+      storageFailure ?? "",
+    );
+    check(
+      `every seeded object was removed (${storageRemoved} of ${doomedFixtures.length})`,
+      storageRemoved === doomedFixtures.length,
+      "a flat, unpaged list() of the company id found none of these: " +
+        "company-files keys begin `company/<id>` and marketing-media keys " +
+        "nest under `<id>/video`",
+    );
+
+    // Verified with this file's own walk, not the purge's.
+    const storageAfter = await objectsForCompany(doomed.companyId);
+    check(
+      "and the buckets are independently confirmed empty for that company",
+      storageAfter.length === 0,
+      storageAfter.slice(0, 5).join(", "),
+    );
+
+    const survivorObjects = await objectsForCompany(survivor.companyId);
+    check(
+      "the other company's files are untouched",
+      survivorObjects.length === survivorFixtures.length,
+      `survivor has ${survivorObjects.length}, expected ${survivorFixtures.length}`,
     );
 
     // Filtered by status AND the error is read. There are two rows for this
