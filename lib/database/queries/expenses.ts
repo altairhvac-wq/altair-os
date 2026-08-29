@@ -158,6 +158,12 @@ export const listExpenses = cache(async function listExpenses(
   return attachReceiptSignedUrls(expenses);
 });
 
+// unbounded-ok: [debt] one technician's ENTIRE expense history, with no date
+// filter and no limit. A technician filing a few receipts a week passes 1,000
+// in about four years, and the oldest are the ones dropped because the order is
+// created_at desc. Filtering by technician_id is not a bound: unlike job_id or
+// invoice_id, a technician accumulates children for as long as they are
+// employed. Needs a date window or keyset pagination.
 export async function listExpensesForTechnician(
   companyId: string,
   technicianId: string,

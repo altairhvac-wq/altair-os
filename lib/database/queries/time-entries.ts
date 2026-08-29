@@ -168,6 +168,9 @@ export async function getActiveTimeEntryForTechnician(
   return { entry, error: null };
 }
 
+// unbounded-ok: one technician, one day. started_at is filtered to the start of
+// today in the caller's timezone, so the row count is bounded by how many times
+// a person can clock in and out between midnight and now.
 export async function getTodayTimeEntriesForTechnician(
   companyId: string,
   technicianId: string,

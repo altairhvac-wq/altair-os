@@ -112,6 +112,13 @@ export function mapJobFormDataToUpdate(data: JobFormData): JobUpdate {
   return mapJobFormDataFields(data);
 }
 
+// unbounded-ok: [debt] the company's whole job book. reportIfRowCapped already
+// records when it truncates, which is a warning and not a bound. Its optional
+// .eq("assigned_technician_id") used to hide it from this verifier entirely —
+// a filter applied only when an option is passed is not boundedness, and a
+// conditional parent scope is exactly how an unbounded company read stays
+// invisible. Needs keyset pagination or an aggregate; tracked with the other
+// whole-book readers.
 export const listJobs = cache(async function listJobs(
   companyId: string,
   options?: ListJobsOptions,
@@ -187,6 +194,10 @@ export async function listJobsForOperationalDay(
   return rows.map(mapJobRowToJob);
 }
 
+// unbounded-ok: [debt] one technician's ENTIRE job history, no date filter and
+// no limit. Same shape as listExpensesForTechnician: a parent that accumulates
+// children for the life of the employment, ordered scheduled_at desc, so the
+// oldest silently disappear past 1,000.
 export async function listAssignedJobs(
   companyId: string,
   technicianId: string,

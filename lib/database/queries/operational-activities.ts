@@ -365,6 +365,12 @@ export function sortActivitiesNewestFirst(
   );
 }
 
+// unbounded-ok: [debt] three unpaged id reads — every job, estimate and invoice
+// belonging to ONE customer — which then feed the activity lookups below. A
+// long-standing commercial customer passes 1,000 of any of them, and the effect
+// is not a short list but a WRONG one: the activity feed silently omits
+// everything attached to the truncated ids. customer_id is not a bound here for
+// the same reason it was not one in countCustomerInvoicePayments.
 export async function listOperationalActivitiesForCustomer(
   companyId: string,
   customerId: string,

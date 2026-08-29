@@ -1,5 +1,5 @@
-import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { countInChunks } from "@/lib/database/queries/chunked-in";
+import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { mapCustomerRowToCustomer } from "@/lib/database/mappers/customer";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -577,36 +577,63 @@ async function countRelatedRecords(
   return count ?? 0;
 }
 
+/** One PostgREST page. The default ceiling is 1,000; this is explicit. */
+const INVOICE_ID_PAGE = 1000;
+
 async function countCustomerInvoicePayments(
   companyId: string,
   customerId: string,
 ): Promise<number> {
   const supabase = await createClient();
 
-  const { data: invoices, error: invoiceError } = await supabase
-    .from("invoices")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("customer_id", customerId);
+  // The invoice ids are PAGED, and that is the fix rather than a detail.
+  //
+  // This function already chunked the payment count below, because the author
+  // knew a long-standing customer can have more invoices than one .in() filter
+  // accepts. The read that PRODUCED those ids had no .limit() or .range(), so
+  // it stopped at PostgREST's 1,000-row default — the chunking was carefully
+  // applied to an already-truncated list, and past a thousand invoices the
+  // payment count came back quietly low.
+  //
+  // The number gates a delete dependency check, so understating it understates
+  // what deleting the customer would take with it.
+  //
+  // A single inner-join count would be shorter and is deliberately not used
+  // here: an exact count under the caller's RLS evaluates the policy for every
+  // matching row, which is the cost verify-rls-count-cost exists to prevent.
+  // Chunked counts stay narrowed to a bounded set of parent invoice ids.
+  const invoiceIds: string[] = [];
+  for (let from = 0; ; from += INVOICE_ID_PAGE) {
+    const { data, error: invoiceError } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("customer_id", customerId)
+      .order("id", { ascending: true })
+      .range(from, from + INVOICE_ID_PAGE - 1);
 
-  if (invoiceError) {
-    console.error("[countCustomerInvoicePayments] invoice lookup failed:", {
-      companyId,
-      customerId,
-      code: invoiceError.code,
-      message: invoiceError.message,
-    });
-    return 0;
+    if (invoiceError) {
+      console.error("[countCustomerInvoicePayments] invoice lookup failed:", {
+        companyId,
+        customerId,
+        page: from / INVOICE_ID_PAGE,
+        code: invoiceError.code,
+        message: invoiceError.message,
+      });
+      return 0;
+    }
+
+    const page = data ?? [];
+    invoiceIds.push(...page.map((invoice) => invoice.id));
+    if (page.length < INVOICE_ID_PAGE) break;
   }
 
-  const invoiceIds = (invoices ?? []).map((invoice) => invoice.id);
   if (invoiceIds.length === 0) {
     return 0;
   }
 
-  // Chunked: a long-standing customer can have more invoices than PostgREST
-  // will accept in one .in() filter, and this count gates a delete dependency
-  // check — a silent 0 there would report "nothing depends on this".
+  // Chunked: more invoice ids than PostgREST will accept in one .in() filter,
+  // which is now reachable in earnest because the list above is complete.
   const { count, error } = await countInChunks(invoiceIds, (chunk) =>
     supabase
       .from("invoice_payments")

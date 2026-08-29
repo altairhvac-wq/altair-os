@@ -162,24 +162,43 @@ function extractFunctionBody(lines, index) {
 }
 
 /**
- * A filter that pins the read to ONE parent record.
+ * A filter that pins the read to ONE parent record — and only where that parent
+ * genuinely bounds the child count.
  *
  * `invoice_line_items` is in the high-volume list because a tenant accumulates
  * an unbounded number of them. A read of the line items belonging to ONE invoice
  * is not unbounded in any sense that matters: it is bounded by that invoice, and
- * an invoice with a thousand lines is a different problem. The same goes for an
- * entity's activity feed, a job's attachments, and a customer's history.
+ * an invoice with a thousand lines is a different problem.
  *
- * What this verifier is actually looking for is the read that says "everything
- * this COMPANY has ever had", which is the one that silently truncates at 1,000
- * and reports a fraction as a total.
+ * That reasoning does NOT extend to every foreign key, and this list used to
+ * pretend it did. `customer_id`, `user_id` and `technician_id` name a parent
+ * that accumulates children for the whole life of the tenant: a long-standing
+ * customer has thousands of invoices, a technician has thousands of time
+ * entries. Those reads truncate at 1,000 exactly like a company-wide one.
+ *
+ * It cost a real defect. countCustomerInvoicePayments read every invoice id for
+ * a customer with `.eq("customer_id", …)` and no limit, then carefully CHUNKED
+ * the payment count over that already-truncated list — the chunking was there
+ * because the author knew a customer can exceed one `.in()` filter, which is
+ * the same knowledge that should have paged the read above it. Past a thousand
+ * invoices the dependency count came back quietly low.
  */
-const PARENT_SCOPES = [
-  /\.eq\(\s*["'](job_id|invoice_id|estimate_id|lead_id|expense_id|customer_id|entity_id|user_id|technician_id|assigned_technician_id|created_by)["']/,
+const ONE_RECORD_SCOPES = [
+  // Children of one document. Bounded by that document.
+  /\.eq\(\s*["'](job_id|invoice_id|estimate_id|lead_id|expense_id|entity_id)["']/,
   // An .in() over ids resolved elsewhere is bounded by that list, and the list
   // itself is bounded by whatever produced it — chunked-in.ts caps the chunk.
   /\.in\(\s*["'](id|job_id|invoice_id|estimate_id|lead_id|expense_id|customer_id)["']/,
 ];
+
+/**
+ * Foreign keys that name a parent whose children grow without bound.
+ *
+ * Filtering by one of these is NOT a bound. A read scoped this way still needs
+ * .limit()/.range(), an aggregate, or an explicit `unbounded-ok:` reason.
+ */
+const HIGH_CARDINALITY_PARENTS =
+  /\.eq\(\s*["'](customer_id|user_id|technician_id|assigned_technician_id|created_by)["']/;
 
 const BOUND_MARKERS = [
   /\.limit\(/,
@@ -223,7 +242,12 @@ for (const file of files) {
     const reason = context.match(/unbounded-ok:\s*(.+)/);
     const bounded =
       BOUND_MARKERS.some((marker) => marker.test(chain)) ||
-      PARENT_SCOPES.some((marker) => marker.test(chain));
+      ONE_RECORD_SCOPES.some((marker) => marker.test(chain));
+
+    // Recorded so the report can say WHY a read is a violation: "filtered by a
+    // parent that grows" reads very differently from "filtered by nothing".
+    const highCardinalityOnly =
+      !bounded && HIGH_CARDINALITY_PARENTS.test(chain);
 
     if (reason) {
       allowed.push({ file, line: i + 1, table, reason: reason[1].trim() });
@@ -231,7 +255,7 @@ for (const file of files) {
     }
     if (bounded) continue;
 
-    violations.push({ file, line: i + 1, table });
+    violations.push({ file, line: i + 1, table, highCardinalityOnly });
   }
 }
 
@@ -244,7 +268,14 @@ check(
   "no unbounded read of a table that grows with the tenant",
   violations.length === 0,
   violations
-    .map((v) => `        ${v.file}:${v.line}  ${v.table}`)
+    .map(
+      (v) =>
+        `        ${v.file}:${v.line}  ${v.table}` +
+        (v.highCardinalityOnly
+          ? "  — filtered by a parent whose children grow with the tenant, " +
+            "which is not a bound"
+          : ""),
+    )
     .join("\n") +
     (violations.length
       ? "\n\n        Add .limit()/.range(), or a `// unbounded-ok: <reason>` line above it."
@@ -285,6 +316,26 @@ if (debt.length === 0) {
       "  reports-and-dashboard work.",
   );
 }
+
+/**
+ * The debt is allowed to exist and is NOT allowed to grow.
+ *
+ * A passing run of this file has been read as "reads are scale-safe", which it
+ * has never meant: it means every unbounded read is either bounded, explained,
+ * or on the list below. Without a ceiling the list can absorb a new whole-book
+ * read at any time and the check still says PASS.
+ *
+ * Lower it when one is fixed. Raising it is a decision someone has to write
+ * down, which is the point.
+ */
+const DEBT_CEILING = 12;
+
+check(
+  `no NEW unbounded read joins the debt list (${debt.length}/${DEBT_CEILING})`,
+  debt.length <= DEBT_CEILING,
+  `the tracked debt grew to ${debt.length}. Fix the read, or raise ` +
+    `DEBT_CEILING deliberately and say why.`,
+);
 
 check(
   "every deliberately-unbounded read states a reason",
