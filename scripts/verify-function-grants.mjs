@@ -41,6 +41,32 @@
  * Revoking from PUBLIC without granting to anyone leaves a function only its
  * owner can call, which is usually a mistake rather than a lockdown.
  *
+ * ===================== AND IT HAS TO PIN search_path =====================
+ * SECURITY DEFINER means the body runs with the OWNER's privileges. If
+ * search_path is left to the caller, the caller chooses which `jobs` or which
+ * `now()` the body resolves to — a schema they can create objects in, placed
+ * ahead of `public`, turns a privileged function into a way to run their own
+ * code as the owner. `set search_path = public, pg_temp` on the definition
+ * closes it, and `pg_temp` is last deliberately.
+ *
+ * Individual verifiers assert this for the functions they care about, which
+ * means it is asserted for the functions someone remembered. This asserts it
+ * for every SECURITY DEFINER function in every migration, so a new one cannot
+ * ship without it.
+ *
+ * Two rules, because they are two different strengths of the same idea:
+ *
+ *   1. EVERY definer function fixes its search_path. This is the security rule.
+ *      A function with no setting at all inherits the caller's path.
+ *
+ *   2. Definer functions written from migration 148 onward end that path with
+ *      `pg_temp`. PostgreSQL searches the temporary schema FIRST for relation
+ *      names when pg_temp is not listed, so `= public` still lets a session's
+ *      temp table shadow a real one; listing pg_temp last is the documented way
+ *      to stop it. The 47 older functions set `= public` and are brought to the
+ *      same form by migration 176's catalog sweep, which is why the rule starts
+ *      at 148 rather than failing the whole history it cannot edit.
+ *
  * Offline and side-effect free.
  *
  * Run: node scripts/verify-function-grants.mjs
@@ -149,6 +175,8 @@ const files = readdirSync(MIGRATIONS_DIR)
 
 const ungranted = [];
 const definerWithoutGrant = [];
+const definerWithoutPinnedPath = [];
+const definerWithoutTempTail = [];
 
 /**
  * One record per FUNCTION, accumulated across every migration.
@@ -174,10 +202,19 @@ for (const file of files) {
   )) {
     const name = match[1];
 
-    // The function body runs from here to its terminating $$; near enough for
-    // reading `returns trigger` and `security definer`, which both sit in the
-    // header before the body.
-    const header = sql.slice(match.index, match.index + 600);
+    // Everything from the name to the `as $$` that opens the body: the
+    // parameter list, the return type, the language, `security definer` and the
+    // search_path setting all live there.
+    //
+    // This used to be a flat 600 characters, which is a bug that reads as a
+    // finding: record_invoice_payment_atomic takes fourteen parameters, so its
+    // `set search_path` sits past the cutoff and the function was reported as
+    // unpinned when it is pinned. Ending at the body marker has no such cliff.
+    const bodyStart = sql.slice(match.index).search(/\bas\s+\$/i);
+    const header = sql.slice(
+      match.index,
+      match.index + (bodyStart === -1 ? 600 : bodyStart),
+    );
     if (/returns\s+trigger/i.test(header)) continue;
     if (INTENTIONALLY_PUBLIC.has(name)) continue;
 
@@ -188,9 +225,21 @@ for (const file of files) {
       isDefiner: false,
       revoked: false,
       granted: false,
+      pinned: false,
+      pinnedWithTemp: false,
+      definerFile: null,
     };
     entry.lastFile = file;
-    if (/security\s+definer/i.test(header)) entry.isDefiner = true;
+    if (/security\s+definer/i.test(header)) {
+      entry.isDefiner = true;
+      // Recorded per definition site and overwritten by later ones, because a
+      // CREATE OR REPLACE that drops the setting is the live definition — the
+      // same shape as the 158 grant bug this file exists for.
+      entry.definerFile = file;
+      entry.pinned = /set\s+search_path\s*=/i.test(header);
+      entry.pinnedWithTemp =
+        /set\s+search_path\s*=[^;$]*?(^|,)\s*pg_temp\s*(;|$|\n)/im.test(header);
+    }
     functions.set(name, entry);
   }
 }
@@ -219,10 +268,46 @@ for (const file of files) {
     ) {
       entry.granted = true;
     }
+
+    // A definition can pin its own search_path, or a later migration can pin it
+    // with ALTER FUNCTION. Both leave the function with a fixed search_path,
+    // which is the property being asserted — ALTER is in fact the safer of the
+    // two for an existing function, because it changes the setting and not the
+    // body. Accepting it is not a relaxation: a function nobody pins either way
+    // still fails.
+    if (
+      new RegExp(
+        `alter\\s+function\\s+public\\.${entry.name}\\s*\\([^)]*\\)[\\s\\S]{0,80}?set\\s+search_path\\s*=\\s*public\\s*,\\s*pg_temp`,
+        "i",
+      ).test(sql)
+    ) {
+      entry.pinned = true;
+      entry.pinnedWithTemp = true;
+    }
   }
 }
 
 const inspected = functions.size;
+
+/** Migration 148 is where `set search_path = public, pg_temp` became the house
+ *  form. Everything before it is covered by 176's sweep instead. */
+const TEMP_TAIL_REQUIRED_FROM = 148;
+
+for (const entry of functions.values()) {
+  if (!entry.isDefiner) continue;
+  if (!entry.pinned) {
+    definerWithoutPinnedPath.push({ file: entry.definerFile, name: entry.name });
+    continue;
+  }
+  const number = Number.parseInt(entry.definerFile, 10);
+  if (
+    Number.isFinite(number) &&
+    number >= TEMP_TAIL_REQUIRED_FROM &&
+    !entry.pinnedWithTemp
+  ) {
+    definerWithoutTempTail.push({ file: entry.definerFile, name: entry.name });
+  }
+}
 
 for (const entry of functions.values()) {
   if (!entry.revoked) {
@@ -233,6 +318,30 @@ for (const entry of functions.values()) {
     definerWithoutGrant.push({ file: entry.privilegesFile ?? entry.lastFile, name: entry.name });
   }
 }
+
+check(
+  "every SECURITY DEFINER function fixes its search_path",
+  definerWithoutPinnedPath.length === 0,
+  definerWithoutPinnedPath
+    .map(
+      (entry) =>
+        `${entry.file}: public.${entry.name} runs as its owner with a ` +
+        `caller-controlled search_path`,
+    )
+    .join("\n        "),
+);
+
+check(
+  `definer functions from ${TEMP_TAIL_REQUIRED_FROM} onward end that path with pg_temp`,
+  definerWithoutTempTail.length === 0,
+  definerWithoutTempTail
+    .map(
+      (entry) =>
+        `${entry.file}: public.${entry.name} — without pg_temp listed, the ` +
+        `temp schema is searched FIRST for relation names`,
+    )
+    .join("\n        "),
+);
 
 console.log("\nEvery function the migrations create states its callers");
 console.log(`  (${files.length} migrations, ${inspected} callable functions)`);
