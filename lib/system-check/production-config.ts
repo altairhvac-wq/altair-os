@@ -206,6 +206,13 @@ export const PRODUCTION_CONFIG: readonly ConfigVariable[] = [
       "Names the outgoing key. Defaults to one below the current version; it must differ from it, or a ciphertext would name both.",
   },
   {
+    name: "ALTAIR_DASHBOARD_AGGREGATES",
+    classification: "optional",
+    group: "Correctness",
+    consequence:
+      "Set it to 'on'. Unset means OFF, and off means the dashboard computes its financial figures in Node from listInvoices, listEstimates and listExpenses -- reads that stop at PostgREST's 1,000-row ceiling. Past a thousand invoices every figure on the most financially sensitive screen in the product is short, and nothing on the page says so. The SQL path (migrations 158/166-168) is opt-in on purpose because switching how those numbers are computed should follow a run that proves old and new agree, which scripts/verify-dashboard-equality-live.mjs is; it is not meant to stay off afterwards.",
+  },
+  {
     name: "PUBLIC_RATE_LIMIT_HASH_SECRET",
     classification: "optional",
     group: "Security",
