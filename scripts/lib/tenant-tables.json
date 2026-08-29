@@ -8,6 +8,7 @@
   "billing_signatures",
   "company_ai_limits",
   "company_billing_accounts",
+  "company_deletion_requests",
   "company_document_counters",
   "company_memberships",
   "company_payment_accounts",

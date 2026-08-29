@@ -196,6 +196,15 @@ export const WORKSPACE_EXPORT_TABLES: WorkspaceExportTable[] = [
       "a record of who tried to get in rather than of the customer's business",
   },
   {
+    table: "company_deletion_requests",
+    category: "internal",
+    scope: "company_id",
+    reason:
+      "the deletion lifecycle's own state: who requested erasure, when the " +
+      "grace period ends, and how far a purge got. Operational metadata about " +
+      "the account rather than anything the account produced",
+  },
+  {
     table: "payment_provider_events",
     category: "credential",
     scope: "company_id",

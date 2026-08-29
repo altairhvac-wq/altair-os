@@ -98,24 +98,50 @@ const admin = createClient(url, key, {
 /**
  * The live schema, read through PostgREST.
  *
- * information_schema is not exposed over the data API, so the shape of each
- * table is discovered by asking for zero rows and reading the keys of a probe
- * insert-shaped response. Instead: a `limit 0` select tells us the table
- * exists, and a single row (any company) tells us its columns. A table with no
- * rows anywhere yields no columns, which is reported rather than assumed
- * clean.
+ * information_schema is not exposed over the data API, but PostgREST will
+ * describe its own schema, and that document lists every table with every
+ * column whether or not any rows exist.
+ *
+ * This used to read a table's shape from `select("*").limit(1)` — the keys of
+ * one returned row. That works only for a table that HAS a row: an empty table
+ * yielded no columns, so the credential-column scan silently skipped exactly
+ * the tables nobody had populated yet. A table is most likely to be empty on
+ * the day it is added, which is the day its columns most need looking at.
  */
-async function tableColumns(table) {
-  const { data, error } = await admin.from(table).select("*").limit(1);
-  if (error) return { exists: false, columns: [] };
-  return {
-    exists: true,
-    columns: data && data.length > 0 ? Object.keys(data[0]) : [],
-  };
+async function fetchSchema() {
+  const response = await fetch(`${url}/rest/v1/`, {
+    headers: {
+      apikey: key,
+      authorization: `Bearer ${key}`,
+      accept: "application/openapi+json",
+    },
+  });
+  if (!response.ok) return null;
+  const spec = await response.json();
+  const tables = new Map();
+  for (const [name, definition] of Object.entries(spec.definitions ?? {})) {
+    tables.set(name, Object.keys(definition.properties ?? {}));
+  }
+  return tables;
+}
+
+let SCHEMA = new Map();
+
+function tableColumns(table) {
+  const columns = SCHEMA.get(table);
+  return { exists: columns != null, columns: columns ?? [] };
 }
 
 async function main() {
   console.log(`\nTarget project: ${ref}\n`);
+
+  SCHEMA = (await fetchSchema()) ?? new Map();
+  check(
+    "the live schema is readable, so empty tables are inspected too",
+    SCHEMA.size > 0,
+    "without it, a table with no rows contributes no columns and its " +
+      "credential-looking fields go unexamined",
+  );
 
   const {
     WORKSPACE_EXPORT_TABLES,
@@ -147,20 +173,40 @@ async function main() {
     missingFromDatabase.map((t) => `        ${t} — stale manifest entry`).join("\n"),
   );
 
-  // The reverse direction is the one that matters: a table that exists and is
-  // NOT named. Discovered by probing every table the seeder or the schema
-  // knows about.
-  const { data: probe, error: probeError } = await admin.rpc(
-    "get_company_operational_inconsistencies",
-    { p_company_id: "00000000-0000-0000-0000-000000000000", p_limit: 1, p_offset: 0 },
-  );
-  void probe;
-  void probeError;
+  // The reverse direction is the one that matters: a table that EXISTS and is
+  // not named. This used to compare against scripts/lib/tenant-tables.json — a
+  // static list — which cannot discover anything, because a table added
+  // yesterday is missing from the manifest AND from the list it is checked
+  // against, and the two agree.
+  //
+  // Discovered live instead: every table PostgREST exposes that carries a
+  // company_id column is tenant-scoped by definition and must be classified.
+  // The static list is unioned in rather than replaced, because a few
+  // tenant-owned tables are scoped through a parent and have no company_id of
+  // their own — marketing_connected_account_secrets is the one that broke the
+  // purge script by being exactly that shape.
+  const liveTenantTables = [...SCHEMA.entries()]
+    .filter(([, columns]) => columns.includes("company_id"))
+    .map(([table]) => table);
 
   const KNOWN_TENANT_TABLES = JSON.parse(
     readFileSync("scripts/lib/tenant-tables.json", "utf8"),
   );
-  const unclassified = KNOWN_TENANT_TABLES.filter((table) => !named.has(table));
+  const discovered = [...new Set([...KNOWN_TENANT_TABLES, ...liveTenantTables])];
+
+  const undeclared = liveTenantTables.filter(
+    (table) => !KNOWN_TENANT_TABLES.includes(table),
+  );
+  check(
+    `every live company_id table is in tenant-tables.json (${liveTenantTables.length} found)`,
+    undeclared.length === 0,
+    undeclared.length
+      ? `${undeclared.join(", ")}\n        A tenant table missing from that ` +
+        `file is missing from the purge order and the export manifest too.`
+      : "",
+  );
+
+  const unclassified = discovered.filter((table) => !named.has(table));
   check(
     "no tenant-scoped table is left unclassified",
     unclassified.length === 0,
