@@ -22,14 +22,26 @@
  * it exists.
  *
  * ===================== WHY IT CANNOT WRITE =====================
- * It issues three kinds of request and nothing else:
+ * It issues four kinds of request and nothing else:
  *
+ *   GET /rest/v1/ (openapi)        the schema document: names and parameters
  *   .select(..., { head: true })   returns a count, no rows
  *   .select(...).limit(0)          returns no rows, proves the column resolves
- *   .rpc(name, args)               only functions declared read-only below
+ *   .rpc(name, args)               ONLY functions whose body cannot write
  *
- * There is no insert, update, upsert or delete anywhere in this file, and the
- * RPC allowlist is explicit. Nothing here can change production.
+ * That last line is load-bearing, and it was once broken. A probe calls a
+ * function for real, so a function that allocates a number, advances a counter
+ * or records an event WRITES when it is probed. While 173, 174 and 175 were
+ * unapplied their probes were harmless; the moment they were applied to
+ * production, running this audit advanced a rate-limit counter for real. It
+ * did, once: one row, scope "audit.probe", which collides with no real scope.
+ *
+ * Writing functions are therefore marked `writes` and are never executed. They
+ * still have to prove they exist, which is what the OpenAPI probe is for — it
+ * asks PostgREST to DESCRIBE a function rather than run it. That also closes an
+ * older hole: `refuses an anonymous caller` accepts HTTP 404, and a function
+ * that does not exist returns 404 to everyone, so anon refusal was never on its
+ * own evidence that anything was there.
  *
  * ===================== WHY IT PRINTS NO CUSTOMER DATA =====================
  * Row CONTENT is never selected into the output. The RPC probes deliberately
@@ -184,16 +196,16 @@ const FUNCTIONS = [
   {
     name: "get_company_operational_inconsistencies",
     migration: "172",
-    // Written and validated on scratch; NOT applied to production. The
-    // dashboard's data-integrity scan calls this the moment it ships, and
-    // without it the scan reports unavailable rather than clean.
-    expectPending: true,
+    // Applied to production 28 Aug 2026. Read-only, so it is still executed: a
+    // null actor makes it return its unauthorized envelope before it reads a
+    // single job.
     args: { p_company_id: NOWHERE, p_limit: 5, p_offset: 0 },
   },
   {
     name: "check_public_request_rate_limit",
     migration: "173",
-    expectPending: true,
+    // ADVANCES A COUNTER. Never executed here — see the header.
+    writes: true,
     args: {
       p_scope: "audit.probe",
       p_dimension: "ip",
@@ -205,7 +217,8 @@ const FUNCTIONS = [
   {
     name: "record_security_audit_event",
     migration: "174",
-    expectPending: true,
+    // INSERTS an event. Never executed here.
+    writes: true,
     args: {
       p_event_type: "audit.probe",
       p_outcome: "failed",
@@ -220,7 +233,9 @@ const FUNCTIONS = [
   {
     name: "request_company_deletion",
     migration: "175",
-    expectPending: true,
+    // INSERTS a deletion request, and the thing it schedules is the deletion of
+    // a company. Never executed here.
+    writes: true,
     args: {
       p_company_id: NOWHERE,
       p_confirmation: "not-a-real-company-name",
@@ -293,9 +308,8 @@ const FUNCTIONS = [
   {
     name: "allocate_company_document_number",
     migration: "148",
-    // Deliberately NOT called: it ALLOCATES, which is a write. Existence is
-    // proven by the anon refusal alone.
-    probeAsServiceRole: false,
+    // Deliberately NOT called: it ALLOCATES, which is a write.
+    writes: true,
     args: { p_company_id: NOWHERE, p_document_type: "job" },
   },
 ];
@@ -379,11 +393,68 @@ const MIGRATION_155_FUNCTIONS = [
   },
 ];
 
+/**
+ * Every RPC PostgREST will answer, with its parameter names.
+ *
+ * This is how a function that must not be executed still proves it exists, and
+ * still proves its SIGNATURE — the property the deployed code actually depends
+ * on, since a renamed or re-typed parameter fails at the call site exactly like
+ * a missing function does. Asking for the schema document changes nothing.
+ */
+async function fetchOpenApiRpcs() {
+  const response = await fetch(`${url}/rest/v1/`, {
+    headers: {
+      apikey: serviceKey,
+      authorization: `Bearer ${serviceKey}`,
+      accept: "application/openapi+json",
+    },
+  });
+  if (!response.ok) return null;
+  const spec = await response.json();
+  const rpcs = new Map();
+  for (const [path, entry] of Object.entries(spec.paths ?? {})) {
+    if (!path.startsWith("/rpc/")) continue;
+    const params = (entry?.post?.parameters ?? []).flatMap((parameter) =>
+      parameter.schema?.properties
+        ? Object.keys(parameter.schema.properties)
+        : parameter.name
+          ? [parameter.name]
+          : [],
+    );
+    rpcs.set(path.slice("/rpc/".length), new Set(params));
+  }
+  return rpcs;
+}
+
 async function auditFunctions() {
   console.log("\nFunctions the deployed code calls");
 
+  const rpcs = await fetchOpenApiRpcs();
+  check(
+    "PostgREST describes its own schema".padEnd(46),
+    rpcs != null && rpcs.size > 0,
+    "without it, a function that must not be executed cannot prove it exists",
+  );
+
   for (const fn of FUNCTIONS) {
-    if (fn.probeAsServiceRole !== false) {
+    // Presence and signature, without running anything. Applied to every
+    // function and not only to the ones that must not be executed: a probe
+    // that returns no error already proves the function ran, but it does not
+    // prove the arguments the deployed code passes are the ones it declares.
+    if (rpcs) {
+      const declared = rpcs.get(fn.name);
+      const expected = Object.keys(fn.args);
+      const missingArgs = expected.filter((name) => !declared?.has(name));
+      check(
+        `${fn.name.padEnd(40)} declared, with the arguments the code passes`,
+        declared != null && missingArgs.length === 0,
+        declared == null
+          ? `not in the schema document — migration ${fn.migration} is absent`
+          : `declares no ${missingArgs.join(", ")}`,
+      );
+    }
+
+    if (!fn.writes) {
       const { error } = await admin.rpc(fn.name, fn.args);
       // A null actor makes every one of these return its zeros envelope before
       // it reaches a company, so "no error" means present and executable.
@@ -392,25 +463,11 @@ async function auditFunctions() {
         /could not find the function|does not exist|schema cache/i.test(
           error.message,
         );
-      if (fn.expectPending) {
-        if (missing) {
-          console.log(
-            `  PEND  ${fn.name.padEnd(40)} not applied yet  (${fn.migration})`,
-          );
-          pending.push(`${fn.name}  — migration ${fn.migration}`);
-        } else {
-          check(
-            `${fn.name.padEnd(40)} present  (${fn.migration}, was pending)`,
-            true,
-          );
-        }
-      } else {
-        check(
-          `${fn.name.padEnd(40)} present and executable  (${fn.migration})`,
-          !missing,
-          missing ? `PostgREST: ${error.message}` : "",
-        );
-      }
+      check(
+        `${fn.name.padEnd(40)} present and executable  (${fn.migration})`,
+        !missing,
+        missing ? `PostgREST: ${error.message}` : "",
+      );
       if (error && !missing) {
         note(
           fn.name,
