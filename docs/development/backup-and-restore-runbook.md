@@ -84,12 +84,29 @@ together and consistently:
 
 Fill these in as decisions, then measure against them in section 4.
 
+There are two of each, because the database and Storage recover by different
+mechanisms with different worst cases. Treating them as one number is how a
+recovery plan ends up covering half the data.
+
 | Objective | Definition | Target | Measured |
 |---|---|---|---|
-| **RPO** (Recovery Point Objective) | Maximum acceptable data loss, in minutes | _decide_ (PITR makes single-digit minutes achievable) | _measure in 4.6_ |
-| **RTO** (Recovery Time Objective) | Maximum acceptable time from decision-to-restore until customers are transacting again | _decide_ | _measure in 4.7_ |
+| **Database RPO** | Maximum acceptable data loss, in minutes | _decide_ (PITR makes single-digit minutes achievable) | _not measured — see below_ |
+| **Database RTO** | From decision-to-restore until customers are transacting again | _decide_ | _not measured — see below_ |
+| **Storage RPO** | Age of the newest object in the last verified backup | _decide_ | **unbounded — no production backup has ever been taken** |
+| **Storage RTO** | From decision-to-restore until objects resolve again | _decide_ | ~3.7 s for one 64 KB object (Rehearsal 2); not extrapolated |
 
 A target without a measurement is a wish. Section 4 produces the measurement.
+
+**Storage RPO is the number that is actually bad right now.** It is not large,
+it is undefined: there is no copy, so the loss on a Storage failure is
+everything in section 6's inventory. The database numbers are unmeasured, which
+is a different and lesser problem — the mechanism is known to work, because the
+scratch project is a production database restore and the full verifier suite
+passes against it.
+
+Measuring the database pair requires provisioning a project from a backup, which
+is a paid, manual platform action and is listed in section 7 rather than done
+from here.
 
 ---
 
@@ -188,7 +205,46 @@ changes RLS, `SECURITY DEFINER` functions, or grants.
 
 ---
 
-## 6. Known gap: Storage objects
+### Rehearsal 2 — Storage recovery, 28 Aug 2026
+
+Performed by `scripts/verify-storage-recovery-live.mjs` against the scratch
+project. Unlike Rehearsal 1 this one **deleted** something: a rehearsal that
+never deletes is checking that a copy exists, not that a recovery works.
+
+Sequence: upload a known 64 KB object to `company-files`, back it up, confirm
+the manifest carries its real SHA-256, delete it, confirm from `list()` that it
+is gone, restore, download, compare bytes. 16 checks.
+
+- **Measured Storage RTO: ~3.7 s** for one 64 KB object, including process
+  start. Not a useful extrapolation to 61.8 MB, but it establishes the procedure
+  runs end to end.
+- **RPO is whatever `--backup` was last run**, which for production is *never*.
+  `--verify` reports objects that exist now and are absent from the backup —
+  that report is the backup's age expressed as the data a restore would lose.
+
+Two defects surfaced by performing it, both of which would otherwise have
+surfaced during a real incident:
+
+- The restore uploaded without a content type and every bucket rejected it with
+  a 415; all four restrict `allowed_mime_types`. The manifest now records the
+  content type.
+- One unreadable object aborted the whole backup. It is now recorded as
+  `manifest.unreadable`, reported loudly, and the run continues.
+
+It also asserts the two refusals that keep a bad backup from making an incident
+worse: `--verify` fails on a corrupted local copy, and `--restore` refuses to
+upload one over a possibly-intact object.
+
+#### What Rehearsal 2 did not establish
+
+Nothing about the database half, and nothing about production. The scratch
+project *is* a production database restore, which is why Rehearsal 1's finding
+still stands and is worth restating: when the storage inventory was first run
+there, **22 of 22 objects were listed with no bytes behind them** — every bucket,
+every object. That is the exact end state a database-only recovery produces,
+observed rather than argued.
+
+## 6. Storage objects: tooling exists, no production copy does
 
 Supabase database backups cover Postgres. They do **not** cover Storage
 objects. This application keeps customer-visible files in Storage:
@@ -204,10 +260,39 @@ objects. This application keeps customer-visible files in Storage:
 tax record. Losing it while the `expenses` row survives leaves a database that
 claims a receipt exists and storage that cannot produce it.
 
-**Still not implemented.** The restore rehearsal in section 5 did not restore
-Storage, because a database backup cannot. What follows is the analysis and a
-recommended strategy; implementing it requires external infrastructure and is
-deliberately not done from the repository.
+**Tooling now exists; no production copy has been taken.** `scripts/storage-backup.mjs`
+inventories, backs up, verifies and restores, and section 5's Rehearsal 2
+performed a real recovery with it. What has *not* happened is running it against
+production. See "Production inventory, 29 Aug 2026" below for what is currently
+at risk.
+
+### Production inventory, 29 Aug 2026
+
+Read-only, `node scripts/storage-backup.mjs --confirm <production-ref>`:
+
+| Bucket | Class | Objects | Size |
+|---|---|---|---|
+| `company-files` | critical | 3 | 4.9 MB |
+| `marketing-media` | critical | 16 | 56.9 MB |
+| `avatars` | reconstructible | 1 | 41 KB |
+| `founder-marketing-screenshots` | reconstructible | 2 | 265 KB |
+
+**19 critical objects, 61.8 MB, and no backup has ever been taken.** No
+unreadable objects; no unclassified bucket. That is what a database-only
+recovery would lose today — small in bytes and not small in kind: expense
+receipts are tax records, and the `expenses` rows referencing them would come
+back pointing at nothing.
+
+It is one command away from being covered:
+
+```
+SUPABASE_STORAGE_BACKUP_URL=... SUPABASE_STORAGE_BACKUP_SERVICE_ROLE_KEY=... \
+  node scripts/storage-backup.mjs --confirm <production-ref> --backup --out <dir>
+```
+
+then `--verify` against the same directory. The output holds customer files: it
+must not be committed, and it belongs somewhere with the retention in section 6's
+strategy, not on a laptop.
 
 ### How Altair actually uses Storage
 
@@ -266,12 +351,11 @@ Ordered by effort. Do at least the first.
    longer than the 7-day database PITR window. Expense receipts are commonly
    retained for years; a 7-day backup of them is not a backup.
 
-### Related defect found during this analysis (not fixed)
+### Related defect found during this analysis — FIXED
 
-**Storage objects are never deleted.** No code path in the repository removes a
-Storage object — `grep` for `.remove(` across `lib/` and `app/` returns
-nothing. `permanentlyDeleteExpense` deletes the `expenses` row and leaves the
-receipt in `company-files` indefinitely. Consequences:
+**Storage objects were never deleted.** No code path removed a Storage object;
+`permanentlyDeleteExpense` deleted the `expenses` row and left the receipt in
+`company-files` indefinitely. Consequences at the time:
 
 - Storage grows without bound and is never reclaimed.
 - A record the product describes as *permanently deleted* still has its
@@ -281,8 +365,16 @@ receipt in `company-files` indefinitely. Consequences:
   unreadable by anyone — which is the safe outcome, but they still occupy
   storage and still exist.
 
-A reaper (delete objects whose owning row is gone) belongs with the P1-11
-storage-authorization work, because both need the same row↔object mapping.
+Closed by `scripts/reap-orphaned-storage.mjs`, which deletes objects whose
+owning row is gone, and `scripts/verify-storage-reaper-live.mjs`, which asserts
+the classification that decides what counts as an orphan (8 checks). Tenant
+deletion removes objects too — `scripts/purge-company.mjs` clears a company's
+Storage as part of the purge, and `scripts/verify-company-deletion-live.mjs`
+covers it.
+
+Both are operator-run. Neither is scheduled, and neither should be scheduled
+against production until someone has looked at a dry run of what it would
+delete.
 
 ---
 
