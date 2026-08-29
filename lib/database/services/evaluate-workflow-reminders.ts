@@ -208,33 +208,83 @@ async function loadCompanyTimeZone(
   return resolveCompanyTimeZone(data?.timezone);
 }
 
-// unbounded-ok: a reminder sweep that skipped rows would silently stop
-// reminding about them. It runs on the cron, not in a request, and its
-// scalability is measured by scripts/verify-cron-scalability-live.mjs
-// (wall-clock budget, checkpointed resume, no skips, no duplicates).
+/**
+ * One PostgREST page. Explicit, because the default is the bug.
+ */
+const REMINDER_SWEEP_PAGE = 1000;
+
+/**
+ * Read every row for one company, paged.
+ *
+ * ===================== WHY THIS EXISTS =====================
+ * The three loaders below carried this reason:
+ *
+ *     "a reminder sweep that skipped rows would silently stop reminding about
+ *      them. It runs on the cron, not in a request, and its scalability is
+ *      measured by verify-cron-scalability-live (no skips, no duplicates)."
+ *
+ * The first sentence is exactly right and was an argument for paging, offered
+ * instead as a justification for not bounding the read. The second is true of
+ * the wrong thing: verify-cron-scalability-live proves every TENANT is visited
+ * across a cycle. It says nothing about rows within a tenant, and
+ * `.eq("company_id", …)` with no range still stops at 1,000.
+ *
+ * So for any company past a thousand invoices, jobs or leads, the sweep read
+ * the newest 1,000 — the order is created_at/scheduled_at descending — and
+ * every older row silently stopped generating reminders. Unpaid invoices past
+ * that line were never followed up; completed work past it was never flagged
+ * for invoicing. The rows that fall off are the OLD ones, which are precisely
+ * the ones a reminder exists for.
+ *
+ * Paging costs one extra round trip per thousand rows on a cron that already
+ * has a wall-clock budget, and the budget is enforced per tenant by
+ * runTenantSweep.
+ */
+async function readAllPages<TRow>(
+  build: () => {
+    range: (
+      from: number,
+      to: number,
+    ) => PromiseLike<{ data: TRow[] | null; error: { message: string } | null }>;
+  },
+): Promise<TRow[]> {
+  const rows: TRow[] = [];
+  for (let from = 0; ; from += REMINDER_SWEEP_PAGE) {
+    const { data, error } = await build().range(
+      from,
+      from + REMINDER_SWEEP_PAGE - 1,
+    );
+    if (error) throw new Error(error.message);
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < REMINDER_SWEEP_PAGE) break;
+  }
+  return rows;
+}
+
+// unbounded-ok: paged to completion by readAllPages — see the note there. The
+// sweep must see every row, which is why it reads them all rather than a page.
 async function loadInvoicesForEvaluation(
   client: DbClient,
   companyId: string,
 ): Promise<Invoice[]> {
-  const { data, error } = await client
-    .from("invoices")
-    .select(
-      `
+  const data = await readAllPages(() =>
+    client
+      .from("invoices")
+      .select(
+        `
       *,
       customers(name, email),
       jobs(job_number),
       estimates(estimate_number),
       invoice_line_items(id)
     `,
-    )
-    .eq("company_id", companyId)
-    .is("deleted_at", null)
-    .is("archived_at", null)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
+      )
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false }),
+  );
 
   return (data ?? []).map((row) =>
     mapInvoiceRowToInvoice(
@@ -308,22 +358,20 @@ async function loadEstimatesForEvaluation(
   return mergeEstimateLifecycleTimestampsBatch(estimates, timestampsByEstimateId);
 }
 
-// unbounded-ok: same sweep, same reason — see loadInvoicesForEvaluation.
+// unbounded-ok: paged to completion by readAllPages — see the note there.
 async function loadLeadsForEvaluation(
   client: DbClient,
   companyId: string,
 ): Promise<Lead[]> {
-  const { data, error } = await client
-    .from("leads")
-    .select("*")
-    .eq("company_id", companyId)
-    .is("deleted_at", null)
-    .is("archived_at", null)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  const data = await readAllPages(() =>
+    client
+      .from("leads")
+      .select("*")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false }),
+  );
 
   return (data ?? []).map((row) => ({
     id: row.id,
@@ -351,28 +399,26 @@ async function loadLeadsForEvaluation(
   }));
 }
 
-// unbounded-ok: same sweep, same reason — see loadInvoicesForEvaluation.
+// unbounded-ok: paged to completion by readAllPages — see the note there.
 async function loadJobsForEvaluation(
   client: DbClient,
   companyId: string,
 ): Promise<Job[]> {
-  const { data, error } = await client
-    .from("jobs")
-    .select(
-      `
+  const data = await readAllPages(() =>
+    client
+      .from("jobs")
+      .select(
+        `
       *,
       customers(name),
       assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
     `,
-    )
-    .eq("company_id", companyId)
-    .is("deleted_at", null)
-    .is("archived_at", null)
-    .order("scheduled_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
+      )
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+      .order("scheduled_at", { ascending: false }),
+  );
 
   return (data ?? []).map((row) =>
     mapJobRowToJob(row as Parameters<typeof mapJobRowToJob>[0]),
