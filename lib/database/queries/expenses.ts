@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -114,6 +115,36 @@ export type ListExpensesOptions = {
   includeArchived?: boolean;
   includeDeleted?: boolean;
 };
+
+/** Expenses for a bounded set of jobs. See listJobsByIds for the contract. */
+export async function listExpensesByJobIds(
+  companyId: string,
+  jobIds: readonly string[],
+): Promise<Expense[]> {
+  if (jobIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<ExpenseRowWithRelations>(
+    jobIds,
+    (chunk) =>
+      supabase
+        .from("expenses")
+        .select(EXPENSE_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listExpensesByJobIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
+}
 
 // unbounded-ok: [debt] reads the company's whole book. It feeds the reports
 // and dashboard aggregates, which have not been moved into SQL yet -- the

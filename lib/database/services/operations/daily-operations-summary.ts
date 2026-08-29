@@ -6,7 +6,10 @@ import {
 import {
   getCompanyJobCompletenessSummary,
 } from "@/lib/database/queries/job-completeness-summary";
-import { loadCompanyOperationalDatasets } from "@/lib/database/services/operations/company-operational-datasets";
+import {
+  loadCompanyOperationalDatasets,
+  loadMaterialTrackedJobDatasets,
+} from "@/lib/database/services/operations/company-operational-datasets";
 import { getJobReviewBlockerResolutionTrendSummary } from "@/lib/database/services/job-review-resolution";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { STALLED_JOB_INACTIVITY_DAYS } from "@/lib/database/services/reports/stalled-jobs-report";
@@ -109,7 +112,12 @@ function groupByJobId<T extends { jobId?: string }>(
 async function deriveMaterialCostExceedsCollectedCount(
   companyId: string,
 ): Promise<number> {
-  const datasets = await loadCompanyOperationalDatasets(companyId);
+  // Narrowed at the QUERY, not in Node. This used to load six whole books —
+  // every job, invoice, estimate, expense, labour entry and material — and
+  // filter afterwards, so past a thousand of any of them the count came back
+  // understated and the dashboard's material-cost card could drop from
+  // critical to warning, or vanish. See loadMaterialTrackedJobDatasets.
+  const datasets = await loadMaterialTrackedJobDatasets(companyId);
   return (await deriveJobLevelOperationalCounts(companyId, datasets))
     .materialCostExceedsCollectedCount;
 }

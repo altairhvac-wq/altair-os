@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { reportIfRowCapped } from "@/lib/database/queries/row-cap";
 import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
@@ -430,6 +431,36 @@ export type ListEstimatesOptions = {
   includeArchived?: boolean;
   includeDeleted?: boolean;
 };
+
+/** Estimates for a bounded set of jobs. See listJobsByIds for the contract. */
+export async function listEstimatesByJobIds(
+  companyId: string,
+  jobIds: readonly string[],
+): Promise<Estimate[]> {
+  if (jobIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<EstimateRowWithRelations>(
+    jobIds,
+    (chunk) =>
+      supabase
+        .from("estimates")
+        .select(ESTIMATE_LIST_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listEstimatesByJobIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map(mapEstimateRowToEstimate);
+}
 
 // unbounded-ok: [debt] reads the company's whole book. It feeds the reports
 // and dashboard aggregates, which have not been moved into SQL yet -- the

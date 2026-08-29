@@ -100,6 +100,50 @@ export const listJobMaterialsForCompany = cache(
   },
 );
 
+/**
+ * Every material row for the company, PAGED.
+ *
+ * listJobMaterialsForCompany stops at PostgREST's 1,000-row default, which made
+ * it useless as the seed for a bounded read: it would have narrowed the job set
+ * to whatever fitted in one page and called the result complete. This is the
+ * one whole-table read in the narrowed path, and it is the smallest of the six
+ * — a company tracks materials on the jobs it tracks materials on, not on all
+ * of them.
+ */
+const JOB_MATERIAL_PAGE = 1000;
+
+export async function listAllJobMaterialsForCompany(
+  companyId: string,
+): Promise<JobMaterial[]> {
+  const supabase = await createClient();
+  const rows: JobMaterialRowWithAddedBy[] = [];
+
+  for (let from = 0; ; from += JOB_MATERIAL_PAGE) {
+    const { data, error } = await supabase
+      .from("job_materials")
+      .select(JOB_MATERIAL_SELECT)
+      .eq("company_id", companyId)
+      .order("id", { ascending: true })
+      .range(from, from + JOB_MATERIAL_PAGE - 1);
+
+    if (error) {
+      console.error("[listAllJobMaterialsForCompany] query failed:", {
+        companyId,
+        page: from / JOB_MATERIAL_PAGE,
+        code: error.code,
+        message: error.message,
+      });
+      return [];
+    }
+
+    const page = (data ?? []) as JobMaterialRowWithAddedBy[];
+    rows.push(...page);
+    if (page.length < JOB_MATERIAL_PAGE) break;
+  }
+
+  return rows.map(mapJobMaterialRow);
+}
+
 export async function listJobMaterialsForJob(
   companyId: string,
   jobId: string,

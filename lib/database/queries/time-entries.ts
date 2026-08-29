@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -293,6 +294,37 @@ export const listCompanyJobLaborEntries = cache(
     return listTimeEntries(companyId, { entryType: "job_labor" });
   },
 );
+
+/** Job-labour entries for a bounded set of jobs. */
+export async function listJobLaborEntriesByJobIds(
+  companyId: string,
+  jobIds: readonly string[],
+): Promise<TimeEntry[]> {
+  if (jobIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<TimeEntryRowWithRelations>(
+    jobIds,
+    (chunk) =>
+      supabase
+        .from("time_entries")
+        .select(TIME_ENTRY_SELECT)
+        .eq("company_id", companyId)
+        .eq("entry_type", "job_labor")
+        .in("job_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listJobLaborEntriesByJobIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map(mapTimeEntryRow);
+}
 
 export async function listJobLaborEntriesForJob(
   companyId: string,

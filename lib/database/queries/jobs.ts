@@ -194,6 +194,45 @@ export async function listJobsForOperationalDay(
   return rows.map(mapJobRowToJob);
 }
 
+/**
+ * Jobs by id, chunked.
+ *
+ * The `.in()` list is capped by chunked-in.ts, and the CALLER is responsible
+ * for the id list being bounded — here it is the set of jobs that have material
+ * rows, which is what makes this a bounded read rather than the whole book
+ * wearing a filter.
+ */
+export async function listJobsByIds(
+  companyId: string,
+  jobIds: readonly string[],
+): Promise<Job[]> {
+  if (jobIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<JobRowWithTechnician>(
+    jobIds,
+    (chunk) =>
+      supabase
+        .from("jobs")
+        .select(JOB_TECHNICIAN_SELECT)
+        .eq("company_id", companyId)
+        .in("id", chunk)
+        .is("deleted_at", null)
+        .is("archived_at", null),
+  );
+
+  if (error) {
+    console.error("[listJobsByIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map(mapJobRowToJob);
+}
+
 // unbounded-ok: [debt] one technician's ENTIRE job history, no date filter and
 // no limit. Same shape as listExpensesForTechnician: a parent that accumulates
 // children for the life of the employment, ordered scheduled_at desc, so the

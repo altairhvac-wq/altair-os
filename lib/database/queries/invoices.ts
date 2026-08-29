@@ -518,6 +518,36 @@ export type ListInvoicesOptions = {
   includeDeleted?: boolean;
 };
 
+/** Invoices for a bounded set of jobs. See listJobsByIds for the contract. */
+export async function listInvoicesByJobIds(
+  companyId: string,
+  jobIds: readonly string[],
+): Promise<Invoice[]> {
+  if (jobIds.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await selectInChunks<InvoiceRowWithRelations>(
+    jobIds,
+    (chunk) =>
+      supabase
+        .from("invoices")
+        .select(INVOICE_LIST_SELECT)
+        .eq("company_id", companyId)
+        .in("job_id", chunk),
+  );
+
+  if (error) {
+    console.error("[listInvoicesByJobIds] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map(mapInvoiceRowToInvoice);
+}
+
 // unbounded-ok: [debt] reads the company's whole book. It feeds the reports
 // and dashboard aggregates, which have not been moved into SQL yet -- the
 // dashboard has an aggregate RPC (migration 158) behind
