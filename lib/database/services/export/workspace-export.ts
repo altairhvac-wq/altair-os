@@ -31,6 +31,25 @@ import {
 
 const PAGE = 1000;
 
+/**
+ * What the export promises, in the words it can actually keep.
+ *
+ * Every row belonging to the tenant that existed for the WHOLE export appears
+ * exactly once. A row created during the export is excluded where the table
+ * carries a created_at, and may or may not appear where it does not. A row
+ * deleted during the export appears if the walk had already passed it and does
+ * not if it had not. No row ever appears twice.
+ *
+ * It is deliberately not "a consistent snapshot". PostgREST cannot hold a
+ * transaction across pages, and claiming a guarantee the implementation does
+ * not have is worse than stating a smaller one accurately.
+ */
+export const EXPORT_CONSISTENCY_CONTRACT =
+  "The export contains every row belonging to this company that existed for " +
+  "the duration of the export, each exactly once. Rows created or deleted " +
+  "while it ran may or may not be included, and none is included twice. This " +
+  "is not a point-in-time snapshot.";
+
 export type WorkspaceExportChunk = {
   table: string;
   rows: Record<string, unknown>[];
@@ -41,6 +60,10 @@ export type WorkspaceExportChunk = {
 export type WorkspaceExportSummary = {
   companyId: string;
   generatedAt: string;
+  /** The instant the export began. Rows created after it are excluded. */
+  boundary: string;
+  /** What the export promises. See EXPORT_CONSISTENCY_CONTRACT. */
+  consistency: string;
   tables: { table: string; rowCount: number }[];
   totalRows: number;
 };
@@ -55,31 +78,111 @@ function stripOmittedColumns(
   return copy;
 }
 
+/**
+ * Tables with no `created_at`, which therefore take no boundary filter.
+ *
+ * Named rather than discovered: a table added tomorrow without a created_at
+ * should make someone decide, not inherit an exemption by accident. All five
+ * are small, derived, operational state — none of them is a customer record.
+ */
+const TABLES_WITHOUT_CREATED_AT = new Set([
+  "agent_marketing_decisions",
+  "agent_marketing_snapshots",
+  "ai_rate_limit_counters",
+  "company_ai_limits",
+  "marketing_metrics",
+]);
+
+/**
+ * One table, read as a KEYSET walk rather than by offset.
+ *
+ * ===================== WHY NOT OFFSET =====================
+ * This used to page with `.range(from, from + PAGE - 1)`. Offsets are positions
+ * in a result set that is being recomputed for every page, so a concurrent
+ * write before the cursor moves every later row:
+ *
+ *   a DELETE before the cursor shifts rows back by one, so the row that would
+ *   have been first on the next page is never returned — a SKIP, and a silent
+ *   one, because the export still looks complete.
+ *
+ *   an INSERT before the cursor shifts rows forward, so the last row of the
+ *   previous page is returned again — a DUPLICATE.
+ *
+ * A keyset walk asks for rows strictly after the last key it saw, so no
+ * concurrent write can move a row across the cursor.
+ *
+ * ===================== THE BOUNDARY =====================
+ * `boundary` is captured once, when the export starts. Tables that have a
+ * created_at are filtered to rows at or before it, which makes two things true:
+ * rows created mid-export are deterministically excluded rather than included
+ * by luck of where their key sorts, and a tenant inserting rows faster than the
+ * export reads them cannot make it run forever.
+ *
+ * ===================== WHAT IS NOT CLAIMED =====================
+ * This is not an ACID snapshot. PostgREST cannot hold a repeatable-read
+ * transaction across pages, so nothing here sees one consistent instant. What
+ * it guarantees is stated in EXPORT_CONSISTENCY_CONTRACT below, and no more.
+ */
 async function* readTable(
   companyId: string,
   entry: WorkspaceExportTable,
+  boundary: string,
 ): AsyncGenerator<Record<string, unknown>[]> {
   const supabase = createServiceRoleClient();
 
-  for (let from = 0; ; from += PAGE) {
-    // An ordered key is required for a stable page walk; without it two pages
-    // can overlap or skip. Most tables have an id; company_document_counters
-    // does not, which the export verifier found by failing on it.
-    let query = supabase.from(entry.table).select("*").eq("company_id", companyId);
-    for (const column of entry.orderBy ?? ["id"]) {
-      query = query.order(column, { ascending: true });
+  // Exactly one column, and it must be unique WITHIN THE TENANT — a keyset walk
+  // over a non-unique key skips every row that ties with the last of a page.
+  // `id` for almost everything; company_document_counters has no id and its
+  // primary key is (company_id, document_type), so document_type is unique once
+  // company_id is already filtered.
+  const keyColumns = entry.orderBy ?? ["id"];
+  if (keyColumns.length !== 1) {
+    throw new Error(
+      `export ${entry.table}: keyset pagination needs exactly one ordering ` +
+        `column, got ${keyColumns.length}. A compound key would need row-value ` +
+        `comparison, which PostgREST does not expose.`,
+    );
+  }
+  const keyColumn = keyColumns[0];
+  const applyBoundary = !TABLES_WITHOUT_CREATED_AT.has(entry.table);
+
+  let cursor: string | number | null = null;
+
+  for (;;) {
+    let query = supabase
+      .from(entry.table)
+      .select("*")
+      .eq("company_id", companyId)
+      .order(keyColumn, { ascending: true })
+      .limit(PAGE);
+
+    if (applyBoundary) {
+      query = query.lte("created_at", boundary);
+    }
+    if (cursor !== null) {
+      query = query.gt(keyColumn, cursor);
     }
 
-    const { data, error } = await query.range(from, from + PAGE - 1);
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`export ${entry.table}: ${error.message}`);
     }
 
     const rows = (data ?? []) as Record<string, unknown>[];
-    if (rows.length > 0) {
-      yield rows.map((row) => stripOmittedColumns(row, entry.omitColumns));
+    if (rows.length === 0) return;
+
+    const lastKey = rows[rows.length - 1][keyColumn];
+    if (lastKey === null || lastKey === undefined) {
+      throw new Error(
+        `export ${entry.table}: ordering column "${keyColumn}" is null on a ` +
+          `row, so the walk cannot advance without risking a loop`,
+      );
     }
+    cursor = lastKey as string | number;
+
+    yield rows.map((row) => stripOmittedColumns(row, entry.omitColumns));
+
     if (rows.length < PAGE) return;
   }
 }
@@ -96,10 +199,32 @@ export async function streamWorkspaceExport(
   const tables: { table: string; rowCount: number }[] = [];
   let totalRows = 0;
 
+  // Captured ONCE, before the first table, FROM THE DATABASE. Every table
+  // filters to rows at or before this instant, so "during the export" means the
+  // same thing for the first table and the sixty-fifth, and a tenant writing
+  // rows faster than the export reads them cannot extend it.
+  //
+  // new Date() would be the wrong clock. The application host was measured
+  // running ~700 ms AHEAD of the database — the dangerous direction, because a
+  // boundary in the future relative to the stamping clock lets a row inserted
+  // after the export began slip in under it. One clock stamps created_at; the
+  // same clock has to draw the line. See migration 178.
+  const boundaryClient = createServiceRoleClient();
+  const { data: boundaryValue, error: boundaryError } =
+    await boundaryClient.rpc("export_boundary");
+  if (boundaryError || !boundaryValue) {
+    throw new Error(
+      `export boundary unavailable: ${boundaryError?.message ?? "no value"}. ` +
+        "Refusing to export without one — falling back to the host clock is " +
+        "how rows created mid-export get silently included.",
+    );
+  }
+  const boundary = String(boundaryValue);
+
   for (const entry of EXPORTED_TABLES) {
     let emitted = 0;
 
-    for await (const rows of readTable(companyId, entry)) {
+    for await (const rows of readTable(companyId, entry, boundary)) {
       emitted += rows.length;
       await onChunk({ table: entry.table, rows, emitted });
     }
@@ -111,6 +236,8 @@ export async function streamWorkspaceExport(
   return {
     companyId,
     generatedAt: new Date().toISOString(),
+    boundary,
+    consistency: EXPORT_CONSISTENCY_CONTRACT,
     tables,
     totalRows,
   };

@@ -1629,6 +1629,14 @@ export type Database = {
         Args: { p_older_than_hours: number };
         Returns: number;
       };
+      // export_boundary: migration 178 — wire into Database types on next gen
+      // types run. The database clock, so the workspace export draws its
+      // boundary with the same clock that stamps created_at rather than the
+      // application host's, which was measured running ahead of it.
+      export_boundary: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
       // get_company_operational_inconsistencies: migration 172 — wire into
       // Database types on next gen types run. Whole-tenant counts for the
       // data-integrity scan plus a bounded page of offending jobs carrying the
