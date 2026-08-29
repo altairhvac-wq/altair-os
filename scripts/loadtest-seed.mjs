@@ -941,18 +941,47 @@ const CLEAN_ORDER = [
   "company_memberships",
 ];
 
-async function runClean(client) {
-  const { data, error } = await client
+/**
+ * Remove load-test tenants.
+ *
+ * `--seed-value` scopes it to one. Without it, every load-test tenant goes.
+ *
+ * That distinction was missing and cost a fixture: --clean accepted
+ * --seed-value, ignored it, and removed both seeded tenants when the operator
+ * had named one. Containment held — nothing outside the load-test name AND slug
+ * prefix is ever touched — but an argument that is accepted and ignored is
+ * worse than one that is rejected, because the operator has no way to tell.
+ */
+async function runClean(client, seedValue = null) {
+  let query = client
     .from("companies")
     .select("id, name, slug")
     .like("slug", `${COMPANY_SLUG_PREFIX}%`)
     .like("name", `${COMPANY_NAME_PREFIX}%`);
 
+  if (seedValue != null) {
+    query = query.eq("slug", `${COMPANY_SLUG_PREFIX}${seedValue}`);
+  }
+
+  const { data, error } = await query;
+
   if (error) throw new Error(error.message);
 
   if (!data || data.length === 0) {
-    console.log("\nNothing to clean: no company matches both the load-test name and slug prefix.\n");
+    console.log(
+      seedValue != null
+        ? `\nNothing to clean: no load-test company with slug ` +
+            `"${COMPANY_SLUG_PREFIX}${seedValue}".\n`
+        : "\nNothing to clean: no company matches both the load-test name and slug prefix.\n",
+    );
     return;
+  }
+
+  if (seedValue == null && data.length > 1) {
+    console.log(
+      `\n${data.length} load-test tenants match. All of them will be removed.\n` +
+        `  Pass --seed-value <n> to remove only one.`,
+    );
   }
 
   for (const company of data) {
@@ -1479,7 +1508,13 @@ async function main() {
   });
 
   if (args.status) return runStatus(client);
-  if (args.clean) return runClean(client);
+  if (args.clean) {
+    // Only when the operator actually passed it — the seeding default must not
+    // silently narrow a clean that was meant to be a sweep.
+    const cleanSeed =
+      args["seed-value"] != null ? String(args["seed-value"]) : null;
+    return runClean(client, cleanSeed);
+  }
   return runSeed(client, args);
 }
 

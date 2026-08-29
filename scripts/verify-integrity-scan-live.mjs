@@ -39,6 +39,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import { resolveLoadtestCompany } from "./lib/loadtest-company.mjs";
 
 import { readAll } from "./lib/reports-oracle.mjs";
 import { mapJobRowToJob } from "@/lib/database/mappers/job";
@@ -117,10 +118,15 @@ if (args.confirm !== ref) {
   fail(`--confirm must match the target project ref "${ref}".`);
 }
 
-const companyId = args.company ?? "78868ecd-25d1-4928-9b99-9bfeb5453cbc";
 const admin = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// See the note in scripts/lib/loadtest-company.mjs. A deleted fixture would
+// have made this verifier compare an empty scan against an empty ground
+// truth and pass, which is the failure mode worth engineering against.
+const companyId =
+  args.company ?? (await resolveLoadtestCompany(admin, { minJobs: 5000 }));
 
 const LIVE = (query) => query.is("deleted_at", null).is("archived_at", null);
 

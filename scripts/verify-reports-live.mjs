@@ -37,6 +37,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import { resolveLoadtestCompany } from "./lib/loadtest-company.mjs";
 
 import {
   loadReportDatasets,
@@ -128,10 +129,16 @@ if (args.confirm !== ref) {
   fail(`--confirm must match the target project ref "${ref}".`);
 }
 
-const companyId = args.company ?? "7830cb77-b7cc-481e-bfdf-97a85e77e0b6";
 const admin = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// The fixture is named by its slug, not by a uuid the seeder reassigns on
+// every rebuild. minJobs is the load-bearing argument: the whole point of
+// this differential is behaviour above the PostgREST 1,000-row ceiling, and
+// a small tenant would pass it without ever crossing that line.
+const companyId =
+  args.company ?? (await resolveLoadtestCompany(admin, { minJobs: 5000 }));
 
 // ---------------------------------------------------------------------------
 // Comparison helpers
