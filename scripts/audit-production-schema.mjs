@@ -693,6 +693,31 @@ async function auditAnonSurface() {
           : "",
     );
   }
+
+  // The three tables 173, 174 and 175 add. These are closed a step earlier than
+  // the four above: `anon` holds no grant on them at all, so the refusal comes
+  // from the table privileges rather than from a policy returning no rows. A
+  // zero-row answer would NOT be a pass here — it would mean anon can read the
+  // table and there simply is nothing in it yet, which stops being true the
+  // first time a stranger fails a login.
+  for (const table of [
+    "public_request_rate_limits",
+    "security_audit_events",
+    "company_deletion_requests",
+  ]) {
+    const { error, status } = await anon.from(table).select("*").limit(1);
+    const refused =
+      error != null && (status === 401 || status === 403 || status === 404);
+    check(
+      `anon is refused outright by ${table.padEnd(26)}`,
+      refused,
+      refused
+        ? ""
+        : `anon received HTTP ${status} — a rate-limit counter, an ` +
+          `authentication log or a deletion schedule is readable without a ` +
+          `session.`,
+    );
+  }
 }
 
 async function auditIndexes() {
