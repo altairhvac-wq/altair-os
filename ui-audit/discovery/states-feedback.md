@@ -108,8 +108,7 @@ Totals from glob: 80 page.tsx · 43 loading.tsx · 9 error.tsx · 6 not-found.ts
 ## Mutation feedback
 - useTransition: 108 files. useFormStatus: 0. useActionState: 5 (auth forms, with AuthSubmitButton pending + role="alert" AuthMessage).
 - Pending discipline verified in samples: CompanyProfileForm (all inputs disabled, aria-busy, Button loading), CustomersBulkActionBar (isBusy props), TeamMembersTable (pendingMembershipId), InvoiceStatusActions (workflowBusy).
-- Button primitive (shared/design-system/components/Button.tsx): loading prop → Loader2 spinner, aria-busy, blocks activation. 
-- Toast system: NONE (0 matches in package.json/app/shared). Success feedback = 36 files with local setSuccess state + 25 SettingsAlertBanner consumers + silent router.refresh() in lifecycle controls + redirect-on-create (CustomersPageView.tsx:539 pushes to new detail).
+- Button primitive (shared/design-system/components/Button.tsx): loading prop → Loader2 spinner, aria-busy, blocks activation.- Toast system: NONE (0 matches in package.json/app/shared). Success feedback = 36 files with local setSuccess state + 25 SettingsAlertBanner consumers + silent router.refresh() in lifecycle controls + redirect-on-create (CustomersPageView.tsx:539 pushes to new detail).
 - alert() calls: 0.
 
 ## Destructive-action inventory (app/actions/)
