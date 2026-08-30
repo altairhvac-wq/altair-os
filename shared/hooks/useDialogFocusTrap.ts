@@ -29,10 +29,20 @@ export function useDialogFocusTrap(
   initialFocusAttribute:
     | "data-altair-dialog-initial-focus"
     | "data-mobile-sheet-initial-focus" = "data-altair-dialog-initial-focus",
+  /**
+   * Whether the panel is currently open.
+   *
+   * Dialogs and sheets only mount their panel when open, so the effect already
+   * runs at the right moment and they leave this alone. A popover that renders
+   * `{open ? <panel/> : null}` inside a component that stays mounted does not:
+   * `panelRef.current` is null on the first commit and nothing re-runs the
+   * effect when the panel later appears. Passing `open` gives it that trigger.
+   */
+  active = true,
 ) {
   useEffect(() => {
     const panel: HTMLElement | null = panelRef.current;
-    if (!panel) {
+    if (!panel || !active) {
       return;
     }
     const panelElement: HTMLElement = panel;
@@ -92,5 +102,5 @@ export function useDialogFocusTrap(
         previousFocus.focus({ preventScroll: true });
       }
     };
-  }, [panelRef, initialFocusAttribute]);
+  }, [panelRef, initialFocusAttribute, active]);
 }

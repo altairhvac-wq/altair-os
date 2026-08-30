@@ -38,6 +38,27 @@ for (const { name, selector } of POPOVERS) {
   const ok = opened === "true" && closed === "false" && focusReturned;
   if (!ok) fails += 1;
   console.log(`  ${ok ? "pass" : "FAIL"}  ${name}: opened=${opened} closedOnEscape=${closed === "false"} focusReturned=${focusReturned}`);
+
+  /* Containment: with the panel open, Tab must never land outside it. Twelve
+   * presses is more than any of these panels holds, so a contained panel wraps
+   * and an uncontained one escapes into the page behind it. */
+  await trigger.click();
+  await p.waitForTimeout(350);
+  let escaped = null;
+  for (let i = 0; i < 12; i += 1) {
+    await p.keyboard.press("Tab");
+    await p.waitForTimeout(70);
+    const outside = await p.evaluate(() => {
+      const a = document.activeElement;
+      if (!a || a === document.body) return "body";
+      return a.closest("[data-popover-panel]") ? null : (a.textContent || a.tagName).trim().slice(0, 30);
+    });
+    if (outside) { escaped = `${outside} (after ${i + 1} tabs)`; break; }
+  }
+  if (escaped) { fails += 1; console.log(`        FAIL  focus escaped to: ${escaped}`); }
+  else console.log(`        pass  focus stayed inside for 12 tabs`);
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(250);
 }
 await b.close();
 console.log(fails === 0 ? "\nALL PASS" : `\n${fails} FAILURES`);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useDialogFocusTrap } from "@/shared/hooks/useDialogFocusTrap";
 import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { Check, ChevronDown, Eye } from "lucide-react";
 import {
@@ -31,6 +32,15 @@ export function OwnerViewSwitcher({
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  /* Tab was walking straight out of the open panel and into the page behind
+     it — measured on the view switcher: three items, then "Trial ended",
+     "Change your photo", "Sign out", all while the panel stayed open. This is
+     the same trap the dialogs and sheets use; the `open` argument exists
+     because a popover's panel mounts after its parent, so the effect needs
+     something to re-run on. */
+  useDialogFocusTrap(popoverRef, "data-altair-dialog-initial-focus", open);
 
   /* Escape closes, and focus goes back to the trigger — an Escape that leaves
      focus on <body> strands a keyboard user mid-page, which is not a fix.
@@ -106,6 +116,8 @@ export function OwnerViewSwitcher({
 
       {open ? (
         <div
+          ref={popoverRef}
+          data-popover-panel
           role="listbox"
           aria-label="View as"
           className="north-star-header-dropdown-panel absolute right-0 z-40 mt-1 w-64 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"

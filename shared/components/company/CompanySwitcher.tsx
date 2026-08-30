@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useDialogFocusTrap } from "@/shared/hooks/useDialogFocusTrap";
 import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { useRouter } from "next/navigation";
 import { Building2, Check, ChevronDown } from "lucide-react";
@@ -45,11 +46,20 @@ export function CompanySwitcher({
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const activeMembership =
     companies.find((membership) => membership.company_id === activeCompanyId) ??
     companies[0];
   const canSwitch = companies.length > 1;
+
+  /* Tab was walking straight out of the open panel and into the page behind
+     it — measured on the view switcher: three items, then "Trial ended",
+     "Change your photo", "Sign out", all while the panel stayed open. This is
+     the same trap the dialogs and sheets use; the `open` argument exists
+     because a popover's panel mounts after its parent, so the effect needs
+     something to re-run on. */
+  useDialogFocusTrap(popoverRef, "data-altair-dialog-initial-focus", open);
 
   /* Escape closes, and focus goes back to the trigger — an Escape that leaves
      focus on <body> strands a keyboard user mid-page, which is not a fix.
@@ -192,6 +202,8 @@ export function CompanySwitcher({
 
       {open ? (
         <div
+          ref={popoverRef}
+          data-popover-panel
           role="listbox"
           aria-label="Companies"
           className={`north-star-header-dropdown-panel absolute z-30 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg ${

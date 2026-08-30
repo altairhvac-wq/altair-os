@@ -9,6 +9,7 @@ import type {
   Notification,
   NotificationAccess,
 } from "@/shared/types/notification";
+import { useDialogFocusTrap } from "@/shared/hooks/useDialogFocusTrap";
 import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { NotificationListItem } from "./NotificationListItem";
 
@@ -36,11 +37,17 @@ export function NotificationBell({
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setNotifications(initialNotifications);
     setUnreadCount(initialUnreadCount);
   }, [initialNotifications, initialUnreadCount]);
+
+  /* Tab used to walk out of the open panel into the page behind it. Same trap
+     the dialogs and sheets use; the `open` argument exists because a popover's
+     panel mounts after its parent, so the effect needs something to re-run on. */
+  useDialogFocusTrap(popoverRef, "data-altair-dialog-initial-focus", open);
 
   /* Escape closes the panel. `useSheetEscape` keeps a stack, so an open dialog
      above this panel still wins — which is why this reuses it instead of adding
@@ -133,7 +140,11 @@ export function NotificationBell({
       </button>
 
       {open ? (
-        <div className="fixed left-1/2 top-[calc(3.75rem+env(safe-area-inset-top,0px))] z-50 w-[calc(100vw-1rem)] max-w-none -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 sm:max-w-md sm:translate-x-0 north-star-notification-panel">
+        <div
+          ref={popoverRef}
+          data-popover-panel
+          className="fixed left-1/2 top-[calc(3.75rem+env(safe-area-inset-top,0px))] z-50 w-[calc(100vw-1rem)] max-w-none -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 sm:max-w-md sm:translate-x-0 north-star-notification-panel"
+        >
           <div className="flex min-w-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2.5">
             <p className="north-star-notification-title min-w-0 truncate text-sm font-semibold text-slate-900">
               Notifications
