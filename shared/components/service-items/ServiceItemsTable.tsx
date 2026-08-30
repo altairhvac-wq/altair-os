@@ -190,15 +190,25 @@ export function ServiceItemsTable({
                 ) : null}
                 <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
                   <div className="min-w-0">
-                    <p
-                      className={
+                    {/* The row's onClick is pointer-only by design — the table
+                        primitive's contract puts keyboard semantics on a real
+                        control inside a cell, never on the <tr>. Without this
+                        button the price book was unreachable by keyboard: the
+                        row was the only way in. */}
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onSelectItem(item);
+                      }}
+                      className={`block min-w-0 max-w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
                         northStar
                           ? northStarItemNameClass
                           : "truncate font-semibold text-slate-900"
-                      }
+                      }`}
                     >
                       {item.name}
-                    </p>
+                    </button>
                     {item.description ? (
                       <p
                         className={

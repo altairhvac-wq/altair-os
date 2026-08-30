@@ -106,6 +106,7 @@ export function Customer360Card({
             opportunities={data.opportunities}
             northStar={false}
             compact
+            hideHeading
           />
         </div>
       </section>
@@ -467,10 +468,15 @@ function OpportunitiesSection({
   opportunities,
   northStar = false,
   compact = false,
+  hideHeading = false,
 }: {
   opportunities: Customer360Opportunity[];
   northStar?: boolean;
   compact?: boolean;
+  /** The `opportunities` variant already renders a SectionHeader above this
+   *  component, so its own h2 stacked a second "Opportunities" directly under
+   *  the first. */
+  hideHeading?: boolean;
 }) {
   const shellClass = northStar
     ? compact
@@ -480,7 +486,7 @@ function OpportunitiesSection({
 
   const content = (
     <>
-      <div className={compact && northStar ? "mb-2" : undefined}>
+      <div className={compact && northStar ? "mb-2" : undefined} hidden={hideHeading}>
         <h2
           className={
             compact && northStar

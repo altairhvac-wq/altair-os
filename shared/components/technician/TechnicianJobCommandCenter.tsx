@@ -393,7 +393,11 @@ export function TechnicianJobCommandCenter({
         }
 
         onStatusUpdated?.(result.job.status);
-        window.setTimeout(() => router.refresh(), 500);
+        // Refresh immediately, matching JobWorkflowActions: the action already
+        // revalidated every affected path server-side, so the 500ms delay only
+        // kept stale data on screen after the mutation had visibly succeeded.
+        // This was the last copy of that delay in the repo.
+        router.refresh();
       } catch {
         setError(
           formatConnectionCatchError(
