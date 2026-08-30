@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { STATUS_TONE_CLASS, type StatusTone } from "./status-tone";
 
-export type StatusPillTone = "neutral" | "success" | "warning" | "danger" | "info";
+/** Alias kept for call-site compatibility; the vocabulary lives in status-tone.ts. */
+export type StatusPillTone = StatusTone;
 export type StatusPillSize = "sm" | "md";
 
 export type StatusPillProps = {

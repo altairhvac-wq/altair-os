@@ -987,3 +987,42 @@ text steps**, both still calm beside parchment, both well above AA.
 The lesson worth keeping: a palette remap must be audited against what each
 family *means*, not only against how it looks. Collapsing two hues is only safe
 when nothing is using them to tell two things apart.
+
+### D-33 · One tone table, and two statuses that were lying
+`StatusPill` and `shared/lib/operational-status-styles.ts` each declared their
+own copy of the same five tone class strings. They were **byte-identical**,
+which is what made the duplication invisible — and it meant a change to
+StatusPill reached **none of the twelve files** importing the operational maps.
+That fork is the structural reason the vocabulary drifted, so it is the thing
+worth fixing rather than any individual badge.
+
+Both now read `STATUS_TONE_CLASS` from
+`shared/design-system/components/status-tone.ts`, which also carries the
+meaning of each tone so a future map picks by *what the state is* rather than by
+what colour looks right:
+
+| tone | means |
+|---|---|
+| `neutral` | nothing has happened yet, or closed without consequence |
+| `info` | in motion, or waiting on someone else — not a problem |
+| `success` | the good terminal state |
+| `warning` | needs a human soon |
+| `danger` | money or access at risk |
+
+Two statuses were then corrected against that vocabulary:
+
+- **Estimate `sent` was `warning`, invoice `sent` was `info`** — the same word,
+  eleven lines apart in one file, rendering steel on one row of a customer's
+  billing tab and gold on the next. Both mean the document has gone out and the
+  ball is with the customer, which is a normal waiting state; the escalation is
+  `overdue` / `expired`. Both are now `info`.
+- **Membership `suspended` was `neutral`** — revoked access rendered at the
+  same weight as a draft invoice, the quietest tone in the system for a
+  security-relevant state. Now `danger`.
+
+**Deliberately not changed.** `scheduled` / `dispatched` / `arrived` share
+`info`. The audit called them indistinguishable, but they carry distinct labels,
+and the house rule is that colour must never be the only differentiator — three
+more tones would break that rule rather than serve it. The remaining per-domain
+maps (leads, dispatch North Star, expense category) still hold raw palette
+literals; they are recorded as open rather than rewritten here.
