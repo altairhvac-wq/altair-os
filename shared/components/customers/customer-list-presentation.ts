@@ -10,36 +10,52 @@ import { isCustomerMissingImportantInfo } from "./customer-work-queues";
 
 export type CustomerListCueTone = "neutral" | "warning";
 
+/**
+ * `kind` exists so a consumer can tell WHY the cue says what it says without
+ * matching on the label text. The mobile card is the only place the cue line
+ * appears, so there `last-service` is real information; in the desktop table it
+ * sits immediately beside a Last Service column and repeated it verbatim.
+ */
+export type CustomerListCueKind =
+  | "trash"
+  | "archived"
+  | "incomplete"
+  | "inactive"
+  | "no-service"
+  | "last-service";
+
 export type CustomerListCue = {
   label: string;
   tone: CustomerListCueTone;
+  kind: CustomerListCueKind;
 };
 
 /** Quiet “what next?” line for list scanability. */
 export function resolveCustomerListCue(customer: Customer): CustomerListCue {
   if (isCustomerDeleted(customer)) {
-    return { label: "In trash", tone: "warning" };
+    return { label: "In trash", tone: "warning", kind: "trash" };
   }
 
   if (isCustomerArchived(customer)) {
-    return { label: "Archived", tone: "neutral" };
+    return { label: "Archived", tone: "neutral", kind: "archived" };
   }
 
   if (isCustomerMissingImportantInfo(customer)) {
-    return { label: "Complete profile", tone: "warning" };
+    return { label: "Complete profile", tone: "warning", kind: "incomplete" };
   }
 
   if (customer.status === "inactive") {
-    return { label: "Inactive", tone: "neutral" };
+    return { label: "Inactive", tone: "neutral", kind: "inactive" };
   }
 
   if (!customer.lastServiceDate) {
-    return { label: "No service yet", tone: "neutral" };
+    return { label: "No service yet", tone: "neutral", kind: "no-service" };
   }
 
   return {
     label: `Last service ${formatDate(customer.lastServiceDate)}`,
     tone: "neutral",
+    kind: "last-service",
   };
 }
 

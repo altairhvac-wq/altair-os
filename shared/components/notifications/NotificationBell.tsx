@@ -9,6 +9,7 @@ import type {
   Notification,
   NotificationAccess,
 } from "@/shared/types/notification";
+import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { NotificationListItem } from "./NotificationListItem";
 
 type NotificationBellProps = {
@@ -39,6 +40,11 @@ export function NotificationBell({
     setNotifications(initialNotifications);
     setUnreadCount(initialUnreadCount);
   }, [initialNotifications, initialUnreadCount]);
+
+  /* Escape closes the panel. `useSheetEscape` keeps a stack, so an open dialog
+     above this panel still wins — which is why this reuses it instead of adding
+     a second document-level key listener. */
+  useSheetEscape(() => setOpen(false), open);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -113,7 +119,7 @@ export function NotificationBell({
                itself, so the icon stopped being readable exactly when it had
                something to say. */
             className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[var(--chrome)] ${
-              badgeClassName ?? "bg-cyan-600"
+              badgeClassName ?? "bg-altair-information"
             }`}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -132,7 +138,7 @@ export function NotificationBell({
                 type="button"
                 onClick={handleMarkAllRead}
                 disabled={isPending}
-                className="shrink-0 text-xs font-semibold text-cyan-700 transition-colors hover:text-cyan-800 disabled:opacity-50"
+                className="shrink-0 text-xs font-semibold text-altair-information-foreground transition-colors hover:text-altair-ink-on-paper disabled:opacity-50"
               >
                 Mark all read
               </button>

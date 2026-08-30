@@ -108,7 +108,11 @@ export function CustomersTable({
                 <AltairTableHead align="right">Revenue</AltairTableHead>
               ) : null}
               <AltairTableHead>Last Service</AltairTableHead>
-              <AltairTableHead>Next</AltairTableHead>
+              {/* Was "Next", which promised a scheduled date the data model has
+                  no field for. It is an attention column: the cue's own name.
+                  Not "Status" either — column three is already a real
+                  active/inactive badge. */}
+              <AltairTableHead>Attention</AltairTableHead>
             </AltairTableRow>
           </AltairTableHeader>
           <AltairTableBody>
@@ -214,7 +218,14 @@ export function CustomersTable({
                       cue.tone === "warning" ? cm.cueWarning : cm.cueNeutral
                     }
                   >
-                    {cue.label}
+                    {/* Two of the six cue kinds say what a neighbouring column
+                        already says — `last-service` repeats the cell directly
+                        to its left, and `inactive` repeats the Status badge. In
+                        a column whose job is to flag what needs a human, both
+                        are noise. */}
+                    {cue.kind === "last-service" || cue.kind === "inactive"
+                      ? "—"
+                      : cue.label}
                   </AltairTableCell>
                 </AltairTableRow>
               );

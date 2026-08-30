@@ -67,8 +67,11 @@ export function NotificationListItem({
   const content = (
     <div
       className={`rounded-lg border px-3 py-2 transition-colors ${
+        /* Unread is `info` — new, not yet seen, nobody is late. It used to be
+           the cyan family, which the Prestige remap points at the gold ramp, so
+           every unread notification was wearing the brand accent as a state. */
         unread
-          ? "border-cyan-200 bg-cyan-50/70"
+          ? "border-altair-information/30 bg-altair-information-surface"
           : "border-slate-200 bg-white"
       }`}
     >
@@ -77,7 +80,7 @@ export function NotificationListItem({
           {formatNotificationTitleForAccess(notification, canViewBilling)}
         </p>
         {unread ? (
-          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-500" />
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-altair-information" />
         ) : null}
       </div>
       <p className="mt-0.5 break-words text-sm text-slate-600">
@@ -87,7 +90,7 @@ export function NotificationListItem({
           clock, so the server and client can disagree by a minute across the
           hydration gap. Keeping the server's text is harmless and avoids an
           intermittent React #418. */}
-      <p className="mt-1 text-xs text-slate-400" suppressHydrationWarning>
+      <p className="mt-1 text-xs text-altair-ink-on-paper-muted" suppressHydrationWarning>
         {formatNotificationTimestamp(notification.createdAt)}
       </p>
     </div>
