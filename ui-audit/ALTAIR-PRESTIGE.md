@@ -735,3 +735,32 @@ The "you're all caught up" panel was also demoted. It means *nothing to do*, yet
 it was the largest, loudest block on the page — a 9.75rem panel dominated by a
 688×384 illustration, sitting under six things that did need attention. The art
 is now a quiet right-edge accent at 35% and the card is sized by its content.
+
+---
+
+## 6. Phase 4 — page migration
+
+### D-27 · Severity strips take severity colour; only categories take category colour
+Reports drew **eight identical brass sparklines**, because `KpiSparkline`
+hardcoded `text-altair-brass` on its `<svg>` — no caller could change it. Two
+problems followed. Brass at eight instances on one page is not an accent, it is
+the page's default line colour. And "Overdue" wore the **brand** accent, which
+is the one colour a money-at-risk figure must never wear.
+
+The stroke is now a `toneClassName` prop (defaulting to brass, so the other
+callers are untouched), and the period ledger passes tones by meaning:
+
+| card | tone | why |
+|---|---|---|
+| Collected | success | money in is genuinely positive |
+| Outstanding | neutral | owed but not late — informational |
+| Overdue | danger | money at risk |
+| Net income est. | brass | the period's summary — one brand moment |
+
+Brass on that strip went from four lines to one, which is what restores it to
+accent weight.
+
+Categorical tints stay where they belong — the icon chips, and the Key metrics
+strip below, where the values genuinely are different categories rather than
+points on a risk scale. This follows the house rule that severity is meaning,
+not category.

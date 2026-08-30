@@ -29,9 +29,21 @@ function buildSparklinePath(values: number[]): string | null {
 type KpiSparklineProps = {
   values: number[];
   className?: string;
+  /**
+   * Trend-line colour. The stroke was hardcoded to brass, so every sparkline in
+   * the product drew the same gold line — including "Overdue", where the brand
+   * accent is the one colour a money-at-risk figure should not wear, and it put
+   * brass far above accent weight on a page with eight of them. Callers that
+   * carry meaning (severity strips) pass a tone; everything else keeps brass.
+   */
+  toneClassName?: string;
 };
 
-export function KpiSparkline({ values, className }: KpiSparklineProps) {
+export function KpiSparkline({
+  values,
+  className,
+  toneClassName,
+}: KpiSparklineProps) {
   const path = buildSparklinePath(values);
   const hasSignal = values.some((value) => value > 0);
 
@@ -46,7 +58,7 @@ export function KpiSparkline({ values, className }: KpiSparklineProps) {
       {path && hasSignal ? (
         <svg
           viewBox="0 0 120 40"
-          className="h-full w-full text-altair-brass"
+          className={`h-full w-full ${toneClassName ?? "text-altair-brass"}`}
           preserveAspectRatio="none"
         >
           <path
