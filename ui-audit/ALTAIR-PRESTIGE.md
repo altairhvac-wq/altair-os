@@ -1244,3 +1244,62 @@ That leaves it empty on all seventeen demo rows. The predicate is live — it al
 powers the needs-info queue — so this is an honest empty state, and whether an
 always-empty flag column earns its width is recorded as a product call rather
 than quietly decided.
+
+### D-45 · emerald-300 is a ramp member, verified in OKLCH
+The token needed to be the rung the emerald ramp was missing, not a green
+invented for Reports. Checked against how the existing 300s sit in their own
+ramps:
+
+| ramp | L above its own 500 | hue drift from 500 | chroma |
+|---|---|---|---|
+| rose | +16.4 | 4.3° | 0.0861 |
+| amber | +17.2 | 18.4° | 0.1077 |
+| **emerald** | **+16.6** | **2.3°** | 0.0785 |
+
+Its lightness lands 17.7 below emerald-100 and 16.6 above emerald-500 —
+near-exactly midway, which is what a 300 spanning 100 and 500 should be — and
+its hue (160.8) is inside the ramp's own 158.5–163.6 spread, with the *smallest*
+drift of any 300 in the set. 7.39 on `--chrome`: AA, and AAA for normal text.
+
+### D-46 · Coverage was the limit, not the product
+Zero failures on 17 routes did not mean the product was clean. Widening to 31
+routes × 4 widths produced five new colour pairs, the largest on `/schedule` —
+100 nodes the first sweep never loaded, painting `text-altair-ink-muted` (a
+paper foreground) at 2.54 on a `bg-altair-graphite` grid.
+
+`/schedule` also produced the sharpest lesson about grounds. Its "N unassigned"
+warning measures **4.56 against bare `--chrome`** — passing — and **4.49 against
+the tile's real composited ground**. The ground is what the browser paints, not
+what the token declares.
+
+Three probes now, because one honest method could not cover everything:
+
+| probe | covers | how |
+|---|---|---|
+| `probe-text-contrast` | every visible text leaf, per route | composites to the first opaque ground; canvas colour parsing; refuses gradients |
+| `probe-gradient-grounds` | text on gradients | scores against the **worst** stop, so passing is definitive |
+| `probe-panel-contrast` | detail panels | opens them, because a route scan never sees them |
+
+### D-47 · Fix the token, not the call site — even when the layer is not tokenized
+`#7C7259`, the muted step in `north-star/tokens.ts`, measures **4.46 on the paper
+surface**: under AA at every call site. That is why it kept surfacing one panel
+at a time as coverage widened, and why fixing the panels would never have ended.
+
+`#786D53` is 4.78 on paper and 5.11 on white, and stays clearly lighter than the
+`#5A5444` secondary step. Because that layer is hex-only rather than `var()`
+-backed (S-2), the token-level fix had to be applied as a 93-literal sweep across
+45 files — which is itself the argument for S-2.
+
+It remains 3.73 on the **sunken** canvas, so muted text there takes the secondary
+step instead. Recorded at the token rather than left to be rediscovered.
+
+### D-48 · Apply the rule that governs the element
+The alert icon on the time-tracking card measures 2.82 and stays that way. It is
+`aria-hidden` and sits beside its own text label, so it is decorative under
+1.4.11 and no threshold governs it — raising it would be applying a rule that
+does not apply.
+
+The same reasoning in the other direction keeps saturation where it belongs: all
+six chart tokens clear 3.0 as strokes and swatches, and only the two that were
+used as *text* needed changing. Non-text that genuinely carries meaning — the
+unread dot at 4.68 — is checked against 3.0, not 4.5.

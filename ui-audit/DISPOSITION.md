@@ -36,7 +36,8 @@ A row is never marked fixed because a token underneath it changed colour.
 | L-15 | money fields announced as unlabelled | `useId` + `htmlFor` in both line-item editors; 14 search inputs given `aria-label`; probe asserts every visible control has an accessible name |
 | **new** | dark-surface badges 2.17–4.02:1 | not in the original audit. `STATUS_TONE_CLASS_ON_DARK`, now 9.5–12.4:1, eight gate cases |
 | **new** | mobile label taps focused an invisible input | `useId` in three components; probe drives two panels at 390px |
-| **new** | dark/paper token mismatch product-wide | 14 failing colour pairs → **0**, on both the composite probe and the gradient-stop probe, 17 routes × 390/1440 |
+| **new** | dark/paper token mismatch product-wide | 14 colour pairs → **0** on three probes: 31 routes × 4 widths, every gradient stop, and 9 opened detail panels |
+| **new** | muted ink under AA at every call site | `#7C7259` measured 4.46 on paper; fixed at the token (93 literals, 45 files — see S-2) |
 | L-9 | "Next" column printed last-service data | renamed to Attention; the two cue kinds that duplicated a neighbour now render "—" |
 | L-12 | unread notifications wore the brand accent; no Escape | unread is `info`; Escape via the existing stack-aware `useSheetEscape`, verified by driving it |
 | L-14 | public token routes had no boundaries | loading/error/not-found on both segments, plus `noindex` |
