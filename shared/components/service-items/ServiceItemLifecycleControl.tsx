@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { useRouter } from "next/navigation";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
@@ -45,6 +46,7 @@ export function ServiceItemLifecycleControl({
   const [dependencies, setDependencies] =
     useState<ServiceItemDeleteDependencies | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { confirm, confirmDialog } = useConfirm();
 
   useEffect(() => {
     let cancelled = false;
@@ -78,13 +80,20 @@ export function ServiceItemLifecycleControl({
     resolvedDeps,
   );
 
-  function runAction(
+  async function runAction(
     action: () => Promise<{ error?: string; deleted?: boolean }>,
-    confirm?: string,
+    confirmMessage?: string,
     onDeleted?: () => void,
   ) {
     if (isPending) return;
-    if (confirm && !window.confirm(confirm)) return;
+    if (confirmMessage) {
+      const ok = await confirm({
+        title: confirmMessage,
+        confirmLabel: "Continue",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await action();
@@ -218,6 +227,7 @@ export function ServiceItemLifecycleControl({
           </>
         ) : null}
       </div>
+      {confirmDialog}
     </div>
   );
 }

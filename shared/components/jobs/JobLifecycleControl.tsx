@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { useRouter } from "next/navigation";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
@@ -43,6 +44,7 @@ export function JobLifecycleControl({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { confirm, confirmDialog } = useConfirm();
 
   if (!canManage) return null;
 
@@ -53,9 +55,19 @@ export function JobLifecycleControl({
     deleteDependencies,
   );
 
-  function runAction(action: () => Promise<{ error?: string }>, confirm?: string) {
+  async function runAction(
+    action: () => Promise<{ error?: string }>,
+    confirmMessage?: string,
+  ) {
     if (isPending) return;
-    if (confirm && !window.confirm(confirm)) return;
+    if (confirmMessage) {
+      const ok = await confirm({
+        title: confirmMessage,
+        confirmLabel: "Continue",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await action();
@@ -200,6 +212,7 @@ export function JobLifecycleControl({
           </>
         ) : null}
       </div>
+      {confirmDialog}
     </div>
   );
 }

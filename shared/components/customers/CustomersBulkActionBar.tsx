@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, Loader2, RotateCcw, Trash2, X } from "lucide-react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import type { CustomerLifecycleActionId } from "@/shared/lib/customer-lifecycle";
 import type { CustomerLifecycleState } from "@/shared/types/customer";
 import { customerMissionClasses as cm } from "./customer-list-presentation";
@@ -46,6 +47,9 @@ export function CustomersBulkActionBar({
   onPermanentDelete,
   onClearSelection,
 }: CustomersBulkActionBarProps) {
+  // Declared before the `selectedCount === 0` early return — hook order
+  // must not depend on whether anything is selected.
+  const { confirm, confirmDialog } = useConfirm();
   const isBusy =
     isArchiving ||
     isRestoring ||
@@ -57,16 +61,21 @@ export function CustomersBulkActionBar({
     return null;
   }
 
-  function handleMoveToTrashClick() {
+  async function handleMoveToTrashClick() {
     if (isBusy) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Move ${selectedCount} selected customer${
+    const confirmed = await confirm({
+      title: `Move ${selectedCount} customer${
         selectedCount === 1 ? "" : "s"
-      } to Recently Deleted? They will be hidden from customer lists for 60 days.`,
-    );
+      } to Recently Deleted?`,
+      description:
+        "They will be hidden from customer lists for 60 days, then permanently removed.",
+      confirmLabel: "Move to Trash",
+      destructive: true,
+      icon: <Trash2 className="h-4 w-4" aria-hidden="true" />,
+    });
 
     if (!confirmed) {
       return;
@@ -75,16 +84,20 @@ export function CustomersBulkActionBar({
     onMoveToTrash();
   }
 
-  function handleArchiveClick() {
+  async function handleArchiveClick() {
     if (isBusy) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Archive ${selectedCount} selected customer${
+    const confirmed = await confirm({
+      title: `Archive ${selectedCount} customer${
         selectedCount === 1 ? "" : "s"
-      }? They will be hidden from active lists, but historical records will be preserved.`,
-    );
+      }?`,
+      description:
+        "They will be hidden from active lists. Historical records are preserved.",
+      confirmLabel: "Archive",
+      icon: <Archive className="h-4 w-4" aria-hidden="true" />,
+    });
 
     if (!confirmed) {
       return;
@@ -93,16 +106,21 @@ export function CustomersBulkActionBar({
     onArchive();
   }
 
-  function handlePermanentDeleteClick() {
+  async function handlePermanentDeleteClick() {
     if (isBusy) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Permanently delete ${selectedCount} selected customer${
+    const confirmed = await confirm({
+      title: `Permanently delete ${selectedCount} customer${
         selectedCount === 1 ? "" : "s"
-      }? This cannot be undone. Customers with historical records will be skipped.`,
-    );
+      }?`,
+      description:
+        "This cannot be undone. Customers with historical records will be skipped.",
+      confirmLabel: "Delete permanently",
+      destructive: true,
+      icon: <Trash2 className="h-4 w-4" aria-hidden="true" />,
+    });
 
     if (!confirmed) {
       return;
@@ -228,6 +246,7 @@ export function CustomersBulkActionBar({
           ) : null}
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

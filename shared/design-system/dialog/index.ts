@@ -24,3 +24,5 @@ export {
   AltairConfirmDialog,
   type AltairConfirmDialogProps,
 } from "./AltairConfirmDialog";
+
+export { useConfirm, type ConfirmRequest } from "./useConfirm";

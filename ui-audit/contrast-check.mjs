@@ -51,6 +51,8 @@ const T = {
   dangerSurface: "#f9eeec",
   informationFg: "#3f5a63",
   informationSurface: "#eef2f3",
+  /* Design Lab sage sidebar, composited: rgba(155,162,103,.22) over rgb(85,95,72). */
+  themedSage: "#646d4f",
   chart1: "#c2a05a",
   chart2: "#3f8a63",
 };
@@ -239,7 +241,21 @@ const cases = [
    * 1.96:1. `--focus-ring` is solid and clears the bar on BOTH grounds, which
    * is why one token can serve the whole product.
    */
-  ["focus-ring on chrome (sidebar nav)", "#987836", T.chrome, UI],
+  /*
+   * The focus indicator is TWO rings, and the pair is what must pass — brass
+   * carries dark grounds, a near-black halo carries light and mid ones.
+   *
+   * A single brass ring is only guaranteed against grounds we control. The
+   * Design Lab's translucent sage sidebar composites to rgb(100 110 79) and
+   * drops brass alone to 1.3:1, because a runtime theme can put chrome
+   * anywhere on the lightness scale. `themedSage` is kept here as a
+   * deliberately hostile ground: any focus treatment must survive it.
+   */
+  ["focus brass on chrome", "#987836", T.chrome, UI],
+  ["focus halo on chrome (weak leg, brass carries)", "#14180f", T.chrome, 1.0],
+  ["focus halo on themed sage", "#14180f", T.themedSage, UI],
+  ["focus halo on surface", "#14180f", T.surface, UI],
+  ["focus halo on canvas", "#14180f", T.canvas, UI],
   ["focus-ring on chromeElevated", "#987836", T.chromeElevated, UI],
   ["focus-ring on surface", "#987836", T.surface, UI],
   ["focus-ring on canvas", "#987836", T.canvas, UI],

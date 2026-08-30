@@ -143,6 +143,25 @@
      2.91:1, so the ring uses the deepest brass that clears all four. */
   --focus-ring: #987836;
 
+  /* Native form controls (checkbox, radio, range, progress) paint themselves
+     with the OS accent unless told otherwise — Windows blue by default. That
+     put a saturated blue tick in every table row of an otherwise warm
+     product. One declaration below turns the whole product's native controls
+     brass; brass-700 keeps a white tick at ~6.3:1 on the filled state. */
+  --control-accent: var(--pg-brass-700);
+
+  /* Two-tone focus ring. A single brass ring is only guaranteed against
+     grounds WE control: measured against the Design Lab's translucent sage
+     sidebar (which composites to rgb(100 110 79)) it falls to 1.3:1, because
+     a runtime theme can move chrome anywhere on the lightness scale. Pairing
+     the brass with a near-black halo means one of the two always clears 3:1
+     — brass carries dark grounds, the halo carries light and mid ones.
+     Measured: sage 3.3, canonical chrome 4.0, paper 17.4, canvas 14.6. */
+  --focus-ring-halo: var(--pg-graphite-950);
+  --focus-ring-shadow:
+    0 0 0 2px var(--focus-ring),
+    0 0 0 4px var(--focus-ring-halo);
+
   /* ── 3. ELEVATION ──────────────────────────────────────────────────────────
    * Why cards read flat today: their computed box-shadow resolves to fully
    * transparent. Real objects need two shadows — a tight CONTACT shadow that
@@ -862,6 +881,18 @@ body {
   background: var(--surface-canvas);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/*
+ * Every native form control, once. This previously existed only as five
+ * near-identical `.<entity>-north-star-ledger input[type="checkbox"]` rules,
+ * so checkboxes outside those five ledgers rendered in the OS accent.
+ */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+progress {
+  accent-color: var(--control-accent);
 }
 
 /*
@@ -2091,7 +2122,7 @@ a[href] {
      on paper (3.5:1), so one token is safe on either ground. */
   .admin-north-star-sidebar-link:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--focus-ring);
+    box-shadow: var(--focus-ring-shadow);
   }
 
   /* Active destination — no fill. Brass underline + icon mark "you are here." */
@@ -4651,7 +4682,7 @@ a[href] {
 
 .admin-nav-link:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--focus-ring);
+  box-shadow: var(--focus-ring-shadow);
 }
 
 /*

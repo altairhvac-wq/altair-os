@@ -609,3 +609,64 @@ look live, so the declarations were removed and the migration code left alone.
 
 Rule: an alias of a Design-Lab-overridable token either lives in the scope the
 override lands on, or does not exist.
+
+---
+
+## 5. Phase 2 — foundation primitives
+
+### D-22 · Destructive confirmation is the product's, not the browser's
+**19 `window.confirm` call sites across 11 files** guarded destructive actions —
+archive, move to trash, permanent delete, cancel jobs, delete marketing posts.
+A native confirm is OS chrome: unstyleable, outside the app's focus model, and
+the single loudest way a "premium" product announces that it is a web page.
+
+`AltairConfirmDialog` already existed; nothing had migrated because the
+primitive is declarative (`open` + `onConfirm`) while every call site was
+synchronous and inline. That gap is where migrations stall, so the fix was a
+bridge rather than 19 rewrites — `useConfirm()` returns a promise-based
+`confirm()` plus the element to render:
+
+```
+if (!(await confirm({ title: "Delete 3 customers?", destructive: true }))) return;
+```
+
+Resolution deliberately matches `window.confirm`: it settles on choice and
+closes. Callers already own their in-flight state — they were written against a
+blocking API — so each migration stayed a local edit. All 19 sites are migrated;
+the product has no native confirms left.
+
+The copy improved in passing. `window.confirm` takes one string, so every
+message was a run-on question. The dialog has a title *and* a description, so
+the question is now short and the consequence sits under it.
+
+### D-23 · Native controls need an accent or the OS picks one
+Checkboxes rendered in **Windows blue** in every table in the product. The
+`accent-color` property was set — but only inside five near-identical
+`.<entity>-north-star-ledger input[type="checkbox"]` rules, so any checkbox
+outside those five ledgers fell back to the OS accent.
+
+One unlayered rule now covers `checkbox`, `radio`, `range` and `progress` from
+a `--control-accent` role. This is the shape most of the remaining `!important`
+override engine should collapse into: a role token plus one base rule, instead
+of a per-surface rule repeated until someone notices a gap.
+
+### D-24 · A focus ring must survive a theme it has never seen
+The focus work in D-12's follow-up made rings solid and measured them at 4.0:1
+against canonical chrome. Re-measured against the **Design Lab's** sidebar —
+`rgba(155 162 103 / 0.22)`, which composites to `rgb(100 110 79)` — the same
+ring is **1.3:1**.
+
+Nothing regressed; the ring was only ever guaranteed against grounds *we*
+control, and a runtime theme can move chrome anywhere on the lightness scale.
+The indicator is now two rings, and the pair is what passes: brass carries dark
+grounds, a near-black halo carries light and mid ones. Measured — themed sage
+3.3, canonical chrome 4.0, paper 17.4, canvas 14.6.
+
+The hostile ground is now a permanent case in the gate (`themedSage`). Any
+future focus treatment has to survive a theme nobody designed against.
+
+**Method note.** This was found because the dev server had been serving a
+22-minute-stale CSS chunk and a rebuild changed a measurement that "passed"
+earlier. Turbopack reused the cached chunk across a full server restart;
+only `rm -rf .next/dev` cleared it. When a live measurement disagrees with the
+source, check that the server is serving the source before believing either.

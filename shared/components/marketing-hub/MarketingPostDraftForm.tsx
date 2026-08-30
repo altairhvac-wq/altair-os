@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import Image from "next/image";
 import { Check, Copy } from "lucide-react";
 import {
@@ -554,6 +555,7 @@ export function MarketingPostDraftForm({
   onCancel,
   onRecurringCreated,
 }: MarketingPostDraftFormProps) {
+  const { confirm, confirmDialog } = useConfirm();
   const northStar = isNorthStarShellEnabled();
   const timeZone = useCompanyTimezone();
   const isEditMode = mode === "edit" && post != null;
@@ -780,16 +782,19 @@ export function MarketingPostDraftForm({
     });
   }
 
-  function handleArchive() {
+  async function handleArchive() {
     if (!isEditMode || isActionPending) {
       return;
     }
 
-    const confirmMessage =
-      post.status === "posted"
-        ? "Move this post to archive? It will leave Posted and appear under Archived. The original record is kept."
-        : "Move this post to archive?";
-    const confirmed = window.confirm(confirmMessage);
+    const confirmed = await confirm({
+      title: "Move this post to archive?",
+      description:
+        post.status === "posted"
+          ? "It will leave Posted and appear under Archived. The original record is kept."
+          : undefined,
+      confirmLabel: "Archive",
+    });
     if (!confirmed) {
       return;
     }
@@ -897,14 +902,18 @@ export function MarketingPostDraftForm({
     });
   }
 
-  function handleDeletePost() {
+  async function handleDeletePost() {
     if (!isEditMode || !canDelete || isActionPending) {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Delete this marketing post? This removes it from Marketing Hub. This cannot be undone.",
-    );
+    const confirmed = await confirm({
+      title: "Delete this marketing post?",
+      description:
+        "This removes it from Marketing Hub and cannot be undone.",
+      confirmLabel: "Delete post",
+      destructive: true,
+    });
     if (!confirmed) {
       return;
     }
@@ -1803,6 +1812,7 @@ export function MarketingPostDraftForm({
           />
         </div>
       </div>
+      {confirmDialog}
     </form>
   );
 }

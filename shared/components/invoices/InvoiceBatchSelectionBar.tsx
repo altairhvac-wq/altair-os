@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, Ban, Loader2, Send, Trash2, X } from "lucide-react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type InvoiceLifecycleActionProps = {
@@ -37,6 +38,8 @@ export function InvoiceBatchSelectionBar({
   moveToTrashAction,
   northStar = false,
 }: InvoiceBatchSelectionBarProps) {
+  // Before the `selectedCount === 0` early return so hook order is stable.
+  const { confirm, confirmDialog } = useConfirm();
   const isBusy = isSending || isLifecycleBusy;
   const canSendSelected = sendableCount > 0;
 
@@ -44,12 +47,22 @@ export function InvoiceBatchSelectionBar({
     return null;
   }
 
-  function confirmAndRun(
+  async function confirmAndRun(
     message: string,
     action?: InvoiceLifecycleActionProps,
   ) {
     if (isBusy || !action || action.eligibleCount === 0) return;
-    if (!window.confirm(message)) return;
+    // The action supplies one sentence of consequence copy; it becomes the
+    // dialog description so the title can stay a short question.
+    const confirmed = await confirm({
+      title: `Apply this to ${action.eligibleCount} invoice${
+        action.eligibleCount === 1 ? "" : "s"
+      }?`,
+      description: message,
+      confirmLabel: "Continue",
+      destructive: true,
+    });
+    if (!confirmed) return;
     action.onAction();
   }
 
@@ -185,6 +198,7 @@ export function InvoiceBatchSelectionBar({
           ) : null}
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

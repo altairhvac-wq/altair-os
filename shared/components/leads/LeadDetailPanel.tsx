@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import Link from "next/link";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { useRouter } from "next/navigation";
@@ -76,6 +77,7 @@ export function LeadDetailPanel({
   onLeadUpdated,
   northStar = false,
 }: LeadDetailPanelProps) {
+  const { confirm, confirmDialog } = useConfirm();
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [note, setNote] = useState("");
@@ -232,13 +234,16 @@ export function LeadDetailPanel({
     });
   }
 
-  function handleMarkWon() {
+  async function handleMarkWon() {
     if (!lead) return;
 
     if (shouldPromptConvertOnWon(lead)) {
-      const confirmed = window.confirm(
-        "This lead is not linked to a customer yet. Convert to customer and mark won?",
-      );
+      const confirmed = await confirm({
+        title: "Convert to customer and mark won?",
+        description:
+          "This lead is not linked to a customer yet, so marking it won will create the customer record too.",
+        confirmLabel: "Convert and mark won",
+      });
       if (!confirmed) {
         return;
       }
@@ -634,6 +639,7 @@ export function LeadDetailPanel({
           ) : null}
         </div>
       ) : null}
+      {confirmDialog}
     </DesktopConditionalDetailPanel>
   );
 }
