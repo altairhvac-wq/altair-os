@@ -4,7 +4,8 @@ Status of every original finding, re-checked against the code as it stands
 rather than carried forward from the audit's own conclusion. Where the audit
 turned out to be wrong, the row says so.
 
-Last reconciled: 2026-08-30, branch `prestige-visual-foundation`.
+Last reconciled: 2026-08-30, branch `prestige-visual-foundation` (second pass:
+dark-surface sweep).
 
 ## How to read this
 
@@ -35,6 +36,11 @@ A row is never marked fixed because a token underneath it changed colour.
 | L-15 | money fields announced as unlabelled | `useId` + `htmlFor` in both line-item editors; 14 search inputs given `aria-label`; probe asserts every visible control has an accessible name |
 | **new** | dark-surface badges 2.17–4.02:1 | not in the original audit. `STATUS_TONE_CLASS_ON_DARK`, now 9.5–12.4:1, eight gate cases |
 | **new** | mobile label taps focused an invisible input | `useId` in three components; probe drives two panels at 390px |
+| **new** | dark/paper token mismatch product-wide | 14 failing colour pairs → **0**, on both the composite probe and the gradient-stop probe, 17 routes × 390/1440 |
+| L-9 | "Next" column printed last-service data | renamed to Attention; the two cue kinds that duplicated a neighbour now render "—" |
+| L-12 | unread notifications wore the brand accent; no Escape | unread is `info`; Escape via the existing stack-aware `useSheetEscape`, verified by driving it |
+| L-14 | public token routes had no boundaries | loading/error/not-found on both segments, plus `noindex` |
+| L-15 | money fields announced as unlabelled | `useId` + `htmlFor`; 14 search inputs named; probe asserts it |
 
 ## Partial
 
@@ -52,8 +58,8 @@ A row is never marked fixed because a token underneath it changed colour.
 | L-5 | server-decided `trialHasEnded` | not on `CompanySubscriptionBillingSummary` |
 | L-7 | loud blue resolved at token level | red flood on the scheduled column; "Past due" vs "Overdue" |
 | L-11 | stat-strip clipping fixed | mobile page title |
-| L-13 | "1 item needs attention" grammar fixed | two cyan avatar disks; dot-only status needs a text pair |
-| L-16 | blue selection → brass | shoulder-hour label overlap; 7–9px lane metadata |
+| L-13 | grammar fixed; **the avatar disks are now brass tokens** | dot-only status still needs a text pair |
+| L-16 | blue selection → brass; **shoulder labels 3.05 → 4.65** | shoulder-hour label *overlap* (a layout issue, not contrast) |
 | L-17 | **duplicate "Opportunities" heading removed** | lifecycle button alignment |
 | L-20 | auth generations unified on `AuthShell` | fabricated `OPERATIONAL_SNAPSHOT` tiles |
 | L-22 | phone formatting applied | six naked address joins |
@@ -76,8 +82,9 @@ A row is never marked fixed because a token underneath it changed colour.
 ## Open
 
 S-2 (938-line hex-only token layer, zero `var()`), S-9 (emerald primaries on
-money surfaces), S-13 (no popover primitive — no Escape or focus management on
-the bell, company switcher, view switcher), S-14 (1,167 arbitrary micro-type
+money surfaces), S-13 (no popover primitive — **the bell now has Escape**, but
+the company switcher and view switcher still do not, and none has focus
+management), S-14 (1,167 arbitrary micro-type
 sites), S-15 (11 StatStrips, 10 SearchFilterBars, 13 EmptyStates), S-17
 (AltairTable has no mobile contract), S-20 (technician cyan across ~25 files),
 S-21 (340 arbitrary `rgba()` brass borders), S-26 (z-index folklore, dead

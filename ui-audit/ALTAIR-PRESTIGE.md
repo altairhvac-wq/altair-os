@@ -1167,3 +1167,80 @@ is what correctly spared `estimate-north-star-meta-cell`, dead itself but
 sharing a rule with a live selector. And the proof is a computed-style diff:
 **49,946 properties across 33 selector families, 13 routes and 3 widths,
 captured against the running app before and after — identical.**
+
+### D-41 · The dark-surface contract, and its two directions
+`[data-theme="dark"]` is never set, so the ambient semantic tokens resolve to
+their light-surface Prestige values — which are dark. That produces two mirrored
+failures, and both were live:
+
+- **Paper tokens on chrome.** The reports cards are `bg-altair-graphite`, and
+  the semantic tokens painted on them measured `ink-secondary` 1.77, `danger`
+  2.67, `success` 3.00.
+- **Chrome tokens on paper.** A lead-pipeline note used the chrome muted ink on
+  the light page canvas at 1.65 — and I made one of these myself, switching a
+  paragraph to a chrome token because the *file* imported the dark card class.
+  The probe had never flagged that element; the live DOM showed every ancestor
+  transparent up to the page container. **Inferring the surface from the file is
+  the same mistake in a different disguise.**
+
+`TONE_TEXT_ON_DARK` is the contract. A component gets it by *declaring* it
+renders on chrome, never by sitting somewhere dark.
+
+Each value is the 300 step of its own hue, so the meaning is unchanged and
+nothing was invented — only the lightness the surface requires. Emerald had no
+300 (a gap: rose and amber both had one), so it was added at 7.39 to sit beside
+rose 7.40 and amber 8.83.
+
+Non-text keeps its saturation. All six chart tokens clear the 3.0 bar as strokes
+and swatches; only two failed as text, so the legend stopped colouring its money
+value — the swatch and row position already name the category twice — rather
+than desaturating the chart.
+
+### D-42 · "Inside a dark region" is not "on a dark surface"
+Two cases turned on exactly this, in the same component.
+
+`.admin-page-header` is dark and flips any `ink-on-paper` utility inside it. But
+the segmented control declares its **own light surface** within that header — an
+opaque white active pill with a near-black label — so the blanket descendant
+selector reached in and painted the active tab's count in chrome ink on white:
+**1.57:1**.
+
+And the control's own background was a 60% wash, which let the dark header
+through enough that the ground composited to `#9fa09c` and the inactive labels
+sat at **2.87:1** across four routes. Light text was not the answer — it would
+fight the white active pill — so the surface had to actually become the surface
+it claims: 85%, measuring 5.12.
+
+### D-43 · Measure the DOM; then measure what the DOM cannot composite
+Two probes, because one honest method could not cover everything.
+
+`probe-text-contrast.mjs` walks every visible text leaf and composites each
+translucent layer to the first opaque ground. Two things it must get right:
+colour is parsed **through a canvas**, not a regex — Chromium serialises some
+computed colours as `oklab()`/`color()`, whose 0-1 components read as near-black
+if treated as bytes, which is how a first run invented 272 failures — and text
+on a gradient is **refused, not scored**, because a composite of solid layers is
+not the truth there.
+
+`probe-gradient-grounds.mjs` covers what the first one refuses: it parses the
+gradient's own colour stops and scores against the **worst** stop. If the worst
+passes, the run passes — no sampling, no interpolation assumption, no image
+dependency.
+
+Fourteen distinct failing colour pairs at the start; zero on both probes across
+17 routes at 390 and 1440.
+
+### D-44 · A column may not promise data the model does not have
+The Customers table headed a column "Next" and rendered a cue whose fallback was
+`Last service <date>` — the same value as the cell to its left, under a header
+promising a scheduled visit that has no field anywhere in the model.
+
+The fix is the name, not the data: it is an attention column. Not "Status"
+either — column three is already a real active/inactive badge, and renaming it
+that way briefly gave the table two Status headers. Two of the cue's six kinds
+duplicated a neighbour and now render "—".
+
+That leaves it empty on all seventeen demo rows. The predicate is live — it also
+powers the needs-info queue — so this is an honest empty state, and whether an
+always-empty flag column earns its width is recorded as a product call rather
+than quietly decided.
