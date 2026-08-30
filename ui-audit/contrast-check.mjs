@@ -267,6 +267,16 @@ const cases = [
    * ground nothing else uses. Gated here so the register stays legible if the
    * wallpaper is ever retuned.
    */
+  /*
+   * Surfaces that only started rendering once the promoted Design Lab theme
+   * was removed. Both referenced tokens that were never declared, so they had
+   * been painting with no background at all — gated now so a missing ramp step
+   * fails here instead of silently going transparent.
+   */
+  ["caught-up title on emerald-100", "#1c1913", "#d7e9de", AA],
+  ["caught-up body on emerald-100", "#453f33", "#d7e9de", AA],
+  ["ink on plate (marketing hub cards)", "#1c1913", "#ffffff", AA],
+
   ["mobile brass label on wallpaper", "#c2a05a", "#1c1e1b", AA],
   ["mobile primary ink on wallpaper", "#e9e8e4", "#1c1e1b", AA],
   ["mobile secondary ink on wallpaper", "#a29f96", "#1c1e1b", AA],

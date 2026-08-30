@@ -837,3 +837,34 @@ product layout; there is nothing to fix.
 This file had been excluded from every previous sweep because it carried an
 uncommitted `data-testid` edit that was not ours to commit. The owner authorised
 including it, so the migration and that line land together.
+
+---
+
+### D-29 · Un-promoting the theme exposed two tokens that were never declared
+The promoted Design Lab row was reverted through the product's own control
+("Revert to default" in Saved themes → `revertLiveDesignLabThemeAction`), not a
+migration or a direct write. It flips `is_live: false` on one company-scoped
+row; all four saved themes remain, and "im not sure" is still an active draft,
+so re-promoting is one click.
+
+With the override gone, the canonical chrome renders — sidebar `#1c211a`,
+topbar `#232922`, no inline style on the shell at all — and **two source
+defects the theme had been masking became visible**:
+
+- `--north-star-caught-up-fill: var(--pg-emerald-100)` referenced a step that
+  was never defined. Only emerald 500–800 existed, so the dashboard's "all
+  caught up" card had **no background**.
+- `--north-star-plate` was referenced by four Marketing Hub sections and
+  declared **nowhere** — not in CSS, not in the Design Lab vocabulary. Those
+  panels have always painted transparent, with only their border visible; the
+  theme never masked this one, it was simply never noticed.
+
+Both are fixed at the source of truth: `--pg-emerald-100: #d7e9de` completes the
+ramp (matching `--color-emerald-100` in the `@theme` remap), and
+`--north-star-plate: var(--surface-card)`. No override was layered on top.
+
+A scan for `var(--x)` with no fallback where `--x` is never declared now returns
+**zero** (`--font-altair-display` is supplied by `next/font` and is not a real
+miss). Worth re-running after any token move: an undefined custom property
+fails silently as "no background", which is exactly the kind of defect a
+runtime theme can hide for months.

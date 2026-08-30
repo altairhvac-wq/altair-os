@@ -84,6 +84,12 @@
   --pg-emerald-700: #2a5c42;
   --pg-emerald-600: #35755a;
   --pg-emerald-500: #3f8a63;
+  /* Pale end of the ramp. It was missing, so `--north-star-caught-up-fill:
+     var(--pg-emerald-100)` resolved to nothing and the dashboard's
+     "all caught up" card rendered with NO background — a defect the
+     promoted Design Lab theme had been masking by injecting a value for the
+     alias. Matches `--color-emerald-100` in the @theme remap. */
+  --pg-emerald-100: #d7e9de;
 
   /* Warm ink: text. Near-black with a brown cast — pairs with parchment
    * without the blue chill of slate. */
@@ -340,6 +346,11 @@
   /* MC section band dividers (Needs attention / Schedule bands) */
   --north-star-section-divider: var(--border);
   /* mc-surface plate / card / tile / list borders */
+  /* Card/plate surface. `--north-star-plate` was referenced by four Marketing
+     Hub sections but never declared anywhere — not in CSS and not in the
+     Design Lab vocabulary — so those sections have always rendered as
+     transparent panels on the canvas, with only their border visible. */
+  --north-star-plate: var(--surface-card);
   --north-star-plate-border: var(--border);
   /* Two-tone canvas — header/section strip vs main content well */
   --north-star-header-strip: var(--chrome);
