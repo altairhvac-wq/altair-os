@@ -912,3 +912,45 @@ approximate — dashboard glance tiles, chart axes, abbreviated KPIs.
 
 No business calculation was touched; only presentation. The cent-precision
 values were always there.
+
+### D-31 · The mobile audit findings, verified one by one
+The original audit's mobile section was re-checked against current code rather
+than assumed fixed by the palette work. Two claims were already resolved; five
+were still real.
+
+**Fixed here**
+
+- *Notification badge painted over the glyph.* The trigger was a 36px box and
+  the unread count sat at `right-1 top-1` — on top of the bell, so the icon
+  became unreadable exactly when it had something to report. Badge moved to the
+  corner with a chrome ring; trigger raised to 44px.
+- *Touch targets under 44px.* `AltairDialogClose` was `h-8 w-8` — and this
+  component **is** the mobile bottom sheet, so it was the close affordance for
+  every sheet in the product, at 32px, on the surface where thumbs are least
+  accurate. Now 44px on touch, 32px from `sm`.
+- *Admin chrome scrolled away on mobile.* `.admin-top-shell` was only positioned
+  inside the `min-width: 768px` block, so below that the company switcher,
+  notifications, view-as and sign-out scrolled off and could not be reached
+  without returning to the top of a long ledger. The technician shell already
+  kept its chrome. Now sticky below 768px; desktop keeps `relative` because the
+  shell there is a fixed-height column with its own inner scroll.
+- *Today's job card lost its title.* `JobScheduleRow` is a `flex-wrap` row where
+  title, time, assignee and status all competed for one line, truncating the one
+  thing that identifies the job. The title block now takes `basis-full` below
+  `sm`. Verified at 390: 290px needed, 290px available.
+- *Owner "View as Technician" bounced tabs back to Home.* Not the rule the audit
+  blamed — that had already been fixed. The surviving cause is hydration:
+  `useStoredOwnerViewMode` returns `"owner_admin"` from the server snapshot, so
+  the redirect effect ran against the *server* value and navigated away from
+  `/tech/*` before the client store resolved. The effect now waits one commit.
+
+**A residual the audit missed.** The stat strips' leading pills no longer clip on
+mobile, but `sm:justify-center` recreated the same defect from 640px: a centered
+flex row cannot be scrolled back to its first item once it overflows, so the
+leading pills were unreachable. Centering now starts at `lg`, where the strip
+fits. Five strips corrected; verified reachable at 390/768/1024.
+
+**Still open, and why.** Bulk operations remain unavailable below 768px on
+Customers only — the other four mobile card lists already accept selection
+props. The fix belongs in `CustomersMobileCardList.tsx`, which is one of the
+protected uncommitted files, so it is reported rather than changed.

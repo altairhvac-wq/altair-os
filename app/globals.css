@@ -1676,6 +1676,28 @@ a[href] {
   z-index: 2;
 }
 
+/*
+ * Mobile chrome stays put.
+ *
+ * `.admin-top-shell` was only ever positioned inside the `min-width: 768px`
+ * block, so below that the header — company switcher, notifications, view-as,
+ * sign-out — scrolled away with the content and could not be reached without
+ * scrolling back to the top of a long ledger. The technician shell already
+ * keeps its chrome; the owner shell did not.
+ *
+ * Desktop keeps `position: relative` (the rule below): there the shell is a
+ * fixed-height flex column with its own inner scroll, so sticky would be
+ * meaningless.
+ */
+@media (max-width: 767.98px) {
+  .admin-top-shell {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    flex-shrink: 0;
+  }
+}
+
 /* Authenticated desktop chrome — North Star olive-graphite */
 @media (min-width: 768px) {
   .admin-top-shell {

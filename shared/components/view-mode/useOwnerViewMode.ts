@@ -61,8 +61,23 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     setViewModeOverride(null);
   }, [companyId]);
 
+  /*
+   * The redirect must not run against the SERVER snapshot.
+   *
+   * `useStoredOwnerViewMode` returns "owner_admin" on the server (localStorage
+   * does not exist there) and the real mode on the client. During hydration the
+   * effect would therefore see "owner_admin" while the owner was actually in
+   * technician mode, and bounce them off /tech/* back to the dashboard — the
+   * "3 of 4 tabs return Home" behaviour. Waiting one commit lets the store
+   * resolve to the client value before any navigation is decided.
+   */
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    if (!isOwner) {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOwner || !hydrated) {
       return;
     }
 
@@ -71,7 +86,7 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     if (redirectTarget && redirectTarget !== pathname) {
       router.replace(redirectTarget);
     }
-  }, [isOwner, pathname, router, viewMode]);
+  }, [hydrated, isOwner, pathname, router, viewMode]);
 
   const setViewMode = useCallback(
     (nextMode: OwnerViewMode) => {

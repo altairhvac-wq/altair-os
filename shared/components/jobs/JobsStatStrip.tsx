@@ -29,7 +29,7 @@ export function JobsStatStrip({
   allCount,
 }: JobsStatStripProps) {
   return (
-    <div className="flex max-w-full flex-nowrap items-center justify-start gap-x-2 overflow-x-auto sm:justify-center sm:gap-x-3">
+    <div className="flex max-w-full flex-nowrap items-center justify-start gap-x-2 overflow-x-auto sm:justify-start lg:justify-center sm:gap-x-3">
       <div className="shrink-0" title="View totals (active jobs)">
         <JobsViewTabs
           activeTab={viewTab}

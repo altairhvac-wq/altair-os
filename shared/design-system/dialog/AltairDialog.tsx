@@ -309,7 +309,11 @@ export function AltairDialogClose({
       type="button"
       onClick={() => onOpenChange(false)}
       aria-label={ariaLabel}
-      className={`altair-dialog-close flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${className}`}
+      /* 44px on touch, 32px from `sm` up. AltairDialog is also the mobile
+         bottom sheet, so this one control is the close affordance for every
+         sheet in the product — at h-8 it was a 32px target under the 44px
+         minimum, on the surface where thumbs are least accurate. */
+      className={`altair-dialog-close flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-8 sm:w-8 ${className}`}
       {...rest}
     >
       <X className="h-4 w-4" aria-hidden="true" />

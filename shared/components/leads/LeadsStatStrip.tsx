@@ -19,7 +19,7 @@ export function LeadsStatStrip({
   onFilterQueue,
 }: LeadsStatStripProps) {
   return (
-    <dl className="flex max-w-full flex-nowrap items-baseline justify-start gap-x-1.5 overflow-x-auto sm:justify-center sm:gap-x-2.5">
+    <dl className="flex max-w-full flex-nowrap items-baseline justify-start gap-x-1.5 overflow-x-auto sm:justify-start lg:justify-center sm:gap-x-2.5">
       {stats.map((stat) => {
         const filterQueue = stat.filterQueue;
         const isInteractive = Boolean(filterQueue && onFilterQueue);

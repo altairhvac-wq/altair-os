@@ -44,7 +44,14 @@ function TitleBlock({
     "block truncate text-sm font-semibold text-altair-ink-on-paper transition-colors";
 
   return (
-    <div className="min-w-0 flex-1">
+    /*
+     * `basis-full` below `sm`: the row is `flex-wrap`, so on a phone the
+     * title block, the time, the assignee chip and the status pill all
+     * competed for one line and the title — the only thing identifying the
+     * job — truncated to nothing. Taking the full width first lets the
+     * metadata wrap beneath it instead of squeezing it out.
+     */
+    <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
       {linkTitle && row.href ? (
         <Link
           href={row.href}

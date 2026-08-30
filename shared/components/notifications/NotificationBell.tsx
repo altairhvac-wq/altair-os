@@ -95,7 +95,8 @@ export function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`relative rounded-lg p-2 transition-colors ${
+        /* min-h/w-11: the trigger was a 36px box, under the touch minimum. */
+        className={`relative flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 transition-colors ${
           triggerClassName ??
           (tone === "dark"
             ? "text-slate-400 hover:bg-white/10 hover:text-slate-200"
@@ -107,7 +108,11 @@ export function NotificationBell({
         <Bell className="h-5 w-5" />
         {unreadCount > 0 ? (
           <span
-            className={`absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+            /* Sits on the glyph corner, not on top of the glyph. At
+               right-1/top-1 inside a 36px box the count covered the bell
+               itself, so the icon stopped being readable exactly when it had
+               something to say. */
+            className={`absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[var(--chrome)] ${
               badgeClassName ?? "bg-cyan-600"
             }`}
           >

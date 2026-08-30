@@ -19,8 +19,14 @@ export function CustomersStatStrip({
   activeQueue,
   onFilterQueue,
 }: CustomersStatStripProps) {
+  /*
+   * A centered flex row cannot be scrolled back to its first item once it
+   * overflows — the leading pills become unreachable. Centering is therefore
+   * only safe from `lg`, where the strip fits; below that it starts at the
+   * left edge and scrolls.
+   */
   return (
-    <dl className="flex max-w-full flex-nowrap items-baseline justify-start gap-x-1.5 overflow-x-auto sm:justify-center sm:gap-x-2.5">
+    <dl className="flex max-w-full flex-nowrap items-baseline justify-start gap-x-1.5 overflow-x-auto sm:justify-start lg:justify-center sm:gap-x-2.5">
       {stats.map((stat) => {
         const filterQueue = stat.filterQueue;
         const isInteractive = Boolean(filterQueue && onFilterQueue);
