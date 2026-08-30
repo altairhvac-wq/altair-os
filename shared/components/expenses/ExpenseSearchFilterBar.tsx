@@ -163,6 +163,7 @@ export function ExpenseSearchFilterBar({
           />
           <input
             type="search"
+            aria-label="Search expenses"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search vendor, notes, category, technician, job…"

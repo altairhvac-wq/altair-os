@@ -465,6 +465,7 @@ export function InvoicesNorthStarMobileOwnerView({
             <input
               id="invoices-owner-archive-search"
               type="search"
+              aria-label="Search invoices"
               value={archiveSearch}
               onChange={(event) => setArchiveSearch(event.target.value)}
               placeholder="Search invoice history…"

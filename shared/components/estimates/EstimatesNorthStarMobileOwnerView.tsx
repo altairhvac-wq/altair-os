@@ -436,6 +436,7 @@ export function EstimatesNorthStarMobileOwnerView({
             <input
               id="estimates-owner-archive-search"
               type="search"
+              aria-label="Search estimates"
               value={archiveSearch}
               onChange={(event) => setArchiveSearch(event.target.value)}
               placeholder="Search estimate history…"

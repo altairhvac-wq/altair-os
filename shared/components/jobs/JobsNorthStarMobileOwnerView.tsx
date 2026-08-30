@@ -499,6 +499,7 @@ export function JobsNorthStarMobileOwnerView({
             <input
               id="jobs-owner-archive-search"
               type="search"
+              aria-label="Search jobs"
               value={archiveSearch}
               onChange={(event) => setArchiveSearch(event.target.value)}
               placeholder="Search job history…"

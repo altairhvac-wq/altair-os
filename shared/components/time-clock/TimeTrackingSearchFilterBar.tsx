@@ -39,6 +39,7 @@ export function TimeTrackingSearchFilterBar({
             />
             <input
               type="search"
+              aria-label="Search time entries"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search time entries…"
@@ -86,6 +87,7 @@ export function TimeTrackingSearchFilterBar({
           />
           <input
             type="search"
+            aria-label="Search time entries"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search time entries…"

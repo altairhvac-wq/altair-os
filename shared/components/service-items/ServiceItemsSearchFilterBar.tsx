@@ -70,6 +70,7 @@ export function ServiceItemsSearchFilterBar({
           />
           <input
             type="search"
+            aria-label="Search price book items"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by name, description, or category…"

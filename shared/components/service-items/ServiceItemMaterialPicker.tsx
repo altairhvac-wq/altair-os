@@ -99,6 +99,7 @@ export function ServiceItemMaterialPicker({
             <input
               id="material-service-item-search"
               type="search"
+              aria-label="Search price book"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search price book…"

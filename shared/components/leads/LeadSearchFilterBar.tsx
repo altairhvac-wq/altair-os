@@ -71,6 +71,7 @@ export function LeadSearchFilterBar({
             />
             <input
               type="search"
+              aria-label="Search leads"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search leads…"

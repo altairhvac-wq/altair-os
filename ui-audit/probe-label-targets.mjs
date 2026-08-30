@@ -32,7 +32,26 @@ const CHECK = () => {
     if (!target) broken.push({ for: label.htmlFor, why: "no element with that id" });
     else if (!visible(target)) broken.push({ for: label.htmlFor, why: "resolves to a hidden control" });
   }
+  /* The inverse failure: a control with no accessible name at all. A label that
+   * is merely a sibling — no htmlFor, no wrapping — looks correct in the source
+   * and announces as "edit blank". */
+  const unnamed = [];
+  for (const c of document.querySelectorAll("input,select,textarea")) {
+    if (c.type === "hidden" || !visible(c)) continue;
+    const named =
+      c.labels?.length ||
+      c.getAttribute("aria-label") ||
+      c.getAttribute("aria-labelledby") ||
+      c.getAttribute("title") ||
+      c.closest("label");
+    if (!named) {
+      const near = (c.previousElementSibling?.textContent || c.parentElement?.textContent || "").trim().slice(0, 30);
+      unnamed.push({ tag: c.tagName.toLowerCase(), type: c.type || "", near });
+    }
+  }
+
   return {
+    unnamed,
     broken,
     duplicates: Object.entries(dupIds).filter(([, n]) => n > 1).map(([id, n]) => `${id} x${n}`),
   };
@@ -49,6 +68,15 @@ const SCENARIOS = [
   { route: "/price-book", open: "button:has-text('New Service Item')" },
   { route: "/settings", open: null },
   { route: "/customers", open: null },
+  { route: "/invoices/new", open: null },
+  { route: "/estimates/new", open: null },
+  { route: "/work", open: null },
+  { route: "/dispatch", open: null },
+  { route: "/time-clock", open: null },
+  { route: "/reports", open: null },
+  { route: "/sales", open: null },
+  { route: "/payroll", open: null },
+  { route: "/settings/team", open: null },
 ];
 
 for (const { route, open } of SCENARIOS) {
@@ -63,13 +91,17 @@ for (const { route, open } of SCENARIOS) {
       opened = "clicked";
     } else opened = "control not found";
   }
-  const { broken, duplicates } = await p.evaluate(CHECK);
+  const { broken, duplicates, unnamed } = await p.evaluate(CHECK);
   console.log(`\n${route}  (panel: ${opened})`);
   console.log(`  duplicate ids: ${duplicates.length ? duplicates.join(", ") : "none"}`);
   if (broken.length) {
     fails += broken.length;
     for (const x of broken) console.log(`  FAIL  label[for="${x.for}"] — ${x.why}`);
   } else console.log("  all visible labels resolve to visible controls");
+  if (unnamed.length) {
+    fails += unnamed.length;
+    for (const u of unnamed) console.log(`  FAIL  <${u.tag}${u.type ? " type=" + u.type : ""}> has no accessible name — near "${u.near}"`);
+  } else console.log("  every visible control has an accessible name");
 }
 console.log(`\n${fails === 0 ? "ALL PASS" : fails + " BROKEN LABELS"}`);
 await b.close();

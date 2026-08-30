@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   calculateInvoiceTotals,
@@ -37,6 +37,10 @@ export function InvoiceLineItemsEditor({
   taxRate,
   onChange,
 }: InvoiceLineItemsEditorProps) {
+  /* Each row's controls need their own ids: the labels sat as siblings with no
+     htmlFor at all, so every money field announced as an unlabelled edit box.
+     Rows are mapped, so the id has to carry the index as well. */
+  const uid = useId();
   const [items, setItems] = useState<InvoiceLineItemFormData[]>(
     lineItems.length > 0 ? lineItems : [{ ...emptyLineItem }],
   );
@@ -148,8 +152,9 @@ export function InvoiceLineItemsEditor({
             <div key={index} className={adminLineItemShellClass}>
               <div className="mb-1.5 flex items-end gap-1.5">
                 <div className="min-w-0 flex-1">
-                  <label className={adminFormLabelClass}>Price book</label>
+                  <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-price-book`}>Price book</label>
                   <select
+                    id={`${uid}-${index}-price-book`}
                     value={selectedServiceId}
                     onChange={(e) =>
                       handleServiceItemChange(index, e.target.value)
@@ -177,8 +182,9 @@ export function InvoiceLineItemsEditor({
               <div className={`${adminLineItemGridClass} sm:items-end`}>
                 {isCustomLineItem ? (
                   <div className="sm:col-span-6">
-                    <label className={adminFormLabelClass}>Name</label>
+                    <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-name`}>Name</label>
                     <input
+                    id={`${uid}-${index}-name`}
                       type="text"
                       value={item.name}
                       onChange={(e) =>
@@ -191,8 +197,9 @@ export function InvoiceLineItemsEditor({
                   </div>
                 ) : null}
                 <div className={isCustomLineItem ? "sm:col-span-6" : "sm:col-span-12"}>
-                  <label className={adminFormLabelClass}>Desc</label>
+                  <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-desc`}>Desc</label>
                   <input
+                    id={`${uid}-${index}-desc`}
                     type="text"
                     value={item.description}
                     onChange={(e) =>
@@ -203,8 +210,9 @@ export function InvoiceLineItemsEditor({
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={adminFormLabelClass}>Qty</label>
+                  <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-qty`}>Qty</label>
                   <input
+                    id={`${uid}-${index}-qty`}
                     type="number"
                     min="1"
                     step="1"
@@ -217,8 +225,9 @@ export function InvoiceLineItemsEditor({
                   />
                 </div>
                 <div className="sm:col-span-3">
-                  <label className={adminFormLabelClass}>Unit $</label>
+                  <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-unit`}>Unit $</label>
                   <input
+                    id={`${uid}-${index}-unit`}
                     type="number"
                     min="0"
                     step="0.01"
@@ -231,7 +240,7 @@ export function InvoiceLineItemsEditor({
                   />
                 </div>
                 <div className="sm:col-span-3">
-                  <label className={adminFormLabelClass}>Total</label>
+                  <span className={`${adminFormLabelClass} block`}>Total</span>
                   <div className="flex min-h-11 items-center rounded-md border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-900">
                     {formatCurrencyExact(lineTotal)}
                   </div>

@@ -437,6 +437,7 @@ export function PlatformBugReportsPageView({
             </span>
             <input
               type="search"
+              aria-label="Search bug reports"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Message, company, email, or page URL"
