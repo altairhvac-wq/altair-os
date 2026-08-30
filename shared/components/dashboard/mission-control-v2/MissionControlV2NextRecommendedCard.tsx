@@ -27,8 +27,19 @@ function NextRecommendedCaughtUp() {
   const [showIllustration, setShowIllustration] = useState(true);
 
   return (
+    /*
+     * PRESTIGE: this state means "nothing to do", and it was the largest and
+     * loudest block on the dashboard — a 9.75rem panel dominated by a 688x384
+     * illustration, sitting directly under six things that DO need attention.
+     * That is inverted priority: the calmest possible state was outranking the
+     * work.
+     *
+     * The art is kept but demoted to a quiet right-edge accent at low opacity,
+     * and the card is sized by its content. A confirmation should read as a
+     * confirmation.
+     */
     <div
-      className={`relative isolate min-h-[9.75rem] overflow-hidden rounded-[var(--radius-panel)] border border-[var(--north-star-plate-border)]/50 bg-[var(--north-star-caught-up-fill)] shadow-sm ${altairMcCardPadClass}`}
+      className={`relative isolate overflow-hidden rounded-[var(--radius-panel)] border border-[var(--north-star-plate-border)]/50 bg-[var(--north-star-caught-up-fill)] shadow-sm ${altairMcCardPadClass}`}
     >
       {showIllustration ? (
         <Image
@@ -37,17 +48,17 @@ function NextRecommendedCaughtUp() {
           width={688}
           height={384}
           aria-hidden="true"
-          sizes="(max-width: 640px) 80vw, 420px"
-          className="pointer-events-none absolute -bottom-8 -right-10 h-[135%] w-auto max-w-none select-none sm:-bottom-6 sm:-right-4 sm:h-[145%]"
+          sizes="220px"
+          className="pointer-events-none absolute -bottom-4 right-0 h-[190%] w-auto max-w-none select-none opacity-35"
           onError={() => setShowIllustration(false)}
         />
       ) : null}
       {/* Left scrim: readable copy over the art; solid fill remains if image is gone. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[72%] bg-gradient-to-r from-[var(--north-star-caught-up-fill)] via-[var(--north-star-caught-up-fill)]/90 to-transparent"
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[78%] bg-gradient-to-r from-[var(--north-star-caught-up-fill)] via-[var(--north-star-caught-up-fill)]/92 to-transparent"
       />
-      <div className="relative z-[2] flex max-w-[min(100%,17.5rem)] items-start gap-3 sm:max-w-[19rem]">
+      <div className="relative z-[2] flex max-w-[min(100%,24rem)] items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-success text-white">
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         </span>

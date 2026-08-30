@@ -670,3 +670,68 @@ future focus treatment has to survive a theme nobody designed against.
 earlier. Turbopack reused the cached chunk across a full server restart;
 only `rm -rf .next/dev` cleared it. When a live measurement disagrees with the
 source, check that the server is serving the source before believing either.
+
+### D-25 · A database row may theme the chrome; it may not redefine the product
+Reading the *running* product rather than the stylesheet exposed the real answer
+to "who owns the final runtime design value?": for 25 properties, a database
+row did — and it disagreed with source.
+
+The promoted Design Lab theme was injecting, over the warm foundation:
+
+| property | injected | source |
+|---|---|---|
+| `--altair-information` | `#2563EB` | `#55707a` |
+| `--altair-graphite` | `#1A2029` | `#1c211a` |
+| `--altair-ink-muted` | `#64748B` | `#665f4d` |
+| `--altair-ink-on-paper-muted` | `#64748B` | `#665f4d` |
+| `--north-star-work-text-muted` | `#64748B` | `#655e4e` |
+| …plus 20 more surface/ink values | cool | warm |
+
+`#2563EB` is the exact generic SaaS blue D-5 removed. `#1A2029` is the retired
+blue-black D-2 named as a defect. `#64748B` is stock slate-500. **Committed
+source fixes were being partially undone at runtime, per company.** It is also
+why every uppercase label on the new Today strip rendered blue-grey the first
+time it was screenshotted.
+
+The fix is a boundary, not a deletion — the Lab is real product value. Live
+promotion is now restricted to the groups that describe the *shell's identity*
+(`chrome`, `sidebar-states`, `text-on-chrome`, `brass`). The groups that are the
+product's contract are source-owned and no longer overridable:
+
+- `altair-foundation` — success / warning / danger / information and the ink
+  ladder. If a theme can redefine "danger", the product has suggestions rather
+  than semantics.
+- `surfaces` and `hub-work-tables` — the material foundation under every page
+  and data table. Moving those repaints the product, not the chrome.
+
+The Design Lab's own preview sandbox still renders every token, so the tool
+stays fully explorable; what changed is which edits can escape it. Verified in
+the running app: injected properties fell from ~110 to 37, `--altair-information`
+resolves to `#55707a`, `--altair-graphite` to `#1c211a`, and the sidebar keeps
+the Lab's olive.
+
+No database row was mutated.
+
+### D-26 · The dashboard now says what the business is doing, not only what broke
+The desktop dashboard rendered exception buckets and nothing else — an owner
+could not see jobs on today's board, what was collected, or what was
+outstanding. `DashboardData` already carried all of it (`operations.*`,
+`money.*`, including a 7-day collections series); the desktop surface simply
+never rendered it, while the mobile home did.
+
+`MissionControlV2TodayStrip` adds four cells — jobs today, collected today,
+outstanding, overdue — above the exception board. Rules it follows:
+
+- **Every number is read from the live snapshot.** There is deliberately no
+  sample fallback: fabricated money on an owner's dashboard is worse than an
+  absent section, so with no data the strip does not render.
+- **Semantic colour is earned.** Overdue is danger-toned only when something is
+  actually overdue; a red `$0` would make the calmest possible state look like
+  a problem.
+- **One band with hairline dividers, not four cards**, so the exception board
+  below stays the heaviest thing on the page.
+
+The "you're all caught up" panel was also demoted. It means *nothing to do*, yet
+it was the largest, loudest block on the page — a 9.75rem panel dominated by a
+688×384 illustration, sitting under six things that did need attention. The art
+is now a quiet right-edge accent at 35% and the card is sized by its content.

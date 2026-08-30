@@ -44,6 +44,7 @@ import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { MissionControlV2NextRecommendedCard } from "./MissionControlV2NextRecommendedCard";
+import { MissionControlV2TodayStrip } from "./MissionControlV2TodayStrip";
 import {
   missionControlV2SampleData,
   type MissionControlV2ActivityRow,
@@ -694,6 +695,15 @@ export function MissionControlV2View({
             </Link>
             .
           </p>
+        ) : null}
+
+        {/* Today — operating state before exceptions. Live data only; the strip
+            is omitted rather than sampled, because fabricated money on an
+            owner's dashboard is worse than an absent section. */}
+        {data ? (
+          <div className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5">
+            <MissionControlV2TodayStrip data={data} />
+          </div>
         ) : null}
 
         {/* Exception board — severity-ranked buckets only when they need attention */}

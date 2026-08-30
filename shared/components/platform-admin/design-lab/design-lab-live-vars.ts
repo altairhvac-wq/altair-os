@@ -2,6 +2,7 @@ import { designLabPreviewVars } from "@/shared/components/platform-admin/design-
 import {
   buildDesignLabShineLiveCss,
 } from "@/shared/components/platform-admin/design-lab/design-lab-shine";
+import { restrictToLiveChromeVars } from "@/shared/components/platform-admin/design-lab/design-lab-live-scope";
 import { parseDesignLabThemeTokens } from "@/shared/components/platform-admin/design-lab/design-lab-theme-tokens";
 
 /**
@@ -20,7 +21,17 @@ export function buildDesignLabLiveStyleVars(
     return null;
   }
 
-  return designLabPreviewVars(parsed.colors, parsed.shines, parsed.dimensions);
+  /* Chrome only. A promoted theme may restyle the shell's identity; it may not
+     redefine the semantic contract (success/warning/danger/information), the
+     ink ladder, or the surface foundation every page is built on. See
+     design-lab-live-scope.ts for why, and for what was measured leaking. */
+  const all = designLabPreviewVars(
+    parsed.colors,
+    parsed.shines,
+    parsed.dimensions,
+  ) as unknown as Record<string, string>;
+
+  return restrictToLiveChromeVars(all) as React.CSSProperties;
 }
 
 /**
