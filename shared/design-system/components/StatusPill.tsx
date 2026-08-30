@@ -20,13 +20,9 @@ const sizeStyles: Record<StatusPillSize, string> = {
   md: "px-2.5 py-0.5 text-[11px] sm:text-xs",
 };
 
-const toneStyles: Record<StatusPillTone, string> = {
-  neutral: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
-  success: "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
-  warning: "bg-altair-warning-surface text-altair-warning-foreground ring-altair-warning/15",
-  danger: "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
-  info: "bg-altair-information-surface text-altair-information-foreground ring-altair-information/15",
-};
+/* The tone table lives in status-tone.ts so StatusPill and the operational
+   status maps cannot drift apart again. */
+const toneStyles = STATUS_TONE_CLASS;
 
 export function StatusPill({
   children,

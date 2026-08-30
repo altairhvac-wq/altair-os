@@ -71,10 +71,14 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
    * "3 of 4 tabs return Home" behaviour. Waiting one commit lets the store
    * resolve to the client value before any navigation is decided.
    */
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  /* `useSyncExternalStore` rather than state-in-an-effect: it reports false
+     during SSR and hydration and true on the client without scheduling an
+     extra render pass. */
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     if (!isOwner || !hydrated) {

@@ -111,8 +111,3 @@ export function DispatchLoadingState() {
     </MasterShellPage>
   );
 }
-
-/** @deprecated North Star loading path retained for any residual imports. */
-export function DispatchNorthStarLoadingState() {
-  return <DispatchLoadingState />;
-}
