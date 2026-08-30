@@ -8,6 +8,17 @@ import { PublicInvoicePaymentDocument } from "@/shared/components/invoices/Publi
 import { PublicInvoicePayNowCard } from "@/shared/components/invoices/PublicInvoicePayNowCard";
 import { isInvoicePayable } from "@/shared/types/invoice-payment";
 
+/**
+ * These pages carry a customer's name, address and amounts behind nothing but a
+ * token, so they must never be indexed. There is no robots.txt in this project,
+ * which means the page-level directive is the only thing standing between a
+ * crawler and a homeowner's invoice.
+ */
+export const metadata = {
+  title: "Invoice",
+  robots: { index: false, follow: false, nocache: true },
+};
+
 type InvoicePaymentPageProps = {
   params: Promise<{ token: string }>;
   searchParams: Promise<{ checkout?: string }>;

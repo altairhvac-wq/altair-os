@@ -1079,3 +1079,91 @@ row's job is to open its invoice.
 
 Verified in the live DOM rather than by reading: `document.querySelectorAll("a a")`
 returns **0** across six routes at 390 and 1440.
+
+### D-36 · Status colour mapped by meaning, and the compression that forced it
+Lead `estimate_sent` was amber, which after the Prestige remap resolves to the
+warning ochre — so a healthy pipeline rendered as a pipeline in trouble, and it
+disagreed with the estimates ledger where `sent` is `info`.
+
+Moving it turned out to be constrained: **the warm remap compressed the cool end
+of the ramp set, and there is no sixth separable badge hue left.** Measured in
+CIE Lab against the five stages already in use:
+
+| candidate | min ΔE | verdict |
+|---|---|---|
+| teal | 8.1 (vs `new`) | reads as an off-blue |
+| purple | 8.0 (vs `scheduled`) | too close |
+| orange | 42.5 | separable, but the warning family again |
+| cyan | 30.3 | separable, but it now paints brass |
+| emerald-600 | 10.3 (vs `won`) | mistaking "Estimate sent" for "Won" misreads closed revenue |
+
+So `estimate_sent` shares `info` with `new` — ranks 0 and 3, never adjacent in a
+status-sorted list. **Recording the constraint matters more than the fix:** any
+future six-state badge ramp will hit the same wall.
+
+The resolution queue was worse and is now mapped by lateness: 1 danger, 6
+warning, 6 info, replacing seven amber and five cyan split along no axis.
+
+### D-37 · `[data-theme="dark"]` is inert, and that is a trap
+Nothing in the product sets the attribute. The scope stays — it is documented
+scaffolding and three contrast scripts parse it — but its semantic tokens are
+the bright pre-Prestige Tailwind values while the `:root` values that actually
+resolve are the dark Prestige ones. So a badge written as `text-altair-warning`
+over `bg-altair-warning/N` **looks correct in the source and renders
+dark-on-dark.** Measured on the live board: dispatch `completed` 2.27, `urgent`
+2.36, `high`/`in_progress` 2.99/3.09, the unassigned count 3.50, the focus-banner
+Clear link 4.02, the lane-header avatars 2.17 — several at 7–9px, where there is
+no large-text exemption.
+
+`STATUS_TONE_CLASS_ON_DARK` puts the light `*-surface` colour on the wash, so the
+ratio no longer depends on which scope wins: 9.5–12.4:1. The scope now carries a
+comment saying so.
+
+### D-38 · Measure the DOM, not the stylesheet
+Arithmetic against `globals.css` found the four semantic tokens and missed the
+brand one; the live probe caught `text-altair-brass` on `bg-altair-brass/20` at
+2.17:1. A wash promises no ratio on its own — only compositing up the real tree
+settles it. Two probes now exist and both gate:
+
+- `probe-dispatch-badges.mjs` — composites every translucent layer, **leaf nodes
+  only** (a wrapper merges its children's text and its `color` is inherited, so
+  measuring one reports a ratio nothing on screen has).
+- `probe-label-targets.mjs` — every visible `label[for]` resolves to a *visible*
+  control, no duplicate ids, and every visible control has an accessible name.
+
+### D-39 · The duplicate-id bug the audit missed
+S-6 was overstated in every headline — 215 hidden/shown pairs is really 17, 11
+doubled ledgers is 7, and "forms end up with duplicate `name=` corrupting
+submissions" is **refuted**: no submission in the repo is corrupted, and the two
+literal duplicates are inert (one posts React state, one sits on a dead branch).
+
+But it missed the one real user-visible defect underneath. The detail-panel
+primitive renders `children` into both a desktop drawer and a mobile overlay,
+both portalled into `document.body`, drawer first, drawer `hidden lg:flex`. With
+static ids the document held two `#amount`, so `<label htmlFor="amount">`
+resolved to the `display: none` copy: **tapping a field label on a phone focused
+an invisible input and no keyboard opened.** Fixed with `useId()` — the right
+level regardless, since a component mounted twice by design must namespace its
+own ids.
+
+### D-40 · S-3 reversed: 393 → 166 `!important`, 5,897 → 5,674 lines
+Two steps, both verified rather than argued.
+
+**Dead code (−67, −223 lines).** Seventeen class families — the customer and job
+ledgers with their cell helpers, five action recipes, the dispatch and settings
+header trios — were defined in `globals.css` and referenced by nothing; those
+surfaces had migrated to `.customer-mission-list` / `admin-page-header` and the
+CSS was never removed.
+
+**Inert flags (−160).** These are unlayered author styles, and `@import
+"tailwindcss"` puts every generated utility inside `@layer utilities` —
+unlayered normal declarations beat layered ones whatever the specificity. Print
+rules excluded, where `!important` really is load-bearing.
+
+Two method notes. Hand-rolled brace matching walked back past `@media` openers
+and proposed deleting 3,282 lines; that was reverted, and the tool now parses
+with postcss and removes a rule only when *every* selector in it is dead — which
+is what correctly spared `estimate-north-star-meta-cell`, dead itself but
+sharing a rule with a live selector. And the proof is a computed-style diff:
+**49,946 properties across 33 selector families, 13 routes and 3 widths,
+captured against the running app before and after — identical.**

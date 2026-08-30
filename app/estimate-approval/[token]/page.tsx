@@ -5,6 +5,17 @@ import { PublicEstimateApprovalDocument } from "@/shared/components/estimates/Pu
 import { PublicEstimateApprovalForm } from "@/shared/components/estimates/PublicEstimateApprovalForm";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 
+/**
+ * These pages carry a customer's name, address and amounts behind nothing but a
+ * token, so they must never be indexed. There is no robots.txt in this project,
+ * which means the page-level directive is the only thing standing between a
+ * crawler and a homeowner's estimate.
+ */
+export const metadata = {
+  title: "Estimate",
+  robots: { index: false, follow: false, nocache: true },
+};
+
 type EstimateApprovalPageProps = {
   params: Promise<{ token: string }>;
   searchParams: Promise<{ approved?: string }>;
