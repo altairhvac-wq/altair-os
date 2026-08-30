@@ -7,13 +7,18 @@ import { formatPaymentMethod } from "@/shared/types/invoice-payment";
 
 type PaymentsMobileCardListProps = {
   payments: RecentInvoicePayment[];
+  /**
+   * Accepted for call-site compatibility but intentionally unused: the whole
+   * card is a link to the invoice, so rendering a second anchor for the
+   * customer name produced nested anchors and a hydration failure. The name
+   * always renders as text here.
+   */
   canManageCustomers?: boolean;
   northStar?: boolean;
 };
 
 export function PaymentsMobileCardList({
   payments,
-  canManageCustomers = false,
   northStar = false,
 }: PaymentsMobileCardListProps) {
   return (
