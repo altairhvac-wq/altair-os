@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   EXPENSE_PAYMENT_METHOD_OPTIONS,
   deriveIsReimbursable,
@@ -27,6 +28,11 @@ export function ExpensePaymentMethodField({
   disabled = false,
   name = "paymentMethod",
 }: ExpensePaymentMethodFieldProps) {
+  /* Before the early return, so the hook order is stable. Namespaced for the
+     same reason as ExpenseForm: the detail panel mounts this subtree twice and
+     the label was resolving to the hidden desktop copy on phones. */
+  const uid = useId();
+
   if (variant === "toggle") {
     return (
       <div>
@@ -70,11 +76,11 @@ export function ExpensePaymentMethodField({
 
   return (
     <div>
-      <label htmlFor="expense-payment-method" className={labelClass}>
+      <label htmlFor={`${uid}-expense-payment-method`} className={labelClass}>
         Payment method
       </label>
       <select
-        id="expense-payment-method"
+        id={`${uid}-expense-payment-method`}
         name={name}
         value={value}
         disabled={disabled}

@@ -139,9 +139,14 @@ function CollapsibleNotesField({
         <label htmlFor={`${id}-desktop`} className={labelClass}>
           {label}
         </label>
+        {/* The id was already de-duplicated for the two mounted copies; the name
+            was not, so this form carries two controls under one name. It does
+            not corrupt anything today because handleSubmit posts React state
+            rather than FormData — but it is invalid HTML, and the day this
+            becomes a server action it would silently send two values. */}
         <textarea
           id={`${id}-desktop`}
-          name={id}
+          name={`${id}-desktop`}
           rows={2}
           value={value}
           onChange={(event) => onChange(event.target.value)}

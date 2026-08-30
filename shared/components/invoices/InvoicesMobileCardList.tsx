@@ -98,7 +98,10 @@ export function InvoicesMobileCardList({
                     <button
                       type="button"
                       onClick={() => onSelect(invoice)}
-                      data-testid="invoice-row"
+                      /* Scoped: the table and this card list are both mounted,
+                         so a bare "invoice-row" matched 2N elements and tripped
+                         Playwright strict mode. */
+                      data-testid="invoice-row-mobile"
                       className={`${
                         northStar
                           ? "flex w-full min-w-0 items-start gap-2.5"

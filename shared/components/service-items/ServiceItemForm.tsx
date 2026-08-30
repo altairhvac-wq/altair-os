@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   type ServiceItem,
   type ServiceItemFormData,
@@ -43,6 +44,13 @@ export function ServiceItemForm({
   isSubmitting = false,
   submitLabel = "Save item",
 }: ServiceItemFormProps) {
+  /* Namespaced because this form can be mounted twice at once: the detail-panel
+   * primitive renders its children into both a desktop drawer and a mobile
+   * overlay, and both portal into document.body. With static ids the document
+   * held two `#unitPrice`, and `<label htmlFor="unitPrice">` resolves to the FIRST —
+   * the drawer copy, which is `display: none` below 1024px. So tapping a field
+   * label on a phone focused an invisible input and no keyboard opened. */
+  const uid = useId();
   const defaults = { ...emptyForm, ...initialData };
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -75,11 +83,11 @@ export function ServiceItemForm({
       ) : null}
 
       <div>
-        <label htmlFor="service-item-name" className={labelClass}>
+        <label htmlFor={`${uid}-service-item-name`} className={labelClass}>
           Service / part name
         </label>
         <input
-          id="service-item-name"
+          id={`${uid}-service-item-name`}
           name="name"
           type="text"
           required
@@ -91,11 +99,11 @@ export function ServiceItemForm({
       </div>
 
       <div>
-        <label htmlFor="description" className={labelClass}>
+        <label htmlFor={`${uid}-description`} className={labelClass}>
           Description
         </label>
         <textarea
-          id="description"
+          id={`${uid}-description`}
           name="description"
           rows={3}
           defaultValue={defaults.description}
@@ -106,11 +114,11 @@ export function ServiceItemForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="category" className={labelClass}>
+          <label htmlFor={`${uid}-category`} className={labelClass}>
             Category
           </label>
           <input
-            id="category"
+            id={`${uid}-category`}
             name="category"
             type="text"
             defaultValue={defaults.category}
@@ -120,11 +128,11 @@ export function ServiceItemForm({
         </div>
 
         <div>
-          <label htmlFor="unitCost" className={labelClass}>
+          <label htmlFor={`${uid}-unitCost`} className={labelClass}>
             Internal unit cost
           </label>
           <input
-            id="unitCost"
+            id={`${uid}-unitCost`}
             name="unitCost"
             type="number"
             min="0"
@@ -138,11 +146,11 @@ export function ServiceItemForm({
         </div>
 
         <div>
-          <label htmlFor="unitPrice" className={labelClass}>
+          <label htmlFor={`${uid}-unitPrice`} className={labelClass}>
             Customer price
           </label>
           <input
-            id="unitPrice"
+            id={`${uid}-unitPrice`}
             name="unitPrice"
             type="number"
             min="0"

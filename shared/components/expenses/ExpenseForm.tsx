@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -37,6 +37,13 @@ export function ExpenseForm({
   onSuccess,
   onCancel,
 }: ExpenseFormProps) {
+  /* Namespaced because this form can be mounted twice at once: the detail-panel
+   * primitive renders its children into both a desktop drawer and a mobile
+   * overlay, and both portal into document.body. With static ids the document
+   * held two `#amount`, and `<label htmlFor="amount">` resolves to the FIRST —
+   * the drawer copy, which is `display: none` below 1024px. So tapping a field
+   * label on a phone focused an invisible input and no keyboard opened. */
+  const uid = useId();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -94,12 +101,12 @@ export function ExpenseForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="amount" className={labelClass}>
+          <label htmlFor={`${uid}-amount`} className={labelClass}>
             Amount{" "}
             <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
-            id="amount"
+            id={`${uid}-amount`}
             name="amount"
             type="number"
             min="0"
@@ -111,12 +118,12 @@ export function ExpenseForm({
         </div>
 
         <div>
-          <label htmlFor="purchaseDate" className={labelClass}>
+          <label htmlFor={`${uid}-purchaseDate`} className={labelClass}>
             Purchase date{" "}
             <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
-            id="purchaseDate"
+            id={`${uid}-purchaseDate`}
             name="purchaseDate"
             type="date"
             defaultValue={initialData?.purchaseDate ?? ""}
@@ -125,12 +132,12 @@ export function ExpenseForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="merchant" className={labelClass}>
+          <label htmlFor={`${uid}-merchant`} className={labelClass}>
             Merchant / vendor{" "}
             <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
-            id="merchant"
+            id={`${uid}-merchant`}
             name="merchant"
             defaultValue={initialData?.merchant ?? ""}
             placeholder="Home Depot"
@@ -139,11 +146,11 @@ export function ExpenseForm({
         </div>
 
         <div>
-          <label htmlFor="category" className={labelClass}>
+          <label htmlFor={`${uid}-category`} className={labelClass}>
             Category
           </label>
           <select
-            id="category"
+            id={`${uid}-category`}
             name="category"
             defaultValue={initialData?.category ?? "materials"}
             className={inputClass}
@@ -158,12 +165,12 @@ export function ExpenseForm({
 
         {!jobId ? (
           <div>
-            <label htmlFor="jobId" className={labelClass}>
+            <label htmlFor={`${uid}-jobId`} className={labelClass}>
               Linked job ID{" "}
               <span className="font-normal text-slate-400">(optional)</span>
             </label>
             <input
-              id="jobId"
+              id={`${uid}-jobId`}
               name="jobId"
               defaultValue={initialData?.jobId ?? ""}
               placeholder="Job UUID"
@@ -183,11 +190,11 @@ export function ExpenseForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="notes" className={labelClass}>
+          <label htmlFor={`${uid}-notes`} className={labelClass}>
             Notes
           </label>
           <textarea
-            id="notes"
+            id={`${uid}-notes`}
             name="notes"
             rows={3}
             defaultValue={initialData?.notes ?? ""}
