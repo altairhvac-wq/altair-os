@@ -764,3 +764,45 @@ Categorical tints stay where they belong — the icon chips, and the Key metrics
 strip below, where the values genuinely are different categories rather than
 points on a risk scale. This follows the house rule that severity is meaning,
 not category.
+
+---
+
+## 7. Known remaining debt
+
+Recorded so the next engineer inherits the list rather than rediscovering it.
+
+**The promoted theme row still exists.** D-25 stops it redefining the
+foundation, but the sidebar is still the Lab's translucent
+`rgba(155 162 103 / 0.22)` rather than the canonical opaque graphite. That is a
+legitimate per-company chrome choice now, not a hidden override — but the
+translucency means the sidebar's final colour still depends on what sits behind
+it, which is the property D-2 criticised. Un-promoting the row (a Design Lab UI
+action, not a migration) would show the canonical chrome.
+
+**The mobile owner home is a visual generation behind.**
+`shared/components/dashboard/AdminMobileHome.tsx` is a near-black slab with
+all-gold accents while the desktop is warm parchment, it still carries three
+`#d4af37` literals and cool greys, it does not get the Today strip, and its
+"1 in progress · 0 done" line clips. It was excluded from every sweep because
+it carries an uncommitted `data-testid` edit that is not ours to commit; git
+stages per file, so touching it would absorb that edit. It needs one decision
+from the owner, then a single pass.
+
+**~736 North Star branch points across 167 files.** With the flag now defaulting
+on (D-22's neighbour) and both branches painting from the same remapped palette,
+these are duplication rather than divergence. The opt-out is retained so a
+regression can be bisected; collapsing them is a mechanical follow-up, best done
+per route family with screenshots either side.
+
+**The `!important` override engine remains.** D-23 showed the pattern it should
+collapse into — one role token plus one base rule, instead of a per-surface rule
+repeated until someone notices a gap. `accent-color` was one instance; the
+ledger `border-color` rules beside it are others.
+
+**`--altair-brass` on light is `#977d2a`, not a canonical step.** It predates the
+brass ramp and sits between brass-600 and brass-700. Harmless, but it means the
+answer to "which brass is this?" is still five steps plus one.
+
+**Technician experience unverified.** `/technician` redirects to the owner home
+for an admin account, so the real technician surfaces need a technician login to
+audit.
