@@ -541,7 +541,7 @@
    */
   --altair-success-foreground: #047653;
   --altair-success-surface: #edf5f0;
-  --altair-warning-foreground: #9f5704;
+  --altair-warning-foreground: #935004;
   --altair-warning-surface: #fbf5e6;
   --altair-danger-foreground: #d32222;
   --altair-danger-surface: #f9eeec;
@@ -593,7 +593,7 @@
   /* Paper-anchored — identical to :root. See the comment on these roles above. */
   --altair-success-foreground: #047653;
   --altair-success-surface: #edf5f0;
-  --altair-warning-foreground: #9f5704;
+  --altair-warning-foreground: #935004;
   --altair-warning-surface: #fbf5e6;
   --altair-danger-foreground: #d32222;
   --altair-danger-surface: #f9eeec;
@@ -719,27 +719,35 @@
   --color-teal-800: #2c3e3b;
   --color-teal-900: #24322f;
 
-  --color-indigo-50: #f3f0f4;
-  --color-indigo-100: #e7e1ea;
-  --color-indigo-200: #d4cbda;
-  --color-indigo-300: #b9acc4;
-  --color-indigo-400: #9a89a8;
-  --color-indigo-500: #7f6c8e;
-  --color-indigo-600: #675875;
-  --color-indigo-700: #53475e;
-  --color-indigo-800: #43394b;
-  --color-indigo-900: #362f3c;
+  --color-indigo-50: #ecefF8;
+  --color-indigo-100: #d9def0;
+  --color-indigo-200: #bcc4e0;
+  --color-indigo-300: #9aa4c9;
+  --color-indigo-400: #7b86b0;
+  --color-indigo-500: #626d97;
+  --color-indigo-600: #4f587c;
+  --color-indigo-700: #404763;
+  --color-indigo-800: #343a51;
+  --color-indigo-900: #2a2e42;
 
-  --color-violet-50: #f3f0f4;
-  --color-violet-100: #e7e1ea;
-  --color-violet-200: #d4cbda;
-  --color-violet-300: #b9acc4;
-  --color-violet-400: #9a89a8;
-  --color-violet-500: #7f6c8e;
-  --color-violet-600: #675875;
-  --color-violet-700: #53475e;
-  --color-violet-800: #43394b;
-  --color-violet-900: #362f3c;
+  /* Violet and indigo are CATEGORICAL and must stay tellable apart.
+   *
+   * The first remap gave them byte-identical ramps, which made lead "contacted"
+   * and lead "scheduled" paint the same pixels — two funnel stages rendered
+   * indistinguishable by the very pass meant to harmonise them. Violet now runs
+   * warm mauve and indigo cool blue-plum: dE 4.7 at the pale badge fill and
+   * 17-24 at the text steps, both still calm enough to sit beside parchment.
+   */
+  --color-violet-50: #f7eef3;
+  --color-violet-100: #eedce7;
+  --color-violet-200: #dcc0d1;
+  --color-violet-300: #c69fb4;
+  --color-violet-400: #ab7f96;
+  --color-violet-500: #94657f;
+  --color-violet-600: #7a5167;
+  --color-violet-700: #614152;
+  --color-violet-800: #4c3341;
+  --color-violet-900: #3c2833;
 
   --color-purple-50: #f3f0f4;
   --color-purple-100: #e7e1ea;
@@ -747,26 +755,36 @@
   --color-purple-600: #675875;
   --color-purple-700: #53475e;
 
-  /* Amber is the single largest off-palette family in the product (684 call
-   * sites) and Tailwind's amber is a bright, high-chroma gold. Sitting beside
-   * real champagne brass it read as the cheaper of two golds — the product
-   * effectively had a second, louder brand accent. Amber now IS the brass
-   * ramp, so gold appears once in the product and always means the same
-   * thing. */
-  --color-amber-50: #fbf7ec;
-  --color-amber-100: #f5edd6;
-  --color-amber-200: #ecdfb4;
-  --color-amber-300: #e0cd8c;
-  --color-amber-400: #cfb46a;
-  --color-amber-500: #b8994c;
+  /* Amber IS the semantic warning ramp — deliberately NOT brass.
+   *
+   * An earlier pass pointed amber at brass, reasoning that Tailwind's amber was
+   * a second, louder gold competing with the brand accent. That was true about
+   * the *pixels* and wrong about the *meaning*: amber was carrying "needs
+   * attention" in a dozen status maps, and `--color-amber-700` ended up
+   * byte-identical to `--altair-brass`, so every `bg-amber-50 text-amber-700`
+   * badge in the product started painting in the brand accent. It also left two
+   * golds doing the same job, so one business event (an estimate sent) rendered
+   * brass on the Leads list and warning-gold on the Estimates list.
+   *
+   * Amber now resolves onto the warning ochre family — `amber-700` is
+   * `--altair-warning-foreground` and `amber-50` is `--altair-warning-surface`,
+   * so the utility classes and the semantic tokens finally agree. Brass is the
+   * brand accent and nothing else. Measured separation from brass-700: dE 23.8.
+   */
+  --color-amber-50: #fbf5e6;
+  --color-amber-100: #f6e8c9;
+  --color-amber-200: #edd49d;
+  --color-amber-300: #e0b96a;
+  --color-amber-400: #d29b3d;
+  --color-amber-500: #c07617;
   /* Slightly deeper than `--pg-brass-600` on purpose: this step is what the
    * product paints metric icons with, and stock brass fell just under the 3:1
    * non-text bar against the sunken canvas. */
-  --color-amber-600: #987836;
-  --color-amber-700: #77591b;
-  --color-amber-800: #5f4715;
-  --color-amber-900: #4a370f;
-  --color-amber-950: #33260a;
+  --color-amber-600: #b3660a;
+  --color-amber-700: #935004;
+  --color-amber-800: #7e4506;
+  --color-amber-900: #5f340a;
+  --color-amber-950: #42240a;
 
   /* Orange carries "warning" and keeps a genuinely orange hue so it stays
    * distinguishable from the gold above — but pulled well off Tailwind's

@@ -954,3 +954,36 @@ fits. Five strips corrected; verified reachable at 390/768/1024.
 Customers only — the other four mobile card lists already accept selection
 props. The fix belongs in `CustomersMobileCardList.tsx`, which is one of the
 protected uncommitted files, so it is reported rather than changed.
+
+### D-32 · Two semantic collisions the palette remap caused
+Auditing status meaning rather than status colour found that the `@theme` remap
+(D-10) had destroyed two distinctions it was supposed to preserve. Both were
+verified numerically before being fixed.
+
+**Amber had become brass.** `--color-amber-700` was byte-identical to
+`--altair-brass` (`#77591b`), so every `bg-amber-50 text-amber-700` badge in the
+product — and amber was carrying *"needs attention"* in a dozen status maps —
+started painting in the **brand accent**. It also left two golds doing the same
+job: the same business event (an estimate sent) rendered brass on the Leads list
+and warning-gold on the Estimates list.
+
+D-10's reasoning was right about the pixels and wrong about the meaning: amber
+*was* a second competing gold, but the fix should have moved it to warning, not
+to brand. Amber now resolves onto the warning ochre family, and `amber-700` is
+literally `--altair-warning-foreground`, so the utility classes and the semantic
+tokens finally agree. Separation from brass: **dE 23.8**.
+
+The gate then caught the second-order problem immediately: the warning
+foreground was `#9f5704`, which measures **4.43 on canvas and 3.99 on the sunken
+canvas** — below AA as prose. Both it and amber-700 moved to `#935004`, which
+clears 4.5 on every light ground (4.52 worst case). This is why the gate exists.
+
+**Violet and indigo were the same ramp.** Byte-identical at every step, so lead
+`contacted` and lead `scheduled` painted the same pixels — two funnel stages
+made indistinguishable by the pass meant to harmonise them. Violet now runs warm
+mauve and indigo cool blue-plum: **dE 4.7 at the pale badge fill, 17–24 at the
+text steps**, both still calm beside parchment, both well above AA.
+
+The lesson worth keeping: a palette remap must be audited against what each
+family *means*, not only against how it looks. Collapsing two hues is only safe
+when nothing is using them to tell two things apart.
