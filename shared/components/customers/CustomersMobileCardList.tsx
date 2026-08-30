@@ -45,7 +45,7 @@ export function CustomersMobileCardList({
         const cue = resolveCustomerListCue(customer);
 
         return (
-          <li key={customer.id} className="min-w-0 max-w-full">
+          <li key={customer.id} data-testid="customer-row" className="min-w-0 max-w-full">
             <button
               type="button"
               onClick={() => router.push(`/customers/${customer.id}`)}

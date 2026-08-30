@@ -69,7 +69,7 @@ async function waitForAuthenticatedApp(page) {
     (url) => !url.pathname.startsWith("/login") && !url.pathname.startsWith("/signup"),
     { timeout: 120_000 },
   );
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 }
 
 async function tryEnvLogin(page, env) {
