@@ -97,7 +97,7 @@ export function TopPerformersChartCard({
                   {technician.profitAvailable &&
                   technician.grossProfit != null ? (
                     <p className="mt-1 text-[11px] tabular-nums text-altair-ink-on-graphite-muted">
-                      <span className="font-semibold text-altair-success">
+                      <span className="font-semibold text-emerald-300">
                         {formatCurrency(technician.grossProfit)} profit
                       </span>
                       {technician.margin != null

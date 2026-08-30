@@ -30,7 +30,7 @@ export function AccountantSummaryCard({
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm leading-relaxed text-altair-ink-secondary">
+            <p className="text-sm leading-relaxed text-altair-ink-on-graphite-secondary">
               Export a printable bookkeeping summary based on records entered in
               Altair OS.
             </p>

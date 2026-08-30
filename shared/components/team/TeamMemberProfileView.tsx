@@ -357,7 +357,7 @@ function TeamMemberProfileLegacyView({
               <h2 className="mb-2 text-sm font-semibold text-slate-900">
                 Technician Information
               </h2>
-              <p className="mb-2 text-xs text-slate-500">Specialties</p>
+              <p className="mb-2 text-xs text-altair-ink-on-paper-muted">Specialties</p>
               <TeamMemberSpecialtiesField
                 specialties={profile.technicianSpecialties}
                 canEdit={canEditSpecialties}
@@ -373,7 +373,7 @@ function TeamMemberProfileLegacyView({
             </h2>
             {profile.certifications.length === 0 ? (
               <div className={adminEmptyWrapClass}>
-                <p className="text-sm text-slate-500">Add certifications.</p>
+                <p className="text-sm text-altair-ink-on-paper-muted">Add certifications.</p>
               </div>
             ) : (
               <ul className="mb-2 flex flex-wrap gap-2">

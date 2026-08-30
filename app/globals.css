@@ -89,6 +89,7 @@
      "all caught up" card rendered with NO background — a defect the
      promoted Design Lab theme had been masking by injecting a value for the
      alias. Matches `--color-emerald-100` in the @theme remap. */
+  --pg-emerald-300: #7ebb9b;
   --pg-emerald-100: #d7e9de;
 
   /* Warm ink: text. Near-black with a brown cast — pairs with parchment
@@ -690,6 +691,11 @@
    * Prestige palette instead of glowing against it. */
   --color-emerald-50: #edf5f0;
   --color-emerald-100: #d7e9de;
+  /* The step the emerald ramp was missing. Rose and amber both carry a 300 for
+     text on dark chrome (7.40 and 8.83 against --chrome); emerald had nothing
+     between 500 at 3.92 — below AA — and 100, which reads as white. This lands
+     at 7.39, alongside its siblings. */
+  --color-emerald-300: #7ebb9b;
   --color-emerald-500: #3f8a63;
   --color-emerald-600: #35755a;
   --color-emerald-700: #2a5c42;
@@ -1912,6 +1918,24 @@ a[href] {
   .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-muted,
   .admin-north-star-shell .admin-page-header .text-altair-ink-on-paper-secondary {
     color: var(--north-star-topbar-subcopy);
+  }
+
+  /*
+   * ...but not inside the segmented control.
+   *
+   * The flip above is a blanket descendant selector, and the segmented control
+   * declares its OWN light surface inside the dark strip — an opaque white
+   * active pill with a near-black label. So the flip reached into it and
+   * painted the active tab's count badge in chrome ink on white: 1.57:1.
+   *
+   * Being inside a dark region is not the same as being on a dark surface.
+   */
+  .admin-north-star-shell .admin-page-header .admin-segmented-item .text-altair-ink-on-paper-secondary {
+    color: var(--altair-ink-on-paper-secondary);
+  }
+
+  .admin-north-star-shell .admin-page-header .admin-segmented-item .text-altair-ink-on-paper-muted {
+    color: var(--altair-ink-on-paper-muted);
   }
 
   /* Keep hub segmented tabs sharp on the header strip */
@@ -4572,12 +4596,22 @@ a[href] {
   }
 }
 
+/* The wash is 85%, not 60%.
+ *
+ * This control is a light surface — opaque white active pill, near-black label
+ * — but on every list page it sits inside `.admin-page-header`, which is dark
+ * chrome. At 60% the dark header showed through enough that the ground
+ * composited to #9fa09c, and the INACTIVE tab labels ("All Jobs", "Lead
+ * Pipeline", "Archived") measured 2.87:1 across /work, /customers, /sales and
+ * /invoices. Light text is not the answer — it would fight the white active
+ * pill — so the surface has to actually be the surface it claims. 85% keeps
+ * the frosted read and measures 5.14:1. */
 .admin-segmented-control {
   display: flex;
   gap: 0.125rem;
   border-radius: 0.5rem;
   border: 1px solid rgb(234 231 225 / 0.9);
-  background: rgb(246 244 242 / 0.6);
+  background: rgb(246 244 242 / 0.85);
   padding: 0.125rem;
 }
 

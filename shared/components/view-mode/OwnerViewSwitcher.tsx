@@ -66,8 +66,14 @@ export function OwnerViewSwitcher({
         />
         <span className="min-w-0 flex-1">
           <span
+            /* The dark branch knows it is on chrome, so it takes the chrome ink
+               scale. `text-slate-500` is a paper-scale colour and measured
+               3.33:1 here — the component was declaring a dark surface and then
+               styling for a light one. */
             className={`block truncate text-[10px] font-semibold uppercase tracking-wide ${
-              tone === "dark" ? "text-slate-500" : "text-slate-400"
+              tone === "dark"
+                ? "text-altair-ink-on-graphite-muted"
+                : "text-slate-400"
             }`}
           >
             View as

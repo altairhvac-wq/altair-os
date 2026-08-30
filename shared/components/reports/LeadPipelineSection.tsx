@@ -157,7 +157,11 @@ export function LeadPipelineSection({
               ))}
             </div>
 
-            <p className="text-[11px] text-altair-ink-on-graphite-muted sm:text-xs">
+            {/* Paper tokens, not chrome ones: these two lines sit between graphite
+                cards but are not on one — every ancestor up to the page
+                container is transparent, so the ground is the light canvas.
+                The chrome muted ink measured 1.65:1 here. */}
+            <p className="text-[11px] text-altair-ink-on-paper-muted sm:text-xs">
               Won and lost reflect each lead&apos;s current status, not when they
               closed.
             </p>

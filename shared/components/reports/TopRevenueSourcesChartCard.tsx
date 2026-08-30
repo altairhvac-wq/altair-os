@@ -28,7 +28,6 @@ type RevenueSegment = {
   value: number;
   stroke: string;
   swatchClass: string;
-  textClass: string;
 };
 
 function resolveCategoryAmount(row: ReportSnapshotRow): number {
@@ -49,7 +48,6 @@ function buildSegments(categories: ReportSnapshotRow[]): RevenueSegment[] {
       value: resolveCategoryAmount(row),
       stroke: palette.stroke,
       swatchClass: palette.swatch,
-      textClass: palette.text,
     };
   });
 }
@@ -151,7 +149,7 @@ function LegendList({
                 <span className="truncate">{item.label}</span>
               </span>
               <span className="shrink-0 text-xs tabular-nums text-altair-ink-on-graphite-muted">
-                <span className={`font-semibold ${item.textClass}`}>
+                <span className="font-semibold text-altair-ink-on-graphite">
                   {formatCurrency(item.value)}
                 </span>
                 <span className="ml-1">({percent}%)</span>

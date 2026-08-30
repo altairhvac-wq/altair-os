@@ -74,7 +74,7 @@ export function TimeTrackingSummaryCard({
                 Long-running shifts needing review
               </p>
             </div>
-            <p className="mt-1 text-xs text-altair-danger/90">
+            <p className="mt-1 text-xs text-rose-300/90">
               Open for 12 hours or longer. No records were changed.
             </p>
             <ul className="mt-3 space-y-2">
@@ -84,7 +84,7 @@ export function TimeTrackingSummaryCard({
                   className="flex flex-wrap justify-between gap-2 text-sm text-altair-paper"
                 >
                   <span className="font-semibold">{entry.technicianName}</span>
-                  <span className="text-altair-danger/90">
+                  <span className="text-rose-300/90">
                     Since {formatDateTime(entry.startedAt)} · {entry.elapsedHours}
                     h
                   </span>

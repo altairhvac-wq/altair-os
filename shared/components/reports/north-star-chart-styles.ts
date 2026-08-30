@@ -38,21 +38,28 @@ export const nsReportChart = {
     pointPeakRadius: 1.15,
   },
 
+  /**
+   * Strokes and swatches keep the saturated tone — they are non-text and clear
+   * the 3.0 bar. The `text` entries take the 300 step of the same hue, because
+   * these labels sit on the graphite report card where the saturated tokens
+   * measured 3.00 (paid) and 3.02 (overdue). The meaning is unchanged; only the
+   * lightness the surface requires is. See TONE_TEXT_ON_DARK.
+   */
   cashHealth: {
     paid: {
       stroke: "var(--altair-success)",
       swatch: "bg-altair-success",
-      text: "text-altair-success",
+      text: "text-emerald-300",
     },
     outstanding: {
       stroke: "var(--altair-warning)",
       swatch: "bg-altair-warning",
-      text: "text-altair-warning",
+      text: "text-amber-300",
     },
     overdue: {
       stroke: "var(--altair-danger)",
       swatch: "bg-altair-danger",
-      text: "text-altair-danger",
+      text: "text-rose-300",
     },
   },
 
@@ -63,10 +70,15 @@ export const nsReportChart = {
    * Current → 1-30 → 31-60 → 61-90 → 90+.
    */
   agingPalette: [
+    /* Same split as cashHealth: saturated stroke/swatch, 300-step text. The
+     * middle tier moves too even though it measured 4.56 and technically
+     * passed — left saturated it would have been visibly the dimmest label in
+     * an escalating severity ramp, which reads as "31-60 days matters least".
+     * Hue carries the escalation here; contrast is not the escalation channel. */
     {
       stroke: "var(--altair-success)",
       swatch: "bg-altair-success",
-      text: "text-altair-success",
+      text: "text-emerald-300",
     },
     {
       stroke: "rgba(232, 228, 220, 0.55)",
@@ -76,7 +88,7 @@ export const nsReportChart = {
     {
       stroke: "var(--altair-warning)",
       swatch: "bg-altair-warning",
-      text: "text-altair-warning",
+      text: "text-amber-300",
     },
     {
       stroke: "var(--altair-danger)",
@@ -86,7 +98,7 @@ export const nsReportChart = {
     {
       stroke: "var(--altair-danger)",
       swatch: "bg-altair-danger",
-      text: "text-altair-danger",
+      text: "text-rose-300",
     },
   ] as const,
 
@@ -116,14 +128,21 @@ export const nsReportChart = {
   /**
    * Fixed categorical palette for donut/legend segments (service categories).
    * Hues align with report icon-chip tints; expand beyond 6 only if needed.
+   *
+   * Stroke and swatch only, deliberately. There used to be a `text` variant per
+   * entry, and on the graphite report card two of the six failed as text —
+   * chart-2 at 3.92 and chart-4 at 4.39 — while all six clear the 3.0 bar that
+   * actually applies to a stroke or a swatch. The legend already names the
+   * category twice, in the swatch and in the row position, so colouring the
+   * value as well bought no information and cost the contrast.
    */
   categoryPalette: [
-    { stroke: "var(--chart-1)", swatch: "bg-[var(--chart-1)]", text: "text-[var(--chart-1)]" },
-    { stroke: "var(--chart-2)", swatch: "bg-[var(--chart-2)]", text: "text-[var(--chart-2)]" },
-    { stroke: "var(--chart-3)", swatch: "bg-[var(--chart-3)]", text: "text-[var(--chart-3)]" },
-    { stroke: "var(--chart-4)", swatch: "bg-[var(--chart-4)]", text: "text-[var(--chart-4)]" },
-    { stroke: "var(--chart-5)", swatch: "bg-[var(--chart-5)]", text: "text-[var(--chart-5)]" },
-    { stroke: "var(--chart-6)", swatch: "bg-[var(--chart-6)]", text: "text-[var(--chart-6)]" },
+    { stroke: "var(--chart-1)", swatch: "bg-[var(--chart-1)]" },
+    { stroke: "var(--chart-2)", swatch: "bg-[var(--chart-2)]" },
+    { stroke: "var(--chart-3)", swatch: "bg-[var(--chart-3)]" },
+    { stroke: "var(--chart-4)", swatch: "bg-[var(--chart-4)]" },
+    { stroke: "var(--chart-5)", swatch: "bg-[var(--chart-5)]" },
+    { stroke: "var(--chart-6)", swatch: "bg-[var(--chart-6)]" },
   ] as const,
 
   table: {

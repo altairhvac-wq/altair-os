@@ -66,7 +66,7 @@ function MobileEntryCard({
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[rgba(119,89,27,0.10)] pt-2.5 text-xs">
         <div>
-          <dt className="font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
+          <dt className="font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-secondary">
             Started
           </dt>
           <dd className="mt-0.5 font-medium text-[#4F4638]">
@@ -74,7 +74,7 @@ function MobileEntryCard({
           </dd>
         </div>
         <div>
-          <dt className="font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
+          <dt className="font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-secondary">
             Duration
           </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-[#17130E]">

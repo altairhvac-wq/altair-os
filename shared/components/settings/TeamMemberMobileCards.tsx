@@ -395,7 +395,7 @@ export function TeamMemberMobileCards({
             className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm"
           >
             <div className="flex items-start gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-altair-brass text-xs font-bold text-white">
                 {getTeamMemberInitials(member.name)}
               </div>
               <div className="min-w-0 flex-1">
@@ -404,7 +404,7 @@ export function TeamMemberMobileCards({
                     {member.name}
                   </p>
                   {isCurrentUser ? (
-                    <span className="shrink-0 text-[11px] font-medium text-slate-500">
+                    <span className="shrink-0 text-[11px] font-medium text-altair-ink-on-paper-muted">
                       (You)
                     </span>
                   ) : null}
@@ -413,8 +413,8 @@ export function TeamMemberMobileCards({
                     className="shrink-0 scale-90 origin-left"
                   />
                 </div>
-                <p className="truncate text-xs text-slate-500">{member.email}</p>
-                <p className="text-[11px] text-slate-400">
+                <p className="truncate text-xs text-altair-ink-on-paper-muted">{member.email}</p>
+                <p className="text-[11px] text-altair-ink-on-paper-muted">
                   {getMemberDateCaption(member)} {getMemberDateLabel(member)}
                 </p>
               </div>

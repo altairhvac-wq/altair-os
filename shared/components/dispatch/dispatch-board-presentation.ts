@@ -96,7 +96,11 @@ export const dispatchMissionClasses = {
     "sticky left-0 z-40 w-[10.5rem] shrink-0 border-r border-altair-border bg-altair-graphite sm:w-44 lg:w-48",
   timeAxisTrack: "relative min-w-0 flex-1",
   timeAxisLabel: `${altairReportMetricLabelClass} absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-altair-ink-on-graphite-muted`,
-  timeAxisLabelShoulder: "opacity-50",
+  /* opacity-50 put these 10px labels at 3.05:1 — the shoulder hours were the
+     ones a dispatcher squints at. 70% still reads as de-emphasised next to the
+     core hours and measures 4.65:1. (The separate shoulder-label *overlap*
+     from L-16 is untouched.) */
+  timeAxisLabelShoulder: "opacity-70",
   timeAxisHeaderHeight: "h-9 sm:h-10",
 
   /** Contained Gantt scrollport — vertical for roster, horizontal for time axis. */

@@ -42,21 +42,21 @@ export function JobsViewTabs({
             key={tab.id}
             type="button"
             role="tab"
+            /* `aria-selected` is the tab state. `aria-pressed` is a toggle-button
+               attribute and is not supported on this role. */
             aria-selected={isActive}
-            aria-pressed={isActive}
             onClick={() => onTabChange(tab.id)}
             className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
               isActive ? adminSegmentedItemActiveClass : ""
             }`}
           >
             <span>{tab.label}</span>
-            <span
-              className={`ml-1.5 text-xs font-medium ${
-                isActive
-                  ? "text-altair-ink-on-paper-secondary"
-                  : "text-altair-ink-on-paper-muted"
-              }`}
-            >
+            {/* One tone for both states. The inactive badge used to be
+                `-muted`, which measured 4.31:1 against the control's wash, and
+                the active/inactive distinction is already carried by the pill
+                background and the label weight — it does not need the count to
+                dim below AA as well. */}
+            <span className="ml-1.5 text-xs font-medium text-altair-ink-on-paper-secondary">
               {tab.count}
             </span>
           </button>

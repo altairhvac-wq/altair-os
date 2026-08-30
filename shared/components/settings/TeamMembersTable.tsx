@@ -352,7 +352,7 @@ export function TeamMembersTable({
       <div className="mt-1 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="min-w-0">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-altair-ink-on-paper-muted">
               Role
             </p>
             {canEditRole ? (
@@ -379,7 +379,7 @@ export function TeamMembersTable({
           </div>
 
           <div className="min-w-0">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-altair-ink-on-paper-muted">
               Reports to
             </p>
             {canManageTeam && canEditReportsTo ? (
@@ -405,7 +405,7 @@ export function TeamMembersTable({
 
           {showSpecialties ? (
             <div className="min-w-0 sm:col-span-2">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-altair-ink-on-paper-muted">
                 Specialties
               </p>
               <TeamMemberSpecialtiesField
@@ -422,7 +422,7 @@ export function TeamMembersTable({
         </div>
 
         <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-200/70 pt-2.5">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-altair-ink-on-paper-muted">
             <span className="font-medium text-slate-700">
               {getMemberDateLabel(member)}
             </span>{" "}
@@ -571,7 +571,10 @@ export function TeamMembersTable({
         {/* Avatar is the drop-in point for employee photos later. */}
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ${
-            isRoot ? "bg-white/20" : "bg-cyan-600"
+            /* A white wash on the gold root card left white initials at
+               4.32:1. Darkening the disk instead of lightening it is the only
+               direction that helps when the text is already white. */
+            isRoot ? "bg-altair-ink/30" : "bg-altair-brass"
           }`}
         >
           {getTeamMemberInitials(member.name)}
@@ -587,7 +590,7 @@ export function TeamMembersTable({
           </span>
           <span
             className={`mt-0.5 block truncate text-[10px] font-medium leading-tight ${
-              isRoot ? "text-cyan-100" : "text-slate-500"
+              isRoot ? "text-cyan-100" : "text-altair-ink-on-paper-muted"
             }`}
           >
             {formatTeamMemberRole(member.role)}
@@ -724,7 +727,7 @@ export function TeamMembersTable({
 
         {hasChart && looseMembers.length > 0 ? (
           <div className="mt-5 border-t border-slate-100 pt-3">
-            <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted">
               Not on the tree yet — click one and set who they report to
             </p>
             <div className="flex flex-wrap items-start justify-center gap-3">
@@ -738,13 +741,13 @@ export function TeamMembersTable({
         {selectedMember ? (
           <div className="mx-auto mt-4 max-w-2xl">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted">
                 Managing {selectedMember.name}
               </p>
               <button
                 type="button"
                 onClick={() => setExpandedMemberId(null)}
-                className="text-xs font-semibold text-slate-500 transition hover:text-slate-700"
+                className="text-xs font-semibold text-altair-ink-on-paper-muted transition hover:text-slate-700"
               >
                 Close
               </button>

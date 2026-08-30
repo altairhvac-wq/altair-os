@@ -309,7 +309,10 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:pr-10 md:h-9 md:min-h-9",
   ].join(" "),
   filterIcon: "text-[#77591B]",
-  filterMeta: "mt-1.5 text-[11px] text-[#7C7259] sm:text-xs",
+  /* #5A5444, not #7C7259: this meta line renders on the sunken canvas, where
+     the lighter of the two muted inks measured 3.48:1. Both are from the scale
+     documented above; this one is simply the step the surface needs. */
+  filterMeta: "mt-1.5 text-[11px] text-[#5A5444] sm:text-xs",
   tableHeaderRow:
     "border-b border-[rgba(124,114,89,0.18)] bg-[#E5E2DA] text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5A5444]",
   tableHeaderCell:

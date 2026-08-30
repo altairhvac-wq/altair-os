@@ -330,6 +330,28 @@ const cases = [
    * are non-text (WCAG 1.4.11), so 3.0 is the bar and 3.50 clears it. */
   ["focusBanner icon warning on warning/20", "#c07617", composite("#c07617", T.chrome, 0.20), 3.0],
   ["unassignedSidebar icon warning on warning/20", "#c07617", composite("#c07617", T.chrome, 0.20), 3.0],
+
+  /* TONE_TEXT_ON_DARK — text colour for a tone on chrome.
+   *
+   * The saturated semantic tokens are paper-scope values, so painting them as
+   * text on chrome measured 1.77 (ink-secondary), 2.67 (danger) and 3.00
+   * (success). Each tone's 300 step is the same hue at the lightness the
+   * surface needs; emerald had no 300, which is why one was added at 7.39 to
+   * sit alongside rose (7.40) and amber (8.83). */
+  ["dark text success emerald-300 on chrome", "#7ebb9b", T.chrome, AA],
+  ["dark text danger rose-300 on chrome", "#dfa082", T.chrome, AA],
+  ["dark text warning amber-300 on chrome", "#e0b96a", T.chrome, AA],
+  ["dark text info sky-300 on chrome", "#a1b4b9", T.chrome, AA],
+  ["dark text neutral ink-on-graphite-muted on chrome", "#bcb5a5", T.chrome, AA],
+  ["dark text secondary ink-on-graphite-secondary on chrome", "#d7cdbd", T.chrome, AA],
+  /* The saturated steps stay on strokes and swatches, where 3.0 is the bar. */
+  ["chart-2 stroke on chrome (non-text)", "#3f8a63", T.chrome, 3.0],
+  ["chart-4 stroke on chrome (non-text)", "#b5763f", T.chrome, 3.0],
+  /* Shoulder-hour dispatch labels: opacity-50 gave 3.05, opacity-70 gives 4.65. */
+  ["dispatch shoulder hour label at 70%", composite("#bcb5a5", T.chrome, 0.70), T.chrome, AA],
+  /* The segmented control declares a light surface inside the dark header; at a
+   * 60% wash its inactive labels sat at 2.87. */
+  ["segmented inactive label on 85% wash over chrome", "#5c5340", composite("#f6f4f2", T.chrome, 0.85), AA],
 ];
 
 let fail = 0;

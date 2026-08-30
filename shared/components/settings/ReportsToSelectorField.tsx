@@ -33,7 +33,7 @@ export function ReportsToSelectorField({
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
       <label className="block" htmlFor={id}>
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted">
           {label}
         </span>
         <select

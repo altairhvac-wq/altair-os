@@ -58,3 +58,33 @@ export const STATUS_TONE_CLASS_ON_DARK: Record<StatusTone, string> = {
   danger: "bg-altair-danger/20 text-altair-danger-surface ring-altair-danger/30",
   info: "bg-altair-information/25 text-altair-information-surface ring-altair-information/35",
 };
+
+/**
+ * Text colour for a tone on a DARK surface.
+ *
+ * This is a surface contract, not an inference. A component does not get these
+ * because it happens to sit somewhere dark — it gets them because it declares
+ * that it renders on chrome. The distinction matters: `[data-theme="dark"]` is
+ * never set in this product, so the ambient `--altair-success` / `-danger` /
+ * `-ink-secondary` tokens resolve to their light-surface Prestige values, which
+ * are dark. Painting those on chrome reads as correct in the source and
+ * measures 1.77-3.02:1 in the browser.
+ *
+ * Every value is an existing 300-step of its own ramp, so the hue is unchanged
+ * and nothing new was invented — only the lightness the surface requires.
+ * Measured against `--chrome` (#1c211a):
+ *
+ *   success  emerald-300  7.39      danger   rose-300   7.40
+ *   warning  amber-300    8.83      info     sky-300    7.60
+ *   neutral  ink-on-graphite-muted  8.03
+ *
+ * For non-text — sparkline strokes, swatches, icon fills — the 500 steps are
+ * fine at the 3.0 bar and should keep their saturation. Only text needs these.
+ */
+export const TONE_TEXT_ON_DARK: Record<StatusTone, string> = {
+  neutral: "text-altair-ink-on-graphite-muted",
+  success: "text-emerald-300",
+  warning: "text-amber-300",
+  danger: "text-rose-300",
+  info: "text-sky-300",
+};

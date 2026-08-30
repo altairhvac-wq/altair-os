@@ -85,7 +85,7 @@ export function TeamMemberSpecialtiesField({
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
       {!northStar ? (
-        <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted">
           Specialties
         </span>
       ) : null}

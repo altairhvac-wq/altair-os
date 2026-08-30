@@ -34,7 +34,7 @@ export function TimeTrackingSearchFilterBar({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B6255]"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-altair-ink-on-paper-secondary"
               aria-hidden="true"
             />
             <input
@@ -49,7 +49,7 @@ export function TimeTrackingSearchFilterBar({
 
           {showTechnicianFilter ? (
             <label className="flex flex-col gap-1.5 text-sm text-[#4F4638] sm:flex-row sm:items-center sm:gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-secondary">
                 Technician
               </span>
               <select

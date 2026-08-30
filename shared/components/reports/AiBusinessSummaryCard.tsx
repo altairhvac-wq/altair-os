@@ -59,7 +59,7 @@ export function AiBusinessSummaryCard({
 
         <div className="mt-3 space-y-3">
           {isPending ? (
-            <div className="flex items-center gap-2 text-sm text-altair-ink-secondary">
+            <div className="flex items-center gap-2 text-sm text-altair-ink-on-graphite-secondary">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               Generating summary…
             </div>
@@ -112,7 +112,7 @@ export function AiBusinessSummaryCard({
           ) : null}
 
           {error ? (
-            <p className="text-sm text-altair-danger" role="alert">
+            <p className="text-sm text-rose-300" role="alert">
               {error}
             </p>
           ) : null}
