@@ -189,7 +189,7 @@ export function AdminMobileHome({
   const hasOverdue = money.overdueCount > 0;
 
   return (
-    <div className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#34353a_0%,#1c1d1f_48%,#0a0a0b_100%)] px-5 pb-12 pt-4">
+    <div data-testid="page-dashboard-mobile" className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-12 pt-4">
       <AdminMobileHomeTopBar
         companyContext={companyContext}
         dateEyebrow={dateEyebrow}
@@ -198,7 +198,7 @@ export function AdminMobileHome({
 
       {/* Needs attention — only buckets with real work surface here */}
       <section aria-label="Needs attention" className="mt-6">
-        <p className="px-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d4af37]">
+        <p className="px-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
           Needs attention
         </p>
         {attentionRows.length === 0 ? (
@@ -206,7 +206,7 @@ export function AdminMobileHome({
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-300">
               <CheckCircle2 className="h-5 w-5" aria-hidden />
             </span>
-            <p className="text-sm font-semibold text-[#e6e8eb]">
+            <p className="text-sm font-semibold text-[#e9e8e4]">
               All caught up — nothing needs attention.
             </p>
           </div>
@@ -231,7 +231,7 @@ export function AdminMobileHome({
                       <span className="block text-sm font-bold text-white">
                         {row.label}
                       </span>
-                      <span className="block truncate text-xs text-[#9b9fa6]">
+                      <span className="block truncate text-xs text-[#a29f96]">
                         {row.detail}
                       </span>
                     </span>
@@ -241,7 +241,7 @@ export function AdminMobileHome({
                       {row.count}
                     </span>
                     <ChevronRight
-                      className="h-4 w-4 shrink-0 text-[#6b7075]"
+                      className="h-4 w-4 shrink-0 text-[#726f68]"
                       aria-hidden
                     />
                   </Link>
@@ -258,17 +258,17 @@ export function AdminMobileHome({
           href="/dispatch"
           className="flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d4af37]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
             Today&apos;s board
           </p>
           <p className="mt-1 text-4xl font-bold tabular-nums leading-none text-white">
             {operations.totalJobsToday}
           </p>
           <div className="mt-auto space-y-0.5 pt-3">
-            <p className="text-[13px] font-semibold text-[#e6e8eb]">
+            <p className="text-[13px] font-semibold text-[#e9e8e4]">
               {operations.totalJobsToday === 1 ? "job today" : "jobs today"}
             </p>
-            <p className="truncate text-xs text-[#9b9fa6]">{boardLine}</p>
+            <p className="truncate text-xs text-[#a29f96]">{boardLine}</p>
           </div>
         </Link>
 
@@ -276,7 +276,7 @@ export function AdminMobileHome({
           href="/sales"
           className="flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d4af37]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
             Money
           </p>
           <p className="mt-1 text-3xl font-bold tabular-nums leading-none text-white">
@@ -285,13 +285,13 @@ export function AdminMobileHome({
               : formatWholeDollars(money.paymentsTodayTotal)}
           </p>
           <div className="mt-auto space-y-0.5 pt-3">
-            <p className="text-[13px] font-semibold text-[#e6e8eb]">
+            <p className="text-[13px] font-semibold text-[#e9e8e4]">
               {hasOverdue
                 ? `${money.overdueCount} past due invoice${money.overdueCount === 1 ? "" : "s"}`
                 : "collected today"}
             </p>
             {hasOverdue && money.paymentsTodayTotal > 0 ? (
-              <p className="truncate text-xs text-[#9b9fa6]">
+              <p className="truncate text-xs text-[#a29f96]">
                 {formatWholeDollars(money.paymentsTodayTotal)} collected today
               </p>
             ) : null}

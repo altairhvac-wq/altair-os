@@ -99,7 +99,7 @@ export function TechnicianHomeScreen({
         }`;
 
   return (
-    <div className="-mx-4 -mt-4 -mb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#34353a_0%,#1c1d1f_48%,#0a0a0b_100%)] px-5 pb-[max(8rem,calc(7rem+env(safe-area-inset-bottom,0px)))] pt-6 sm:-mx-5 sm:-mt-5">
+    <div className="-mx-4 -mt-4 -mb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-[max(8rem,calc(7rem+env(safe-area-inset-bottom,0px)))] pt-6 sm:-mx-5 sm:-mt-5">
       {/* Greeting */}
       <header className="px-0.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">

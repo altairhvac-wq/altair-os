@@ -779,7 +779,8 @@ translucency means the sidebar's final colour still depends on what sits behind
 it, which is the property D-2 criticised. Un-promoting the row (a Design Lab UI
 action, not a migration) would show the canonical chrome.
 
-**The mobile owner home is a visual generation behind.**
+**~~The mobile owner home is a visual generation behind.~~** *Resolved — see
+D-28.* Original note kept for context:
 `shared/components/dashboard/AdminMobileHome.tsx` is a near-black slab with
 all-gold accents while the desktop is warm parchment, it still carries three
 `#d4af37` literals and cool greys, it does not get the Today strip, and its
@@ -806,3 +807,33 @@ answer to "which brass is this?" is still five steps plus one.
 **Technician experience unverified.** `/technician` redirects to the owner home
 for an admin account, so the real technician surfaces need a technician login to
 audit.
+
+---
+
+### D-28 · The mobile home screens are a register, not an oversight
+`AdminMobileHome` and `TechnicianHomeScreen` are dark "home screen" slabs on a
+warm product. That is a deliberate mobile pattern, not a page that failed to get
+the canvas, so the migration kept the register and corrected the palette rather
+than flattening it into the desktop surface.
+
+What changed: the three `#D4AF37` labels became canonical brass-500, and the
+cool grey ink ramp (`#e6e8eb` / `#9b9fa6` / `#6b7075`) and the shared wallpaper
+gradient moved onto warm equivalents with **WCAG relative luminance held
+constant** — deltas ≤3e-4, so nothing about legibility moved. The wallpaper is
+shared by three files (`AdminMobileHome`, its loading state, and
+`TechnicianHomeScreen`); all three were changed together, because warming one
+of a shared background is how a product ends up with two near-identical darks.
+
+The mobile ink ramp now has its own gate cases, since it sits on a ground
+nothing else in the product uses: brass 6.8, primary ink 13.7, secondary 6.3,
+muted glyph 3.4.
+
+Two things deliberately not changed. Gold density on this surface is high — every
+label and count — but that is the screen's design, and it is now canonical brass
+rather than the cheap metallic. And the "1 in progress" line that appeared
+clipped in screenshots is covered by the **Next.js dev indicator**, not by
+product layout; there is nothing to fix.
+
+This file had been excluded from every previous sweep because it carried an
+uncommitted `data-testid` edit that was not ours to commit. The owner authorised
+including it, so the migration and that line land together.

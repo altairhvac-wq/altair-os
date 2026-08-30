@@ -261,6 +261,17 @@ const cases = [
   ["focus-ring on canvas", "#987836", T.canvas, UI],
   ["focus-ring on canvasSunken", "#987836", T.canvasSunken, UI],
 
+  /*
+   * Mobile home screens (owner + technician) are a deliberate dark "home
+   * screen" register rather than the warm canvas, so their ink ramp sits on a
+   * ground nothing else uses. Gated here so the register stays legible if the
+   * wallpaper is ever retuned.
+   */
+  ["mobile brass label on wallpaper", "#c2a05a", "#1c1e1b", AA],
+  ["mobile primary ink on wallpaper", "#e9e8e4", "#1c1e1b", AA],
+  ["mobile secondary ink on wallpaper", "#a29f96", "#1c1e1b", AA],
+  ["mobile muted glyph on wallpaper", "#726f68", "#1c1e1b", UI],
+
   ["brass-600 status dot on paper #fbf7ef", "#a4823a", "#fbf7ef", UI],
   ["near-black label on brass-600 fill", "#080907", "#a4823a", AA],
   ["link hover amber-800 on paper #fbf7ef", "#5f4715", "#fbf7ef", AA],
