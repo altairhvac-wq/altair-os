@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { Check, ChevronDown, Eye } from "lucide-react";
 import {
   OWNER_VIEW_MODE_DESCRIPTIONS,
@@ -29,6 +30,15 @@ export function OwnerViewSwitcher({
 }: OwnerViewSwitcherProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  /* Escape closes, and focus goes back to the trigger — an Escape that leaves
+     focus on <body> strands a keyboard user mid-page, which is not a fix.
+     `useSheetEscape` keeps a stack, so a dialog opened above this still wins. */
+  useSheetEscape(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, open);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -50,6 +60,7 @@ export function OwnerViewSwitcher({
     <div ref={panelRef} className={`relative ${className}`}>
       <button
         type="button"
+        ref={triggerRef}
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-haspopup="listbox"

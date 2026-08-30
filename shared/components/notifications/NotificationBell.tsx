@@ -35,6 +35,7 @@ export function NotificationBell({
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setNotifications(initialNotifications);
@@ -44,7 +45,10 @@ export function NotificationBell({
   /* Escape closes the panel. `useSheetEscape` keeps a stack, so an open dialog
      above this panel still wins — which is why this reuses it instead of adding
      a second document-level key listener. */
-  useSheetEscape(() => setOpen(false), open);
+  useSheetEscape(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, open);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -100,6 +104,7 @@ export function NotificationBell({
     <div ref={panelRef} className="relative">
       <button
         type="button"
+        ref={triggerRef}
         onClick={() => setOpen((current) => !current)}
         /* min-h/w-11: the trigger was a 36px box, under the touch minimum. */
         className={`relative flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 transition-colors ${

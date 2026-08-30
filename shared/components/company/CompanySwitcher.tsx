@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { useRouter } from "next/navigation";
 import { Building2, Check, ChevronDown } from "lucide-react";
 import { switchCompanyAction } from "@/app/actions/company-switcher";
@@ -37,11 +38,20 @@ export function CompanySwitcher({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const activeMembership =
     companies.find((membership) => membership.company_id === activeCompanyId) ??
     companies[0];
   const canSwitch = companies.length > 1;
+
+  /* Escape closes, and focus goes back to the trigger — an Escape that leaves
+     focus on <body> strands a keyboard user mid-page, which is not a fix.
+     `useSheetEscape` keeps a stack, so a dialog opened above this still wins. */
+  useSheetEscape(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, open);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -122,6 +132,7 @@ export function CompanySwitcher({
     <div ref={panelRef} className={`relative ${className}`}>
       <button
         type="button"
+        ref={triggerRef}
         onClick={() => setOpen((current) => !current)}
         disabled={isPending}
         aria-expanded={open}
