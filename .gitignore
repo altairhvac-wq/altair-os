@@ -88,3 +88,8 @@ next-env.d.ts
 
 # Prestige campaign screenshot output (regenerate with ui-audit/shots.mjs)
 /ui-audit/SHOTS/
+
+# Release smoke captures (regenerate with ui-audit/smoke-release.mjs). Same
+# reason as the others: they are authenticated screenshots of real customer
+# names, emails and phone numbers.
+/ui-audit/smoke/

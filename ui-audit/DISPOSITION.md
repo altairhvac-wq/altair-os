@@ -4,8 +4,7 @@ Status of every original finding, re-checked against the code as it stands
 rather than carried forward from the audit's own conclusion. Where the audit
 turned out to be wrong, the row says so.
 
-Last reconciled: 2026-08-30, branch `prestige-visual-foundation` (second pass:
-dark-surface sweep).
+Last reconciled: 2026-08-30, branch `prestige-visual-foundation` — **release closeout**.
 
 ## How to read this
 
@@ -42,6 +41,9 @@ A row is never marked fixed because a token underneath it changed colour.
 | L-12 | unread notifications wore the brand accent; no Escape | unread is `info`; Escape via the existing stack-aware `useSheetEscape`, verified by driving it |
 | L-14 | public token routes had no boundaries | loading/error/not-found on both segments, plus `noindex` |
 | L-15 | money fields announced as unlabelled | `useId` + `htmlFor`; 14 search inputs named; probe asserts it |
+| S-13 | popovers had no Escape, no focus management | Escape + focus return + **containment** on all three, via the shared `useDialogFocusTrap`; probe presses Tab 12× and fails if focus leaves |
+| **new** | admin header cut itself off on phones | 407px cluster in a 390px header put Sign out at x=427, unreachable — `html`/`body` are `overflow-x-clip` so it was clipped, not scrollable. Found by the release mobile check, not the audit |
+| **new** | bulk-select and trial-pill touch targets | 16×40 and 133×17 → 44px on mobile |
 
 ## Partial
 
@@ -160,3 +162,48 @@ correction.
 **Why it is safe to defer.** These are borders, rings and washes. The two places
 where brass was doing something it should not — standing in for a *state*, and
 being painted as text on chrome — are both fixed, and the probes hold the line.
+
+---
+
+## Release verification — 2026-08-30
+
+Every gate below was run against the built app on this branch.
+
+| gate | result |
+|---|---|
+| `npx tsc --noEmit` | clean |
+| `npm run build` | compiled successfully |
+| `npm run lint` | **134 warnings, 0 errors** — the pre-existing baseline, unchanged |
+| `git diff --check` | clean |
+| contrast gate (`contrast-check.mjs`) | ALL PASS |
+| authenticated smoke | **57 route/width combinations, 57 clean** — no error boundary, no empty body, no console error, at 390/768/1440 |
+
+Seven DOM probes, all passing:
+
+| probe | asserts | result |
+|---|---|---|
+| `probe-text-contrast` | every visible text leaf, composited to its real ground | **0** failures, 15 routes |
+| `probe-gradient-grounds` | text on gradients, against the **worst** stop | **0** |
+| `probe-panel-contrast` | contrast inside opened detail panels | **0**, 9 panels |
+| `probe-mobile-flows` | no clipped content, touch targets at 390px | **ALL PASS**, 19 routes |
+| `probe-label-targets` | every `label[for]` resolves visible; every control named | ALL PASS |
+| `probe-popover-keyboard` | Escape closes, focus returns, focus stays contained | ALL PASS |
+| `probe-dispatch-badges` | badge/chip contrast on dark chrome | ALL PASS, 37 labels |
+
+The smoke captures are gitignored for the same reason as the other screenshot
+output: they are authenticated shots of real customer names, emails and phones.
+Regenerate with `ui-audit/smoke-release.mjs`.
+
+### Known and accepted at merge
+
+- **S-2 / S-21** — documented above, deferred by decision. Neither has a
+  confirmed user-visible defect; both are architectural consolidation.
+- **S-14, S-15, S-17, S-20, S-26, L-8** — remain open. None reproduced as a
+  user-visible defect in the release checks above; they are code-structure and
+  consistency findings.
+- **Company switcher** keyboard behaviour is wired identically to the other two
+  popovers but is only exercisable on a multi-company account, so its probe row
+  honestly reads SKIP rather than pass.
+- **Customers "Attention" column** is empty on the demo dataset. The predicate
+  is live; whether an always-empty flag column earns its width is a product
+  call, recorded rather than decided.
