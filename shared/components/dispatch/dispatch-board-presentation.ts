@@ -42,8 +42,9 @@ export const dispatchMissionClasses = {
   focusBannerTitle: "text-xs font-bold text-altair-paper sm:text-sm",
   focusBannerDescription:
     "mt-0.5 hidden text-[11px] leading-snug text-altair-ink-on-graphite-muted sm:mt-1 sm:block sm:text-xs sm:leading-relaxed",
+  /* Was `text-altair-warning` on the banner's own warning wash: 4.02:1. */
   focusBannerClear:
-    "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-altair-warning transition-colors hover:text-altair-paper",
+    "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-altair-warning-surface/90 transition-colors hover:text-altair-warning-surface",
 
   /** Technician Gantt row — no overflow clip so sticky identity can pin while scrolling. */
   lane: `${altairReportCardClass} flex min-w-0 items-stretch`,
@@ -74,8 +75,10 @@ export const dispatchMissionClasses = {
     "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-altair-warning/20 text-altair-warning sm:h-8 sm:w-8",
   unassignedSidebarTitle: "text-sm font-bold text-altair-paper",
   unassignedSidebarSubtitle: "text-[10px] text-altair-ink-on-graphite-muted sm:text-[11px]",
+  /* Light warning surface, not the warning tone itself: 11px bold on a wash of
+   * its own colour measured 3.50:1 here. */
   unassignedSidebarCount:
-    "rounded-full border border-altair-warning/35 bg-altair-warning/20 px-2 py-0.5 text-[11px] font-bold tabular-nums text-altair-warning",
+    "rounded-full border border-altair-warning/35 bg-altair-warning/20 px-2 py-0.5 text-[11px] font-bold tabular-nums text-altair-warning-surface",
   unassignedSidebarList:
     "min-h-0 flex-1 overflow-y-auto overscroll-contain border-0 border-t border-altair-border/50",
   unassignedSidebarRow:

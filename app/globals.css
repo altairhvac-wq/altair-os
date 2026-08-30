@@ -549,6 +549,23 @@
   --altair-information-surface: #eef2f3;
 }
 
+/* NOTHING IN THE PRODUCT SETS THIS ATTRIBUTE.
+ *
+ * The scope is deliberate scaffolding for the future theming surface (see the
+ * note above) and three contrast scripts parse it, so it stays. But it is a
+ * trap for anyone styling a dark surface: the semantic tokens below are the
+ * pre-Prestige Tailwind values (`#34d399`, `#fbbf24`, `#f87171`) and they are
+ * BRIGHT, whereas the `:root` values they actually resolve to are the Prestige
+ * ones and they are DARK. A badge written as `text-altair-success` over
+ * `bg-altair-success/25` therefore looks correct in this block and renders
+ * dark-on-dark in the browser. That is exactly how the dispatch Gantt chips
+ * ended up at 2.27:1.
+ *
+ * Style dark surfaces with `STATUS_TONE_CLASS_ON_DARK`
+ * (shared/design-system/components/status-tone.ts), which puts the light
+ * `*-surface` colour on a wash of the tone and so does not depend on which
+ * scope wins.
+ */
 [data-theme="dark"] {
   --altair-stone: #252b22;
 

@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { Loader2 } from "lucide-react";
+import { STATUS_TONE_CLASS_ON_DARK } from "@/shared/design-system/components/status-tone";
 import {
   DISPATCH_LANE_TRACK_PADDING_Y_PX,
   DISPATCH_TIME_BLOCK_HEIGHT_PX,
@@ -34,20 +35,31 @@ const BLOCK_PRIORITY_ACCENT: Record<DispatchJobPriority, string> = {
   urgent: "bg-altair-danger",
 };
 
+/**
+ * These chips set 7px text, so they have no large-text exemption and need the
+ * full 4.5:1. They used to paint the tone colour as *text* over a wash of the
+ * same tone — `text-altair-warning` on `bg-altair-warning/30` and so on. That
+ * worked while `[data-theme="dark"]` supplied bright Tailwind semantics, but
+ * nothing in the product ever sets that attribute, so the tokens resolve to the
+ * light-scope Prestige values and the pairs went dark-on-dark: measured 2.27:1
+ * for `completed`, 2.39:1 for `urgent`, 3.09:1 for `high` and `in_progress`.
+ * The shared dark tones put the light surface colour on the wash instead and
+ * measure 9.5-12.4:1.
+ */
 const BLOCK_PRIORITY_BADGE: Record<DispatchJobPriority, string> = {
-  low: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
-  normal: "bg-altair-information/25 text-altair-paper ring-altair-information/40",
-  high: "bg-altair-warning/30 text-altair-warning ring-altair-warning/45",
-  urgent: "bg-altair-danger/30 text-altair-danger ring-altair-danger/45",
+  low: STATUS_TONE_CLASS_ON_DARK.neutral,
+  normal: STATUS_TONE_CLASS_ON_DARK.info,
+  high: STATUS_TONE_CLASS_ON_DARK.warning,
+  urgent: STATUS_TONE_CLASS_ON_DARK.danger,
 };
 
 const BLOCK_STATUS_BADGE: Record<DispatchJobStatus, string> = {
-  scheduled: "bg-altair-information/25 text-altair-paper ring-altair-information/35",
-  dispatched: "bg-altair-information/25 text-altair-paper ring-altair-information/35",
-  arrived: "bg-altair-information/30 text-altair-paper ring-altair-information/40",
-  in_progress: "bg-altair-warning/30 text-altair-warning ring-altair-warning/40",
-  completed: "bg-altair-success/25 text-altair-success ring-altair-success/40",
-  cancelled: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
+  scheduled: STATUS_TONE_CLASS_ON_DARK.neutral,
+  dispatched: STATUS_TONE_CLASS_ON_DARK.info,
+  arrived: STATUS_TONE_CLASS_ON_DARK.info,
+  in_progress: STATUS_TONE_CLASS_ON_DARK.info,
+  completed: STATUS_TONE_CLASS_ON_DARK.success,
+  cancelled: STATUS_TONE_CLASS_ON_DARK.neutral,
 };
 
 const BADGE_BASE =

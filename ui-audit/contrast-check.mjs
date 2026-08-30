@@ -161,6 +161,20 @@ for (const [name, steps] of Object.entries(ICON_ON_CHROME)) {
 }
 
 const AA = 4.5;
+
+/** Flatten `fg` at `alpha` over opaque `bg` — a wash promises no ratio on its own. */
+function composite(fg, bg, alpha) {
+  const h = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const [fr, fg_, fb] = h(fg);
+  const [br, bg_, bb] = h(bg);
+  const mix = (a, b) => Math.round(a * alpha + b * (1 - alpha));
+  return (
+    "#" +
+    [mix(fr, br), mix(fg_, bg_), mix(fb, bb)]
+      .map((v) => v.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
 const UI = 3.0; // non-text contrast (borders/indicators)
 
 const cases = [
@@ -293,6 +307,29 @@ const cases = [
   ["champagne-300 text on chromeElevated", "#e8d9ac", T.chromeElevated, AA],
 
   ...paletteCases,
+
+  /* Dark-surface status badges (dispatch board, expense detail hero).
+   *
+   * These regressed because `[data-theme="dark"]` declares BRIGHT pre-Prestige
+   * semantics but nothing in the product sets that attribute, so call sites
+   * written as `text-altair-warning` over `bg-altair-warning/N` resolved to the
+   * DARK `:root` values and went dark-on-dark. Measured on the live board:
+   * completed 2.27, urgent 2.36/2.39, high & in_progress 2.99/3.09, the
+   * unassigned count 3.50, the focus-banner Clear link 4.02.
+   *
+   * STATUS_TONE_CLASS_ON_DARK puts the light `*-surface` colour on the wash
+   * instead, so the ratio no longer depends on which scope wins. Composites
+   * below are the wash over `chrome`. */
+  ["dark badge success text on success/20", "#edf5f0", composite("#35755a", T.chrome, 0.20), AA],
+  ["dark badge warning text on warning/20", "#fbf5e6", composite("#c07617", T.chrome, 0.20), AA],
+  ["dark badge danger text on danger/20", "#f9eeec", composite("#c0392f", T.chrome, 0.20), AA],
+  ["dark badge info text on information/25", "#eef2f3", composite("#55707a", T.chrome, 0.25), AA],
+  ["unassigned count warning-surface on warning/20", "#fbf5e6", composite("#c07617", T.chrome, 0.20), AA],
+  ["focus-banner Clear on warning/10", "#fbf5e6", composite("#c07617", T.chrome, 0.10), AA],
+  /* The two icon chips that legitimately keep the tone as their colour: these
+   * are non-text (WCAG 1.4.11), so 3.0 is the bar and 3.50 clears it. */
+  ["focusBanner icon warning on warning/20", "#c07617", composite("#c07617", T.chrome, 0.20), 3.0],
+  ["unassignedSidebar icon warning on warning/20", "#c07617", composite("#c07617", T.chrome, 0.20), 3.0],
 ];
 
 let fail = 0;

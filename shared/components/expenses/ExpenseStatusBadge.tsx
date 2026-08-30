@@ -1,4 +1,8 @@
 import {
+  STATUS_TONE_CLASS,
+  STATUS_TONE_CLASS_ON_DARK,
+} from "@/shared/design-system/components/status-tone";
+import {
   OPERATIONAL_EXPENSE_STATUS_STYLES,
   OPERATIONAL_STATUS_BADGE_BASE,
 } from "@/shared/lib/operational-status-styles";
@@ -12,27 +16,26 @@ type ExpenseStatusBadgeProps = {
   onDarkSurface?: boolean;
 };
 
-/** North Star draft/submitted keep quiet paper/brass chrome; status uses semantic tokens. */
+/**
+ * `submitted` used to be brass. An expense waiting on an approver is not a
+ * brand moment, it is the textbook `info` case — in motion, waiting on someone
+ * else — and spending the accent here is part of why brass stopped reading as
+ * special. The rest already matched the shared tones; they now say so.
+ */
 const northStarExpenseStatusStyles: Record<ExpenseStatus, string> = {
-  draft: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
-  submitted:
-    "bg-altair-brass/15 text-altair-ink-on-paper ring-altair-brass/25",
-  approved:
-    "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
-  rejected:
-    "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
-  reimbursed:
-    "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
+  draft: STATUS_TONE_CLASS.neutral,
+  submitted: STATUS_TONE_CLASS.info,
+  approved: STATUS_TONE_CLASS.success,
+  rejected: STATUS_TONE_CLASS.danger,
+  reimbursed: STATUS_TONE_CLASS.success,
 };
 
 const northStarDarkSurfaceStatusStyles: Record<ExpenseStatus, string> = {
-  draft: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
-  submitted: "bg-altair-brass/25 text-altair-paper ring-altair-brass/35",
-  approved:
-    "bg-altair-success/20 text-altair-success-surface ring-altair-success/30",
-  rejected: "bg-altair-danger/20 text-altair-danger-surface ring-altair-danger/30",
-  reimbursed:
-    "bg-altair-success/20 text-altair-success-surface ring-altair-success/30",
+  draft: STATUS_TONE_CLASS_ON_DARK.neutral,
+  submitted: STATUS_TONE_CLASS_ON_DARK.info,
+  approved: STATUS_TONE_CLASS_ON_DARK.success,
+  rejected: STATUS_TONE_CLASS_ON_DARK.danger,
+  reimbursed: STATUS_TONE_CLASS_ON_DARK.success,
 };
 
 export function ExpenseStatusBadge({

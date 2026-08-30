@@ -1,3 +1,4 @@
+import { STATUS_TONE_CLASS_ON_DARK } from "@/shared/design-system/components/status-tone";
 import {
   OPERATIONAL_JOB_STATUS_STYLES,
   OPERATIONAL_STATUS_BADGE_BASE,
@@ -7,19 +8,22 @@ import {
   type DispatchJobStatus,
 } from "@/shared/types/dispatch";
 
+/**
+ * Dispatch is a progression — scheduled, then a technician is moving on it,
+ * then it is done — so the board only needs to separate those buckets. The
+ * three active states (`dispatched`, `arrived`, `in_progress`) share `info`
+ * because they mean the same thing to whoever is reading the board: someone is
+ * on it. Their labels tell you which. Encoding them as three brass steps, as
+ * this map used to, spent the brand accent on a distinction that was invisible
+ * anyway.
+ */
 const NORTH_STAR_DISPATCH_STATUS_STYLES: Record<DispatchJobStatus, string> = {
-  scheduled:
-    "bg-[rgba(188,181,165,0.14)] text-[#D7CDBD] ring-[rgba(188,181,165,0.22)]",
-  dispatched:
-    "bg-[rgba(194,160,90,0.14)] text-[#E8D9AC] ring-[rgba(194,160,90,0.24)]",
-  arrived:
-    "bg-[rgba(194,160,90,0.18)] text-[#D9C188] ring-[rgba(194,160,90,0.28)]",
-  in_progress:
-    "bg-[rgba(194,160,90,0.22)] text-[#E8D9AC] ring-[rgba(194,160,90,0.30)]",
-  completed:
-    "bg-[rgba(16,185,129,0.16)] text-emerald-300 ring-[rgba(16,185,129,0.28)]",
-  cancelled:
-    "bg-[rgba(188,181,165,0.10)] text-[#BCB5A5] ring-[rgba(188,181,165,0.16)]",
+  scheduled: STATUS_TONE_CLASS_ON_DARK.neutral,
+  dispatched: STATUS_TONE_CLASS_ON_DARK.info,
+  arrived: STATUS_TONE_CLASS_ON_DARK.info,
+  in_progress: STATUS_TONE_CLASS_ON_DARK.info,
+  completed: STATUS_TONE_CLASS_ON_DARK.success,
+  cancelled: STATUS_TONE_CLASS_ON_DARK.neutral,
 };
 
 type DispatchStatusBadgeProps = {

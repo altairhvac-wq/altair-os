@@ -33,3 +33,28 @@ export const STATUS_TONE_CLASS: Record<StatusTone, string> = {
     "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
   info: "bg-altair-information-surface text-altair-information-foreground ring-altair-information/15",
 };
+
+/**
+ * The same five tones for badges sitting on a dark surface — the dispatch board
+ * and the expense detail hero.
+ *
+ * These existed already, but only inside `ExpenseStatusBadge`, so the dispatch
+ * board wrote its own from raw literals and drifted three ways: `dispatched`,
+ * `arrived` and `in_progress` were all brass at 14%/18%/22% — the brand accent
+ * doing status duty, with `dispatched` and `in_progress` sharing one text
+ * colour and separated only by eight percent of background alpha, which is not
+ * a distinction anyone can see. `completed` meanwhile used raw Tailwind emerald
+ * (`#10b981`), the one cool green left on an otherwise warm board.
+ *
+ * The wash carries the tone and the light surface colour carries the text, so
+ * contrast comes from the foreground rather than from the wash's opacity.
+ */
+export const STATUS_TONE_CLASS_ON_DARK: Record<StatusTone, string> = {
+  neutral: "bg-altair-paper/10 text-altair-paper-subtle ring-altair-paper/15",
+  success:
+    "bg-altair-success/20 text-altair-success-surface ring-altair-success/30",
+  warning:
+    "bg-altair-warning/20 text-altair-warning-surface ring-altair-warning/30",
+  danger: "bg-altair-danger/20 text-altair-danger-surface ring-altair-danger/30",
+  info: "bg-altair-information/25 text-altair-information-surface ring-altair-information/35",
+};

@@ -183,6 +183,28 @@ export type OperationalResolutionQueuePresentation = {
   iconClassName: string;
 };
 
+/**
+ * Icon-chip tone for a resolution-queue signal.
+ *
+ * Every entry in this queue is something that needs doing, so the only thing
+ * worth encoding in colour is *how late it is* — which is what a person scans
+ * the queue for. The previous chips encoded nothing: seven signals shared amber
+ * and five shared cyan, split along no axis, and after the Prestige remap those
+ * two ramps resolve to the warning ochre and to brass. So the queue rendered as
+ * a wall of "warning" and "brand accent", with the one genuinely overdue signal
+ * (`overdue_invoice`) no louder than a draft estimate waiting to be sent.
+ *
+ * Tones follow `STATUS_TONE_CLASS`'s vocabulary:
+ *   danger  — money is already late
+ *   warning — past a staleness threshold; needs a human soon
+ *   info    — queued work in the normal course; nobody is late
+ */
+const QUEUE_CHIP: Record<"danger" | "warning" | "info", string> = {
+  danger: "bg-altair-danger-surface text-altair-danger-foreground",
+  warning: "bg-altair-warning-surface text-altair-warning-foreground",
+  info: "bg-altair-information-surface text-altair-information-foreground",
+};
+
 const QUEUE_PRESENTATION: Record<
   OperationalResolutionQueueType,
   Omit<
@@ -196,7 +218,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: "/dispatch?focus=unassigned",
     relatedLabel: "Open dispatch board",
     icon: "users",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   ready_to_invoice: {
     completionTitle: "Invoicing queue clear",
@@ -204,7 +226,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: "/reports?queue=invoicing",
     relatedLabel: "View invoicing queue",
     icon: "briefcase",
-    iconClassName: "bg-cyan-100 text-cyan-700",
+    iconClassName: QUEUE_CHIP.info,
   },
   overdue_invoice: {
     completionTitle: "Overdue invoices processed",
@@ -212,7 +234,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: buildSalesHubHref("invoices", { focus: "overdue" }),
     relatedLabel: "View all overdue",
     icon: "dollar",
-    iconClassName: "bg-rose-100 text-rose-700",
+    iconClassName: QUEUE_CHIP.danger,
   },
   unpaid_invoice_follow_up: {
     completionTitle: "Unpaid invoices followed up",
@@ -224,7 +246,7 @@ const QUEUE_PRESENTATION: Record<
     }),
     relatedLabel: "View unpaid invoices",
     icon: "dollar",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   unsent_invoice: {
     completionTitle: "All invoices sent",
@@ -232,7 +254,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: INVOICE_PAGE_DRAFT_HREF,
     relatedLabel: "View draft invoices",
     icon: "file",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.info,
   },
   unsent_estimate: {
     completionTitle: "All estimates sent",
@@ -240,7 +262,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: buildSalesHubHref("estimates"),
     relatedLabel: "View all estimates",
     icon: "clipboard",
-    iconClassName: "bg-cyan-100 text-cyan-700",
+    iconClassName: QUEUE_CHIP.info,
   },
   stale_sent_estimate: {
     completionTitle: "Sent estimates followed up",
@@ -249,7 +271,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: buildSalesHubHref("estimates"),
     relatedLabel: "View all estimates",
     icon: "clipboard",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   accepted_estimate_scheduling: {
     completionTitle: "Accepted estimates scheduled",
@@ -258,21 +280,21 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: buildSalesHubHref("estimates", { status: "approved" }),
     relatedLabel: "View approved estimates",
     icon: "briefcase",
-    iconClassName: "bg-cyan-100 text-cyan-700",
+    iconClassName: QUEUE_CHIP.info,
   },
   needs_review: {
     completionTitle: "Review queue clear",
     relatedHref: "/reports?queue=attention",
     relatedLabel: "Open review queue",
     icon: "clipboard",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   stalled_job: {
     completionTitle: "Stalled jobs reviewed",
     relatedHref: "/reports?queue=stalled",
     relatedLabel: "View stalled jobs",
     icon: "briefcase",
-    iconClassName: "bg-amber-100 text-amber-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   lead_follow_up: {
     completionTitle: "Lead follow-ups complete",
@@ -280,7 +302,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: "/customers?tab=pipeline",
     relatedLabel: "Open leads",
     icon: "users",
-    iconClassName: "bg-cyan-100 text-cyan-700",
+    iconClassName: QUEUE_CHIP.warning,
   },
   new_lead_contact: {
     completionTitle: "New leads contacted",
@@ -288,7 +310,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: LEADS_NEEDS_CONTACT_QUEUE_HREF,
     relatedLabel: "Open needs-contact queue",
     icon: "users",
-    iconClassName: "bg-sky-100 text-sky-700",
+    iconClassName: QUEUE_CHIP.info,
   },
   lead_estimate_ready: {
     completionTitle: "Lead estimates prepared",
@@ -296,7 +318,7 @@ const QUEUE_PRESENTATION: Record<
     relatedHref: LEADS_QUALIFIED_QUEUE_HREF,
     relatedLabel: "Open qualified queue",
     icon: "clipboard",
-    iconClassName: "bg-violet-100 text-violet-700",
+    iconClassName: QUEUE_CHIP.info,
   },
 };
 

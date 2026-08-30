@@ -11,13 +11,17 @@ import {
 } from "@/shared/types/dispatch";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { STATUS_TONE_CLASS_ON_DARK } from "@/shared/design-system/components/status-tone";
 import { dispatchMissionClasses as dm } from "./dispatch-board-presentation";
 
+/* `high` and `urgent` painted the tone colour over a wash of itself, which on
+ * this dark panel measured 2.99:1 and 2.36:1 — the two priorities that most
+ * need to be read were the two hardest to read. See STATUS_TONE_CLASS_ON_DARK. */
 const PRIORITY_BADGE: Record<DispatchJobPriority, string> = {
-  low: "bg-white/10 text-altair-ink-on-graphite-muted ring-white/15",
+  low: STATUS_TONE_CLASS_ON_DARK.neutral,
   normal: "bg-white/10 text-altair-paper ring-white/20",
-  high: "bg-altair-warning/30 text-altair-warning ring-altair-warning/45",
-  urgent: "bg-altair-danger/30 text-altair-danger ring-altair-danger/45",
+  high: STATUS_TONE_CLASS_ON_DARK.warning,
+  urgent: STATUS_TONE_CLASS_ON_DARK.danger,
 };
 
 type UnassignedJobsPanelProps = {
