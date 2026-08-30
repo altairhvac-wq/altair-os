@@ -14,7 +14,7 @@ export function ScheduleMonthGrid({ days }: ScheduleMonthGridProps) {
         {WEEKDAY_HEADERS.map((label) => (
           <div
             key={label}
-            className="px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted"
+            className="px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted"
           >
             {label}
           </div>

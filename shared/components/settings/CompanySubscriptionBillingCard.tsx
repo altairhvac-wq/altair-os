@@ -468,7 +468,7 @@ export function CompanySubscriptionBillingCard({
       {/* ── Portal explanation ─────────────────────────────────────── */}
       {canManageSubscription && effectiveSummary.hasStripeSubscription ? (
         <p
-          className={`mt-2 text-xs ${northStar ? "text-[#7c7259]" : "text-slate-400"}`}
+          className={`mt-2 text-xs ${northStar ? "text-[#7c7259]" : "text-altair-ink-on-paper-muted"}`}
         >
           Payment methods, billing info, and subscription invoices are managed
           securely through Stripe.

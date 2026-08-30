@@ -25,6 +25,12 @@ function getRoleLabel(membership: MembershipWithCompany) {
   return role ? COMPANY_ROLE_LABELS[role] : "Member";
 }
 
+/*
+ * `tone` is this component's surface contract: it is told which ground it is on
+ * rather than guessing. So every muted colour below is picked from the matching
+ * scale — chrome ink on dark, paper ink on light. It previously used slate greys
+ * on both, which meant the dark branch painted a paper grey on graphite.
+ */
 export function CompanySwitcher({
   activeCompanyId,
   companies,
@@ -97,7 +103,7 @@ export function CompanySwitcher({
   if (!canSwitch) {
     if (variant === "technician") {
       return (
-        <p className={`truncate text-xs text-slate-500 ${className}`}>
+        <p className={`truncate text-xs text-altair-ink-on-paper-muted ${className}`}>
           {activeMembership.company.name}
         </p>
       );
@@ -113,7 +119,9 @@ export function CompanySwitcher({
           {activeMembership.company.name}
         </p>
         {showRole ? (
-          <p className={tone === "dark" ? "text-xs text-slate-400" : "text-xs text-slate-500"}>
+          <p className={tone === "dark"
+              ? "text-xs text-altair-ink-on-graphite-muted"
+              : "text-xs text-altair-ink-on-paper-muted"}>
             {getRoleLabel(activeMembership)}
           </p>
         ) : null}
@@ -143,7 +151,9 @@ export function CompanySwitcher({
         {variant === "admin" ? (
           <Building2
             className={`hidden h-4 w-4 shrink-0 sm:block ${
-              tone === "dark" ? "text-slate-500" : "text-slate-400"
+              tone === "dark"
+                ? "text-altair-ink-on-graphite-muted"
+                : "text-altair-ink-on-paper-muted"
             }`}
           />
         ) : null}
@@ -162,7 +172,9 @@ export function CompanySwitcher({
           {showRole ? (
             <span
               className={`block truncate text-xs ${
-                tone === "dark" ? "text-slate-400" : "text-slate-500"
+                tone === "dark"
+                ? "text-altair-ink-on-graphite-muted"
+                : "text-altair-ink-on-paper-muted"
               }`}
             >
               {getRoleLabel(activeMembership)}
@@ -171,7 +183,9 @@ export function CompanySwitcher({
         </span>
         <ChevronDown
           className={`h-3.5 w-3.5 shrink-0 transition-transform ${
-            tone === "dark" ? "text-slate-500" : "text-slate-400"
+            tone === "dark"
+                ? "text-altair-ink-on-graphite-muted"
+                : "text-altair-ink-on-paper-muted"
           } ${open ? "rotate-180" : ""}`}
         />
       </button>

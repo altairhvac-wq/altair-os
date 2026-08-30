@@ -58,7 +58,7 @@ export function TechnicianBottomNav({
                   className={`relative flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 ${
                     isActive
                       ? "bg-cyan-50 text-cyan-700"
-                      : "text-slate-500 hover:bg-slate-50/80 hover:text-slate-700 active:bg-slate-100/80"
+                      : "text-altair-ink-on-paper-muted hover:bg-slate-50/80 hover:text-slate-700 active:bg-slate-100/80"
                   }`}
                 >
                   <Icon

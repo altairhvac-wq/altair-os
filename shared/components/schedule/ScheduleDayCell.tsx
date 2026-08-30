@@ -20,7 +20,7 @@ function DayStatusMixLabeled({ day }: { day: ScheduleWeekDaySummary }) {
   const mix = SCHEDULE_STATUS_MIX_ORDER.filter((key) => day.counts[key] > 0);
 
   if (mix.length === 0) {
-    return <p className="mt-2 text-[11px] text-altair-ink-muted">No jobs</p>;
+    return <p className="mt-2 text-[11px] text-altair-ink-on-graphite-muted">No jobs</p>;
   }
 
   return (
@@ -34,7 +34,7 @@ function DayStatusMixLabeled({ day }: { day: ScheduleWeekDaySummary }) {
             className={`h-1.5 w-1.5 shrink-0 rounded-full ${SCHEDULE_STATUS_DOT_CLASS[key]}`}
             aria-hidden
           />
-          <span className="min-w-0 truncate text-altair-ink-muted">
+          <span className="min-w-0 truncate text-altair-ink-on-graphite-muted">
             {SCHEDULE_STATUS_MIX_LABEL[key]}
           </span>
           <span className="ml-auto font-semibold text-altair-paper">
@@ -46,6 +46,22 @@ function DayStatusMixLabeled({ day }: { day: ScheduleWeekDaySummary }) {
   );
 }
 
+/*
+ * This grid renders on the graphite schedule board — its container is
+ * `bg-altair-graphite` and the inherited text colour is paper-light. Every
+ * colour below therefore comes from the chrome scale, not the paper one.
+ *
+ * It used to use `text-altair-ink-muted` (a paper foreground) at 2.54:1 and
+ * `text-altair-brass` at 2.48:1, including brass text on a brass/20 wash for
+ * the selected day — the same shape as the dispatch lane avatars. Brass on a
+ * dark ground is `--altair-brass-interactive`.
+ *
+ * "N unassigned" moved to the 300 step too. At 4.56 the saturated warning
+ * passed, but it was the dimmest thing on the tile while being the only line
+ * that needs action — the same argument as the receivables ramp: a severity
+ * cue reading quieter than the labels around it is a semantic misread, not
+ * just a contrast one.
+ */
 export function ScheduleDayCell({
   summary,
   density,
@@ -71,10 +87,10 @@ export function ScheduleDayCell({
       <div className="flex items-start justify-between gap-1">
         <div className="min-w-0">
           {isMonth ? null : (
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-muted">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-altair-ink-on-graphite-muted">
               {day.stripLabel}
               {day.isToday ? (
-                <span className="ml-1 text-altair-brass">Today</span>
+                <span className="ml-1 text-altair-brass-interactive">Today</span>
               ) : null}
             </p>
           )}
@@ -82,7 +98,7 @@ export function ScheduleDayCell({
             <span
               className={`inline-flex h-6 min-w-6 items-center justify-center rounded-md px-1 text-xs font-bold tabular-nums leading-none sm:h-7 sm:min-w-7 sm:text-sm ${
                 day.isToday
-                  ? "bg-altair-brass/20 text-altair-brass ring-1 ring-altair-brass/45"
+                  ? "bg-altair-brass/20 text-altair-brass-interactive ring-1 ring-altair-brass/45"
                   : "bg-white/[0.12] text-altair-paper ring-1 ring-white/[0.16]"
               }`}
             >
@@ -91,7 +107,7 @@ export function ScheduleDayCell({
           ) : (
             <p
               className={`text-lg font-bold tabular-nums leading-tight ${
-                day.isToday ? "text-altair-brass" : "text-altair-paper"
+                day.isToday ? "text-altair-brass-interactive" : "text-altair-paper"
               }`}
             >
               {day.dayOfMonth}
@@ -105,7 +121,7 @@ export function ScheduleDayCell({
         >
           {counts.activeTotal}
           <span
-            className={`mt-0.5 block font-medium text-altair-ink-muted ${
+            className={`mt-0.5 block font-medium text-altair-ink-on-graphite-muted ${
               isMonth ? "text-[9px]" : "text-[10px]"
             }`}
           >
@@ -119,10 +135,10 @@ export function ScheduleDayCell({
           {counts.activeTotal > 0 ? (
             <ScheduleDayStatusDots counts={counts} size="md" />
           ) : (
-            <p className="text-[10px] text-altair-ink-muted">No jobs</p>
+            <p className="text-[10px] text-altair-ink-on-graphite-muted">No jobs</p>
           )}
           {hasUnassigned ? (
-            <p className="text-[9px] font-semibold leading-none text-altair-warning sm:text-[10px]">
+            <p className="text-[9px] font-semibold leading-none text-amber-300 sm:text-[10px]">
               {counts.unassigned} unassigned
             </p>
           ) : null}
@@ -131,7 +147,7 @@ export function ScheduleDayCell({
         <>
           <DayStatusMixLabeled day={summary} />
           {hasUnassigned ? (
-            <p className="mt-auto pt-2 text-[10px] font-semibold text-altair-warning">
+            <p className="mt-auto pt-2 text-[10px] font-semibold text-amber-300">
               {counts.unassigned} unassigned
             </p>
           ) : (

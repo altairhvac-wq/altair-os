@@ -84,7 +84,7 @@ export function OwnerViewSwitcher({
             className={`block truncate text-[10px] font-semibold uppercase tracking-wide ${
               tone === "dark"
                 ? "text-altair-ink-on-graphite-muted"
-                : "text-slate-400"
+                : "text-altair-ink-on-paper-muted"
             }`}
           >
             View as

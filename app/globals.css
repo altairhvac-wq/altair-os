@@ -691,10 +691,27 @@
    * Prestige palette instead of glowing against it. */
   --color-emerald-50: #edf5f0;
   --color-emerald-100: #d7e9de;
-  /* The step the emerald ramp was missing. Rose and amber both carry a 300 for
-     text on dark chrome (7.40 and 8.83 against --chrome); emerald had nothing
-     between 500 at 3.92 — below AA — and 100, which reads as white. This lands
-     at 7.39, alongside its siblings. */
+  /*
+   * The step the emerald ramp was missing.
+   *
+   * Rose and amber both carry a 300 for text on dark chrome (7.40 and 8.83
+   * against --chrome). Emerald had nothing between 500, which measures 3.92 and
+   * is below AA, and 100, which reads as white — so anything needing a readable
+   * green on graphite had to invent one. This is that rung, not a Reports green.
+   *
+   * It is placed the way the existing 300s are placed, measured in OKLCH:
+   *
+   *            L vs its own 500     hue drift from 500     chroma
+   *   rose         +16.4                  4.3 deg          0.0861
+   *   amber        +17.2                 18.4 deg          0.1077
+   *   emerald      +16.6                  2.3 deg          0.0785
+   *
+   * Its lightness sits 17.7 below emerald-100 and 16.6 above emerald-500 —
+   * near-exactly midway, which is what a 300 spanning 100 and 500 should be —
+   * and its hue (160.8) falls inside the ramp's own 158.5-163.6 spread, with
+   * the smallest drift of any 300 in the set. 7.39 on --chrome, which clears
+   * AA for normal text and AAA as well.
+   */
   --color-emerald-300: #7ebb9b;
   --color-emerald-500: #3f8a63;
   --color-emerald-600: #35755a;

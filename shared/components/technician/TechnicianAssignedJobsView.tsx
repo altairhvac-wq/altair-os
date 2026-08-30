@@ -67,7 +67,7 @@ function TechnicianJobsEmptyState({
 
       <h3 className="mt-3 text-base font-bold text-slate-900">{title}</h3>
 
-      <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500">
+      <p className="mx-auto mt-1 max-w-xs text-sm text-altair-ink-on-paper-muted">
         {description}
       </p>
     </section>

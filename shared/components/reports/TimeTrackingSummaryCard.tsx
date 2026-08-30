@@ -68,6 +68,11 @@ export function TimeTrackingSummaryCard({
             className={`${altairReportCardClass} border-altair-danger/40 bg-altair-danger/10 p-3.5`}
             role="alert"
           >
+            {/* The icon measures 2.82:1 on this card and stays that way on
+                purpose. It is `aria-hidden` and sits beside its own text label,
+                so it is decorative under 1.4.11 — nothing is conveyed by it that
+                the heading does not already say. Raising it to the 300 step
+                would be applying a rule that does not govern this element. */}
             <div className="flex items-center gap-2 text-altair-danger">
               <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="text-sm font-bold text-altair-paper">

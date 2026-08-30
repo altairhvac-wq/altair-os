@@ -84,7 +84,7 @@ function TechnicianUpNextJobRow({
             {formatTechnicianJobTime(job.scheduledDate)}
           </span>
         </div>
-        <p className="truncate text-xs text-slate-500">{job.jobType}</p>
+        <p className="truncate text-xs text-altair-ink-on-paper-muted">{job.jobType}</p>
         <div className="flex items-center gap-3 pt-0.5">
           <p className="flex min-w-0 items-center gap-1 truncate text-[11px] text-slate-500">
             <MapPin className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />

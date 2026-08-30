@@ -59,10 +59,10 @@ export function TechnicianWeekStrip({
           <span className="text-slate-300" aria-hidden>
             ·
           </span>
-          <p className="min-w-0 truncate font-medium text-slate-500">
+          <p className="min-w-0 truncate font-medium text-altair-ink-on-paper-muted">
             {queueLabel}
           </p>
-          <span className="ml-auto shrink-0 text-slate-400">
+          <span className="ml-auto shrink-0 text-altair-ink-on-paper-muted">
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1 font-medium text-slate-600">
                 <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
@@ -112,7 +112,7 @@ export function TechnicianWeekStrip({
               >
                 <span
                   className={`text-[10px] font-semibold uppercase leading-none tracking-wide ${
-                    isSelected ? "text-white/90" : "text-slate-500"
+                    isSelected ? "text-white/90" : "text-altair-ink-on-paper-muted"
                   }`}
                 >
                   {day.stripLabel}
@@ -127,7 +127,7 @@ export function TechnicianWeekStrip({
                 {jobCount > 0 ? (
                   <span
                     className={`text-[9px] font-medium tabular-nums leading-none ${
-                      isSelected ? "text-white/75" : "text-slate-400"
+                      isSelected ? "text-white/75" : "text-altair-ink-on-paper-muted"
                     }`}
                   >
                     {jobCount}

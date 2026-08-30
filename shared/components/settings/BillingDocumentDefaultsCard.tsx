@@ -222,7 +222,7 @@ export function BillingDocumentDefaultsCard({
     : "min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5";
   const mobileSummaryLabelClass = northStar
     ? "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]"
-    : "text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500";
+    : "text-[10px] font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-muted";
   const mobileSummaryValueClass = northStar
     ? "mt-0.5 truncate text-xs font-semibold text-[#17130E]"
     : "mt-0.5 truncate text-xs font-semibold text-slate-900";
