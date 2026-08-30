@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
 import { ServiceItemMaterialPicker } from "@/shared/components/service-items/ServiceItemMaterialPicker";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   fieldControlClass,
@@ -278,7 +278,7 @@ export function JobMaterialForm({
           <p className="text-xs text-slate-500">
             Total customer charge:{" "}
             <span className="font-semibold text-slate-700">
-              {formatCurrency(
+              {formatCurrencyExact(
                 calculateJobMaterialTotalBillable({
                   quantity: parsedQuantity,
                   unitPrice: parsedUnitPrice,
@@ -290,7 +290,7 @@ export function JobMaterialForm({
                 {" "}
                 · Total internal cost:{" "}
                 <span className="font-semibold text-slate-700">
-                  {formatCurrency(
+                  {formatCurrencyExact(
                     calculateJobMaterialTotalCost({
                       quantity: parsedQuantity,
                       unitCost: parsedUnitCost,

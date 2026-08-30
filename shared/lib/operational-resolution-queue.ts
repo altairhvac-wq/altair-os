@@ -20,7 +20,7 @@ import type {
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
 import { ESTIMATE_RECOVERY_THRESHOLD_DAYS } from "@/shared/lib/estimate-recovery";
@@ -359,7 +359,7 @@ function buildReadyToInvoiceItems(
   return entries.map((entry) => {
     const revenueHint =
       entry.approvedEstimateAmount != null
-        ? `Est. ${formatCurrency(entry.approvedEstimateAmount)}`
+        ? `Est. ${formatCurrencyExact(entry.approvedEstimateAmount)}`
         : entry.daysSinceCompletion > 0
           ? `${entry.daysSinceCompletion}d since completion`
           : undefined;
@@ -435,7 +435,7 @@ function buildUnpaidInvoiceFollowUpItems(
     queueType: "unpaid_invoice_follow_up",
     title: `Invoice ${invoice.invoiceNumber}`,
     subtitle: invoice.customerName,
-    meta: `${formatCurrency(invoice.balanceDue)} · ${invoice.daysUnpaid}d unpaid`,
+    meta: `${formatCurrencyExact(invoice.balanceDue)} · ${invoice.daysUnpaid}d unpaid`,
     severity: "warning",
     openHref: `/invoices/${invoice.id}`,
     invoice,
@@ -465,7 +465,7 @@ function buildUnsentInvoiceItems(
     queueType: "unsent_invoice",
     title: `Invoice ${invoice.invoiceNumber}`,
     subtitle: invoice.customerName,
-    meta: formatCurrency(invoice.total),
+    meta: formatCurrencyExact(invoice.total),
     severity: "warning",
     openHref: `/invoices/${invoice.id}`,
     invoice,
@@ -671,7 +671,7 @@ function buildUnsentEstimateItems(
     queueType: "unsent_estimate",
     title: `Estimate ${estimate.estimateNumber}`,
     subtitle: estimate.customerName,
-    meta: formatCurrency(estimate.total),
+    meta: formatCurrencyExact(estimate.total),
     severity: "warning",
     openHref: `/estimates/${estimate.id}`,
     estimate,
@@ -736,8 +736,8 @@ function buildAcceptedEstimateSchedulingItems(
     title: `Estimate ${estimate.estimateNumber}`,
     subtitle: estimate.customerName,
     meta: estimate.approvedAt
-      ? `Approved ${estimate.approvedAt.slice(0, 10)} · ${formatCurrency(estimate.total)}`
-      : formatCurrency(estimate.total),
+      ? `Approved ${estimate.approvedAt.slice(0, 10)} · ${formatCurrencyExact(estimate.total)}`
+      : formatCurrencyExact(estimate.total),
     severity: "warning",
     openHref: estimate.openHref,
     estimate,

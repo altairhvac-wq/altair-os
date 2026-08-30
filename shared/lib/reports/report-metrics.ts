@@ -30,7 +30,7 @@ import type {
   ReportsPageData,
   ReportsPageDateRange,
 } from "@/shared/types/reports-page";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import { formatPercent } from "@/shared/types/analytics";
 import {
   isDateWithinReportBounds,
@@ -627,7 +627,7 @@ function buildTopCustomers(
       id,
       label: entry.name,
       detail: `${entry.count} payment${entry.count === 1 ? "" : "s"}`,
-      value: formatCurrency(entry.revenue),
+      value: formatCurrencyExact(entry.revenue),
     }));
 }
 
@@ -678,7 +678,7 @@ function buildTopServiceCategories(
       id: jobType,
       label: jobType,
       detail: `${entry.jobCount} job${entry.jobCount === 1 ? "" : "s"}`,
-      value: formatCurrency(entry.revenue),
+      value: formatCurrencyExact(entry.revenue),
       amount: entry.revenue,
     }));
 }
@@ -693,7 +693,7 @@ function buildOverdueInvoices(invoices: Invoice[]): ReportSnapshotRow[] {
       label: invoice.customerName,
       customerId: invoice.customerId,
       detail: invoice.invoiceNumber,
-      value: formatCurrency(invoice.balanceDue),
+      value: formatCurrencyExact(invoice.balanceDue),
     }));
 }
 

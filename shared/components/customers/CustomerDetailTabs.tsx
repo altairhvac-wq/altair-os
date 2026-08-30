@@ -31,7 +31,7 @@ import {
   resolveCustomerDetailTabFromHash,
   type CustomerDetailTabId,
 } from "@/shared/lib/customers/customer-detail-anchors";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import type { Customer } from "@/shared/types/customer";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import type { Estimate } from "@/shared/types/estimate";
@@ -335,7 +335,7 @@ export function CustomerDetailTabs({
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
                           <p className="text-sm font-semibold text-altair-ink-on-paper">
-                            {formatCurrency(estimate.total)}
+                            {formatCurrencyExact(estimate.total)}
                           </p>
                           <EstimateStatusBadge status={estimate.status} />
                         </div>
@@ -385,7 +385,7 @@ export function CustomerDetailTabs({
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
                           <p className="text-sm font-semibold text-altair-ink-on-paper">
-                            {formatCurrency(invoice.total)}
+                            {formatCurrencyExact(invoice.total)}
                           </p>
                           <InvoiceStatusBadge status={invoice.status} />
                         </div>
@@ -425,7 +425,7 @@ export function CustomerDetailTabs({
                           </p>
                         </div>
                         <p className="shrink-0 text-sm font-semibold text-altair-success-foreground">
-                          {formatCurrency(payment.amount)}
+                          {formatCurrencyExact(payment.amount)}
                         </p>
                       </Link>
                     </li>

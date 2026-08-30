@@ -17,7 +17,7 @@ import {
   AltairTablePrimaryCell,
   AltairTableRow,
 } from "@/shared/design-system/table";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import { formatPaymentMethod } from "@/shared/types/invoice-payment";
 
 const invoiceNumberLinkFocusClass =
@@ -159,7 +159,7 @@ export function PaymentsTable({
                     northStar ? "text-[#17130E]" : "text-slate-900"
                   }`}
                 >
-                  {formatCurrency(payment.amount)}
+                  {formatCurrencyExact(payment.amount)}
                 </AltairTableCell>
                 <AltairTableCell>
                   <PaymentMethodCell payment={payment} northStar={northStar} />

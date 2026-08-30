@@ -18,7 +18,7 @@ import {
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import {
   ESTIMATE_LIFECYCLE_FILTER_OPTIONS,
   ESTIMATE_STATUS_OPTIONS,
@@ -115,7 +115,7 @@ function OwnerAttentionHeroCard({
 
         <div className="space-y-2 text-[15px] leading-snug text-slate-600">
           <p className="text-lg font-semibold tabular-nums text-slate-800">
-            {formatCurrency(estimate.total)}
+            {formatCurrencyExact(estimate.total)}
           </p>
           <p className="flex items-start gap-2.5">
             <Clock
@@ -168,7 +168,7 @@ function OwnerUpNextRow({
             <DemoDisplayName>{estimate.customerName}</DemoDisplayName>
           </p>
           <span className={estimatesOwnerMobileRowAmountClass}>
-            {formatCurrency(estimate.total)}
+            {formatCurrencyExact(estimate.total)}
           </span>
         </div>
         <p className={estimatesOwnerMobileRowMetaClass}>
@@ -210,7 +210,7 @@ function OwnerArchiveResultRow({
             <DemoDisplayName>{estimate.customerName}</DemoDisplayName>
           </p>
           <span className={estimatesOwnerMobileRowAmountClass}>
-            {formatCurrency(estimate.total)}
+            {formatCurrencyExact(estimate.total)}
           </span>
         </div>
         <p className={estimatesOwnerMobileRowMetaClass}>{estimate.estimateNumber}</p>

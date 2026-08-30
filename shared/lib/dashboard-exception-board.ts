@@ -10,7 +10,7 @@ import { LEADS_NEEDS_CONTACT_QUEUE_HREF } from "@/shared/lib/lead-dashboard-atte
 import { buildSalesHubHref } from "@/shared/lib/sales/sales-hub";
 import { buildTeamHubHref } from "@/shared/lib/team/team-hub";
 import { buildWorkJobHref } from "@/shared/lib/work/work-hub";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import type { DashboardData } from "@/shared/types/dashboard";
 
 export type DashboardExceptionBucketId =
@@ -146,7 +146,7 @@ export function buildDashboardExceptionBuckets(
       const items: DashboardExceptionBucketItem[] = [
         ...paymentAttention.openDisputes.map((dispute) => ({
           id: `dispute-${dispute.id}`,
-          label: formatCurrency(dispute.amount),
+          label: formatCurrencyExact(dispute.amount),
           detail: [
             dispute.reason?.replace(/_/g, " ") ?? "Dispute",
             dispute.invoiceNumber ?? null,
@@ -160,7 +160,7 @@ export function buildDashboardExceptionBuckets(
           label: attempt.invoiceNumber
             ? `Invoice ${attempt.invoiceNumber}`
             : "Card payment failed",
-          detail: formatCurrency(attempt.amount),
+          detail: formatCurrencyExact(attempt.amount),
           href: `/invoices/${attempt.invoiceId}`,
         })),
       ];
@@ -191,7 +191,7 @@ export function buildDashboardExceptionBuckets(
       items: money.overdueInvoices.map((invoice) => ({
         id: invoice.id,
         label: invoice.invoiceNumber,
-        detail: `${invoice.customerName} · ${formatCurrency(invoice.balanceDue)}`,
+        detail: `${invoice.customerName} · ${formatCurrencyExact(invoice.balanceDue)}`,
         href: `/invoices/${invoice.id}`,
       })),
     });
@@ -267,7 +267,7 @@ export function buildDashboardExceptionBuckets(
         (estimate) => ({
           id: estimate.id,
           label: estimate.estimateNumber,
-          detail: `${estimate.customerName} · ${formatCurrency(estimate.total)}`,
+          detail: `${estimate.customerName} · ${formatCurrencyExact(estimate.total)}`,
           href: estimate.openHref,
         }),
       ),

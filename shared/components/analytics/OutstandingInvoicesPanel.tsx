@@ -1,5 +1,5 @@
 import { AlertCircle, Clock, Receipt } from "lucide-react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrency, formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import type { OutstandingInvoice } from "@/shared/types/analytics";
 
 type OutstandingInvoicesPanelProps = {
@@ -83,7 +83,7 @@ export function OutstandingInvoicesPanel({
                 </p>
               </div>
               <p className="shrink-0 text-base font-black text-slate-900">
-                {formatCurrency(invoice.amount)}
+                {formatCurrencyExact(invoice.amount)}
               </p>
             </li>
           );

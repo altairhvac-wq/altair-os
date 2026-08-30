@@ -41,7 +41,7 @@ import {
   formatBillingSignatureBlockHtml,
   formatBillingSignatureBlockText,
 } from "@/shared/lib/billing-signature-block";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrencyExact, formatDate } from "@/shared/types/customer";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 
 export type SendBillingEmailResult = ResendSendResult;
@@ -203,7 +203,7 @@ export async function sendEstimateEmail(
       ? "Use the secure link below to review and sign this estimate online."
       : null,
     "",
-    `Estimated total: ${formatCurrency(input.total)}`,
+    `Estimated total: ${formatCurrencyExact(input.total)}`,
     `Issued: ${formatDate(input.issuedDate, input.timeZone)}`,
     validUntilLine,
     "",
@@ -322,7 +322,7 @@ export async function sendInvoiceEmail(
         : "Use the secure link below to view this invoice and contact us to pay."
       : null,
     "",
-    `Amount due: ${formatCurrency(input.balanceDue)}`,
+    `Amount due: ${formatCurrencyExact(input.balanceDue)}`,
     `Issued: ${formatDate(input.issuedDate, input.timeZone)}`,
     `Due date: ${formatDate(input.dueDate, input.timeZone)}`,
     "",
@@ -434,7 +434,7 @@ export async function sendInvoicePaymentLinkEmail(
     `${companyName} sent you a secure payment link for invoice ${input.invoiceNumber}.`,
     "You can pay securely online using this link.",
     "",
-    `Amount due: ${formatCurrency(input.balanceDue)}`,
+    `Amount due: ${formatCurrencyExact(input.balanceDue)}`,
     paymentCtaText,
     companyContactText ? `\n${companyContactText}` : null,
     "",
@@ -468,7 +468,7 @@ export async function sendInvoicePaymentLinkEmail(
             <tr>
               <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;">Amount due</td>
               <td align="right" style="padding:0;color:#18181b;font-size:20px;font-weight:700;line-height:1.2;white-space:nowrap;">
-                ${escapeBillingEmailHtml(formatCurrency(input.balanceDue))}
+                ${escapeBillingEmailHtml(formatCurrencyExact(input.balanceDue))}
               </td>
             </tr>
           </table>

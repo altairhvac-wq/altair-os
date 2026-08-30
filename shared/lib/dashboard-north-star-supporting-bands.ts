@@ -2,7 +2,7 @@ import { formatAcceptedEstimateSchedulingDescription } from "@/shared/lib/accept
 import { buildOperationalMomentumSnapshot } from "@/shared/lib/dashboard-operational-momentum";
 import { formatTimeInTimeZone } from "@/shared/lib/datetime";
 import type { DashboardData } from "@/shared/types/dashboard";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import { formatExpenseDate } from "@/shared/types/expense";
 import {
   formatOperationalActivityDetailsForAccess,
@@ -163,7 +163,7 @@ function buildActivityRows(data: DashboardData): NorthStarActivityRow[] {
     for (const payment of money.recentPayments.slice(0, ACTIVITY_LIMIT)) {
       rows.push({
         id: payment.id,
-        title: `Payment · ${payment.invoiceNumber} · ${formatCurrency(payment.amount)}`,
+        title: `Payment · ${payment.invoiceNumber} · ${formatCurrencyExact(payment.amount)}`,
         time: formatExpenseDate(payment.paymentDate),
       });
     }

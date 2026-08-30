@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CreditCard, FileText, Receipt } from "lucide-react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
 import {
@@ -166,7 +166,7 @@ export function CustomerBillingHistorySection({
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
-                      <p className={amountClass}>{formatCurrency(estimate.total)}</p>
+                      <p className={amountClass}>{formatCurrencyExact(estimate.total)}</p>
                       <EstimateStatusBadge status={estimate.status} />
                     </div>
                   </Link>
@@ -206,7 +206,7 @@ export function CustomerBillingHistorySection({
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
-                      <p className={amountClass}>{formatCurrency(invoice.total)}</p>
+                      <p className={amountClass}>{formatCurrencyExact(invoice.total)}</p>
                       <InvoiceStatusBadge status={invoice.status} />
                     </div>
                   </Link>
@@ -248,7 +248,7 @@ export function CustomerBillingHistorySection({
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-emerald-700">
-                      {formatCurrency(payment.amount)}
+                      {formatCurrencyExact(payment.amount)}
                     </p>
                   </Link>
                 </li>

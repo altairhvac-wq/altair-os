@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Globe } from "lucide-react";
 import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-payments";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import { formatPaymentMethod } from "@/shared/types/invoice-payment";
 
 type PaymentsMobileCardListProps = {
@@ -45,7 +45,7 @@ export function PaymentsMobileCardList({
                       northStar ? "text-[#17130E]" : "text-slate-900"
                     }`}
                   >
-                    {formatCurrency(payment.amount)}
+                    {formatCurrencyExact(payment.amount)}
                   </p>
                   <p className="shrink-0 text-xs tabular-nums text-altair-ink-on-paper-muted">
                     {formatDate(payment.paymentDate)}

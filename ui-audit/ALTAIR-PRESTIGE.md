@@ -868,3 +868,47 @@ A scan for `var(--x)` with no fallback where `--x` is never declared now returns
 miss). Worth re-running after any token move: an undefined custom property
 fails silently as "no background", which is exactly the kind of defect a
 runtime theme can hide for months.
+
+---
+
+## 8. Audit completion
+
+### D-30 · Rounded money on 73 surfaces where money is money
+The original audit's P1 — "money renders rounded where money changes hands" —
+was fixed at the *primitive* level (a `formatCurrencyExact` was added) but never
+at the *call sites*. A per-site classification of all 226 rounded uses found
+**73 that are money of record**, four of them P1 and customer-facing:
+
+`lib/email/billing-send.ts` rendered the invoice payment email's "Amount due"
+hero and plain-text line with the rounded formatter, while the Pay-now CTA
+directly beneath it (`billing-email-layout.ts`) used the exact one. **The same
+email disagreed with itself**, and Stripe charges
+`Math.round(roundCurrency(balanceDue) * 100)` cents — so a customer emailed
+"$1,235" is charged $1,234.56. The estimate email had the same defect on the
+number a customer reads before approving.
+
+The other 69 are figures of record that must reconcile:
+
+- **Printable tax summary** — control totals and their component rows rounded
+  independently, so Payments-by-Method no longer sums to Total payments, and
+  aging buckets no longer sum to Outstanding.
+- **Reconciling triads** — Customer 360, customer card and detail hero each
+  render Invoiced / Collected / Balance side by side, where
+  Balance = Invoiced − Collected. Rounding all three independently makes the
+  subtraction visibly wrong.
+- **List-vs-record contradictions** — invoice and estimate *lists* rounded while
+  their *detail pages* were exact, so the same field disagreed with itself
+  across two screens.
+- **Price book** — `unitPrice` is the price copied into line items; an $89.99
+  item read "$90" in the catalog and "$89.99" everywhere it was used.
+- Payment disputes and card failures (amounts being clawed back), per-invoice
+  balances in the resolution queue and exception board, and material-charge
+  previews rendered above `step="0.01"` inputs.
+
+All 73 now use `formatCurrencyExact`. **No rounded currency remains anywhere in
+`lib/email/`, `lib/payments/`, `app/invoice-payment/`, `app/estimate-approval/`
+or `shared/components/billing/`.** 153 rounded uses remain and are legitimately
+approximate — dashboard glance tiles, chart axes, abbreviated KPIs.
+
+No business calculation was touched; only presentation. The cent-precision
+values were always there.

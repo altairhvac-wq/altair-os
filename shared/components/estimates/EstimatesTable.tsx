@@ -1,7 +1,7 @@
 import { Fragment, useMemo } from "react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
@@ -253,7 +253,7 @@ export function EstimatesTable({
                           northStar ? lt.tableMetricText : "font-semibold text-slate-900"
                         }
                       >
-                        {formatCurrency(estimate.total)}
+                        {formatCurrencyExact(estimate.total)}
                       </AltairTableCell>
                     </AltairTableRow>
                   );

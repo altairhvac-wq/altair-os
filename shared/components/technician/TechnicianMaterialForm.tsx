@@ -11,7 +11,7 @@ import {
   formatPreservedFormError,
   formatRetryGuidance,
 } from "@/shared/lib/operational-errors";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   calculateJobMaterialTotalBillable,
   type JobMaterialFormData,
@@ -310,7 +310,7 @@ export function TechnicianMaterialForm({
         <p className="text-xs text-slate-500">
           Total {isCustomMaterial ? "billable" : "customer charge"}:{" "}
           <span className="font-semibold text-slate-700">
-            {formatCurrency(
+            {formatCurrencyExact(
               calculateJobMaterialTotalBillable({
                 quantity: parsedQuantity,
                 unitPrice: previewUnitPrice,

@@ -25,7 +25,7 @@ import type {
   DashboardData,
   DashboardLeadPipelineSummary,
 } from "@/shared/types/dashboard";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import { formatDispatchTime } from "@/shared/types/dispatch";
 import { formatExpenseAmount } from "@/shared/types/expense";
 import {
@@ -527,7 +527,7 @@ export function DashboardCompactBillingSection({
                   </p>
                 </div>
                 <p className="shrink-0 text-xs font-black text-emerald-700">
-                  {formatCurrency(payment.amount)}
+                  {formatCurrencyExact(payment.amount)}
                 </p>
               </Link>
             </li>

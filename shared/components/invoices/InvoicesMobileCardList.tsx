@@ -2,7 +2,7 @@ import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/a
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import { ChevronRight } from "lucide-react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
@@ -163,7 +163,7 @@ export function InvoicesMobileCardList({
                                 : "text-sm font-semibold text-slate-900"
                             }
                           >
-                            {formatCurrency(invoice.total)}
+                            {formatCurrencyExact(invoice.total)}
                           </p>
                           {invoice.balanceDue > 0 ? (
                             <p
@@ -173,7 +173,7 @@ export function InvoicesMobileCardList({
                                   : "text-xs font-medium text-amber-700"
                               }
                             >
-                              {formatCurrency(invoice.balanceDue)} due
+                              {formatCurrencyExact(invoice.balanceDue)} due
                             </p>
                           ) : (
                             <p

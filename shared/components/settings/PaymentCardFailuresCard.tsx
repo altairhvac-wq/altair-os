@@ -9,7 +9,7 @@ import {
 } from "@/shared/design-system/components/mc-surface";
 import { StatusPill } from "@/shared/design-system/components/StatusPill";
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 
 export type PaymentCardFailureListViewItem = {
   id: string;
@@ -118,7 +118,7 @@ export function PaymentCardFailuresCard({
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold tabular-nums text-altair-ink-on-paper">
-                        {formatCurrency(attempt.amount)}
+                        {formatCurrencyExact(attempt.amount)}
                       </span>
                       <StatusPill tone="warning" size="sm">
                         {attempt.cardFailureCount}{" "}

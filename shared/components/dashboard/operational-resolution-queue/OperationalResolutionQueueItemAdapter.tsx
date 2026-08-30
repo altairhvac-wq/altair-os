@@ -22,7 +22,7 @@ import { getReadyToInvoiceHref } from "@/shared/lib/operational-resolution-queue
 import { canBatchSendEstimate } from "@/shared/lib/estimate-batch-send";
 import { canBatchSendInvoice } from "@/shared/lib/invoice-batch-send";
 import { hasValidCustomerEmailForSend } from "@/shared/lib/operational-errors";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import { formatDispatchStatus } from "@/shared/types/dispatch";
 import { formatJobStatus } from "@/shared/types/job";
 import { canResendEstimateEmail } from "@/shared/types/estimate";
@@ -432,7 +432,7 @@ function OverdueInvoiceQueueItemAdapter({
     });
   }
 
-  const balanceMeta = `${formatCurrency(invoice.balanceDue)} due`;
+  const balanceMeta = `${formatCurrencyExact(invoice.balanceDue)} due`;
 
   return (
     <OperationalResolutionQueueItemView

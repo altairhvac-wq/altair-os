@@ -8,7 +8,7 @@ import {
   adminTableRowSelectedClass,
 } from "@/shared/lib/admin-density";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import type { ServiceItem } from "@/shared/types/service-item";
 
 type ServiceItemsTableProps = {
@@ -76,7 +76,7 @@ function getCostLabel(unitCost: number | null | undefined, northStar: boolean) {
   }
 
   return {
-    text: formatCurrency(unitCost),
+    text: formatCurrencyExact(unitCost),
     missing: false,
   };
 }
@@ -253,7 +253,7 @@ export function ServiceItemsTable({
                       : "px-4 py-3 text-right font-medium text-slate-900"
                   }`}
                 >
-                  {formatCurrency(item.unitPrice)}
+                  {formatCurrencyExact(item.unitPrice)}
                 </td>
                 <td
                   className={

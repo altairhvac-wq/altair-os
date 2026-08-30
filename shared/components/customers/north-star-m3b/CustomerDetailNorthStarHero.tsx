@@ -12,12 +12,7 @@ import {
 import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
 import type { Customer360Data } from "@/shared/lib/customers/customer-360";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
-import {
-  formatCurrency,
-  formatDate,
-  getCustomerInitials,
-  type Customer,
-} from "@/shared/types/customer";
+import { formatCurrency, formatDate, getCustomerInitials, type Customer, formatCurrencyExact } from "@/shared/types/customer";
 
 type CustomerDetailNorthStarHeroProps = {
   customer: Customer;
@@ -154,19 +149,19 @@ export function CustomerDetailNorthStarHero({
             <div>
               <p className={dt.heroStatLabel}>Total invoiced</p>
               <p className={dt.heroStatValue}>
-                {formatCurrency(financialSummary.totalInvoiced)}
+                {formatCurrencyExact(financialSummary.totalInvoiced)}
               </p>
             </div>
             <div>
               <p className={dt.heroStatLabel}>Total collected</p>
               <p className={dt.heroStatValue}>
-                {formatCurrency(financialSummary.totalCollected)}
+                {formatCurrencyExact(financialSummary.totalCollected)}
               </p>
             </div>
             <div>
               <p className={dt.heroStatLabel}>Balance due</p>
               <p className={dt.heroStatValue}>
-                {formatCurrency(financialSummary.outstandingBalance)}
+                {formatCurrencyExact(financialSummary.outstandingBalance)}
               </p>
             </div>
           </>

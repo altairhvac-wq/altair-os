@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   filterActiveServiceItemsForSearch,
   type ServiceItem,
@@ -62,9 +62,9 @@ export function ServiceItemMaterialPicker({
               </p>
             ) : null}
             <p className="mt-1 text-xs text-slate-500">
-              Customer charge: {formatCurrency(selectedItem.unitPrice)}
+              Customer charge: {formatCurrencyExact(selectedItem.unitPrice)}
               {showUnitCost && selectedItem.unitCost != null
-                ? ` · Internal cost: ${formatCurrency(selectedItem.unitCost)}`
+                ? ` · Internal cost: ${formatCurrencyExact(selectedItem.unitCost)}`
                 : null}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function ServiceItemMaterialPicker({
                       ) : null}
                     </span>
                     <span className="shrink-0 text-right text-xs tabular-nums text-slate-600">
-                      {formatCurrency(item.unitPrice)}
+                      {formatCurrencyExact(item.unitPrice)}
                     </span>
                   </button>
                 </li>

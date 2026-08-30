@@ -10,11 +10,7 @@ import {
 } from "@/shared/lib/customers/customer-operational-stats";
 import { getEstimateLifecycleState } from "@/shared/lib/estimate-lifecycle";
 import { getEstimateWorkflowGroup } from "@/shared/lib/estimate-workflow-list";
-import {
-  formatCustomerStatusLabel,
-  type Customer,
-  type CustomerStatus,
-} from "@/shared/types/customer";
+import { formatCustomerStatusLabel, type Customer, type CustomerStatus, formatCurrencyExact } from "@/shared/types/customer";
 import {
   computeCustomerFinancialSummary,
   type CustomerFinancialSummary,
@@ -428,12 +424,12 @@ function buildOpportunities(input: {
       } else if (expiredCount > 0) {
         description =
           expiredCount === 1
-            ? `${primary.estimateNumber} expired (${formatCurrency(total)}).`
+            ? `${primary.estimateNumber} expired (${formatCurrencyExact(total)}).`
             : `${expiredCount} expired estimates (${formatCurrency(total)} total).`;
       } else {
         description =
           openCount === 1
-            ? `${primary.estimateNumber} is awaiting a decision (${formatCurrency(total)}).`
+            ? `${primary.estimateNumber} is awaiting a decision (${formatCurrencyExact(total)}).`
             : `${openCount} estimates are still open (${formatCurrency(total)} total).`;
       }
 

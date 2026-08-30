@@ -1,7 +1,7 @@
 import { Fragment, useMemo } from "react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
@@ -255,7 +255,7 @@ export function InvoicesTable({
                           northStar ? lt.tableMetricText : "font-semibold text-slate-900"
                         }
                       >
-                        {formatCurrency(invoice.total)}
+                        {formatCurrencyExact(invoice.total)}
                       </AltairTableCell>
                       <AltairTableCell
                         className={`hidden sm:table-cell ${
@@ -264,7 +264,7 @@ export function InvoicesTable({
                             : "font-medium text-slate-700"
                         }`}
                       >
-                        {formatCurrency(invoice.balanceDue)}
+                        {formatCurrencyExact(invoice.balanceDue)}
                       </AltairTableCell>
                       <AltairTableCell>
                         <InvoiceStatusBadge status={invoice.status} />

@@ -4,12 +4,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { formatPhoneForDisplay } from "@/shared/lib/phone";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { CustomerStatusBadge } from "@/shared/components/customers/CustomerStatusBadge";
-import {
-  formatCurrency,
-  formatDate,
-  getCustomerInitials,
-  type Customer,
-} from "@/shared/types/customer";
+import { formatCurrency, formatDate, getCustomerInitials, type Customer, formatCurrencyExact } from "@/shared/types/customer";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 
 type CustomerCardProps = {
@@ -102,19 +97,19 @@ export function CustomerCard({
               <div>
                 <p className="text-xs font-medium text-slate-500">Total invoiced</p>
                 <p className="mt-0.5 text-lg font-bold text-slate-900">
-                  {formatCurrency(financialSummary.totalInvoiced)}
+                  {formatCurrencyExact(financialSummary.totalInvoiced)}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-500">Total collected</p>
                 <p className="mt-0.5 text-lg font-bold text-slate-900">
-                  {formatCurrency(financialSummary.totalCollected)}
+                  {formatCurrencyExact(financialSummary.totalCollected)}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-500">Balance due</p>
                 <p className="mt-0.5 text-lg font-bold text-slate-900">
-                  {formatCurrency(financialSummary.outstandingBalance)}
+                  {formatCurrencyExact(financialSummary.outstandingBalance)}
                 </p>
               </div>
             </div>

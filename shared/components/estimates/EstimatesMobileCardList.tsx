@@ -2,7 +2,7 @@ import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/a
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
 import { ChevronRight } from "lucide-react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrencyExact } from "@/shared/types/customer";
 import type { Estimate } from "@/shared/types/estimate";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
@@ -168,7 +168,7 @@ export function EstimatesMobileCardList({
                               : "text-sm font-semibold text-slate-900"
                           }
                         >
-                          {formatCurrency(estimate.total)}
+                          {formatCurrencyExact(estimate.total)}
                         </p>
                         <ChevronRight
                           className={

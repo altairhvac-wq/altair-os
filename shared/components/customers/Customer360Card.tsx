@@ -35,7 +35,7 @@ import {
   formatWarrantyStatus,
   getWarrantyStatusStyles,
 } from "@/shared/types/customer-equipment";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type Customer360CardVariant = "full" | "facts" | "opportunities";
@@ -357,19 +357,19 @@ function FinancialSection({
       <div className="mt-1.5 grid grid-cols-2 gap-2 lg:grid-cols-4">
         <SummaryMetric
           label="Total invoiced"
-          value={formatCurrency(financial.totalInvoiced)}
+          value={formatCurrencyExact(financial.totalInvoiced)}
           icon={ClipboardList}
           northStar={northStar}
         />
         <SummaryMetric
           label="Total collected"
-          value={formatCurrency(financial.totalCollected)}
+          value={formatCurrencyExact(financial.totalCollected)}
           icon={CircleDollarSign}
           northStar={northStar}
         />
         <SummaryMetric
           label="Balance due"
-          value={formatCurrency(financial.outstandingBalance)}
+          value={formatCurrencyExact(financial.outstandingBalance)}
           icon={AlertTriangle}
           highlighted={financial.outstandingBalance > 0}
           northStar={northStar}

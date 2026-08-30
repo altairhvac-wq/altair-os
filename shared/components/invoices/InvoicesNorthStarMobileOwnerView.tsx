@@ -28,7 +28,7 @@ import {
 } from "@/shared/components/jobs/jobs-north-star-mobile-owner-styles";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import type { InvoiceListStatusFilter } from "@/shared/lib/invoice-page-focus";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatDate, formatCurrencyExact } from "@/shared/types/customer";
 import {
   hasInvoiceUnpaidBalance,
   INVOICE_LIFECYCLE_FILTER_OPTIONS,
@@ -86,10 +86,10 @@ type InvoicesNorthStarMobileOwnerViewProps = {
 
 function formatInvoiceAmountLine(invoice: Invoice): string {
   if (hasInvoiceUnpaidBalance(invoice) && invoice.balanceDue > 0) {
-    return `${formatCurrency(invoice.balanceDue)} due`;
+    return `${formatCurrencyExact(invoice.balanceDue)} due`;
   }
 
-  return formatCurrency(invoice.total);
+  return formatCurrencyExact(invoice.total);
 }
 
 function formatInvoiceDateLine(invoice: Invoice, timeZone?: string): string {
@@ -137,7 +137,7 @@ function OwnerCollectionHeroCard({
             {formatInvoiceAmountLine(invoice)}
             {hasInvoiceUnpaidBalance(invoice) && invoice.total > 0 ? (
               <span className="ml-2 text-sm font-medium text-slate-500">
-                of {formatCurrency(invoice.total)}
+                of {formatCurrencyExact(invoice.total)}
               </span>
             ) : null}
           </p>

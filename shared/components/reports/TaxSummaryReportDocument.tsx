@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import type { AccountantSummaryData } from "@/shared/types/reports-page";
 import { REPORTS_PAGE_DATE_RANGE_OPTIONS } from "@/shared/types/reports-page";
 import {
@@ -183,27 +183,27 @@ export function TaxSummaryReportDocument({
           <SummaryTableSurface northStar={northStar}>
             <SummaryRow
               label="Total invoice value"
-              value={formatCurrency(summary.totalInvoiceValue)}
+              value={formatCurrencyExact(summary.totalInvoiceValue)}
               northStar={northStar}
             />
             <SummaryRow
               label="Total payments collected"
-              value={formatCurrency(summary.totalPaymentsCollected)}
+              value={formatCurrencyExact(summary.totalPaymentsCollected)}
               northStar={northStar}
             />
             <SummaryRow
               label="Outstanding invoice balance"
-              value={formatCurrency(summary.outstandingBalance)}
+              value={formatCurrencyExact(summary.outstandingBalance)}
               northStar={northStar}
             />
             <SummaryRow
               label="Overdue invoice balance"
-              value={formatCurrency(summary.overdueBalance)}
+              value={formatCurrencyExact(summary.overdueBalance)}
               northStar={northStar}
             />
             <SummaryRow
               label="Sales tax collected"
-              value={formatCurrency(summary.salesTaxCollected)}
+              value={formatCurrencyExact(summary.salesTaxCollected)}
               northStar={northStar}
             />
             <SummaryRow
@@ -213,7 +213,7 @@ export function TaxSummaryReportDocument({
             />
             <SummaryRow
               label="Net income estimate (Altair records only)"
-              value={formatCurrency(summary.netIncomeEstimate)}
+              value={formatCurrencyExact(summary.netIncomeEstimate)}
               northStar={northStar}
             />
           </SummaryTableSurface>
@@ -230,7 +230,7 @@ export function TaxSummaryReportDocument({
                 <SummaryRow
                   key={entry.method}
                   label={`${entry.method} (${entry.count})`}
-                  value={formatCurrency(entry.amount)}
+                  value={formatCurrencyExact(entry.amount)}
                   northStar={northStar}
                 />
               ))
@@ -284,7 +284,7 @@ export function TaxSummaryReportDocument({
               <SummaryRow
                 key={bucket.label}
                 label={`${bucket.label} (${bucket.count})`}
-                value={formatCurrency(bucket.amount)}
+                value={formatCurrencyExact(bucket.amount)}
                 northStar={northStar}
               />
             ))}

@@ -45,7 +45,7 @@ import {
   buildLeadPipelineMetricsFromAggregates,
   EMPTY_LEAD_PIPELINE_METRICS,
 } from "@/shared/lib/leads/lead-metrics";
-import { formatCurrency } from "@/shared/types/customer";
+import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import { formatPercent } from "@/shared/types/analytics";
 import { roundCurrency } from "@/shared/types/invoice";
 import { formatPaymentMethod } from "@/shared/types/invoice-payment";
@@ -272,7 +272,7 @@ function buildTopCustomerRows(
     id: entry.customerId,
     label: entry.name,
     detail: `${num(entry.paymentCount)} payment${num(entry.paymentCount) === 1 ? "" : "s"}`,
-    value: formatCurrency(roundCurrency(num(entry.revenue))),
+    value: formatCurrencyExact(roundCurrency(num(entry.revenue))),
   }));
 }
 
@@ -303,7 +303,7 @@ function buildServiceCategoryRows(
       id: entry.jobType,
       label: entry.jobType,
       detail: `${entry.jobCount} job${entry.jobCount === 1 ? "" : "s"}`,
-      value: formatCurrency(entry.revenue),
+      value: formatCurrencyExact(entry.revenue),
       amount: entry.revenue,
     }));
 }
@@ -316,7 +316,7 @@ function buildOverdueRows(
     label: entry.customerName,
     customerId: entry.customerId,
     detail: entry.invoiceNumber,
-    value: formatCurrency(roundCurrency(num(entry.balanceDue))),
+    value: formatCurrencyExact(roundCurrency(num(entry.balanceDue))),
   }));
 }
 
