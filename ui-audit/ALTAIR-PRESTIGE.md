@@ -551,3 +551,61 @@ Two things this pass tried and backed out, because measuring beat assuming:
 Verified across /customers, /sales, /work and /team at 390, 768, 1024 and 1440:
 no truncated titles, no overlap. Header height is unchanged everywhere except
 where content genuinely does not fit on one row.
+
+---
+
+## 4. Phase 1 — visual authority
+
+### D-20 · One stylesheet scope owns tokens
+"Who owns the final runtime design value?" had no short answer. Tokens were
+declared in **three** stylesheet scopes plus a database-driven inline style, and
+the same name could be defined in two of them at once.
+
+Measured before touching anything:
+
+| scope | declarations |
+|---|---:|
+| `:root` (5 blocks) | 170 |
+| `.admin-north-star-shell` | 46 |
+| `[data-theme="dark"]` | 30 |
+
+**29 of the shell's 46 were byte-identical to `:root`, and none differed.** They
+were a fossil: before the Prestige palette the two scopes carried genuinely
+different values, and once both aliased the same roles the second scope became
+pure ambiguity. The other 17 were shell-only surface aliases that
+`.north-star-list-page-canvas`, `.north-star-detail-page-canvas` and
+`.north-star-page-header` consume *without* being textually nested in the
+shell — they worked only by inheritance, and rendered unstyled anywhere the
+shell was absent.
+
+The shell block is gone; the 17 moved to `:root`. Authority is now:
+
+> **`:root` declares every token. `[data-theme="dark"]` re-declares the dark
+> set. The Design Lab inline style on the shell element is the only runtime
+> override. Nothing else.**
+
+**This was verified, not assumed.** `ui-audit/token-snapshot.mjs` reads the
+*computed* value of every custom property found in any stylesheet, on the shell,
+on the main region and on the root, across five routes — 6,600 values. Before
+and after the refactor: **0 changed, 0 lost**, plus 85 that newly resolve
+(the relocated aliases, which is the point). Re-run it around any future token
+move; reading CSS cannot tell you what a three-layer cascade resolves to.
+
+### D-21 · A var that aliases an overridable var must live in the overridden scope
+The first pass of D-20 moved everything to `:root` and the snapshot caught two
+values changing: `--north-star-text-light` and `--north-star-text-light-muted`
+went from the Design Lab's olive to canonical ink.
+
+The cascade reason is worth remembering. Both were aliases —
+`--north-star-text-light: var(--north-star-section-title)` — and the Design Lab
+sets `--north-star-section-title` *inline on the shell element*. Declared in the
+shell scope the alias resolved against the inline override; hoisted to `:root`
+it resolves against the `:root` value and silently stops tracking the theme.
+
+Both turned out to have **zero CSS consumers**. They are backward-compatibility
+keys read from previously saved theme rows by `design-lab-theme-tokens.ts`,
+which migrates them onto the split roles. Declaring them in CSS made dead names
+look live, so the declarations were removed and the migration code left alone.
+
+Rule: an alias of a Design-Lab-overridable token either lives in the scope the
+override lands on, or does not exist.

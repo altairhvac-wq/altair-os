@@ -201,6 +201,36 @@
   /* Emphasis point on a trend line. */
   --chart-accent: #e8d9ac;
 
+
+  /* ── 8. NORTH STAR SURFACE ALIASES ──
+   * Relocated from a `.admin-north-star-shell` scope that declared 46
+   * custom properties, 29 of them byte-identical to `:root`. Two scopes
+   * declaring the same tokens gave every value two possible origins for no
+   * benefit. `:root` is now the only stylesheet scope that declares design
+   * tokens; the Design Lab inline style is the only other authority.
+   *
+   * These also resolve outside the shell now, which fixes
+   * `.north-star-list-page-canvas`, `.north-star-detail-page-canvas` and
+   * `.north-star-page-header`: they consume these vars but are not
+   * textually nested in the shell, so they relied on inheritance. */
+  --north-star-work-surface: var(--surface);
+  --north-star-work-band: var(--canvas-sunken);
+  --north-star-work-row: var(--surface-raised);
+  --north-star-work-row-hover: var(--surface-recessed);
+  --north-star-work-input: var(--surface-raised);
+  --north-star-work-border: var(--border);
+  --north-star-work-border-strong: var(--border-strong);
+  --north-star-work-text: var(--ink);
+  --north-star-work-text-secondary: var(--ink-secondary);
+  --north-star-work-text-muted: var(--ink-muted);
+  --north-star-work-placeholder: var(--pg-ink-300);
+  --page-canvas-top: var(--surface);
+  --page-canvas-mid: var(--surface);
+  --page-canvas-deep: var(--surface-recessed);
+  --page-canvas-border: var(--border);
+  --page-header-top: var(--chrome-elevated);
+  --page-header-bottom: var(--chrome);
+
   /* ── 7. TYPOGRAPHY ─────────────────────────────────────────────────────────
    * The audit counted 27 distinct font sizes across 4,353 call sites with no
    * system behind them — 73% of the product is `text-xs`/`text-sm`, and the
@@ -307,11 +337,18 @@
   --north-star-text-secondary: var(--ink-secondary);
   --north-star-text-muted: var(--ink-muted);
   /*
-   * Light ink roles (formerly bundled as --north-star-text-light):
+   * Light ink roles (formerly bundled as one `--north-star-text-light`):
    *   topbar-heading  — Premium header / hub strip / Settings titles
    *   section-title   — graphite-canvas section titles (.altair-canvas-ink)
    *   link-hover      — canvas link hover + header sign-out hover
-   * Legacy aliases keep stray refs readable; Design Lab edits the role tokens.
+   * Design Lab edits the role tokens directly.
+   *
+   * The two bundled names are deliberately NOT declared here. Nothing in
+   * CSS reads them — they survive only as keys inside previously saved
+   * Design Lab themes, and `design-lab-theme-tokens.ts` migrates those
+   * rows forward onto the split roles above. Declaring them in `:root` as
+   * well made them look live and produced a value that silently stopped
+   * tracking the Design Lab override once token scopes were unified.
    */
   /* Ink split by GROUND, not by name. `topbar-*` sits on dark chrome and stays
    * light; `section-*` / `link` sit on the (now light) parchment canvas and
@@ -320,9 +357,8 @@
   --north-star-topbar-heading: var(--ink-on-chrome);
   --north-star-section-title: var(--ink);
   --north-star-link-hover: var(--ink);
-  --north-star-text-light: var(--north-star-section-title);
   /*
-   * Muted light ink roles (formerly --north-star-text-light-muted):
+   * Muted light ink roles (formerly one `--north-star-text-light-muted`):
    *   topbar-subcopy     — date / switcher helpers / Settings eyebrow
    *   section-secondary  — .altair-canvas-ink-secondary + caught-up body
    *   link               — canvas link base (.altair-canvas-ink-link)
@@ -332,7 +368,6 @@
   --north-star-section-secondary: var(--ink-secondary);
   --north-star-link: var(--ink-secondary);
   --north-star-topbar-icon: var(--ink-on-chrome-secondary);
-  --north-star-text-light-muted: var(--north-star-section-secondary);
   --north-star-graphite-base: var(--north-star-sidebar);
   --north-star-graphite-mid: var(--north-star-topbar);
   --north-star-graphite-border: var(--north-star-border);
@@ -1500,76 +1535,6 @@ a[href] {
 }
 
 /* North Star shell scope — Platinum Circuit graphite chrome (always applied by AdminShell) */
-.admin-north-star-shell {
-  /* PRESTIGE: this scope re-declares the chrome family and OUTRANKS `:root`,
-   * so it is the block that actually decides what the shell looks like. It is
-   * now aliased to the same canonical roles as `:root` — the two must never
-   * drift apart again. (Keeping the block rather than deleting it preserves
-   * the cascade order the Design Lab live-theme override depends on.) */
-  --north-star-root: var(--canvas);
-  --north-star-sidebar: var(--chrome);
-  --north-star-topbar: var(--chrome-elevated);
-  --north-star-panel: var(--chrome-elevated);
-  --north-star-border: var(--chrome-edge);
-  --north-star-section-divider: var(--border);
-  --north-star-plate-border: var(--border);
-  --north-star-header-strip: var(--chrome);
-  --north-star-content-well: var(--canvas);
-  --north-star-caught-up-fill: var(--pg-emerald-100);
-  --north-star-bronze: var(--pg-brass-700);
-  --north-star-brass: var(--pg-brass-600);
-  --north-star-gold: var(--pg-brass-500);
-  --north-star-champagne: var(--pg-champagne-300);
-  --north-star-ivory: var(--pg-porcelain-050);
-  --north-star-ivory-strong: var(--pg-porcelain-000);
-  --north-star-text-dark: var(--ink);
-  --north-star-text-secondary: var(--ink-secondary);
-  --north-star-text-muted: var(--ink-muted);
-  /* Ink split by GROUND, not by name. `topbar-*` sits on dark chrome and stays
-   * light; `section-*` / `link` sit on the (now light) parchment canvas and
-   * must be dark ink. Getting this wrong renders invisible headings — the
-   * exact "flipping ink role" failure the Foundation documents. */
-  --north-star-topbar-heading: var(--ink-on-chrome);
-  --north-star-section-title: var(--ink);
-  --north-star-link-hover: var(--ink);
-  --north-star-text-light: var(--north-star-section-title);
-  --north-star-topbar-subcopy: var(--ink-on-chrome-secondary);
-  --north-star-section-secondary: var(--ink-secondary);
-  --north-star-link: var(--ink-secondary);
-  --north-star-topbar-icon: var(--ink-on-chrome-secondary);
-  --north-star-text-light-muted: var(--north-star-section-secondary);
-  --north-star-sidebar-link-hover: var(--ink-on-chrome);
-  /* The "work" family paints dense ledger surfaces (tables, filter bars,
-   * inputs). It was an independent cool blue-grey palette — the main reason
-   * list pages read colder than the rest of the product. Now warm. */
-  --north-star-work-surface: var(--surface);
-  --north-star-work-band: var(--canvas-sunken);
-  --north-star-work-row: var(--surface-raised);
-  --north-star-work-row-hover: var(--surface-recessed);
-  --north-star-work-input: var(--surface-raised);
-  --north-star-work-border: var(--border);
-  --north-star-work-border-strong: var(--border-strong);
-  --north-star-work-text: var(--ink);
-  --north-star-work-text-secondary: var(--ink-secondary);
-  --north-star-work-text-muted: var(--ink-muted);
-  --north-star-work-placeholder: var(--pg-ink-300);
-
-  /* Layer 1 — floating page canvas. Re-tuned Aug 2026 from the old "moon
-   * graphite" BLUE-black family to a true neutral Black (#0A0A0A) + Platinum
-   * (#D0CCC4) mix, matching the Platinum Circuit reference exactly — no blue
-   * hue left anywhere in the chrome, and the canvas now visibly lifts off
-   * the black frame instead of reading flat. See ALTAIR_ARCHITECTURE.md —
-   * Shell Layer Model. */
-  /* PRESTIGE: the floating page canvas is the plane a list/detail page sits on.
-   * It reads as a shallow warm well inside the parchment frame — a very slight
-   * top-to-bottom fall, not the old three-stop dark graphite ramp. */
-  --page-canvas-top: var(--surface);
-  --page-canvas-mid: var(--surface);
-  --page-canvas-deep: var(--surface-recessed);
-  --page-canvas-border: var(--border);
-  --page-header-top: var(--chrome-elevated);
-  --page-header-bottom: var(--chrome);
-}
 
 /*
  * Operational surfaces use the same cool blue-gray/white palette throughout
