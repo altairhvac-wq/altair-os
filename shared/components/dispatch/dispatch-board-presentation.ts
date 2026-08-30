@@ -50,8 +50,11 @@ export const dispatchMissionClasses = {
   lane: `${altairReportCardClass} flex min-w-0 items-stretch`,
   laneHeader:
     "sticky left-0 z-20 flex h-full w-[10.5rem] shrink-0 flex-col justify-center overflow-hidden border-r border-altair-border bg-altair-graphite px-2 py-1 sm:w-44 sm:px-2.5 lg:w-48",
+  /* Bright brass for the initials, not `--altair-brass`: the dark brass on its
+   * own 20% wash measured 2.17:1 in the live board at 9px. Interactive brass
+   * keeps the brand read and measures 5.68:1. */
   laneHeaderAvatar:
-    "flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-altair-brass/20 text-[9px] font-bold text-altair-brass ring-1 ring-altair-brass/30",
+    "flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-altair-brass/20 text-[9px] font-bold text-altair-brass-interactive ring-1 ring-altair-brass/30",
   laneHeaderName:
     "truncate text-[11px] font-bold leading-tight tracking-tight text-altair-paper sm:text-[12px]",
   laneHeaderRole: "truncate text-[9px] leading-tight text-altair-ink-on-graphite-muted",
