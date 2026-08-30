@@ -31,7 +31,18 @@ export function buildDesignLabLiveStyleVars(
     parsed.dimensions,
   ) as unknown as Record<string, string>;
 
-  return restrictToLiveChromeVars(all) as React.CSSProperties;
+  const chromeOnly = restrictToLiveChromeVars(all);
+
+  /* Keep the fail-closed contract meaningful now that the map is filtered: a
+     saved theme consisting only of foundation tokens produces no live chrome,
+     and both callers (the shell layout and the promote action) treat null as
+     "fall back to source". Returning an empty object instead would let such a
+     theme promote successfully and then change nothing. */
+  if (Object.keys(chromeOnly).length === 0) {
+    return null;
+  }
+
+  return chromeOnly as React.CSSProperties;
 }
 
 /**
