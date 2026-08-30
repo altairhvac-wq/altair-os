@@ -499,7 +499,7 @@ Details that matter more than the width:
   to "Good ev…" / "Satu…", which reads as a rendering bug rather than identity.
   The serif moment waits until there is room for it.
 
-**Known and deliberately not fixed here.** `admin-page-header` lays out a
+**Known, and fixed separately in D-19.** `admin-page-header` lays out a
 `flex-1 min-w-0` title block beside `shrink-0` tabs and buttons, so the title
 yields all available space instead of the tabs wrapping. Measured at 1024px the
 title block collapses to **98px**, and both the page title and its description
@@ -507,3 +507,47 @@ truncate into it; the same compression shows at 390px. It is pre-existing, it is
 on a different breakpoint from the rail, and `admin-page-header` is shared by
 every admin page — changing its flex model deserves its own pass with its own
 verification across all surfaces, not a drive-by inside a sidebar fix.
+
+### D-19 · The page header collapsed the wrong thing
+`MasterPageHeader` laid out a `flex-1 min-w-0` title block beside a centre slot
+and `shrink-0` actions. Two independent faults compounded:
+
+1. `flex-1` is `flex: 1 1 0%` — a **zero basis**, so the title block made no
+   claim on width at all and yielded everything to its neighbours.
+2. `sm:shrink-0` lived *inside* the default `titleClassName` string, so any page
+   passing a custom title class silently lost it. The title then competed with
+   its own subtitle and truncated first — which is never the right loser.
+
+Measured before the fix: the Customers hub title block collapsed to **98px** at
+1024px, and on **/work the title rendered at 0px at 1024, 1280 and 1440** — the
+page title was invisible at every desktop width, and once the block was too
+narrow to contain a non-shrinking title, the title overflowed and printed on top
+of the neighbouring stat strip.
+
+The fix is three small changes, each addressing one fault:
+
+- `flex-auto` (`flex: 1 1 auto`) so the block starts from its content width and
+  is always wide enough to contain the title. `min-w-0` stays, so the subtitle
+  still truncates — which is the correct thing to sacrifice.
+- `sm:shrink-0` hoisted out of the fallback string onto every title.
+- `lg:flex-wrap`, scoped to the breakpoint where the centre slot actually
+  renders. From `lg` up the natural widths genuinely exceed the row (966px of
+  content in 766px on the Customers hub at 1024), so without a wrap the
+  shortfall lands on the tab strip, whose labels break over two lines and clip.
+  Below `lg` there is no centre slot and the row fits, so wrapping there would
+  add height for nothing.
+
+Two things this pass tried and backed out, because measuring beat assuming:
+
+- **Wrapping at every width.** It fixed 1024 but cost 40px of header height at
+  768 to recover a 12px shortfall. Scoping the wrap to `lg` kept 768 at its
+  original height.
+- **An `overflow-x` utility on the centre wrapper.** The wrapper's own comment
+  claimed the content would scroll, so this looked like the missing piece — but
+  probing showed the strip *inside* it already carries `overflow-x: auto`
+  (scrollWidth 667 against clientWidth 272). The utility was redundant and was
+  removed rather than left as dead CSS.
+
+Verified across /customers, /sales, /work and /team at 390, 768, 1024 and 1440:
+no truncated titles, no overlap. Header height is unchanged everywhere except
+where content genuinely does not fit on one row.
