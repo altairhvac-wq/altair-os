@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/shared/design-system/feedback";
 import { Copy } from "lucide-react";
 import { buildTeamInviteShareTextFromOrigin } from "@/shared/lib/team-invite-link";
 
@@ -36,6 +37,14 @@ export function CopyTeamInviteLinkButton({
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+      /* Success is already visible — the icon swaps to a check — so it
+         raises no toast. Failure had no signal at all: the clipboard API
+         rejects on an insecure context or a denied permission, and the
+         button simply did nothing. */
+      toast.error("Could not copy the invite link", {
+        description: "Select the text and copy it manually.",
+        dedupeKey: "clipboard",
+      });
     }
   }
 

@@ -5121,6 +5121,44 @@ a[href] {
   }
 }
 
+/*
+ * Toast entry. Motion is 140ms and travels 6px — enough to catch the eye at the
+ * edge of vision without pulling focus from the work that triggered it.
+ *
+ * Under reduced motion the toast still APPEARS (suppressing it entirely would
+ * hide the only confirmation some mutations give); it simply arrives without
+ * travel. Opacity-only is the accessible fallback, not "no feedback".
+ */
+.altair-toast {
+  animation: altair-toast-in 140ms ease-out both;
+}
+
+@keyframes altair-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .altair-toast {
+    animation: altair-toast-fade 100ms ease-out both;
+  }
+
+  @keyframes altair-toast-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
 /* Horizontally scrollable mobile destination rail — hide scrollbars, keep swipe. */
 .mobile-nav-rail-scroll {
   -ms-overflow-style: none;

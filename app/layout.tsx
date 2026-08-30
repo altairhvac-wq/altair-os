@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { MetaPixel } from "@/shared/components/analytics/MetaPixel";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
+import { ToastViewport } from "@/shared/design-system/feedback";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -109,6 +110,10 @@ export default function RootLayout({
         <PwaServiceWorkerRegistration />
         <MetaPixel />
         {children}
+        {/* Root-level so admin, technician and public routes share one
+            feedback surface, and so its live regions exist in the DOM before
+            any message arrives. */}
+        <ToastViewport />
       </body>
     </html>
   );
