@@ -24,25 +24,34 @@ const GRAB = (props) => {
     return o;
   };
   const res = {};
-  const sels = ["h1", "h1 + p", "thead tr", "thead th", "tbody tr", "tbody td",
-    'input[type="checkbox"]', "header", "table"];
+  const sels = ["h1", "h2", "h3", "h1 + p", "thead tr", "thead th", "tbody tr", "tbody td",
+    'input[type="checkbox"]', "header", "table", "button", "a", "select", "label",
+    "aside", "nav", "main", "section", "article", "ul", "li", "p", "span",
+    "[class*=ledger]", "[class*=page-header]", "[class*=north-star]",
+    "[class*=mission]", "[class*=card]", "[class*=panel]", "[class*=badge]",
+    "[class*=pill]", "[class*=row]", "[class*=cell]", "[class*=action]"];
   for (const s of sels) {
-    const els = [...document.querySelectorAll(s)].slice(0, 4);
+    const els = [...document.querySelectorAll(s)].slice(0, 8);
     res[s] = els.map(pick);
   }
   return res;
 };
 
 const b = await chromium.launch({ headless: true });
-const ctx = await b.newContext({ storageState: AUTH, viewport: { width: 1440, height: 900 } });
-const p = await ctx.newPage();
+const ROUTES = ["/", "/customers", "/work", "/dispatch", "/settings", "/time-clock",
+  "/invoices", "/estimates", "/expenses", "/payroll", "/reports", "/price-book", "/sales"];
 const snap = {};
-for (const r of ["/customers", "/work", "/dispatch", "/settings", "/time-clock", "/invoices", "/estimates", "/expenses", "/payroll", "/reports"]) {
-  await p.goto(BASE + r, { waitUntil: "domcontentloaded", timeout: 90000 });
-  await p.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
-  await p.waitForTimeout(700);
-  snap[r] = await p.evaluate(GRAB, PROPS);
-  process.stdout.write(`${r} `);
+for (const width of [390, 1024, 1440]) {
+  const ctx = await b.newContext({ storageState: AUTH, viewport: { width, height: 900 } });
+  const p = await ctx.newPage();
+  for (const r of ROUTES) {
+    await p.goto(BASE + r, { waitUntil: "domcontentloaded", timeout: 90000 });
+    await p.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
+    await p.waitForTimeout(600);
+    snap[`${width}${r}`] = await p.evaluate(GRAB, PROPS);
+  }
+  await ctx.close();
+  process.stdout.write(`${width}px `);
 }
 fs.writeFileSync(out, JSON.stringify(snap, null, 1));
 console.log(`\nwritten ${out}`);

@@ -1621,11 +1621,11 @@ a[href] {
  * and tax documents to white.
  */
 .admin-north-star-shell .bg-\[\#FBF7EF\] {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
 }
 
 .admin-north-star-shell .bg-\[\#FFF9EA\] {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
 }
 
 .admin-north-star-shell .bg-\[\#F5F0E4\],
@@ -1633,22 +1633,22 @@ a[href] {
 .admin-north-star-shell .bg-\[\#F7F0E2\],
 .admin-north-star-shell .bg-\[\#EFE4CB\],
 .admin-north-star-shell .bg-\[\#E8DCC4\] {
-  background-color: var(--north-star-work-band) !important;
+  background-color: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .bg-\[\#EDE3C8\] {
-  background-color: #e1ddd4 !important;
+  background-color: #e1ddd4;
 }
 
 .admin-north-star-shell .hover\:bg-\[\#FFF9EA\]:hover,
 .admin-north-star-shell .hover\:bg-\[\#F3EBDD\]:hover,
 .admin-north-star-shell .hover\:bg-\[\#F7F0E2\]:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .focus\:bg-\[\#FBF7EF\]:focus,
 .admin-north-star-shell .focus\:bg-\[\#FFF9EA\]:focus {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
 }
 
 /* Admin experience — Surface Hierarchy (canvas → section → card/tile → row) */
@@ -1830,29 +1830,29 @@ a[href] {
       input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
       select
     ) {
-    min-height: 2rem !important;
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
+    min-height: 2rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 
   .admin-north-star-shell .admin-shell-main textarea {
-    min-height: 3rem !important;
+    min-height: 3rem;
   }
 
   .admin-north-star-shell .admin-shell-main form label,
   .admin-north-star-shell .admin-shell-main form label > span:first-child,
   .admin-north-star-shell .admin-shell-main form legend {
-    font-size: 0.75rem !important;
-    line-height: 1.125rem !important;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
   }
 
   .admin-north-star-shell .admin-shell-main form :is(h3, h4) {
-    font-size: 0.8125rem !important;
-    line-height: 1.25rem !important;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
   }
 
   .admin-north-star-shell .admin-shell-main form .grid {
-    gap: 0.625rem 0.875rem !important;
+    gap: 0.625rem 0.875rem;
   }
 
   .admin-north-star-shell
@@ -1861,23 +1861,23 @@ a[href] {
     :is(.space-y-3, .space-y-4, .space-y-5, .space-y-6)
     > :not([hidden])
     ~ :not([hidden]) {
-    margin-top: 0.625rem !important;
+    margin-top: 0.625rem;
   }
 
   .admin-north-star-shell .admin-shell-main form :is(.pb-4, .pb-5, .pb-6) {
-    padding-bottom: 0.75rem !important;
+    padding-bottom: 0.75rem;
   }
 
   .admin-north-star-shell .admin-shell-main form :is(.pt-4, .pt-5, .pt-6) {
-    padding-top: 0.75rem !important;
+    padding-top: 0.75rem;
   }
 
   .admin-north-star-shell .admin-shell-main form :is(.mt-4, .mt-5, .mt-6) {
-    margin-top: 0.75rem !important;
+    margin-top: 0.75rem;
   }
 
   .admin-north-star-shell .admin-shell-main form :is(.mb-4, .mb-5, .mb-6) {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.75rem;
   }
 
   /*
@@ -2083,38 +2083,38 @@ a[href] {
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-title {
-    color: var(--north-star-text-dark) !important;
+    color: var(--north-star-text-dark);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-empty {
-    color: var(--north-star-text-secondary) !important;
+    color: var(--north-star-text-secondary);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-helper {
-    color: var(--north-star-text-secondary) !important;
+    color: var(--north-star-text-secondary);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel button.text-cyan-700 {
-    color: var(--north-star-bronze) !important;
+    color: var(--north-star-bronze);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel button.text-cyan-700:hover {
-    color: var(--north-star-brass) !important;
+    color: var(--north-star-brass);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-900,
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel .font-semibold.text-slate-900 {
-    color: var(--north-star-text-dark) !important;
+    color: var(--north-star-text-dark);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-600,
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-700 {
-    color: var(--north-star-text-secondary) !important;
+    color: var(--north-star-text-secondary);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-400,
   .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-500 {
-    color: var(--north-star-text-secondary) !important;
+    color: var(--north-star-text-secondary);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher p,
@@ -2140,17 +2140,17 @@ a[href] {
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel span.text-slate-900,
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .font-medium.text-slate-900,
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .font-semibold.text-slate-900 {
-    color: var(--north-star-text-dark) !important;
+    color: var(--north-star-text-dark);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel p.text-slate-500,
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel span.text-slate-500,
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .text-xs.text-slate-500 {
-    color: var(--north-star-text-secondary) !important;
+    color: var(--north-star-text-secondary);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .text-cyan-600 {
-    color: var(--north-star-bronze) !important;
+    color: var(--north-star-bronze);
   }
 
   .admin-north-star-sidebar-group-label {
@@ -2465,28 +2465,28 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-today-list .job-north-star-row-selected {
-  background-color: rgb(194 160 90 / 0.12) !important;
+  background-color: rgb(194 160 90 / 0.12);
   box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Invoices list — billing ledger (M5A) */
 .admin-north-star-shell .north-star-page-header .north-star-invoices-primary-action {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
-  opacity: 1 !important;
+  );
+  color: #17130e;
+  opacity: 1;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-invoices-primary-action svg {
-  color: #17130e !important;
+  color: #17130e;
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar {
@@ -2520,27 +2520,27 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-ledger thead tr {
-  border-bottom: 1px solid var(--north-star-work-border) !important;
-  background: var(--north-star-work-band) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .invoice-north-star-ledger thead th {
   padding: 0.5625rem 0.75rem;
-  font-size: 0.625rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  color: var(--north-star-work-text-secondary) !important;
-  background: transparent !important;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--north-star-work-text-secondary);
+  background: transparent;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody tr {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody tr:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody td {
@@ -2549,16 +2549,16 @@ a[href] {
 
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-meta-cell,
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-date-cell {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-balance-cell {
-  color: #17130e !important;
-  font-weight: 600 !important;
+  color: #17130e;
+  font-weight: 600;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger input[type="checkbox"] {
-  border-color: #a4823a !important;
+  border-color: #a4823a;
   accent-color: #77591b;
   color: #c2a05a;
 }
@@ -2577,28 +2577,28 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list .invoice-north-star-row-selected {
-  background-color: rgb(194 160 90 / 0.12) !important;
+  background-color: rgb(194 160 90 / 0.12);
   box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Estimates list — quote pipeline ledger (M5B) */
 .admin-north-star-shell .north-star-page-header .north-star-estimates-primary-action {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
-  opacity: 1 !important;
+  );
+  color: #17130e;
+  opacity: 1;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-estimates-primary-action svg {
-  color: #17130e !important;
+  color: #17130e;
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar {
@@ -2632,27 +2632,27 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-ledger thead tr {
-  border-bottom: 1px solid var(--north-star-work-border) !important;
-  background: var(--north-star-work-band) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .estimate-north-star-ledger thead th {
   padding: 0.5625rem 0.75rem;
-  font-size: 0.625rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  color: var(--north-star-work-text-secondary) !important;
-  background: transparent !important;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--north-star-work-text-secondary);
+  background: transparent;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody tr {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody tr:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody td {
@@ -2661,11 +2661,11 @@ a[href] {
 
 .admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-meta-cell,
 .admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-date-cell {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"] {
-  border-color: #a4823a !important;
+  border-color: #a4823a;
   accent-color: #77591b;
   color: #c2a05a;
 }
@@ -2684,110 +2684,110 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list .estimate-north-star-row-selected {
-  background-color: rgb(194 160 90 / 0.12) !important;
+  background-color: rgb(194 160 90 / 0.12);
   box-shadow: inset 3px 0 0 0 #c2a05a;
 }
 
 /* North Star Expenses list — spending ledger (M6A) */
 .admin-north-star-shell .north-star-page-header .north-star-expenses-primary-action {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
-  opacity: 1 !important;
+  );
+  color: #17130e;
+  opacity: 1;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-expenses-primary-action svg {
-  color: #17130e !important;
+  color: #17130e;
 }
 
 .admin-north-star-shell .north-star-expenses-page-header > div > p:first-child {
-  color: #d9c188 !important;
+  color: #d9c188;
 }
 
 .admin-north-star-shell .north-star-expenses-page-header h1 {
-  color: #fff8e8 !important;
+  color: #fff8e8;
 }
 
 .admin-north-star-shell .north-star-expenses-page-header h1 + p {
-  color: #d7cdbd !important;
+  color: #d7cdbd;
 }
 
 /* North Star Reports operating brief (M8) */
 .admin-north-star-shell .north-star-page-header .north-star-reports-primary-action {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
-  opacity: 1 !important;
+  );
+  color: #17130e;
+  opacity: 1;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-reports-primary-action svg {
-  color: #17130e !important;
+  color: #17130e;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-reports-secondary-action {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid #d9c188 !important;
-  background: #fff9ea !important;
-  color: #17130e !important;
-  opacity: 1 !important;
+  border: 1px solid #d9c188;
+  background: #fff9ea;
+  color: #17130e;
+  opacity: 1;
 }
 
 .admin-north-star-shell .north-star-page-header .north-star-reports-secondary-action svg {
-  color: #77591b !important;
+  color: #77591b;
 }
 
 .admin-north-star-shell .north-star-reports-page-header > div > p:first-child {
-  color: #d9c188 !important;
+  color: #d9c188;
 }
 
 .admin-north-star-shell .north-star-reports-page-header h1 {
-  color: #fff8e8 !important;
+  color: #fff8e8;
 }
 
 .admin-north-star-shell .north-star-reports-page-header h1 + p {
-  color: #d7cdbd !important;
+  color: #d7cdbd;
 }
 
 .admin-north-star-shell .north-star-tax-summary-page-header > div > p:first-child {
-  color: #d9c188 !important;
+  color: #d9c188;
 }
 
 .admin-north-star-shell .north-star-tax-summary-page-header h1 {
-  color: #fff8e8 !important;
+  color: #fff8e8;
 }
 
 .admin-north-star-shell .north-star-tax-summary-page-header h1 + p {
-  color: #d7cdbd !important;
+  color: #d7cdbd;
 }
 
 .admin-north-star-shell .north-star-time-page-header > div > p:first-child {
-  color: #d9c188 !important;
+  color: #d9c188;
 }
 
 .admin-north-star-shell .north-star-time-page-header h1 {
-  color: #fff8e8 !important;
+  color: #fff8e8;
 }
 
 .admin-north-star-shell .north-star-time-page-header h1 + p {
-  color: #d7cdbd !important;
+  color: #d7cdbd;
 }
 
 /* Dispatch page — mobile bottom clearance for feedback pill + safe area (M15) */
@@ -3102,40 +3102,40 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-ledger thead tr {
-  border-bottom: 1px solid var(--north-star-work-border) !important;
-  background: var(--north-star-work-band) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .time-north-star-ledger thead th {
   padding: 0.625rem 1rem;
-  font-size: 0.625rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  color: var(--north-star-work-text-secondary) !important;
-  background: transparent !important;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--north-star-work-text-secondary);
+  background: transparent;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
   border-bottom: 1px solid var(--north-star-work-border);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:nth-child(even) {
-  background-color: var(--north-star-work-input) !important;
+  background-color: var(--north-star-work-input);
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:nth-child(even):hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row-selected {
-  background-color: rgb(194 160 90 / 0.12) !important;
+  background-color: rgb(194 160 90 / 0.12);
   border-bottom: 1px solid rgb(119 89 27 / 0.1);
   box-shadow: inset 3px 0 0 0 #c2a05a;
 }
@@ -3145,7 +3145,7 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-ledger .time-north-star-meta-cell {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .time-north-star-mobile-list .time-north-star-mobile-entry {
@@ -3153,28 +3153,28 @@ a[href] {
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger thead tr {
-  border-bottom: 1px solid var(--north-star-work-border) !important;
-  background: var(--north-star-work-band) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger thead th {
   padding: 0.75rem 1rem;
-  font-size: 0.625rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  color: var(--north-star-work-text-secondary) !important;
-  background: transparent !important;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--north-star-work-text-secondary);
+  background: transparent;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody tr {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
   border-bottom: 1px solid var(--north-star-work-border);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody tr:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td {
@@ -3183,51 +3183,51 @@ a[href] {
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-900,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .font-semibold.text-slate-900 {
-  color: var(--north-star-work-text) !important;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-500,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-500,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-600,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-400 {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .font-medium.text-slate-700,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-700 {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .rounded-full.bg-cyan-600 {
-  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%) !important;
-  color: #17130e !important;
+  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%);
+  color: #17130e;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger select,
 .admin-north-star-shell .settings-north-star-team-ledger input {
-  border-color: var(--north-star-work-border-strong) !important;
-  background: var(--north-star-work-input) !important;
-  color: var(--north-star-work-text) !important;
+  border-color: var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger select:focus,
 .admin-north-star-shell .settings-north-star-team-ledger input:focus {
-  border-color: var(--altair-border-strong) !important;
+  border-color: var(--altair-border-strong);
   outline: none;
   box-shadow:
     0 0 0 2px var(--altair-paper-elevated),
-    0 0 0 4px var(--altair-ink-on-paper) !important;
+    0 0 0 4px var(--altair-ink-on-paper);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .bg-cyan-600 {
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
+  );
+  color: #17130e;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .hover\:bg-cyan-700:hover {
@@ -3236,29 +3236,29 @@ a[href] {
     #f0e4b8 0%,
     #d4b05a 45%,
     #77591b 100%
-  ) !important;
+  );
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile > div.rounded-xl,
 .admin-north-star-shell .settings-north-star-team-mobile > div.rounded-lg {
-  border-color: var(--north-star-work-border) !important;
-  background: var(--north-star-work-input) !important;
+  border-color: var(--north-star-work-border);
+  background: var(--north-star-work-input);
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile .rounded-full.bg-cyan-600 {
-  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%) !important;
-  color: #17130e !important;
+  background: linear-gradient(135deg, #e8d9ac 0%, #c2a05a 55%, #a4823a 100%);
+  color: #17130e;
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile .bg-cyan-600 {
-  border: 1px solid #e8d9ac !important;
+  border: 1px solid #e8d9ac;
   background: linear-gradient(
     180deg,
     #e8d9ac 0%,
     #c2a05a 45%,
     #a4823a 100%
-  ) !important;
-  color: #17130e !important;
+  );
+  color: #17130e;
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar {
@@ -3292,31 +3292,31 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar .expense-north-star-result-meta {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .expense-north-star-ledger thead tr {
-  border-bottom: 1px solid var(--north-star-work-border) !important;
-  background: var(--north-star-work-band) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .expense-north-star-ledger thead th {
   padding: 0.5625rem 0.75rem;
-  font-size: 0.625rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  color: var(--north-star-work-text-secondary) !important;
-  background: transparent !important;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--north-star-work-text-secondary);
+  background: transparent;
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody tr {
-  background-color: var(--north-star-work-row) !important;
+  background-color: var(--north-star-work-row);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody tr:hover {
-  background-color: var(--north-star-work-row-hover) !important;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody td {
@@ -3324,11 +3324,11 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-ledger .expense-north-star-meta-cell {
-  color: var(--north-star-work-text-secondary) !important;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .expense-north-star-ledger input[type="checkbox"] {
-  border-color: #a4823a !important;
+  border-color: #a4823a;
   accent-color: #77591b;
   color: #c2a05a;
 }
