@@ -1026,3 +1026,41 @@ and the house rule is that colour must never be the only differentiator — thre
 more tones would break that rule rather than serve it. The remaining per-domain
 maps (leads, dispatch North Star, expense category) still hold raw palette
 literals; they are recorded as open rather than rewritten here.
+
+### D-34 · What actually needed a toast, and what did not
+The audit's "archive/restore succeed silently / 36 hand-rolled patterns" was
+checked flow by flow. As written it is **largely false**: bulk archive and
+restore in all six list views already produce a tone-coded banner carrying
+success and failure counts *and* a per-item failure list, which is richer than a
+toast could be. Single-entity archive emits no worded confirmation, but the
+button set swaps, the status badge changes, and the detail hero renders "This
+customer is archived…". The accurate claim is *no worded confirmation*, not
+*silent*.
+
+What is reproducible: **27 ad-hoc feedback helpers under 8 different names with
+incompatible signatures**, six near-duplicate `formatBulk*ResultMessage`
+functions, and ~160 distinct feedback state variables.
+
+**Migrated — the effect was genuinely invisible:**
+
+- *Platform founder signals.* The server already writes the sentence — "Marked
+  as contacted.", "Snoozed for 3 days.", "Note saved." — and `runAction` threw
+  it away. The signal re-sorts or leaves the queue, so nothing on screen said
+  which of four buttons had fired.
+- *Send / resend from the resolution queue* (4 handlers). The item leaving the
+  queue says "resolved"; it does not say an email reached the customer. Email
+  delivery is the archetypal invisible side effect.
+- *Alpha tracker status.* `if (result.error || !result.item) return;` discarded
+  the failure entirely — a rejected update was indistinguishable from a slow one.
+- *Two copy-to-clipboard buttons* whose `catch` swallowed clipboard rejection.
+
+**Deliberately not migrated,** because a toast would be worse:
+
+- Bulk operations — the banner must stay readable and carry per-item detail
+  ("INV-1042: customer has no email").
+- Customer import — a dedicated result page with counts and per-row reasons.
+- Copy-to-clipboard *success* — the icon already changes at the point of action.
+- Clock in/out — the entire clock UI flips state.
+- Public estimate approval — redirects to a confirmation page.
+- Optimistic list mutations where the row visibly moves or disappears.
+- Field validation — belongs on the field.

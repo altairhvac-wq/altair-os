@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "@/shared/design-system/feedback";
 import { useState, useTransition } from "react";
 import {
   markPlatformSignalContactedAction,
@@ -96,8 +97,18 @@ export function PlatformSignalActionControls({
       const result = await action();
       if (result.error) {
         setError(result.error);
-      } else {
-        setSnoozeOpen(false);
+        return;
+      }
+      setSnoozeOpen(false);
+      /*
+       * The server already writes the sentence — "Marked as contacted.",
+       * "Snoozed for 3 days.", "Note saved." — and this handler was throwing
+       * it away. These actions mutate a record the operator is not looking at
+       * (the signal row re-sorts or leaves the queue), so there was nothing on
+       * screen to confirm which of the four buttons had actually fired.
+       */
+      if (result.success) {
+        toast.success(result.success, { dedupeKey: `signal-${signal.signalKey}` });
       }
     });
   }

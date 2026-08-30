@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { toast } from "@/shared/design-system/feedback";
 import { Plus } from "lucide-react";
 import {
   createAlphaTrackerItemAction,
@@ -171,6 +172,13 @@ export function AlphaTrackerPageView({
       setStatusUpdatingId(null);
 
       if (result.error || !result.item) {
+        /* This branch discarded the failure entirely: the status control
+           simply snapped back with no explanation, so a rejected update was
+           indistinguishable from a slow one. */
+        toast.error("Could not update the status", {
+          description: result.error ?? undefined,
+          dedupeKey: "alpha-tracker-status",
+        });
         return;
       }
 

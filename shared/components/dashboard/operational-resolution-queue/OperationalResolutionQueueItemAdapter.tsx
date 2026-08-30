@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/shared/design-system/feedback";
 import { useMemo, useState, useTransition } from "react";
 import { assignJobAction } from "@/app/actions/dispatch";
 import { DispatchTechnicianRecommendation } from "@/shared/components/dashboard/operational-resolution-queue/DispatchTechnicianRecommendation";
@@ -424,7 +425,11 @@ function OverdueInvoiceQueueItemAdapter({
           return;
         }
 
-        onResolved(item.id);
+                toast.success(`Invoice ${invoice.invoiceNumber} resent`, {
+          description: "The customer has been emailed a copy.",
+          dedupeKey: `send-${item.id}`,
+        });
+onResolved(item.id);
         router.refresh();
       } catch {
         setError("We couldn't resend this invoice. Try again.");
@@ -503,7 +508,11 @@ function UnpaidInvoiceFollowUpQueueItemAdapter({
           return;
         }
 
-        onResolved(item.id);
+                toast.success(`Invoice ${invoice.invoiceNumber} resent`, {
+          description: "The customer has been emailed a copy.",
+          dedupeKey: `send-${item.id}`,
+        });
+onResolved(item.id);
         router.refresh();
       } catch {
         setError("We couldn't send this reminder. Try again.");
@@ -562,7 +571,11 @@ function UnsentInvoiceQueueItemAdapter({
           return;
         }
 
-        onResolved(item.id);
+                toast.success(`Invoice ${item.invoice.invoiceNumber} sent`, {
+          description: "The customer has been emailed a copy.",
+          dedupeKey: `send-${item.id}`,
+        });
+onResolved(item.id);
         router.refresh();
       } catch {
         setError("We couldn't send this invoice. Try again.");
@@ -629,7 +642,11 @@ function StaleSentEstimateQueueItemAdapter({
           return;
         }
 
-        onResolved(item.id);
+                toast.success(`Estimate ${estimate.estimateNumber} resent`, {
+          description: "The customer has been emailed a copy.",
+          dedupeKey: `send-${item.id}`,
+        });
+onResolved(item.id);
         router.refresh();
       } catch {
         setError("We couldn't resend this estimate. Try again.");
