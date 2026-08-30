@@ -44,6 +44,7 @@ import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { MissionControlV2NextRecommendedCard } from "./MissionControlV2NextRecommendedCard";
+import { MissionControlV2TodayStrip } from "./MissionControlV2TodayStrip";
 import {
   missionControlV2SampleData,
   type MissionControlV2ActivityRow,
@@ -89,7 +90,7 @@ const EXCEPTION_BUCKET_ICON: Record<DashboardExceptionBucketId, LucideIcon> = {
 
 /**
  * Soft light-card urgency chrome.
- * Low = cream + calm green circle; medium = amber tint; high = danger tint.
+ * Low = cream + neutral graphite circle; medium = amber tint; high = danger tint.
  * Urgency is expressed via full-card background tint + icon-circle color (not border).
  */
 const EXCEPTION_URGENCY: Record<
@@ -104,24 +105,32 @@ const EXCEPTION_URGENCY: Record<
   }
 > = {
   low: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-sm`,
-    iconCircle: "bg-altair-success text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`,
+    /* PRESTIGE: this was success-green, which made the board say the opposite
+     * of what it means. Urgency here is derived from COUNT alone, so "low" is
+     * simply a small number — and on a panel titled "Needs attention" a single
+     * past-due invoice was rendering with the same green that means "on
+     * track". Green is load-bearing in this product; spending it on "not many
+     * of these" both lies and drowns the amber and red rows in a wall of it.
+     * Low is now neutral graphite, so escalation reads neutral -> amber -> red
+     * and colour only appears when it carries meaning. */
+    iconCircle: "altair-icon-well bg-[var(--chrome-elevated)] text-white",
     count: "text-altair-ink-on-paper",
-    link: "text-altair-success-foreground",
+    link: "text-[var(--brand-metal-text)]",
     divider: "border-altair-border/40",
     rowHover: "hover:bg-black/[0.03]",
   },
   medium: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-warning/25 bg-altair-warning-surface shadow-sm`,
-    iconCircle: "bg-altair-warning text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-warning/25 bg-altair-warning-surface shadow-[var(--elev-hairline),var(--elev-2)]`,
+    iconCircle: "altair-icon-well bg-altair-warning text-white",
     count: "text-altair-warning-foreground",
     link: "text-altair-warning-foreground",
     divider: "border-altair-warning/20",
     rowHover: "hover:bg-altair-warning/10",
   },
   high: {
-    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-danger/25 bg-altair-danger-surface shadow-sm`,
-    iconCircle: "bg-altair-danger text-white",
+    shell: `${EXCEPTION_CARD_RADIUS} border border-altair-danger/25 bg-altair-danger-surface shadow-[var(--elev-hairline),var(--elev-2)]`,
+    iconCircle: "altair-icon-well bg-altair-danger text-white",
     count: "text-altair-danger",
     link: "text-altair-danger",
     divider: "border-altair-danger/20",
@@ -204,7 +213,7 @@ export function MissionControlV2ExceptionBucketCard({
     return (
       <Link
         href={bucket.href}
-        className={`block ${urgency.shell} ${altairMcCardPadClass} transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+        className={`block ${urgency.shell} ${altairMcCardPadClass} transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
       >
         {header}
       </Link>
@@ -215,7 +224,7 @@ export function MissionControlV2ExceptionBucketCard({
     <div className={urgency.shell}>
       <details className="group">
         <summary
-          className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+          className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] [&::-webkit-details-marker]:hidden`}
         >
           {header}
         </summary>
@@ -225,7 +234,7 @@ export function MissionControlV2ExceptionBucketCard({
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className={`flex items-start justify-between gap-3 py-2.5 transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+                  className={`flex items-start justify-between gap-3 py-2.5 transition-colors ${urgency.rowHover} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-altair-ink-on-paper">
@@ -285,7 +294,10 @@ export function MissionControlV2NeedsAttentionHeader({
           </h2>
           {totalCount > 0 ? (
             <span
-              className="inline-flex min-w-6 items-center justify-center rounded-full bg-altair-paper/20 px-2 py-0.5 text-[11px] font-bold tabular-nums leading-none text-altair-paper ring-1 ring-inset ring-altair-paper/35"
+              /* PRESTIGE: was paper-on-paper (light ink + light fill), which
+               * was invisible once the canvas became light parchment. A count
+               * chip is quiet metadata, so it reads as recessed neutral. */
+              className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--surface-recessed)] px-2 py-0.5 text-[11px] font-bold tabular-nums leading-none text-[var(--ink-secondary)] ring-1 ring-inset ring-[var(--border-strong)]"
               aria-label={`${totalCount} items need attention`}
             >
               {totalCount}
@@ -360,12 +372,12 @@ const INFORMATIONAL_BUCKET_TONE: Record<
   { iconCircle: string; link: string; muted: string }
 > = {
   success: {
-    iconCircle: "bg-altair-success text-white",
+    iconCircle: "altair-icon-well bg-altair-success text-white",
     link: "text-altair-success-foreground",
     muted: "text-altair-ink-on-paper-muted",
   },
   warning: {
-    iconCircle: "bg-altair-warning text-white",
+    iconCircle: "altair-icon-well bg-altair-warning text-white",
     link: "text-altair-warning-foreground",
     muted: "text-altair-ink-on-paper-muted",
   },
@@ -394,10 +406,10 @@ function InformationalBucketShell({
 
   return (
     <details
-      className={`group ${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-sm`}
+      className={`group ${EXCEPTION_CARD_RADIUS} border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]`}
     >
       <summary
-        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 [&::-webkit-details-marker]:hidden`}
+        className={`${altairMcCardPadClass} cursor-pointer list-none marker:content-none transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] [&::-webkit-details-marker]:hidden`}
       >
         <div className="flex items-center gap-3">
           <span
@@ -597,7 +609,7 @@ export function MissionControlV2ActivityBucketCard({
                 {row.href ? (
                   <Link
                     href={row.href}
-                    className="block transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+                    className="block transition-colors hover:bg-altair-brass/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                   >
                     {body}
                   </Link>
@@ -683,6 +695,15 @@ export function MissionControlV2View({
             </Link>
             .
           </p>
+        ) : null}
+
+        {/* Today — operating state before exceptions. Live data only; the strip
+            is omitted rather than sampled, because fabricated money on an
+            owner's dashboard is worse than an absent section. */}
+        {data ? (
+          <div className="border-b border-[var(--north-star-section-divider)]/40 px-4 py-4 sm:px-5">
+            <MissionControlV2TodayStrip data={data} />
+          </div>
         ) : null}
 
         {/* Exception board — severity-ranked buckets only when they need attention */}

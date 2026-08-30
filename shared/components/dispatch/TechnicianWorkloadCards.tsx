@@ -45,7 +45,7 @@ export function TechnicianWorkloadCards({
           <p className="text-xs font-semibold text-[#FFF8E8] sm:text-sm">
             Invite a technician to dispatch
           </p>
-          <p className="mt-0.5 hidden text-xs text-[#AEB6C2] sm:mt-1 sm:block">
+          <p className="mt-0.5 hidden text-xs text-[#BCB5A5] sm:mt-1 sm:block">
             Add team members with the technician role in Settings, then assign jobs here.
           </p>
         </div>
@@ -95,7 +95,7 @@ export function TechnicianWorkloadCards({
               <div
                 className={
                   northStar
-                    ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)] sm:h-10 sm:w-10 sm:rounded-xl sm:text-sm"
+                    ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(194,160,90,0.28)] sm:h-10 sm:w-10 sm:rounded-xl sm:text-sm"
                     : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white sm:h-10 sm:w-10 sm:rounded-xl sm:text-sm"
                 }
               >
@@ -114,7 +114,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "hidden truncate text-xs text-[#AEB6C2] sm:block"
+                      ? "hidden truncate text-xs text-[#BCB5A5] sm:block"
                       : "hidden truncate text-xs text-slate-500 sm:block"
                   }
                 >
@@ -134,7 +134,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "text-[10px] font-medium text-[#AEB6C2] sm:text-[11px]"
+                      ? "text-[10px] font-medium text-[#BCB5A5] sm:text-[11px]"
                       : "text-[10px] font-medium text-slate-500 sm:text-[11px]"
                   }
                 >
@@ -174,8 +174,8 @@ export function TechnicianWorkloadCards({
 
   if (northStar) {
     return (
-      <section className="rounded-xl border border-[rgba(201,164,77,0.28)] bg-[rgba(39,49,64,0.45)] p-2 shadow-sm ring-1 ring-[rgba(201,164,77,0.16)] sm:rounded-2xl sm:p-4">
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#E6D092] sm:mb-3 sm:text-xs">
+      <section className="rounded-xl border border-[rgba(194,160,90,0.28)] bg-[rgba(43,51,40,0.45)] p-2 shadow-sm ring-1 ring-[rgba(194,160,90,0.16)] sm:rounded-2xl sm:p-4">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#E8D9AC] sm:mb-3 sm:text-xs">
           Technician workload today
         </p>
         {grid}

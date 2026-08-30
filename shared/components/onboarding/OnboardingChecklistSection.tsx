@@ -75,14 +75,14 @@ export function OnboardingChecklistSection({
       aria-label="Onboarding checklist"
       className={
         northStar
-          ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
+          ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF]"
           : `${altairSurfaceCardClass} min-w-0 max-w-full overflow-x-clip`
       }
     >
       <div
         className={`flex items-start justify-between gap-2.5 border-b ${
           northStar
-            ? "border-[rgba(138,99,36,0.12)] bg-[#F5F0E4]"
+            ? "border-[rgba(119,89,27,0.12)] bg-[#F5F0E4]"
             : "border-altair-border bg-altair-paper-subtle"
         } ${
           isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
@@ -92,7 +92,7 @@ export function OnboardingChecklistSection({
           <div
             className={`flex shrink-0 items-center justify-center rounded-lg ${
               northStar
-                ? "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+                ? "bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
                 : "bg-altair-information-surface text-altair-information-foreground ring-1 ring-altair-information/20"
             } ${
               isSettingsCompact ? "h-9 w-9" : "h-11 w-11 rounded-xl"
@@ -104,7 +104,7 @@ export function OnboardingChecklistSection({
             <p
               className={`text-[10px] font-bold uppercase tracking-widest ${
                 northStar
-                  ? "text-[#8A6324]"
+                  ? "text-[#77591B]"
                   : "text-altair-information-foreground"
               }`}
             >
@@ -173,7 +173,7 @@ export function OnboardingChecklistSection({
           >
             <div
               className={`h-full rounded-full transition-[width] duration-300 ease-out ${
-                northStar ? "bg-[#C9A44D]" : "bg-altair-information"
+                northStar ? "bg-[#C2A05A]" : "bg-altair-information"
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -211,7 +211,7 @@ export function OnboardingChecklistSection({
                   href={item.href}
                   className={`flex items-start gap-2.5 border transition ${
                     northStar
-                      ? "border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
+                      ? "border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] hover:border-[rgba(194,160,90,0.35)] hover:bg-[#F3EBDD]"
                       : "border-altair-border bg-altair-paper-elevated hover:border-altair-information/40 hover:bg-altair-information-surface/40"
                   } ${
                     isSettingsCompact
@@ -242,7 +242,7 @@ export function OnboardingChecklistSection({
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                             northStar
-                              ? "bg-[#EFE4CB] text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]"
+                              ? "bg-[#EFE4CB] text-[#6B6255] ring-1 ring-[rgba(119,89,27,0.12)]"
                               : "bg-altair-paper-subtle text-altair-ink-on-paper-muted ring-1 ring-altair-border"
                           }`}
                         >
@@ -274,7 +274,7 @@ export function OnboardingChecklistSection({
                   <ArrowRight
                     className={`mt-1 h-4 w-4 shrink-0 ${
                       northStar
-                        ? "text-[#8A6324]"
+                        ? "text-[#77591B]"
                         : "text-altair-ink-on-paper-muted"
                     }`}
                     aria-hidden="true"

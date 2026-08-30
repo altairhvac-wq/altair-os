@@ -5,13 +5,13 @@ import type { PriorityAction } from "./sample-data";
 const leverageStyles = {
   primary: {
     shell:
-      "bg-gradient-to-br from-cyan-500/20 via-slate-900 to-slate-900 ring-cyan-400/40 shadow-[0_8px_32px_rgba(34,211,238,0.12)]",
+      "bg-gradient-to-br from-cyan-500/20 via-slate-900 to-slate-900 ring-cyan-400/40 shadow-[0_8px_32px_rgba(200,192,175,0.12)]",
     label: "text-white",
     metric: "text-cyan-200/80",
     badge: "bg-cyan-400/20 text-cyan-200",
   },
   secondary: {
-    shell: "bg-slate-900/80 ring-slate-700/60 shadow-[0_4px_20px_rgba(15,23,42,0.25)]",
+    shell: "bg-slate-900/80 ring-slate-700/60 shadow-[0_4px_20px_rgba(21,25,19,0.25)]",
     label: "text-slate-100",
     metric: "text-slate-400",
     badge: "bg-slate-700/60 text-slate-300",

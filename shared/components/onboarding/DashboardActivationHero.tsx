@@ -51,7 +51,7 @@ export function DashboardActivationHero({
     <div
       className={
         northStar
-          ? "relative overflow-hidden rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-gradient-to-br from-[#17130E] via-[#1F1A14] to-[#14110C] px-4 py-4 sm:px-5 sm:py-5"
+          ? "relative overflow-hidden rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-gradient-to-br from-[#17130E] via-[#1F1A14] to-[#14110C] px-4 py-4 sm:px-5 sm:py-5"
           : signatureCockpitSurfaceClass
       }
     >
@@ -59,7 +59,7 @@ export function DashboardActivationHero({
         <div className="min-w-0 flex-1">
           <p
             className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
-              northStar ? "text-[#C9A44D]/90" : "text-cyan-700/90"
+              northStar ? "text-[#C2A05A]/90" : "text-cyan-700/90"
             }`}
           >
             {missionComplete ? "Mission complete" : "Closed beta · Getting started"}
@@ -85,7 +85,7 @@ export function DashboardActivationHero({
             <div className="mt-4">
               <p
                 className={`text-[10px] font-bold uppercase tracking-widest ${
-                  northStar ? "text-[#8A6324]" : "text-slate-500"
+                  northStar ? "text-[#77591B]" : "text-slate-500"
                 }`}
               >
                 Path to operational
@@ -96,7 +96,7 @@ export function DashboardActivationHero({
                     <span
                       className={
                         northStar
-                          ? "rounded-md bg-[#2A2418] px-2 py-1 text-[#E8DDC2] ring-1 ring-[rgba(201,164,77,0.2)]"
+                          ? "rounded-md bg-[#2A2418] px-2 py-1 text-[#E8D9AC] ring-1 ring-[rgba(194,160,90,0.2)]"
                           : "rounded-md bg-slate-100 px-2 py-1 text-slate-700"
                       }
                     >
@@ -122,7 +122,7 @@ export function DashboardActivationHero({
           variant="bare"
           className={`w-full shrink-0 lg:max-w-sm ${
             northStar
-              ? "rounded-xl border border-[rgba(201,164,77,0.18)] bg-[#221C14] p-4"
+              ? "rounded-xl border border-[rgba(194,160,90,0.18)] bg-[#221C14] p-4"
               : "rounded-xl border border-cyan-100 bg-cyan-50/40 p-4"
           }`}
         >
@@ -130,7 +130,7 @@ export function DashboardActivationHero({
             <div className="flex items-start gap-2.5">
               <CheckCircle2
                 className={`mt-0.5 h-5 w-5 shrink-0 ${
-                  northStar ? "text-[#C9A44D]" : "text-emerald-600"
+                  northStar ? "text-[#C2A05A]" : "text-emerald-600"
                 }`}
                 aria-hidden="true"
               />
@@ -156,7 +156,7 @@ export function DashboardActivationHero({
             <>
               <p
                 className={`text-[10px] font-bold uppercase tracking-widest ${
-                  northStar ? "text-[#C9A44D]" : "text-cyan-700"
+                  northStar ? "text-[#C2A05A]" : "text-cyan-700"
                 }`}
               >
                 Next recommended
@@ -212,7 +212,7 @@ export function DashboardActivationHero({
             >
               <div
                 className={`h-full rounded-full transition-[width] duration-300 ease-out ${
-                  northStar ? "bg-[#C9A44D]" : "bg-cyan-500"
+                  northStar ? "bg-[#C2A05A]" : "bg-cyan-500"
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -227,7 +227,7 @@ export function DashboardActivationHero({
                 aria-expanded={remainingStepsOpen}
                 className={`flex w-full items-center justify-between gap-2 rounded-md px-0.5 py-1 text-left text-[11px] font-semibold transition ${
                   northStar
-                    ? "text-[#C6BBA8] hover:text-[#E8DDC2]"
+                    ? "text-[#C6BBA8] hover:text-[#E8D9AC]"
                     : "text-slate-600 hover:text-slate-800"
                 }`}
               >
@@ -247,7 +247,7 @@ export function DashboardActivationHero({
                         href={item.href}
                         className={`flex items-center gap-2 rounded-md px-1.5 py-1.5 text-xs font-medium transition ${
                           northStar
-                            ? "text-[#E8DDC2] hover:bg-[#2A2418]"
+                            ? "text-[#E8D9AC] hover:bg-[#2A2418]"
                             : "text-slate-700 hover:bg-cyan-50/80"
                         }`}
                       >
@@ -263,7 +263,7 @@ export function DashboardActivationHero({
                         {item.optional ? (
                           <span
                             className={`shrink-0 text-[10px] font-semibold ${
-                              northStar ? "text-[#8A6324]" : "text-slate-500"
+                              northStar ? "text-[#77591B]" : "text-slate-500"
                             }`}
                           >
                             (optional)

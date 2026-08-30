@@ -27,8 +27,10 @@ const PLATFORM_TIERS = [
   {
     tier: "Core Operations",
     tagline: "Dispatch & field execution",
-    accent: "border-[#D4AF37]/20",
-    labelColor: "text-[#D4AF37]",
+    accent: "border-[#C2A05A]/20",
+    /* Sits on the LIGHT tier card, not the dark hero: brass-500 measures
+     * 2.4:1 there. Uses the AA-safe brass-700, same as the other two tiers. */
+    labelColor: "text-[#77591B]",
     features: [
       {
         icon: MapPin,
@@ -45,8 +47,8 @@ const PLATFORM_TIERS = [
   {
     tier: "Pro Analytics",
     tagline: "Operational intelligence",
-    accent: "border-[#D4AF37]/14",
-    labelColor: "text-[#9A7209]",
+    accent: "border-[#C2A05A]/14",
+    labelColor: "text-[#77591B]",
     features: [
       {
         icon: BarChart3,
@@ -63,8 +65,8 @@ const PLATFORM_TIERS = [
   {
     tier: "Network Platform",
     tagline: "Connected field ecosystem",
-    accent: "border-[#D4AF37]/14",
-    labelColor: "text-[#9A7209]",
+    accent: "border-[#C2A05A]/14",
+    labelColor: "text-[#77591B]",
     features: [
       {
         icon: Network,
@@ -103,12 +105,12 @@ function AuthHeroPanel() {
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-70" />
       <div className="auth-grid-fine pointer-events-none absolute inset-0 opacity-50" />
       <div className="auth-noise pointer-events-none absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute -left-24 -top-20 h-[480px] w-[480px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.18)_0%,rgba(212,175,55,0.06)_38%,transparent_72%)]" />
-      <div className="pointer-events-none absolute left-[28%] top-[38%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.1)_0%,rgba(154,114,9,0.04)_45%,transparent_70%)]" />
-      <div className="pointer-events-none absolute -bottom-28 right-8 h-96 w-96 bg-[radial-gradient(circle_at_center,rgba(154,114,9,0.12)_0%,rgba(212,175,55,0.04)_40%,transparent_68%)]" />
-      <div className="pointer-events-none absolute bottom-[22%] left-[12%] h-56 w-56 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)]" />
+      <div className="pointer-events-none absolute -left-24 -top-20 h-[480px] w-[480px] bg-[radial-gradient(circle_at_center,rgba(194,160,90,0.18)_0%,rgba(194,160,90,0.06)_38%,transparent_72%)]" />
+      <div className="pointer-events-none absolute left-[28%] top-[38%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(194,160,90,0.1)_0%,rgba(119,89,27,0.04)_45%,transparent_70%)]" />
+      <div className="pointer-events-none absolute -bottom-28 right-8 h-96 w-96 bg-[radial-gradient(circle_at_center,rgba(119,89,27,0.12)_0%,rgba(194,160,90,0.04)_40%,transparent_68%)]" />
+      <div className="pointer-events-none absolute bottom-[22%] left-[12%] h-56 w-56 bg-[radial-gradient(circle_at_center,rgba(194,160,90,0.08)_0%,transparent_65%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_75%_at_50%_42%,transparent_0%,rgba(10,10,10,0.35)_58%,rgba(10,10,10,0.82)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A05A]/30 to-transparent" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
         <div className="auth-hero-enter shrink-0">
@@ -116,11 +118,11 @@ function AuthHeroPanel() {
             variant="white"
             size="lg"
             showWordmark
-            className="drop-shadow-[0_2px_16px_rgba(212,175,55,0.18)]"
+            className="drop-shadow-[0_2px_16px_rgba(194,160,90,0.18)]"
           />
 
           <div className="mt-8 max-w-lg xl:mt-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]/90">
               Operational command center
             </p>
             <h2 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-white xl:text-[2rem]">
@@ -133,10 +135,10 @@ function AuthHeroPanel() {
           </div>
         </div>
 
-        <div className="auth-hero-enter mt-6 shrink-0 rounded-2xl border border-[#D4AF37]/34 bg-gradient-to-b from-[#242019] via-[#1C1A17] to-[#12100D] p-4 shadow-[0_16px_52px_rgba(0,0,0,0.58),0_6px_18px_rgba(0,0,0,0.38),0_0_0_1px_rgba(212,175,55,0.06),inset_0_1px_0_rgba(245,230,163,0.2)] xl:mt-8">
+        <div className="auth-hero-enter mt-6 shrink-0 rounded-2xl border border-[#C2A05A]/34 bg-gradient-to-b from-[#242019] via-[#1C1A17] to-[#12100D] p-4 shadow-[0_16px_52px_rgba(0,0,0,0.58),0_6px_18px_rgba(0,0,0,0.38),0_0_0_1px_rgba(194,160,90,0.06),inset_0_1px_0_rgba(245,230,163,0.2)] xl:mt-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Radio className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
+              <Radio className="h-3.5 w-3.5 text-[#C2A05A]" aria-hidden="true" />
               <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
                 Live operations
               </span>
@@ -150,7 +152,7 @@ function AuthHeroPanel() {
             {OPERATIONAL_SNAPSHOT.map((metric) => (
               <div
                 key={metric.label}
-                className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
+                className="rounded-lg border border-[#C2A05A]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
               >
                 <p className="text-[10px] font-medium uppercase tracking-wider text-stone-600">
                   {metric.label}
@@ -167,7 +169,7 @@ function AuthHeroPanel() {
           {PLATFORM_TIERS.map((platform) => (
             <div
               key={platform.tier}
-              className={`auth-tier auth-feature group rounded-2xl border border-[#D4AF37]/22 bg-gradient-to-b from-[#FDF9F0] via-[#FAF7F0] to-[#F4EFE4] p-3.5 shadow-[0_14px_44px_rgba(0,0,0,0.42),0_5px_14px_rgba(0,0,0,0.24),0_0_0_1px_rgba(212,175,55,0.07),inset_0_1px_0_rgba(255,255,255,0.96)] transition-[border-color,box-shadow] duration-200 hover:border-[#D4AF37]/32 hover:shadow-[0_18px_50px_rgba(0,0,0,0.46),0_6px_16px_rgba(0,0,0,0.26),0_0_0_1px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(255,255,255,0.98)] ${platform.accent}`}
+              className={`auth-tier auth-feature group rounded-2xl border border-[#C2A05A]/22 bg-gradient-to-b from-[#FDF9F0] via-[#FAF7F0] to-[#F4EFE4] p-3.5 shadow-[0_14px_44px_rgba(0,0,0,0.42),0_5px_14px_rgba(0,0,0,0.24),0_0_0_1px_rgba(194,160,90,0.07),inset_0_1px_0_rgba(255,255,255,0.96)] transition-[border-color,box-shadow] duration-200 hover:border-[#C2A05A]/32 hover:shadow-[0_18px_50px_rgba(0,0,0,0.46),0_6px_16px_rgba(0,0,0,0.26),0_0_0_1px_rgba(194,160,90,0.1),inset_0_1px_0_rgba(255,255,255,0.98)] ${platform.accent}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -179,7 +181,7 @@ function AuthHeroPanel() {
                   <p className="mt-0.5 text-xs text-stone-500">{platform.tagline}</p>
                 </div>
                 <ClipboardList
-                  className="h-3.5 w-3.5 shrink-0 text-stone-400 transition-colors group-hover:text-[#9A7209]"
+                  className="h-3.5 w-3.5 shrink-0 text-stone-400 transition-colors group-hover:text-[#77591B]"
                   aria-hidden="true"
                 />
               </div>
@@ -188,7 +190,7 @@ function AuthHeroPanel() {
                   <div key={feature.title} className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <feature.icon
-                        className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]/90"
+                        className="h-3.5 w-3.5 shrink-0 text-[#C2A05A]/90"
                         aria-hidden="true"
                       />
                       <p className="truncate text-xs font-semibold text-[#0A0A0A]">
@@ -237,13 +239,13 @@ function OnboardingProgress({
         <span className="text-slate-500">
           Step {current} of {total}
         </span>
-        <span className="rounded-full bg-[#D4AF37]/10 px-2 py-0.5 text-[#9A7209]">
+        <span className="rounded-full bg-[#C2A05A]/10 px-2 py-0.5 text-[#77591B]">
           {label}
         </span>
       </div>
       <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-stone-100">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#9A7209] to-[#D4AF37] transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-[#77591B] to-[#C2A05A] transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -313,9 +315,9 @@ export function AuthShell({
       </div>
 
       <div className="auth-panel-enter auth-panel-bg relative flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-y-auto bg-gradient-to-br from-[#FAF7F2] via-[#FFFBF7] to-[#EDE8DF]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_85%_15%,rgba(212,175,55,0.07)_0%,transparent_55%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_10%_90%,rgba(154,114,9,0.05)_0%,transparent_50%)]" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent lg:hidden" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_85%_15%,rgba(194,160,90,0.07)_0%,transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_10%_90%,rgba(119,89,27,0.05)_0%,transparent_50%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A05A]/25 to-transparent lg:hidden" />
 
         <div className="relative flex min-h-full flex-1 flex-col justify-center px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:px-8 sm:pb-8 sm:pt-8 lg:justify-start lg:px-10 lg:pb-10 lg:pt-[clamp(2.5rem,11vh,5.5rem)] xl:px-14">
           <div className="mx-auto w-full min-w-0 max-w-[420px]">
@@ -346,7 +348,7 @@ export function AuthShell({
 
             <div
               id={formAnchorId}
-              className="mt-4 scroll-mt-6 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6"
+              className="mt-4 scroll-mt-6 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#C2A05A]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(119,89,27,0.1),0_0_28px_rgba(194,160,90,0.06)] ring-1 ring-[#C2A05A]/20 sm:p-6"
             >
               {children}
             </div>
@@ -395,7 +397,7 @@ export function AuthInput(props: React.ComponentProps<"input">) {
   return (
     <input
       {...props}
-      className={`min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-stone-300 focus:border-[#B8860B] focus:ring-4 focus:ring-[#D4AF37]/10 focus-visible:border-[#B8860B] focus-visible:ring-4 focus-visible:ring-[#D4AF37]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
+      className={`min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-stone-300 focus:border-[#A4823A] focus:ring-4 focus:ring-[#C2A05A]/10 focus-visible:border-[#A4823A] focus-visible:ring-4 focus-visible:ring-[#C2A05A]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
     />
   );
 }
@@ -404,7 +406,7 @@ export function AuthSelect(props: React.ComponentProps<"select">) {
   return (
     <select
       {...props}
-      className={`w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 hover:border-stone-300 focus:border-[#B8860B] focus:ring-4 focus:ring-[#D4AF37]/10 focus-visible:border-[#B8860B] focus-visible:ring-4 focus-visible:ring-[#D4AF37]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
+      className={`w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 hover:border-stone-300 focus:border-[#A4823A] focus:ring-4 focus:ring-[#C2A05A]/10 focus-visible:border-[#A4823A] focus-visible:ring-4 focus-visible:ring-[#C2A05A]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
     />
   );
 }
@@ -420,8 +422,14 @@ export function AuthSubmitButton({
 }) {
   const className =
     variant === "gold"
-      ? "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e5bd59] to-[#bc852c] px-4 py-2.5 text-sm font-semibold text-[#07101d] shadow-[0_10px_26px_-12px_rgba(201,164,77,0.7),inset_0_1px_0_rgba(255,249,218,0.65)] ring-1 ring-[#f0cf78]/40 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#edca70] hover:to-[#c89134] hover:shadow-[0_14px_30px_-12px_rgba(201,164,77,0.8)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/25 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
-      : "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#111b2e] to-[#080f1c] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_5px_20px_rgba(138,99,36,0.2),inset_0_1px_0_rgba(230,208,146,0.16)] ring-1 ring-[#c9a44d]/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#17243b] hover:to-[#0b1423] hover:shadow-[0_8px_24px_-10px_rgba(15,23,42,0.7),0_5px_22px_rgba(138,99,36,0.24)] hover:ring-[#c9a44d]/45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/20 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100";
+      /* PRESTIGE: the primary CTA kept its own gold pair (#e5bd59 → #bc852c)
+       * after #D4AF37 was retired from every accent around it, which left the
+       * loudest control on the page as the only bright metallic gold left.
+       * It now runs champagne-400 → brass-600 — still a lit top-to-bottom
+       * metal so it reads as a raised control, just on the canonical ramp.
+       * Dark label holds 5.3:1 on the darkest stop. */
+      ? "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#d9c188] to-[#a4823a] px-4 py-2.5 text-sm font-semibold text-[#0e100d] shadow-[0_10px_26px_-12px_rgba(164,130,58,0.7),inset_0_1px_0_rgba(255,249,218,0.65)] ring-1 ring-[#e8d9ac]/40 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#e8d9ac] hover:to-[#b8994c] hover:shadow-[0_14px_30px_-12px_rgba(164,130,58,0.8)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c2a05a]/25 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
+      : "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#181c16] to-[#0d100c] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_5px_20px_rgba(119,89,27,0.2),inset_0_1px_0_rgba(232,217,172,0.16)] ring-1 ring-[#c2a05a]/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#20261e] hover:to-[#121510] hover:shadow-[0_8px_24px_-10px_rgba(21,25,19,0.7),0_5px_22px_rgba(119,89,27,0.24)] hover:ring-[#c2a05a]/45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c2a05a]/20 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100";
 
   return (
     <button
@@ -476,8 +484,8 @@ export function AuthLink({
 }) {
   const className =
     variant === "dark"
-      ? "font-semibold text-[#e6d092] underline-offset-4 transition-colors hover:text-[#fff3c4] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6d092]/45"
-      : "font-semibold text-[#9A7209] underline-offset-4 transition-colors hover:text-[#7A5A07] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/30";
+      ? "font-semibold text-[#e8d9ac] underline-offset-4 transition-colors hover:text-[#fff3c4] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8d9ac]/45"
+      : "font-semibold text-[#77591B] underline-offset-4 transition-colors hover:text-[#7A5A07] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/30";
 
   return (
     <Link

@@ -34,7 +34,33 @@ type LedgerMetric = {
   value: string;
   tint: ReportIconTintCategory;
   icon: LucideIcon;
+  /** Trend-line tone. See LEDGER_SPARK_TONE. */
+  sparkTone: keyof typeof LEDGER_SPARK_TONE;
 };
+
+/**
+ * The period ledger is a SEVERITY strip, not a categorical one.
+ *
+ * Every sparkline on this page previously inherited the same brass, so four
+ * cards drew four identical gold lines — and "Overdue" wore the brand accent,
+ * which is the one thing a money-at-risk figure should never do. Reserving
+ * brass for a single card also puts it back at accent weight instead of being
+ * the page's default line colour.
+ *
+ * Categorical tints stay where they belong: the icon chips, and the Key
+ * metrics strip below, where the values genuinely are different categories
+ * rather than points on a risk scale.
+ */
+const LEDGER_SPARK_TONE = {
+  /** Money in — genuinely positive. */
+  positive: "text-altair-success",
+  /** Owed but not yet late — informational, not a problem. */
+  neutral: "text-altair-ink-on-graphite-muted",
+  /** Money at risk. */
+  danger: "text-altair-danger",
+  /** The period's summary figure — the one brand moment in this strip. */
+  brand: "text-[var(--chart-1)]",
+} as const;
 
 function formatPeriodLabel(dateRange: AccountantSummaryData["dateRange"]): string {
   return (
@@ -52,6 +78,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
   const metrics: LedgerMetric[] = [
     {
       id: "collected",
+      sparkTone: "positive",
       label: "Collected",
       value: formatCurrency(summary.totalPaymentsCollected),
       tint: "revenue",
@@ -59,6 +86,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
     },
     {
       id: "outstanding",
+      sparkTone: "neutral",
       label: "Outstanding",
       value: formatCurrency(summary.outstandingBalance),
       tint: "outstanding",
@@ -66,6 +94,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
     },
     {
       id: "overdue",
+      sparkTone: "danger",
       label: "Overdue",
       value: formatCurrency(summary.overdueBalance),
       tint: "outstanding",
@@ -73,6 +102,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
     },
     {
       id: "net-income",
+      sparkTone: "brand",
       label: "Net income est.",
       value: formatCurrency(summary.netIncomeEstimate),
       tint: "profit",
@@ -119,6 +149,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
                 <KpiSparkline
                   values={sparkline}
                   className={altairReportSparklineWellClass}
+                  toneClassName={LEDGER_SPARK_TONE[metric.sparkTone]}
                 />
               ) : null}
             </div>

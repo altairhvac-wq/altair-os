@@ -309,7 +309,7 @@ export function TeamMemberProfileNorthStarView({
                   <img
                     src={profile.avatarUrl}
                     alt=""
-                    className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-[rgba(201,164,77,0.35)]"
+                    className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-[rgba(194,160,90,0.35)]"
                   />
                 ) : (
                   <div className={tm.heroAvatar}>
@@ -325,7 +325,7 @@ export function TeamMemberProfileNorthStarView({
                       {formatProfileMembershipStatus(profile.status)}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-sm font-medium text-[#C8D0DA]">
+                  <p className="mt-0.5 text-sm font-medium text-[#D4CFC2]">
                     {formatTeamMemberRole(profile.role)}
                   </p>
 
@@ -348,10 +348,10 @@ export function TeamMemberProfileNorthStarView({
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 rounded-lg border border-[rgba(201,164,77,0.14)] bg-[rgba(15,23,42,0.28)] px-3 py-2">
-                <Shield className="h-4 w-4 shrink-0 text-[#8A6324]" />
+              <div className="flex shrink-0 items-center gap-2 rounded-lg border border-[rgba(194,160,90,0.14)] bg-[rgba(21,25,19,0.28)] px-3 py-2">
+                <Shield className="h-4 w-4 shrink-0 text-[#77591B]" />
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C8D0DA]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#D4CFC2]">
                     Access
                   </p>
                   <p className="text-sm font-semibold text-[#FFF9EA]">
@@ -403,7 +403,7 @@ export function TeamMemberProfileNorthStarView({
                 </dl>
 
                 {canViewNotes ? (
-                  <div className="mt-4 border-t border-[rgba(138,99,36,0.12)] pt-4">
+                  <div className="mt-4 border-t border-[rgba(119,89,27,0.12)] pt-4">
                     <label htmlFor="member-notes-ns" className={tm.formLabel}>
                       Notes
                     </label>
@@ -465,7 +465,7 @@ export function TeamMemberProfileNorthStarView({
 
                 {profile.certifications.length === 0 ? (
                   <div className={`${tm.emptyState} mt-3`}>
-                    <p className="text-sm font-medium text-[#64748B]">
+                    <p className="text-sm font-medium text-[#7C7259]">
                       Add certifications.
                     </p>
                   </div>
@@ -529,7 +529,7 @@ export function TeamMemberProfileNorthStarView({
 
                   {!hasLaborRate && !canEditProfitability ? (
                     <div className={`${tm.emptyState} mt-3`}>
-                      <p className="text-sm font-medium text-[#64748B]">
+                      <p className="text-sm font-medium text-[#7C7259]">
                         Add a labor cost rate to unlock profitability reporting.
                       </p>
                     </div>
@@ -578,7 +578,7 @@ export function TeamMemberProfileNorthStarView({
                     </p>
                   ) : (
                     <div className={`${tm.emptyState} mt-3`}>
-                      <p className="text-sm font-medium text-[#64748B]">
+                      <p className="text-sm font-medium text-[#7C7259]">
                         Add a labor cost rate to unlock profitability reporting.
                       </p>
                     </div>
@@ -698,21 +698,21 @@ function WorkSummarySection({
     <section className={tm.sectionSurface}>
       <div className="flex items-center justify-between gap-2">
         <h2 className={tm.sectionTitle}>Work summary</h2>
-        <span className="text-[11px] font-medium text-[#64748B]">
+        <span className="text-[11px] font-medium text-[#7C7259]">
           {summary.periodLabel}
         </span>
       </div>
 
       {isPendingInvite ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#64748B]">
+          <p className="text-sm font-medium text-[#7C7259]">
             Work summary will be available after this member accepts their
             invite.
           </p>
         </div>
       ) : !hasData ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#64748B]">
+          <p className="text-sm font-medium text-[#7C7259]">
             Work summary will appear once this member has completed jobs.
           </p>
         </div>
@@ -779,7 +779,7 @@ function ActivitySection({
 
       {activity.length === 0 ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#64748B]">
+          <p className="text-sm font-medium text-[#7C7259]">
             Recent activity will appear here.
           </p>
         </div>

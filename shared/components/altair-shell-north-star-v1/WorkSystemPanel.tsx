@@ -5,8 +5,8 @@ import { shellEyebrowClass, shellInsetClass, shellZoneClass } from "./shell-toke
 
 const statusStyles = {
   scheduled: { node: "bg-slate-600 ring-slate-500/40", chip: "bg-slate-800/80 text-slate-300", label: "Scheduled" },
-  en_route: { node: "bg-sky-500 ring-sky-400/50 shadow-[0_0_16px_rgba(56,189,248,0.35)]", chip: "bg-sky-950/50 text-sky-200", label: "En route" },
-  in_progress: { node: "bg-cyan-400 ring-cyan-300/50 shadow-[0_0_20px_rgba(34,211,238,0.4)]", chip: "bg-cyan-950/50 text-cyan-100", label: "In progress" },
+  en_route: { node: "bg-sky-500 ring-sky-400/50 shadow-[0_0_16px_rgba(186,176,155,0.35)]", chip: "bg-sky-950/50 text-sky-200", label: "En route" },
+  in_progress: { node: "bg-cyan-400 ring-cyan-300/50 shadow-[0_0_20px_rgba(200,192,175,0.4)]", chip: "bg-cyan-950/50 text-cyan-100", label: "In progress" },
   completed: { node: "bg-emerald-500/80 ring-emerald-400/40", chip: "bg-emerald-950/40 text-emerald-200", label: "Done" },
 } as const;
 

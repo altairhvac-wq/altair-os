@@ -37,7 +37,7 @@ export function NetworkInvitedByBanner({
   }
 
   const shellClass = isNorthStar
-    ? "flex items-start justify-between gap-3 rounded-[1rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] px-4 py-3"
+    ? "flex items-start justify-between gap-3 rounded-[1rem] border border-[rgba(194,160,90,0.28)] bg-[#FFF9EA] px-4 py-3"
     : "flex items-start justify-between gap-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3";
   const titleClass = isNorthStar
     ? "text-sm font-semibold text-[#17130E]"

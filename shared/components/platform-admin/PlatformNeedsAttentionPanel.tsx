@@ -24,9 +24,9 @@ function severityClass(severity: PlatformPrioritySignal["severity"], northStar: 
       case "high":
         return "bg-[rgba(180,83,9,0.1)] text-[#9A3412] ring-[rgba(180,83,9,0.16)]";
       case "medium":
-        return "bg-[rgba(138,99,36,0.1)] text-[#8A6324] ring-[rgba(138,99,36,0.16)]";
+        return "bg-[rgba(119,89,27,0.1)] text-[#77591B] ring-[rgba(119,89,27,0.16)]";
       default:
-        return "bg-[rgba(100,116,139,0.1)] text-[#475569] ring-[rgba(100,116,139,0.16)]";
+        return "bg-[rgba(124,114,89,0.1)] text-[#5C5340] ring-[rgba(124,114,89,0.16)]";
     }
   }
 
@@ -73,7 +73,7 @@ function SignalRow({
           <span
             className={
               northStar
-                ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFE4CB] text-[11px] font-bold text-[#8A6324]"
+                ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFE4CB] text-[11px] font-bold text-[#77591B]"
                 : "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600"
             }
           >
@@ -110,7 +110,7 @@ function SignalRow({
               <p
                 className={
                   northStar
-                    ? "mt-1 text-[11px] font-medium text-[#8A6324]"
+                    ? "mt-1 text-[11px] font-medium text-[#77591B]"
                     : "mt-1 text-[11px] font-medium text-cyan-700"
                 }
               >
@@ -134,7 +134,7 @@ function SignalRow({
           <ChevronRight
             className={
               northStar
-                ? "mt-1 h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-hover:translate-x-0.5"
+                ? "mt-1 h-4 w-4 shrink-0 text-[#77591B] transition-transform group-hover:translate-x-0.5"
                 : "mt-1 h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
             }
             aria-hidden="true"

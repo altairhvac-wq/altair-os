@@ -78,7 +78,7 @@ export function ExpenseDetailNorthStarSideRail({
           className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${
             expense.isReimbursable
               ? "bg-amber-50 text-amber-800 ring-amber-600/20"
-              : "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.14)]"
+              : "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(119,89,27,0.14)]"
           }`}
         >
           {expense.isReimbursable ? "Reimbursable" : "Company-paid"}

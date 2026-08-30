@@ -15,7 +15,7 @@ export function GraphiteTopBar({ companyContext, dateLabel }: GraphiteTopBarProp
   return (
     <header className={v3TopBarClass}>
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1a2230] to-[#0F141B] text-xs font-bold text-[#E8DDC2] ring-1 ring-[rgba(184,148,63,0.28)] lg:hidden">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1e231c] to-[#121510] text-xs font-bold text-[#E8D9AC] ring-1 ring-[rgba(194,160,90,0.28)] lg:hidden">
           A
         </div>
         <div className="min-w-0">
@@ -44,7 +44,7 @@ export function GraphiteTopBar({ companyContext, dateLabel }: GraphiteTopBarProp
           type="button"
           className="flex items-center gap-2 rounded-xl bg-white/[0.04] py-1.5 pl-1.5 pr-3 ring-1 ring-white/[0.08] transition-all hover:bg-white/[0.06]"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#141B24] text-[10px] font-semibold text-[#E8DDC2] ring-1 ring-[rgba(184,148,63,0.28)]">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#181C16] text-[10px] font-semibold text-[#E8D9AC] ring-1 ring-[rgba(194,160,90,0.28)]">
             {userInitials}
           </span>
           <span className="hidden text-sm font-medium text-slate-300 sm:inline">{displayName}</span>

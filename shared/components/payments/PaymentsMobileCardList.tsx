@@ -20,7 +20,7 @@ export function PaymentsMobileCardList({
     <ul
       className={`md:hidden ${
         northStar
-          ? "divide-y divide-[rgba(138,99,36,0.12)]"
+          ? "divide-y divide-[rgba(119,89,27,0.12)]"
           : "divide-y divide-slate-100"
       }`}
     >
@@ -34,7 +34,7 @@ export function PaymentsMobileCardList({
               href={`/invoices/${payment.invoiceId}`}
               className={`flex items-center gap-3 px-3.5 py-3 transition-colors ${
                 northStar
-                  ? "hover:bg-[rgba(138,99,36,0.04)]"
+                  ? "hover:bg-[rgba(119,89,27,0.04)]"
                   : "hover:bg-slate-50"
               }`}
             >

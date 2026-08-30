@@ -79,7 +79,7 @@ export function NetworkDirectoryCard({
             <p className={`mt-0.5 ${st.cardSecondary}`}>{profile.tradeType}</p>
             {locationLine ? (
               <p className={`mt-0.5 flex items-center gap-1 ${st.cardMuted}`}>
-                <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
+                <MapPin className="h-3 w-3 shrink-0 text-[#77591B]" />
                 <span className="truncate">{locationLine}</span>
               </p>
             ) : (
@@ -112,7 +112,7 @@ export function NetworkDirectoryCard({
           }
 
           return (
-            <div className="mt-2 space-y-1.5 border-t border-[rgba(138,99,36,0.08)] pt-2">
+            <div className="mt-2 space-y-1.5 border-t border-[rgba(119,89,27,0.08)] pt-2">
               {showSendPrimary ? (
                 <button
                   type="button"

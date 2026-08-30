@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, Ban, Loader2, Send, Trash2, X } from "lucide-react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type EstimateLifecycleActionProps = {
@@ -37,6 +38,8 @@ export function EstimateBatchSelectionBar({
   moveToTrashAction,
   northStar = false,
 }: EstimateBatchSelectionBarProps) {
+  // Before the `selectedCount === 0` early return so hook order is stable.
+  const { confirm, confirmDialog } = useConfirm();
   const isBusy = isSending || isLifecycleBusy;
   const canSendSelected = sendableCount > 0;
 
@@ -44,17 +47,27 @@ export function EstimateBatchSelectionBar({
     return null;
   }
 
-  function confirmAndRun(
+  async function confirmAndRun(
     message: string,
     action?: EstimateLifecycleActionProps,
   ) {
     if (isBusy || !action || action.eligibleCount === 0) return;
-    if (!window.confirm(message)) return;
+    // The action supplies one sentence of consequence copy; it becomes the
+    // dialog description so the title can stay a short question.
+    const confirmed = await confirm({
+      title: `Apply this to ${action.eligibleCount} estimate${
+        action.eligibleCount === 1 ? "" : "s"
+      }?`,
+      description: message,
+      confirmLabel: "Continue",
+      destructive: true,
+    });
+    if (!confirmed) return;
     action.onAction();
   }
 
   const hintClass = northStar
-    ? "mt-1 space-y-0.5 text-xs font-medium text-[#64748B]"
+    ? "mt-1 space-y-0.5 text-xs font-medium text-[#7C7259]"
     : "mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90";
 
   return (
@@ -62,7 +75,7 @@ export function EstimateBatchSelectionBar({
       className={
         northStar
           ? lt.bulkBar
-          : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-5"
+          : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(21,25,19,0.25)] backdrop-blur-sm sm:px-5"
       }
       role="region"
       aria-label="Batch estimate actions"
@@ -185,6 +198,7 @@ export function EstimateBatchSelectionBar({
           ) : null}
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

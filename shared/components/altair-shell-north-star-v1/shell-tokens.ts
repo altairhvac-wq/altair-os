@@ -1,17 +1,17 @@
 /** Shared visual tokens for the Altair OS shell concept — premium dark operating system. */
 
 /** Root shell background — dark navy / graphite. */
-export const shellRootClass = "bg-[#0a0f18]";
+export const shellRootClass = "bg-[#0d100c]";
 
 /** Main command canvas with subtle cyan horizon glow. */
 export const shellCanvasClass =
   "relative flex-1 overflow-y-auto bg-[linear-gradient(180deg,#0a0f18_0%,#0d1420_45%,#0a1019_100%)]";
 
 export const shellCanvasGlowClass =
-  "pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(34,211,238,0.09),transparent_65%)]";
+  "pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(200,192,175,0.09),transparent_65%)]";
 
 export const shellCanvasGlowSecondaryClass =
-  "pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_50%_80%_at_80%_0%,rgba(99,102,241,0.06),transparent_70%)]";
+  "pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_50%_80%_at_80%_0%,rgba(130,118,90,0.06),transparent_70%)]";
 
 /** Frosted dimensional panel — composed operating zone. */
 export const shellZoneClass =
@@ -19,7 +19,7 @@ export const shellZoneClass =
 
 /** Dominant command deck — one primary canvas. */
 export const shellCommandDeckClass =
-  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0c1220] via-slate-950 to-[#0a0f18] p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6";
+  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#10130f] via-slate-950 to-[#0d100c] p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-5 lg:p-6";
 
 /** Nested frosted inset surface inside a zone. */
 export const shellInsetClass =

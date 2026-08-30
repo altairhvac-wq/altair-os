@@ -35,14 +35,14 @@ export function NetworkNearbySearch({
     ? "text-sm font-bold text-[#17130E]"
     : "text-sm font-bold text-slate-900";
   const inputClass = isNorthStar
-    ? "w-full rounded-lg border border-[rgba(138,99,36,0.2)] bg-white px-3 py-2 text-sm text-[#17130E] placeholder:text-[#8A7F6C] focus:outline-none focus:ring-2 focus:ring-[#8A6324]/30"
+    ? "w-full rounded-lg border border-[rgba(119,89,27,0.2)] bg-white px-3 py-2 text-sm text-[#17130E] placeholder:text-[#8A7F6C] focus:outline-none focus:ring-2 focus:ring-[#77591B]/30"
     : adminFormInputClass;
   const selectClass = inputClass;
   const buttonClass = isNorthStar
     ? st.panelActionAccent
     : "inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-60";
   const resultRowClass = isNorthStar
-    ? "flex items-center justify-between gap-3 rounded-lg border border-[rgba(138,99,36,0.12)] bg-white px-3 py-2"
+    ? "flex items-center justify-between gap-3 rounded-lg border border-[rgba(119,89,27,0.12)] bg-white px-3 py-2"
     : "flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2";
   const mutedClass = isNorthStar ? st.cardMuted : "text-xs text-slate-500";
 
@@ -144,7 +144,7 @@ export function NetworkNearbySearch({
                       onClick={() => onSelectProfile(profile.id)}
                       className={
                         isNorthStar
-                          ? "text-xs font-semibold text-[#8A6324] hover:text-[#6B5A2E]"
+                          ? "text-xs font-semibold text-[#77591B] hover:text-[#77591B]"
                           : "text-xs font-semibold text-cyan-700 hover:text-cyan-800"
                       }
                     >

@@ -118,13 +118,13 @@ function PendingInvitesCardContent({
     <section
       className={
         northStar
-          ? "min-w-0 max-w-full rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] shadow-[0_2px_8px_rgba(138,99,36,0.08)]"
+          ? "min-w-0 max-w-full rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] shadow-[0_2px_8px_rgba(119,89,27,0.08)]"
           : "min-w-0 max-w-full rounded-xl border border-cyan-200 bg-cyan-50/60 shadow-sm"
       }
     >
       <div
         className={`border-b ${
-          northStar ? "border-[rgba(138,99,36,0.12)]" : "border-cyan-100"
+          northStar ? "border-[rgba(119,89,27,0.12)]" : "border-cyan-100"
         } ${
           isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
         }`}
@@ -133,7 +133,7 @@ function PendingInvitesCardContent({
           <div
             className={`flex shrink-0 items-center justify-center rounded-lg ${
               northStar
-                ? "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+                ? "bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
                 : "bg-cyan-100 text-cyan-700"
             } ${
               isSettingsCompact ? "h-9 w-9" : "h-10 w-10 rounded-xl"
@@ -153,7 +153,7 @@ function PendingInvitesCardContent({
             </h2>
             <p
               className={`${
-                northStar ? "text-[#64748B]" : "text-slate-600"
+                northStar ? "text-[#7C7259]" : "text-slate-600"
               } ${
                 isSettingsCompact
                   ? "mt-0.5 text-xs leading-snug"
@@ -181,7 +181,7 @@ function PendingInvitesCardContent({
               key={invite.id}
               className={`flex min-w-0 flex-col rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between ${
                 northStar
-                  ? "gap-2.5 border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
+                  ? "gap-2.5 border-[rgba(119,89,27,0.12)] bg-[#FBF7EF]"
                   : `border-white bg-white/90 ${
                       isSettingsCompact ? "gap-2.5" : "gap-3 rounded-xl p-4"
                     }`
@@ -204,7 +204,7 @@ function PendingInvitesCardContent({
                 </p>
                 <p
                   className={`mt-1 break-words text-xs ${
-                    northStar ? "text-[#64748B]" : "text-slate-500"
+                    northStar ? "text-[#7C7259]" : "text-slate-500"
                   }`}
                 >
                   Invited as {invite.inviteEmail}

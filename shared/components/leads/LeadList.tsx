@@ -27,7 +27,7 @@ import { leadMissionClasses as lm } from "./lead-list-presentation";
  * action stays keyboard-focusable without inventing a new control.
  */
 const leadNameButtonFocusClass =
-  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
 
 type LeadListProps = {
   leads: Lead[];

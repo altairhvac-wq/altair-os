@@ -46,7 +46,7 @@ function ActionRowBody({ row }: { row: NorthStarBoardRowModel }) {
         <p className={`mt-0.5 truncate ${t.lightCardMeta}`}>{row.meta}</p>
       </div>
       {row.featured ? (
-        <span className="shrink-0 rounded-full bg-[rgba(198,167,87,0.16)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#8B7232] ring-1 ring-[rgba(198,167,87,0.28)]">
+        <span className="shrink-0 rounded-full bg-[rgba(194,160,90,0.16)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#77591B] ring-1 ring-[rgba(194,160,90,0.28)]">
           Top priority
         </span>
       ) : null}
@@ -78,7 +78,7 @@ function MoneyRowBody({ row }: { row: NorthStarBoardRowModel }) {
       ) : null}
       <p className={`mt-0.5 ${t.lightCardMeta}`}>{row.meta}</p>
       {row.featured ? (
-        <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[#8B7232]">
+        <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[#77591B]">
           Top priority
         </p>
       ) : null}

@@ -84,7 +84,7 @@ function CollapsibleNotesField({
             onClick={() => setExpanded(true)}
             className={
               northStar
-                ? "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-left text-sm transition-colors hover:bg-[#F3EBDD]"
+                ? "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-3 py-2 text-left text-sm transition-colors hover:bg-[#F3EBDD]"
                 : "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50"
             }
           >
@@ -207,13 +207,13 @@ export function BillingDocumentDefaultsCard({
   const labelClass = northStar ? st.formLabel : legacyLabelClass;
   const billingSummaryRows = buildBillingSummaryRows(formValues);
   const mobileExpandButtonClass = northStar
-    ? "flex min-h-9 w-full items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
+    ? "flex min-h-9 w-full items-center justify-center rounded-lg border border-[rgba(119,89,27,0.22)] bg-[#FFF9EA] px-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C2A05A] hover:bg-[#F3EBDD]"
     : "flex min-h-9 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50";
   const mobileCollapseButtonClass = northStar
     ? "text-xs font-medium text-[#4F4638] hover:text-[#4F4638]"
     : "text-xs font-medium text-slate-500 hover:text-slate-700";
   const mobileSummaryCellClass = northStar
-    ? "min-w-0 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA] px-2 py-1.5"
+    ? "min-w-0 rounded-lg border border-[rgba(119,89,27,0.10)] bg-[#FFF9EA] px-2 py-1.5"
     : "min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5";
   const mobileSummaryLabelClass = northStar
     ? "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]"
@@ -226,7 +226,7 @@ export function BillingDocumentDefaultsCard({
     <div
       className={
         northStar
-          ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
+          ? "min-w-0 rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
           : `min-w-0 ${altairMcCardClass} ${altairMcCardPadClass}`
       }
     >
@@ -234,7 +234,7 @@ export function BillingDocumentDefaultsCard({
         <div
           className={
             northStar
-              ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)] sm:flex"
+              ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)] sm:flex"
               : "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 sm:flex"
           }
         >
@@ -422,7 +422,7 @@ export function BillingDocumentDefaultsCard({
           <div
             className={
               northStar
-                ? "border-t border-[rgba(138,99,36,0.12)] pt-2.5 sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+                ? "border-t border-[rgba(119,89,27,0.12)] pt-2.5 sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
                 : "border-t border-slate-100 pt-2.5 sm:admin-sticky-footer-inline sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
             }
           >

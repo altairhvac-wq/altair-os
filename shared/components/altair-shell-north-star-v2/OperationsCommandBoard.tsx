@@ -340,7 +340,7 @@ export function OperationsCommandBoard({
           <div className="mt-auto grid grid-cols-2 gap-2 border-t border-slate-200/70 pt-3">
             <Link
               href="/expenses"
-              className="group rounded-xl border border-slate-200/80 bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all hover:border-slate-300/90 hover:shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
+              className="group rounded-xl border border-slate-200/80 bg-white p-2.5 shadow-[0_1px_2px_rgba(21,25,19,0.03)] transition-all hover:border-slate-300/90 hover:shadow-[0_2px_6px_rgba(21,25,19,0.05)]"
             >
               <div className="flex items-center gap-1.5">
                 <Receipt className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
@@ -354,7 +354,7 @@ export function OperationsCommandBoard({
 
             <Link
               href="/customers?tab=pipeline"
-              className="group rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/60 to-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all hover:border-violet-300/80"
+              className="group rounded-xl border border-violet-200/70 bg-gradient-to-br from-violet-50/60 to-white p-2.5 shadow-[0_1px_2px_rgba(21,25,19,0.03)] transition-all hover:border-violet-300/80"
             >
               <div className="flex items-center gap-1.5">
                 <Target className="h-3.5 w-3.5 text-violet-600" aria-hidden="true" />

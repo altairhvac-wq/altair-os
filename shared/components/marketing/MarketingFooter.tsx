@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 const FOOTER_LINKS = [
   { href: "/#features", label: "Features" },
@@ -16,7 +16,7 @@ const FOOTER_LINKS = [
 
 export function MarketingFooter() {
   return (
-    <footer className="relative border-t border-[rgba(222,228,236,0.08)] bg-[#08090c] px-5 py-5 sm:px-8 sm:py-6">
+    <footer className="relative border-t border-[rgba(230,227,220,0.08)] bg-[#080907] px-5 py-5 sm:px-8 sm:py-6">
       <div className="mx-auto flex max-w-[90rem] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="max-w-sm">
           <Link
@@ -42,7 +42,7 @@ export function MarketingFooter() {
               className={[
                 "rounded-sm font-medium transition-colors",
                 "accent" in link && link.accent
-                  ? "text-[#c9a44d] hover:text-[#e6d092]"
+                  ? "text-[#c2a05a] hover:text-[#e8d9ac]"
                   : "text-[#c9bfae] hover:text-[#f3ebdd]",
                 focusRing,
               ].join(" ")}

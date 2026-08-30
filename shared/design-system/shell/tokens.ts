@@ -122,11 +122,11 @@ export const adminPanelActionWarningClass =
 
 /** Signature hero band — frosted content surface inside `HorizonHero`. */
 export const signatureHeroContentClass =
-  "border-0 bg-white/60 shadow-[0_4px_24px_rgba(15,23,42,0.04)] backdrop-blur-[2px] sm:bg-white/55";
+  "border-0 bg-white/60 shadow-[0_4px_24px_rgba(21,25,19,0.04)] backdrop-blur-[2px] sm:bg-white/55";
 
 /** Operations cockpit — borderless grouped surface inside `HorizonHero`. */
 export const signatureCockpitSurfaceClass =
-  "rounded-xl bg-white/55 px-3 py-3 shadow-[0_2px_16px_rgba(15,23,42,0.03)] backdrop-blur-[1px] sm:px-4 sm:py-3.5 lg:px-5 lg:py-4";
+  "rounded-xl bg-white/55 px-3 py-3 shadow-[0_2px_16px_rgba(21,25,19,0.03)] backdrop-blur-[1px] sm:px-4 sm:py-3.5 lg:px-5 lg:py-4";
 
 /** Signature soft card — borderless premium surface for metrics and strips. */
 export const signatureSoftCardClass =

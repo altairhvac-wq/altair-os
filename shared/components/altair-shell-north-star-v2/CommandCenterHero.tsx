@@ -80,7 +80,7 @@ export function CommandCenterHero({
           {/* PRIMARY ACTION — undeniable first move */}
           <Link
             href={topPriority.href}
-            className="group relative flex max-w-2xl flex-col gap-3 overflow-hidden rounded-2xl border-l-[3px] border-l-cyan-400 bg-gradient-to-br from-[#0f1a2e]/95 to-[#0c1524]/90 p-5 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.5)] ring-1 ring-slate-600/35 transition-all hover:border-l-cyan-300 hover:ring-slate-500/45 sm:p-6"
+            className="group relative flex max-w-2xl flex-col gap-3 overflow-hidden rounded-2xl border-l-[3px] border-l-cyan-400 bg-gradient-to-br from-[#171b15]/95 to-[#131611]/90 p-5 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.5)] ring-1 ring-slate-600/35 transition-all hover:border-l-cyan-300 hover:ring-slate-500/45 sm:p-6"
           >
             <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -146,7 +146,7 @@ export function CommandCenterHero({
         <div className="flex flex-col items-center gap-4 lg:items-end">
           <div className="relative h-[7.5rem] w-[7.5rem] shrink-0">
             <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(148,163,184,0.15)" strokeWidth="5" />
+              <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(176,168,143,0.15)" strokeWidth="5" />
               <circle
                 cx="60"
                 cy="60"
@@ -160,8 +160,8 @@ export function CommandCenterHero({
               />
               <defs>
                 <linearGradient id="mission-ops-score" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#22d3ee" />
-                  <stop offset="100%" stopColor="#0891b2" />
+                  <stop offset="0%" stopColor="#c8c0af" />
+                  <stop offset="100%" stopColor="#918465" />
                 </linearGradient>
               </defs>
             </svg>

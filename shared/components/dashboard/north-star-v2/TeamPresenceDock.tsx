@@ -28,7 +28,7 @@ export function TeamPresenceDock({ technicians }: TeamPresenceDockProps) {
   return (
     <aside
       aria-label="Team presence"
-      className="w-full shrink-0 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 p-4 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.5)] sm:w-[15rem] lg:w-[13.5rem]"
+      className="w-full shrink-0 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 p-4 shadow-[0_12px_40px_-16px_rgba(21,25,19,0.5)] sm:w-[15rem] lg:w-[13.5rem]"
     >
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">

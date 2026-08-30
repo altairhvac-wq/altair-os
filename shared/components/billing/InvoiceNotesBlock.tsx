@@ -14,7 +14,7 @@ export function InvoiceNotesBlock({ notes, northStar = false }: InvoiceNotesBloc
     <div
       className={
         northStar
-          ? "invoice-notes-block rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-5 py-5 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0"
+          ? "invoice-notes-block rounded-xl border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] px-5 py-5 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0"
           : "invoice-notes-block rounded-xl border border-slate-200 bg-white px-5 py-5 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:px-0 print:py-0"
       }
     >

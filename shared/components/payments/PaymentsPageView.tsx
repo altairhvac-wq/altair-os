@@ -124,7 +124,7 @@ export function PaymentsPageView({
                   className={
                     northStar
                       ? lt.secondaryAction
-                      : "inline-flex items-center justify-center rounded-md border border-altair-border bg-[var(--surface-tile)] px-3 py-1.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-[var(--surface-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+                      : "inline-flex items-center justify-center rounded-md border border-altair-border bg-[var(--surface-tile)] px-3 py-1.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-[var(--surface-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                   }
                 >
                   {paged.isLoadingMore ? "Loading…" : "Load more"}

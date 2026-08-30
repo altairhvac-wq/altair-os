@@ -83,7 +83,7 @@ export function BillingTotalsSummary({
     amountPaid > 0 || showBalanceInTotals;
 
   const containerClass = northStar && isPremiumStyle
-    ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-2"
+    ? "rounded-lg border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-2"
     : isPremiumStyle
     ? "rounded-lg border border-slate-200 bg-white px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
     : "rounded-lg border border-slate-200 bg-white px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
@@ -157,7 +157,7 @@ export function BillingTotalsSummary({
           ) : null}
 
           {!hideTotal ? (
-            <div className={`!mt-3 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 ${northStar ? "border-[rgba(138,99,36,0.28)]" : "border-slate-900"} pt-3`}>
+            <div className={`!mt-3 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 ${northStar ? "border-[rgba(119,89,27,0.28)]" : "border-slate-900"} pt-3`}>
               <span className={northStar ? "text-right text-sm font-bold uppercase tracking-[0.08em] text-[#4F4638] print:text-slate-900" : "text-right text-sm font-bold uppercase tracking-[0.08em] text-slate-900"}>
                 {totalLabel}
               </span>

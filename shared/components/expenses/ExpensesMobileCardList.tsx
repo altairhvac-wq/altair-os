@@ -17,7 +17,7 @@ type ExpensesMobileCardListProps = {
   northStar?: boolean;
 };
 
-const northStarMissingValueClass = "text-xs font-medium italic text-[#64748B]";
+const northStarMissingValueClass = "text-xs font-medium italic text-[#7C7259]";
 
 function getExpenseMerchantLabel(merchant: string, northStar: boolean) {
   const trimmed = merchant.trim();
@@ -72,7 +72,7 @@ export function ExpensesMobileCardList({
     <ul
       className={`md:hidden ${
         northStar
-          ? "expense-north-star-mobile-list divide-y divide-[rgba(138,99,36,0.12)]"
+          ? "expense-north-star-mobile-list divide-y divide-[rgba(119,89,27,0.12)]"
           : "divide-y divide-slate-100"
       }`}
     >
@@ -173,7 +173,7 @@ export function ExpensesMobileCardList({
                       <span
                         className={
                           northStar
-                            ? "inline-flex items-center gap-1 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[10px] font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]"
+                            ? "inline-flex items-center gap-1 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[10px] font-semibold text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.14)]"
                             : "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500"
                         }
                       >
@@ -198,7 +198,7 @@ export function ExpensesMobileCardList({
                   </p>
                   <ChevronRight
                     className={
-                      northStar ? "h-4 w-4 text-[#8A6324]/50" : "h-4 w-4 text-slate-300"
+                      northStar ? "h-4 w-4 text-[#77591B]/50" : "h-4 w-4 text-slate-300"
                     }
                   />
                 </div>

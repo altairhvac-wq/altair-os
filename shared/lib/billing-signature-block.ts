@@ -128,7 +128,7 @@ export function formatBillingSignatureBlockHtml(
 
   return `
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e4e4e7;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">${escapeHtml(content.label)}</div>
+      <div style="color:#7c7259;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">${escapeHtml(content.label)}</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:14px;">
         <tbody>
           ${fieldRow(

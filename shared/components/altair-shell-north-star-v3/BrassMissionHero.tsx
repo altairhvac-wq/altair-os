@@ -77,14 +77,14 @@ export function BrassMissionHero({
           </div>
 
           <div className={v3OpsScoreInlineClass}>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8B7232]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">
               Ops score
             </span>
             <span className="text-lg font-semibold tabular-nums text-[#292218]">{dayState.opsScore}</span>
-            <div className="h-4 w-px bg-[rgba(184,148,63,0.25)]" aria-hidden="true" />
+            <div className="h-4 w-px bg-[rgba(194,160,90,0.25)]" aria-hidden="true" />
             <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[#EFEAE2]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#B8943F] to-[#8B7232]"
+                className="h-full rounded-full bg-gradient-to-r from-[#C2A05A] to-[#77591B]"
                 style={{ width: `${dayState.opsScore}%` }}
               />
             </div>
@@ -106,7 +106,7 @@ export function BrassMissionHero({
               <div className="mt-2 flex flex-wrap gap-2">
                 {secondaryActions.map((action, index) => (
                   <Link key={action.id} href={action.href} className={v3SecondaryActionClass}>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#EFEAE2] text-[10px] font-bold tabular-nums text-[#8B7232]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#EFEAE2] text-[10px] font-bold tabular-nums text-[#77591B]">
                       {index + 2}
                     </span>
                     <span className="text-sm font-medium text-[#3D3428] group-hover:text-[#292218]">
@@ -118,7 +118,7 @@ export function BrassMissionHero({
                       </span>
                     ) : null}
                     <ChevronRight
-                      className="h-3.5 w-3.5 text-[rgba(41,34,24,0.40)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#8B7232]"
+                      className="h-3.5 w-3.5 text-[rgba(41,34,24,0.40)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#77591B]"
                       aria-hidden="true"
                     />
                   </Link>

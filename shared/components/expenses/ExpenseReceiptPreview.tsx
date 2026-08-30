@@ -44,18 +44,18 @@ export function ExpenseReceiptPreview({
         <div
           className={`flex items-center gap-3 rounded-xl border border-dashed text-left ${
             northStar
-              ? "border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-[#64748B]"
+              ? "border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] text-[#7C7259]"
               : "border-slate-200 bg-white text-slate-500"
           } ${compact ? "px-3 py-4" : "px-4 py-6"}`}
         >
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg shadow-sm ${
-              northStar ? "bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]" : "bg-white"
+              northStar ? "bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]" : "bg-white"
             }`}
           >
             <Receipt
               className={`h-5 w-5 ${
-                northStar ? "text-[#8A6324]" : "text-slate-400"
+                northStar ? "text-[#77591B]" : "text-slate-400"
               }`}
             />
           </div>
@@ -67,7 +67,7 @@ export function ExpenseReceiptPreview({
             >
               No receipt attached
             </p>
-            <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
+            <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-500"}`}>
               {formatReceiptStatus(expense.receiptStatus)}
             </p>
           </div>
@@ -93,7 +93,7 @@ export function ExpenseReceiptPreview({
         onClick={() => setShowModal(true)}
         className={`group w-full overflow-hidden rounded-xl border text-left transition-colors ${
           northStar
-            ? "border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] hover:border-[rgba(201,164,77,0.35)] hover:ring-2 hover:ring-[rgba(201,164,77,0.18)]"
+            ? "border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] hover:border-[rgba(194,160,90,0.35)] hover:ring-2 hover:ring-[rgba(194,160,90,0.18)]"
             : "border-slate-200 bg-white hover:border-cyan-300 hover:ring-2 hover:ring-cyan-500/15"
         } ${compact ? "" : "shadow-sm"}`}
       >
@@ -113,7 +113,7 @@ export function ExpenseReceiptPreview({
             <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
               <FileText
                 className={`h-8 w-8 ${
-                  northStar ? "text-[#8A6324]" : "text-slate-400"
+                  northStar ? "text-[#77591B]" : "text-slate-400"
                 }`}
               />
               <span
@@ -138,7 +138,7 @@ export function ExpenseReceiptPreview({
           >
             {expense.receiptFileName ?? "Receipt attached"}
           </p>
-          <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
+          <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-500"}`}>
             Uploaded {uploadedLabel}
           </p>
         </div>
@@ -175,11 +175,11 @@ function ExpenseReceiptPreviewModal({
       <AltairDialogContent
         size="lg"
         className={
-          northStar ? "border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]" : undefined
+          northStar ? "border-[rgba(119,89,27,0.12)] bg-[#FBF7EF]" : undefined
         }
       >
         <AltairDialogHeader
-          className={northStar ? "border-[rgba(138,99,36,0.12)]" : undefined}
+          className={northStar ? "border-[rgba(119,89,27,0.12)]" : undefined}
         >
           <div className="min-w-0 flex-1">
             <AltairDialogTitle
@@ -187,7 +187,7 @@ function ExpenseReceiptPreviewModal({
             >
               {expense.receiptFileName ?? "Receipt preview"}
             </AltairDialogTitle>
-            <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
+            <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-500"}`}>
               {expense.expenseNumber} · Uploaded {formatExpenseDate(expense.createdAt)}
             </p>
           </div>
@@ -199,7 +199,7 @@ function ExpenseReceiptPreviewModal({
                 rel="noopener noreferrer"
                 className={
                   northStar
-                    ? "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
+                    ? "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C2A05A] hover:bg-[#F3EBDD]"
                     : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                 }
               >
@@ -210,7 +210,7 @@ function ExpenseReceiptPreviewModal({
             <AltairDialogClose
               className={
                 northStar
-                  ? "text-[#64748B] hover:bg-[#EFE4CB] hover:text-[#17130E]"
+                  ? "text-[#7C7259] hover:bg-[#EFE4CB] hover:text-[#17130E]"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
               }
             />
@@ -229,13 +229,13 @@ function ExpenseReceiptPreviewModal({
             <div
               className={`flex flex-col items-center justify-center gap-4 rounded-xl border px-6 py-12 text-center ${
                 northStar
-                  ? "border-[rgba(138,99,36,0.12)] bg-[#FFF9EA]"
+                  ? "border-[rgba(119,89,27,0.12)] bg-[#FFF9EA]"
                   : "border-slate-200 bg-white"
               }`}
             >
               <FileText
                 className={`h-12 w-12 ${
-                  northStar ? "text-[#8A6324]" : "text-slate-400"
+                  northStar ? "text-[#77591B]" : "text-slate-400"
                 }`}
               />
               <div>
@@ -246,7 +246,7 @@ function ExpenseReceiptPreviewModal({
                 >
                   {expense.receiptFileName ?? "Receipt file"}
                 </p>
-                <p className={`mt-1 text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
+                <p className={`mt-1 text-xs ${northStar ? "text-[#7C7259]" : "text-slate-500"}`}>
                   PDF or non-image receipt — open in a new tab to view.
                 </p>
               </div>

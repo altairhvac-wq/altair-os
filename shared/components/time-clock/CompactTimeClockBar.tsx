@@ -49,7 +49,7 @@ export function CompactTimeClockBar({
             type="button"
             onClick={onToggle}
             disabled={isPending}
-            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
+            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
               isClockOut
                 ? "bg-altair-ink-on-paper hover:bg-altair-ink"
                 : "bg-altair-success hover:bg-altair-success/90"

@@ -48,7 +48,7 @@ function TitleBlock({
       {linkTitle && row.href ? (
         <Link
           href={row.href}
-          className={`${titleClass} hover:text-altair-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
+          className={`${titleClass} hover:text-altair-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
         >
           {row.title}
         </Link>

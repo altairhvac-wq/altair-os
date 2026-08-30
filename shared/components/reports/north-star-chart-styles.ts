@@ -6,8 +6,16 @@
  * tuned for readability on that surface (not the former ivory North Star paper).
  */
 
-/** Sky/blue revenue categorical tint — matches report icon chip `bg-sky-500/25`. */
-const REVENUE_SKY = "#38BDF8";
+/**
+ * PRESTIGE: the primary series reads brass, not sky blue.
+ *
+ * Every series colour in this module used to be a raw Tailwind-400 hex
+ * (#38BDF8 sky, #34D399 emerald, #A78BFA violet, …) authored here rather than
+ * taken from a token, which made the report charts the loudest off-palette
+ * element left in the product. Series colours now come from the canonical
+ * `--chart-*` roles in globals.css.
+ */
+const SERIES_PRIMARY = "var(--chart-1)";
 
 export const nsReportChart = {
   gridLine: "border-t border-white/[0.06]",
@@ -18,14 +26,14 @@ export const nsReportChart = {
   chartPlot: "absolute inset-x-0 inset-y-1 sm:inset-y-2",
 
   revenue: {
-    line: REVENUE_SKY,
+    line: SERIES_PRIMARY,
     lineWidth: 0.7,
     /** Soft fill under the line — ~25% opacity fading to transparent. */
-    areaColor: REVENUE_SKY,
+    areaColor: SERIES_PRIMARY,
     areaTopOpacity: 0.28,
     areaBottomOpacity: 0,
-    point: REVENUE_SKY,
-    pointPeak: "#7DD3FC",
+    point: SERIES_PRIMARY,
+    pointPeak: "var(--chart-accent)",
     pointRadius: 0.85,
     pointPeakRadius: 1.15,
   },
@@ -71,7 +79,7 @@ export const nsReportChart = {
       text: "text-altair-warning",
     },
     {
-      stroke: "#F43F5E",
+      stroke: "var(--altair-danger)",
       swatch: "bg-rose-500",
       text: "text-rose-400",
     },
@@ -82,10 +90,14 @@ export const nsReportChart = {
     },
   ] as const,
 
+  /* PRESTIGE: stage 1 was `bg-sky-400` — the last raw Tailwind blue on the
+   * Reports page, and the brightest thing on it. The funnel now walks the
+   * canonical series ramp so it reads as one progression rather than four
+   * unrelated hues. */
   funnelStages: [
-    "bg-sky-400",
-    "bg-altair-success",
-    "bg-altair-brass",
+    "bg-[var(--chart-1)]",
+    "bg-[var(--chart-2)]",
+    "bg-[var(--chart-3)]",
     "bg-altair-ink-muted",
   ] as const,
 
@@ -97,19 +109,21 @@ export const nsReportChart = {
   techBarFill:
     "h-full rounded-sm transition-[width] duration-300 ease-out",
   techProfitBar: "bg-altair-success",
-  techRevenueBar: "bg-sky-400/85",
+  /* Revenue pairs with profit in the same bar group, so it takes the primary
+   * series role rather than a hue that appears nowhere else on the page. */
+  techRevenueBar: "bg-[var(--chart-1)]/85",
 
   /**
    * Fixed categorical palette for donut/legend segments (service categories).
    * Hues align with report icon-chip tints; expand beyond 6 only if needed.
    */
   categoryPalette: [
-    { stroke: REVENUE_SKY, swatch: "bg-sky-400", text: "text-sky-300" },
-    { stroke: "#34D399", swatch: "bg-emerald-400", text: "text-emerald-300" },
-    { stroke: "#A78BFA", swatch: "bg-violet-400", text: "text-violet-300" },
-    { stroke: "#FBBF24", swatch: "bg-amber-400", text: "text-amber-300" },
-    { stroke: "#2DD4BF", swatch: "bg-teal-400", text: "text-teal-300" },
-    { stroke: "#FB7185", swatch: "bg-rose-400", text: "text-rose-300" },
+    { stroke: "var(--chart-1)", swatch: "bg-[var(--chart-1)]", text: "text-[var(--chart-1)]" },
+    { stroke: "var(--chart-2)", swatch: "bg-[var(--chart-2)]", text: "text-[var(--chart-2)]" },
+    { stroke: "var(--chart-3)", swatch: "bg-[var(--chart-3)]", text: "text-[var(--chart-3)]" },
+    { stroke: "var(--chart-4)", swatch: "bg-[var(--chart-4)]", text: "text-[var(--chart-4)]" },
+    { stroke: "var(--chart-5)", swatch: "bg-[var(--chart-5)]", text: "text-[var(--chart-5)]" },
+    { stroke: "var(--chart-6)", swatch: "bg-[var(--chart-6)]", text: "text-[var(--chart-6)]" },
   ] as const,
 
   table: {

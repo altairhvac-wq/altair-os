@@ -119,8 +119,8 @@ function ShowcaseRow({
             className={[
               "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200",
               isDark
-                ? "border-[#D4AF37]/28 bg-[#D4AF37]/8 text-[#D4AF37]/90 motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#D4AF37]/40 group-hover/row:bg-[#D4AF37]/12"
-                : "border-[#D4AF37]/30 bg-[#FFFCF8] text-[#9A7209] motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#D4AF37]/45 group-hover/row:bg-[#FAF7F0]",
+                ? "border-[#C2A05A]/28 bg-[#C2A05A]/8 text-[#C2A05A]/90 motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#C2A05A]/40 group-hover/row:bg-[#C2A05A]/12"
+                : "border-[#C2A05A]/30 bg-[#FFFCF8] text-[#77591B] motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#C2A05A]/45 group-hover/row:bg-[#FAF7F0]",
             ].join(" ")}
           >
             <item.icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
@@ -169,7 +169,7 @@ export function SeeAltairInActionSection({
         <p
           className={[
             "text-[11px] font-semibold uppercase tracking-[0.16em]",
-            isDark ? "text-[#D4AF37]/90" : "text-[#9A7209]",
+            isDark ? "text-[#C2A05A]/90" : "text-[#77591B]",
           ].join(" ")}
         >
           Product tour

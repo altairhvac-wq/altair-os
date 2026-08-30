@@ -32,7 +32,7 @@ export function AdminMobileHomeLoadingState() {
       aria-busy="true"
       aria-label="Loading home"
       data-testid="page-dashboard-mobile-loading"
-      className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#34353a_0%,#1c1d1f_48%,#0a0a0b_100%)] px-5 pb-12 pt-4"
+      className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-12 pt-4"
     >
       {/* Top bar: menu, greeting block, calendar */}
       <div className="flex items-start justify-between gap-3">

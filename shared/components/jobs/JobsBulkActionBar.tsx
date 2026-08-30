@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, UserPlus, X } from "lucide-react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { useMemo, useState } from "react";
 import {
   isBulkStatusActionDestructive,
@@ -32,6 +33,7 @@ export function JobsBulkActionBar({
   onUpdateStatus,
   onClearSelection,
 }: JobsBulkActionBarProps) {
+  const { confirm, confirmDialog } = useConfirm();
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
   const [selectedActionId, setSelectedActionId] = useState<
     JobWorkflowActionId | ""
@@ -57,17 +59,20 @@ export function JobsBulkActionBar({
     onAssign(selectedTechnicianId);
   }
 
-  function handleStatusClick() {
+  async function handleStatusClick() {
     if (!selectedActionId || isBusy) {
       return;
     }
 
     if (isBulkStatusActionDestructive(selectedActionId)) {
-      const confirmed = window.confirm(
-        `Cancel ${selectedCount} selected job${
-          selectedCount === 1 ? "" : "s"
-        }? This cannot be undone from the bulk action bar.`,
-      );
+      const confirmed = await confirm({
+        title: `Cancel ${selectedCount} job${selectedCount === 1 ? "" : "s"}?`,
+        description:
+          "This cannot be undone from the bulk action bar.",
+        confirmLabel: "Cancel jobs",
+        cancelLabel: "Keep jobs",
+        destructive: true,
+      });
 
       if (!confirmed) {
         return;
@@ -186,6 +191,7 @@ export function JobsBulkActionBar({
           ) : null}
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

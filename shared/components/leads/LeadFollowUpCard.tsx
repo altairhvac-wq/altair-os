@@ -137,7 +137,7 @@ export function LeadFollowUpCard({
       </div>
 
       {error ? (
-        <p className="mt-3 text-xs text-rose-600">{error}</p>
+        <p className="mt-3 text-xs text-rose-700">{error}</p>
       ) : null}
     </div>
   );

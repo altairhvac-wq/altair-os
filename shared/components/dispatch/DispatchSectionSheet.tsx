@@ -61,7 +61,7 @@ export function DispatchSectionSheet({
       >
         {northStar ? (
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.38)] to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(217,193,136,0.38)] to-transparent"
             aria-hidden
           />
         ) : null}

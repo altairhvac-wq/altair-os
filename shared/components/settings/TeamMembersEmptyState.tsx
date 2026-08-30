@@ -16,12 +16,12 @@ export function TeamMembersEmptyState({
   if (northStar) {
     return (
       <div className="px-4 py-8 sm:px-6">
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-6 py-8 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-6 py-8 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]">
             {isNoResults ? (
-              <SearchX className="h-6 w-6 text-[#8A6324]" />
+              <SearchX className="h-6 w-6 text-[#77591B]" />
             ) : (
-              <Users className="h-6 w-6 text-[#8A6324]" />
+              <Users className="h-6 w-6 text-[#77591B]" />
             )}
           </div>
 

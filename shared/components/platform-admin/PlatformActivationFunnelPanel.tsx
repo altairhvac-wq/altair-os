@@ -63,7 +63,7 @@ function FunnelStepRow({
     <div
       className={
         northStar
-          ? "min-w-0 rounded-[0.875rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3"
+          ? "min-w-0 rounded-[0.875rem] border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] p-3"
           : "min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-3"
       }
     >
@@ -102,7 +102,7 @@ function FunnelStepRow({
             <div
               className={
                 northStar
-                  ? "h-full rounded-full bg-[#C9A44D]"
+                  ? "h-full rounded-full bg-[#C2A05A]"
                   : "h-full rounded-full bg-cyan-500"
               }
               style={{
@@ -113,7 +113,7 @@ function FunnelStepRow({
           <p
             className={
               northStar
-                ? "mt-1 text-[11px] font-medium text-[#8A6324]"
+                ? "mt-1 text-[11px] font-medium text-[#77591B]"
                 : "mt-1 text-[11px] font-medium text-slate-600"
             }
           >

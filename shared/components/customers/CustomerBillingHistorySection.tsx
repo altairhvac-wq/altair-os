@@ -89,12 +89,12 @@ export function CustomerBillingHistorySection({
   const subheadingClass = northStar
     ? dt.metricLabel
     : "text-xs font-semibold uppercase tracking-wide text-slate-500";
-  const iconClass = northStar ? "h-4 w-4 text-[#8A6324]" : "h-4 w-4 text-slate-400";
+  const iconClass = northStar ? "h-4 w-4 text-[#77591B]" : "h-4 w-4 text-slate-400";
   const primaryTextClass = northStar
     ? "font-semibold text-[#17130E]"
     : "font-semibold text-slate-900";
   const secondaryTextClass = northStar
-    ? "mt-0.5 text-xs text-[#64748B]"
+    ? "mt-0.5 text-xs text-[#7C7259]"
     : "mt-0.5 text-xs text-slate-500";
   const amountClass = northStar
     ? "text-sm font-semibold text-[#17130E]"

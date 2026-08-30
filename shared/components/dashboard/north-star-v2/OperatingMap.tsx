@@ -3,13 +3,13 @@ import type { OperatingLink, OperatingNode } from "./sample-data";
 const nodeToneStyles = {
   cyan: {
     ring: "ring-cyan-400/30",
-    glow: "shadow-[0_0_24px_rgba(34,211,238,0.25)]",
+    glow: "shadow-[0_0_24px_rgba(200,192,175,0.25)]",
     dot: "bg-cyan-400",
     label: "text-cyan-700",
   },
   sky: {
     ring: "ring-sky-400/30",
-    glow: "shadow-[0_0_24px_rgba(56,189,248,0.22)]",
+    glow: "shadow-[0_0_24px_rgba(186,176,155,0.22)]",
     dot: "bg-sky-400",
     label: "text-sky-700",
   },
@@ -27,7 +27,7 @@ const nodeToneStyles = {
   },
   slate: {
     ring: "ring-slate-300/40",
-    glow: "shadow-[0_0_16px_rgba(148,163,184,0.15)]",
+    glow: "shadow-[0_0_16px_rgba(176,168,143,0.15)]",
     dot: "bg-slate-400",
     label: "text-slate-600",
   },
@@ -48,18 +48,18 @@ export function OperatingMap({ nodes, links }: OperatingMapProps) {
   return (
     <div
       aria-label="Live operating map"
-      className="relative min-h-[220px] flex-1 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_-20px_rgba(15,23,42,0.55)] sm:min-h-[260px] lg:min-h-[280px]"
+      className="relative min-h-[220px] flex-1 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_-20px_rgba(21,25,19,0.55)] sm:min-h-[260px] lg:min-h-[280px]"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(34,211,238,0.12),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(200,192,175,0.12),transparent_55%)]"
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)",
+            "linear-gradient(rgba(176,168,143,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(176,168,143,0.08) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
         }}
       />
@@ -79,8 +79,8 @@ export function OperatingMap({ nodes, links }: OperatingMapProps) {
       >
         <defs>
           <linearGradient id="link-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(34,211,238,0.15)" />
-            <stop offset="50%" stopColor="rgba(56,189,248,0.35)" />
+            <stop offset="0%" stopColor="rgba(200,192,175,0.15)" />
+            <stop offset="50%" stopColor="rgba(186,176,155,0.35)" />
             <stop offset="100%" stopColor="rgba(251,191,36,0.2)" />
           </linearGradient>
         </defs>

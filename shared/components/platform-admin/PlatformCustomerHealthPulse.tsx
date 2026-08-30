@@ -59,7 +59,7 @@ function CountChip({
     <div
       className={
         northStar
-          ? "min-w-0 rounded-[0.875rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3"
+          ? "min-w-0 rounded-[0.875rem] border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] p-3"
           : "min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-3"
       }
     >
@@ -135,7 +135,7 @@ function CompanyHealthRow({
             <span
               className={
                 northStar
-                  ? "inline-flex rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[10px] font-medium text-[#8A6324]"
+                  ? "inline-flex rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[10px] font-medium text-[#77591B]"
                   : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
               }
             >
@@ -166,7 +166,7 @@ function CompanyHealthRow({
         <ChevronRight
           className={
             northStar
-              ? "mt-1 h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-hover:translate-x-0.5"
+              ? "mt-1 h-4 w-4 shrink-0 text-[#77591B] transition-transform group-hover:translate-x-0.5"
               : "mt-1 h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
           }
           aria-hidden="true"

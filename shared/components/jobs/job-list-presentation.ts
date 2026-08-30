@@ -160,7 +160,7 @@ export const jobMissionClasses = {
   schedulePast: "text-altair-danger-foreground",
   scheduleUnscheduled: "text-altair-warning-foreground",
   bulkBar:
-    "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.12)] backdrop-blur-sm sm:px-4",
+    "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.12)] backdrop-blur-sm sm:px-4",
   bulkBarTitle: "text-sm font-semibold text-altair-ink-on-paper",
   bulkClearButton: buttonClassName("quiet", "sm", "shrink-0"),
   bulkSecondaryAction: buttonClassName("secondary", "sm"),

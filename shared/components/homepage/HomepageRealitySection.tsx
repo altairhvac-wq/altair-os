@@ -91,17 +91,17 @@ export function HomepageRealitySection() {
       className="mc-reality relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.28),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.28),transparent)]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-x-[10%] top-0 h-20 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-[10%] top-0 h-20 bg-[radial-gradient(ellipse_at_top,rgba(220,215,204,0.07),transparent_70%)]"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-[90rem]">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             The reality of running a business
           </p>
           <h2
@@ -145,7 +145,7 @@ export function HomepageRealitySection() {
                 style={{ animationDelay: `${index * 90}ms` }}
               >
                 <Icon
-                  className="h-5 w-5 text-[#c9a44d]"
+                  className="h-5 w-5 text-[#c2a05a]"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -180,7 +180,7 @@ export function HomepageRealitySection() {
                 aria-hidden={!active}
               >
                 <Icon
-                  className="h-5 w-5 text-[#c9a44d]"
+                  className="h-5 w-5 text-[#c2a05a]"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -202,7 +202,7 @@ export function HomepageRealitySection() {
                 key={item.id}
                 className={[
                   "h-1.5 w-1.5 rounded-full transition-colors",
-                  index === activeIndex ? "bg-[#c9a44d]" : "bg-[#2a303a]",
+                  index === activeIndex ? "bg-[#c2a05a]" : "bg-[#2b3227]",
                 ].join(" ")}
               />
             ))}
@@ -211,7 +211,7 @@ export function HomepageRealitySection() {
       </div>
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.18),transparent)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.18),transparent)]"
         aria-hidden="true"
       />
     </section>

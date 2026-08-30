@@ -15,7 +15,7 @@ type ActivityAndHealthBandProps = {
 export function ActivityAndHealthBand({ activities, momentum }: ActivityAndHealthBandProps) {
   return (
     <div className={`${v3FooterSectionClass} grid lg:grid-cols-[1.2fr_0.8fr]`}>
-      <div className="border-b border-[rgba(184,148,63,0.10)] px-4 py-4 lg:border-b-0 lg:border-r lg:px-5">
+      <div className="border-b border-[rgba(194,160,90,0.10)] px-4 py-4 lg:border-b-0 lg:border-r lg:px-5">
         <p className={v3EyebrowLightClass}>Field activity</p>
         <ul className="mt-3 space-y-2">
           {activities.map((item) => (
@@ -36,7 +36,7 @@ export function ActivityAndHealthBand({ activities, momentum }: ActivityAndHealt
         <ul className="mt-3 space-y-1.5">
           {momentum.map((item) => (
             <li key={item} className={`flex items-start gap-2 ${v3MetaClass}`}>
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8943F]" aria-hidden="true" />
+              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#C2A05A]" aria-hidden="true" />
               {item}
             </li>
           ))}

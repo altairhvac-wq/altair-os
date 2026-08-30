@@ -72,7 +72,7 @@ export function IncomingNetworkInvitesCard({
     const isAccepting = isPending && acceptingId === invite.id;
 
     const bannerClass = isNorthStar
-      ? "rounded-[1rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] p-4 shadow-[0_2px_12px_rgba(138,99,36,0.10)]"
+      ? "rounded-[1rem] border border-[rgba(194,160,90,0.28)] bg-[#FFF9EA] p-4 shadow-[0_2px_12px_rgba(119,89,27,0.10)]"
       : "rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-white p-4 shadow-sm";
     const titleClass = isNorthStar
       ? "text-sm font-semibold text-[#17130E]"
@@ -116,13 +116,13 @@ export function IncomingNetworkInvitesCard({
   }
 
   const sectionClass = isNorthStar
-    ? "min-w-0 max-w-full rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_2px_12px_rgba(138,99,36,0.08)]"
+    ? "min-w-0 max-w-full rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] shadow-[0_2px_12px_rgba(119,89,27,0.08)]"
     : "min-w-0 max-w-full rounded-xl border border-cyan-200 bg-cyan-50/60 shadow-sm";
   const headerClass = isNorthStar
-    ? "border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-4 py-4 sm:px-6"
+    ? "border-b border-[rgba(119,89,27,0.12)] bg-[#F5F0E4] px-4 py-4 sm:px-6"
     : "border-b border-cyan-100 px-4 py-4 sm:px-6";
   const iconWrapClass = isNorthStar
-    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
     : "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700";
   const headingClass = isNorthStar
     ? "text-lg font-bold text-[#17130E]"
@@ -131,7 +131,7 @@ export function IncomingNetworkInvitesCard({
     ? "mt-1 text-sm text-[#6B6255]"
     : "mt-1 text-sm text-slate-600";
   const cardClass = isNorthStar
-    ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4"
+    ? "rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] p-4"
     : "rounded-xl border border-white bg-white/90 p-4";
 
   return (
@@ -188,7 +188,7 @@ export function IncomingNetworkInvitesCard({
                     <p
                       className={
                         isNorthStar
-                          ? "mt-3 rounded-lg bg-[#FBF7EF] px-3 py-2 text-xs text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.10)]"
+                          ? "mt-3 rounded-lg bg-[#FBF7EF] px-3 py-2 text-xs text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.10)]"
                           : "mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600"
                       }
                     >

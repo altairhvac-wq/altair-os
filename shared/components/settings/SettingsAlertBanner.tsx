@@ -44,7 +44,7 @@ const NORTH_STAR_TONE_STYLES: Record<
     text: "text-[#9A3412]",
   },
   info: {
-    container: "border-[rgba(138,99,36,0.22)] bg-[#FFF9EA]",
+    container: "border-[rgba(119,89,27,0.22)] bg-[#FFF9EA]",
     text: "text-[#4F4638]",
   },
 };

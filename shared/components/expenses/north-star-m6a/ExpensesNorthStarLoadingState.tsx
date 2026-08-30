@@ -35,14 +35,14 @@ function DesktopLoadingSkeleton() {
             <Skeleton dark className="h-3 w-56 max-w-full" />
           </div>
         </div>
-        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]" />
+        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(194,160,90,0.22)]" />
       </header>
 
       <div className="grid shrink-0 grid-cols-2 gap-2.5 px-3 sm:gap-3 sm:px-3.5 lg:grid-cols-4 lg:px-5">
         {Array.from({ length: 4 }).map((_, index) => (
           <Skeleton
             key={index}
-            className="h-[5.5rem] rounded-[1rem] border border-[rgba(138,99,36,0.12)] sm:h-[4.75rem]"
+            className="h-[5.5rem] rounded-[1rem] border border-[rgba(119,89,27,0.12)] sm:h-[4.75rem]"
           />
         ))}
       </div>
@@ -54,7 +54,7 @@ function DesktopLoadingSkeleton() {
         >
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
 
-          <div className="shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-2.5 sm:px-4 lg:px-5">
+          <div className="shrink-0 border-b border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3 py-2.5 sm:px-4 lg:px-5">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="mt-1.5 h-3 w-72 max-w-full" />
           </div>

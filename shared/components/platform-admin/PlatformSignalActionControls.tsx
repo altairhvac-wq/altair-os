@@ -40,11 +40,11 @@ function actionStatusClass(status: string, northStar: boolean): string {
       case "contacted":
         return "bg-[rgba(22,101,52,0.1)] text-[#166534] ring-[rgba(22,101,52,0.16)]";
       case "snoozed":
-        return "bg-[rgba(100,116,139,0.1)] text-[#475569] ring-[rgba(100,116,139,0.16)]";
+        return "bg-[rgba(124,114,89,0.1)] text-[#5C5340] ring-[rgba(124,114,89,0.16)]";
       case "resolved":
-        return "bg-[rgba(100,116,139,0.08)] text-[#64748B] ring-[rgba(100,116,139,0.12)]";
+        return "bg-[rgba(124,114,89,0.08)] text-[#7C7259] ring-[rgba(124,114,89,0.12)]";
       default:
-        return "bg-[rgba(138,99,36,0.1)] text-[#8A6324] ring-[rgba(138,99,36,0.16)]";
+        return "bg-[rgba(119,89,27,0.1)] text-[#77591B] ring-[rgba(119,89,27,0.16)]";
     }
   }
 
@@ -104,10 +104,10 @@ export function PlatformSignalActionControls({
 
   const buttonClass = compact
     ? northStar
-      ? "inline-flex min-h-8 items-center gap-1 rounded-lg border border-[rgba(138,99,36,0.2)] bg-white px-2 py-1 text-[11px] font-semibold text-[#4F4638] hover:bg-[#F3EBDD] disabled:opacity-50"
+      ? "inline-flex min-h-8 items-center gap-1 rounded-lg border border-[rgba(119,89,27,0.2)] bg-white px-2 py-1 text-[11px] font-semibold text-[#4F4638] hover:bg-[#F3EBDD] disabled:opacity-50"
       : "inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
     : northStar
-      ? "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.2)] bg-white px-3 py-1.5 text-xs font-semibold text-[#4F4638] hover:bg-[#F3EBDD] disabled:opacity-50"
+      ? "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[rgba(119,89,27,0.2)] bg-white px-3 py-1.5 text-xs font-semibold text-[#4F4638] hover:bg-[#F3EBDD] disabled:opacity-50"
       : "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50";
 
   return (
@@ -165,7 +165,7 @@ export function PlatformSignalActionControls({
                 <div
                   className={
                     northStar
-                      ? "absolute left-0 top-full z-10 mt-1 flex gap-1 rounded-lg border border-[rgba(138,99,36,0.2)] bg-white p-1 shadow-sm"
+                      ? "absolute left-0 top-full z-10 mt-1 flex gap-1 rounded-lg border border-[rgba(119,89,27,0.2)] bg-white p-1 shadow-sm"
                       : "absolute left-0 top-full z-10 mt-1 flex gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
                   }
                 >
@@ -250,7 +250,7 @@ export function PlatformSignalActionControls({
             placeholder="Founder note — what you did or plan to follow up on"
             className={
               northStar
-                ? "w-full rounded-lg border border-[rgba(138,99,36,0.2)] bg-white px-3 py-2 text-xs text-[#17130E] placeholder:text-[#8A6324]/60"
+                ? "w-full rounded-lg border border-[rgba(119,89,27,0.2)] bg-white px-3 py-2 text-xs text-[#17130E] placeholder:text-[#77591B]/60"
                 : "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400"
             }
           />

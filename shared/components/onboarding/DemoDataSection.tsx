@@ -107,14 +107,14 @@ export function DemoDataSection({
       aria-label="Sample Data"
       className={
         northStar
-          ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
+          ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF]"
           : "admin-card min-w-0 max-w-full overflow-x-clip"
       }
     >
       <div
         className={`flex items-start gap-2.5 border-b ${
           northStar
-            ? "border-[rgba(138,99,36,0.12)] bg-[#F5F0E4]"
+            ? "border-[rgba(119,89,27,0.12)] bg-[#F5F0E4]"
             : "border-slate-100 bg-gradient-to-r from-violet-50/80 to-white"
         } ${
           isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
@@ -123,7 +123,7 @@ export function DemoDataSection({
         <div
           className={`flex shrink-0 items-center justify-center rounded-lg ${
             northStar
-              ? "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+              ? "bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
               : "bg-violet-100 text-violet-700"
           } ${
             isSettingsCompact ? "h-9 w-9" : "h-11 w-11 rounded-xl"

@@ -659,7 +659,7 @@ export function NetworkNorthStarView({
               <p className={`mt-0.5 ${st.cardSecondary}`}>{partner.tradeType}</p>
               {partner.city || partner.state ? (
                 <p className={`mt-0.5 flex items-center gap-1 ${st.cardMuted}`}>
-                  <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
+                  <MapPin className="h-3 w-3 shrink-0 text-[#77591B]" />
                   {[partner.city, partner.state].filter(Boolean).join(", ")}
                 </p>
               ) : null}
@@ -921,7 +921,7 @@ export function NetworkNorthStarView({
                       onChange={(event) =>
                         setAcceptingReferralsOnly(event.target.checked)
                       }
-                      className="h-3.5 w-3.5 rounded border-[rgba(138,99,36,0.25)]"
+                      className="h-3.5 w-3.5 rounded border-[rgba(119,89,27,0.25)]"
                     />
                     Accepting referrals only
                   </label>

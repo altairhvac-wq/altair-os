@@ -23,7 +23,7 @@ import {
 } from "./pwa-utils";
 
 const ctaFocusClass =
-  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#C2A05A]/20";
 
 type InstallPlatform = "ios" | "android" | "desktop";
 
@@ -135,7 +135,7 @@ function CompactStepList({ steps }: { steps: CompactStep[] }) {
           className="flex items-center gap-3 px-3.5 py-2.5 text-sm text-stone-700"
         >
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF4E8] text-base ring-1 ring-[#D4AF37]/20"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF4E8] text-base ring-1 ring-[#C2A05A]/20"
             aria-hidden
           >
             {step.emoji}
@@ -157,13 +157,13 @@ function InstallCardShell({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border-2 border-[#D4AF37]/35 border-t-[4px] border-t-[#D4AF37]/70 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_16px_40px_rgba(10,10,10,0.1)] ring-1 ring-[#D4AF37]/18 sm:p-6">
+    <section className="rounded-2xl border-2 border-[#C2A05A]/35 border-t-[4px] border-t-[#C2A05A]/70 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_16px_40px_rgba(10,10,10,0.1)] ring-1 ring-[#C2A05A]/18 sm:p-6">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#9A7209] shadow-sm ring-1 ring-[#D4AF37]/25">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#77591B] shadow-sm ring-1 ring-[#C2A05A]/25">
           <Smartphone className="h-5 w-5" aria-hidden />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9A7209]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">
             {eyebrow}
           </p>
           <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#0A0A0A] sm:text-xl">
@@ -199,7 +199,7 @@ function IosWalkthroughScreenshot({
         href={src}
         target="_blank"
         rel="noopener noreferrer"
-        className={`group block rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20 ${ctaFocusClass}`}
+        className={`group block rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#C2A05A]/20 ${ctaFocusClass}`}
         aria-label={`${caption} — open full-size screenshot`}
       >
         <div className="flex max-h-[min(420px,55vh)] items-center justify-center overflow-hidden rounded-xl border border-stone-200/90 bg-white shadow-[0_2px_8px_rgba(10,10,10,0.06)] sm:max-h-[460px]">
@@ -218,7 +218,7 @@ function IosWalkthroughScreenshot({
         </p>
       </a>
       <figcaption className="mt-2 text-center text-xs leading-relaxed text-stone-600 sm:text-sm">
-        <span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
+        <span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-bold text-[#77591B] ring-1 ring-[#C2A05A]/25">
           {stepNumber}
         </span>
         {caption}
@@ -262,10 +262,10 @@ function IosInstallWizard() {
         only takes about 20 seconds.
       </p>
 
-      <ol className="mt-4 space-y-2 rounded-xl border border-[#D4AF37]/25 bg-[#FAF4E8]/40 px-4 py-3.5">
+      <ol className="mt-4 space-y-2 rounded-xl border border-[#C2A05A]/25 bg-[#FAF4E8]/40 px-4 py-3.5">
         {IOS_QUICK_STEPS.map((step, index) => (
           <li key={step} className="flex gap-3 text-sm leading-snug text-[#0A0A0A]">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/30">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#77591B] ring-1 ring-[#C2A05A]/30">
               {index + 1}
             </span>
             <span className="pt-0.5 font-medium">{step}</span>
@@ -476,12 +476,12 @@ function IosStickyHint() {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#D4AF37]/25 bg-[#FFFCF8]/95 px-5 py-2.5 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#C2A05A]/25 bg-[#FFFCF8]/95 px-5 py-2.5 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-3xl text-center">
-        <p className="text-sm font-medium text-[#9A7209]">
+        <p className="text-sm font-medium text-[#77591B]">
           ⋯ Next: tap the three dots by altair-op.com
         </p>
-        <p className="mt-0.5 text-xs text-[#9A7209]/80">
+        <p className="mt-0.5 text-xs text-[#77591B]/80">
           Then tap Share → Add to Home Screen
         </p>
       </div>
@@ -528,7 +528,7 @@ export function InstallPageView() {
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C2A05A]/30 to-transparent" />
 
       <header className="relative border-b border-stone-200/80 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
@@ -556,7 +556,7 @@ export function InstallPageView() {
         }`}
       >
         <div className="auth-hero-enter text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A7209]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
             Mobile install
           </p>
           <h1 className="mt-3 text-[1.875rem] font-semibold tracking-tight text-[#0A0A0A] sm:text-[2.125rem]">
@@ -583,7 +583,7 @@ export function InstallPageView() {
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/login"
-                  className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
+                  className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(194,160,90,0.2)] ring-1 ring-[#C2A05A]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
                 >
                   <ExternalLink className="h-4 w-4" aria-hidden />
                   Open Altair

@@ -70,13 +70,13 @@ export function HomepageProductProofSection() {
       className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16 lg:py-20"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(230,227,220,0.2),transparent)]"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-[90rem]">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c2a05a]">
             One system, visible at every stage
           </p>
           <h2
@@ -121,7 +121,7 @@ export function HomepageProductProofSection() {
                   />
                   <div className="px-1 pb-1 pt-5 sm:px-2">
                     <Icon
-                      className="h-5 w-5 text-[#c9a44d]"
+                      className="h-5 w-5 text-[#c2a05a]"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />

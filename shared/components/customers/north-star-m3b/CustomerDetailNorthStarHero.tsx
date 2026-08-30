@@ -136,7 +136,7 @@ export function CustomerDetailNorthStarHero({
           <div className={`mt-1.5 flex flex-wrap gap-1.5 ${dt.metaRow}`}>
             {customer.tags.map((tag) => (
               <span key={tag} className={dt.tagChip}>
-                <Tag className="h-2.5 w-2.5 text-[#D6BE78]" />
+                <Tag className="h-2.5 w-2.5 text-[#D9C188]" />
                 {tag}
               </span>
             ))}
@@ -144,7 +144,7 @@ export function CustomerDetailNorthStarHero({
         ) : null}
       </div>
 
-      <div className="mt-3 grid gap-2.5 border-t border-[rgba(201,164,77,0.12)] pt-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-3 grid gap-2.5 border-t border-[rgba(194,160,90,0.12)] pt-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className={dt.heroStatLabel}>Jobs</p>
           <p className={dt.heroStatValue}>{customer.totalJobs}</p>

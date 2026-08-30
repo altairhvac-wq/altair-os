@@ -41,13 +41,13 @@ export function OnboardingDismissedRecoveryBanner({
       aria-label="Resume workspace setup"
       className={
         northStar
-          ? "flex min-w-0 flex-col gap-2.5 rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] px-3 py-2.5 sm:flex-row sm:items-start"
+          ? "flex min-w-0 flex-col gap-2.5 rounded-lg border border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] px-3 py-2.5 sm:flex-row sm:items-start"
           : "admin-card flex min-w-0 flex-col gap-2.5 px-3 py-2.5 sm:flex-row sm:items-start sm:px-4"
       }
     >
       <Settings2
         className={`mt-0.5 h-4 w-4 shrink-0 ${
-          northStar ? "text-[#8A6324]" : "text-slate-500"
+          northStar ? "text-[#77591B]" : "text-slate-500"
         }`}
         aria-hidden="true"
       />
@@ -74,7 +74,7 @@ export function OnboardingDismissedRecoveryBanner({
         disabled={isPending}
         className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
           northStar
-            ? "bg-[#EFE4CB] text-[#8A6324] hover:bg-[#E5D9BE]"
+            ? "bg-[#EFE4CB] text-[#77591B] hover:bg-[#E5D9BE]"
             : "bg-slate-100 text-slate-700 hover:bg-slate-200"
         }`}
       >

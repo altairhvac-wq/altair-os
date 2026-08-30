@@ -20,7 +20,7 @@ type SignaturePadProps = {
 };
 
 const STROKE_WIDTH = 2.5;
-const STROKE_COLOR = "#0f172a";
+const STROKE_COLOR = "#151913";
 
 export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(
   function SignaturePad({ disabled = false, onStroke }, ref) {

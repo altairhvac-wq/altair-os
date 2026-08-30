@@ -84,7 +84,7 @@ export function MarketingCompletedJobPicker({
   const isEmpty = jobs !== null && jobs.length === 0;
 
   const cardClassName = northStar
-    ? "overflow-hidden rounded-[1.25rem] border border-[rgba(148,163,184,0.22)] bg-[#FFFBF5] shadow-[0_8px_30px_rgba(138,99,36,0.08)] ring-1 ring-[rgba(100,116,139,0.12)]"
+    ? "overflow-hidden rounded-[1.25rem] border border-[rgba(176,168,143,0.22)] bg-[#FFFBF5] shadow-[0_8px_30px_rgba(119,89,27,0.08)] ring-1 ring-[rgba(124,114,89,0.12)]"
     : "overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[var(--shadow-card)]";
 
   return (
@@ -93,7 +93,7 @@ export function MarketingCompletedJobPicker({
         <header
           className={`border-b px-5 py-5 sm:px-7 sm:py-6 ${
             northStar
-              ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+              ? "border-[rgba(176,168,143,0.18)] bg-[#FAF6EE]/50"
               : "border-slate-100 bg-slate-50/50"
           }`}
         >
@@ -149,14 +149,14 @@ export function MarketingCompletedJobPicker({
               <div
                 className={
                   northStar
-                    ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
+                    ? "mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]"
                     : "admin-empty-icon mx-auto"
                 }
               >
                 <Briefcase
                   className={
                     northStar
-                      ? "h-6 w-6 text-[#8A6324]"
+                      ? "h-6 w-6 text-[#77591B]"
                       : "h-7 w-7 text-slate-400"
                   }
                 />
@@ -226,7 +226,7 @@ export function MarketingCompletedJobPicker({
                       <span
                         className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           northStar
-                            ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
+                            ? "bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
                             : "bg-slate-100 text-slate-700"
                         }`}
                       >
@@ -240,7 +240,7 @@ export function MarketingCompletedJobPicker({
               <div
                 className={`mt-5 border-t pt-5 ${
                   northStar
-                    ? "border-[rgba(148,163,184,0.18)]"
+                    ? "border-[rgba(176,168,143,0.18)]"
                     : "border-slate-100"
                 }`}
               >

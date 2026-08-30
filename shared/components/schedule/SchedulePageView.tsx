@@ -117,7 +117,7 @@ export function SchedulePageView(props: SchedulePageViewProps) {
                     <Link
                       href={prevHref}
                       aria-label={prevLabel}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-altair-border bg-white/[0.04] text-altair-paper transition-colors hover:border-altair-border-strong hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-altair-border bg-white/[0.04] text-altair-paper transition-colors hover:border-altair-border-strong hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                     >
                       <ChevronLeft className="h-4 w-4" aria-hidden />
                     </Link>
@@ -127,7 +127,7 @@ export function SchedulePageView(props: SchedulePageViewProps) {
                     <Link
                       href={nextHref}
                       aria-label={nextLabel}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-altair-border bg-white/[0.04] text-altair-paper transition-colors hover:border-altair-border-strong hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-altair-border bg-white/[0.04] text-altair-paper transition-colors hover:border-altair-border-strong hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                     >
                       <ChevronRight className="h-4 w-4" aria-hidden />
                     </Link>

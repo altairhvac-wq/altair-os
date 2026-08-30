@@ -138,9 +138,9 @@ export function TimeNorthStarView({
           density="compact"
           className="time-north-star-brief min-w-0 px-3 sm:px-3.5 lg:px-5"
         >
-          <div className="flex items-start gap-3 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-4 py-3.5 text-sm text-[#4F4638]">
+          <div className="flex items-start gap-3 rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-4 py-3.5 text-sm text-[#4F4638]">
             <AlertCircle
-              className="mt-0.5 h-4 w-4 shrink-0 text-[#8A6324]"
+              className="mt-0.5 h-4 w-4 shrink-0 text-[#77591B]"
               aria-hidden="true"
             />
             You do not have permission to view company time entries.

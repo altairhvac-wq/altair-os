@@ -19,9 +19,9 @@ function pulseStatusClass(
       case "critical":
         return "bg-[rgba(185,28,28,0.1)] text-[#991B1B] ring-[rgba(185,28,28,0.16)]";
       case "deferred":
-        return "bg-[rgba(100,116,139,0.08)] text-[#64748B] ring-[rgba(100,116,139,0.12)]";
+        return "bg-[rgba(124,114,89,0.08)] text-[#7C7259] ring-[rgba(124,114,89,0.12)]";
       default:
-        return "bg-[rgba(100,116,139,0.1)] text-[#475569] ring-[rgba(100,116,139,0.16)]";
+        return "bg-[rgba(124,114,89,0.1)] text-[#5C5340] ring-[rgba(124,114,89,0.16)]";
     }
   }
 
@@ -69,7 +69,7 @@ function PulseItem({
     <div
       className={
         northStar
-          ? "min-w-0 rounded-[0.875rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3"
+          ? "min-w-0 rounded-[0.875rem] border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] p-3"
           : "min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-3"
       }
     >

@@ -70,7 +70,7 @@ export function TimeNorthStarLoadingState() {
               {Array.from({ length: 4 }).map((_, index) => (
                 <Skeleton
                   key={index}
-                  className="h-28 rounded-xl border border-[rgba(138,99,36,0.12)]"
+                  className="h-28 rounded-xl border border-[rgba(119,89,27,0.12)]"
                 />
               ))}
             </div>
@@ -79,7 +79,7 @@ export function TimeNorthStarLoadingState() {
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 border-b border-[rgba(138,99,36,0.10)] py-3.5 last:border-b-0"
+                  className="flex items-center gap-4 border-b border-[rgba(119,89,27,0.10)] py-3.5 last:border-b-0"
                 >
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-16" />

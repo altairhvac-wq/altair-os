@@ -35,7 +35,7 @@ function DayStatePanel({ dayState, signals }: { dayState: DayState; signals: Ope
       <div className="relative flex items-center gap-4 lg:flex-col lg:items-start lg:gap-5">
         <div className="relative h-[5.5rem] w-[5.5rem] shrink-0">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="6" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(176,168,143,0.12)" strokeWidth="6" />
             <circle
               cx="50"
               cy="50"
@@ -49,8 +49,8 @@ function DayStatePanel({ dayState, signals }: { dayState: DayState; signals: Ope
             />
             <defs>
               <linearGradient id="shell-day-progress" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#6366f1" />
+                <stop offset="0%" stopColor="#c8c0af" />
+                <stop offset="100%" stopColor="#82765a" />
               </linearGradient>
             </defs>
           </svg>

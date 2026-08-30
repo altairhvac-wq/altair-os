@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, Ban, Loader2, RotateCcw, Trash2, X } from "lucide-react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type EntityLifecycleBulkBarProps = {
@@ -88,6 +89,7 @@ export function EntityLifecycleBulkBar({
   onClearSelection,
   northStar = false,
 }: EntityLifecycleBulkBarProps) {
+  const { confirm, confirmDialog } = useConfirm();
   const isBusy =
     isArchiving ||
     isRestoring ||
@@ -105,14 +107,19 @@ export function EntityLifecycleBulkBar({
     return isBusy || (eligibleCount !== undefined && eligibleCount === 0);
   }
 
-  function confirmAndRun(
+  async function confirmAndRun(
     defaultMessage: string,
     action?: () => void,
     confirmMessage?: string,
     eligibleCount?: number,
   ) {
     if (isActionDisabled(eligibleCount) || !action) return;
-    if (!window.confirm(confirmMessage ?? defaultMessage)) return;
+    const ok = await confirm({
+      title: confirmMessage ?? defaultMessage,
+      confirmLabel: "Continue",
+      destructive: true,
+    });
+    if (!ok) return;
     action();
   }
 
@@ -120,7 +127,7 @@ export function EntityLifecycleBulkBar({
 
   const shellClass = northStar
     ? lt.bulkBar
-    : "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.12)] backdrop-blur-sm sm:px-4";
+    : "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.12)] backdrop-blur-sm sm:px-4";
   const titleClass = northStar
     ? lt.bulkBarTitle
     : "text-sm font-semibold text-altair-ink-on-paper";
@@ -264,11 +271,14 @@ export function EntityLifecycleBulkBar({
           {showRestore ? (
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 if (isActionDisabled(restoreEligibleCount) || !onRestore) return;
                 if (
                   restoreConfirmMessage &&
-                  !window.confirm(restoreConfirmMessage)
+                  !(await confirm({
+                    title: restoreConfirmMessage,
+                    confirmLabel: "Restore",
+                  }))
                 ) {
                   return;
                 }
@@ -289,13 +299,16 @@ export function EntityLifecycleBulkBar({
           {showRestoreFromTrash ? (
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 if (isActionDisabled(restoreFromTrashEligibleCount) || !onRestoreFromTrash) {
                   return;
                 }
                 if (
                   restoreFromTrashConfirmMessage &&
-                  !window.confirm(restoreFromTrashConfirmMessage)
+                  !(await confirm({
+                    title: restoreFromTrashConfirmMessage,
+                    confirmLabel: "Restore",
+                  }))
                 ) {
                   return;
                 }
@@ -337,6 +350,7 @@ export function EntityLifecycleBulkBar({
           ) : null}
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

@@ -189,7 +189,7 @@ export function TodayNeedsAttentionSection({
     <section className="admin-card flex h-full flex-col overflow-hidden">
       <div className="flex flex-col gap-1.5 border-b border-slate-100 px-4 py-3 max-lg:gap-1.5 sm:flex-row sm:items-end sm:justify-between lg:gap-2 lg:px-5 lg:py-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600/90 lg:text-xs">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/90 lg:text-xs">
             Today needs attention
           </p>
           <h2 className="text-base font-black tracking-tight text-slate-900 lg:text-lg">

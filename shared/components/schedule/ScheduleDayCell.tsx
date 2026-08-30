@@ -60,7 +60,7 @@ export function ScheduleDayCell({
       href={`/dispatch?date=${day.dateOnly}`}
       role="listitem"
       aria-label={`${day.stripLabel} ${day.dayOfMonth}, ${jobLabel}${day.isToday ? ", today" : ""}${hasUnassigned ? ", has unassigned" : ""}${muted ? ", outside month" : ""}`}
-      className={`${altairReportTileClass} group flex flex-col transition-colors hover:border-altair-brass/40 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 ${
+      className={`${altairReportTileClass} group flex flex-col transition-colors hover:border-altair-brass/40 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${
         isMonth
           ? "min-h-[5.25rem] px-1.5 py-1.5 sm:min-h-[5.75rem] sm:px-2 sm:py-2"
           : "min-h-[9.5rem] px-3 py-2.5"

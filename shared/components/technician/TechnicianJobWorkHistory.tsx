@@ -116,7 +116,7 @@ export function TechnicianJobWorkHistory({
 
       {error ? (
         <div className="space-y-1.5 px-0.5">
-          <p className="text-sm text-rose-600" role="alert">
+          <p className="text-sm text-rose-700" role="alert">
             {error}
           </p>
           <button

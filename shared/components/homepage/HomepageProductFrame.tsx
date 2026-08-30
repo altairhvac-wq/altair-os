@@ -26,7 +26,7 @@ export function HomepageProductFrame({
     <div className={`mc-product-frame relative ${className}`.trim()}>
       <div
         className={[
-          "pointer-events-none absolute rounded-[2rem] bg-[radial-gradient(ellipse_at_center,rgba(230,236,244,0.18)_0%,rgba(210,216,224,0.05)_42%,transparent_70%)]",
+          "pointer-events-none absolute rounded-[2rem] bg-[radial-gradient(ellipse_at_center,rgba(238,235,230,0.18)_0%,rgba(220,215,204,0.05)_42%,transparent_70%)]",
           isProof || isHero ? "-inset-[7%] opacity-80" : "-inset-[10%]",
         ].join(" ")}
         aria-hidden="true"
@@ -35,19 +35,19 @@ export function HomepageProductFrame({
         className="relative overflow-hidden rounded-xl sm:rounded-2xl"
         style={{
           background: isHero
-            ? "linear-gradient(155deg, rgba(242,246,252,0.62) 0%, rgba(198,206,218,0.28) 28%, rgba(52,58,68,0.52) 62%, rgba(12,14,18,0.96) 100%)"
-            : "linear-gradient(155deg, rgba(230,236,244,0.42) 0%, rgba(170,178,190,0.18) 28%, rgba(40,46,56,0.55) 62%, rgba(12,14,18,0.98) 100%)",
+            ? "linear-gradient(155deg, rgba(247,246,243,0.62) 0%, rgba(211,205,191,0.28) 28%, rgba(62,57,47,0.52) 62%, rgba(12,15,11,0.96) 100%)"
+            : "linear-gradient(155deg, rgba(238,235,230,0.42) 0%, rgba(183,177,161,0.18) 28%, rgba(41,48,37,0.55) 62%, rgba(12,15,11,0.98) 100%)",
           padding: "1px",
           boxShadow: isProof
-            ? "0 24px 56px -28px rgba(0,0,0,0.75), 0 0 0 1px rgba(222,228,236,0.12), 0 1px 0 rgba(230,236,244,0.18) inset"
+            ? "0 24px 56px -28px rgba(0,0,0,0.75), 0 0 0 1px rgba(230,227,220,0.12), 0 1px 0 rgba(238,235,230,0.18) inset"
             : isHero
-              ? "0 32px 64px -34px rgba(0,0,0,0.68), 0 0 0 1px rgba(236,240,246,0.28), 0 1px 0 rgba(246,248,252,0.34) inset"
-              : "0 40px 90px -36px rgba(0,0,0,0.85), 0 0 0 1px rgba(222,228,236,0.14), 0 1px 0 rgba(230,236,244,0.22) inset",
+              ? "0 32px 64px -34px rgba(0,0,0,0.68), 0 0 0 1px rgba(241,240,235,0.28), 0 1px 0 rgba(249,248,246,0.34) inset"
+              : "0 40px 90px -36px rgba(0,0,0,0.85), 0 0 0 1px rgba(230,227,220,0.14), 0 1px 0 rgba(238,235,230,0.22) inset",
         }}
       >
         <div
           className={[
-            "relative w-full overflow-hidden rounded-[0.7rem] bg-[#0a0c10] sm:rounded-[0.95rem]",
+            "relative w-full overflow-hidden rounded-[0.7rem] bg-[#0b0c0a] sm:rounded-[0.95rem]",
             isHero ? "aspect-[16/10] sm:aspect-[16/9.5]" : "aspect-[16/10]",
           ].join(" ")}
         >

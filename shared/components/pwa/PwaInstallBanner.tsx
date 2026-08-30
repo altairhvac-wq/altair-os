@@ -33,16 +33,16 @@ export function PwaInstallBanner() {
   }
 
   return (
-    <div className="mb-2.5 flex items-center justify-between gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#FDF9F0] px-3 py-2 shadow-sm">
+    <div className="mb-2.5 flex items-center justify-between gap-2 rounded-xl border border-[#C2A05A]/25 bg-[#FDF9F0] px-3 py-2 shadow-sm">
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#9A7209]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#77591B]">
           <Smartphone className="h-4 w-4" aria-hidden />
         </div>
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold text-[#0A0A0A]">Install Altair for quicker access</p>
           <Link
             href="/install"
-            className="mt-0.5 inline-flex text-xs font-semibold text-[#8A6324] hover:text-[#6F4E16]"
+            className="mt-0.5 inline-flex text-xs font-semibold text-[#77591B] hover:text-[#6F4E16]"
           >
             View instructions
           </Link>

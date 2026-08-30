@@ -13,13 +13,13 @@ const legacyStatusStyles: Record<NetworkReferralStatus, string> = {
 };
 
 const northStarStatusStyles: Record<NetworkReferralStatus, string> = {
-  sent: "bg-[rgba(201,164,77,0.14)] text-[#8A6324] ring-[rgba(201,164,77,0.28)]",
+  sent: "bg-[rgba(194,160,90,0.14)] text-[#77591B] ring-[rgba(194,160,90,0.28)]",
   accepted: "bg-[rgba(22,101,52,0.10)] text-[#166534] ring-[rgba(22,101,52,0.22)]",
   declined: "bg-[rgba(185,28,28,0.08)] text-[#991B1B] ring-[rgba(185,28,28,0.20)]",
-  converted: "bg-[rgba(138,99,36,0.10)] text-[#6B6255] ring-[rgba(138,99,36,0.18)]",
+  converted: "bg-[rgba(119,89,27,0.10)] text-[#6B6255] ring-[rgba(119,89,27,0.18)]",
   won: "bg-[rgba(22,101,52,0.12)] text-[#166534] ring-[rgba(22,101,52,0.24)]",
-  lost: "bg-[rgba(138,99,36,0.08)] text-[#6B6255] ring-[rgba(138,99,36,0.14)]",
-  cancelled: "bg-[rgba(138,99,36,0.08)] text-[#6B6255] ring-[rgba(138,99,36,0.14)]",
+  lost: "bg-[rgba(119,89,27,0.08)] text-[#6B6255] ring-[rgba(119,89,27,0.14)]",
+  cancelled: "bg-[rgba(119,89,27,0.08)] text-[#6B6255] ring-[rgba(119,89,27,0.14)]",
 };
 
 type NetworkReferralStatusBadgeProps = {

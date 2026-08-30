@@ -35,7 +35,7 @@ function DesktopLoadingSkeleton() {
             <Skeleton dark className="h-3 w-40 max-w-full" />
           </div>
         </div>
-        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]" />
+        <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(194,160,90,0.22)]" />
       </header>
 
       <MasterContentStack density="compact" scrollable>

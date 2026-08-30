@@ -48,8 +48,8 @@ export function PageSummaryStrip({
         : "flex min-w-[4.5rem] flex-col px-3 py-0.5";
     const compactStripClass =
       compactDensity === "header"
-        ? "invoice-north-star-summary-strip shrink-0 w-fit max-w-full overflow-x-auto rounded-lg border border-[rgba(138,99,36,0.12)] bg-[rgba(239,228,203,0.55)] px-2 py-1"
-        : "invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4";
+        ? "invoice-north-star-summary-strip shrink-0 w-fit max-w-full overflow-x-auto rounded-lg border border-[rgba(119,89,27,0.12)] bg-[rgba(239,228,203,0.55)] px-2 py-1"
+        : "invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(119,89,27,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4";
 
     return (
       <>
@@ -63,10 +63,10 @@ export function PageSummaryStrip({
               <div
                 key={card.label}
                 className={`${compactMetricClass} ${
-                  index > 0 ? "border-l border-[rgba(138,99,36,0.18)]" : ""
+                  index > 0 ? "border-l border-[rgba(119,89,27,0.18)]" : ""
                 } ${
                   card.highlighted
-                    ? "-my-0.5 rounded-md bg-[rgba(201,164,77,0.14)] px-2 py-0.5"
+                    ? "-my-0.5 rounded-md bg-[rgba(194,160,90,0.14)] px-2 py-0.5"
                     : ""
                 }`}
               >
@@ -89,9 +89,9 @@ export function PageSummaryStrip({
           {cards.map((card) => (
             <div
               key={card.label}
-              className={`rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
+              className={`rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(6,7,5,0.08)] sm:px-4 sm:py-3.5 ${
                 card.highlighted
-                  ? "border-[rgba(201,164,77,0.35)] bg-[#FFF9EA] ring-1 ring-[rgba(201,164,77,0.18)]"
+                  ? "border-[rgba(194,160,90,0.35)] bg-[#FFF9EA] ring-1 ring-[rgba(194,160,90,0.18)]"
                   : ""
               }`}
             >
@@ -104,13 +104,13 @@ export function PageSummaryStrip({
                     {card.value}
                   </p>
                   {card.description ? (
-                    <p className="mt-0.5 text-xs text-[#64748B]">
+                    <p className="mt-0.5 text-xs text-[#7C7259]">
                       {card.description}
                     </p>
                   ) : null}
                 </div>
                 <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] ${card.iconClassName}`}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)] ${card.iconClassName}`}
                 >
                   <card.icon className="h-4 w-4" />
                 </div>

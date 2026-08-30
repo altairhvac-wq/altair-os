@@ -48,7 +48,7 @@ export function UnassignedJobsModal({
       >
         {northStar ? (
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.32)] to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(217,193,136,0.32)] to-transparent"
             aria-hidden
           />
         ) : null}
@@ -89,7 +89,7 @@ export function UnassignedJobsModal({
           unstyled
           className={
             northStar
-              ? `min-w-0 max-w-full overflow-x-hidden bg-[#141c26] p-3 pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
+              ? `min-w-0 max-w-full overflow-x-hidden bg-[#191d16] p-3 pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
               : "min-w-0 max-w-full overflow-x-hidden p-3 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]"
           }
         >
@@ -99,7 +99,7 @@ export function UnassignedJobsModal({
                 <p className="text-sm font-medium text-[#D7CDBD]">
                   No unassigned jobs match your filters
                 </p>
-                <p className="mt-1 text-xs text-[#AEB6C2]">
+                <p className="mt-1 text-xs text-[#BCB5A5]">
                   Adjust search or filters to see the queue
                 </p>
               </div>

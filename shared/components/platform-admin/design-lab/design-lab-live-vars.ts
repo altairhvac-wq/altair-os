@@ -2,6 +2,7 @@ import { designLabPreviewVars } from "@/shared/components/platform-admin/design-
 import {
   buildDesignLabShineLiveCss,
 } from "@/shared/components/platform-admin/design-lab/design-lab-shine";
+import { restrictToLiveChromeVars } from "@/shared/components/platform-admin/design-lab/design-lab-live-scope";
 import { parseDesignLabThemeTokens } from "@/shared/components/platform-admin/design-lab/design-lab-theme-tokens";
 
 /**
@@ -20,7 +21,28 @@ export function buildDesignLabLiveStyleVars(
     return null;
   }
 
-  return designLabPreviewVars(parsed.colors, parsed.shines, parsed.dimensions);
+  /* Chrome only. A promoted theme may restyle the shell's identity; it may not
+     redefine the semantic contract (success/warning/danger/information), the
+     ink ladder, or the surface foundation every page is built on. See
+     design-lab-live-scope.ts for why, and for what was measured leaking. */
+  const all = designLabPreviewVars(
+    parsed.colors,
+    parsed.shines,
+    parsed.dimensions,
+  ) as unknown as Record<string, string>;
+
+  const chromeOnly = restrictToLiveChromeVars(all);
+
+  /* Keep the fail-closed contract meaningful now that the map is filtered: a
+     saved theme consisting only of foundation tokens produces no live chrome,
+     and both callers (the shell layout and the promote action) treat null as
+     "fall back to source". Returning an empty object instead would let such a
+     theme promote successfully and then change nothing. */
+  if (Object.keys(chromeOnly).length === 0) {
+    return null;
+  }
+
+  return chromeOnly as React.CSSProperties;
 }
 
 /**

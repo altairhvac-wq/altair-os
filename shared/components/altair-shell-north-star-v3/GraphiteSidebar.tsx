@@ -24,7 +24,7 @@ export function GraphiteSidebar() {
     <aside aria-label="Altair navigation" className={`${v3SidebarClass}`}>
       <div className="border-b border-white/[0.08] px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a2230] to-[#0F141B] text-sm font-bold text-[#E8DDC2] shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset] ring-1 ring-[rgba(184,148,63,0.28)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1e231c] to-[#121510] text-sm font-bold text-[#E8D9AC] shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset] ring-1 ring-[rgba(194,160,90,0.28)]">
             A
           </div>
           <div className="min-w-0">
@@ -54,7 +54,7 @@ export function GraphiteSidebar() {
                         href={item.href}
                         className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
                           active
-                            ? "bg-white/[0.06] text-white ring-1 ring-[rgba(184,148,63,0.28)]"
+                            ? "bg-white/[0.06] text-white ring-1 ring-[rgba(194,160,90,0.28)]"
                             : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-300"
                         }`}
                       >
@@ -62,7 +62,7 @@ export function GraphiteSidebar() {
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
                             active
-                              ? "text-[#C6A757]"
+                              ? "text-[#C2A05A]"
                               : "text-slate-500 group-hover:text-slate-400"
                           }`}
                           aria-hidden="true"
@@ -80,7 +80,7 @@ export function GraphiteSidebar() {
 
       <div className="border-t border-white/[0.08] p-4">
         <div className="rounded-xl bg-white/[0.04] p-3.5 ring-1 ring-white/[0.08]">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C6A757]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C2A05A]">
             Concept · v3.1
           </p>
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">

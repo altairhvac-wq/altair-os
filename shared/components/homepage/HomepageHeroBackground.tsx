@@ -92,7 +92,7 @@ export function HomepageHeroBackground({ media }: HomepageHeroBackgroundProps) {
           />
         ) : (
           <div
-            className="absolute inset-0 bg-[#0c0e12]"
+            className="absolute inset-0 bg-[#0c0f0b]"
             role="img"
             aria-label={alt}
           />
@@ -101,15 +101,15 @@ export function HomepageHeroBackground({ media }: HomepageHeroBackgroundProps) {
 
       {/* Readability scrims — slightly lighter for alive environment, strong text contrast */}
       <div
-        className="absolute inset-0 bg-[linear-gradient(105deg,rgba(8,9,12,0.64)_0%,rgba(8,9,12,0.36)_38%,rgba(8,9,12,0.14)_62%,rgba(8,9,12,0.28)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(105deg,rgba(8,9,7,0.64)_0%,rgba(8,9,7,0.36)_38%,rgba(8,9,7,0.14)_62%,rgba(8,9,7,0.28)_100%)]"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(8,9,12,0.8)_0%,rgba(8,9,12,0.38)_28%,rgba(8,9,12,0.08)_52%,rgba(8,9,12,0.22)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(8,9,7,0.8)_0%,rgba(8,9,7,0.38)_28%,rgba(8,9,7,0.08)_52%,rgba(8,9,7,0.22)_100%)]"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(8,9,12,0.45),transparent)]"
+        className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(8,9,7,0.45),transparent)]"
         aria-hidden="true"
       />
     </div>

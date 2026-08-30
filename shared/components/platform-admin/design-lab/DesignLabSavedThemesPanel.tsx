@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import {
   deleteDesignLabThemeAction,
   listDesignLabThemesAction,
@@ -73,6 +74,10 @@ export function DesignLabSavedThemesPanel({
   onThemesChange,
   onLoadTheme,
 }: DesignLabSavedThemesPanelProps) {
+  // The revert flow below keeps its own AltairConfirmDialog because it needs
+  // an in-flight `pending` state inside the dialog. Delete does not, so it
+  // uses the promise bridge.
+  const { confirm: confirmDelete, confirmDialog } = useConfirm();
   const [name, setName] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -172,14 +177,16 @@ export function DesignLabSavedThemesPanel({
     });
   }
 
-  function handleDelete(theme: DesignLabTheme) {
-    if (
-      !window.confirm(
-        theme.isLive
-          ? `Delete live theme “${theme.name}”? This removes the live product override and cannot be undone.`
-          : `Delete saved theme “${theme.name}”? This cannot be undone.`,
-      )
-    ) {
+  async function handleDelete(theme: DesignLabTheme) {
+    const confirmed = await confirmDelete({
+      title: `Delete ${theme.isLive ? "live" : "saved"} theme “${theme.name}”?`,
+      description: theme.isLive
+        ? "This removes the live product override and cannot be undone."
+        : "This cannot be undone.",
+      confirmLabel: "Delete theme",
+      destructive: true,
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -527,6 +534,7 @@ export function DesignLabSavedThemesPanel({
         pending={confirmPending && pendingAction === "revert"}
         onConfirm={handleConfirmRevert}
       />
+      {confirmDialog}
     </section>
   );
 }

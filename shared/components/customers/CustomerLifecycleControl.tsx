@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/shared/design-system/dialog";
 import { useRouter } from "next/navigation";
 import { Archive, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import {
@@ -37,6 +38,7 @@ export function CustomerLifecycleControl({
   canManage,
   northStar = false,
 }: CustomerLifecycleControlProps) {
+  const { confirm, confirmDialog } = useConfirm();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -55,14 +57,17 @@ export function CustomerLifecycleControl({
     deleteDependencies,
   );
 
-  function handleArchive() {
+  async function handleArchive() {
     if (!canArchiveCustomer(customer) || isPending) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Archive ${customer.name}? They will be hidden from active customer lists, but historical records will be preserved.`,
-    );
+    const confirmed = await confirm({
+      title: `Archive ${customer.name}?`,
+      description:
+        "They will be hidden from active customer lists. Historical records are preserved.",
+      confirmLabel: "Archive",
+    });
 
     if (!confirmed) {
       return;
@@ -99,14 +104,18 @@ export function CustomerLifecycleControl({
     });
   }
 
-  function handleMoveToTrash() {
+  async function handleMoveToTrash() {
     if (!canMoveCustomerToTrash(customer) || isPending) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Move ${customer.name} to Recently Deleted? They will be hidden from customer lists for 60 days.`,
-    );
+    const confirmed = await confirm({
+      title: `Move ${customer.name} to Recently Deleted?`,
+      description:
+        "They will be hidden from customer lists for 60 days, then permanently removed.",
+      confirmLabel: "Move to Trash",
+      destructive: true,
+    });
 
     if (!confirmed) {
       return;
@@ -148,14 +157,18 @@ export function CustomerLifecycleControl({
     });
   }
 
-  function handlePermanentDelete() {
+  async function handlePermanentDelete() {
     if (!canPermanentlyDelete || isPending) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Permanently delete ${customer.name}? This action cannot be undone and will remove this customer record entirely.`,
-    );
+    const confirmed = await confirm({
+      title: `Permanently delete ${customer.name}?`,
+      description:
+        "This cannot be undone. The customer record is removed entirely.",
+      confirmLabel: "Delete permanently",
+      destructive: true,
+    });
 
     if (!confirmed) {
       return;
@@ -304,6 +317,7 @@ export function CustomerLifecycleControl({
           {error}
         </p>
       ) : null}
+      {confirmDialog}
     </div>
   );
 }

@@ -42,8 +42,8 @@ export const ALTAIR_BRAND_IDENTITY = {
 export const ALTAIR_BRAND_COLORS = {
   black: "#0A0A0A",
   // Platinum Circuit palette (Version 2, approved Aug 2026)
-  platinumHighlight: "#F0F2F4",
-  platinum: "#C8CDD3",
+  platinumHighlight: "#F3F2EF",
+  platinum: "#D0CCC4",
   steel: "#71767D",
   goldAccent: "#D4AF37",
   white: "#FFFFFF",

@@ -60,7 +60,7 @@ export function NetworkTrustMetricsLine({
     ? "mt-0.5 flex items-center gap-1 text-xs font-medium text-[#4F4638]"
     : "mt-1 flex items-center gap-1 text-xs font-medium text-slate-600";
   const iconClass = isNorthStar
-    ? "h-3 w-3 shrink-0 text-[#8A6324]"
+    ? "h-3 w-3 shrink-0 text-[#77591B]"
     : "h-3 w-3 shrink-0 text-slate-400";
 
   return (
@@ -77,7 +77,7 @@ export function NetworkTrustMetricsSection({
 }: TrustMetricsProps) {
   const isNorthStar = surface === "north-star";
   const headingClass = isNorthStar
-    ? "text-xs font-bold uppercase tracking-wide text-[#8A6324]"
+    ? "text-xs font-bold uppercase tracking-wide text-[#77591B]"
     : "text-xs font-bold uppercase tracking-wide text-slate-500";
   const mutedClass = isNorthStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500";
   const labelClass = isNorthStar ? "text-xs text-[#6B6255]" : "text-xs text-slate-500";

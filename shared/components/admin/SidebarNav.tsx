@@ -30,14 +30,19 @@ function SidebarNavLink({ item, active }: SidebarNavLinkProps) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       data-testid={testId}
-      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-lg px-3 pb-3 pt-2 text-sm transition-[background-color,color] duration-150 ${
+      /* The rail hides the label visually, so the tooltip is the only way a
+       * sighted pointer user can confirm a destination between 768 and 1023. */
+      title={item.label}
+      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-lg px-3 pb-3 pt-2 text-sm transition-[background-color,color] duration-150 max-lg:justify-center max-lg:gap-0 max-lg:px-0 ${
         active
           ? `${northStarSidebarLinkActiveClass} font-semibold`
           : "font-medium"
       }`}
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <span className="truncate">{item.label}</span>
+      {/* `sr-only`, not `hidden`: a display:none label is not announced, which
+       * would leave every rail link an unnamed icon to a screen reader. */}
+      <span className="truncate max-lg:sr-only">{item.label}</span>
     </Link>
   );
 }
@@ -66,7 +71,12 @@ export function SidebarNav({
         <ul className="flex flex-col gap-7">
           {navGroups.map((group) => (
             <li key={group.id}>
-              <p className={`mb-2.5 px-2.5 ${northStarSidebarGroupLabelClass}`}>
+              {/* Group headings would wrap to three lines in a 68px rail.
+                  Hidden visually below `lg` — the `gap-7` between groups still
+                  reads as grouping — but kept in the accessibility tree. */}
+              <p
+                className={`mb-2.5 px-2.5 max-lg:sr-only ${northStarSidebarGroupLabelClass}`}
+              >
                 {group.label}
               </p>
               <ul className="flex flex-col gap-1">
@@ -84,7 +94,7 @@ export function SidebarNav({
         </ul>
 
         {navItems.length <= 2 ? (
-          <p className="mt-6 px-2.5 text-xs text-[var(--north-star-sidebar-link)]">
+          <p className="mt-6 px-2.5 text-xs text-[var(--north-star-sidebar-link)] max-lg:sr-only">
             Limited workspace access
           </p>
         ) : null}

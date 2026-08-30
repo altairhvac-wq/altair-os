@@ -24,7 +24,7 @@ export function SettingsComingSoonSection({
   if (northStar) {
     return (
       <>
-        <details className="group min-w-0 overflow-hidden rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] md:hidden">
+        <details className="group min-w-0 overflow-hidden rounded-[1rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] md:hidden">
           <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 marker:content-none [&::-webkit-details-marker]:hidden">
             <div className="flex min-w-0 items-baseline gap-2">
               <span className="text-sm font-semibold text-[#17130E]">
@@ -33,11 +33,11 @@ export function SettingsComingSoonSection({
               <span className="text-xs text-[#4F4638]">{count} upcoming</span>
             </div>
             <ChevronDown
-              className="h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-open:rotate-180"
+              className="h-4 w-4 shrink-0 text-[#77591B] transition-transform group-open:rotate-180"
               aria-hidden="true"
             />
           </summary>
-          <ul className="divide-y divide-[rgba(138,99,36,0.10)] border-t border-[rgba(138,99,36,0.12)]">
+          <ul className="divide-y divide-[rgba(119,89,27,0.10)] border-t border-[rgba(119,89,27,0.12)]">
             {items.map((item) => {
               const Icon = item.icon;
 
@@ -47,7 +47,7 @@ export function SettingsComingSoonSection({
                   className="flex items-center gap-2.5 px-3 py-2"
                 >
                   <Icon
-                    className="h-3.5 w-3.5 shrink-0 text-[#8A6324]"
+                    className="h-3.5 w-3.5 shrink-0 text-[#77591B]"
                     aria-hidden="true"
                   />
                   <span className="min-w-0 flex-1 truncate text-sm text-[#4F4638]">

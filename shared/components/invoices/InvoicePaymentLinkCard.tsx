@@ -46,7 +46,7 @@ export function InvoicePaymentLinkCard({
     <section className={northStar ? dt.compactSectionSurface : "rounded-xl border border-slate-200 bg-white p-4"}>
       <div className="flex items-start gap-3">
         <Link2
-          className={`mt-0.5 h-4 w-4 shrink-0 ${northStar ? "text-[#8A6324]" : "text-slate-400"}`}
+          className={`mt-0.5 h-4 w-4 shrink-0 ${northStar ? "text-[#77591B]" : "text-slate-400"}`}
           aria-hidden
         />
         <div className="min-w-0 flex-1">

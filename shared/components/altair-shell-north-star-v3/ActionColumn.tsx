@@ -99,7 +99,7 @@ export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
         })}
       </ul>
 
-      <div className="mt-auto border-t border-[rgba(184,148,63,0.12)] pt-3">
+      <div className="mt-auto border-t border-[rgba(194,160,90,0.12)] pt-3">
         <p className={v3LabelMutedClass}>Office follow-ups</p>
         <ul className="mt-2 flex flex-col gap-1">
           {officeQueue.map((item) => {

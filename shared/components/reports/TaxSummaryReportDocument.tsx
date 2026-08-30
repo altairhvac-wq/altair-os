@@ -29,7 +29,7 @@ function SummaryRow({
 }) {
   if (northStar) {
     return (
-      <div className="flex items-start justify-between gap-4 border-b border-[rgba(138,99,36,0.12)] py-2.5 text-sm last:border-b-0">
+      <div className="flex items-start justify-between gap-4 border-b border-[rgba(119,89,27,0.12)] py-2.5 text-sm last:border-b-0">
         <span className="text-[#4F4638]">{label}</span>
         <span className="font-semibold tabular-nums text-[#17130E]">{value}</span>
       </div>
@@ -53,7 +53,7 @@ function SummaryTableSurface({
 }) {
   if (northStar) {
     return (
-      <div className="rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA]/60 px-4 py-0">
+      <div className="rounded-xl border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA]/60 px-4 py-0">
         {children}
       </div>
     );
@@ -78,7 +78,7 @@ function EmptyRowMessage({
 }) {
   return (
     <p
-      className={`py-3 text-sm ${northStar ? "text-[#64748B]" : "text-slate-500"}`}
+      className={`py-3 text-sm ${northStar ? "text-[#7C7259]" : "text-slate-500"}`}
     >
       {children}
     </p>
@@ -124,15 +124,15 @@ export function TaxSummaryReportDocument({
     )?.label ?? summary.dateRange;
 
   const documentSurfaceClass = northStar
-    ? "rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-6 py-8 text-[#17130E] shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0"
+    ? "rounded-[1.25rem] border border-[rgba(119,89,27,0.12)] bg-[#FBF7EF] px-6 py-8 text-[#17130E] shadow-[0_4px_16px_rgba(6,7,5,0.08)] sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0"
     : "bg-white px-6 py-8 text-slate-900 sm:px-10 sm:py-10 print:rounded-none print:border-0 print:shadow-none print:ring-0";
 
   const headerBorderClass = northStar
-    ? "border-b border-[rgba(138,99,36,0.12)] pb-6"
+    ? "border-b border-[rgba(119,89,27,0.12)] pb-6"
     : "border-b border-slate-200 pb-6";
 
   const footerClass = northStar
-    ? "mt-10 border-t border-[rgba(138,99,36,0.12)] pt-4 text-xs text-[#64748B]"
+    ? "mt-10 border-t border-[rgba(119,89,27,0.12)] pt-4 text-xs text-[#7C7259]"
     : "mt-10 border-t border-slate-200 pt-4 text-xs text-slate-500";
 
   const documentInner = (
@@ -141,7 +141,7 @@ export function TaxSummaryReportDocument({
         <p
           className={
             northStar
-              ? "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8A6324]"
+              ? "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#77591B]"
               : "text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
           }
         >
@@ -169,7 +169,7 @@ export function TaxSummaryReportDocument({
         <p
           className={
             northStar
-              ? "mt-1 text-xs leading-relaxed text-[#64748B]"
+              ? "mt-1 text-xs leading-relaxed text-[#7C7259]"
               : "mt-1 text-xs text-slate-500"
           }
         >

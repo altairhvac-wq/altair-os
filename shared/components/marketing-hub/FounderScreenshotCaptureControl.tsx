@@ -160,14 +160,14 @@ export function FounderScreenshotCaptureControl({
     <div
       className={`mt-4 rounded-xl border p-3 ${
         northStar
-          ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/70"
+          ? "border-[rgba(164,130,58,0.28)] bg-[#FAF6EE]/70"
           : "border-amber-200/70 bg-amber-50/40"
       }`}
     >
       <div className="flex items-start gap-2">
         <Camera
           className={`mt-0.5 h-4 w-4 shrink-0 ${
-            northStar ? "text-[#8A6324]" : "text-amber-800"
+            northStar ? "text-[#77591B]" : "text-amber-800"
           }`}
         />
         <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ export function FounderScreenshotCaptureControl({
           placeholder={DEFAULT_BASE_URL}
           className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 ${
             northStar
-              ? "border-[rgba(148,163,184,0.28)] bg-white/90 text-[#17130E] focus:ring-[rgba(184,138,46,0.25)]"
+              ? "border-[rgba(176,168,143,0.28)] bg-white/90 text-[#17130E] focus:ring-[rgba(164,130,58,0.25)]"
               : "border-slate-200 bg-white text-slate-900 focus:ring-slate-200"
           } disabled:cursor-not-allowed disabled:opacity-60`}
         />
@@ -212,7 +212,7 @@ export function FounderScreenshotCaptureControl({
       {remoteTarget ? (
         <p
           className={`mt-2 text-xs leading-relaxed ${
-            northStar ? "text-[#8A6324]" : "text-amber-800"
+            northStar ? "text-[#77591B]" : "text-amber-800"
           }`}
         >
           {authHint}
@@ -280,7 +280,7 @@ export function FounderScreenshotCaptureControl({
                 className={`shrink-0 ${
                   page.notes === "Capturing…"
                     ? northStar
-                      ? "text-[#8A6324]"
+                      ? "text-[#77591B]"
                       : "text-amber-800"
                     : page.ok
                       ? northStar

@@ -111,9 +111,9 @@ export function CommunityMyBusinessProfileControl({
               right: menuPosition.right,
               zIndex: 9999,
             }}
-            className="w-[min(18.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] shadow-[0_12px_32px_-12px_rgba(23,19,14,0.28)]"
+            className="w-[min(18.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-[rgba(119,89,27,0.14)] bg-[#FBF7EF] shadow-[0_12px_32px_-12px_rgba(23,19,14,0.28)]"
           >
-            <div className="border-b border-[rgba(138,99,36,0.10)] px-3.5 py-3">
+            <div className="border-b border-[rgba(119,89,27,0.10)] px-3.5 py-3">
               {ownProfile ? (
                 <>
                   <p className="truncate text-sm font-semibold text-[#17130E]">
@@ -148,7 +148,7 @@ export function CommunityMyBusinessProfileControl({
                 </>
               )}
               {profileReadiness ? (
-                <p className="mt-2 text-[11px] leading-snug text-[#8A6324]">
+                <p className="mt-2 text-[11px] leading-snug text-[#77591B]">
                   {profileReadiness.title}
                 </p>
               ) : null}
@@ -161,7 +161,7 @@ export function CommunityMyBusinessProfileControl({
                 onClick={handleEdit}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-[#4F4638] transition-colors hover:bg-[#F3EBDD] hover:text-[#17130E]"
               >
-                <Pencil className="h-3.5 w-3.5 text-[#8A6324]" aria-hidden="true" />
+                <Pencil className="h-3.5 w-3.5 text-[#77591B]" aria-hidden="true" />
                 {ownProfile
                   ? profileReadiness?.ctaLabel ?? "Edit profile"
                   : "Set up profile"}
@@ -188,7 +188,7 @@ export function CommunityMyBusinessProfileControl({
         <span className="min-[420px]:hidden">My Profile</span>
         {needsAttention ? (
           <span
-            className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#B88A2E] ring-2 ring-[#FBF7EF]"
+            className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#A4823A] ring-2 ring-[#FBF7EF]"
             aria-label="Profile needs attention"
           />
         ) : null}

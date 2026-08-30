@@ -5,7 +5,7 @@
  * Same Altair brand materials (Graphite, Border, Brass, Ink) — different
  * surface register for the Reports operating brief.
  *
- * Background: Graphite (`--altair-graphite` / `#1A2029`) is the existing
+ * Background: Graphite (`--altair-graphite` / `#1C211A`) is the existing
  * dark elevated chrome tone — one shade lighter than the North Star deep
  * canvas — matching the moon-graphite "Surface 2/3 — Card/Tile" lift used
  * across Dispatch/list frames. Do not invent a parallel hex.
@@ -44,18 +44,18 @@ export const altairReportSparklineWellClass =
  * near-white text on cream (the washed-out "Generate AI Summary" bug).
  */
 export const altairReportCanvasActionClass =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border-strong bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper transition hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border-strong bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper transition hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-60";
 
 /** Header secondary action — dark outline control (Filters / Export chrome). */
 export const altairReportSecondaryActionClass =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border bg-white/[0.04] px-3 text-sm font-medium text-altair-paper transition hover:border-altair-border-strong hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-altair-border bg-white/[0.04] px-3 text-sm font-medium text-altair-paper transition hover:border-altair-border-strong hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-60";
 
 /** Date-range segmented track inset on a dark report card. */
 export const altairReportRangeTrackClass =
   "grid w-full grid-cols-4 gap-0.5 rounded-md bg-white/[0.04] p-0.5 sm:flex sm:w-auto";
 
 export const altairReportRangeItemClass =
-  "min-h-9 min-w-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40 sm:min-w-[3.25rem] sm:px-3";
+  "min-h-9 min-w-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:min-w-[3.25rem] sm:px-3";
 
 /** Inactive range pill — muted ink on dark Graphite. */
 export const altairReportRangeItemIdleClass =

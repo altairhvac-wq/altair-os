@@ -42,10 +42,10 @@ export function InvoicePaymentHistory({
   }
 
   const mobileListClass = northStar
-    ? "divide-y divide-[rgba(138,99,36,0.12)] rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] sm:hidden"
+    ? "divide-y divide-[rgba(119,89,27,0.12)] rounded-lg border border-[rgba(119,89,27,0.12)] bg-[#FFF9EA] sm:hidden"
     : "divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white sm:hidden";
   const tableWrapClass = northStar
-    ? "hidden overflow-hidden rounded-lg border border-[rgba(138,99,36,0.12)] sm:block"
+    ? "hidden overflow-hidden rounded-lg border border-[rgba(119,89,27,0.12)] sm:block"
     : "hidden overflow-hidden rounded-xl border border-slate-200 sm:block";
   const headerCellClass = northStar
     ? "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#4F4638]"
@@ -89,7 +89,7 @@ export function InvoicePaymentHistory({
       </ul>
 
       <div className={tableWrapClass}>
-        <table className={`min-w-full ${northStar ? "divide-y divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-200"}`}>
+        <table className={`min-w-full ${northStar ? "divide-y divide-[rgba(119,89,27,0.12)]" : "divide-y divide-slate-200"}`}>
           <thead className={northStar ? "bg-[#EFE4CB]" : "bg-white"}>
             <tr>
               <th className={headerCellClass}>
@@ -112,7 +112,7 @@ export function InvoicePaymentHistory({
               </th>
             </tr>
           </thead>
-          <tbody className={northStar ? "divide-y divide-[rgba(138,99,36,0.12)] bg-[#FFF9EA]" : "divide-y divide-slate-100 bg-white"}>
+          <tbody className={northStar ? "divide-y divide-[rgba(119,89,27,0.12)] bg-[#FFF9EA]" : "divide-y divide-slate-100 bg-white"}>
             {payments.map((payment) => (
               <tr key={payment.id}>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">

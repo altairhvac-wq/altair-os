@@ -8,13 +8,13 @@ const statusStyles = {
     chip: "bg-slate-100 text-slate-600",
   },
   en_route: {
-    node: "bg-sky-500 ring-sky-400/50 shadow-[0_0_16px_rgba(56,189,248,0.35)]",
+    node: "bg-sky-500 ring-sky-400/50 shadow-[0_0_16px_rgba(186,176,155,0.35)]",
     pulse: "",
     label: "En route",
     chip: "bg-sky-50 text-sky-700",
   },
   in_progress: {
-    node: "bg-cyan-400 ring-cyan-300/50 shadow-[0_0_20px_rgba(34,211,238,0.4)]",
+    node: "bg-cyan-400 ring-cyan-300/50 shadow-[0_0_20px_rgba(200,192,175,0.4)]",
     pulse: "",
     label: "In progress",
     chip: "bg-cyan-50 text-cyan-800",
@@ -35,7 +35,7 @@ export function WorkFlowRail({ jobs }: WorkFlowRailProps) {
   return (
     <section
       aria-label="Work in motion"
-      className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-white/70 p-4 shadow-[0_8px_40px_-16px_rgba(15,23,42,0.12),0_0_0_1px_rgba(148,163,184,0.08)] backdrop-blur-sm sm:p-5"
+      className="relative min-w-0 flex-1 overflow-hidden rounded-2xl bg-white/70 p-4 shadow-[0_8px_40px_-16px_rgba(21,25,19,0.12),0_0_0_1px_rgba(176,168,143,0.08)] backdrop-blur-sm sm:p-5"
     >
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>

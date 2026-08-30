@@ -41,7 +41,7 @@ function statusBadgeClassName(
     case "not_connected":
     default:
       return northStar
-        ? `${base} bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]`
+        ? `${base} bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]`
         : `${base} bg-slate-100 text-slate-600 ring-1 ring-slate-200/80`;
   }
 }
@@ -49,7 +49,7 @@ function statusBadgeClassName(
 function connectButtonClassName(northStar: boolean, disabled: boolean): string {
   if (disabled) {
     return northStar
-      ? "inline-flex rounded-md px-2 py-1 text-xs font-medium cursor-not-allowed bg-[#FAF6EE] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+      ? "inline-flex rounded-md px-2 py-1 text-xs font-medium cursor-not-allowed bg-[#FAF6EE] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]"
       : "inline-flex rounded-md px-2 py-1 text-xs font-medium cursor-not-allowed bg-slate-50 text-slate-400 ring-1 ring-slate-200/80";
   }
 
@@ -140,7 +140,7 @@ export function MarketingConnectedAccountsCard({
     <section
       className={`shrink-0 border-b px-4 py-4 sm:px-5 ${
         northStar
-          ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+          ? "border-[rgba(176,168,143,0.18)] bg-[#FAF6EE]/50"
           : "border-slate-100/90 bg-slate-50/60"
       }`}
     >
@@ -148,12 +148,12 @@ export function MarketingConnectedAccountsCard({
         <div
           className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
             northStar
-              ? "bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
+              ? "bg-[#EFE4CB] ring-1 ring-[rgba(119,89,27,0.12)]"
               : "bg-white ring-1 ring-slate-200/80"
           }`}
         >
           <Link2
-            className={`h-4 w-4 ${northStar ? "text-[#8A6324]" : "text-slate-500"}`}
+            className={`h-4 w-4 ${northStar ? "text-[#77591B]" : "text-slate-500"}`}
             aria-hidden="true"
           />
         </div>
@@ -209,7 +209,7 @@ export function MarketingConnectedAccountsCard({
                 key={row.provider}
                 className={`rounded-xl border px-3 py-3 ${
                   northStar
-                    ? "border-[rgba(148,163,184,0.22)] bg-white/80"
+                    ? "border-[rgba(176,168,143,0.22)] bg-white/80"
                     : "border-slate-200/90 bg-white"
                 }`}
               >
@@ -269,7 +269,7 @@ export function MarketingConnectedAccountsCard({
                   <div className="mt-3 border-t border-dashed border-slate-200/80 pt-2">
                     <p
                       className={`text-[11px] font-medium uppercase tracking-wide ${
-                        northStar ? "text-[#8A6324]" : "text-slate-500"
+                        northStar ? "text-[#77591B]" : "text-slate-500"
                       }`}
                     >
                       Connected Pages

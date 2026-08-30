@@ -15,7 +15,6 @@ import { SubscriptionBillingBanner } from "@/shared/components/billing/Subscript
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
-import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateInTimeZone, getHourInTimeZone } from "@/shared/lib/datetime";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
@@ -105,10 +104,14 @@ export function Header({
     canViewCompanyExpenses: accessScope.canViewCompanyExpenses,
     canViewAssignedJobs: companyContext.permissions.viewAssignedJobs,
   });
-  const isMobile = useMobileViewport();
-  /* Desktop chrome is always North Star; mobile keeps light tone for child controls */
-  const northStarChrome = !isMobile;
-  const chromeTone = isMobile ? "light" : "dark";
+  /* PRESTIGE: one chrome per ROLE, not per breakpoint. The header used to be a
+   * light bar below 768px and dark chrome above it (driven by a
+   * `useMobileViewport()` read), so the same owner saw two different products
+   * depending on the device. Chrome is now the graphite surface at every
+   * width, and the child controls are told so — which also removed a
+   * client-side viewport read from the shell's first paint. */
+  const northStarChrome = true;
+  const chromeTone = "dark" as const;
   const showMobileQuickNav =
     showQuickNav && typeof onQuickNavOpenChange === "function";
   const showScheduleCalendar = canAccessOperationalJobsArea(companyContext);
@@ -136,9 +139,18 @@ export function Header({
           </div>
         ) : null}
 
-        <div className="min-w-0">
+        {/* Hidden below `lg`: with the tablet rail in place the top bar's
+          * functional controls take the width they need, and the greeting was
+          * truncating to "Good ev…" / "Satu…", which reads as a rendering bug
+          * rather than identity. The page header names the page anyway, so the
+          * serif moment simply waits until there is room for it. */}
+        <div className="min-w-0 max-lg:hidden">
+          {/* PRESTIGE: the greeting is the product's one piece of display
+            * typography — set in the Altair serif rather than the interface
+            * sans. It is the only place the serif appears in the shell, which
+            * is what makes it read as identity instead of decoration. */}
           <p
-            className={`truncate text-sm font-bold tracking-tight sm:text-base ${
+            className={`truncate font-altair text-[1.0625rem] leading-tight tracking-[0.005em] sm:text-[1.1875rem] ${
               northStarChrome ? "" : "text-slate-900 md:text-slate-50"
             }`}
           >

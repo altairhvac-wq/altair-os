@@ -85,3 +85,6 @@ next-env.d.ts
 # existing file needs a deliberate separate change:
 #   git rm --cached supabase/.temp/cli-latest
 /supabase/.temp/
+
+# Prestige campaign screenshot output (regenerate with ui-audit/shots.mjs)
+/ui-audit/SHOTS/

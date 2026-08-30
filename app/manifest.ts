@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
 /** Matches `--surface-canvas` in globals.css */
-const APP_SHELL_BACKGROUND = "#f4f7fa";
+const APP_SHELL_BACKGROUND = "#f8f7f4";
 /** Premium slate accent used across auth/admin surfaces */
-const APP_THEME_COLOR = "#0f172a";
+/* Matches `--chrome` (--pg-graphite-900), same as the layout's theme colour. */
+const APP_THEME_COLOR = "#1c211a";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

@@ -37,7 +37,7 @@ export function WorkColumn({ jobs, technicians }: WorkColumnProps) {
   const completedToday = jobs.filter((j) => j.status === "completed").length;
 
   return (
-    <div className="relative flex flex-col gap-4 border-t border-[rgba(184,148,63,0.12)] p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7">
+    <div className="relative flex flex-col gap-4 border-t border-[rgba(194,160,90,0.12)] p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7">
       <div aria-hidden="true" className={v3ColumnRailClass} />
       <div className={v3ColumnHeaderClass}>
         <div className="flex items-start justify-between gap-3">
@@ -84,7 +84,7 @@ export function WorkColumn({ jobs, technicians }: WorkColumnProps) {
         })}
       </ul>
 
-      <div className="mt-auto border-t border-[rgba(184,148,63,0.12)] pt-3">
+      <div className="mt-auto border-t border-[rgba(194,160,90,0.12)] pt-3">
         <div className="flex items-center gap-1.5">
           <Users className="h-3.5 w-3.5 text-[rgba(41,34,24,0.50)]" aria-hidden="true" />
           <p className={v3LabelMutedClass}>Crew load → dispatch pressure</p>
