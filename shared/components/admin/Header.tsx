@@ -183,7 +183,15 @@ export function Header({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+      {/* `min-w-0`, not `shrink-0`.
+       *
+       * At 390px this cluster measured 407px inside a 390px header and pushed
+       * every admin route 37px sideways — the page itself panned, not a table
+       * inside it. The trial pill already declares `min-w-0 shrink
+       * max-w-[9.5rem]`, but a `shrink-0` parent blocks a child from ever
+       * shrinking, so that intent never applied. Letting the cluster compress
+       * lets the pill truncate as it was written to. */}
+      <div className="flex min-w-0 items-center gap-1 sm:gap-3">
         {/*
          * No global Search control here. A Search button used to ship in this
          * slot with no onClick, no form, and no dialog — it was announced to
@@ -204,8 +212,13 @@ export function Header({
             northStarChrome ? "north-star-header-bell-badge" : undefined
           }
         />
+        {/* `min-w-0` so this can compress too. At 390px its children — view
+         * switcher 120px, trial pill 133px, avatar 36px, sign out 36px, plus
+         * gaps — reached x=427 on a 390px screen. `html` and `body` are
+         * `overflow-x-clip`, so the page did not pan; the Sign out button was
+         * simply cut off and unreachable on a phone. */}
         <div
-          className={`flex items-center gap-2 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 ${
+          className={`flex min-w-0 items-center gap-2 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 ${
             northStarChrome
               ? "north-star-header-divider border-l"
               : "border-l border-slate-200 md:border-white/10"

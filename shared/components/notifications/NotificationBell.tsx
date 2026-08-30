@@ -39,10 +39,17 @@ export function NotificationBell({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  /* Adjust state during render rather than in an effect. The server sends fresh
+     notifications on every refresh, and syncing them in a `useEffect` renders
+     once with the stale list, commits, then renders again — the cascading
+     render the lint rule names. Comparing against the previous prop lets React
+     discard the first render before it is ever painted. */
+  const [syncedFrom, setSyncedFrom] = useState(initialNotifications);
+  if (syncedFrom !== initialNotifications) {
+    setSyncedFrom(initialNotifications);
     setNotifications(initialNotifications);
     setUnreadCount(initialUnreadCount);
-  }, [initialNotifications, initialUnreadCount]);
+  }
 
   /* Tab used to walk out of the open panel into the page behind it. Same trap
      the dialogs and sheets use; the `open` argument exists because a popover's

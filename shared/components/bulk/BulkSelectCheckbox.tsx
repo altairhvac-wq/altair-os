@@ -40,8 +40,12 @@ export function BulkSelectCheckbox({
   }, [indeterminate]);
 
   return (
+    /* The label is the touch target, not the 16px box inside it. It already
+       claimed 40px of height on mobile but only the input's 16px of width, so
+       the effective target was 16x40 — under 2.5.8's 24px on one axis. 44x44
+       on mobile, unchanged from `sm` up where a pointer is doing the work. */
     <label
-      className="flex min-h-10 shrink-0 items-center sm:min-h-0"
+      className="flex min-h-11 min-w-11 shrink-0 items-center justify-center sm:min-h-0 sm:min-w-0"
       onClick={(event) => event.stopPropagation()}
     >
       <input

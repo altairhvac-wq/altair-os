@@ -60,7 +60,12 @@ export function SubscriptionBillingBanner({
       {model.showManageAction ? (
         <Link
           href={BILLING_SETTINGS_HREF}
-          className="inline-flex min-w-0 rounded-full transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          /* 44px of height on mobile. The pill measured 133x17 in the admin
+             header on every route — a standalone control, so 2.5.8's inline
+             exception does not cover it, and it is the only route to billing
+             from the header. The visual pill is unchanged; the link around it
+             simply claims a finger-sized box. */
+          className="inline-flex min-h-11 min-w-0 items-center rounded-full transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:min-h-0"
           aria-label={`${label}. ${tooltip}`}
         >
           {pill}

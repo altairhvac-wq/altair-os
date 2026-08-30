@@ -97,3 +97,66 @@ homeowner gets a "Back to dashboard" CTA).
 **Highest-leverage next:** L-14 is the only one on a public, unauthenticated
 surface. S-13 and L-12 are the same fix. S-2 unblocks theming for zero call-site
 edits.
+
+---
+
+## Deferred to a maintenance phase
+
+Both are real and both are architectural. Neither causes a **confirmed
+user-visible defect today** — all three contrast probes read zero across the
+product — so they are documented here rather than fixed under a release.
+
+### S-2 — the token layer is hex-only
+
+`shared/design-system/north-star/tokens.ts`, measured 2026-08-30:
+
+| | |
+|---|---|
+| lines | 947 |
+| raw hex literals | 325 |
+| distinct hexes | 62 |
+| `var(--…)` references | **0** |
+| files importing it | 109 |
+
+**What it costs, concretely.** The muted-ink fix in this pass had to be applied
+as a **93-literal sweep across 45 files**, because the same value is written out
+at every call site instead of resolving through one custom property. A second
+consequence: nothing in this layer can be reached by the Design Lab or any
+future theming surface, since there is no property to override.
+
+**The fix, when it is scheduled.** Back the ~62 distinct hexes with the `--pg-*`
+and `--altair-*` properties that already exist in `globals.css` and that these
+values were derived from. The class strings themselves do not change, so it is
+zero call-site edits — the work is in the mapping and in verifying it. The
+computed-style differ used for the `!important` removal
+(`ui-audit/snapshot-chrome.mjs`) is the right proof: capture before, remap,
+capture after, and require the ~50k properties to be identical.
+
+**Do not** convert it piecemeal. A half-tokenized layer is worse than a
+hex-only one, because then neither rule holds.
+
+### S-21 — brass is not a ramp
+
+Across `app/` and `shared/`, spacing-tolerant:
+
+| pattern | count |
+|---|---|
+| `rgba(119, 89, 27, …)` | 332 |
+| `rgba(194, 160, 90, …)` | 316 |
+| `rgba(138, 99, 36, …)` | 39 |
+| arbitrary-value brass classes in components | 524 |
+| distinct golds in use | 10 |
+
+*(The audit's original figure was 340. It reproduces at roughly twice that once
+the pattern tolerates whitespace — my first count used the wrong spacing and
+briefly suggested the finding was stale. It is not.)*
+
+**The fix, when it is scheduled.** A brass ramp with the steps that are actually
+in use, plus three border/ring properties for the alpha variants, then a sweep
+of the 687 `rgba()` sites. Contrast is already handled — `--altair-brass` for
+paper, `--altair-brass-interactive` for chrome — so this is consolidation, not
+correction.
+
+**Why it is safe to defer.** These are borders, rings and washes. The two places
+where brass was doing something it should not — standing in for a *state*, and
+being painted as text on chrome — are both fixed, and the probes hold the line.
