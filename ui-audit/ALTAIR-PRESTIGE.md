@@ -472,3 +472,38 @@ fold cannot silently invert later. 231 assertions, all passing.
 **Still excluded:** the approved logo palette (`brand-assets.ts`), the Design Lab
 and color-lab tooling whose hex values are their subject matter, and the
 uncommitted user files.
+
+### D-18 · The tablet band gets a rail, not a hidden sidebar
+The sidebar appeared at `md` at its full `14.5rem`, so at 768px the content
+column was **536px** — narrower than a phone in landscape. The damage was real,
+not cosmetic: the Customers page header collided with its own subtitle, the stat
+strip clipped mid-word ("OTAL CUSTOMERS"), and table columns fell off the edge.
+
+Two ways to fix it. Moving the breakpoint to `lg` and letting the existing
+mobile nav cover 768–1023 is the smaller change, but it takes persistent
+navigation away from a device that has room for it. Collapsing to a **68px icon
+rail** keeps the nav and returns ~164px to content, so that is what this does.
+
+Details that matter more than the width:
+
+- Labels are `max-lg:sr-only`, **not** `hidden`. A `display:none` label is not
+  in the accessibility tree, which would have left every rail link an unnamed
+  icon to a screen reader. Group headings and the "Limited workspace access"
+  note get the same treatment.
+- Each link carries a `title`, because on the rail a tooltip is the only way a
+  sighted pointer user can confirm a destination.
+- The active state already used a centred brass underline, so it needed no
+  change — it simply centres under the icon.
+- The top-bar greeting is hidden below `lg`. With the rail in place the
+  functional controls take the width they need, and the greeting was truncating
+  to "Good ev…" / "Satu…", which reads as a rendering bug rather than identity.
+  The serif moment waits until there is room for it.
+
+**Known and deliberately not fixed here.** `admin-page-header` lays out a
+`flex-1 min-w-0` title block beside `shrink-0` tabs and buttons, so the title
+yields all available space instead of the tabs wrapping. Measured at 1024px the
+title block collapses to **98px**, and both the page title and its description
+truncate into it; the same compression shows at 390px. It is pre-existing, it is
+on a different breakpoint from the rail, and `admin-page-header` is shared by
+every admin page — changing its flex model deserves its own pass with its own
+verification across all surfaces, not a drive-by inside a sidebar fix.

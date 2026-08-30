@@ -139,7 +139,12 @@ export function Header({
           </div>
         ) : null}
 
-        <div className="min-w-0">
+        {/* Hidden below `lg`: with the tablet rail in place the top bar's
+          * functional controls take the width they need, and the greeting was
+          * truncating to "Good ev…" / "Satu…", which reads as a rendering bug
+          * rather than identity. The page header names the page anyway, so the
+          * serif moment simply waits until there is room for it. */}
+        <div className="min-w-0 max-lg:hidden">
           {/* PRESTIGE: the greeting is the product's one piece of display
             * typography — set in the Altair serif rather than the interface
             * sans. It is the only place the serif appears in the shell, which

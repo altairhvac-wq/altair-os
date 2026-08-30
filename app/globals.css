@@ -1868,6 +1868,26 @@ a[href] {
     box-shadow: inset -1px 0 0 rgb(194 160 90 / 0.1);
   }
 
+  /*
+   * Tablet rail (768px - 1023px).
+   *
+   * The sidebar appeared at `md` at its full 14.5rem, which left 536px of
+   * content at 768px — narrower than a phone in landscape. Real consequences
+   * on that band: the Customers page header collided with its own subtitle,
+   * the stat strip clipped mid-word ("OTAL CUSTOMERS"), and table columns fell
+   * off the edge.
+   *
+   * Collapsing to an icon rail rather than hiding the sidebar keeps persistent
+   * navigation on a device that has room for it, and returns ~164px to the
+   * content column. Labels are `sr-only` rather than `hidden` below `lg`, so
+   * every link keeps its accessible name.
+   */
+  @media (max-width: 1023.98px) {
+    .admin-north-star-sidebar {
+      width: 4.25rem;
+    }
+  }
+
   .admin-north-star-sidebar::before {
     content: "";
     position: absolute;
