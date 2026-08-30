@@ -70,7 +70,7 @@ export function CustomerRecentPhotosSection({
               <p
                 className={
                   northStar
-                    ? "truncate text-[11px] text-[#7C7259]"
+                    ? "truncate text-[11px] text-[#786D53]"
                     : "truncate text-[11px] text-slate-500"
                 }
               >

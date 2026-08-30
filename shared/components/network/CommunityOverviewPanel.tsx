@@ -322,7 +322,7 @@ export function CommunityOverviewPanel({
                     {metric.value}
                   </p>
                   {metric.hint ? (
-                    <p className="mt-1.5 truncate text-[10px] leading-snug text-[#7C7259]">
+                    <p className="mt-1.5 truncate text-[10px] leading-snug text-[#786D53]">
                       {metric.hint}
                     </p>
                   ) : null}
@@ -525,7 +525,7 @@ export function CommunityOverviewPanel({
               <h2 id="community-relationships-heading" className={st.sectionTitle}>
                 Relationships Snapshot
               </h2>
-              <p className="mt-1 text-xs text-[#7C7259]">
+              <p className="mt-1 text-xs text-[#786D53]">
                 {relationships.length === 0
                   ? "Businesses you trust for referrals and overflow work."
                   : `${relationships.length} active relationship${

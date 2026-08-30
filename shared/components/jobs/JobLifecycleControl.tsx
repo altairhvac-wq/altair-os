@@ -91,7 +91,7 @@ export function JobLifecycleControl({
         className={
           northStar
             ? dt.sectionTitle
-            : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+            : "text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted"
         }
       >
         Cleanup

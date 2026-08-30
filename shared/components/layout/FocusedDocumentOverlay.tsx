@@ -101,7 +101,7 @@ function OverlayHeader({
           {headerAside}
         </div>
         {subtitle ? (
-          <p className={northStar ? edt.overlayHeaderSubtitle : "mt-0.5 text-sm text-slate-500"}>
+          <p className={northStar ? edt.overlayHeaderSubtitle : "mt-0.5 text-sm text-altair-ink-on-paper-muted"}>
             {subtitle}
           </p>
         ) : null}

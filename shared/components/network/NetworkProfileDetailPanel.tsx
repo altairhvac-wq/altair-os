@@ -152,7 +152,7 @@ export function NetworkProfileDetailPanel({
     ? "mt-1.5 flex items-start gap-1.5 text-xs text-[#6B6255]"
     : "mt-1.5 flex items-start gap-1.5 text-xs text-slate-500";
   const metaClass = isNorthStar
-    ? "mt-2 text-[11px] text-[#7C7259]"
+    ? "mt-2 text-[11px] text-[#786D53]"
     : "mt-2 text-[11px] text-slate-500";
   const networkButtonClass = isNorthStar
     ? `${st.cardActionAccentFull} min-h-10 disabled:opacity-60 sm:min-h-[44px]`

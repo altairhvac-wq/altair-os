@@ -306,7 +306,7 @@ export function ReceiptUploadBox({
                     ? "Tap to snap receipt"
                     : "Drop receipt here or tap to browse"}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-altair-ink-on-paper-muted">
               {retryFile && expenseId && !isPending
                 ? "Receipt ready to retry"
                 : captureEnvironment

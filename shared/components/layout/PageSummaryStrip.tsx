@@ -104,7 +104,7 @@ export function PageSummaryStrip({
                     {card.value}
                   </p>
                   {card.description ? (
-                    <p className="mt-0.5 text-xs text-[#7C7259]">
+                    <p className="mt-0.5 text-xs text-[#786D53]">
                       {card.description}
                     </p>
                   ) : null}

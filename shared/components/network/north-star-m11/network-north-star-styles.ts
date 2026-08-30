@@ -39,7 +39,7 @@ export const networkNorthStarStyles = {
   filterInput: `${fieldControlClass} h-9 min-h-9`,
   emptyState: lt.emptyState,
   emptyTitle: "text-sm font-semibold text-[#17130E]",
-  emptyDescription: "mt-1 text-xs text-[#7C7259]",
+  emptyDescription: "mt-1 text-xs text-[#786D53]",
   panelAction:
     "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(119,89,27,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[rgba(194,160,90,0.38)] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#77591B]",
   panelActionAccent:
@@ -48,7 +48,7 @@ export const networkNorthStarStyles = {
     "group/card relative rounded-lg border border-[rgba(194,160,90,0.28)] bg-[#FFF9EA] px-2 py-1.5 transition-colors hover:border-[rgba(194,160,90,0.42)] hover:bg-[#FFFDF5]",
   cardPrimary: "truncate text-[13px] font-semibold leading-tight text-[#17130E]",
   cardSecondary: "truncate text-[11px] leading-snug text-[#4F4638]",
-  cardMuted: "truncate text-[11px] leading-snug text-[#7C7259]",
+  cardMuted: "truncate text-[11px] leading-snug text-[#786D53]",
   cardIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-[10px] font-bold leading-none text-[#17130E] ring-1 ring-[rgba(119,89,27,0.16)]",
   cardActionFull: buttonClassName("secondary", "sm", "w-full"),
@@ -60,14 +60,14 @@ export const networkNorthStarStyles = {
   detailPanelTitle: "truncate text-sm font-bold text-[#17130E]",
   detailPanelSubtitle: "mt-0.5 text-[11px] leading-snug text-[#4F4638]",
   detailPanelClose:
-    "rounded-lg p-1.5 text-[#7C7259] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
+    "rounded-lg p-1.5 text-[#786D53] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
   detailPanelEmptyShell:
     "flex shrink-0 flex-col items-center px-4 py-5 text-center",
   detailPanelEmptyIcon:
     "flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#E8D9AC] to-[#A4823A] text-[#17130E] ring-1 ring-[rgba(119,89,27,0.16)]",
   detailPanelEmptyTitle: "mt-3 text-sm font-semibold text-[#17130E]",
   detailPanelEmptyBody:
-    "mt-1.5 max-w-[240px] text-[11px] leading-relaxed text-[#7C7259]",
+    "mt-1.5 max-w-[240px] text-[11px] leading-relaxed text-[#786D53]",
   detailPanelEmptyChips: "mt-5 flex flex-wrap items-center justify-center gap-2",
   detailPanelEmptyChip:
     "inline-flex items-center rounded-full border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#4F4638]",
@@ -79,7 +79,7 @@ export const networkNorthStarStyles = {
   profileVisibilityStrip:
     "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(119,89,27,0.10)] bg-[#FBF7EF]/80 px-3 py-2 sm:px-3.5",
   profileVisibilityLabel: "text-xs font-semibold text-[#17130E]",
-  profileVisibilityHelper: "text-[10px] leading-snug text-[#7C7259]",
+  profileVisibilityHelper: "text-[10px] leading-snug text-[#786D53]",
   profileVisibilityPill:
     "inline-flex items-center rounded-full bg-[rgba(22,101,52,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#166534] ring-1 ring-[rgba(22,101,52,0.18)]",
   profileVisibilityPillHidden:
@@ -130,14 +130,14 @@ export const networkNorthStarStyles = {
   mapPreviewSubtitle: "mt-0.5 text-[10px] leading-snug text-[#4F4638]",
   mapPreviewMessage: "mt-1 text-[10px] leading-snug text-[#4F4638]",
   mapPreviewPill:
-    "inline-flex items-center rounded-full border border-[rgba(119,89,27,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#7C7259] backdrop-blur-[1px]",
+    "inline-flex items-center rounded-full border border-[rgba(119,89,27,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#786D53] backdrop-blur-[1px]",
   mapPreviewHint:
     "mt-3 inline-flex w-fit items-center rounded-lg border border-dashed border-[rgba(119,89,27,0.22)] bg-[rgba(255,249,234,0.75)] px-2.5 py-1 text-[10px] font-medium text-[#77591B] backdrop-blur-[1px]",
   mapPreviewAreasLabel:
     "text-[10px] font-semibold uppercase tracking-[0.1em] text-[#77591B]",
   mapPreviewAreaChip:
     "inline-flex max-w-full items-center truncate rounded-full border border-[rgba(194,160,90,0.22)] bg-[rgba(255,249,234,0.88)] px-2.5 py-0.5 text-[10px] font-medium text-[#4F4638] backdrop-blur-[1px]",
-  mapPreviewMeta: "text-[10px] text-[#7C7259]",
+  mapPreviewMeta: "text-[10px] text-[#786D53]",
   mapPreviewFooter: "mt-auto space-y-1.5 pt-1.5",
   cardShell:
     "group/card relative rounded-lg border border-[rgba(119,89,27,0.10)] bg-[#FBF7EF] px-2 py-1.5 transition-colors hover:border-[rgba(194,160,90,0.24)] hover:bg-[#FFFDF5]",
@@ -166,7 +166,7 @@ export const networkNorthStarStyles = {
   saveButton: buttonClassName("primary", "md"),
   cancelButton: buttonClassName("secondary", "md"),
   permissionCopy: "text-sm text-[#4F4638]",
-  countMeta: "text-xs font-medium text-[#7C7259]",
+  countMeta: "text-xs font-medium text-[#786D53]",
   // Deliberately NOT min-h-0/flex-1/overflow-y-auto — Community's page grows
   // to its natural content height and the outer document scrolls, instead of
   // being locked to the viewport with its own internal scrollbar. See the

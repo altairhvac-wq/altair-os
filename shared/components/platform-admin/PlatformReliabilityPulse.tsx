@@ -19,7 +19,7 @@ function pulseStatusClass(
       case "critical":
         return "bg-[rgba(185,28,28,0.1)] text-[#991B1B] ring-[rgba(185,28,28,0.16)]";
       case "deferred":
-        return "bg-[rgba(124,114,89,0.08)] text-[#7C7259] ring-[rgba(124,114,89,0.12)]";
+        return "bg-[rgba(124,114,89,0.08)] text-[#786D53] ring-[rgba(124,114,89,0.12)]";
       default:
         return "bg-[rgba(124,114,89,0.1)] text-[#5C5340] ring-[rgba(124,114,89,0.16)]";
     }

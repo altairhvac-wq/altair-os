@@ -153,7 +153,7 @@ function PendingInvitesCardContent({
             </h2>
             <p
               className={`${
-                northStar ? "text-[#7C7259]" : "text-slate-600"
+                northStar ? "text-[#786D53]" : "text-slate-600"
               } ${
                 isSettingsCompact
                   ? "mt-0.5 text-xs leading-snug"
@@ -204,7 +204,7 @@ function PendingInvitesCardContent({
                 </p>
                 <p
                   className={`mt-1 break-words text-xs ${
-                    northStar ? "text-[#7C7259]" : "text-slate-500"
+                    northStar ? "text-[#786D53]" : "text-slate-500"
                   }`}
                 >
                   Invited as {invite.inviteEmail}

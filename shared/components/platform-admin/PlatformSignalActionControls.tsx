@@ -43,7 +43,7 @@ function actionStatusClass(status: string, northStar: boolean): string {
       case "snoozed":
         return "bg-[rgba(124,114,89,0.1)] text-[#5C5340] ring-[rgba(124,114,89,0.16)]";
       case "resolved":
-        return "bg-[rgba(124,114,89,0.08)] text-[#7C7259] ring-[rgba(124,114,89,0.12)]";
+        return "bg-[rgba(124,114,89,0.08)] text-[#786D53] ring-[rgba(124,114,89,0.12)]";
       default:
         return "bg-[rgba(119,89,27,0.1)] text-[#77591B] ring-[rgba(119,89,27,0.16)]";
     }

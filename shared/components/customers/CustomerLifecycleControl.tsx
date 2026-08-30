@@ -307,7 +307,7 @@ export function CustomerLifecycleControl({
       </div>
 
       {lifecycleState === "deleted" && permanentDeleteBlockReason ? (
-        <p className="max-w-sm text-right text-xs text-slate-500">
+        <p className="max-w-sm text-right text-xs text-altair-ink-on-paper-muted">
           {permanentDeleteBlockReason}
         </p>
       ) : null}

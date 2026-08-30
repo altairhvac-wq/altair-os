@@ -33,7 +33,7 @@ export function ServiceItemsEmptyState({
 
           <h3 className="mt-4 text-base font-semibold text-[#17130E]">{title}</h3>
 
-          <p className="mt-2 text-sm text-[#7C7259]">{description}</p>
+          <p className="mt-2 text-sm text-[#786D53]">{description}</p>
 
           {!isNoResults && onCreateItem ? (
             <button

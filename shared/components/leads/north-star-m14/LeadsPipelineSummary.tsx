@@ -135,7 +135,7 @@ export function LeadsPipelineSummary({
               }`}
             >
               <span>{formatLeadStatus(status)}</span>
-              <span className="tabular-nums text-[#7C7259]">{count}</span>
+              <span className="tabular-nums text-[#786D53]">{count}</span>
             </button>
           );
         })}

@@ -36,7 +36,7 @@ const northStarCatalogSearchClass =
 const northStarCatalogSelectClass =
   "h-11 w-full min-h-11 appearance-none rounded-xl border border-altair-border bg-altair-paper-elevated py-1.5 pl-9 pr-8 text-sm font-semibold text-altair-ink-on-paper outline-none transition-colors hover:border-altair-border-strong focus-visible:border-altair-border-strong focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated sm:w-auto sm:pr-10 md:h-9 md:min-h-9";
 
-const northStarCatalogFilterIconClass = "text-[#7C7259]";
+const northStarCatalogFilterIconClass = "text-[#786D53]";
 
 const northStarCatalogMetaClass = "mt-2 text-xs font-medium text-[#4F4638]";
 

@@ -24,7 +24,7 @@ export const leadNorthStarStyles = {
     "text-xs font-medium uppercase tracking-wide text-[#4F4638]",
   sectionValue: "mt-1 text-sm text-[#17130E]",
   sectionValueStrong: "mt-1 text-sm font-semibold text-[#17130E]",
-  helperText: "mt-1 text-xs leading-snug text-[#7C7259]",
+  helperText: "mt-1 text-xs leading-snug text-[#786D53]",
   primaryText: "text-[#17130E]",
   secondaryText: "text-[#4F4638]",
   linkAccent:
@@ -66,10 +66,10 @@ export const leadNorthStarStyles = {
   timelineIconWrap:
     "relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EFE4CB] text-[#77591B] ring-1 ring-[rgba(119,89,27,0.12)]",
   timelineTitle: "text-sm font-semibold text-[#17130E]",
-  timelineMeta: "text-xs text-[#7C7259]",
+  timelineMeta: "text-xs text-[#786D53]",
   timelineBody: "mt-1 whitespace-pre-wrap text-sm text-[#4F4638]",
-  timelineAuthor: "mt-1 text-xs text-[#7C7259]",
-  emptyState: "text-sm text-[#7C7259]",
+  timelineAuthor: "mt-1 text-xs text-[#786D53]",
+  emptyState: "text-sm text-[#786D53]",
 } as const;
 
 export const ls = leadNorthStarStyles;

@@ -28,8 +28,8 @@ export const teamMemberNorthStarStyles = {
   activityType:
     "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#77591B]",
   activityLabel: "text-sm font-semibold text-[#17130E]",
-  activityDetail: "mt-0.5 truncate text-xs text-[#7C7259]",
-  activityTime: "mt-0.5 text-[11px] text-[#7C7259]",
+  activityDetail: "mt-0.5 truncate text-xs text-[#786D53]",
+  activityTime: "mt-0.5 text-[11px] text-[#786D53]",
   metricCard: dt.metricCard,
   metricLabel: dt.metricLabel,
   metricValue: dt.metricValue,
@@ -58,7 +58,7 @@ export const teamMemberNorthStarStyles = {
   certChip:
     "inline-flex items-center gap-1 rounded-full border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-sm font-medium text-[#4F4638]",
   certRemove:
-    "ml-0.5 text-[#7C7259] transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60",
+    "ml-0.5 text-[#786D53] transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60",
 } as const;
 
 export const tm = teamMemberNorthStarStyles;

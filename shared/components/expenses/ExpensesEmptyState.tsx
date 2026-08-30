@@ -81,7 +81,7 @@ export function ExpensesEmptyState({
           <h3 className="mt-4 text-base font-semibold text-[#17130E]">{title}</h3>
 
           {description ? (
-            <p className="mt-2 text-sm text-[#7C7259]">{description}</p>
+            <p className="mt-2 text-sm text-[#786D53]">{description}</p>
           ) : null}
 
           {!isNoResults && onCreateExpense ? (

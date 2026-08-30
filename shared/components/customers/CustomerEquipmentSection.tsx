@@ -216,7 +216,7 @@ export function CustomerEquipmentSection({
           <p
             className={
               northStar
-                ? "mt-1 text-xs text-[#7C7259]"
+                ? "mt-1 text-xs text-[#786D53]"
                 : "mt-1 text-xs text-slate-500"
             }
           >
@@ -267,20 +267,20 @@ export function CustomerEquipmentSection({
                         </p>
                       ) : null}
                       {item.serialNumber ? (
-                        <p className={northStar ? "text-[#7C7259]" : "text-slate-500"}>
+                        <p className={northStar ? "text-[#786D53]" : "text-slate-500"}>
                           S/N {item.serialNumber}
                         </p>
                       ) : null}
                       {item.location ? <p>{item.location}</p> : null}
                       {item.installDate ? (
-                        <p className={northStar ? "text-[#7C7259]" : "text-slate-500"}>
+                        <p className={northStar ? "text-[#786D53]" : "text-slate-500"}>
                           Installed {formatEquipmentDate(item.installDate)}
                         </p>
                       ) : null}
                     </div>
 
                     {item.notes?.trim() && !compact ? (
-                      <p className={northStar ? "mt-2 text-sm text-[#7C7259]" : "mt-2 text-sm text-slate-500"}>
+                      <p className={northStar ? "mt-2 text-sm text-[#786D53]" : "mt-2 text-sm text-slate-500"}>
                         {item.notes}
                       </p>
                     ) : null}

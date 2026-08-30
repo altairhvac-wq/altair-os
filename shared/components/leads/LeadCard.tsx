@@ -96,7 +96,7 @@ export function LeadCard({
               </div>
             </div>
 
-            <p className="mt-2 line-clamp-2 text-[11px] text-[#7C7259]">
+            <p className="mt-2 line-clamp-2 text-[11px] text-[#786D53]">
               {getLeadLastActivityLabel(lead)}
             </p>
           </div>

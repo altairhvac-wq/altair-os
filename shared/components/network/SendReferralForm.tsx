@@ -79,7 +79,7 @@ export function SendReferralForm({
     : "mt-1 text-base font-semibold text-slate-900";
   const receiverMetaClass = isNorthStar
     ? "mt-0.5 text-sm text-[#6B6255]"
-    : "mt-0.5 text-sm text-slate-500";
+    : "mt-0.5 text-sm text-altair-ink-on-paper-muted";
   const incentiveSectionClass = isNorthStar
     ? "space-y-3 rounded-[1rem] border border-[rgba(119,89,27,0.14)] bg-[#FFF9EA] p-4 sm:p-5"
     : "space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4 sm:p-5";

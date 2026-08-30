@@ -17,7 +17,7 @@ type ExpensesMobileCardListProps = {
   northStar?: boolean;
 };
 
-const northStarMissingValueClass = "text-xs font-medium italic text-[#7C7259]";
+const northStarMissingValueClass = "text-xs font-medium italic text-[#786D53]";
 
 function getExpenseMerchantLabel(merchant: string, northStar: boolean) {
   const trimmed = merchant.trim();

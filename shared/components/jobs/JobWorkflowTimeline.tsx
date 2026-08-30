@@ -98,7 +98,7 @@ function stageLabelClass(
         : "font-medium text-slate-400 line-through dark:text-slate-500";
     default:
       return northStar
-        ? "font-medium text-[#7C7259]"
+        ? "font-medium text-[#786D53]"
         : "font-medium text-slate-500 dark:text-slate-400";
   }
 }

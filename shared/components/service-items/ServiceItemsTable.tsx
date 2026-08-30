@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { STATUS_TONE_CLASS } from "@/shared/design-system/components/status-tone";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import {
@@ -27,9 +28,12 @@ const legacyStatusStyles = {
   inactive: "bg-slate-100 text-slate-600",
 } as const;
 
+/* `active` was raw Tailwind emerald-700 (#047857) on a wash of itself — a
+ * pre-remap literal the palette migration never reached, measured 4.19:1 in the
+ * open panel. A sellable item is the `success` case, so it takes the shared
+ * tone rather than a second private green. */
 const northStarStatusStyles = {
-  active:
-    "bg-[rgba(4,120,87,0.10)] text-[#047857] ring-1 ring-[rgba(4,120,87,0.18)]",
+  active: STATUS_TONE_CLASS.success,
   inactive: `${lt.badgeArchived}`,
 } as const;
 
@@ -46,7 +50,7 @@ const northStarItemDescriptionClass =
 const northStarCategoryChipClass =
   "inline-flex rounded-md bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.14)]";
 
-const northStarMissingValueClass = "text-sm text-[#7C7259]";
+const northStarMissingValueClass = "text-sm text-[#786D53]";
 
 const northStarMissingCostBadgeClass =
   "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.12)]";
@@ -109,7 +113,7 @@ export function ServiceItemsTable({
             className={
               northStar
                 ? northStarTableHeaderRow
-                : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
+                : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted"
             }
           >
             {selectionEnabled ? (
@@ -214,7 +218,7 @@ export function ServiceItemsTable({
                         className={
                           northStar
                             ? northStarItemDescriptionClass
-                            : "truncate text-xs text-slate-500"
+                            : "truncate text-xs text-altair-ink-on-paper-muted"
                         }
                       >
                         {item.description}

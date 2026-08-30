@@ -181,7 +181,7 @@ export function InvoicesMobileCardList({
                           ) : (
                             <p
                               className={
-                                northStar ? "text-xs text-[#7C7259]" : "text-xs text-slate-400"
+                                northStar ? "text-xs text-[#786D53]" : "text-xs text-slate-400"
                               }
                             >
                               Paid

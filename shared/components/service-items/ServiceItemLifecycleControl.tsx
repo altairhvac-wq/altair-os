@@ -110,7 +110,7 @@ export function ServiceItemLifecycleControl({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted">
         Cleanup
       </p>
       {lifecycleState === "deleted" && serviceItem.deletedAt ? (

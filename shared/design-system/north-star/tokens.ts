@@ -220,7 +220,13 @@ export const northStarTokens: NorthStarDashboardTokens = {
  *
  * Warm graphite frame: lift #2B3328 · base #1C211A · deep #151913 · edge #BCB5A5
  * Royal brass actions: champagne #E6D092 · royal #C9A44D · command #B88A2E
- * Light surfaces: stone #EEECE7 / band #E5E2DA / row #FFFFFF · text #151914 / #5A5444 / #7C7259
+ * Light surfaces: stone #EEECE7 / band #E5E2DA / row #FFFFFF · text #151914 / #5A5444 / #786D53
+ *
+ * The muted step was #786D53 and measured 4.46 on the paper surface — under AA
+ * at every call site, which is why it kept surfacing one panel at a time.
+ * #786D53 is 4.78 on paper and 5.11 on white, and stays clearly lighter than
+ * the #5A5444 secondary step. It is still 3.73 on the SUNKEN canvas, so muted
+ * text there needs the secondary step instead — see `filterMeta`.
  * Dark header text: warm ivory #F3EBDD · warm muted #D4CFC2
  */
 export type NorthStarListPageTokens = {
@@ -309,7 +315,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:pr-10 md:h-9 md:min-h-9",
   ].join(" "),
   filterIcon: "text-[#77591B]",
-  /* #5A5444, not #7C7259: this meta line renders on the sunken canvas, where
+  /* #5A5444, not #786D53: this meta line renders on the sunken canvas, where
      the lighter of the two muted inks measured 3.48:1. Both are from the scale
      documented above; this one is simply the step the surface needs. */
   filterMeta: "mt-1.5 text-[11px] text-[#5A5444] sm:text-xs",
@@ -328,7 +334,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E8D9AC] to-[#D9C188] text-xs font-bold text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.16)] shadow-[0_1px_3px_rgba(119,89,27,0.12)]",
   tablePrimaryText: "truncate font-semibold text-[#17130E]",
   tableSecondaryText: "font-medium text-[#4F4638]",
-  tableMutedText: "truncate text-xs text-[#7C7259]",
+  tableMutedText: "truncate text-xs text-[#786D53]",
   tableMetricText: "font-semibold tabular-nums text-[#17130E]",
   tableDateText: "font-medium text-[#4F4638]",
   badgeDeleted:
@@ -497,10 +503,10 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
     "inline-flex items-center gap-0.5 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[11px] font-medium text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.12)]",
   ivoryCardPrimary: "text-sm font-semibold text-[#17130E]",
   ivoryCardSecondary: "text-xs text-[#4F4638]",
-  ivoryCardMuted: "text-xs text-[#7C7259]",
+  ivoryCardMuted: "text-xs text-[#786D53]",
   compactSectionSurface:
     "north-star-detail-section scroll-mt-6 rounded-[1rem] p-3",
-  truncatedHint: "mt-2 text-xs font-medium text-[#7C7259]",
+  truncatedHint: "mt-2 text-xs font-medium text-[#786D53]",
 };
 
 /**
@@ -553,7 +559,7 @@ export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
     "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
   ivoryPrimary: "text-[#17130E]",
   ivorySecondary: "text-[#4F4638]",
-  ivoryMuted: "text-[#7C7259]",
+  ivoryMuted: "text-[#786D53]",
   ivoryLink: "text-[#77591B] transition-colors hover:text-[#77591B]",
   darkPrimary: "text-[#FFF8E8]",
   darkSecondary: "text-[#D7CDBD]",
@@ -587,7 +593,7 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
     "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
   ivoryPrimary: "text-[#17130E]",
   ivorySecondary: "text-[#4F4638]",
-  ivoryMuted: "text-[#7C7259]",
+  ivoryMuted: "text-[#786D53]",
   ivoryLink:
     "text-[#77591B] transition-colors hover:text-[#77591B]",
   darkPrimary: "text-[#FFF8E8]",

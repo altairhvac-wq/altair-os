@@ -149,7 +149,7 @@ export function CustomerJobsSection({
                     />
                     <div>
                       <p>{job.serviceAddress}</p>
-                      <p className={northStar ? "text-xs text-[#7C7259]" : "text-xs text-slate-500"}>
+                      <p className={northStar ? "text-xs text-[#786D53]" : "text-xs text-slate-500"}>
                         {formatCityStateZip(job.city, job.state, job.zip)}
                       </p>
                     </div>

@@ -99,7 +99,7 @@ export function ExpenseLifecycleControl({
     : "rounded-xl border border-slate-200 bg-slate-50/80 p-4";
   const titleClass = northStar
     ? "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]"
-    : "text-xs font-semibold uppercase tracking-wide text-slate-500";
+    : "text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted";
   const secondaryButtonClass = northStar
     ? `${dt.secondaryAction} !text-xs`
     : "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800";
@@ -168,7 +168,7 @@ export function ExpenseLifecycleControl({
                 Move to Trash
               </button>
             ) : trashBlockReason ? (
-              <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-600"}`}>{trashBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#786D53]" : "text-slate-600"}`}>{trashBlockReason}</p>
             ) : null}
           </>
         ) : null}
@@ -202,7 +202,7 @@ export function ExpenseLifecycleControl({
                 Move to Trash
               </button>
             ) : trashBlockReason ? (
-              <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-600"}`}>{trashBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#786D53]" : "text-slate-600"}`}>{trashBlockReason}</p>
             ) : null}
           </>
         ) : null}
@@ -239,7 +239,7 @@ export function ExpenseLifecycleControl({
                 Permanently Delete
               </button>
             ) : permanentDeleteBlockReason ? (
-              <p className={`text-xs ${northStar ? "text-[#7C7259]" : "text-slate-600"}`}>{permanentDeleteBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#786D53]" : "text-slate-600"}`}>{permanentDeleteBlockReason}</p>
             ) : null}
           </>
         ) : null}

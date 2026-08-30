@@ -154,7 +154,7 @@ export function PaymentSettingsCard({
     : "text-sm font-semibold text-altair-ink sm:text-base";
 
   const helperClass = northStar
-    ? "mt-0.5 text-xs text-[#7C7259] sm:text-sm"
+    ? "mt-0.5 text-xs text-[#786D53] sm:text-sm"
     : "mt-0.5 text-xs text-altair-ink-secondary sm:text-sm";
 
   const noticeClass = northStar
@@ -162,7 +162,7 @@ export function PaymentSettingsCard({
     : "rounded-none border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] px-2.5 py-2 text-xs text-altair-ink-secondary sm:text-sm";
 
   const subtleNoticeClass = northStar
-    ? "text-xs text-[#7C7259] sm:text-sm"
+    ? "text-xs text-[#786D53] sm:text-sm"
     : "text-xs text-altair-ink-muted sm:text-sm";
 
   const errorNoticeClass = northStar
