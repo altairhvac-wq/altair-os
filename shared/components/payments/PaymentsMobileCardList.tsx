@@ -52,10 +52,24 @@ export function PaymentsMobileCardList({
                   </p>
                 </div>
                 <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                  {/*
+                    * `canManageCustomers={false}` renders the name as a span.
+                    *
+                    * The whole card is already a <Link> to the invoice, and
+                    * CustomerNameLink renders its own <a> when the viewer can
+                    * manage customers. Nested anchors are invalid HTML: the
+                    * parser hoists the inner one out, so the client DOM does
+                    * not match the server's and React discards the server tree
+                    * — a hydration failure on the Sales hub.
+                    *
+                    * Plain text is also the better mobile behaviour: a second
+                    * destination inside one tap target is ambiguous. The card
+                    * goes to the invoice, which is what a payment row is for.
+                    */}
                   <CustomerNameLink
                     customerId={payment.customerId}
                     customerName={payment.customerName}
-                    canManageCustomers={canManageCustomers}
+                    canManageCustomers={false}
                     className="truncate text-sm text-altair-ink-on-paper-secondary"
                     linkClassName="truncate text-sm font-medium text-altair-ink-on-paper transition-colors hover:underline"
                     stopRowNavigation

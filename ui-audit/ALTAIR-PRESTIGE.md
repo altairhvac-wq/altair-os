@@ -1064,3 +1064,18 @@ functions, and ~160 distinct feedback state variables.
 - Public estimate approval — redirects to a confirmation page.
 - Optimistic list mutations where the row visibly moves or disappears.
 - Field validation — belongs on the field.
+
+### D-35 · S-7: the nested anchor that discarded the server tree
+`PaymentsMobileCardList` wrapped each row in a `<Link>` to the invoice and then
+rendered `CustomerNameLink` inside it, which renders **its own `<a>`** whenever
+the viewer can manage customers. Nested anchors are invalid HTML: the parser
+hoists the inner one out of the outer, so the client DOM does not match the
+server's and React discards the server tree — a hydration failure, and (per the
+audit's S-6 double-render finding) one that reached desktop too.
+
+The customer name now renders as a span. That is also the better mobile
+behaviour: two destinations inside one tap target is ambiguous, and a payment
+row's job is to open its invoice.
+
+Verified in the live DOM rather than by reading: `document.querySelectorAll("a a")`
+returns **0** across six routes at 390 and 1440.
