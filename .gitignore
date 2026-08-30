@@ -93,3 +93,7 @@ next-env.d.ts
 # reason as the others: they are authenticated screenshots of real customer
 # names, emails and phone numbers.
 /ui-audit/smoke/
+
+# Probe output. Regenerate with the probe that writes it; it captures text
+# pulled straight off authenticated pages, so it can carry customer data.
+/ui-audit/text-contrast.json
