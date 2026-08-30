@@ -207,3 +207,32 @@ Regenerate with `ui-audit/smoke-release.mjs`.
 - **Customers "Attention" column** is empty on the demo dataset. The predicate
   is live; whether an always-empty flag column earns its width is a product
   call, recorded rather than decided.
+
+---
+
+## Final re-verification — 2026-08-30 (second pass, same day)
+
+Requested as a closeout confirmation after the release closeout above; no new
+work was scoped or found. All gates re-run clean against the current HEAD:
+
+| gate | result |
+|---|---|
+| `npx tsc --noEmit` | clean |
+| `npm run build` | compiled successfully |
+| `npm run lint` | 0 errors, 133 warnings (at/below the 134 baseline) |
+| `git diff --check` | clean |
+| contrast gate | ALL PASS |
+| `probe-popover-keyboard` (S-13 focus containment) | ALL PASS |
+| `probe-mobile-flows` | ALL PASS, 19 routes |
+| `probe-smoke-release` | 57/57 route-width combinations clean |
+
+Full diff against `main` re-inspected: 174 files, no `.env`/secret/credential
+files, no binaries, no screenshots, no auth-state files. The four protected
+files (`scripts/save-demo-playwright-auth.mjs`,
+`shared/components/customers/CustomersMobileCardList.tsx`,
+`shared/components/dashboard/AdminMobileHome.tsx`,
+`supabase/.temp/cli-latest`) remain modified-but-unstaged, untouched by this
+work, exactly as before.
+
+No new findings. No new fixes. Nothing deferred that wasn't already deferred
+above. This entry exists so the closeout has a matching final-state record.
