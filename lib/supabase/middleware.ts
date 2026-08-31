@@ -35,6 +35,8 @@ const BILLING_WEBHOOK_ROUTE = "/api/webhooks/billing";
 const CRON_ROUTE_PREFIX = "/api/cron/";
 /** Dev-only fingerprint check for the Altair Demo Tool preflight guard. */
 const DEMO_FINGERPRINT_ROUTE = "/api/demo/fingerprint";
+/** Dev-only session-validity check for the Altair Demo Tool (capture contract). */
+const DEMO_SESSION_ROUTE = "/api/demo/session";
 /**
  * Machine-to-machine media ingest. Public at this layer for the same reason
  * the cron and agent routes are: the render pipeline posting here has no
@@ -99,7 +101,13 @@ function isMarketingMediaIngestRoute(pathname: string) {
 function isDemoFingerprintRoute(pathname: string) {
   return (
     pathname === DEMO_FINGERPRINT_ROUTE ||
-    pathname === `${DEMO_FINGERPRINT_ROUTE}/`
+    pathname === `${DEMO_FINGERPRINT_ROUTE}/` ||
+    // /api/demo/session (capture contract): answers "is this saved session
+    // signed in" and must therefore be reachable WITHOUT one — a redirect
+    // to /login is precisely the signed-out case it exists to report. The
+    // route is dev-only (404 elsewhere) and discloses validity only.
+    pathname === DEMO_SESSION_ROUTE ||
+    pathname === `${DEMO_SESSION_ROUTE}/`
   );
 }
 
