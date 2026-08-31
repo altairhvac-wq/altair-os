@@ -22,6 +22,7 @@ export function QuickNavToggle({
       type="button"
       aria-expanded={open}
       aria-controls="quick-navigation-drawer"
+      data-testid="quick-nav-toggle"
       aria-label={open ? "Close quick navigation" : "Open quick navigation"}
       onClick={() => onOpenChange(!open)}
       className={`inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 ${

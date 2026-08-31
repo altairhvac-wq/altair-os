@@ -69,7 +69,10 @@ export const DispatchBoard = memo(function DispatchBoard({
   const showTechnicianColumns = technicianFilter !== "unassigned";
 
   return (
-    <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col gap-2 overflow-hidden max-md:overflow-visible md:h-full lg:flex-row lg:items-stretch lg:gap-2.5">
+    <div
+      data-testid="dispatch-board"
+      className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col gap-2 overflow-hidden max-md:overflow-visible md:h-full lg:flex-row lg:items-stretch lg:gap-2.5"
+    >
       {showUnassignedSidebar ? (
         <UnassignedJobsPanel
           jobs={unassignedJobs}

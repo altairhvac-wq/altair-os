@@ -104,6 +104,7 @@ export function TeamHubPageView({
 
   return (
     <MasterListPageLayout
+      data-testid="page-team"
       title="Team"
       subtitle={hubSubtitle(activeTab)}
       density="compact"

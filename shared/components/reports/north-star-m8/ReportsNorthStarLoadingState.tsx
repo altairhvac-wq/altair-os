@@ -15,7 +15,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export function ReportsNorthStarLoadingState() {
   return (
-    <MasterShellPage density="compact">
+    <MasterShellPage density="compact" aria-busy={true}>
       <MasterPageCanvas width="wide">
         <MasterContentStack density="compact" className="min-w-0">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">

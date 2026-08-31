@@ -40,7 +40,8 @@
     "verify:reel-insights": "node scripts/verify-marketing-reel-insights.mjs",
     "verify:reel-evidence": "node scripts/verify-marketing-reel-evidence.mjs",
     "verify:oauth-scopes": "node scripts/verify-marketing-oauth-scopes.mjs",
-    "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs"
+    "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs",
+    "verify:capture-manifest": "node scripts/verify-capture-manifest.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

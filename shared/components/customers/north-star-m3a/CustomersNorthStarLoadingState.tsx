@@ -17,7 +17,7 @@ function Skeleton({ className }: { className?: string }) {
  */
 export function CustomersNorthStarLoadingState() {
   return (
-    <MasterShellPage fillViewport density="compact">
+    <MasterShellPage fillViewport density="compact" aria-busy={true}>
       <header className="admin-page-header flex shrink-0 items-center justify-between gap-2 px-3 py-1.5 sm:px-3.5">
         <div className="flex min-w-0 flex-1 items-baseline gap-2">
           <Skeleton className="hidden h-5 w-28 shrink-0 md:block" />

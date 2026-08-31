@@ -29,7 +29,7 @@ function DispatchInlineKpiSkeleton() {
 
 function DispatchBoardSkeleton() {
   return (
-    <div className={masterWorkbenchRowClass}>
+    <div aria-busy="true" className={masterWorkbenchRowClass}>
       <div className={`${dm.boardSurface} max-w-full lg:flex-1`}>
         <div className={dm.boardHeader}>
           <div className="min-w-0 space-y-1.5">

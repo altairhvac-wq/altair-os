@@ -98,7 +98,7 @@ export const DispatchTimeGrid = memo(function DispatchTimeGrid({
   }
 
   return (
-    <div className={dm.timeGridScroll} data-no-pull-refresh>
+    <div className={dm.timeGridScroll} data-no-pull-refresh data-testid="dispatch-schedule">
       <div className={`${dm.timeGridInner} w-max`}>
         {/* Horizontal time axis */}
         <div className={`${dm.timeAxisHeader} ${dm.timeAxisHeaderHeight}`}>

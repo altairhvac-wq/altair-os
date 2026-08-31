@@ -124,6 +124,18 @@ export function DispatchMap({
       map.resize();
     });
 
+    // ── Capture contract (shared/capture/capture-manifest.json) ──────────
+    // The demo tool's semantic camera prefers a real map API handle over a
+    // pointer-drag on the canvas, and probes window.__altairMap for one on
+    // every run. `data-map-idle` closes the other gap: the panel's `-ready`
+    // testid means "geocoded", not "tiles painted" — idle after load is the
+    // first moment the map is actually showing something. Both are inert to
+    // the product; renaming either is an API break for the capture pipeline.
+    (window as typeof window & { __altairMap?: mapboxgl.Map }).__altairMap = map;
+    map.once("idle", () => {
+      containerRef.current?.setAttribute("data-map-idle", "true");
+    });
+
     mapRef.current = map;
 
     return () => {
@@ -131,6 +143,8 @@ export function DispatchMap({
         marker.remove();
       }
       markersRef.current = [];
+      const w = window as typeof window & { __altairMap?: mapboxgl.Map };
+      if (w.__altairMap === map) delete w.__altairMap;
       map.remove();
       mapRef.current = null;
     };

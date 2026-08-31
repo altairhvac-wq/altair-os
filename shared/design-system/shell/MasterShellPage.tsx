@@ -19,6 +19,11 @@ export type MasterShellPageProps = {
   className?: string;
   /** Stable hook for Playwright / demo-tool targeting */
   "data-testid"?: string;
+  /**
+   * Loading-state marker for the demo tool's stale-frame detector (the
+   * AsyncSection contract's aria-busy half). Set true on page skeletons.
+   */
+  "aria-busy"?: boolean;
 };
 
 export function MasterShellPage({
@@ -28,10 +33,12 @@ export function MasterShellPage({
   fillViewport = false,
   className = "",
   "data-testid": testId,
+  "aria-busy": ariaBusy,
 }: MasterShellPageProps) {
   return (
     <div
       data-testid={testId}
+      aria-busy={ariaBusy}
       className={`mx-auto flex w-full min-w-0 max-w-full flex-col pb-2 ${stackGapClassName ?? masterShellStackGap[density]} ${fillViewport ? masterShellViewportFillClass : ""} ${className}`}
     >
       {children}

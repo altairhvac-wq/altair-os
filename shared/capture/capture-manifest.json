@@ -1,0 +1,92 @@
+{
+  "manifestVersion": 1,
+  "_what": "The capture contract between altair-os and the Altair Demo Tool. Every hook the video pipeline may target, declared by the app that owns the DOM. scripts/verify-capture-manifest.mjs proves each declared hook still exists in the source; the demo tool vendors a mirror of this file and refuses to reference anything outside it. Renaming or removing anything here is an API break for the capture pipeline - do it deliberately, in both repos.",
+  "_ownership": "altair-os owns WHAT is stable (this file). The demo tool owns HOW to film it (flows, cameras, readiness gating, timing). Neither camera direction nor selectors belong in content plans.",
+  "breakpoints": {
+    "_note": "Tailwind defaults - no custom breakpoints exist (no tailwind.config, no --breakpoint in globals.css). md is where the mobile nav rail and card lists give way to the sidebar and tables; lg is where the icon rail becomes the full sidebar and list pages become viewport-locked.",
+    "md": 768,
+    "lg": 1024
+  },
+  "shell": {
+    "main": "admin-shell-main",
+    "desktopNavLandmark": "aside[aria-label=\"Desktop navigation\"]",
+    "navLinkTestId": "nav-link-{id}",
+    "mobileNavLinkTestId": "mobile-nav-link-{id}",
+    "navLinkDerivation": "id = href === '/' ? 'dashboard' : href.slice(1).replace(/\\//g, '-') - see SidebarNav.tsx/MobileNav.tsx",
+    "quickNavToggle": "quick-nav-toggle",
+    "quickNavDrawer": "quick-nav-drawer",
+    "quickNavOpenLabel": "Open quick navigation",
+    "quickNavCloseLabel": "Close quick navigation",
+    "toastViewport": "toast-viewport"
+  },
+  "asyncContract": {
+    "_note": "AsyncSection's pair: while loading the section carries {feature}-loading and aria-busy=true; when settled it carries {feature}-ready. Page skeletons additionally mark their root aria-busy=true so the demo tool's loading detector sees them.",
+    "loadingSuffix": "-loading",
+    "readySuffix": "-ready",
+    "busyAttribute": "aria-busy"
+  },
+  "endpoints": {
+    "fingerprint": "/api/demo/fingerprint",
+    "session": "/api/demo/session",
+    "demoDataReset": "/api/dev/video-demo-data"
+  },
+  "map": {
+    "_note": "Dispatch's Mapbox map. The handle and idle attribute exist for the capture pipeline: prefer window.__altairMap for camera moves over pointer drags, and wait for data-map-idle=true when the shot needs painted tiles (dispatch-map-panel-ready fires on GEOCODING, before tiles).",
+    "windowHandle": "__altairMap",
+    "idleAttribute": "data-map-idle",
+    "markerAriaLabel": "{customerName}, {formattedStatus}",
+    "technicianLaneId": "dispatch-tech-{technicianId}",
+    "technicianLaneAriaLabel": "{technicianName} schedule, {timeStateLabel}"
+  },
+  "screens": {
+    "dashboard": {
+      "route": "/",
+      "container": { "desktop": "page-dashboard", "mobile": "page-dashboard-mobile" },
+      "mobileLandmark": "section[aria-label=\"Needs attention\"]",
+      "notes": "page-dashboard is display:none below md; the mobile landmark renders unconditionally (\"All caught up\" when empty)."
+    },
+    "dispatch": {
+      "route": "/dispatch",
+      "container": { "any": "page-dispatch" },
+      "regions": {
+        "board": "dispatch-board",
+        "schedule": "dispatch-schedule",
+        "unassignedJobs": "unassigned-jobs-panel",
+        "unassignedJobsLandmark": "section[aria-label=\"Unassigned jobs\"]"
+      },
+      "async": { "feature": "dispatch-map-panel", "loading": "dispatch-map-panel-loading", "ready": "dispatch-map-panel-ready" },
+      "notes": "ready = geocoded. Tiles painted = map.idleAttribute above."
+    },
+    "work": {
+      "route": "/work",
+      "container": { "any": "page-work" },
+      "row": "job-row",
+      "detailContainer": "page-job-detail",
+      "detailRegions": "data-job-section={id} anchors on job detail"
+    },
+    "customers": {
+      "route": "/customers",
+      "container": { "any": "page-customers" },
+      "row": { "mobile": "customer-row" },
+      "tabs": { "deepLink": "?tab={customers|pipeline|archived}" }
+    },
+    "sales": {
+      "route": "/sales",
+      "container": { "any": "page-sales" },
+      "tabs": {
+        "deepLink": "?tab={estimates|invoices|payments|estimate-pipeline}",
+        "control": "role=tab within [aria-label=\"Sales views\"], hidden below lg - deep-link on phone widths"
+      },
+      "invoices": {
+        "row": { "desktop": "invoice-row", "mobile": "invoice-row-mobile" },
+        "queues": "invoice-queue-{draft|sent|partially_paid|overdue|paid}",
+        "sendButton": "invoice-send-button",
+        "sendSuccess": "invoice-send-success",
+        "notes": "invoice-send-button renders only while the selected invoice is a draft; the send consumes the seeded draft (re-arm via demoDataReset)."
+      }
+    },
+    "schedule": { "route": "/schedule", "container": { "any": "page-schedule" } },
+    "team": { "route": "/team", "container": { "any": "page-team" } },
+    "reports": { "route": "/reports", "container": { "any": "page-reports" } }
+  }
+}

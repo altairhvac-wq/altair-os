@@ -133,7 +133,7 @@ export function ReportsNorthStarView({
     summary != null || isSummaryPending || summaryError != null;
 
   return (
-    <MasterShellPage density="compact">
+    <MasterShellPage density="compact" data-testid="page-reports">
       <MasterPageCanvas width="wide">
         <MasterContentStack density="compact" className="min-w-0 overflow-x-hidden">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">

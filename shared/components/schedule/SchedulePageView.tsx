@@ -97,7 +97,7 @@ export function SchedulePageView(props: SchedulePageViewProps) {
       : "Month overview · open a day on the dispatch board";
 
   return (
-    <MasterShellPage density="compact">
+    <MasterShellPage density="compact" data-testid="page-schedule">
       <MasterPageCanvas width="wide">
         <div className={`${dm.pageCanvas} p-2 sm:p-3`}>
           <MasterContentStack density="compact">

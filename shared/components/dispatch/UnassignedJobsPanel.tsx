@@ -54,6 +54,7 @@ export const UnassignedJobsPanel = memo(function UnassignedJobsPanel({
         emphasized ? dm.unassignedSidebarEmphasis : dm.unassignedSidebar
       } ${expanded ? "lg:w-full lg:max-w-md" : ""}`}
       aria-label="Unassigned jobs"
+      data-testid="unassigned-jobs-panel"
     >
       <header className={dm.unassignedSidebarHeader}>
         <div className={dm.unassignedSidebarIcon}>

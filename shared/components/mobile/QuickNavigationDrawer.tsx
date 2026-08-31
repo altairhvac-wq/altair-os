@@ -71,6 +71,7 @@ export function QuickNavigationDrawer({
 
         <nav
           aria-label="Quick navigation destinations"
+          data-testid="quick-nav-drawer"
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4"
         >
           <ul className="flex flex-col gap-6">
