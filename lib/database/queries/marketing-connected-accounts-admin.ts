@@ -9,6 +9,7 @@ import type {
   MarketingConnectedProvider,
 } from "@/shared/types/marketing-connected-account";
 import type { MarketingPublishCapability } from "@/shared/types/marketing-channel-connection";
+import type { IntegrationKind } from "@/shared/types/integration-provider";
 
 /**
  * Service-role helpers for OAuth connect callbacks.
@@ -25,10 +26,15 @@ type MarketingConnectedAccountRow = {
   provider_resource_id: string | null;
   provider_resource_name: string | null;
   status: MarketingConnectedAccountStatus;
+  integration_kind: IntegrationKind | null;
   scopes: string[];
+  granted_scopes: string[] | null;
   publish_capability: MarketingPublishCapability | null;
   capability_detail: string | null;
   capability_checked_at: string | null;
+  capability_probe_error: string | null;
+  last_success_at: string | null;
+  last_attempt_at: string | null;
   token_expires_at: string | null;
   connected_by: string | null;
   connected_at: string | null;
@@ -47,7 +53,7 @@ type MarketingConnectedAccountsClient = ReturnType<
 // capability columns (migration 143) were omitted from both and therefore
 // unreachable by the state machine that exists to read them.
 const ACCOUNT_SELECT =
-  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, publish_capability, capability_detail, capability_checked_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at";
+  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at";
 
 function marketingConnectedAccountsTable(
   client: MarketingConnectedAccountsClient,
@@ -74,10 +80,15 @@ function mapMarketingConnectedAccountRow(
     providerResourceId: row.provider_resource_id ?? undefined,
     providerResourceName: row.provider_resource_name ?? undefined,
     status: row.status,
+    integrationKind: row.integration_kind ?? "publisher",
     scopes: row.scopes ?? [],
+    grantedScopes: row.granted_scopes ?? [],
     publishCapability: row.publish_capability ?? "none",
     capabilityDetail: row.capability_detail ?? undefined,
     capabilityCheckedAt: row.capability_checked_at ?? undefined,
+    capabilityProbeError: row.capability_probe_error ?? undefined,
+    lastSuccessAt: row.last_success_at ?? undefined,
+    lastAttemptAt: row.last_attempt_at ?? undefined,
     tokenExpiresAt: row.token_expires_at ?? undefined,
     connectedBy: row.connected_by ?? undefined,
     connectedAt: row.connected_at ?? undefined,

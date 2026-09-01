@@ -234,6 +234,44 @@ for (const file of files) {
   }
 }
 
+/* -------------------------------------------- the 181 capability backfill */
+
+// 181 promotes publish_capability to 'direct' on live production rows. That
+// is only defensible if it records EVIDENCE rather than an assumption: a
+// connection that merely holds a token has not demonstrated it can publish,
+// and marking it 'direct' would be exactly the "connected when it isn't"
+// failure the whole capability model exists to prevent.
+const BACKFILL = "181_integration_connection_model.sql";
+if (files.includes(BACKFILL)) {
+  const sql = readSql(BACKFILL);
+  const statement =
+    sql.match(/update\s+public\.marketing_connected_accounts[\s\S]*?(?=;)/)?.[0] ?? "";
+
+  console.log("\nThe 181 capability backfill is evidence-scoped");
+  check(
+    "promotes only rows that currently hold a credential",
+    /exists\s*\([\s\S]*?marketing_connected_account_secrets[\s\S]*?\)/.test(statement),
+  );
+  check(
+    "promotes only rows with a COMPLETED external publish on record",
+    /exists\s*\([\s\S]*?marketing_channel_deliveries[\s\S]*?delivery_state\s*=\s*'posted'[\s\S]*?\)/.test(
+      statement,
+    ),
+  );
+  check(
+    "requires a provider-issued post id, not merely a local state",
+    /provider_post_id\s+is\s+not\s+null/.test(statement),
+  );
+  check(
+    "never demotes or overwrites an established capability",
+    /publish_capability\s*=\s*'none'/.test(statement),
+  );
+  check(
+    "matches the delivery to the same company, not just the account",
+    /d\.company_id\s*=\s*a\.company_id/.test(statement),
+  );
+}
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed.`);

@@ -5,6 +5,7 @@ import type {
   MarketingConnectedProvider,
 } from "@/shared/types/marketing-connected-account";
 import type { MarketingPublishCapability } from "@/shared/types/marketing-channel-connection";
+import type { IntegrationKind } from "@/shared/types/integration-provider";
 
 type MarketingConnectedAccountRow = {
   id: string;
@@ -15,10 +16,15 @@ type MarketingConnectedAccountRow = {
   provider_resource_id: string | null;
   provider_resource_name: string | null;
   status: MarketingConnectedAccountStatus;
+  integration_kind: IntegrationKind | null;
   scopes: string[];
+  granted_scopes: string[] | null;
   publish_capability: MarketingPublishCapability | null;
   capability_detail: string | null;
   capability_checked_at: string | null;
+  capability_probe_error: string | null;
+  last_success_at: string | null;
+  last_attempt_at: string | null;
   token_expires_at: string | null;
   connected_by: string | null;
   connected_at: string | null;
@@ -52,13 +58,21 @@ function mapMarketingConnectedAccountRow(
     providerResourceId: row.provider_resource_id ?? undefined,
     providerResourceName: row.provider_resource_name ?? undefined,
     status: row.status,
+    // Null-safe defaults throughout: these columns are NOT NULL with a
+    // default in SQL, but a row read against a database where 181 has not
+    // been applied yet surfaces null, and the fallback must be the
+    // conservative reading rather than an optimistic one.
+    integrationKind: row.integration_kind ?? "publisher",
     scopes: row.scopes ?? [],
-    // Null-safe: the column is NOT NULL DEFAULT 'none' in SQL, but a row
-    // read before 143 applied would surface null, and 'none' is the honest
-    // reading of "we have never established what this can do".
+    grantedScopes: row.granted_scopes ?? [],
+    // 'none' is the honest reading of "we have never established what this
+    // connection can do" — never an assumption that it can publish.
     publishCapability: row.publish_capability ?? "none",
     capabilityDetail: row.capability_detail ?? undefined,
     capabilityCheckedAt: row.capability_checked_at ?? undefined,
+    capabilityProbeError: row.capability_probe_error ?? undefined,
+    lastSuccessAt: row.last_success_at ?? undefined,
+    lastAttemptAt: row.last_attempt_at ?? undefined,
     tokenExpiresAt: row.token_expires_at ?? undefined,
     connectedBy: row.connected_by ?? undefined,
     connectedAt: row.connected_at ?? undefined,
@@ -82,7 +96,7 @@ export async function listMarketingConnectedAccounts(
       // value could not reach `deriveMarketingChannelState` — the state
       // machine written to consume it. Explicit lists are the house style;
       // this is the omission being corrected, not a widening.
-      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, publish_capability, capability_detail, capability_checked_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
+      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
     )
     .eq("company_id", companyId)
     .order("provider", { ascending: true })
@@ -121,7 +135,7 @@ export async function getMarketingConnectedAccountById(
       // value could not reach `deriveMarketingChannelState` — the state
       // machine written to consume it. Explicit lists are the house style;
       // this is the omission being corrected, not a widening.
-      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, publish_capability, capability_detail, capability_checked_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
+      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
     )
     .eq("company_id", companyId)
     .eq("id", normalizedId)

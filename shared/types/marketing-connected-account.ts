@@ -1,4 +1,4 @@
-import type { IntegrationProvider } from "./integration-provider";
+import type { IntegrationKind, IntegrationProvider } from "./integration-provider";
 import type { MarketingPublishCapability } from "./marketing-channel-connection";
 
 /**
@@ -28,8 +28,22 @@ export type MarketingConnectedAccount = {
   providerResourceId?: string;
   providerResourceName?: string;
   status: MarketingConnectedAccountStatus;
+  /** What this connection IS — see `./integration-provider`. */
+  integrationKind: IntegrationKind;
   /** What we ASKED the provider for at authorize time. */
   scopes: string[];
+  /**
+   * What the provider actually GRANTED, read back after consent (migration
+   * 181). A partial consent makes this differ from `scopes`, and the
+   * difference is the diagnosis when a publish later fails with an opaque
+   * permission error. Empty until a capability probe has run.
+   */
+  grantedScopes: string[];
+  /** Why the last capability probe failed, if it did. */
+  capabilityProbeError?: string;
+  /** When this connection last completed an operation against the provider. */
+  lastSuccessAt?: string;
+  lastAttemptAt?: string;
   /**
    * What this connection can DO, independent of whether the token is valid.
    *
