@@ -775,6 +775,94 @@ check(
   offRegistry.every((text) => !/[A-Za-z0-9_-]{24,}/.test(text)),
 );
 
+/* ============================================================================
+ * THE TOKEN_EXPIRED DEADLOCK
+ *
+ * The gate used to refuse `TOKEN_EXPIRED` in the same call that checked the
+ * kill switch and the approval, and `dispatchPublish` made that call BEFORE
+ * resolving the credential. So an expired access token was refused by the
+ * check that ran before the step which un-expires it, while the state
+ * machine's copy for that state promised "it will refresh automatically on
+ * the next publish". Google's tokens last about an hour; outside that window
+ * nothing could publish, and retrying could not help.
+ *
+ * The live YouTube canary hit this on its first real run. These checks pin
+ * the split that fixed it: the local half must not care about connection
+ * health, and the health half must still refuse everything it always did.
+ * ========================================================================== */
+
+console.log("\nThe TOKEN_EXPIRED deadlock stays fixed");
+
+const expiredInput = (over = {}) => ({
+  provider: "youtube",
+  integrationKind: "publisher",
+  channelState: "TOKEN_EXPIRED",
+  jobApprovedAt: APPROVED_AT,
+  account: null,
+  env: LIVE_ENV,
+  ...over,
+});
+
+check(
+  "THE LOCAL HALF LETS AN EXPIRED TOKEN THROUGH so the refresh can run",
+  gate.assertPublishPreconditions(expiredInput()) === null,
+  gate.assertPublishPreconditions(expiredInput()),
+);
+check(
+  "the health half still refuses an expired token when it is genuinely stale",
+  refused(gate.assertConnectionReady(expiredInput())),
+);
+check(
+  "the health half passes a refreshed connection",
+  gate.assertConnectionReady(
+    expiredInput({ channelState: "DIRECT_PUBLISH_READY" }),
+  ) === null,
+);
+
+// The local half must still refuse everything that was never about health.
+check(
+  "the local half still refuses a disarmed deployment",
+  refused(gate.assertPublishPreconditions(expiredInput({ env: {} }))),
+);
+check(
+  "the local half still refuses an unapproved publish",
+  refused(gate.assertPublishPreconditions(expiredInput({ jobApprovedAt: null }))),
+);
+check(
+  "the local half still refuses a non-publisher",
+  refused(
+    gate.assertPublishPreconditions(
+      expiredInput({ provider: "higgsfield", integrationKind: "asset_source" }),
+    ),
+  ),
+);
+check(
+  "the local half still refuses a provider outside the registry",
+  refused(gate.assertPublishPreconditions(expiredInput({ provider: "myspace" }))),
+);
+check(
+  "the health half refuses an unknown provider too, rather than throwing",
+  refused(gate.assertConnectionReady(expiredInput({ provider: "myspace" }))),
+);
+
+// And the composition is unchanged for callers that already hold fresh facts.
+check(
+  "assertPublishAllowed still refuses TOKEN_EXPIRED as a whole",
+  refused(gate.assertPublishAllowed(expiredInput())),
+);
+check(
+  "assertPublishAllowed still allows a healthy, armed, approved publish",
+  gate.assertPublishAllowed(
+    expiredInput({ channelState: "DIRECT_PUBLISH_READY" }),
+  ) === null,
+);
+check(
+  "nothing was widened: every state canAcceptContent rejects is still refused",
+  ["NOT_CONFIGURED", "NOT_CONNECTED", "CONNECTING", "REAUTH_REQUIRED", "API_ACCESS_REQUIRED", "ERROR"].every(
+    (state) => refused(gate.assertConnectionReady(expiredInput({ channelState: state }))),
+  ),
+);
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} publish-gate checks passed.`,
 );

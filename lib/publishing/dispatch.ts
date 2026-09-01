@@ -15,7 +15,11 @@ import {
   type MarketingChannelAccountFacts,
 } from "@/shared/types/marketing-channel-connection";
 import type { DeliveryProviderResult } from "@/shared/types/marketing-delivery";
-import { assertPublishAllowed, type PublishModeEnv } from "./gate";
+import {
+  assertConnectionReady,
+  assertPublishPreconditions,
+  type PublishModeEnv,
+} from "./gate";
 
 /**
  * The one path from an approved job to an external write.
@@ -30,20 +34,38 @@ import { assertPublishAllowed, type PublishModeEnv } from "./gate";
  * that might one day publish.
  *
  * ================== THE ORDER IS THE DESIGN ==================
- *   1. GATE first, and before anything is claimed or minted. A refusal here
- *      must cost nothing and leave nothing behind — no ledger row, no signed
- *      URL, no provider contact.
+ *   1. GATE, HALF ONE — publisher kind, the kill switch, and the recorded
+ *      human approval. All decidable from the row and the environment, so a
+ *      refusal costs nothing and leaves nothing behind: no ledger row, no
+ *      signed URL, and no provider contact at all.
  *   2. CREDENTIAL next, because it can refresh and therefore fail, and a
  *      failure after a claim would strand the ledger row `in_flight`, which
  *      `decideDelivery` reports as NEEDS_RECONCILIATION and sends a human to
  *      look at a provider for a post that never happened. The same lesson
  *      `app/actions/marketing-publish.ts` records about local validation
  *      returning after a claim.
- *   3. MEDIA GRANTS next, for the same reason: minting can fail.
- *   4. CLAIM last. From here on, everything that can fail locally has
+ *   3. GATE, HALF TWO — connection health, judged on the expiry that applies
+ *      AFTER the refresh. See below; this split is not cosmetic.
+ *   4. MEDIA GRANTS next, for the same reason as the credential: minting can
+ *      fail.
+ *   5. CLAIM last. From here on, everything that can fail locally has
  *      already been resolved, so the window between the claim and the
  *      provider call is as small as this can make it.
- *   5. PUBLISH, then SETTLE — always, on both paths.
+ *   6. PUBLISH, then SETTLE — always, on both paths.
+ *
+ * ================== WHY THE GATE IS IN TWO HALVES ==================
+ * It was one call, ahead of the credential, and that deadlocked every publish
+ * whose access token had expired. `canAcceptContent` refuses `TOKEN_EXPIRED`,
+ * so the gate rejected the publish BEFORE reaching the seam that would have
+ * refreshed the token — while the state machine's own copy for that state
+ * promised "it will refresh automatically on the next publish". It could not.
+ * Google's tokens last about an hour; outside that window nothing could ever
+ * publish, and no amount of retrying would help because the retry was refused
+ * for the same reason.
+ *
+ * The live YouTube canary hit it on its first real run. The fix is ordering,
+ * not permission: nothing is now allowed that was not allowed before, and the
+ * checks that must precede any provider contact still do.
  *
  * ================== IDEMPOTENCY IS NOT IMPLEMENTED HERE ==================
  * It is `claimDelivery`, and behind it 143's
@@ -169,19 +191,22 @@ export async function dispatchPublish(
     nowIso: input.nowIso,
   });
 
-  const gateRefusal = assertPublishAllowed({
+  const gateInput = {
     provider: account.provider,
     integrationKind: account.integrationKind,
     channelState,
     jobApprovedAt: input.jobApprovedAt,
     account: account.facts,
     ...(input.env ? { env: input.env } : {}),
-  });
+  };
 
-  if (gateRefusal) {
-    // Nothing claimed, nothing minted, nothing sent. Retrying after the
-    // operator fixes what the refusal names is exactly right.
-    return refuse("REFUSED_BY_GATE", gateRefusal, true);
+  // HALF ONE: everything decidable without touching a provider — publisher
+  // kind, the kill switch, and the recorded human approval. A refusal here
+  // costs nothing and leaves nothing behind: no ledger row, no signed URL,
+  // and no provider contact of any kind, not even a credential refresh.
+  const preconditionRefusal = assertPublishPreconditions(gateInput);
+  if (preconditionRefusal) {
+    return refuse("REFUSED_BY_GATE", preconditionRefusal, true);
   }
 
   // ------------------------------------------------------------- 2. adapter
@@ -219,6 +244,37 @@ export async function dispatchPublish(
 
   if (!credential.ok) {
     return refuse("NO_CREDENTIAL", credential.detail, false);
+  }
+
+  // HALF TWO: connection health, judged on the expiry that applies NOW.
+  //
+  // `credential.tokenExpiresAt` is authoritative either way — the refreshed
+  // value when a refresh happened, the stored one when it did not — and the
+  // lifecycle wrapper has already persisted it. Deriving the state from the
+  // pre-refresh facts is what deadlocked this path: an expired token was
+  // refused for being expired by the check that ran before the step which
+  // un-expires it.
+  const refreshedFacts = {
+    ...account.facts,
+    tokenExpiresAt: credential.tokenExpiresAt,
+  };
+
+  const readyRefusal = assertConnectionReady({
+    ...gateInput,
+    channelState: deriveMarketingChannelState({
+      configured: input.configured,
+      account: refreshedFacts,
+      nowIso: input.nowIso,
+    }),
+    account: refreshedFacts,
+  });
+
+  if (readyRefusal) {
+    // Still nothing claimed and nothing sent — the credential seam only
+    // talked to the provider's token endpoint. A connection that cannot be
+    // repaired by a refresh (revoked, never granted, awaiting review) lands
+    // here, and the refusal names the human step.
+    return refuse("REFUSED_BY_GATE", readyRefusal, true);
   }
 
   // -------------------------------------------------------------- 4. media

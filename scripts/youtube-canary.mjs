@@ -328,14 +328,25 @@ const channelState = deriveMarketingChannelState({
 });
 step(`connection state  ${channelState}`);
 
-if (channelState !== "DIRECT_PUBLISH_READY") {
-  // DRAFT_UPLOAD_ONLY would pass `canAcceptContent`, but YouTube has no
-  // draft mode this platform can reach, so for this canary it is a refusal.
+// TOKEN_EXPIRED is REFRESHABLE, and refusing it here was half of the deadlock
+// the first live canary run hit. That state means the access token is stale
+// AND a refresh token is stored (without one the machine reports
+// REAUTH_REQUIRED instead), so `dispatchPublish` resolves the credential and
+// then judges health on the refreshed expiry. Refusing it in this preflight
+// would send an operator to "fix" a connection with nothing wrong.
+//
+// DRAFT_UPLOAD_ONLY would satisfy `canAcceptContent`, but YouTube has no
+// draft mode this platform can reach, so for this canary it stays a refusal.
+const REFRESHABLE_STATES = ["DIRECT_PUBLISH_READY", "TOKEN_EXPIRED"];
+if (!REFRESHABLE_STATES.includes(channelState)) {
   fail(
-    `The connection is ${channelState}, not DIRECT_PUBLISH_READY.`,
+    `The connection is ${channelState}, which no refresh can repair.`,
     "Fix the connection on Settings → Integrations, then re-run.",
   );
   die();
+}
+if (channelState === "TOKEN_EXPIRED") {
+  step(`                  (stale token — it will refresh before the upload)`);
 }
 
 /* ------------------------------------------------------------ the human */

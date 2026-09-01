@@ -841,11 +841,33 @@ const body = dispatchSource.slice(
   dispatchSource.indexOf("export async function dispatchPublish"),
 );
 
-const at = (needle) => body.indexOf(needle);
+/**
+ * Position of an anchor, or a THROW if it is absent.
+ *
+ * It used to return `indexOf` directly, and that made every ordering check
+ * below silently vacuous the moment an anchor was renamed: `-1 < realIndex`
+ * is true, so "the gate runs before the claim" passed while the gate call it
+ * named no longer existed anywhere in the file. Splitting the gate renamed
+ * exactly that anchor and the suite stayed green.
+ *
+ * A missing anchor is now a loud failure. An ordering assertion about a
+ * function that is not there is not a weaker assertion — it is no assertion,
+ * wearing the costume of one.
+ */
+const at = (needle) => {
+  const index = body.indexOf(needle);
+  if (index === -1) {
+    throw new Error(
+      `ORDERING ANCHOR MISSING: "${needle}" is not in dispatchPublish. ` +
+        `Update this check to the new name rather than leaving it to pass on -1.`,
+    );
+  }
+  return index;
+};
 
 check(
-  "the gate is consulted before anything is claimed",
-  at("assertPublishAllowed(") < at("claimDelivery("),
+  "the LOCAL half of the gate runs before anything is claimed",
+  at("assertPublishPreconditions(") < at("claimDelivery("),
 );
 check(
   "the credential is resolved before the claim, so a refresh failure cannot strand a row",
@@ -854,6 +876,25 @@ check(
 check(
   "the claim happens before the provider is contacted",
   at("claimDelivery(") < at("adapter.publish("),
+);
+
+/* ------------------------------- the deadlock this used to have --------- */
+
+check(
+  "THE KILL SWITCH AND APPROVAL ARE CHECKED BEFORE THE CREDENTIAL IS TOUCHED",
+  at("assertPublishPreconditions(") < at("getUsableAccessToken("),
+);
+check(
+  "CONNECTION HEALTH IS CHECKED AFTER THE REFRESH, NOT BEFORE — the deadlock fix",
+  at("getUsableAccessToken(") < at("assertConnectionReady("),
+);
+check(
+  "health is judged on the post-refresh expiry, not the stored one",
+  at("tokenExpiresAt: credential.tokenExpiresAt") < at("assertConnectionReady("),
+);
+check(
+  "and still before the claim, so an unhealthy connection leaves no ledger row",
+  at("assertConnectionReady(") < at("claimDelivery("),
 );
 check(
   "IDEMPOTENCY IS THE LEDGER: a non-PROCEED claim returns without publishing",
@@ -1008,6 +1049,15 @@ check(
 check(
   "it warns loudly if a posted delivery is not private",
   /delivery_state === "posted" && privacy !== "private"/.test(canaryCode),
+);
+check(
+  "it lets a REFRESHABLE stale token through — the other half of the deadlock",
+  canaryCode.includes("REFRESHABLE_STATES") &&
+    canaryCode.includes("TOKEN_EXPIRED"),
+);
+check(
+  "but still refuses a state no refresh can repair",
+  canaryCode.includes("which no refresh can repair"),
 );
 check(
   "it is not a scheduler: no cron, interval, or loop over work",

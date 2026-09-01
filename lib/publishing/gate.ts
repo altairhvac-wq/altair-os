@@ -243,9 +243,31 @@ export type PublishGateInput = {
  *               outranks connection health for the reason
  *               `deriveMarketingChannelState` checks `configured` first: a
  *               disarmed deployment cannot meaningfully be in any other state.
- *   3. STATE    this one connection. Reconnecting is real work for one person.
- *   4. APPROVAL this one piece of content, and the only step that is nobody's
+ *   3. APPROVAL this one piece of content, and the only step that is nobody's
  *               job but the operator's, right now.
+ *   4. STATE    this one connection.
+ *
+ * ============ WHY STATE MOVED BEHIND APPROVAL ============
+ * It used to be third, and that ordering deadlocked the publish path. The
+ * live YouTube canary found it: a token that had expired put the connection
+ * in `TOKEN_EXPIRED`, which `canAcceptContent` refuses — so the publish was
+ * rejected BEFORE `dispatchPublish` ever reached the credential seam that
+ * would have refreshed it. The state machine's own copy for that state reads
+ * "Access expired. It will refresh automatically on the next publish", and it
+ * could not: the refresh was reachable only through a publish that this gate
+ * refused for needing one. Google's access tokens last about an hour, so
+ * every publish attempted outside that window was refused forever.
+ *
+ * The fix is ordering, not permission. Connection health is now judged
+ * against POST-REFRESH facts, which means the caller must resolve the
+ * credential between the two halves of this gate — hence
+ * `assertPublishPreconditions` and `assertConnectionReady` below.
+ *
+ * Approval moving ahead of state is not a consolation prize for the split;
+ * it is strictly better. Approval is local and free, connection health now
+ * costs a network round trip to establish honestly, and checking the free
+ * thing first means AN UNAPPROVED PUBLISH NEVER CONTACTS THE PROVIDER AT
+ * ALL — not even to refresh a credential.
  *
  * ============ WHY THE PROVIDER IS CHECKED BEFORE IT IS LOOKED UP ============
  * `provider` is declared `IntegrationProvider`, and that is a claim about the
@@ -272,9 +294,99 @@ export type PublishGateInput = {
  * what makes the `string | null` result total over arbitrary strings.
  */
 export function assertPublishAllowed(input: PublishGateInput): string | null {
+  // The whole gate, in order, for a caller that already holds facts current
+  // enough to judge connection health — a preview, a verifier, a readback.
+  //
+  // `dispatchPublish` deliberately does NOT use this one: it runs the two
+  // halves either side of the credential refresh, which is the only way the
+  // state check sees a token that was just renewed. See the ordering note.
+  return (
+    assertPublishPreconditions(input) ?? assertConnectionReady(input)
+  );
+}
+
+/**
+ * The refusals that need nothing external: is this a publisher, is publishing
+ * armed, and has a human approved THIS content for THIS destination.
+ *
+ * Everything here is decidable from the row and the environment, so all of it
+ * runs before a single byte reaches a provider — including before a
+ * credential refresh. That is the property that keeps an unapproved or
+ * disarmed publish from generating any provider traffic whatsoever.
+ */
+export function assertPublishPreconditions(
+  input: PublishGateInput,
+): string | null {
+  const unknown = refuseOnUnknownProvider(input.provider);
+  if (unknown) return unknown;
+
+  const capability = capabilityFor(input.provider);
+
+  const kindRefusal = refuseOnKind(input.integrationKind, capability);
+  if (kindRefusal) return kindRefusal;
+
+  const modeRefusal = refuseOnMode(
+    resolvePublishMode(input.env),
+    capability.label,
+  );
+  if (modeRefusal) return modeRefusal;
+
+  if (
+    capability.requiresManualApproval &&
+    !hasRecordedApproval(input.jobApprovedAt)
+  ) {
+    return (
+      `${capability.label} publishes only after a person approves the specific post ` +
+      `and destination, and no approval is recorded on this one. Approve it for ` +
+      `${capability.label}, then try again — nothing was sent.`
+    );
+  }
+
+  return null;
+}
+
+/**
+ * The one refusal that must be judged on CURRENT facts: is this connection
+ * healthy enough to accept content right now.
+ *
+ * Call this AFTER resolving the credential. `channelState` is derived from
+ * `token_expires_at`, and an expired token is exactly the condition the
+ * credential seam repairs — so evaluating it beforehand asks a question whose
+ * answer the very next step was about to change.
+ */
+export function assertConnectionReady(
+  input: PublishGateInput,
+): string | null {
+  const unknown = refuseOnUnknownProvider(input.provider);
+  if (unknown) return unknown;
+
+  const capability = capabilityFor(input.provider);
+
+  if (!canAcceptContent(input.channelState)) {
+    // `MARKETING_CHANNEL_DESCRIPTORS` covers exactly the publishers; the
+    // registry check has already refused every name outside the union and the
+    // kind check every non-publisher inside it, so this lookup is non-null
+    // here. `verify-integration-registry.mjs` proves the record is total over
+    // the publisher set.
+    const descriptor = MARKETING_CHANNEL_DESCRIPTORS[input.provider];
+    // The channel state machine already owns this copy and already names the
+    // next step for every state. Restating it here would be a second place for
+    // "Reconnect YouTube" to drift out of date.
+    return `Nothing was sent to ${capability.label}. ${describeMarketingChannelState(
+      input.channelState,
+      descriptor,
+      input.account ?? null,
+    )}`;
+  }
+
+  return null;
+}
+
+/** The registry membership check both halves of the gate begin with. */
+function refuseOnUnknownProvider(candidate: string): string | null {
   // Widened to `string` on purpose: narrowing to the union is the job of the
   // guard on the next line, not of the parameter's declared type.
-  const provider: string = input.provider;
+  const provider: string = candidate;
   if (!isIntegrationProvider(provider)) {
     // The unrecognized name is deliberately NOT quoted back. Every other
     // refusal in this file is assembled from registry-controlled text, and a
@@ -291,42 +403,6 @@ export function assertPublishAllowed(input: PublishGateInput): string | null {
       `registry, so nothing was sent. Nothing publishes through a connection ` +
       `this deployment cannot identify. Choose a supported publishing channel ` +
       `as the destination, or deploy a build that knows this one, then try again.`
-    );
-  }
-
-  const capability = capabilityFor(provider);
-
-  const kindRefusal = refuseOnKind(input.integrationKind, capability);
-  if (kindRefusal) return kindRefusal;
-
-  const modeRefusal = refuseOnMode(
-    resolvePublishMode(input.env),
-    capability.label,
-  );
-  if (modeRefusal) return modeRefusal;
-
-  if (!canAcceptContent(input.channelState)) {
-    // `MARKETING_CHANNEL_DESCRIPTORS` covers exactly the publishers; the
-    // registry check has already refused every name outside the union and the
-    // kind check every non-publisher inside it, so this lookup is non-null
-    // here. `verify-integration-registry.mjs` proves the record is total over
-    // the publisher set.
-    const descriptor = MARKETING_CHANNEL_DESCRIPTORS[provider];
-    // The channel state machine already owns this copy and already names the
-    // next step for every state. Restating it here would be a second place for
-    // "Reconnect YouTube" to drift out of date.
-    return `Nothing was sent to ${capability.label}. ${describeMarketingChannelState(
-      input.channelState,
-      descriptor,
-      input.account ?? null,
-    )}`;
-  }
-
-  if (capability.requiresManualApproval && !hasRecordedApproval(input.jobApprovedAt)) {
-    return (
-      `${capability.label} publishes only after a person approves the specific post ` +
-      `and destination, and no approval is recorded on this one. Approve it for ` +
-      `${capability.label}, then try again — nothing was sent.`
     );
   }
 
