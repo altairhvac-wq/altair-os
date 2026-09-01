@@ -79,6 +79,24 @@ export type PublishOutcome = {
    */
   readonly providerMediaId?: string;
   readonly providerPermalink?: string;
+  /**
+   * Provider-reported facts about the object that now exists, destined for
+   * `marketing_channel_deliveries.provider_result` (migration 186).
+   *
+   * ============ WHY IDS ARE NOT ENOUGH ============
+   * An id records THAT something was created. For a YouTube canary the
+   * load-bearing fact is its VISIBILITY, and a video uploaded privately and
+   * one uploaded publicly produce identical ids. A reconciliation that
+   * cannot answer "was it private?" cannot check the one property the
+   * canary was authorized on — so the adapter reports what it verified,
+   * and the ledger keeps it.
+   *
+   * Primitives only: the column is capped at 2 KB and constrained to an
+   * object, so this cannot become somewhere to put a response body.
+   */
+  readonly providerResult?: Readonly<
+    Record<string, string | number | boolean | null>
+  >;
 };
 
 /**
@@ -144,6 +162,22 @@ export type PublishInput = {
    */
   readonly capability: ProviderCapability;
   readonly publishCapability: MarketingPublishCapability;
+  /**
+   * `granted_scopes` from the connected-account row (migration 181) — what
+   * the provider actually granted at consent, not what we asked for.
+   *
+   * ============ WHY THE CAPABILITY IS NOT ENOUGH ============
+   * `publishCapability` is a CONCLUSION drawn at connect time and stored. A
+   * user can narrow a grant afterwards from the provider's own account
+   * settings without touching this app, so a capability written weeks ago is
+   * evidence about the past. An adapter that is about to perform an
+   * irreversible write gets the underlying evidence too and can refuse on
+   * it — which is what makes "connected" stop being a proxy for "allowed".
+   *
+   * Empty is a real answer and must fail closed: a row we cannot prove
+   * anything about is not a row to publish through.
+   */
+  readonly grantedScopes: readonly string[];
   /**
    * Decrypted at the credential seam and passed in. An adapter must never
    * read a token from the environment or the database — the same rule

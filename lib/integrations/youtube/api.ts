@@ -271,3 +271,17 @@ export async function fetchYouTubeChannels(
 
   return channels;
 }
+
+/**
+ * One video as YouTube reports it back. Every field is nullable because a
+ * readback that cannot prove a fact must say so rather than default it — a
+ * missing `privacyStatus` read as "private" is precisely the assumption the
+ * private-only canary exists to rule out.
+ */
+export type YouTubeVideoStatus = {
+  readonly videoId: string;
+  readonly privacyStatus: string | null;
+  readonly uploadStatus: string | null;
+  readonly channelId: string | null;
+  readonly title: string | null;
+};

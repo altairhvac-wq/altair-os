@@ -53,7 +53,13 @@ export type IntegrationAdapterLoader = () => Promise<IntegrationAdapter>;
  */
 const ADAPTER_LOADERS: Readonly<
   Partial<Record<IntegrationProvider, IntegrationAdapterLoader>>
-> = {};
+> = {
+  // The first and, for now, only wired adapter. Every other provider
+  // resolves to ADAPTER_NOT_REGISTERED, which is the honest answer: the
+  // capability matrix describing a provider is not the same as this
+  // deployment being able to reach it.
+  youtube: () => import("./youtube/adapter").then((m) => m.youtubeAdapter),
+};
 
 export const ADAPTER_RESOLUTION_FAILURES = [
   /** The string is not a provider this codebase knows at all. */

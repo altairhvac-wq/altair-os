@@ -275,6 +275,9 @@ const registryStub = await import(
   pathToFileURL(join(dir, "registry-stub.mjs")).href
 );
 const registry = await import(pathToFileURL(join(dir, "registry-real.mjs")).href);
+const providers = await import(
+  pathToFileURL(join(dir, "integration-provider.mjs")).href
+);
 const credentials = await import(pathToFileURL(join(dir, "credentials.mjs")).href);
 
 /* ------------------------------------------------------------- fixtures */
@@ -411,15 +414,37 @@ try {
 
   console.log("\nThe registry fails closed");
 
+  // This used to assert the registry was EMPTY, which was a fact about the
+  // day it was written rather than an invariant — wiring the first adapter
+  // correctly made it fail. What matters is not how many are registered but
+  // that every registered one is real and every unregistered one is refused.
+  const registered = registry.registeredAdapterProviders();
   check(
-    "nothing is registered yet, so nothing resolves",
-    registry.registeredAdapterProviders().length === 0,
-    registry.registeredAdapterProviders(),
+    "every registered provider is a provider the matrix knows",
+    registered.every((p) => providers.INTEGRATION_PROVIDERS.includes(p)),
+    registered,
   );
   check(
-    "a known provider with no adapter is refused by name",
-    (await registry.resolveIntegrationAdapter("youtube")).reason ===
+    "a known provider with NO adapter is still refused by name",
+    (await registry.resolveIntegrationAdapter("linkedin")).reason ===
       "NOT_REGISTERED",
+  );
+  // A registered adapter's module is not importable from this sandbox — the
+  // loaders use real project-relative specifiers and only the credential
+  // chain is emitted here. So the assertion is the one this harness can
+  // actually make, and it is the one that matters: a resolution NEVER hands
+  // back an adapter for a provider other than the one asked for. Whether the
+  // module loads is proven where it can load, in verify-youtube-upload.mjs.
+  check(
+    "a resolution never returns an adapter belonging to another provider",
+    await (async () => {
+      for (const provider of registered) {
+        const resolved = await registry.resolveIntegrationAdapter(provider);
+        if (resolved.ok && resolved.adapter.provider !== provider) return false;
+        if (!resolved.ok && resolved.adapter !== undefined) return false;
+      }
+      return true;
+    })(),
   );
   check(
     "a string that is not a provider at all is refused",

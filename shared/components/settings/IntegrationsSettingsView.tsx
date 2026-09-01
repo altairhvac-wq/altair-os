@@ -233,7 +233,6 @@ function IntegrationRowAction({
 
   return (
     <Button
-      as="a"
       href={row.connectPath ?? "#"}
       variant={row.action === "connect" ? "primary" : "secondary"}
       size="sm"

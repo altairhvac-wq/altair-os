@@ -532,3 +532,71 @@ export async function upsertMarketingConnectedFacebookUserWithoutPages(input: {
     ),
   };
 }
+
+/**
+ * Write back the expiry that applies after a refresh.
+ *
+ * ============ THE COLUMN THE REFRESH PATH COULD NOT REACH ============
+ * `lib/integrations/credentials.ts` refreshes the credential and writes the
+ * SECRETS table it owns — ciphertext, failure count, `last_refreshed_at`,
+ * `refresh_expires_at`. It deliberately does not write this table, and it
+ * says so on `CredentialResult.tokenExpiresAt`: "PERSIST THIS when
+ * `refreshed` is true."
+ *
+ * Nothing did. `token_expires_at` was written only by the connect paths, so
+ * a refreshed connection kept the expiry issued at consent — an instant
+ * already in the past. `deriveMarketingChannelState` reads that column and
+ * derives expiry from time rather than from a status someone remembered to
+ * write, so a working, freshly-refreshed connection reported TOKEN_EXPIRED
+ * on the Integrations page forever, and every later publish re-ran a refresh
+ * that had already succeeded.
+ *
+ * `last_success_at` is stamped in the same statement: a provider that just
+ * issued a credential is a provider that just answered us.
+ *
+ * ============ WHY THIS FAILURE IS RETURNED, NOT THROWN ============
+ * The credential is already stored and usable by the time this runs. A
+ * publish must not be abandoned because a health timestamp did not land, so
+ * the caller logs and proceeds; the cost of that choice is one stale column
+ * until the next refresh, which is strictly better than a refused publish.
+ */
+export async function recordRefreshedTokenExpiry(input: {
+  connectedAccountId: string;
+  tokenExpiresAt: string | null;
+  nowIso: string;
+}): Promise<{ error?: string }> {
+  const connectedAccountId = input.connectedAccountId.trim();
+  if (!connectedAccountId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await marketingConnectedAccountsTable(supabase)
+    .update({
+      token_expires_at: input.tokenExpiresAt,
+      last_success_at: input.nowIso,
+      // A refresh that worked clears the last failure note. Leaving it would
+      // keep a resolved problem on screen next to a healthy connection.
+      last_error: null,
+    })
+    .eq("id", connectedAccountId)
+    // Never resurrect a connection a human disconnected while a refresh was
+    // in flight: that would silently re-arm a destination someone switched
+    // off. The row is matched on being connected, so a disconnect wins.
+    .eq("status", "connected")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[recordRefreshedTokenExpiry] update failed:", {
+      connectedAccountId,
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      error: mapDatabaseError(error) ?? "Failed to record the refreshed expiry.",
+    };
+  }
+
+  return {};
+}

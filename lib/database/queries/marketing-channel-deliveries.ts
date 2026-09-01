@@ -308,6 +308,13 @@ export async function settleDelivery(input: {
     patch.provider_post_id = s.providerPostId;
     patch.provider_permalink = s.providerPermalink ?? null;
     patch.failure_detail = null;
+    // Migration 186. Omitted rather than defaulted to `{}` when the adapter
+    // reported nothing, so an empty object means "the adapter had nothing to
+    // say" and a missing key means "this settle predates the column" —
+    // distinguishable by anything reconciling later.
+    if (s.providerResult) {
+      patch.provider_result = s.providerResult;
+    }
   } else if (s.outcome === "draft") {
     patch.provider_post_id = s.providerPostId ?? null;
     patch.failure_detail = null;

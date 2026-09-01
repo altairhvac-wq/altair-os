@@ -51,7 +51,8 @@
     "verify:publish-gate": "node scripts/verify-publish-gate.mjs",
     "verify:media-multiformat": "node scripts/verify-media-multiformat.mjs",
     "verify:creative-assets": "node scripts/verify-creative-assets.mjs",
-    "verify:youtube-connect": "node scripts/verify-youtube-connect.mjs"
+    "verify:youtube-connect": "node scripts/verify-youtube-connect.mjs",
+    "verify:youtube-upload": "node scripts/verify-youtube-upload.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

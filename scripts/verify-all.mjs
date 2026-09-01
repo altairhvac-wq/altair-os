@@ -128,6 +128,7 @@ steps.push(
   { name: "media-multiformat", script: "scripts/verify-media-multiformat.mjs" },
   { name: "creative-assets", script: "scripts/verify-creative-assets.mjs" },
   { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
+  { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
 );
 
 const results = [];
