@@ -206,6 +206,76 @@ export const PRODUCTION_CONFIG: readonly ConfigVariable[] = [
       "Names the outgoing key. Defaults to one below the current version; it must differ from it, or a ciphertext would name both.",
   },
   {
+    name: "MARKETING_PUBLISH_MODE",
+    classification: "dangerous",
+    group: "Integrations",
+    consequence:
+      "The live-publishing kill switch. Unset or anything other than the exact literal 'live' means nothing is sent, and that is the correct value for every deployment until a channel has been connected and proved. Setting it to 'live' permits real posts on real brand accounts, which no later edit to this variable can take back. 'dry_run' runs the whole path and stops before the provider call. Being live is not sufficient on its own: a post still needs a connected account whose capability permits it and, for every provider today, a recorded human approval.",
+  },
+  {
+    name: "GOOGLE_OAUTH_CLIENT_ID",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Without it YouTube and Google Business render as 'Not available' in Settings -> Integrations and cannot be connected. Setting it makes them connectable; it does not connect them and does not permit publishing.",
+  },
+  {
+    name: "GOOGLE_OAUTH_CLIENT_SECRET",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "The other half of the Google OAuth client. Without it the authorize hop starts and the token exchange fails, which is a worse failure than the provider simply being unavailable.",
+  },
+  {
+    name: "TIKTOK_CLIENT_KEY",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Without it TikTok cannot be connected. With it, connections are still draft-upload only until TikTok grants Direct Post through an app review that no token reflects — so a connected TikTok account that cannot publish is an ordinary state, not a fault.",
+  },
+  {
+    name: "TIKTOK_CLIENT_SECRET",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "The other half of the TikTok client. Without it the authorize hop starts and the token exchange fails.",
+  },
+  {
+    name: "LINKEDIN_CLIENT_ID",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Without it LinkedIn cannot be connected. Organization posting additionally requires the page admin to have granted the app access on LinkedIn's side.",
+  },
+  {
+    name: "LINKEDIN_CLIENT_SECRET",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "The other half of the LinkedIn client. Without it the authorize hop starts and the token exchange fails.",
+  },
+  {
+    name: "REDDIT_CLIENT_ID",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Without it Reddit cannot be connected. Reddit also ships with publishing capability 'none' until a written per-subreddit posting policy exists — their rules are per-community and an automated post is a reputational risk, not merely a technical one.",
+  },
+  {
+    name: "REDDIT_CLIENT_SECRET",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "The other half of the Reddit client. Without it the authorize hop starts and the token exchange fails.",
+  },
+  {
+    name: "HIGGSFIELD_API_KEY",
+    classification: "optional",
+    group: "Integrations",
+    consequence:
+      "Without it no creative can be generated. Higgsfield is an asset SOURCE and never a publishing destination, so this key cannot cause anything to be posted anywhere.",
+  },
+  {
     name: "ALTAIR_DASHBOARD_AGGREGATES",
     classification: "optional",
     group: "Correctness",

@@ -121,6 +121,12 @@ steps.push(
   { name: "integration-registry", script: "scripts/verify-integration-registry.mjs" },
   { name: "integration-migrations", script: "scripts/verify-integration-migrations.mjs" },
   { name: "integration-rows", script: "scripts/verify-integration-rows.mjs" },
+  { name: "integration-credentials", script: "scripts/verify-integration-credentials.mjs" },
+  { name: "publishing-package", script: "scripts/verify-publishing-package.mjs" },
+  { name: "publish-job", script: "scripts/verify-publish-job-machine.mjs" },
+  { name: "publish-gate", script: "scripts/verify-publish-gate.mjs" },
+  { name: "media-multiformat", script: "scripts/verify-media-multiformat.mjs" },
+  { name: "creative-assets", script: "scripts/verify-creative-assets.mjs" },
 );
 
 const results = [];

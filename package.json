@@ -44,7 +44,13 @@
     "verify:capture-manifest": "node scripts/verify-capture-manifest.mjs",
     "verify:integration-registry": "node scripts/verify-integration-registry.mjs",
     "verify:integration-migrations": "node scripts/verify-integration-migrations.mjs",
-    "verify:integration-rows": "node scripts/verify-integration-rows.mjs"
+    "verify:integration-rows": "node scripts/verify-integration-rows.mjs",
+    "verify:integration-credentials": "node scripts/verify-integration-credentials.mjs",
+    "verify:publishing-package": "node scripts/verify-publishing-package.mjs",
+    "verify:publish-job": "node scripts/verify-publish-job-machine.mjs",
+    "verify:publish-gate": "node scripts/verify-publish-gate.mjs",
+    "verify:media-multiformat": "node scripts/verify-media-multiformat.mjs",
+    "verify:creative-assets": "node scripts/verify-creative-assets.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",
