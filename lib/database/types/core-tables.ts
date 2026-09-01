@@ -1726,7 +1726,8 @@ export type ActiveCompanyContext = UserCompanyContext & {
     | "manageCustomers"
     | "viewAssignedJobs"
     | "manageBilling"
-    | "createFieldEstimates",
+    | "createFieldEstimates"
+    | "manageIntegrations",
     boolean
   >;
 };

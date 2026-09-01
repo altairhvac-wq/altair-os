@@ -15,6 +15,10 @@ export type CompanyAccessScope = {
   canViewTechnicianRoster: boolean;
   canManageCustomers: boolean;
   canManageTeamMembers: boolean;
+  /** Connect / disconnect / re-probe publishing integrations. */
+  canManageIntegrations: boolean;
+  /** See connection status without being able to change it. */
+  canViewIntegrations: boolean;
 };
 
 export function getCompanyAccessScope(
@@ -40,6 +44,14 @@ export function getCompanyAccessScope(
       permissions.dispatchJobs || permissions.manageCompany,
     canManageCustomers: permissions.manageCustomers,
     canManageTeamMembers: permissions.manageUsers,
+    canManageIntegrations: permissions.manageIntegrations,
+    // Reading is deliberately wider than managing, and matches the
+    // dispatcher-read RLS policy migration 089 already put on
+    // `marketing_connected_accounts`: "is Facebook broken?" is an
+    // operational question, while handing a third party a fresh grant on
+    // the company's behalf is an ownership decision.
+    canViewIntegrations:
+      permissions.manageIntegrations || permissions.dispatchJobs,
   };
 }
 
@@ -49,6 +61,38 @@ export function canManageTeamMembers(context: ActiveCompanyContext): boolean {
 
 export function canViewTechnicianRoster(context: ActiveCompanyContext): boolean {
   return getCompanyAccessScope(context).canViewTechnicianRoster;
+}
+
+export function canManageIntegrations(context: ActiveCompanyContext): boolean {
+  return getCompanyAccessScope(context).canManageIntegrations;
+}
+
+export function canViewIntegrations(context: ActiveCompanyContext): boolean {
+  return getCompanyAccessScope(context).canViewIntegrations;
+}
+
+/**
+ * The server-side gate for every integration mutation.
+ *
+ * Returns a message rather than throwing, matching the typed-result
+ * convention the actions use. Hiding a Connect button is not authorization:
+ * every action calls this itself, because a Server Action is a public
+ * boundary reachable without the UI that rendered it.
+ */
+export function assertIntegrationsManagementAccess(
+  context: ActiveCompanyContext,
+  companyId: string,
+): string | null {
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return scopeError;
+  }
+
+  if (!canManageIntegrations(context)) {
+    return "You do not have permission to manage integrations.";
+  }
+
+  return null;
 }
 
 function normalizeCompanyIdForScope(companyId: string): string {

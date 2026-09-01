@@ -72,6 +72,7 @@ export function DispatchPageView({
         manageCustomers: false,
         manageBilling: false,
         createFieldEstimates: false,
+        manageIntegrations: false,
       },
       currentUserId,
       { assignedTechnicianId: job.technicianId ?? null },
