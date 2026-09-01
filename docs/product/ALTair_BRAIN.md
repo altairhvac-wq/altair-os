@@ -588,6 +588,63 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 
 ---
 
+### Publishing & Integration Foundation
+
+**Status:** Foundation built and gated — NOT live. No provider adapter is
+registered, no worker or cron runs the queue, and `MARKETING_PUBLISH_MODE`
+defaults to off. Facebook/Instagram remain the only paths that actually
+publish, unchanged, through the existing `app/actions/marketing-publish.ts`.
+
+**Description:** A provider-agnostic layer so each platform can be connected
+one at a time without redesigning the system for every platform. Extends the
+Facebook-era connected-account model (089/090/091/143) rather than forking it.
+
+**Provider vocabulary (9):** facebook, instagram, google_business, youtube,
+tiktok, linkedin, reddit, higgsfield, altair_site — across three KINDS:
+`publisher` (content is delivered to it), `asset_source` (produces creative,
+can never receive a post — Higgsfield), `first_party` (an Altair surface with
+no third-party credential).
+
+**Features:**
+- Capability matrix (`shared/types/integration-capability.ts`): media kinds,
+  media requirement, asset count, title/body limits, hashtags, thumbnails,
+  scheduling, analytics, OAuth kind, transport, poll budget, approval
+  requirement. Automation branches on capabilities, never on provider names.
+- Connection state machine (`marketing-channel-connection.ts`, pre-existing):
+  NOT_CONFIGURED → NOT_CONNECTED → CONNECTING → TOKEN_EXPIRED /
+  REAUTH_REQUIRED / API_ACCESS_REQUIRED / DRAFT_UPLOAD_ONLY →
+  DIRECT_PUBLISH_READY / ERROR. Configuration, connection health and
+  provider-granted capability are three independent facts.
+- Settings → Integrations (`/settings/integrations`): read-only cards per
+  provider across three sections. Only the Facebook connect hop is wired.
+- Adapter port + registry + credential seam (`lib/integrations/`): a typed
+  boundary; the registry fails closed with no fallback adapter; one module
+  reads/decrypts/refreshes every stored secret.
+- Content packages (182): one package fans out to one post per provider,
+  preserving 145's one-post-per-provider rule and 143's duplicate guard.
+- Publish queue (184): lease/attempt/backoff, keyed identically to the
+  delivery ledger so it can never outrun it.
+- Publish gate (`lib/publishing/gate.ts`): `MARKETING_PUBLISH_MODE` kill
+  switch failing closed, plus capability, kind and approval checks.
+- Creative asset model (185): Higgsfield generation requests and candidates
+  with quality state, nullable score, rejection reason, approved uses and a
+  place for performance metadata.
+
+**Migrations:** 179 (provider enum), 180 (channel enum), 181 (integration
+kind, granted scopes, health, refresh lifecycle, evidence-scoped capability
+backfill), 182 (content packages), 183 (multi-format media), 184 (publish
+jobs), 185 (creative assets).
+
+**Verifiers:** `integration-registry`, `integration-migrations`,
+`integration-rows`, `integration-credentials`, `publishing-package`,
+`publish-job`, `publish-gate`, `media-multiformat`, `creative-assets`.
+
+**Dependencies:** marketing_connected_accounts (089/143/181),
+marketing_connected_account_secrets (090/181), marketing_oauth_states (091),
+marketing_channel_deliveries (143/145), marketing_media_assets (144/183)
+
+---
+
 ### Workflow Reminders
 
 **Status:** Production

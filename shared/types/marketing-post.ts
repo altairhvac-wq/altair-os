@@ -6,10 +6,31 @@ export type MarketingPostStatus =
   | "failed"
   | "archived";
 
+/**
+ * Mirrors the `public.marketing_channel` SQL enum (087 + 180).
+ *
+ * Kept in step deliberately: this union was three labels behind the enum
+ * once already — the same drift `shared/types/integration-provider.ts`
+ * documents, where the database accepted a value the TypeScript refused to
+ * name. `scripts/verify-integration-registry.mjs` now compares the two
+ * label-for-label, so a future migration that adds a channel without
+ * widening this fails a check rather than surfacing as a row nothing can
+ * read.
+ *
+ * `higgsfield` is deliberately absent and must stay absent: it is an asset
+ * source, and a channel label for it would make "publish to Higgsfield"
+ * representable. `website` is the Altair-owned surface — 180 adds no
+ * `altair_site` label because a second name for the same destination would
+ * split every historical row's meaning.
+ */
 export type MarketingChannel =
   | "facebook"
   | "instagram"
   | "google_business"
+  | "youtube"
+  | "tiktok"
+  | "linkedin"
+  | "reddit"
   | "website"
   | "general";
 
@@ -110,12 +131,32 @@ export const MARKETING_POST_STATUS_OPTIONS: {
   { value: "archived", label: "Archived" },
 ];
 
+/**
+ * Every channel a post may be filed under, in picker order.
+ *
+ * ============ THIS IS ALSO A VALIDATION ALLOWLIST ============
+ * `app/actions/marketing-posts.ts` builds its accepted-channel Set from this
+ * array, so a label missing here is not merely absent from a dropdown — the
+ * Server Action REJECTS it. That coupling is why the four channels migration
+ * 180 added appear here rather than only in the type: a post the database
+ * can store but the action refuses to accept is the same drift in a second
+ * costume.
+ *
+ * (The comparable coupling in `lib/integrations/oauth-state.ts` — where a
+ * card list was serving as the OAuth provider allowlist — was severed
+ * instead, because there the two really were different questions. Here they
+ * are the same question: which channels may a post name?)
+ */
 export const MARKETING_CHANNEL_OPTIONS: {
   value: MarketingChannel;
   label: string;
 }[] = [
   { value: "facebook", label: "Facebook" },
   { value: "instagram", label: "Instagram" },
+  { value: "youtube", label: "YouTube" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "reddit", label: "Reddit" },
   { value: "google_business", label: "Google Business" },
   { value: "website", label: "Website" },
   { value: "general", label: "General" },

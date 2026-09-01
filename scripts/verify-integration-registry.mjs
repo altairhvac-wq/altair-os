@@ -264,6 +264,34 @@ check(
   !channelLabels.includes("higgsfield"),
 );
 
+// The same drift, one file over. `MarketingChannel` sat three labels behind
+// the SQL enum, and `app/actions/marketing-posts.ts` builds its accepted-
+// channel Set from MARKETING_CHANNEL_OPTIONS — so a missing label was not
+// merely a gap in a dropdown, it was a Server Action refusing a value the
+// database would happily have stored.
+const postModule = await loadPureModule("shared/types/marketing-post.ts", "intreg");
+const optionValues = postModule.MARKETING_CHANNEL_OPTIONS.map((o) => o.value);
+
+check(
+  "every SQL marketing_channel label is offered as an option",
+  channelLabels.every((label) => optionValues.includes(label)),
+  channelLabels.filter((label) => !optionValues.includes(label)),
+);
+check(
+  "every offered channel option exists as a SQL label",
+  optionValues.every((value) => channelLabels.includes(value)),
+  optionValues.filter((value) => !channelLabels.includes(value)),
+);
+check(
+  "the channel options list has no duplicates",
+  new Set(optionValues).size === optionValues.length,
+);
+check(
+  "the SQL channel enum was actually parsed, so the comparison is not vacuous",
+  channelLabels.length >= 5,
+  channelLabels,
+);
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed.`);
