@@ -43,7 +43,8 @@
     "prove:reel-trace": "node scripts/prove-reel-insights-trace.mjs",
     "verify:capture-manifest": "node scripts/verify-capture-manifest.mjs",
     "verify:integration-registry": "node scripts/verify-integration-registry.mjs",
-    "verify:integration-migrations": "node scripts/verify-integration-migrations.mjs"
+    "verify:integration-migrations": "node scripts/verify-integration-migrations.mjs",
+    "verify:integration-rows": "node scripts/verify-integration-rows.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

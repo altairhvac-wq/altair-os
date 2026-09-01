@@ -120,6 +120,7 @@ steps.push(
 steps.push(
   { name: "integration-registry", script: "scripts/verify-integration-registry.mjs" },
   { name: "integration-migrations", script: "scripts/verify-integration-migrations.mjs" },
+  { name: "integration-rows", script: "scripts/verify-integration-rows.mjs" },
 );
 
 const results = [];
