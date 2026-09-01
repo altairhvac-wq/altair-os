@@ -108,6 +108,20 @@ steps.push(
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
 );
 
+/**
+ * ============ THE PUBLISHING / INTEGRATION FOUNDATION ============
+ * Appended at the END deliberately. This runner stops at the first failure,
+ * so a new verifier inserted earlier would mask every step after it — and
+ * these are the newest and least settled checks in the repo.
+ *
+ * All of them are static: they read source and SQL, stub every client, and
+ * cannot open a socket or reach a provider.
+ */
+steps.push(
+  { name: "integration-registry", script: "scripts/verify-integration-registry.mjs" },
+  { name: "integration-migrations", script: "scripts/verify-integration-migrations.mjs" },
+);
+
 const results = [];
 let failed = false;
 

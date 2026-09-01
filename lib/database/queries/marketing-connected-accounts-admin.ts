@@ -8,6 +8,7 @@ import type {
   MarketingConnectedAccountStatus,
   MarketingConnectedProvider,
 } from "@/shared/types/marketing-connected-account";
+import type { MarketingPublishCapability } from "@/shared/types/marketing-channel-connection";
 
 /**
  * Service-role helpers for OAuth connect callbacks.
@@ -25,6 +26,9 @@ type MarketingConnectedAccountRow = {
   provider_resource_name: string | null;
   status: MarketingConnectedAccountStatus;
   scopes: string[];
+  publish_capability: MarketingPublishCapability | null;
+  capability_detail: string | null;
+  capability_checked_at: string | null;
   token_expires_at: string | null;
   connected_by: string | null;
   connected_at: string | null;
@@ -39,8 +43,11 @@ type MarketingConnectedAccountsClient = ReturnType<
   typeof createServiceRoleClient
 >;
 
+// Mirrors the select list in `./marketing-connected-accounts.ts`. The
+// capability columns (migration 143) were omitted from both and therefore
+// unreachable by the state machine that exists to read them.
 const ACCOUNT_SELECT =
-  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at";
+  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, scopes, publish_capability, capability_detail, capability_checked_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at";
 
 function marketingConnectedAccountsTable(
   client: MarketingConnectedAccountsClient,
@@ -68,6 +75,9 @@ function mapMarketingConnectedAccountRow(
     providerResourceName: row.provider_resource_name ?? undefined,
     status: row.status,
     scopes: row.scopes ?? [],
+    publishCapability: row.publish_capability ?? "none",
+    capabilityDetail: row.capability_detail ?? undefined,
+    capabilityCheckedAt: row.capability_checked_at ?? undefined,
     tokenExpiresAt: row.token_expires_at ?? undefined,
     connectedBy: row.connected_by ?? undefined,
     connectedAt: row.connected_at ?? undefined,

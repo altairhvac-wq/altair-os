@@ -1,13 +1,14 @@
 /**
- * Direct publishing channels — the state vocabulary the Distribution tab
- * renders, and the pure rules that derive it.
+ * Direct publishing channels — the state vocabulary the integrations
+ * surfaces render, and the pure rules that derive it.
  *
  * ====================== WHY THIS FILE IS PURE ======================
- * No imports. Not `server-only`, not a database client, not `process.env`.
- * The whole connect/publish state machine is therefore testable without a
- * browser, a database, or a provider — which matters because every one of
- * these states is reachable only through a third party we cannot summon on
- * demand. A state we cannot test is a state we will render wrong.
+ * Type-only and pure-data imports. Not `server-only`, not a database client,
+ * not `process.env`. The whole connect/publish state machine is therefore
+ * testable without a browser, a database, or a provider — which matters
+ * because every one of these states is reachable only through a third party
+ * we cannot summon on demand. A state we cannot test is a state we will
+ * render wrong.
  *
  * ================== THREE FACTS, NOT ONE STATUS ==================
  * A channel's display state is derived from three INDEPENDENT facts, and
@@ -24,14 +25,22 @@
  * quota that is granted outside OAuth entirely. Neither is an error. Both
  * are ordinary, and the operator needs to see which one they are in.
  */
+import {
+  INTEGRATION_CAPABILITIES,
+  PUBLISHER_PROVIDERS,
+} from "./integration-capability";
 
-export const MARKETING_PUBLISH_CHANNELS = [
-  "youtube",
-  "google_business",
-  "tiktok",
-] as const;
-export type MarketingPublishChannel =
-  (typeof MARKETING_PUBLISH_CHANNELS)[number];
+/**
+ * Every provider content can be delivered TO.
+ *
+ * Derived from the capability matrix rather than hand-listed, so a provider
+ * declared `kind: "publisher"` is automatically a publish channel and an
+ * asset source can never become one by an editing slip. This list was three
+ * values while the matrix knew about seven publishers; deriving it removes
+ * the class of drift entirely.
+ */
+export const MARKETING_PUBLISH_CHANNELS = PUBLISHER_PROVIDERS;
+export type MarketingPublishChannel = (typeof PUBLISHER_PROVIDERS)[number];
 
 /** Mirrors the `marketing_publish_capability` enum (migration 143). */
 export const MARKETING_PUBLISH_CAPABILITIES = [
@@ -169,31 +178,35 @@ export type MarketingChannelDescriptor = {
   readonly requiredEnvVars: readonly string[];
 };
 
+/**
+ * Projected from `INTEGRATION_CAPABILITIES` rather than restated.
+ *
+ * The label, identity noun, connect path and env-var names all already live
+ * in the capability matrix; writing them twice is how a descriptor ends up
+ * advertising a connect path that no longer exists. Publishers always carry
+ * a connect path — asserted by `scripts/verify-integration-registry.mjs` —
+ * so the projection is total for every channel in this record.
+ */
 export const MARKETING_CHANNEL_DESCRIPTORS: Readonly<
   Record<MarketingPublishChannel, MarketingChannelDescriptor>
-> = {
-  youtube: {
-    channel: "youtube",
-    label: "YouTube",
-    identityLabel: "channel",
-    connectPath: "/api/marketing/connected-accounts/youtube/authorize",
-    requiredEnvVars: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"],
-  },
-  google_business: {
-    channel: "google_business",
-    label: "Google Business",
-    identityLabel: "location",
-    connectPath: "/api/marketing/connected-accounts/google-business/authorize",
-    requiredEnvVars: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"],
-  },
-  tiktok: {
-    channel: "tiktok",
-    label: "TikTok",
-    identityLabel: "username",
-    connectPath: "/api/marketing/connected-accounts/tiktok/authorize",
-    requiredEnvVars: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"],
-  },
-};
+> = Object.freeze(
+  Object.fromEntries(
+    PUBLISHER_PROVIDERS.map((provider) => {
+      const capability = INTEGRATION_CAPABILITIES[provider];
+      return [
+        provider,
+        {
+          channel: provider,
+          label: capability.label,
+          identityLabel: capability.identityLabel,
+          // Non-null for every publisher; the registry verifier proves it.
+          connectPath: capability.connectPath ?? "",
+          requiredEnvVars: capability.requiredEnvVars,
+        } satisfies MarketingChannelDescriptor,
+      ];
+    }),
+  ),
+) as Readonly<Record<MarketingPublishChannel, MarketingChannelDescriptor>>;
 
 /**
  * One line of operator-facing copy per state. Kept beside the state machine

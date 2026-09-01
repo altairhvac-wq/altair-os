@@ -3,10 +3,8 @@ import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import {
-  MARKETING_CONNECTED_PROVIDER_OPTIONS,
-  type MarketingConnectedProvider,
-} from "@/shared/types/marketing-connected-account";
+import { INTEGRATION_PROVIDERS } from "@/shared/types/integration-provider";
+import type { MarketingConnectedProvider } from "@/shared/types/marketing-connected-account";
 
 const DEFAULT_TTL_MINUTES = 10;
 const MAX_TTL_MINUTES = 30;
@@ -70,8 +68,19 @@ export function normalizeMarketingOAuthRedirectPath(
   return trimmed;
 }
 
+/**
+ * Which providers may have an OAuth state minted.
+ *
+ * Derived from the provider VOCABULARY, not from the Marketing Hub's card
+ * list as it was before. Deriving an authorization allowlist from a
+ * presentation array meant a provider became connectable only if some card
+ * happened to render it — which is why YouTube and TikTok were unreachable
+ * here despite migration 143 adding both to the SQL enum. Configuration and
+ * route existence are what actually gate a connect attempt, and both are
+ * checked at the authorize route.
+ */
 const ALLOWED_PROVIDERS = new Set<MarketingConnectedProvider>(
-  MARKETING_CONNECTED_PROVIDER_OPTIONS.map((option) => option.value),
+  INTEGRATION_PROVIDERS,
 );
 
 type MarketingOAuthStateRow = {
