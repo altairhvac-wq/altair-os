@@ -246,7 +246,7 @@ function errorName(error: unknown): string {
  * means the refreshed credential could not be stored, and that has to be
  * known BEFORE the provider is asked to rotate one.
  */
-function currentSecretKeyVersion(): number | null {
+export function currentSecretKeyVersion(): number | null {
   try {
     return readIntegrationSecretKeyVersion(
       encryptIntegrationSecret(KEY_VERSION_PROBE),

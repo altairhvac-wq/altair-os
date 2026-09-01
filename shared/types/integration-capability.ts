@@ -82,7 +82,21 @@ export type ProviderCapability = {
   /** What the connected identity is CALLED, for "Connected — X" copy. */
   readonly identityLabel: string;
   readonly authKind: IntegrationAuthKind;
-  /** Where "Connect" points. Null when there is nothing to authorize. */
+  /**
+   * Where "Connect" points, or null.
+   *
+   * ============ NULL MEANS "NO ROUTE EXISTS YET" ============
+   * Null covers two cases and they are deliberately not distinguished here,
+   * because they look identical to the person clicking: a provider with
+   * nothing to authorize (the first-party surface, the API-key asset
+   * source), and a provider whose authorize route has not been built. Both
+   * render as an explained, disabled control rather than a Connect button
+   * that navigates to a 404 — which is what this field held for four
+   * providers until `verify-youtube-connect.mjs` started comparing the
+   * matrix against the filesystem and found them.
+   *
+   * A path here is a claim that the route exists, and that claim is checked.
+   */
   readonly connectPath: string | null;
   /** Env var NAMES required to configure. Never values, ever. */
   readonly requiredEnvVars: readonly string[];
@@ -196,7 +210,9 @@ export const INTEGRATION_CAPABILITIES: Readonly<
     label: "Google Business",
     identityLabel: "location",
     authKind: "oauth2",
-    connectPath: `${CONNECT_BASE}/google-business/authorize`,
+    // No authorize route yet. Shares YouTube's Google client, so the
+    // credentials may be present while the flow is not built.
+    connectPath: null,
     requiredEnvVars: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"],
     requiresRefreshToken: true,
     acceptsMediaKinds: ["image"],
@@ -251,7 +267,12 @@ export const INTEGRATION_CAPABILITIES: Readonly<
     label: "TikTok",
     identityLabel: "username",
     authKind: "oauth2_pkce",
-    connectPath: `${CONNECT_BASE}/tiktok/authorize`,
+    // No authorize route yet. TikTok additionally requires PKCE, and the
+    // OAuth state table has nowhere to hold a code_verifier between the
+    // authorize hop and the callback — that is a migration, not an
+    // afternoon, and pretending otherwise with a path here would ship a
+    // button that cannot work.
+    connectPath: null,
     requiredEnvVars: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"],
     requiresRefreshToken: true,
     acceptsMediaKinds: ["video"],
@@ -280,7 +301,8 @@ export const INTEGRATION_CAPABILITIES: Readonly<
     label: "LinkedIn",
     identityLabel: "organization",
     authKind: "oauth2",
-    connectPath: `${CONNECT_BASE}/linkedin/authorize`,
+    // No authorize route yet.
+    connectPath: null,
     requiredEnvVars: ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"],
     requiresRefreshToken: true,
     acceptsMediaKinds: ["video", "image"],
@@ -306,7 +328,9 @@ export const INTEGRATION_CAPABILITIES: Readonly<
     label: "Reddit",
     identityLabel: "subreddit",
     authKind: "oauth2",
-    connectPath: `${CONNECT_BASE}/reddit/authorize`,
+    // No authorize route yet, and one should not be added before the
+    // per-subreddit posting policy this provider ships gated behind.
+    connectPath: null,
     requiredEnvVars: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"],
     requiresRefreshToken: true,
     acceptsMediaKinds: ["image"],

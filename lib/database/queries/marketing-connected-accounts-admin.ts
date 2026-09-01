@@ -207,6 +207,134 @@ export async function upsertMarketingConnectedFacebookPage(
   };
 }
 
+export type UpsertMarketingConnectedResourceInput = {
+  companyId: string;
+  connectedBy: string;
+  provider: MarketingConnectedProvider;
+  integrationKind: IntegrationKind;
+  /** The authorizing identity (a Google account, a Page owner, …). */
+  providerAccountId: string;
+  providerAccountName: string;
+  /** The thing content is delivered to: a channel, a Page, an organization. */
+  providerResourceId: string;
+  providerResourceName: string;
+  /** What we ASKED for. */
+  scopes: string[];
+  /** What the provider actually GRANTED, read back from its response. */
+  grantedScopes: string[];
+  publishCapability: MarketingPublishCapability;
+  /** Operator-facing reason for that capability, naming the next step. */
+  capabilityDetail: string | null;
+  tokenExpiresAt?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
+/**
+ * Upserts one connected resource for ANY provider.
+ *
+ * ============ WHY THIS EXISTS BESIDE THE FACEBOOK ONE ============
+ * `upsertMarketingConnectedFacebookPage` hardcodes `provider: "facebook"`
+ * and predates the capability columns, so every provider added after it
+ * would have needed its own near-identical copy — and the sixth copy is
+ * where one of them quietly forgets to write `granted_scopes`. This is the
+ * provider-generic form new integrations use.
+ *
+ * The Facebook one is deliberately NOT deleted or rewritten to call this.
+ * It is the only connect path that runs against live customer connections
+ * today, it carries Page-specific behaviour (the no-Pages placeholder, the
+ * Instagram business-account link), and rewriting a working credential path
+ * as a side effect of adding a different provider is how a migration takes
+ * down the thing it was not about.
+ *
+ * ============ CAPABILITY IS WRITTEN FROM EVIDENCE ============
+ * `publishCapability` is a required parameter with no default. The caller
+ * has just been told by the provider what it granted, and that is the only
+ * moment this can be answered honestly — defaulting it here would mean
+ * guessing on behalf of a caller that knew.
+ */
+export async function upsertMarketingConnectedResource(
+  input: UpsertMarketingConnectedResourceInput,
+): Promise<{ account?: MarketingConnectedAccount; error?: string }> {
+  const supabase = createServiceRoleClient();
+  const now = new Date().toISOString();
+
+  // Matches the partial unique index from migration 089:
+  // (company_id, provider, provider_resource_id) where resource id is not null.
+  const { data: existing, error: lookupError } =
+    await marketingConnectedAccountsTable(supabase)
+      .select("id")
+      .eq("company_id", input.companyId)
+      .eq("provider", input.provider)
+      .eq("provider_resource_id", input.providerResourceId)
+      .maybeSingle();
+
+  if (lookupError) {
+    console.error("[upsertMarketingConnectedResource] lookup failed:", {
+      companyId: input.companyId,
+      provider: input.provider,
+      code: lookupError.code,
+      message: lookupError.message,
+    });
+    return {
+      error:
+        mapDatabaseError(lookupError) ??
+        "Failed to look up the connected account.",
+    };
+  }
+
+  const existingId = (existing as { id?: string } | null)?.id;
+  const payload = {
+    company_id: input.companyId,
+    provider: input.provider,
+    integration_kind: input.integrationKind,
+    provider_account_id: input.providerAccountId,
+    provider_account_name: input.providerAccountName,
+    provider_resource_id: input.providerResourceId,
+    provider_resource_name: input.providerResourceName,
+    status: "connected" as const,
+    scopes: input.scopes,
+    granted_scopes: input.grantedScopes,
+    publish_capability: input.publishCapability,
+    capability_detail: input.capabilityDetail,
+    capability_checked_at: now,
+    capability_probe_error: null,
+    token_expires_at: input.tokenExpiresAt ?? null,
+    connected_by: input.connectedBy,
+    connected_at: now,
+    disconnected_at: null,
+    last_error: null,
+    metadata: input.metadata ?? {},
+  };
+
+  const query = existingId
+    ? marketingConnectedAccountsTable(supabase)
+        .update(payload)
+        .eq("id", existingId)
+    : marketingConnectedAccountsTable(supabase).insert(payload);
+
+  const { data, error } = await query.select(ACCOUNT_SELECT).single();
+
+  if (error || !data) {
+    console.error("[upsertMarketingConnectedResource] write failed:", {
+      companyId: input.companyId,
+      provider: input.provider,
+      mode: existingId ? "update" : "insert",
+      code: error?.code,
+      message: error?.message,
+    });
+    return {
+      error:
+        mapDatabaseError(error) ?? "Failed to save the connected account.",
+    };
+  }
+
+  return {
+    account: mapMarketingConnectedAccountRow(
+      data as MarketingConnectedAccountRow,
+    ),
+  };
+}
+
 /**
  * Marks Facebook Page connections not present in the latest OAuth page list
  * as disconnected (metadata only — secrets cascade on hard delete only).

@@ -90,15 +90,44 @@ check(
 
 console.log("\nKind discipline");
 
+// This check used to require a connect path on every publisher, and four
+// providers satisfied it with paths pointing at routes that did not exist —
+// a Connect button navigating to a 404. Requiring the STRING was the wrong
+// invariant; requiring the CLAIM to be true is the right one, and
+// `verify-youtube-connect.mjs` enforces it against the filesystem. What
+// belongs here is only the shape: a path, when present, must look like the
+// authorize route it claims to be.
 check(
-  "every publisher declares a connect path",
-  reg.PUBLISHER_PROVIDERS.every((p) => typeof CAPS[p].connectPath === "string"),
-  reg.PUBLISHER_PROVIDERS.filter((p) => !CAPS[p].connectPath),
+  "a declared connect path is an authorize route under the connected-accounts API",
+  PROVIDERS.every(
+    (p) =>
+      CAPS[p].connectPath === null ||
+      /^\/api\/marketing\/connected-accounts\/[a-z0-9-]+\/authorize$/.test(
+        CAPS[p].connectPath,
+      ),
+  ),
+  PROVIDERS.filter(
+    (p) =>
+      CAPS[p].connectPath !== null &&
+      !/^\/api\/marketing\/connected-accounts\/[a-z0-9-]+\/authorize$/.test(
+        CAPS[p].connectPath,
+      ),
+  ),
+);
+check(
+  "at least one provider is actually connectable, so the shape check is not vacuous",
+  PROVIDERS.some((p) => CAPS[p].connectPath !== null),
 );
 check(
   "a provider with authKind 'none' advertises no connect path",
   PROVIDERS.every(
     (p) => CAPS[p].authKind !== "none" || CAPS[p].connectPath === null,
+  ),
+);
+check(
+  "a non-publisher never advertises a connect path into the publish flow",
+  PROVIDERS.filter((p) => CAPS[p].kind !== "publisher").every(
+    (p) => CAPS[p].connectPath === null,
   ),
 );
 check(

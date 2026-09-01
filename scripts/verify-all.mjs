@@ -127,6 +127,7 @@ steps.push(
   { name: "publish-gate", script: "scripts/verify-publish-gate.mjs" },
   { name: "media-multiformat", script: "scripts/verify-media-multiformat.mjs" },
   { name: "creative-assets", script: "scripts/verify-creative-assets.mjs" },
+  { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
 );
 
 const results = [];

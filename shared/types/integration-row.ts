@@ -316,6 +316,7 @@ export function formatIntegrationConnectFlash(params: {
     denied: `${label} connection was cancelled.`,
     state: `${label} connection expired or was invalid. Try connecting again.`,
     token_exchange: `${label} authorization failed while exchanging tokens. Try again.`,
+    channels: `${label} authorized, but its account list could not be read. Try again.`,
     no_accounts: `${label} authorized, but no usable account was found.`,
     persist: `${label} authorized, but saving the connection failed.`,
     config: `${label} is not fully configured on this environment.`,
