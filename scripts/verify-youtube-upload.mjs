@@ -923,6 +923,101 @@ check(
   /recordRefreshedTokenExpiry[\s\S]*\.eq\("status", "connected"\)/.test(adminSource),
 );
 
+/* ================================================================== */
+/*                  THE SUPERVISED CANARY TRIGGER                     */
+/* ================================================================== */
+
+console.log("\nThe canary trigger cannot weaken anything");
+
+const canary = readFileSync("scripts/youtube-canary.mjs", "utf8");
+const canaryCode = canary
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(new RegExp("//[^\\n]*", "g"), "");
+
+check(
+  "it goes through dispatchPublish rather than calling the adapter itself",
+  canaryCode.includes("dispatchPublish(") &&
+    !canaryCode.includes("youtubeAdapter"),
+);
+check(
+  "IT NEVER PASSES env INTO THE GATE, so the kill switch cannot be asserted past",
+  // A plain substring, deliberately: two earlier attempts at this line used
+  // a regex and both carried a mangled escape — one a literal backspace byte
+  // where a word boundary was meant — so the guard matched nothing and
+  // passed while an injected `env:` sat in the file. Mutation-checking
+  // found that; reading the line did not. No escapes, nothing to mangle.
+  // The canary's own `env` uses are `ENV_PATH`, `loadEnvLocal` and
+  // `process.env[...]`, none of which contain this token.
+  !canaryCode.includes("env:"),
+);
+check(
+  "it refuses unless MARKETING_PUBLISH_MODE is exactly live",
+  /publishMode !== "live"/.test(canaryCode),
+);
+check(
+  "the provider is hardcoded, not an argument",
+  /const PROVIDER = "youtube"/.test(canaryCode) &&
+    !/flag\("provider"\)/.test(canaryCode),
+);
+check(
+  "it refuses a matrix visibility other than private",
+  /defaultVisibility !== "private"/.test(canaryCode),
+);
+check(
+  "it checks the live upload grant, not just that the account is connected",
+  canaryCode.includes("REQUIRED_UPLOAD_SCOPE"),
+);
+check(
+  "it requires a real approver email and resolves it to a profile",
+  /--approved-by/.test(canary) && canaryCode.includes('from("profiles")'),
+);
+check(
+  "the approver must be an ACTIVE owner or admin",
+  /membership\.status !== "active"/.test(canaryCode) &&
+    /\["owner", "admin"\]/.test(canaryCode),
+);
+check(
+  "the approval it writes is a real timestamp on a real job row",
+  canaryCode.includes('from("marketing_publish_jobs")') &&
+    canaryCode.includes("approved_by: approver.id"),
+);
+check(
+  "the gate is handed the approval READ BACK from the database",
+  canaryCode.includes("jobApprovedAt: job.approved_at"),
+);
+check(
+  "writing requires --apply; the default run touches nothing",
+  /if \(!APPLY\)/.test(canaryCode) &&
+    canaryCode.indexOf("if (!APPLY)") < canaryCode.indexOf('from("marketing_media_assets")'),
+);
+check(
+  "the project must be confirmed by ref before anything is read",
+  /projectRef !== CONFIRM/.test(canaryCode),
+);
+check(
+  "media and job rows are upserted on their natural keys, so a second run reuses them",
+  canaryCode.includes('onConflict: "company_id,source_job_id"') &&
+    canaryCode.includes('onConflict: "company_id,marketing_post_id,provider"'),
+);
+check(
+  "it reports the readback privacy, channel and final delivery state",
+  ["privacyStatus", "channelId", "delivery_state"].every((f) =>
+    canaryCode.includes(f),
+  ),
+);
+check(
+  "it warns loudly if a posted delivery is not private",
+  /delivery_state === "posted" && privacy !== "private"/.test(canaryCode),
+);
+check(
+  "it is not a scheduler: no cron, interval, or loop over work",
+  !/setInterval|node-cron|while \(true\)|for await/.test(canaryCode),
+);
+check(
+  "it tells the operator to disarm afterwards",
+  /MARKETING_PUBLISH_MODE=off/.test(canary),
+);
+
 globalThis.fetch = realFetch;
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
