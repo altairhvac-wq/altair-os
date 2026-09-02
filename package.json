@@ -54,7 +54,8 @@
     "verify:youtube-connect": "node scripts/verify-youtube-connect.mjs",
     "verify:youtube-upload": "node scripts/verify-youtube-upload.mjs",
     "verify:site-publishing": "node scripts/verify-site-publishing.mjs",
-    "verify:marketing-command": "node scripts/verify-marketing-command.mjs"
+    "verify:marketing-command": "node scripts/verify-marketing-command.mjs",
+    "verify:work-requests": "node scripts/verify-work-requests.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

@@ -19,6 +19,7 @@ import {
 } from "@/shared/types/marketing-command";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
+import { listWorkRequests } from "@/lib/database/queries/agent-work-requests";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { listMarketingItems } from "@/lib/marketing/store";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
@@ -58,26 +59,21 @@ export default async function MarketingPage({
     );
   }
 
-  const [
-    posts,
-    connectedAccounts,
-    agentSnapshot,
-    agentDecisions,
-    storedMedia,
-  ] = await Promise.all([
-    listMarketingPosts(companyContext.company.id),
-    listMarketingConnectedAccounts(companyContext.company.id),
-    // Read-only projection pushed by the Agent Platform. Null means it has
-    // never reported in. That is a diagnostic fact, so it is rendered under
-    // Advanced rather than as the first thing on the page.
-    getLatestAgentMarketingSnapshot(companyContext.company.id),
-    // Recorded decisions, so a subject already decided is never offered again.
-    listAgentDecisionsSince(companyContext.company.id, 0, 200),
-    // Which renders this deployment actually holds bytes for. Identities only
-    // — no URL is created here. A playable link is minted per request by
-    // `requestMarketingMediaPreviewAction` and expires on its own.
-    listStoredMediaAssets(companyContext.company.id),
-  ]);
+  const [posts, connectedAccounts, agentSnapshot, agentDecisions, storedMedia] =
+    await Promise.all([
+      listMarketingPosts(companyContext.company.id),
+      listMarketingConnectedAccounts(companyContext.company.id),
+      // Read-only projection pushed by the Agent Platform. Null means it has
+      // never reported in. That is a diagnostic fact, so it is rendered under
+      // Advanced rather than as the first thing on the page.
+      getLatestAgentMarketingSnapshot(companyContext.company.id),
+      // Recorded decisions, so a subject already decided is never offered again.
+      listAgentDecisionsSince(companyContext.company.id, 0, 200),
+      // Which renders this deployment actually holds bytes for. Identities only
+      // — no URL is created here. A playable link is minted per request by
+      // `requestMarketingMediaPreviewAction` and expires on its own.
+      listStoredMediaAssets(companyContext.company.id),
+    ]);
 
   // ============ WHY THIS ONE IS FETCHED SEPARATELY ============
   // The rationale on the Today card is not new text and is not inferred. It is
@@ -154,12 +150,14 @@ export default async function MarketingPage({
   // cannot be called — so a platform that has stopped reporting shows as
   // exactly that rather than as a quiet day.
   const nowIso = new Date().toISOString();
-  const [operatingState, chiefMessages] = await Promise.all([
+  const [operatingState, chiefMessages, workRequests] = await Promise.all([
     getMarketingOperatingState({
       companyId: companyContext.company.id,
       nowIso,
     }),
     listChiefMessages({ companyId: companyContext.company.id, limit: 50 }),
+    // What the operator has asked the platform to run, and what came back.
+    listWorkRequests({ companyId: companyContext.company.id, limit: 10 }),
   ]);
 
   const awaitingReply = chiefMessages.some(
@@ -179,6 +177,7 @@ export default async function MarketingPage({
       ? null
       : "The Agent Platform has not reported recently. Questions will queue until it next runs.",
     canAsk: true,
+    workRequests,
   };
 
   return (

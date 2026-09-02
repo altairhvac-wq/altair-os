@@ -438,9 +438,15 @@ check(
   "a real question is accepted and trimmed",
   cmd.validateChiefQuestion("  what is blocked?  ").body === "what is blocked?",
 );
+// The spread operator is three dots too. Matching it flagged `...current` in
+// a setState call as a typing indicator — a false positive that says nothing
+// about the copy. A spread is always followed by an identifier, `{` or `[`;
+// an ellipsis in user-visible text is not, so dropping spreads keeps the
+// check aimed at what it is actually about.
+const viewCopy = view.replace(/\.\.\.(?=[A-Za-z_$[{])/g, "");
 check(
   "the view shows no typing indicator",
-  !/typing|is thinking|\.\.\./i.test(view),
+  !/typing|is thinking|\.\.\./i.test(viewCopy),
 );
 check(
   "a queued question is labelled as waiting for the platform",

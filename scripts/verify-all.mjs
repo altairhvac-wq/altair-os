@@ -131,6 +131,7 @@ steps.push(
   { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
   { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
+  { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
 );
 
 const results = [];

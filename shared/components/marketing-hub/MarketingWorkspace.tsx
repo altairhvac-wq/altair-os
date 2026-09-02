@@ -12,6 +12,7 @@ import type {
   ChiefMessage,
   CommandLane,
 } from "@/shared/types/marketing-command";
+import type { WorkRequest } from "@/shared/types/agent-work-request";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
@@ -68,6 +69,7 @@ type MarketingWorkspaceProps = {
     awaitingReply: boolean;
     platformUnavailableReason: string | null;
     canAsk: boolean;
+    workRequests: readonly WorkRequest[];
   };
   /**
    * Publishing details per website post id, projected server-side from rows
@@ -141,6 +143,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           canAsk={props.command.canAsk}
           // The same decision records the Advanced tab reads. One queue.
           decisions={props.decisions}
+          workRequests={props.command.workRequests}
         />
       ) : null}
 

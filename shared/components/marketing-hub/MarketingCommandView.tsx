@@ -12,8 +12,16 @@ import {
   Send,
 } from "lucide-react";
 import { askChiefAction } from "@/app/actions/marketing-chief";
+import { requestWorkAction } from "@/app/actions/marketing-work-request";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
 import { AgentDecisionControls } from "./AgentDecisionControls";
+import {
+  describeWorkRequest,
+  WORK_REQUEST_DESCRIPTORS,
+  WORK_REQUEST_KINDS,
+  type WorkRequest,
+  type WorkRequestKind,
+} from "@/shared/types/agent-work-request";
 import { StatusPill } from "@/shared/design-system/components";
 import {
   altairMcCardClass,
@@ -71,6 +79,7 @@ export function MarketingCommandView({
   platformUnavailableReason,
   canAsk,
   decisions,
+  workRequests,
 }: {
   readonly lanes: readonly CommandLane[];
   readonly attention: readonly AttentionItem[];
@@ -88,6 +97,8 @@ export function MarketingCommandView({
    * would be shown buttons for something they just decided.
    */
   readonly decisions: readonly AgentDecisionRecord[];
+  /** What has been asked of the platform recently, and what came back. */
+  readonly workRequests: readonly WorkRequest[];
 }) {
   return (
     <div
@@ -105,6 +116,7 @@ export function MarketingCommandView({
       </div>
       <div className="space-y-3">
         <NeedsAttention items={attention} decisions={decisions} />
+        <RequestWork requests={workRequests} canAsk={canAsk} />
         <RecentActivity entries={activity} />
       </div>
     </div>
@@ -388,6 +400,122 @@ function NeedsAttention({
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------ request work */
+
+/**
+ * Asking the platform to run one named analysis.
+ *
+ * ====================== ONE BUTTON, ONE NAMED THING ======================
+ * Every option is a fixed kind from a closed vocabulary — there is no free
+ * text, no argument and no "run whatever I meant". That is what stops vague
+ * language from becoming a broad instruction: there is no field for it.
+ *
+ * ====================== ASKING IS NOT RUNNING ======================
+ * The request is queued and the platform decides. Each runner keeps its own
+ * consent gate on the machine that runs the agents, which this browser can
+ * neither read nor set — so a request can come back `refused` having spent
+ * nothing, and the copy never promises otherwise.
+ */
+function RequestWork({
+  requests,
+  canAsk,
+}: {
+  readonly requests: readonly WorkRequest[];
+  readonly canAsk: boolean;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [busyKind, setBusyKind] = useState<WorkRequestKind | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // One key per attempt, HELD until it succeeds. Minting a fresh key on every
+  // click would make a double-click two rows; reusing it means the unique
+  // index collapses them into the one request the operator meant.
+  const [keys, setKeys] = useState<Partial<Record<WorkRequestKind, string>>>(
+    {},
+  );
+
+  function submit(kind: WorkRequestKind) {
+    setError(null);
+    setBusyKind(kind);
+    const requestKey = keys[kind] ?? `work:${crypto.randomUUID()}`;
+    setKeys((current) => ({ ...current, [kind]: requestKey }));
+
+    startTransition(async () => {
+      const result = await requestWorkAction({ kind, requestKey });
+      setBusyKind(null);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setKeys((current) => ({ ...current, [kind]: undefined }));
+      router.refresh();
+    });
+  }
+
+  return (
+    <section
+      className={`${altairMcCardClass} ${altairMcCardPadClass}`}
+      aria-label="Ask the Chief to run something"
+    >
+      <h2 className="text-sm font-semibold text-altair-ink">
+        Ask the Chief to run something
+      </h2>
+      <p className="mt-1 text-xs text-altair-ink-muted">
+        Queued for the Agent Platform. Each of these is read-only — none of them
+        publishes.
+      </p>
+
+      <div className="mt-2 space-y-2">
+        {WORK_REQUEST_KINDS.map((kind) => {
+          const descriptor = WORK_REQUEST_DESCRIPTORS[kind];
+          return (
+            <div key={kind}>
+              <button
+                type="button"
+                disabled={!canAsk || pending}
+                onClick={() => submit(kind)}
+                className="w-full rounded border border-altair-border bg-altair-paper-elevated px-2 py-1.5 text-left text-xs font-medium text-altair-ink hover:border-altair-brass disabled:opacity-50"
+              >
+                {busyKind === kind ? "Queueing…" : descriptor.label}
+              </button>
+              <p className="mt-0.5 text-[11px] leading-4 text-altair-ink-muted">
+                {descriptor.detail}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {error ? (
+        <p className="mt-2 text-xs text-altair-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {requests.length > 0 ? (
+        <ul className="mt-3 space-y-1 border-t border-altair-border pt-2">
+          {requests.slice(0, 5).map((request) => (
+            <li key={request.id} className="text-[11px] leading-4">
+              <span
+                className={
+                  request.outcome === "completed"
+                    ? "text-altair-success"
+                    : request.outcome === "refused" ||
+                        request.outcome === "failed"
+                      ? "text-altair-danger"
+                      : "text-altair-ink-muted"
+                }
+              >
+                {describeWorkRequest(request)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
