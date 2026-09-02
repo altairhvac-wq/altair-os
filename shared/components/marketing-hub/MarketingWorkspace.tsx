@@ -5,6 +5,13 @@ import { MarketingTodayView } from "./MarketingTodayView";
 import { MarketingSettingsView } from "./MarketingSettingsView";
 import { MarketingAutomationSection } from "./MarketingAutomationSection";
 import { MarketingHubPageView } from "./MarketingHubPageView";
+import { MarketingCommandView } from "./MarketingCommandView";
+import type {
+  ActivityEntry,
+  AttentionItem,
+  ChiefMessage,
+  CommandLane,
+} from "@/shared/types/marketing-command";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
@@ -52,6 +59,16 @@ import type { ReelVideoOption } from "@/shared/types/marketing-reel";
 
 type MarketingWorkspaceProps = {
   posts: MarketingPost[];
+  /** Projected server-side from stored rows. Never assembled in the browser. */
+  command: {
+    lanes: readonly CommandLane[];
+    attention: readonly AttentionItem[];
+    activity: readonly ActivityEntry[];
+    messages: readonly ChiefMessage[];
+    awaitingReply: boolean;
+    platformUnavailableReason: string | null;
+    canAsk: boolean;
+  };
   /**
    * Publishing details per website post id, projected server-side from rows
    * that already exist. Absent for every non-website post, which is why the
@@ -80,6 +97,9 @@ type MarketingWorkspaceProps = {
 };
 
 const TABS = [
+  // Command is first and default: the Chief of Staff is the way in, and the
+  // other tabs are where you go when you already know what you want.
+  { id: "command", label: "Command" },
   { id: "today", label: "Today" },
   { id: "settings", label: "Settings" },
   { id: "advanced", label: "Advanced" },
@@ -88,7 +108,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 export function MarketingWorkspace(props: MarketingWorkspaceProps) {
-  const [tab, setTab] = useState<TabId>("today");
+  const [tab, setTab] = useState<TabId>("command");
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
@@ -109,6 +129,18 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           </button>
         ))}
       </div>
+
+      {tab === "command" ? (
+        <MarketingCommandView
+          lanes={props.command.lanes}
+          attention={props.command.attention}
+          activity={props.command.activity}
+          messages={props.command.messages}
+          awaitingReply={props.command.awaitingReply}
+          platformUnavailableReason={props.command.platformUnavailableReason}
+          canAsk={props.command.canAsk}
+        />
+      ) : null}
 
       {tab === "today" ? (
         <MarketingTodayView

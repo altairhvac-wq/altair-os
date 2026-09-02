@@ -530,8 +530,18 @@ check(
   today_.includes("deriveMarketingTodayState") && today_.includes("selectTodayCandidates"),
 );
 check(
-  "Today is the workspace's default tab",
-  /useState<TabId>\("today"\)/.test(workspace),
+  // Was "Today is the default tab". Command took that place deliberately:
+  // the Chief of Staff is now the way into Marketing, and Today is where a
+  // reader goes once they already know what they are looking for. The
+  // invariant worth keeping is that SOME tab is the default and it is the
+  // first one offered — not which one it happens to be this quarter.
+  "Command is the workspace's default tab, and is offered first",
+  /useState<TabId>\("command"\)/.test(workspace) &&
+    workspace.indexOf('{ id: "command"') < workspace.indexOf('{ id: "today"'),
+);
+check(
+  "Today is still reachable as its own tab",
+  workspace.includes('{ id: "today"') && workspace.includes('tab === "today"'),
 );
 check(
   "the diagnostics section is mounted exactly once, under Advanced",

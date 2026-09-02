@@ -9,6 +9,14 @@ import { hasCompanyRole } from "@/lib/database/types/roles";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
 import { getSitePublishingDetailsForPost } from "@/lib/database/queries/marketing-site-pages";
+import { getMarketingOperatingState } from "@/lib/database/queries/marketing-operating-state";
+import { listChiefMessages } from "@/lib/database/queries/agent-chief-messages";
+import {
+  buildTodayPlan,
+  buildAttentionItems,
+  buildRecentActivity,
+  isSnapshotFresh,
+} from "@/shared/types/marketing-command";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
@@ -140,9 +148,43 @@ export default async function MarketingPage({
     ),
   );
 
+  // ============ THE COMMAND SURFACE, FROM REAL STATE ============
+  // Everything here is projected server-side from stored rows. Nothing is
+  // fetched from the Agent Platform at render time — it is behind NAT and
+  // cannot be called — so a platform that has stopped reporting shows as
+  // exactly that rather than as a quiet day.
+  const nowIso = new Date().toISOString();
+  const [operatingState, chiefMessages] = await Promise.all([
+    getMarketingOperatingState({
+      companyId: companyContext.company.id,
+      nowIso,
+    }),
+    listChiefMessages({ companyId: companyContext.company.id, limit: 50 }),
+  ]);
+
+  const awaitingReply = chiefMessages.some(
+    (message) => message.role === "user" && message.status === "queued",
+  );
+
+  const command = {
+    lanes: buildTodayPlan(operatingState),
+    attention: buildAttentionItems(operatingState),
+    activity: buildRecentActivity(operatingState),
+    messages: chiefMessages,
+    awaitingReply,
+    // Fail closed and say so: a stale or absent snapshot means the platform
+    // is not reporting, and the Chief answers on ITS cycle, so a question
+    // asked now may sit for a while. The operator is told, not guessed at.
+    platformUnavailableReason: isSnapshotFresh(operatingState)
+      ? null
+      : "The Agent Platform has not reported recently. Questions will queue until it next runs.",
+    canAsk: true,
+  };
+
   return (
     <MarketingWorkspace
       posts={posts}
+      command={command}
       sitePublishingDetails={sitePublishingDetails}
       automationHealth={automationHealth}
       // The same section Advanced renders in full. Today reads it only to

@@ -130,6 +130,7 @@ steps.push(
   { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
   { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
+  { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
 );
 
 const results = [];
