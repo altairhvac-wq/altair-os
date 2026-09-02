@@ -453,6 +453,17 @@ check(
   view.includes("Waiting for the Agent Platform"),
 );
 check(
+  "WHILE SOMETHING IS PENDING the view re-reads real state on an interval",
+  /somethingPending[\s\S]{0,400}setInterval\(\(\) => router\.refresh\(\), 20_000\)/.test(
+    view,
+  ),
+);
+check(
+  "and the interval exists ONLY while something is pending",
+  /if \(!somethingPending\) return;/.test(view) &&
+    /return \(\) => clearInterval\(timer\);/.test(view),
+);
+check(
   "a failed question is not dressed up as an answer",
   view.includes("could not answer this"),
 );

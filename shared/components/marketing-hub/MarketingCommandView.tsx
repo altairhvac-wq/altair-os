@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -100,6 +100,23 @@ export function MarketingCommandView({
   /** What has been asked of the platform recently, and what came back. */
   readonly workRequests: readonly WorkRequest[];
 }) {
+  const router = useRouter();
+  // ============ RE-CHECK WHILE SOMETHING IS PENDING, AND ONLY THEN ============
+  // An answer or a request outcome arrives when the platform's gateway next
+  // settles it — typically within a minute or two, never instantly, and this
+  // page has no live connection to be pushed over. So while (and ONLY while)
+  // something of ours is unsettled, the server projection is re-read on a slow
+  // interval. The moment everything is settled the interval is torn down:
+  // an idle Command tab makes no requests. This is a re-read of real state,
+  // not a liveness performance — the copy still says "queued", because it is.
+  const somethingPending =
+    awaitingReply || workRequests.some((request) => request.outcome === null);
+  useEffect(() => {
+    if (!somethingPending) return;
+    const timer = setInterval(() => router.refresh(), 20_000);
+    return () => clearInterval(timer);
+  }, [somethingPending, router]);
+
   return (
     <div
       className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]"
