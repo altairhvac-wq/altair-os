@@ -161,7 +161,9 @@ export default async function MarketingPage({
     }),
     listChiefMessages({ companyId: companyContext.company.id, limit: 50 }),
     // What the operator has asked the platform to run, and what came back.
-    listWorkRequests({ companyId: companyContext.company.id, limit: 10 }),
+    // Enough rows that every message visible in the 50-message conversation
+    // can still show the work it started (a campaign alone queues several).
+    listWorkRequests({ companyId: companyContext.company.id, limit: 30 }),
   ]);
 
   const awaitingReply = chiefMessages.some(

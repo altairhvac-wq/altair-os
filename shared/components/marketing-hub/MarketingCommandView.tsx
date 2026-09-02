@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -16,9 +16,11 @@ import { requestWorkAction } from "@/app/actions/marketing-work-request";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
 import { AgentDecisionControls } from "./AgentDecisionControls";
 import {
+  chiefCommandQuestionId,
   describeWorkRequest,
+  OPERATOR_BUTTON_KINDS,
   WORK_REQUEST_DESCRIPTORS,
-  WORK_REQUEST_KINDS,
+  workRequestDisplayLabel,
   type WorkRequest,
   type WorkRequestKind,
 } from "@/shared/types/agent-work-request";
@@ -39,6 +41,22 @@ import {
   type CommandLane,
   type CommandLaneState,
 } from "@/shared/types/marketing-command";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
+
+/**
+ * `crypto.randomUUID` exists only on secure origins. Testing this surface from
+ * a phone over plain-http LAN would otherwise throw a raw TypeError inside the
+ * click handler; a request key only needs uniqueness per operator attempt, so
+ * a time+random fallback is sufficient there.
+ */
+function mintRequestKey(prefix: string): string {
+  const unique =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return `${prefix}:${unique}`;
+}
 
 /**
  * Marketing Command — the Chief of Staff surface.
@@ -117,24 +135,41 @@ export function MarketingCommandView({
     return () => clearInterval(timer);
   }, [somethingPending, router]);
 
+  // ================= ONE COLUMN ON A PHONE, IN PRIORITY ORDER =================
+  // Below `lg` the two column wrappers dissolve (`max-lg:contents`) so every
+  // panel is a direct grid child and can be ordered by importance instead of
+  // by desktop column: conversation, then what needs a human, then the plan.
+  // DOM order is unchanged, so desktop columns and screen readers see the
+  // original arrangement.
   return (
     <div
       className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]"
       data-testid="marketing-command"
     >
-      <div className="space-y-3">
-        <ChiefConversation
-          messages={messages}
-          awaitingReply={awaitingReply}
-          platformUnavailableReason={platformUnavailableReason}
-          canAsk={canAsk}
-        />
-        <TodayPlan lanes={lanes} />
+      <div className="max-lg:contents lg:space-y-3">
+        <div className="min-w-0 max-lg:order-1">
+          <ChiefConversation
+            messages={messages}
+            awaitingReply={awaitingReply}
+            platformUnavailableReason={platformUnavailableReason}
+            canAsk={canAsk}
+            workRequests={workRequests}
+          />
+        </div>
+        <div className="min-w-0 max-lg:order-3">
+          <TodayPlan lanes={lanes} />
+        </div>
       </div>
-      <div className="space-y-3">
-        <NeedsAttention items={attention} decisions={decisions} />
-        <RequestWork requests={workRequests} canAsk={canAsk} />
-        <RecentActivity entries={activity} />
+      <div className="max-lg:contents lg:space-y-3">
+        <div className="min-w-0 max-lg:order-2">
+          <NeedsAttention items={attention} decisions={decisions} />
+        </div>
+        <div className="min-w-0 max-lg:order-4">
+          <RequestWork requests={workRequests} canAsk={canAsk} />
+        </div>
+        <div className="min-w-0 max-lg:order-5">
+          <RecentActivity entries={activity} />
+        </div>
       </div>
     </div>
   );
@@ -147,16 +182,27 @@ function ChiefConversation({
   awaitingReply,
   platformUnavailableReason,
   canAsk,
+  workRequests,
 }: {
   readonly messages: readonly ChiefMessage[];
   readonly awaitingReply: boolean;
   readonly platformUnavailableReason: string | null;
   readonly canAsk: boolean;
+  readonly workRequests: readonly WorkRequest[];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Messages render oldest-first, so without this the newest turn sits below
+  // the fold of the scroller — on a phone the panel looks unchanged after
+  // sending, which reads as a failed send. Scrolling the container directly
+  // (not scrollIntoView) keeps the page itself from jumping.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+  }, [messages]);
 
   const status = describeChiefConversation({
     messages,
@@ -174,7 +220,7 @@ function ChiefConversation({
 
     // One key per submission. A double-click reuses it and the unique index
     // refuses the second insert, so the Chief is asked once.
-    const requestKey = `chief:${crypto.randomUUID()}`;
+    const requestKey = mintRequestKey("chief");
 
     startTransition(async () => {
       const result = await askChiefAction({ body: validated.body, requestKey });
@@ -209,14 +255,32 @@ function ChiefConversation({
 
       <p className="mt-1 text-xs leading-5 text-altair-ink-muted">{status}</p>
 
-      <div className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+      {/* Viewport-relative on a phone so the scroller is not half the screen
+          nested inside the page scroller; the fixed 320px stays at lg. */}
+      <div
+        ref={scrollerRef}
+        className="mt-3 max-h-[45dvh] space-y-2 overflow-y-auto lg:max-h-80"
+      >
         {messages.length === 0 ? (
           <p className="py-6 text-center text-xs text-altair-ink-muted">
             No conversation yet.
           </p>
         ) : (
           messages.map((message) => (
-            <ChiefBubble key={message.id} message={message} />
+            <ChiefBubble
+              key={message.id}
+              message={message}
+              // Requests the Chief queued FROM this message, matched by the
+              // deterministic request-key prefix. Real rows, real states.
+              startedWork={
+                message.role === "user"
+                  ? workRequests.filter(
+                      (request) =>
+                        chiefCommandQuestionId(request.requestKey) === message.id,
+                    )
+                  : []
+              }
+            />
           ))
         )}
       </div>
@@ -265,7 +329,13 @@ function ChiefConversation({
   );
 }
 
-function ChiefBubble({ message }: { readonly message: ChiefMessage }) {
+function ChiefBubble({
+  message,
+  startedWork,
+}: {
+  readonly message: ChiefMessage;
+  readonly startedWork: readonly WorkRequest[];
+}) {
   const isUser = message.role === "user";
 
   return (
@@ -295,7 +365,85 @@ function ChiefBubble({ message }: { readonly message: ChiefMessage }) {
             {message.errorDetail ?? "The Chief could not answer this."}
           </p>
         ) : null}
+        {startedWork.length > 0 ? (
+          <StartedWorkList requests={startedWork} />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The work the Chief queued from one message, with its REAL states.
+ *
+ * Every row here is an `agent_work_requests` row matched by request key —
+ * there is no simulated progress and no invented "running" stage, because
+ * the browser genuinely cannot observe the platform mid-cycle. Queued,
+ * done, refused and failed are the four facts that exist; those are what
+ * is shown.
+ */
+function StartedWorkList({
+  requests,
+}: {
+  readonly requests: readonly WorkRequest[];
+}) {
+  const ordered = [...requests].sort((a, b) =>
+    a.requestKey.localeCompare(b.requestKey),
+  );
+  return (
+    <div className="mt-1.5 border-t border-altair-border pt-1.5">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-altair-ink-muted">
+        Started {ordered.length} task{ordered.length === 1 ? "" : "s"}
+      </p>
+      <ul className="mt-0.5 space-y-0.5">
+        {ordered.map((request) => {
+          const done = request.outcome === "completed";
+          const broken =
+            request.outcome === "refused" || request.outcome === "failed";
+          const Icon = done ? CheckCircle2 : broken ? AlertTriangle : CircleDashed;
+          return (
+            <li key={request.id} className="flex items-start gap-1.5">
+              <Icon
+                className={`mt-0.5 h-3 w-3 shrink-0 ${
+                  done
+                    ? "text-altair-success"
+                    : broken
+                      ? "text-altair-danger"
+                      : "text-altair-ink-muted"
+                }`}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 text-[11px] leading-4 text-altair-ink">
+                <span className="font-medium">
+                  {workRequestDisplayLabel(request)}
+                </span>{" "}
+                <span
+                  className={
+                    done
+                      ? "text-altair-success"
+                      : broken
+                        ? "text-altair-danger"
+                        : "text-altair-ink-muted"
+                  }
+                >
+                  {done
+                    ? "— done"
+                    : request.outcome === "refused"
+                      ? "— not run"
+                      : request.outcome === "failed"
+                        ? "— failed"
+                        : "— queued"}
+                </span>
+                {broken && request.outcomeDetail ? (
+                  <span className="line-clamp-2 block text-[10px] text-altair-ink-muted">
+                    {request.outcomeDetail}
+                  </span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -387,7 +535,7 @@ function NeedsAttention({
                   {item.href ? (
                     <a
                       href={item.href}
-                      className="mt-0.5 inline-block text-xs text-altair-brass underline underline-offset-4"
+                      className="mt-0.5 inline-flex min-h-11 items-center text-xs text-altair-brass underline underline-offset-4 md:min-h-0"
                     >
                       Open
                     </a>
@@ -458,7 +606,7 @@ function RequestWork({
   function submit(kind: WorkRequestKind) {
     setError(null);
     setBusyKind(kind);
-    const requestKey = keys[kind] ?? `work:${crypto.randomUUID()}`;
+    const requestKey = keys[kind] ?? mintRequestKey("work");
     setKeys((current) => ({ ...current, [kind]: requestKey }));
 
     startTransition(async () => {
@@ -487,7 +635,9 @@ function RequestWork({
       </p>
 
       <div className="mt-2 space-y-2">
-        {WORK_REQUEST_KINDS.map((kind) => {
+        {/* Only the parameterless kinds render as buttons: the others need a
+            topic, which is the conversation's job, not a button's. */}
+        {OPERATOR_BUTTON_KINDS.map((kind) => {
           const descriptor = WORK_REQUEST_DESCRIPTORS[kind];
           return (
             <div key={kind}>
@@ -495,7 +645,7 @@ function RequestWork({
                 type="button"
                 disabled={!canAsk || pending}
                 onClick={() => submit(kind)}
-                className="w-full rounded border border-altair-border bg-altair-paper-elevated px-2 py-1.5 text-left text-xs font-medium text-altair-ink hover:border-altair-brass disabled:opacity-50"
+                className="min-h-11 w-full rounded border border-altair-border bg-altair-paper-elevated px-3 py-2 text-left text-sm font-medium text-altair-ink hover:border-altair-brass disabled:opacity-50 md:min-h-0 md:px-2 md:py-1.5 md:text-xs"
               >
                 {busyKind === kind ? "Queueing…" : descriptor.label}
               </button>
@@ -517,15 +667,17 @@ function RequestWork({
         <ul className="mt-3 space-y-1 border-t border-altair-border pt-2">
           {requests.slice(0, 5).map((request) => (
             <li key={request.id} className="text-[11px] leading-4">
+              {/* `outcome_detail` may legally be 2000 chars; unclamped that is
+                  ~40 lines of 11px text on a phone. */}
               <span
-                className={
+                className={`line-clamp-3 ${
                   request.outcome === "completed"
                     ? "text-altair-success"
                     : request.outcome === "refused" ||
                         request.outcome === "failed"
                       ? "text-altair-danger"
                       : "text-altair-ink-muted"
-                }
+                }`}
               >
                 {describeWorkRequest(request)}
               </span>
@@ -544,6 +696,10 @@ function RecentActivity({
 }: {
   readonly entries: readonly ActivityEntry[];
 }) {
+  // Device-local `toLocaleString` here was both a hydration mismatch (server
+  // renders UTC, client re-renders device TZ) and the wrong clock for an
+  // operations log. The company timezone is the one the operator plans in.
+  const timeZone = useCompanyTimezone();
   return (
     <section
       className={`${altairMcCardClass} ${altairMcCardPadClass}`}
@@ -570,12 +726,7 @@ function RecentActivity({
                 dateTime={entry.at}
                 className="block text-[10px] text-altair-ink-muted"
               >
-                {new Date(entry.at).toLocaleString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                {formatDateTimeInTimeZone(entry.at, timeZone)}
               </time>
             </li>
           ))}

@@ -142,7 +142,11 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-1 border-b border-[var(--north-star-plate-border)]">
+      {/* The shell's <main> clips horizontal overflow, so without its own
+          scroller this bar CLIPS on a phone and the trailing tabs become
+          unreachable. `overflow-x-auto` + `shrink-0` keeps all seven tabs
+          one swipe away; `min-h-11` keeps each a real thumb target. */}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--north-star-plate-border)]">
         {TABS.map((entry) => (
           <button
             key={entry.id}
@@ -150,8 +154,8 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
             onClick={() => setTab(entry.id)}
             className={
               tab === entry.id
-                ? "px-4 py-2 text-sm font-medium text-altair-ink border-b-2 border-altair-accent"
-                : "px-4 py-2 text-sm text-altair-ink-muted hover:text-altair-ink"
+                ? "min-h-11 shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-altair-ink border-b-2 border-altair-accent md:min-h-0"
+                : "min-h-11 shrink-0 whitespace-nowrap px-4 py-2 text-sm text-altair-ink-muted hover:text-altair-ink md:min-h-0"
             }
           >
             {entry.label}
