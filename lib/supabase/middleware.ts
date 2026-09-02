@@ -18,6 +18,24 @@ const AUTH_ROUTES = [
 const PRICING_ROUTE = "/pricing";
 /** Public legal documents — linked from the marketing footer. */
 const LEGAL_ROUTES = ["/privacy", "/terms"];
+/**
+ * Published website pages (migration 187) and the sitemap that advertises
+ * them.
+ *
+ * ============ WHY THIS EXEMPTION EXISTS ============
+ * These are the marketing site's own articles. A page that 307s an anonymous
+ * visitor to /login is not published in any sense that matters: a reader sees
+ * a login form, and a crawler indexes the redirect rather than the article.
+ * The first live site canary hit exactly that — the page existed, was
+ * `published`, had a canonical, and was unreachable.
+ *
+ * Being public here is not a hole. `marketing_site_pages` RLS exposes only
+ * `page_state = 'published'` to anon, and the route reads through the
+ * anon-key client, so a draft still 404s for a logged-out visitor. The
+ * middleware decides who may KNOCK; the policy decides what they may see.
+ */
+const SITE_PAGE_ROUTE_PREFIX = "/insights";
+const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
 const MARKETING_HOMEPAGE_ROUTE = "/welcome";
@@ -119,6 +137,18 @@ function isLegalRoute(pathname: string) {
   return LEGAL_ROUTES.includes(pathname);
 }
 
+/** A published article, or the index of them. Never a draft — RLS decides. */
+function isSitePageRoute(pathname: string) {
+  return (
+    pathname === SITE_PAGE_ROUTE_PREFIX ||
+    pathname.startsWith(`${SITE_PAGE_ROUTE_PREFIX}/`)
+  );
+}
+
+function isSitemapRoute(pathname: string) {
+  return pathname === SITEMAP_ROUTE;
+}
+
 function isInstallRoute(pathname: string) {
   return pathname === INSTALL_ROUTE;
 }
@@ -146,6 +176,8 @@ function isPublicRoute(pathname: string) {
     isAuthRoute(pathname) ||
     isPricingRoute(pathname) ||
     isLegalRoute(pathname) ||
+    isSitePageRoute(pathname) ||
+    isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||

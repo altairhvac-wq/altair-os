@@ -163,7 +163,7 @@ export const altairSiteAdapter: FirstPartyAdapter = {
 
     const written = await publishSitePage({
       companyId: input.post.companyId,
-      contentPackageId: input.post.providerResourceId,
+      contentPackageId: input.contentPackageId,
       slug,
       title: draft.title,
       metaTitle,

@@ -254,6 +254,21 @@ check(
   "a slug owned by a different package is refused rather than overwritten",
   queries.includes("already belongs to a different content package"),
 );
+check(
+  "THE PACKAGE ID IS ITS OWN INPUT, not the connection's resource id",
+  // Regression. The adapter passed `post.providerResourceId` as the content
+  // package id, and for a first-party connection that value is the SITE
+  // ("altair-site") — a connection identifier being written into a uuid
+  // column with a composite foreign key. Every publish would have failed on
+  // the cast, and the one-page-per-package index would have been meaningless
+  // if it had not. Found by inspection before the first canary publish.
+  adapter.includes("contentPackageId: input.contentPackageId") &&
+    !adapter.includes("contentPackageId: input.post.providerResourceId"),
+);
+check(
+  "the dispatcher forwards a package id rather than inventing one",
+  dispatch.includes("contentPackageId: input.contentPackageId ?? null"),
+);
 check("the revision counter increments on republish", queries.includes("existing.revision + 1"));
 check("every publish appends a revision snapshot", queries.includes("revisionsTable(supabase).insert"));
 check(
@@ -353,6 +368,48 @@ check(
   sitemap.includes("filter((page) => Boolean(page.canonicalUrl))"),
 );
 check("the route emits the canonical as alternates", route.includes("alternates: { canonical"));
+
+/* ============================ the middleware ============================ */
+
+console.log("\nA published page is reachable by an anonymous visitor");
+
+const middleware = strip(read("lib/supabase/middleware.ts"));
+
+// Scoped to the BODY of `isPublicRoute`, not the whole file. Matching the
+// file passed on the function DEFINITION — deleting the call from
+// `isPublicRoute` (which is the actual regression) left the definition in
+// place and the check green. Mutation-checking found that; reading it did
+// not.
+const publicRouteBody = (() => {
+  const start = middleware.indexOf("function isPublicRoute");
+  if (start === -1) return "";
+  return middleware.slice(start, middleware.indexOf("}", start));
+})();
+
+check(
+  "the isPublicRoute body was located, so the checks below are not vacuous",
+  publicRouteBody.length > 0 && publicRouteBody.includes("isAuthRoute(pathname)"),
+);
+check(
+  "THE ARTICLE ROUTE IS PUBLIC AT THE MIDDLEWARE LAYER",
+  // Regression. The first live canary published a page that was `published`,
+  // had a canonical, and 307'd every anonymous visitor to /login — a reader
+  // saw a login form and a crawler would have indexed the redirect. The page
+  // existed and was unreachable, which is not published.
+  publicRouteBody.includes("isSitePageRoute(pathname)"),
+);
+check(
+  "the sitemap is public too, or nothing can discover the page",
+  publicRouteBody.includes("isSitemapRoute(pathname)"),
+);
+check(
+  "the exemption covers the whole article prefix, not one hardcoded slug",
+  middleware.includes('pathname.startsWith(`${SITE_PAGE_ROUTE_PREFIX}/`)'),
+);
+check(
+  "being public at the middleware does not expose drafts — RLS still decides",
+  migration.includes("using (page_state = 'published')"),
+);
 check("the route emits a meta description", route.includes("description: page.metaDescription"));
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

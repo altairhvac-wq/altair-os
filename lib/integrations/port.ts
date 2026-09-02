@@ -444,6 +444,20 @@ export type FirstPartyPublishInput = {
   readonly package: PublishPackage;
   readonly capability: ProviderCapability;
   /**
+   * The creative brief this page is published FROM, or null for a
+   * hand-authored page.
+   *
+   * ============ WHY THIS IS NOT `post.providerResourceId` ============
+   * It was, and that was a defect. For a first-party connection the resource
+   * id is the SITE ("altair-site"), not a package — so the adapter was
+   * writing a connection identifier into `content_package_id`, a uuid column
+   * with a composite foreign key. Every publish would have failed on the
+   * cast, and the one-page-per-package index it feeds would have been
+   * meaningless if it had not. The package is its own input now, because it
+   * is its own thing.
+   */
+  readonly contentPackageId: string | null;
+  /**
    * The person publishing. Required, and not optional the way a token is
    * absent: an internal write still has an author, and the audit trail on a
    * live public URL is worth more than the convenience of omitting it.

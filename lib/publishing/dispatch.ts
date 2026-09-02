@@ -164,6 +164,11 @@ export type DispatchInput = {
     readonly canonicalUrl: string | null;
     readonly keywords: readonly string[];
   };
+  /**
+   * The content package this publish came from. First-party only, and the
+   * page's identity for the one-page-per-package guard.
+   */
+  readonly contentPackageId?: string | null;
   /** Slugs of other published pages this one links to. First-party only. */
   readonly internalLinks?: readonly string[];
   /** Why a live page changed, recorded on the revision. First-party only. */
@@ -523,6 +528,7 @@ async function dispatchFirstParty(args: {
         media: input.media,
       },
       capability: capabilityFor(account.provider),
+      contentPackageId: input.contentPackageId ?? null,
       publishedBy: input.publishedBy,
       seo: input.seo ?? {
         slug: null,
