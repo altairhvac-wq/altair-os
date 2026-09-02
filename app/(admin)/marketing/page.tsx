@@ -15,11 +15,15 @@ import {
   buildTodayPlan,
   buildAttentionItems,
   buildRecentActivity,
-  isSnapshotFresh,
 } from "@/shared/types/marketing-command";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
 import { listWorkRequests } from "@/lib/database/queries/agent-work-requests";
+import { getLatestAgentPlatformHeartbeat } from "@/lib/database/queries/agent-platform-heartbeat";
+import {
+  deriveAgentPlatformStatus,
+  describeAgentPlatformStatus,
+} from "@/shared/types/agent-heartbeat";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { listMarketingItems } from "@/lib/marketing/store";
 import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
@@ -159,21 +163,28 @@ export default async function MarketingPage({
   // cannot be called — so a platform that has stopped reporting shows as
   // exactly that rather than as a quiet day.
   const nowIso = new Date().toISOString();
-  const [operatingState, chiefMessages, workRequests] = await Promise.all([
-    getMarketingOperatingState({
-      companyId: companyContext.company.id,
-      nowIso,
-    }),
-    listChiefMessages({ companyId: companyContext.company.id, limit: 50 }),
-    // What the operator has asked the platform to run, and what came back.
-    // Enough rows that every message visible in the 50-message conversation
-    // can still show the work it started (a campaign alone queues several).
-    listWorkRequests({ companyId: companyContext.company.id, limit: 30 }),
-  ]);
+  const [operatingState, chiefMessages, workRequests, platformHeartbeat] =
+    await Promise.all([
+      getMarketingOperatingState({
+        companyId: companyContext.company.id,
+        nowIso,
+      }),
+      listChiefMessages({ companyId: companyContext.company.id, limit: 50 }),
+      // What the operator has asked the platform to run, and what came back.
+      // Enough rows that every message visible in the 50-message conversation
+      // can still show the work it started (a campaign alone queues several).
+      listWorkRequests({ companyId: companyContext.company.id, limit: 30 }),
+      // The platform's OWN liveness signal — see shared/types/agent-heartbeat.ts.
+      // Deliberately separate from the marketing snapshot's 24-hour freshness
+      // window: a queued question needs an answer sized in MINUTES, not a day.
+      getLatestAgentPlatformHeartbeat(companyContext.company.id),
+    ]);
 
   const awaitingReply = chiefMessages.some(
     (message) => message.role === "user" && message.status === "queued",
   );
+
+  const platformStatusReport = deriveAgentPlatformStatus(platformHeartbeat, nowIso);
 
   const command = {
     lanes: buildTodayPlan(operatingState),
@@ -181,15 +192,21 @@ export default async function MarketingPage({
     activity: buildRecentActivity(operatingState),
     messages: chiefMessages,
     awaitingReply,
-    // Fail closed and say so: a stale or absent snapshot means the platform
-    // is not reporting, and the Chief answers on ITS cycle, so a question
-    // asked now may sit for a while. The operator is told, not guessed at.
-    platformUnavailableReason: isSnapshotFresh(operatingState)
-      ? null
-      : "The Agent Platform has not reported recently. Questions will queue until it next runs.",
+    // Fail closed and say so, from the PLATFORM'S OWN heartbeat rather than
+    // the (24-hour-tolerant) marketing snapshot: a question asked while the
+    // gateway is offline must read as offline within minutes, not a day.
+    platformUnavailableReason:
+      platformStatusReport.status === "online"
+        ? null
+        : describeAgentPlatformStatus(platformStatusReport),
     canAsk: true,
     workRequests,
+    platformStatus: platformStatusReport,
   };
+  // `buildTodayPlan`/`buildAttentionItems` still call `isSnapshotFresh`
+  // INTERNALLY (marketing-command.ts) to gate Today's plan / Needs-attention
+  // on business-DATA freshness — a different, correctly 24-hour-tolerant
+  // question from platform process liveness above. Nothing to import here.
 
   return (
     <MarketingWorkspace

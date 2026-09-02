@@ -43,6 +43,10 @@ import {
 } from "@/shared/types/marketing-command";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
+import {
+  formatRelativeAge,
+  type AgentPlatformStatusReport,
+} from "@/shared/types/agent-heartbeat";
 
 /**
  * `crypto.randomUUID` exists only on secure origins. Testing this surface from
@@ -98,6 +102,7 @@ export function MarketingCommandView({
   canAsk,
   decisions,
   workRequests,
+  platformStatus,
 }: {
   readonly lanes: readonly CommandLane[];
   readonly attention: readonly AttentionItem[];
@@ -117,6 +122,8 @@ export function MarketingCommandView({
   readonly decisions: readonly AgentDecisionRecord[];
   /** What has been asked of the platform recently, and what came back. */
   readonly workRequests: readonly WorkRequest[];
+  /** The platform's own liveness signal — ONLINE / DEGRADED / OFFLINE. */
+  readonly platformStatus: AgentPlatformStatusReport;
 }) {
   const router = useRouter();
   // ============ RE-CHECK WHILE SOMETHING IS PENDING, AND ONLY THEN ============
@@ -127,8 +134,14 @@ export function MarketingCommandView({
   // interval. The moment everything is settled the interval is torn down:
   // an idle Command tab makes no requests. This is a re-read of real state,
   // not a liveness performance — the copy still says "queued", because it is.
+  //
+  // A platform that is not ONLINE is ALSO "something pending": the operator
+  // needs to see it recover the moment a heartbeat lands again, not only when
+  // they happen to have a queued question of their own.
   const somethingPending =
-    awaitingReply || workRequests.some((request) => request.outcome === null);
+    awaitingReply ||
+    workRequests.some((request) => request.outcome === null) ||
+    platformStatus.status !== "online";
   useEffect(() => {
     if (!somethingPending) return;
     const timer = setInterval(() => router.refresh(), 20_000);
@@ -151,6 +164,7 @@ export function MarketingCommandView({
           <ChiefConversation
             messages={messages}
             awaitingReply={awaitingReply}
+            platformStatus={platformStatus}
             platformUnavailableReason={platformUnavailableReason}
             canAsk={canAsk}
             workRequests={workRequests}
@@ -175,17 +189,94 @@ export function MarketingCommandView({
   );
 }
 
+/* ------------------------------------------------- platform liveness badge */
+
+const PLATFORM_STATUS_TONE = {
+  online: "success",
+  degraded: "warning",
+  offline: "danger",
+} as const;
+
+const PLATFORM_STATUS_LABEL = {
+  online: "Agent Platform online",
+  degraded: "Agent Platform degraded",
+  offline: "Agent Platform offline",
+} as const;
+
+/**
+ * ONLINE / DEGRADED / OFFLINE + "last seen", always rendered.
+ *
+ * ====================== WHY THIS EXISTS ======================
+ * Before this badge, a queued Chief question could sit for HOURS with only
+ * "waiting for next cycle" — indistinguishable from a platform working
+ * normally on a slow day. This makes the platform's own aliveness a first-
+ * class, always-visible fact rather than something inferred from silence.
+ *
+ * ====================== WHY "LAST SEEN" TICKS WITHOUT A NETWORK CALL ======================
+ * The server computed `ageMs` once, at render time. A `setInterval` here only
+ * forces a RE-RENDER of the already-fetched timestamp through
+ * `formatRelativeAge` — zero network cost, so the number keeps advancing
+ * between the page's own 20s poll cycles instead of freezing at whatever it
+ * said when the page last loaded.
+ */
+function AgentPlatformBadge({
+  status,
+}: {
+  readonly status: AgentPlatformStatusReport;
+}) {
+  // `nowMs` is set ONLY from inside effects (mount, then every 10s) — never
+  // read from `Date.now()` in the render body itself, which must stay pure.
+  // Before the mount effect has run (server render, first paint) it is
+  // null and the badge falls back to the server-computed `status.ageMs`,
+  // which is also what keeps SSR and the first client render in agreement.
+  const [nowMs, setNowMs] = useState<number | null>(null);
+  useEffect(() => {
+    setNowMs(Date.now());
+    if (status.lastSeenAt === null) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 10_000);
+    return () => clearInterval(timer);
+  }, [status.lastSeenAt]);
+
+  const liveAgeMs =
+    status.lastSeenAt === null
+      ? null
+      : nowMs === null
+        ? status.ageMs
+        : Math.max(0, nowMs - Date.parse(status.lastSeenAt));
+  const detail =
+    liveAgeMs === null
+      ? "never reported in"
+      : `last seen ${formatRelativeAge(liveAgeMs)} ago`;
+
+  return (
+    <StatusPill
+      tone={PLATFORM_STATUS_TONE[status.status]}
+      size="sm"
+      className="gap-1"
+    >
+      <span
+        aria-hidden="true"
+        className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-current"
+      />
+      {PLATFORM_STATUS_LABEL[status.status]}
+      <span className="text-altair-ink-muted">· {detail}</span>
+    </StatusPill>
+  );
+}
+
 /* --------------------------------------------------------- conversation */
 
 function ChiefConversation({
   messages,
   awaitingReply,
+  platformStatus,
   platformUnavailableReason,
   canAsk,
   workRequests,
 }: {
   readonly messages: readonly ChiefMessage[];
   readonly awaitingReply: boolean;
+  readonly platformStatus: AgentPlatformStatusReport;
   readonly platformUnavailableReason: string | null;
   readonly canAsk: boolean;
   readonly workRequests: readonly WorkRequest[];
@@ -242,15 +333,17 @@ function ChiefConversation({
         <h2 className="text-sm font-semibold text-altair-ink">
           Chief of Staff
         </h2>
-        {platformUnavailableReason ? (
-          <StatusPill tone="warning" size="sm">
-            Platform not reporting
-          </StatusPill>
-        ) : awaitingReply ? (
-          <StatusPill tone="info" size="sm">
-            Queued
-          </StatusPill>
-        ) : null}
+        <div className="flex items-center gap-1.5">
+          {/* ALWAYS visible, not only when something is wrong — a queued
+              question must never sit for hours with no indication the
+              platform is offline (the failure this badge exists to close). */}
+          <AgentPlatformBadge status={platformStatus} />
+          {platformStatus.status === "online" && awaitingReply ? (
+            <StatusPill tone="info" size="sm">
+              Queued
+            </StatusPill>
+          ) : null}
+        </div>
       </header>
 
       <p className="mt-1 text-xs leading-5 text-altair-ink-muted">{status}</p>

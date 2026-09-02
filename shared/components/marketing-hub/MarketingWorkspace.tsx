@@ -24,6 +24,7 @@ import type {
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingPost } from "@/shared/types/marketing-post";
 import type { ReelVideoOption } from "@/shared/types/marketing-reel";
+import type { AgentPlatformStatusReport } from "@/shared/types/agent-heartbeat";
 
 /**
  * `/marketing` — the one canonical founder-facing Marketing workspace.
@@ -71,6 +72,8 @@ type MarketingWorkspaceProps = {
     platformUnavailableReason: string | null;
     canAsk: boolean;
     workRequests: readonly WorkRequest[];
+    /** The platform's own liveness signal — see shared/types/agent-heartbeat.ts. */
+    platformStatus: AgentPlatformStatusReport;
   };
   /**
    * The company's site pages, projected from the same operating state the
@@ -175,6 +178,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           // The same decision records Performance reads. One queue.
           decisions={props.decisions}
           workRequests={props.command.workRequests}
+          platformStatus={props.command.platformStatus}
         />
       ) : null}
 

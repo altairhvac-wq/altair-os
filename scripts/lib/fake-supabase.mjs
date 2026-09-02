@@ -20,7 +20,8 @@
  * ==================== WHAT IT MODELS, AND WHAT IT DOES NOT ====================
  * Models: eq/is/gt/in filters, ordering, limit, projection, single/maybeSingle
  * cardinality, insert with unique-constraint violation (23505), guarded UPDATE
- * returning affected rows via `.select()`, and injectable failures.
+ * returning affected rows via `.select()`, upsert-on-conflict (replace in
+ * place or insert), and injectable failures.
  *
  * Does NOT model: RLS (the service role bypasses it anyway), CHECK
  * constraints (asserted against the migrations by the static verifier),
@@ -43,11 +44,12 @@ const MATCHERS = {
 };
 
 class FakeQuery {
-  constructor(store, table, op, payload) {
+  constructor(store, table, op, payload, opUpsertOptions) {
     this.store = store;
     this.table = table;
     this.op = op;
     this.payload = payload;
+    this.upsertOptions = opUpsertOptions ?? null;
     this.filters = [];
     this.projection = null;
     this.orderBy = null;
@@ -211,6 +213,36 @@ class FakeQuery {
       return this.shape(affected.map((row) => this.project(row)));
     }
 
+    if (this.op === "upsert") {
+      // `INSERT ... ON CONFLICT (conflictColumns) DO UPDATE SET ...` — one
+      // atomic statement in real Postgres. The fake models the OUTCOME (a
+      // matching row is replaced in place, a non-matching one is created)
+      // rather than the SQL, which is enough to prove upsert semantics: a
+      // second heartbeat REPLACES the first rather than accumulating.
+      const incoming = Array.isArray(this.payload) ? this.payload : [this.payload];
+      const conflictColumns = (this.upsertOptions?.onConflict ?? "")
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const upserted = [];
+      for (const candidate of incoming) {
+        const existing =
+          conflictColumns.length > 0
+            ? rows.find((row) => conflictColumns.every((column) => row[column] === candidate[column]))
+            : undefined;
+        if (existing) {
+          Object.assign(existing, candidate);
+          upserted.push(existing);
+        } else {
+          const row = this.store.buildRow(this.table, candidate);
+          rows.push(row);
+          upserted.push(row);
+        }
+      }
+      if (!this.returning) return { data: null, error: null };
+      return this.shape(upserted.map((row) => this.project(row)));
+    }
+
     throw new Error(`unsupported operation: ${this.op}`);
   }
 }
@@ -294,6 +326,7 @@ export function createFakeSupabase() {
         select: (columns) => new FakeQuery(store, table, "select", null).select(columns),
         insert: (payload) => new FakeQuery(store, table, "insert", payload),
         update: (payload) => new FakeQuery(store, table, "update", payload),
+        upsert: (payload, options) => new FakeQuery(store, table, "upsert", payload, options),
       };
     },
   };

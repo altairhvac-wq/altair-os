@@ -138,6 +138,7 @@ steps.push(
     name: "agent-queue-integrity",
     script: "scripts/verify-agent-queue-integrity.mjs",
   },
+  { name: "agent-heartbeat", script: "scripts/verify-agent-heartbeat.mjs" },
 );
 
 const results = [];
