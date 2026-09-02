@@ -85,14 +85,50 @@ const MUTATIONS = [
     to: "  return `chief-answer:shared`;",
   },
   {
-    invariant: "answer key collision is refused",
+    invariant: "a reply is never written before the claim succeeds",
     file: CHIEF,
-    from: `    if (
-      !existing ||
-      existing.role !== "chief" ||
-      existing.in_reply_to !== input.questionId
-    ) {`,
-    to: `    if (false) {`,
+    // The SECOND Codex pass's residual defect, reintroduced precisely: when
+    // the claim (queued -> answered) finds zero rows, fetch the question
+    // anyway and insert a reply regardless of whether it is still answerable
+    // — exactly what the pre-fix ordering did (insert first, check second).
+    // A late answer to an already-`failed` question then writes a chief
+    // reply row underneath it: a failed question with an answer no failure
+    // message explains.
+    from: `  if (!claimed) {
+    // Zero rows: the question is already terminal (answered or failed — a
+    // late answer, a duplicate answer, or the loser of a concurrent race
+    // against \`recordChiefFailure\`) or does not exist for this company. NO
+    // REPLY IS WRITTEN in either case — that is the guarantee this reorder
+    // exists to provide.
+    const existing = await chiefMessagesTable(supabase)
+      .select("id")
+      .eq("id", input.questionId)
+      .eq("company_id", input.companyId)
+      .eq("role", "user")
+      .maybeSingle();
+    return { outcome: existing.data ? "already_settled" : "not_found" };
+  }
+
+  const answer = await chiefMessagesTable(supabase).insert({
+    company_id: input.companyId,
+    conversation_id: claimed.conversation_id,`,
+    to: `  let conversationId = claimed?.conversation_id;
+  if (!claimed) {
+    const existing = await chiefMessagesTable(supabase)
+      .select("id, conversation_id")
+      .eq("id", input.questionId)
+      .eq("company_id", input.companyId)
+      .eq("role", "user")
+      .maybeSingle();
+    if (!existing.data) {
+      return { outcome: "not_found" };
+    }
+    conversationId = existing.data.conversation_id;
+  }
+
+  const answer = await chiefMessagesTable(supabase).insert({
+    company_id: input.companyId,
+    conversation_id: conversationId,`,
   },
   {
     invariant: "answered is terminal (failure path)",
@@ -112,15 +148,19 @@ const MUTATIONS = [
   {
     invariant: "answered is terminal (answer path)",
     file: CHIEF,
-    from: `    .eq("role", "user")
+    // Without `status = 'queued'` guarding the CLAIM itself, an already-
+    // ANSWERED or FAILED question would re-satisfy the update, re-stamping
+    // answered_at and re-attempting an insert that then collides with its
+    // own prior reply — the one-way state machine breaks at its source.
+    from: `    .eq("id", input.questionId)
+    .eq("company_id", input.companyId)
+    .eq("role", "user")
     .eq("status", "queued")
-    .select("id");
-
-  if (settle.error) {`,
-    to: `    .eq("role", "user")
-    .select("id");
-
-  if (settle.error) {`,
+    .select("id, conversation_id");`,
+    to: `    .eq("id", input.questionId)
+    .eq("company_id", input.companyId)
+    .eq("role", "user")
+    .select("id, conversation_id");`,
   },
   {
     invariant: "a batch accounts for every item",

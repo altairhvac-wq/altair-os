@@ -285,11 +285,35 @@ export function chiefAnswerRequestKey(questionId: string): string {
 /**
  * Record the Chief's answer, and mark the question handled.
  *
- * Two writes, answer first: if the second fails the question stays `queued`
- * and is pulled again. With the derived key above, that re-pull now collides
- * with its own answer row and settles the question instead of duplicating it.
- * The other order loses the answer entirely and reports the question as
- * handled, which is not recoverable.
+ * ============ CLAIM THE TRANSITION, THEN — ONLY THEN — WRITE THE REPLY ============
+ * This used to insert the chief reply FIRST and run the guarded settle UPDATE
+ * second. That let the reply land even when the settle step went on to find
+ * the question already terminal: a late answer arriving after
+ * `recordChiefFailure` had already moved the question to `failed` still wrote
+ * a chief reply row, because nothing before the insert asked whether the
+ * question was still answerable. The result was a question and a reply that
+ * disagreed — `failed` sitting above an answer no failure message explains.
+ *
+ * The order is now: (1) attempt the guarded UPDATE — `queued` → `answered` —
+ * and let the AFFECTED-ROW COUNT decide everything; (2) insert the reply only
+ * if that UPDATE actually matched a row, which is the platform's proof that
+ * THIS call is the one making the question answerable. A single guarded
+ * UPDATE is one atomic statement, so two concurrent callers can never both
+ * win it — whichever the database serializes first claims the transition,
+ * and the other observes zero rows matched and writes no reply at all. That
+ * is what makes "queued→answered" and "failed vs. late answer" and
+ * "concurrent answer/failure" all resolve to a single row deciding the
+ * outcome rather than a race between two independent writes.
+ *
+ * The one gap a single-statement CAS cannot close by itself is the reply
+ * INSERT failing *after* the claim succeeds (a transient error, not a
+ * conflict). Left alone that would strand the question `answered` with no
+ * reply beneath it — silently unrecoverable, since nothing else may touch an
+ * `answered` row. So that path explicitly REVERTS the claim back to `queued`
+ * before returning an error: an audited, narrowly-scoped recovery transition,
+ * safe specifically because a transition into `answered` can only be
+ * performed once per question and only by this function, so nothing else can
+ * have touched the row in between.
  */
 export async function recordChiefAnswer(input: {
   questionId: string;
@@ -298,94 +322,91 @@ export async function recordChiefAnswer(input: {
   nowIso: string;
 }): Promise<{ outcome?: SettlementOutcome; error?: string }> {
   const supabase = createServiceRoleClient();
-
-  const question = await chiefMessagesTable(supabase)
-    .select("id, conversation_id, company_id, role, status")
-    .eq("id", input.questionId)
-    // Company-scoped: an answer can only ever be attached to a question the
-    // same company asked, whatever the caller claims.
-    .eq("company_id", input.companyId)
-    .eq("role", "user")
-    .maybeSingle();
-
-  if (!question.data) {
-    return { outcome: "not_found" };
-  }
-
-  const row = question.data as { conversation_id: string };
   const requestKey = chiefAnswerRequestKey(input.questionId);
 
-  const answer = await chiefMessagesTable(supabase)
-    .insert({
-      company_id: input.companyId,
-      conversation_id: row.conversation_id,
-      role: "chief",
-      body: input.body,
-      status: "answered",
-      request_key: requestKey,
-      in_reply_to: input.questionId,
-      answered_at: input.nowIso,
-    })
-    .select("id, in_reply_to, role")
-    .maybeSingle();
-
-  if (answer.error) {
-    // A repeated answer for the same key is the pull protocol working, not a
-    // failure: the platform re-pulled a question whose answer never landed.
-    // But "the key exists" is only benign if the row it hit is THIS question's
-    // own chief reply — anything else means the derivation is broken, and
-    // settling on top of it would report an answer nobody can read.
-    if (answer.error.code !== "23505") {
-      console.error("[recordChiefAnswer] answer insert failed:", {
-        code: answer.error.code,
-      });
-      return { error: "The answer could not be stored." };
-    }
-
-    const colliding = await chiefMessagesTable(supabase)
-      .select("id, in_reply_to, role")
-      .eq("company_id", input.companyId)
-      .eq("request_key", requestKey)
-      .maybeSingle();
-
-    const existing = colliding.data as {
-      in_reply_to: string | null;
-      role: string;
-    } | null;
-
-    if (
-      !existing ||
-      existing.role !== "chief" ||
-      existing.in_reply_to !== input.questionId
-    ) {
-      console.error("[recordChiefAnswer] answer key collided with a foreign row:", {
-        questionId: input.questionId,
-      });
-      return { error: "The answer could not be stored." };
-    }
-  }
-
-  // One-way: only a QUEUED question becomes answered. A question already
-  // answered or failed keeps the state it has, and the caller is told the
-  // transition was a replay rather than a fresh settlement.
-  const settle = await chiefMessagesTable(supabase)
+  // The claim. One-way: only a row still `queued` can transition, and the
+  // returned rows are the only proof that THIS call performed it.
+  const claim = await chiefMessagesTable(supabase)
     .update({ status: "answered", answered_at: input.nowIso })
     .eq("id", input.questionId)
     .eq("company_id", input.companyId)
     .eq("role", "user")
     .eq("status", "queued")
-    .select("id");
+    .select("id, conversation_id");
 
-  if (settle.error) {
-    console.error("[recordChiefAnswer] question not settled:", {
+  if (claim.error) {
+    console.error("[recordChiefAnswer] claim update failed:", {
       questionId: input.questionId,
-      code: settle.error.code,
+      code: claim.error.code,
     });
-    return { error: "The answer was stored but the question was not settled." };
+    return { error: "The question could not be settled." };
   }
 
-  const matched = Array.isArray(settle.data) ? settle.data.length : 0;
-  return { outcome: matched > 0 ? "settled" : "already_settled" };
+  const claimed = Array.isArray(claim.data) ? (claim.data[0] as
+    | { id: string; conversation_id: string }
+    | undefined) : undefined;
+
+  if (!claimed) {
+    // Zero rows: the question is already terminal (answered or failed — a
+    // late answer, a duplicate answer, or the loser of a concurrent race
+    // against `recordChiefFailure`) or does not exist for this company. NO
+    // REPLY IS WRITTEN in either case — that is the guarantee this reorder
+    // exists to provide.
+    const existing = await chiefMessagesTable(supabase)
+      .select("id")
+      .eq("id", input.questionId)
+      .eq("company_id", input.companyId)
+      .eq("role", "user")
+      .maybeSingle();
+    return { outcome: existing.data ? "already_settled" : "not_found" };
+  }
+
+  const answer = await chiefMessagesTable(supabase).insert({
+    company_id: input.companyId,
+    conversation_id: claimed.conversation_id,
+    role: "chief",
+    body: input.body,
+    status: "answered",
+    request_key: requestKey,
+    in_reply_to: input.questionId,
+    answered_at: input.nowIso,
+  });
+
+  if (!answer.error) {
+    return { outcome: "settled" };
+  }
+
+  // ============ ANY INSERT FAILURE HERE IS UNEXPECTED, NOT A REPLAY ============
+  // A 23505 on the derived key looks, at first glance, like the benign replay
+  // the old code accepted unconditionally. It is not reachable that way under
+  // this ordering: the claim above can transition a question at most once
+  // (it is a one-way, guarded UPDATE), so a legitimate retry after this exact
+  // call already succeeded would find the question no longer `queued` and
+  // return via the `already_settled` branch above WITHOUT ever reaching this
+  // insert. So a 23505 here can only mean some OTHER row already occupies
+  // this question's derived key — a foreign or squatted row, not our own
+  // reply — and settling on top of it would report an answer nobody wrote.
+  // Every insert failure at this point, 23505 included, is therefore
+  // treated the same way: the claim is reverted rather than trusted.
+  console.error("[recordChiefAnswer] reply insert failed after claiming the question:", {
+    questionId: input.questionId,
+    code: answer.error.code,
+  });
+  const revert = await chiefMessagesTable(supabase)
+    .update({ status: "queued", answered_at: null })
+    .eq("id", input.questionId)
+    .eq("company_id", input.companyId)
+    .eq("role", "user")
+    .eq("status", "answered");
+
+  if (revert.error) {
+    console.error("[recordChiefAnswer] could not revert an orphaned claim:", {
+      questionId: input.questionId,
+      code: revert.error.code,
+    });
+  }
+
+  return { error: "The answer could not be stored." };
 }
 
 /**

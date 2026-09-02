@@ -541,6 +541,106 @@ console.log("\nAnswered is terminal (P2-3)");
     row.status === "failed" && answered.outcome === "already_settled",
     { status: row.status, answered },
   );
+  check(
+    "A LATE ANSWER TO A FAILED QUESTION WRITES NO REPLY ROW",
+    // The residual defect the second Codex pass found: the reply insert
+    // used to happen BEFORE the guarded settle check, so a late answer to an
+    // already-failed question still wrote a chief reply — a failed question
+    // sitting above an answer no failure message explained. The claim
+    // (queued -> answered) is now attempted FIRST; a question already
+    // `failed` is not `queued`, so the claim matches nothing and the reply
+    // is never inserted at all.
+    !store
+      .rows("agent_chief_messages")
+      .some((entry) => entry.role === "chief" && entry.in_reply_to === question.id),
+    store.rows("agent_chief_messages").filter((entry) => entry.role === "chief"),
+  );
+  check(
+    "and the original failure detail is untouched",
+    row.error_detail === "gave up",
+    row.error_detail,
+  );
+}
+
+/* ==================================================================== */
+/* RACE — a late answer must never insert a reply for a question that   */
+/* concurrently loses the claim to `recordChiefFailure`, in EITHER order */
+/* ==================================================================== */
+
+console.log("\nConcurrent answer/failure race: exactly one winner, never a stray reply");
+
+{
+  store.reset();
+  // Answer arrives first in the array — with the fake store's synchronous
+  // `.then()`, Promise.all dispatches thenables in array order, so this
+  // pins the ANSWER as the one that wins the underlying CAS.
+  const question = seedQuestion(OURS);
+  const [answered, failed] = await Promise.all([
+    chief.recordChiefAnswer({
+      questionId: question.id,
+      companyId: OURS,
+      body: "the answer that wins the race",
+      nowIso: "2026-09-02T10:00:00.000Z",
+    }),
+    chief.recordChiefFailure({
+      questionId: question.id,
+      companyId: OURS,
+      errorDetail: "arrived a moment later",
+    }),
+  ]);
+  const row = store
+    .rows("agent_chief_messages")
+    .find((entry) => entry.id === question.id);
+  const replies = store
+    .rows("agent_chief_messages")
+    .filter((entry) => entry.role === "chief" && entry.in_reply_to === question.id);
+  check(
+    "THE ANSWER WINS: settled, the failure sees already_settled",
+    answered.outcome === "settled" && failed.outcome === "already_settled",
+    { answered, failed },
+  );
+  check(
+    "the question ends up ANSWERED with EXACTLY ONE reply, no error_detail",
+    row.status === "answered" && replies.length === 1 && row.error_detail === null,
+    { status: row.status, replies: replies.length, errorDetail: row.error_detail },
+  );
+}
+
+{
+  store.reset();
+  // Same race, opposite array order: the failure now wins the CAS.
+  const question = seedQuestion(OURS);
+  const [failed, answered] = await Promise.all([
+    chief.recordChiefFailure({
+      questionId: question.id,
+      companyId: OURS,
+      errorDetail: "this one wins the race",
+    }),
+    chief.recordChiefAnswer({
+      questionId: question.id,
+      companyId: OURS,
+      body: "arrives after the question already failed",
+      nowIso: "2026-09-02T10:00:01.000Z",
+    }),
+  ]);
+  const row = store
+    .rows("agent_chief_messages")
+    .find((entry) => entry.id === question.id);
+  const replies = store
+    .rows("agent_chief_messages")
+    .filter((entry) => entry.role === "chief" && entry.in_reply_to === question.id);
+  check(
+    "THE FAILURE WINS: settled, the answer sees already_settled",
+    failed.outcome === "settled" && answered.outcome === "already_settled",
+    { failed, answered },
+  );
+  check(
+    "the question ends up FAILED with NO REPLY ROW AT ALL",
+    row.status === "failed" &&
+      row.error_detail === "this one wins the race" &&
+      replies.length === 0,
+    { status: row.status, errorDetail: row.error_detail, replies: replies.length },
+  );
 }
 
 /* ==================================================================== */
