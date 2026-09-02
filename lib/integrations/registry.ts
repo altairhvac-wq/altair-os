@@ -59,6 +59,11 @@ const ADAPTER_LOADERS: Readonly<
   // capability matrix describing a provider is not the same as this
   // deployment being able to reach it.
   youtube: () => import("./youtube/adapter").then((m) => m.youtubeAdapter),
+  // The first-party surface. It reaches an internal database write rather
+  // than a provider API — the dispatcher routes on the adapter's kind, and
+  // this one exposes `publishFirstParty` instead of `publish`.
+  altair_site: () =>
+    import("./altair-site/adapter").then((m) => m.altairSiteAdapter),
 };
 
 export const ADAPTER_RESOLUTION_FAILURES = [

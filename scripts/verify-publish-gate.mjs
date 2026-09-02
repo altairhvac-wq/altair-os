@@ -365,20 +365,36 @@ check(
 
 /* ------------------------------------------------------------- the kind gate */
 
-console.log("\nKind — an asset source or Altair surface is never a destination");
+console.log("\nKind — an asset source is never a destination");
+
+/**
+ * Which kinds may be published to.
+ *
+ * `asset_source` never can: it produces creative, and migration 181's header
+ * says a publish to it must stay unrepresentable.
+ *
+ * `first_party` NOW CAN, and that changed deliberately. It was refused while
+ * the Altair site had no publisher — a destination nothing can write to is
+ * not a destination — and migration 187 gave it one. The dispatcher routes on
+ * the adapter's kind, so a first-party destination reaches an internal
+ * database write through `publishFirstParty` and can never reach `publish`.
+ * The kill switch, the recorded approval and the delivery ledger apply to it
+ * exactly as they do to an external provider.
+ */
+const isDestination = (provider) => CAPABILITY[provider].kind !== "asset_source";
 
 for (const provider of PROVIDERS) {
   const label = CAPABILITY[provider].label;
 
-  // A well-formed row, everything else perfect: only a publisher gets through.
+  // A well-formed row, everything else perfect.
   const wellFormed = ask(provider);
   check(
-    `${provider}: a well-formed row is ${isPublisher(provider) ? "allowed" : "refused"}`,
-    isPublisher(provider) ? wellFormed === null : refused(wellFormed),
+    `${provider}: a well-formed row is ${isDestination(provider) ? "allowed" : "refused"}`,
+    isDestination(provider) ? wellFormed === null : refused(wellFormed),
     wellFormed,
   );
 
-  if (!isPublisher(provider)) {
+  if (!isDestination(provider)) {
     check(
       `${provider}: the refusal says it does not receive published content`,
       (wellFormed ?? "").includes(`${label} does not receive published content.`),
@@ -623,8 +639,13 @@ for (const provider of PROVIDERS) {
 
           // Restated independently of the implementation: all four facts, or no.
           const shouldAllow =
-            kind === "publisher" &&
-            CAPABILITY[provider].kind === "publisher" &&
+            // The stored kind and the registry must agree, and neither may
+            // be an asset source. `first_party` is a legitimate destination
+            // since migration 187 — an internal write reached through
+            // `publishFirstParty`, under the same switch, approval and
+            // ledger as an external post.
+            kind === CAPABILITY[provider].kind &&
+            CAPABILITY[provider].kind !== "asset_source" &&
             env.MARKETING_PUBLISH_MODE === "live" &&
             conn.canAcceptContent(state) &&
             (!CAPABILITY[provider].requiresManualApproval ||
@@ -679,9 +700,39 @@ check(
   allowedBy.get("higgsfield"),
 );
 check(
-  "a first-party surface is never allowed, under any combination",
-  allowedBy.get("altair_site") === 0,
+  "A FIRST-PARTY SURFACE IS ALLOWED ONLY WHEN EVERY OTHER FACT HOLDS",
+  // It is a destination now, so "never allowed" is the wrong assertion. What
+  // must remain true is that it earns its way through the same four checks
+  // as anything else — the sweep above already fails any combination that
+  // gets through without them.
+  allowedBy.get("altair_site") > 0,
   allowedBy.get("altair_site"),
+);
+check(
+  "a first-party surface is still refused when publishing is disarmed",
+  refused(
+    gate.assertPublishAllowed({
+      provider: "altair_site",
+      integrationKind: "first_party",
+      channelState: "DIRECT_PUBLISH_READY",
+      jobApprovedAt: APPROVED_AT,
+      account: null,
+      env: {},
+    }),
+  ),
+);
+check(
+  "a first-party surface is still refused without a recorded approval",
+  refused(
+    gate.assertPublishAllowed({
+      provider: "altair_site",
+      integrationKind: "first_party",
+      channelState: "DIRECT_PUBLISH_READY",
+      jobApprovedAt: null,
+      account: null,
+      env: LIVE_ENV,
+    }),
+  ),
 );
 check(
   "every publisher has at least one path through, so the gate is not merely closed",

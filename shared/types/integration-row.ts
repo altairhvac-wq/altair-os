@@ -60,7 +60,15 @@ export type IntegrationRowAction =
   | "connect"
   | "reconnect"
   | "recheck"
-  | "disconnect";
+  | "disconnect"
+  /**
+   * First-party only. There is no third party to authorize, so "connect" is
+   * the wrong word and a connect path would have nowhere to point: enabling
+   * the Altair site publisher is an internal decision that records a
+   * connected-account row so the ledger and this card have something true to
+   * refer to.
+   */
+  | "enable";
 
 export type IntegrationRow = {
   readonly provider: IntegrationProvider;
@@ -225,7 +233,15 @@ export function buildIntegrationRows(
       nowIso: input.nowIso,
     });
 
-    const action = INTEGRATION_STATE_ACTION[state];
+    // A first-party surface has nothing to authorize, so the generic
+    // NOT_CONNECTED -> "connect" mapping would offer a button with nowhere to
+    // point. Enabling it is an internal decision instead, and only once the
+    // deployment can actually build a canonical URL.
+    const baseAction = INTEGRATION_STATE_ACTION[state];
+    const action: IntegrationRowAction =
+      capability.kind === "first_party" && baseAction === "connect"
+        ? "enable"
+        : baseAction;
     const wantsConnectPath = action === "connect" || action === "reconnect";
 
     return {

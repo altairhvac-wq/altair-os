@@ -129,6 +129,7 @@ steps.push(
   { name: "creative-assets", script: "scripts/verify-creative-assets.mjs" },
   { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
   { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
+  { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
 );
 
 const results = [];

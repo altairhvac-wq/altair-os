@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import { enableAltairSiteAction } from "@/app/actions/marketing-site";
 import {
   Briefcase,
   Building2,
@@ -213,7 +215,15 @@ function IntegrationRowAction({
         ? "Reconnect"
         : row.action === "recheck"
           ? "Re-check"
-          : "Disconnect";
+          : row.action === "enable"
+            ? "Enable"
+            : "Disconnect";
+
+  // The first-party surface is enabled by a Server Action, not by an
+  // authorize hop — there is no third party to send anyone to.
+  if (row.action === "enable") {
+    return <EnableAltairSiteButton canManage={canManage} />;
+  }
 
   const disabledReason = !canManage
     ? "Only owners and admins can manage integrations."
@@ -239,5 +249,52 @@ function IntegrationRowAction({
     >
       {label}
     </Button>
+  );
+}
+
+/**
+ * Enable the Altair website as a publishing destination.
+ *
+ * A Server Action rather than a link: there is no authorize hop, and the
+ * write is ours. The action re-checks the permission itself — this disabled
+ * state is a courtesy to the operator, not the control.
+ */
+function EnableAltairSiteButton({ canManage }: { canManage: boolean }) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  if (!canManage) {
+    return (
+      <Button
+        variant="quiet"
+        size="sm"
+        disabled
+        title="Only owners and admins can manage integrations."
+      >
+        Enable
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        variant="primary"
+        size="sm"
+        loading={pending}
+        onClick={() => {
+          setError(null);
+          startTransition(async () => {
+            const result = await enableAltairSiteAction();
+            if (result.error) setError(result.error);
+          });
+        }}
+      >
+        {pending ? "Enabling…" : "Enable"}
+      </Button>
+      {error ? (
+        <span className="text-xs text-altair-danger">{error}</span>
+      ) : null}
+    </div>
   );
 }

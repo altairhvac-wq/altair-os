@@ -363,12 +363,30 @@ export function assertConnectionReady(
   const capability = capabilityFor(input.provider);
 
   if (!canAcceptContent(input.channelState)) {
-    // `MARKETING_CHANNEL_DESCRIPTORS` covers exactly the publishers; the
-    // registry check has already refused every name outside the union and the
-    // kind check every non-publisher inside it, so this lookup is non-null
-    // here. `verify-integration-registry.mjs` proves the record is total over
-    // the publisher set.
-    const descriptor = MARKETING_CHANNEL_DESCRIPTORS[input.provider];
+    // ============ WHY THIS LOOKUP NEEDS A FALLBACK ============
+    // `MARKETING_CHANNEL_DESCRIPTORS` covers exactly the PUBLISHERS. That was
+    // safe while the kind check refused every non-publisher before this line
+    // — and it stopped being safe the moment `first_party` became a legal
+    // destination, because `altair_site` has no descriptor and the index
+    // returned `undefined`. `describeMarketingChannelState` then dereferenced
+    // it and THREW, which is the one failure mode this file's header rules
+    // out: a throw here lands in a caller's catch written to settle a
+    // delivery FAILED and records a provider failure for a publish that never
+    // left the building.
+    //
+    // The gate's own combination sweep caught it. The fallback mirrors
+    // `descriptorFor` in `integration-row.ts`, which solved the same problem
+    // for the same reason.
+    const descriptor =
+      MARKETING_CHANNEL_DESCRIPTORS[
+        input.provider as keyof typeof MARKETING_CHANNEL_DESCRIPTORS
+      ] ?? {
+        channel: input.provider,
+        label: capability.label,
+        identityLabel: capability.identityLabel,
+        connectPath: capability.connectPath ?? "",
+        requiredEnvVars: capability.requiredEnvVars,
+      };
     // The channel state machine already owns this copy and already names the
     // next step for every state. Restating it here would be a second place for
     // "Reconnect YouTube" to drift out of date.
@@ -456,9 +474,24 @@ function describeNonPublisherNextStep(kind: IntegrationKind): string | null {
     case "publisher":
       return null;
     case "asset_source":
+      // The one kind that is never a destination. Migration 181's header and
+      // the port's union both say so; this is where it is said to a human.
       return "Choose a publishing channel as the destination — this connection only produces creative.";
     case "first_party":
-      return "Choose a publishing channel as the destination — this is an Altair surface, not an external one.";
+      // ============ WHY THIS IS NO LONGER A REFUSAL ============
+      // It used to be, and that was right while the Altair site had no
+      // publisher: a destination nothing could write to is not a destination.
+      // Migration 187 gave it one, and the port grew `publishFirstParty` for
+      // exactly this kind.
+      //
+      // Allowing it does not widen what an EXTERNAL provider may do. The
+      // dispatcher routes on the adapter's kind, so a first-party
+      // destination reaches an internal database write and can never reach
+      // `publish`; `asset_source` remains refused above; and the kill
+      // switch, the recorded approval and the delivery ledger apply to all
+      // three kinds identically. What changed is that one legitimate
+      // destination stopped being described as an impossible one.
+      return null;
   }
 }
 

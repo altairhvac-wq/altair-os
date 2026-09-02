@@ -144,6 +144,15 @@ for (const file of files) {
 
 /* --------------------------------------------------- tenancy, RLS, grants */
 
+/**
+ * Tables that are deliberately readable by anonymous visitors.
+ *
+ * Exactly one, and it is the public website. Adding to this set is a decision
+ * to put a table on the internet, and belongs in the migration that does it
+ * rather than here.
+ */
+const ANON_READABLE_TABLES = new Set(["marketing_site_pages"]);
+
 console.log("\nTenancy, RLS and grants on every new table");
 for (const file of files) {
   const sql = readSql(file);
@@ -183,10 +192,43 @@ for (const file of files) {
         `revoke\\s+insert,\\s*update,\\s*delete\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+authenticated`,
       ).test(sql),
     );
-    check(
-      `${table}: revokes everything from anon`,
-      new RegExp(`revoke\\s+all\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+anon`).test(sql),
-    );
+    // ============ THE ONE TABLE ANON MAY READ ============
+    // Every other table here holds credentials, ledgers or unreleased copy,
+    // and `revoke all from anon` is right for all of them. A PUBLIC WEBSITE
+    // is the exception by definition: a page no anonymous visitor can read
+    // is not published.
+    //
+    // The exception is named rather than inferred, so adding a second
+    // anon-readable table is a deliberate edit here and not a side effect of
+    // how someone wrote their grants. And it is not a hole: the assertions
+    // below are STRICTER than the blanket revoke they replace — anon must be
+    // granted SELECT only, must be denied every write, and the row-level
+    // policy must narrow that read to published rows.
+    if (ANON_READABLE_TABLES.has(table)) {
+      check(
+        `${table}: anon may select (a public page must be readable)`,
+        new RegExp(`grant\\s+select\\s+on\\s+table\\s+public\\.${table}\\s+to\\s+anon`).test(sql),
+      );
+      check(
+        `${table}: anon is granted NOTHING but select`,
+        !new RegExp(`grant\\s+(all|insert|update|delete)[^;]*\\s+to\\s+[^;]*anon`).test(sql),
+      );
+      check(
+        `${table}: anon writes are revoked explicitly`,
+        new RegExp(
+          `revoke\\s+insert,\\s*update,\\s*delete\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+anon`,
+        ).test(sql),
+      );
+      check(
+        `${table}: the anon policy narrows to published rows only`,
+        /to\s+anon[^;]*using\s*\(\s*page_state\s*=\s*'published'\s*\)/s.test(sql),
+      );
+    } else {
+      check(
+        `${table}: revokes everything from anon`,
+        new RegExp(`revoke\\s+all\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+anon`).test(sql),
+      );
+    }
     check(
       `${table}: grants all to service_role`,
       new RegExp(`grant\\s+all\\s+on\\s+table\\s+public\\.${table}\\s+to\\s+service_role`).test(

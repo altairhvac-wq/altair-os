@@ -427,9 +427,61 @@ export type AssetSourceAdapter = IntegrationAdapterBase & {
  * gets its own named method — widening `publish` to cover it would put an
  * internal write and an irreversible third-party post behind one name.
  */
+/**
+ * What a first-party publish reports back. Same shape as `PublishOutcome`
+ * so one settlement path serves both, but produced by a different method for
+ * the reason written on the adapter below.
+ */
+export type FirstPartyPublishOutcome = PublishOutcome & {
+  /** True when this created the page; false when it revised an existing one. */
+  readonly created: boolean;
+  /** The revision now live. 1 on creation, incrementing on each update. */
+  readonly revision: number;
+};
+
+export type FirstPartyPublishInput = {
+  readonly post: PublishTarget;
+  readonly package: PublishPackage;
+  readonly capability: ProviderCapability;
+  /**
+   * The person publishing. Required, and not optional the way a token is
+   * absent: an internal write still has an author, and the audit trail on a
+   * live public URL is worth more than the convenience of omitting it.
+   */
+  readonly publishedBy: string;
+  /** SEO fields, which no external provider carries. */
+  readonly seo: {
+    readonly slug: string | null;
+    readonly metaTitle: string | null;
+    readonly metaDescription: string | null;
+    readonly canonicalUrl: string | null;
+    readonly keywords: readonly string[];
+  };
+  readonly internalLinks: readonly string[];
+  readonly changeNote: string | null;
+  readonly nowIso: string;
+};
+
 export type FirstPartyAdapter = IntegrationAdapterBase & {
   readonly kind: "first_party";
+  /**
+   * `publish` stays uninhabitable. See the union's note: widening it to cover
+   * an internal write would put an ordinary database row and an irreversible
+   * third-party post behind one name, and the two need different arguments,
+   * different failure handling and different reviews.
+   */
   publish?: never;
+  /**
+   * The named method that note promised.
+   *
+   * THROWS on failure, matching `publish`'s contract, so the caller's catch
+   * settles the delivery and releases the claim exactly as it does for an
+   * external provider. The ledger does not care which kind of destination it
+   * was; the adapter interface does.
+   */
+  publishFirstParty(
+    input: FirstPartyPublishInput,
+  ): Promise<FirstPartyPublishOutcome>;
 };
 
 export type IntegrationAdapter =

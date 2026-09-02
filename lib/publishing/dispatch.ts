@@ -5,7 +5,11 @@ import {
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
 import { getUsableAccessToken } from "@/lib/integrations/credential-lifecycle";
-import type { PublishOutcome, PublisherAdapter } from "@/lib/integrations/port";
+import type {
+  FirstPartyAdapter,
+  PublishOutcome,
+  PublisherAdapter,
+} from "@/lib/integrations/port";
 import { resolveIntegrationAdapter } from "@/lib/integrations/registry";
 import { capabilityFor } from "@/shared/types/integration-capability";
 import type { IntegrationProvider } from "@/shared/types/integration-provider";
@@ -139,6 +143,31 @@ export type DispatchInput = {
   readonly nowIso: string;
   /** True when the deployment is configured, so the gate can be driven. */
   readonly configured: boolean;
+  /**
+   * Who is publishing.
+   *
+   * Required for a FIRST-PARTY destination, where the write is ours and the
+   * audit trail on a live public URL depends on knowing who made it. Unused
+   * for external providers, whose accountability is the recorded approval on
+   * the job plus the provider's own record of what it received.
+   */
+  readonly publishedBy?: string;
+  /**
+   * SEO fields. First-party only — no external provider carries a slug, a
+   * meta description or a canonical, and inventing them for one would put
+   * fields on a Facebook post that mean nothing there.
+   */
+  readonly seo?: {
+    readonly slug: string | null;
+    readonly metaTitle: string | null;
+    readonly metaDescription: string | null;
+    readonly canonicalUrl: string | null;
+    readonly keywords: readonly string[];
+  };
+  /** Slugs of other published pages this one links to. First-party only. */
+  readonly internalLinks?: readonly string[];
+  /** Why a live page changed, recorded on the revision. First-party only. */
+  readonly changeNote?: string | null;
   /** Injected for verifiers only. Production leaves it alone. */
   readonly env?: PublishModeEnv;
 };
@@ -215,7 +244,14 @@ export async function dispatchPublish(
     return refuse("NO_ADAPTER", resolution.detail, false);
   }
 
-  if (resolution.adapter.kind !== "publisher") {
+  // ============ THE TWO KINDS OF DESTINATION ============
+  // `asset_source` is refused outright — it produces creative and can never
+  // receive a post. `first_party` is a real destination reached by an
+  // INTERNAL write, so it takes the branch below: no credential (there is no
+  // delegated token to refresh), no connection-health check (there is no
+  // token to expire), but the same claim, the same ledger and the same
+  // settlement as any external provider.
+  if (resolution.adapter.kind === "asset_source") {
     // The gate checks this too, from the row and the matrix. This checks the
     // loaded ADAPTER, which is a third independent answer — and the one that
     // would catch a module wired under the wrong key in the registry.
@@ -224,6 +260,13 @@ export async function dispatchPublish(
       `The ${account.provider} adapter cannot receive content, so nothing was sent.`,
       false,
     );
+  }
+
+  if (resolution.adapter.kind === "first_party") {
+    return dispatchFirstParty({
+      input,
+      adapter: resolution.adapter,
+    });
   }
 
   const adapter: PublisherAdapter = resolution.adapter;
@@ -392,6 +435,148 @@ export async function dispatchPublish(
     // published video and a ledger insisting nothing happened.
     console.error("[dispatchPublish] PUBLISHED BUT NOT SETTLED:", {
       provider: account.provider,
+      deliveryId,
+      providerPostId: outcome.providerPostId,
+    });
+  }
+
+  return { ok: true, outcome, deliveryId };
+}
+
+/**
+ * The first-party branch: an internal write to the Altair site.
+ *
+ * ============ WHAT IT SHARES AND WHAT IT SKIPS ============
+ * SHARES, because these are what make a publish accountable rather than a
+ * database write somebody happened to run:
+ *   the gate's local half   already passed in `dispatchPublish` — kill
+ *                           switch, publisher kind, recorded human approval
+ *   `claimDelivery`         the same ledger, the same
+ *                           `unique (company_id, marketing_post_id, provider)`
+ *                           duplicate guard
+ *   `settleDelivery`        the same settlement, on both paths
+ *
+ * SKIPS, because they describe a delegated credential that does not exist:
+ *   the credential seam     there is no token to decrypt or refresh, and
+ *                           `refreshIfNeeded` refuses a first-party account
+ *                           by design (`firstPartyRefusal`)
+ *   the health check        `deriveMarketingChannelState` reads a token
+ *                           expiry; migration 181 forbids one on a
+ *                           first-party row, so the question is not just
+ *                           unanswerable, it is meaningless
+ *
+ * The page's own preconditions — metadata present, body not thin, canonical
+ * addressing this page, internal links alive — live in the adapter and in
+ * migration 187's CHECK constraints, which is where a rule about a web page
+ * belongs.
+ */
+async function dispatchFirstParty(args: {
+  readonly input: DispatchInput;
+  readonly adapter: FirstPartyAdapter;
+}): Promise<DispatchResult> {
+  const { input, adapter } = args;
+  const { account } = input;
+
+  if (!input.publishedBy) {
+    // An internal write still has an author. Refusing here rather than
+    // defaulting keeps the audit trail on a live public URL honest.
+    return refuse(
+      "REFUSED_BY_GATE",
+      "A first-party publish records who published it, and no publisher was supplied. Nothing was written.",
+      true,
+    );
+  }
+
+  const claim = await claimDelivery({
+    companyId: account.companyId,
+    marketingPostId: input.marketingPostId,
+    provider: account.provider,
+    connectedAccountId: account.connectedAccountId,
+    nowIso: input.nowIso,
+  });
+
+  if (claim.decision !== "PROCEED" || !claim.delivery) {
+    return refuse(
+      "NOT_CLAIMED",
+      claim.error ??
+        `This post has already been published to ${capabilityFor(account.provider).label}, or a publish is in progress. Nothing was written again.`,
+      false,
+    );
+  }
+
+  const deliveryId = claim.delivery.id;
+
+  let outcome: PublishOutcome;
+  try {
+    outcome = await adapter.publishFirstParty({
+      post: {
+        connectedAccountId: account.connectedAccountId,
+        companyId: account.companyId,
+        providerAccountId: account.providerAccountId,
+        providerResourceId: account.providerResourceId,
+      },
+      package: {
+        title: input.title,
+        body: input.body,
+        hashtags: input.hashtags,
+        link: input.link,
+        media: input.media,
+      },
+      capability: capabilityFor(account.provider),
+      publishedBy: input.publishedBy,
+      seo: input.seo ?? {
+        slug: null,
+        metaTitle: null,
+        metaDescription: null,
+        canonicalUrl: null,
+        keywords: [],
+      },
+      internalLinks: input.internalLinks ?? [],
+      changeNote: input.changeNote ?? null,
+      nowIso: input.nowIso,
+    });
+  } catch (error) {
+    const detail = `Publishing to ${capabilityFor(account.provider).label} failed. Nothing further was written.`;
+
+    console.error("[dispatchFirstParty] publish failed:", {
+      provider: account.provider,
+      deliveryId,
+      errorName: error instanceof Error ? error.name : "unknown",
+      code:
+        error instanceof Error && "code" in error
+          ? String((error as { code: unknown }).code)
+          : "unknown",
+    });
+
+    const settled = await settleDelivery({
+      deliveryId,
+      settlement: { outcome: "failed", failureDetail: detail },
+      nowIso: input.nowIso,
+    });
+    if (settled.error) {
+      console.error("[dispatchFirstParty] failed settle did not land:", {
+        deliveryId,
+      });
+    }
+
+    return refuse("PROVIDER_FAILED", detail, false);
+  }
+
+  const settled = await settleDelivery({
+    deliveryId,
+    settlement: {
+      outcome: "posted",
+      providerPostId: outcome.providerPostId,
+      ...(outcome.providerPermalink
+        ? { providerPermalink: outcome.providerPermalink }
+        : {}),
+      providerResult: providerResultFrom(outcome, input.nowIso),
+    },
+    nowIso: input.nowIso,
+  });
+
+  if (settled.error) {
+    console.error("[dispatchFirstParty] PUBLISHED BUT NOT SETTLED:", {
       deliveryId,
       providerPostId: outcome.providerPostId,
     });
