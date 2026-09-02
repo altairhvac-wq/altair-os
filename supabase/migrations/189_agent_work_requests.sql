@@ -99,6 +99,10 @@ grant select on table public.agent_work_requests to authenticated;
 revoke insert, update, delete on table public.agent_work_requests from authenticated;
 revoke all on table public.agent_work_requests from anon;
 grant all on table public.agent_work_requests to service_role;
+-- The table grant does not cover the sequence bigserial created for `seq`,
+-- and without it every service-role insert fails with 42501. Found live on
+-- 2026-09-01 (see migration 190, which repairs already-applied environments).
+grant usage, select on sequence public.agent_work_requests_seq_seq to service_role;
 
 comment on table public.agent_work_requests is
   'Operator requests for named Agent Platform analysis runs. Pulled by the platform, which honours each runner''s own consent gate. Creating a row here never itself runs, publishes or spends anything.';

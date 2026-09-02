@@ -77,6 +77,18 @@ export async function GET(request: Request) {
     : 10;
 
   const all = await listQueuedChiefQuestions({ afterSeq: after, limit });
+  if (all === null) {
+    // A read failure is a 503, never an empty work list. Reporting "no
+    // questions" over a broken table is how the sequence-grant incident hid.
+    return NextResponse.json(
+      {
+        ok: false,
+        route: ROUTE_NAME,
+        error: "The question queue could not be read.",
+      },
+      { status: 503 },
+    );
+  }
   // Filtered to the configured company even though the query is global: the
   // company is the server's, never the caller's, and this is where that is
   // enforced for this route.

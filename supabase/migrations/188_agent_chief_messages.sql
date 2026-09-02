@@ -117,6 +117,10 @@ grant select on table public.agent_chief_messages to authenticated;
 revoke insert, update, delete on table public.agent_chief_messages from authenticated;
 revoke all on table public.agent_chief_messages from anon;
 grant all on table public.agent_chief_messages to service_role;
+-- The table grant does not cover the sequence bigserial created for `seq`,
+-- and without it every service-role insert fails with 42501. Found live on
+-- 2026-09-01 (see migration 190, which repairs already-applied environments).
+grant usage, select on sequence public.agent_chief_messages_seq_seq to service_role;
 
 comment on table public.agent_chief_messages is
   'Conversation with the Chief of Staff. User turns are queued for the Agent Platform to pull (it is behind NAT and cannot be called); chief turns are written back through the authenticated agent bridge. Stores text only — every action the Chief takes still passes the platform''s own governance.';

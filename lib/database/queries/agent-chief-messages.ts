@@ -146,7 +146,10 @@ export async function enqueueChiefQuestion(input: {
       .maybeSingle();
 
     return existing.data
-      ? { message: toMessage(existing.data as ChiefMessageRow), duplicate: true }
+      ? {
+          message: toMessage(existing.data as ChiefMessageRow),
+          duplicate: true,
+        }
       : { error: "That question could not be queued." };
   }
 
@@ -155,7 +158,8 @@ export async function enqueueChiefQuestion(input: {
     code: insert.error.code,
   });
   return {
-    error: mapDatabaseError(insert.error) ?? "That question could not be queued.",
+    error:
+      mapDatabaseError(insert.error) ?? "That question could not be queued.",
   };
 }
 
@@ -180,7 +184,7 @@ export type QueuedChiefQuestion = {
 export async function listQueuedChiefQuestions(input: {
   afterSeq: number;
   limit: number;
-}): Promise<QueuedChiefQuestion[]> {
+}): Promise<QueuedChiefQuestion[] | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await chiefMessagesTable(supabase)
     .select(MESSAGE_SELECT)
@@ -194,7 +198,11 @@ export async function listQueuedChiefQuestions(input: {
     console.error("[listQueuedChiefQuestions] read failed:", {
       code: error.code,
     });
-    return [];
+    // Null, never an empty list: this is the platform's work list, and a
+    // read failure reported as "no work" is how a broken table spent a night
+    // masquerading as a quiet queue (the 42501 sequence-grant incident,
+    // 2026-09-01). The route turns null into a 503 the puller can see.
+    return null;
   }
 
   return (data ?? []).map((raw: unknown) => {
@@ -286,7 +294,10 @@ export async function recordChiefFailure(input: {
 }): Promise<{ error?: string }> {
   const supabase = createServiceRoleClient();
   const { error } = await chiefMessagesTable(supabase)
-    .update({ status: "failed", error_detail: input.errorDetail.slice(0, 1000) })
+    .update({
+      status: "failed",
+      error_detail: input.errorDetail.slice(0, 1000),
+    })
     .eq("id", input.questionId)
     .eq("company_id", input.companyId)
     .eq("role", "user");

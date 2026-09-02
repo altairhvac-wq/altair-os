@@ -190,7 +190,7 @@ export type PulledWorkRequest = {
 export async function listUnappliedWorkRequests(input: {
   afterSeq: number;
   limit: number;
-}): Promise<PulledWorkRequest[]> {
+}): Promise<PulledWorkRequest[] | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await workRequestsTable(supabase)
     .select(REQUEST_SELECT)
@@ -203,7 +203,9 @@ export async function listUnappliedWorkRequests(input: {
     console.error("[listUnappliedWorkRequests] read failed:", {
       code: error.code,
     });
-    return [];
+    // Null, never an empty list — a read failure reported as "no work" is
+    // how a broken table masquerades as a quiet queue. The route 503s.
+    return null;
   }
 
   const requests: PulledWorkRequest[] = [];

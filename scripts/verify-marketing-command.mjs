@@ -710,6 +710,97 @@ check(
   stateQuery.includes("deriveMarketingChannelState"),
 );
 
+/* ==================== one Marketing policy, stated once ==================== */
+
+// ============ WHAT THE 2026-09-01 INCIDENT PROVED WORTH PINNING ============
+// The founder hit "You do not have permission to perform this action" and
+// spent the evening auditing these gates — which had never failed; the write
+// had (42501, sequence grant). Two properties would have shortened that hunt
+// and must now hold permanently:
+//
+//   1. The page and every Marketing server action gate on the SAME predicate,
+//      so "the page opened" is proof the action's gate passed too.
+//   2. The unauthorized copy states the real policy, so a genuine gate
+//      refusal sends the reader to the right permission.
+console.log("\nMarketing page and actions gate on the same predicate");
+
+const marketingPage = strip(read("app/(admin)/marketing/page.tsx"));
+const chiefAction = strip(read("app/actions/marketing-chief.ts"));
+const workAction = strip(read("app/actions/marketing-work-request.ts"));
+const accessControl = strip(read("lib/database/access-control.ts"));
+
+check(
+  'the page gates on canAccessAdminNavItem(_, "/marketing")',
+  /canAccessAdminNavItem\((?:companyContext|context), "\/marketing"\)/.test(
+    marketingPage,
+  ),
+);
+check(
+  "askChiefAction gates on the SAME nav predicate",
+  /canAccessAdminNavItem\(context, "\/marketing"\)/.test(chiefAction),
+);
+check(
+  "requestWorkAction gates on the SAME nav predicate",
+  /canAccessAdminNavItem\(context, "\/marketing"\)/.test(workAction),
+);
+check(
+  "neither action re-derives its own role arithmetic",
+  !/hasCompanyRole|isPlatformAdmin|COMPANY_ROLE_PERMISSIONS/.test(
+    chiefAction + workAction,
+  ),
+);
+{
+  // The /marketing case itself: platform operator AND a dispatch-capable
+  // company role. Loosening either half is a deliberate policy change and
+  // must arrive as an edit to this check, not as drift.
+  const marketingCase = accessControl.match(
+    /case "\/marketing":[\s\S]*?return ([^;]+);/,
+  );
+  check(
+    "the /marketing policy is platform admin AND dispatchJobs",
+    marketingCase !== null &&
+      /context\.isPlatformAdmin\s*&&\s*permissions\.dispatchJobs/.test(
+        marketingCase?.[1] ?? "",
+      ),
+    marketingCase?.[1],
+  );
+}
+check(
+  "the unauthorized copy states the platform-operator policy, not a role list",
+  marketingPage.includes("limited to platform operators") &&
+    !marketingPage.includes("owners, admins, and dispatchers"),
+);
+
+/* =================== a broken queue can never look quiet =================== */
+
+console.log("\nA queue read failure is a 503, never an empty work list");
+
+const chiefRoute = strip(read("app/api/agent/chief-messages/route.ts"));
+const workRoute = strip(read("app/api/agent/work-requests/route.ts"));
+const chiefQueries = strip(
+  read("lib/database/queries/agent-chief-messages.ts"),
+);
+const workQueries = strip(read("lib/database/queries/agent-work-requests.ts"));
+
+check(
+  "the question pull distinguishes failure from empty",
+  chiefQueries.includes("Promise<QueuedChiefQuestion[] | null>") &&
+    /listQueuedChiefQuestions[\s\S]{0,700}return null;/.test(chiefQueries),
+);
+check(
+  "the request pull distinguishes failure from empty",
+  workQueries.includes("Promise<PulledWorkRequest[] | null>") &&
+    /listUnappliedWorkRequests[\s\S]{0,900}return null;/.test(workQueries),
+);
+check(
+  "the chief route answers 503 on a failed read",
+  /all === null[\s\S]{0,400}status: 503/.test(chiefRoute),
+);
+check(
+  "the work-request route answers 503 on a failed read",
+  /all === null[\s\S]{0,400}status: 503/.test(workRoute),
+);
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed.`);

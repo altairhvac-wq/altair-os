@@ -55,7 +55,11 @@ export default async function MarketingPage({
 
   if (!canAccessAdminNavItem(companyContext, "/marketing")) {
     return (
-      <UnauthorizedAccessView description="Marketing posts are limited to company owners, admins, and dispatchers." />
+      // The copy states the REAL policy. The previous line here described a
+      // role list from before Marketing became platform-operator-only, and a
+      // guard that lies about its own rule sends whoever hits it debugging
+      // the wrong permission (it did, on 2026-09-01).
+      <UnauthorizedAccessView description="Marketing is currently limited to platform operators. It opens to company owners and admins when marketing automation becomes generally available." />
     );
   }
 

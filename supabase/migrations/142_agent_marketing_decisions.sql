@@ -67,6 +67,10 @@ alter table public.agent_marketing_decisions enable row level security;
 revoke all on table public.agent_marketing_decisions from authenticated;
 revoke all on table public.agent_marketing_decisions from anon;
 grant all on table public.agent_marketing_decisions to service_role;
+-- The table grant does not cover the sequence bigserial created for `seq`,
+-- and without it every service-role insert fails with 42501. Found live on
+-- 2026-09-01 (see migration 190, which repairs already-applied environments).
+grant usage, select on sequence public.agent_marketing_decisions_seq_seq to service_role;
 
 comment on table public.agent_marketing_decisions is
   'Human approve/reject/request-edit decisions on Agent Platform proposals. Pulled by the platform on its next cycle. Recording a decision here never itself publishes anything.';
