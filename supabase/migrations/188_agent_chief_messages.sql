@@ -89,8 +89,13 @@ create table if not exists public.agent_chief_messages (
 );
 
 -- The platform's work list: queued user turns, oldest first.
-create index if not exists agent_chief_messages_pull_idx
-  on public.agent_chief_messages (seq)
+-- The platform's pull: ONE COMPANY's queued user turns, in seq order.
+-- The company leads deliberately (migration 192, patched in here for fresh
+-- environments): an index led by `seq` cannot serve the company predicate,
+-- and the query that matched it filtered by company only after a global
+-- limit — which let one tenant's backlog starve another indefinitely.
+create index if not exists agent_chief_messages_company_pull_idx
+  on public.agent_chief_messages (company_id, seq)
   where role = 'user' and status = 'queued';
 
 -- The UI's read: one conversation, in order.

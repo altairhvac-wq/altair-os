@@ -9,6 +9,10 @@ import {
   listUnappliedWorkRequests,
   markWorkRequestApplied,
 } from "@/lib/database/queries/agent-work-requests";
+import {
+  isDelivered,
+  settlementHttpStatus,
+} from "@/shared/types/agent-settlement";
 
 /**
  * The operator's work-request queue, as the Agent Platform sees it.
@@ -75,7 +79,13 @@ export async function GET(request: Request) {
     ? Math.min(Math.max(limitRaw, 1), MAX_LIMIT)
     : 10;
 
-  const all = await listUnappliedWorkRequests({ afterSeq: after, limit });
+  // The company goes INTO the query, so the limit applies to this company's
+  // rows rather than to a global page another tenant's backlog can fill.
+  const all = await listUnappliedWorkRequests({
+    companyId,
+    afterSeq: after,
+    limit,
+  });
   if (all === null) {
     // A read failure is a 503, never an empty work list.
     return NextResponse.json(
@@ -87,10 +97,15 @@ export async function GET(request: Request) {
       { status: 503 },
     );
   }
-  // Filtered to the configured company even though the query is global: the
-  // company is the server's, never the caller's, and this is where that is
-  // enforced for this route.
+  // Belt and braces behind the SQL predicate: a last assertion that nothing
+  // foreign reaches the wire, loud rather than silent if it ever does.
   const requests = all.filter((entry) => entry.companyId === companyId);
+  if (requests.length !== all.length) {
+    console.error("[agent-work-requests] query returned foreign rows:", {
+      returned: all.length,
+      kept: requests.length,
+    });
+  }
 
   return NextResponse.json({
     ok: true,
@@ -185,5 +200,21 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, route: ROUTE_NAME, requestId });
+  // What actually happened to the row, not merely "no database error". A
+  // wrong or foreign id answers 404 so the platform can see the two sides
+  // disagree, instead of being told its outcome landed.
+  const settlement = recorded.outcome ?? "not_found";
+  return NextResponse.json(
+    {
+      ok: isDelivered(settlement),
+      route: ROUTE_NAME,
+      requestId,
+      settlement,
+      error:
+        settlement === "not_found"
+          ? "No such work request for this company."
+          : null,
+    },
+    { status: settlementHttpStatus(settlement) },
+  );
 }

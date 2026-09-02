@@ -95,6 +95,14 @@ create index if not exists agent_work_requests_unapplied_idx
   on public.agent_work_requests (company_id, applied_at)
   where applied_at is null;
 
+-- The platform's pull: ONE COMPANY's undecided requests, in seq order.
+-- (Migration 192, patched in here for fresh environments.) The index above
+-- cannot order by seq; without this one the company-scoped pull degrades to a
+-- filter over a growing backlog.
+create index if not exists agent_work_requests_company_pull_idx
+  on public.agent_work_requests (company_id, seq)
+  where applied_at is null;
+
 alter table public.agent_work_requests enable row level security;
 
 -- Operators read their own company's requests so the surface can show what

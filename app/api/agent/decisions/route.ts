@@ -92,6 +92,21 @@ export async function GET(request: Request) {
     throwOnFailure: false,
     callback: async () => {
       const decisions = await listAgentDecisionsSince(companyId, since, limit);
+      if (decisions === null) {
+        // A read failure is a 503, never an empty decision list. Answering
+        // 200 with `[]` made a broken table indistinguishable from a quiet
+        // queue: the platform's cycle reported "both halves settled" and the
+        // gateway stayed on its normal interval while every human approval
+        // sat undelivered. The two sibling queues already answer this way.
+        return NextResponse.json(
+          {
+            ok: false,
+            route: ROUTE_NAME,
+            error: "The decision queue could not be read.",
+          },
+          { status: 503 },
+        );
+      }
       return NextResponse.json({
         ok: true,
         route: ROUTE_NAME,

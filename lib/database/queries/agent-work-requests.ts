@@ -9,6 +9,7 @@ import {
   type WorkRequestKind,
   type WorkRequestOutcome,
 } from "@/shared/types/agent-work-request";
+import type { SettlementOutcome } from "@/shared/types/agent-settlement";
 
 /**
  * Operator requests for Agent Platform work (migration 189).
@@ -192,6 +193,22 @@ export async function enqueueWorkRequest(input: {
  * human is carried in `requestedByEmail` from the conversation row, and the
  * request key (`chief-cmd:<questionId>:<n>-<kind>`) makes re-posts collapse
  * on the unique index instead of double-queueing.
+ *
+ * ============ EVERY ITEM GETS AN ANSWER ============
+ * A mid-batch database error used to abandon the loop and return one error
+ * for the whole call, leaving the already-inserted prefix queued while the
+ * operator was told the batch failed. Nothing is atomic here — PostgREST
+ * gives no transaction across separate inserts — so instead of pretending,
+ * every item is attempted and accounted for by name. The deterministic keys
+ * make a retry of the whole batch safe: the prefix collides and is counted as
+ * a duplicate rather than queued twice.
+ *
+ * Four outcomes, deliberately distinct, because they mean different things to
+ * the person reading the Chief's reply:
+ *   queued      accepted and newly created
+ *   duplicates  accepted earlier under the same key (a safe replay)
+ *   rejected    refused by validation — never written, and it says why
+ *   failed      the database refused it — not written, and worth alerting on
  */
 export async function enqueueWorkRequestsFromAgent(input: {
   companyId: string;
@@ -202,28 +219,32 @@ export async function enqueueWorkRequestsFromAgent(input: {
     note?: string | null;
     requestedByEmail?: string | null;
   }>;
-}): Promise<
-  | { queued: number; duplicates: number; invalid: { requestKey: string; error: string }[] }
-  | { error: string }
-> {
+}): Promise<{
+  received: number;
+  queued: number;
+  duplicates: number;
+  rejected: { requestKey: string; error: string }[];
+  failed: { requestKey: string; error: string }[];
+}> {
   const supabase = createServiceRoleClient();
   let queued = 0;
   let duplicates = 0;
-  const invalid: { requestKey: string; error: string }[] = [];
+  const rejected: { requestKey: string; error: string }[] = [];
+  const failed: { requestKey: string; error: string }[] = [];
 
   for (const request of input.requests) {
     const key = typeof request.requestKey === "string" ? request.requestKey.trim() : "";
     if (!key || key.length > 200) {
-      invalid.push({ requestKey: key || "(missing)", error: "requestKey is invalid" });
+      rejected.push({ requestKey: key || "(missing)", error: "requestKey is invalid" });
       continue;
     }
     if (!isWorkRequestKind(request.kind)) {
-      invalid.push({ requestKey: key, error: "unknown kind" });
+      rejected.push({ requestKey: key, error: "unknown kind" });
       continue;
     }
     const params = validateWorkRequestParams(request.kind, request.params ?? null);
     if (!params.ok) {
-      invalid.push({ requestKey: key, error: params.error });
+      rejected.push({ requestKey: key, error: params.error });
       continue;
     }
 
@@ -262,12 +283,21 @@ export async function enqueueWorkRequestsFromAgent(input: {
       companyId: input.companyId,
       code: insert.error.code,
     });
-    return {
+    // Recorded against ITS OWN key and the loop continues: abandoning here
+    // left a queued prefix behind an error that claimed nothing was queued.
+    failed.push({
+      requestKey: key,
       error: mapDatabaseError(insert.error) ?? "A request could not be queued.",
-    };
+    });
   }
 
-  return { queued, duplicates, invalid };
+  return {
+    received: input.requests.length,
+    queued,
+    duplicates,
+    rejected,
+    failed,
+  };
 }
 
 export type PulledWorkRequest = {
@@ -282,19 +312,31 @@ export type PulledWorkRequest = {
 };
 
 /**
- * The platform's work list: requests it has not yet decided.
+ * The platform's work list: one company's requests it has not yet decided.
  *
  * `applied_at is null` is the filter, so a request the platform has already
  * completed OR refused never comes back. That, not a cursor the two sides
  * have to keep in step, is what makes a re-pull a no-op.
+ *
+ * ============ THE COMPANY PREDICATE IS THE FAIRNESS GUARANTEE ============
+ * Filtered in SQL, BEFORE ordering and limiting — see the same note on
+ * `listQueuedChiefQuestions`. Applying it afterwards in the route let another
+ * company's unapplied backlog occupy every slot of the limited page, so this
+ * company's requests were never returned and never expired: permanent
+ * starvation from a query that looked correctly scoped at the route.
+ *
+ * Invariant a test can hold: a company's oldest unapplied request is returned
+ * on its next poll in bounded work, whatever any other company's backlog is.
  */
 export async function listUnappliedWorkRequests(input: {
+  companyId: string;
   afterSeq: number;
   limit: number;
 }): Promise<PulledWorkRequest[] | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await workRequestsTable(supabase)
     .select(REQUEST_SELECT)
+    .eq("company_id", input.companyId)
     .is("applied_at", null)
     .gt("seq", input.afterSeq)
     .order("seq", { ascending: true })
@@ -336,6 +378,18 @@ export async function listUnappliedWorkRequests(input: {
  * Company-scoped and one-way: `applied_at is null` in the filter means an
  * outcome can never be overwritten, so a re-post of the same outcome is a
  * no-op rather than a rewrite of history.
+ *
+ * ============ A GUARDED UPDATE THAT MATCHES NOTHING IS NOT SUCCESS ============
+ * This returned `{}` — read by the route as ok — whenever the database did not
+ * error. A guarded UPDATE matching zero rows does not error: it succeeds
+ * having changed nothing. So posting an outcome for a wrong id, a foreign
+ * company's id, or a request already settled all answered "recorded", and the
+ * platform stopped tracking work that was still queued (or never existed).
+ *
+ * The affected-row count is now the evidence, and the three cases are told
+ * apart: `settled` (this call moved it), `already_settled` (a replay, which
+ * is the pull protocol working), `not_found` (a correlation break the
+ * operator has to see, because no retry can fix it).
  */
 export async function markWorkRequestApplied(input: {
   requestId: string;
@@ -343,9 +397,9 @@ export async function markWorkRequestApplied(input: {
   outcome: WorkRequestOutcome;
   detail: string | null;
   nowIso: string;
-}): Promise<{ error?: string }> {
+}): Promise<{ outcome?: SettlementOutcome; error?: string }> {
   const supabase = createServiceRoleClient();
-  const { error } = await workRequestsTable(supabase)
+  const { data, error } = await workRequestsTable(supabase)
     .update({
       applied_at: input.nowIso,
       outcome: input.outcome,
@@ -353,7 +407,8 @@ export async function markWorkRequestApplied(input: {
     })
     .eq("id", input.requestId)
     .eq("company_id", input.companyId)
-    .is("applied_at", null);
+    .is("applied_at", null)
+    .select("id");
 
   if (error) {
     console.error("[markWorkRequestApplied] update failed:", {
@@ -362,5 +417,19 @@ export async function markWorkRequestApplied(input: {
     });
     return { error: "The outcome could not be recorded." };
   }
-  return {};
+
+  if (Array.isArray(data) && data.length > 0) {
+    return { outcome: "settled" };
+  }
+
+  // Zero rows. Distinguish "already decided" from "no such request for this
+  // company" — the first is a benign replay, the second means the two sides
+  // disagree about what exists.
+  const existing = await workRequestsTable(supabase)
+    .select("id")
+    .eq("id", input.requestId)
+    .eq("company_id", input.companyId)
+    .maybeSingle();
+
+  return { outcome: existing.data ? "already_settled" : "not_found" };
 }

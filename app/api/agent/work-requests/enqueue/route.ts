@@ -34,6 +34,17 @@ export const dynamic = "force-dynamic";
 const ROUTE_NAME = "agent-work-requests-enqueue";
 const MAX_BATCH = 10;
 
+/**
+ * Bumped when the response shape changes.
+ *
+ * v1 answered `{queued, duplicates, invalid}` and the platform's parser only
+ * read `queued` and `duplicates` — so refused items vanished between the two
+ * repos and the operator was told every proposal had been queued. v2 names
+ * `received`, `rejected` and `failed` explicitly and the platform reports
+ * them; the version is echoed so a skew is visible rather than inferred.
+ */
+const ENQUEUE_CONTRACT_VERSION = 2;
+
 type EnqueuePayload = {
   requests?: unknown;
 };
@@ -103,18 +114,21 @@ export async function POST(request: Request) {
   });
 
   const result = await enqueueWorkRequestsFromAgent({ companyId, requests: items });
-  if ("error" in result) {
-    return NextResponse.json(
-      { ok: false, route: ROUTE_NAME, error: result.error },
-      { status: 400 },
-    );
-  }
 
+  // ============ EVERY ITEM IS ACCOUNTED FOR BY NAME ============
+  // `received` is the arithmetic anchor: queued + duplicates + rejected +
+  // failed must equal it, so a caller can detect a dropped item rather than
+  // inferring acceptance from the absence of an error. The platform reports
+  // these counts to the operator verbatim — "queued 3" must mean three rows
+  // exist, and anything refused must say so and why.
   return NextResponse.json({
     ok: true,
     route: ROUTE_NAME,
+    contractVersion: ENQUEUE_CONTRACT_VERSION,
+    received: result.received,
     queued: result.queued,
     duplicates: result.duplicates,
-    invalid: result.invalid,
+    rejected: result.rejected,
+    failed: result.failed,
   });
 }

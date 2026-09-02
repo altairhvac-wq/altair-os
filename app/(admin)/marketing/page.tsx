@@ -72,7 +72,12 @@ export default async function MarketingPage({
       // Advanced rather than as the first thing on the page.
       getLatestAgentMarketingSnapshot(companyContext.company.id),
       // Recorded decisions, so a subject already decided is never offered again.
-      listAgentDecisionsSince(companyContext.company.id, 0, 200),
+      // `null` means the read failed; the UI degrades to offering the controls
+      // again rather than blanking the page, which is the safe direction here
+      // because recording a decision is idempotent on its key.
+      listAgentDecisionsSince(companyContext.company.id, 0, 200).then(
+        (rows) => rows ?? [],
+      ),
       // Which renders this deployment actually holds bytes for. Identities only
       // — no URL is created here. A playable link is minted per request by
       // `requestMarketingMediaPreviewAction` and expires on its own.

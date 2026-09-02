@@ -11,6 +11,10 @@ import {
   recordChiefFailure,
 } from "@/lib/database/queries/agent-chief-messages";
 import { CHIEF_MESSAGE_MAX } from "@/shared/types/marketing-command";
+import {
+  isDelivered,
+  settlementHttpStatus,
+} from "@/shared/types/agent-settlement";
 
 /**
  * The Chief of Staff conversation bridge.
@@ -76,7 +80,13 @@ export async function GET(request: Request) {
     ? Math.min(Math.max(limitRaw, 1), MAX_LIMIT)
     : 10;
 
-  const all = await listQueuedChiefQuestions({ afterSeq: after, limit });
+  // The company goes INTO the query, so the limit applies to this company's
+  // rows rather than to a global page that another tenant's backlog can fill.
+  const all = await listQueuedChiefQuestions({
+    companyId,
+    afterSeq: after,
+    limit,
+  });
   if (all === null) {
     // A read failure is a 503, never an empty work list. Reporting "no
     // questions" over a broken table is how the sequence-grant incident hid.
@@ -89,10 +99,16 @@ export async function GET(request: Request) {
       { status: 503 },
     );
   }
-  // Filtered to the configured company even though the query is global: the
-  // company is the server's, never the caller's, and this is where that is
-  // enforced for this route.
+  // Belt and braces. The predicate above is what makes delivery fair; this
+  // is a last assertion that nothing foreign can reach the wire, and it
+  // shouts if the query layer ever regresses instead of silently leaking.
   const questions = all.filter((q) => q.companyId === companyId);
+  if (questions.length !== all.length) {
+    console.error("[agent-chief-messages] query returned foreign rows:", {
+      returned: all.length,
+      kept: questions.length,
+    });
+  }
 
   return NextResponse.json({
     ok: true,
@@ -157,9 +173,28 @@ export async function POST(request: Request) {
       companyId,
       errorDetail: payload.error.trim(),
     });
+    if (failed.error) {
+      return NextResponse.json(
+        { ok: false, route: ROUTE_NAME, error: failed.error },
+        { status: 400 },
+      );
+    }
+    // `already_settled` here means the question reached a terminal state
+    // before this failure arrived — a late callback for work that finished.
+    // It is reported, not applied: the answer stands.
+    const outcome = failed.outcome ?? "not_found";
     return NextResponse.json(
-      { ok: !failed.error, route: ROUTE_NAME, error: failed.error ?? null },
-      { status: failed.error ? 400 : 200 },
+      {
+        ok: isDelivered(outcome),
+        route: ROUTE_NAME,
+        questionId,
+        outcome,
+        error:
+          outcome === "not_found"
+            ? "No such question for this company."
+            : null,
+      },
+      { status: settlementHttpStatus(outcome) },
     );
   }
 
@@ -176,16 +211,14 @@ export async function POST(request: Request) {
   // 8000; this is the conversational limit and is the tighter of the two.
   const bounded = body.slice(0, CHIEF_MESSAGE_MAX * 4);
 
-  const requestKey =
-    typeof payload.requestKey === "string" && payload.requestKey.trim()
-      ? payload.requestKey.trim()
-      : `chief-answer:${questionId}`;
-
+  // `payload.requestKey` is deliberately NOT read. The answer's identity is
+  // derived from the question it answers (`chiefAnswerRequestKey`), so a
+  // caller cannot present a key belonging to another row and have its answer
+  // treated as an already-stored duplicate while the question settles anyway.
   const recorded = await recordChiefAnswer({
     questionId,
     companyId,
     body: bounded,
-    requestKey,
     nowIso: new Date().toISOString(),
   });
 
@@ -196,5 +229,16 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, route: ROUTE_NAME, questionId });
+  const outcome = recorded.outcome ?? "not_found";
+  return NextResponse.json(
+    {
+      ok: isDelivered(outcome),
+      route: ROUTE_NAME,
+      questionId,
+      outcome,
+      error:
+        outcome === "not_found" ? "No such question for this company." : null,
+    },
+    { status: settlementHttpStatus(outcome) },
+  );
 }
