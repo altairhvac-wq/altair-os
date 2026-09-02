@@ -184,6 +184,9 @@ export default async function MarketingPage({
     <MarketingWorkspace
       posts={posts}
       command={command}
+      // Already loaded for the Command surface's lanes; the Website tab is a
+      // second reading of the same rows, not a second query.
+      sitePages={operatingState.sitePages}
       sitePublishingDetails={sitePublishingDetails}
       automationHealth={automationHealth}
       // The same section Advanced renders in full. Today reads it only to

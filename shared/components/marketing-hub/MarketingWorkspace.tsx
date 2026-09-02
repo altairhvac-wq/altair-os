@@ -13,6 +13,7 @@ import type {
   CommandLane,
 } from "@/shared/types/marketing-command";
 import type { WorkRequest } from "@/shared/types/agent-work-request";
+import { MarketingWebsiteView, type SitePageRow } from "./MarketingWebsiteView";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
@@ -72,6 +73,12 @@ type MarketingWorkspaceProps = {
     workRequests: readonly WorkRequest[];
   };
   /**
+   * The company's site pages, projected from the same operating state the
+   * Command surface reads. Read-only here: a page is written by the publish
+   * path, and its SEO details are edited on the post under Content.
+   */
+  sitePages: readonly SitePageRow[];
+  /**
    * Publishing details per website post id, projected server-side from rows
    * that already exist. Absent for every non-website post, which is why the
    * SEO panel cannot appear on one.
@@ -98,13 +105,33 @@ type MarketingWorkspaceProps = {
   connectedAccountsFlash: { tone: "success" | "error"; message: string } | null;
 };
 
+/**
+ * Marketing, named by what you are trying to do.
+ *
+ * ============ WHY THIS REPLACED "TODAY / SETTINGS / ADVANCED" ============
+ * "Advanced" had become the place everything went that was not the daily
+ * decision — runs, schedules, agent status, campaign telemetry, render
+ * diagnostics and the whole post editor, in one scroll. A tab named after how
+ * hard it is rather than what it holds cannot tell you whether what you want
+ * is in it. Each destination below is named after the question it answers.
+ *
+ * NOTHING WAS REBUILT TO DO THIS. Every screen is the one that already
+ * existed: Content is the post editor and its Website/SEO panel unchanged,
+ * Publishing is the daily go-out view, and Performance and History ask the
+ * same automation dashboard for the sections they are about. Integrations
+ * stay in Settings, where they were.
+ *
+ * Command is first and default: the Chief of Staff is the way in, and the
+ * other tabs are where you go when you already know what you want.
+ */
 const TABS = [
-  // Command is first and default: the Chief of Staff is the way in, and the
-  // other tabs are where you go when you already know what you want.
   { id: "command", label: "Command" },
-  { id: "today", label: "Today" },
+  { id: "content", label: "Content" },
+  { id: "publishing", label: "Publishing" },
+  { id: "performance", label: "Performance" },
+  { id: "website", label: "Website" },
+  { id: "history", label: "History" },
   { id: "settings", label: "Settings" },
-  { id: "advanced", label: "Advanced" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -141,23 +168,76 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           awaitingReply={props.command.awaitingReply}
           platformUnavailableReason={props.command.platformUnavailableReason}
           canAsk={props.command.canAsk}
-          // The same decision records the Advanced tab reads. One queue.
+          // The same decision records Performance reads. One queue.
           decisions={props.decisions}
           workRequests={props.command.workRequests}
         />
       ) : null}
 
-      {tab === "today" ? (
-        <MarketingTodayView
-          key={refreshKey}
-          posts={props.posts}
+      {tab === "content" ? (
+        <MarketingHubPageView
+          initialPosts={props.posts}
+          sitePublishingDetails={props.sitePublishingDetails}
           connectedAccounts={props.connectedAccounts}
           videoOptions={props.videoOptions}
-          rationaleByPostId={props.rationaleByPostId}
-          automationHealth={props.automationHealth}
-          renders={props.renders}
+          companyName={props.companyName}
+          showFounderMarketing={props.showFounderMarketing}
+          showFounderScreenshotCapture={props.showFounderScreenshotCapture}
+          aiFeaturesEnabled={props.aiFeaturesEnabled}
+          aiDraftingConfigured={props.aiDraftingConfigured}
+        />
+      ) : null}
+
+      {tab === "publishing" ? (
+        <div className="space-y-6">
+          <MarketingTodayView
+            key={refreshKey}
+            posts={props.posts}
+            connectedAccounts={props.connectedAccounts}
+            videoOptions={props.videoOptions}
+            rationaleByPostId={props.rationaleByPostId}
+            automationHealth={props.automationHealth}
+            renders={props.renders}
+            nowIso={props.nowIso}
+            onChanged={() => setRefreshKey((value) => value + 1)}
+          />
+          {/* The same dashboard, asked only for what going-out work looks
+              like. Decision controls, support levels and empty states are
+              unchanged — this is a subset, not a second component. */}
+          <MarketingAutomationSection
+            stored={props.snapshot}
+            only={["approvals", "videoRenders"]}
+            decisions={props.decisions}
+            bridgeConfigured={props.bridgeConfigured}
+            storedMediaJobIds={props.storedMediaJobIds}
+            nowIso={props.nowIso}
+          />
+        </div>
+      ) : null}
+
+      {tab === "performance" ? (
+        <MarketingAutomationSection
+          stored={props.snapshot}
+          only={["campaign", "recommendations", "agentStatus"]}
+          decisions={props.decisions}
+          bridgeConfigured={props.bridgeConfigured}
+          storedMediaJobIds={props.storedMediaJobIds}
           nowIso={props.nowIso}
-          onChanged={() => setRefreshKey((value) => value + 1)}
+        />
+      ) : null}
+
+      {tab === "website" ? (
+        <MarketingWebsiteView pages={props.sitePages} />
+      ) : null}
+
+      {tab === "history" ? (
+        <MarketingAutomationSection
+          stored={props.snapshot}
+          only={["summary", "recentActivity", "upcomingWork"]}
+          decisions={props.decisions}
+          bridgeConfigured={props.bridgeConfigured}
+          storedMediaJobIds={props.storedMediaJobIds}
+          nowIso={props.nowIso}
         />
       ) : null}
 
@@ -169,34 +249,6 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           connectedAccountsFlash={props.connectedAccountsFlash}
           canOpenMarketingHq={props.showFounderMarketing}
         />
-      ) : null}
-
-      {tab === "advanced" ? (
-        <div className="space-y-6">
-          <p className="text-sm text-altair-ink-muted">
-            Runs, schedules, agent status, campaign telemetry, render
-            diagnostics and manual post drafting. Nothing here is needed for the
-            daily decision.
-          </p>
-          <MarketingAutomationSection
-            stored={props.snapshot}
-            decisions={props.decisions}
-            bridgeConfigured={props.bridgeConfigured}
-            storedMediaJobIds={props.storedMediaJobIds}
-            nowIso={props.nowIso}
-          />
-          <MarketingHubPageView
-            initialPosts={props.posts}
-            sitePublishingDetails={props.sitePublishingDetails}
-            connectedAccounts={props.connectedAccounts}
-            videoOptions={props.videoOptions}
-            companyName={props.companyName}
-            showFounderMarketing={props.showFounderMarketing}
-            showFounderScreenshotCapture={props.showFounderScreenshotCapture}
-            aiFeaturesEnabled={props.aiFeaturesEnabled}
-            aiDraftingConfigured={props.aiDraftingConfigured}
-          />
-        </div>
       ) : null}
     </div>
   );
