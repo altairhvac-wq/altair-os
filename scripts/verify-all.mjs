@@ -132,6 +132,12 @@ steps.push(
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
   { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
   { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
+  // Behavioural, not static: the two above read these modules as text and
+  // were green through a tenant-starvation outage. This one executes them.
+  {
+    name: "agent-queue-integrity",
+    script: "scripts/verify-agent-queue-integrity.mjs",
+  },
 );
 
 const results = [];
