@@ -139,6 +139,8 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           awaitingReply={props.command.awaitingReply}
           platformUnavailableReason={props.command.platformUnavailableReason}
           canAsk={props.command.canAsk}
+          // The same decision records the Advanced tab reads. One queue.
+          decisions={props.decisions}
         />
       ) : null}
 
@@ -170,8 +172,8 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
         <div className="space-y-6">
           <p className="text-sm text-altair-ink-muted">
             Runs, schedules, agent status, campaign telemetry, render
-            diagnostics and manual post drafting. Nothing here is needed for
-            the daily decision.
+            diagnostics and manual post drafting. Nothing here is needed for the
+            daily decision.
           </p>
           <MarketingAutomationSection
             stored={props.snapshot}

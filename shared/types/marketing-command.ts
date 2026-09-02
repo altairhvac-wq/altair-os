@@ -73,6 +73,19 @@ export type AttentionItem = {
   /** Where the operator goes to act. Null when there is no single place. */
   readonly href: string | null;
   readonly occurredAt: string | null;
+  /**
+   * The Agent Platform approval a human may decide here, when there is one.
+   *
+   * ============ THE ONLY DELEGABLE ITEM, AND ONLY TO A HUMAN ============
+   * Typed as an approval id rather than a generic "actionable" flag so a
+   * failed delivery or an unhealthy connection can never acquire decision
+   * buttons by accident. Deciding writes an `agent_marketing_decisions` row
+   * through the same server action the Advanced tab uses, which the platform
+   * pulls on its next cycle — recording that a HUMAN agreed. It publishes
+   * nothing by itself, and the Chief cannot set this field: it comes from
+   * the platform's own snapshot.
+   */
+  readonly decidableApprovalId: string | null;
 };
 
 export type ActivityEntry = {
@@ -383,6 +396,9 @@ export function buildAttentionItems(
         detail: approval.humanSummary,
         href: "/marketing",
         occurredAt: approval.requestedAt,
+        // Still open, so still decidable. The two `continue`s above are what
+        // guarantee that.
+        decidableApprovalId: approval.approvalId,
       });
     }
   }
@@ -395,6 +411,8 @@ export function buildAttentionItems(
       detail: delivery.failureDetail ?? "The publish did not complete.",
       href: "/marketing",
       occurredAt: delivery.settledAt ?? delivery.createdAt,
+      // A failed delivery is not a decision — it is a repair.
+      decidableApprovalId: null,
     });
   }
 
@@ -415,6 +433,8 @@ export function buildAttentionItems(
       detail: `The connection is ${connection.channelState}.`,
       href: "/settings/integrations",
       occurredAt: null,
+      // Reconnecting is a credential flow, not an approval.
+      decidableApprovalId: null,
     });
   }
 
@@ -428,6 +448,7 @@ export function buildAttentionItems(
         } failed on the Agent Platform.`,
         href: null,
         occurredAt: state.snapshot.generatedAt,
+        decidableApprovalId: null,
       });
     }
     if (state.snapshot.schedulesFailed > 0) {
@@ -439,6 +460,7 @@ export function buildAttentionItems(
         } is in a failed state.`,
         href: null,
         occurredAt: state.snapshot.generatedAt,
+        decidableApprovalId: null,
       });
     }
   }

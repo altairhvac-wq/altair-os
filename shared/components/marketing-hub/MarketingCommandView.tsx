@@ -12,6 +12,8 @@ import {
   Send,
 } from "lucide-react";
 import { askChiefAction } from "@/app/actions/marketing-chief";
+import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
+import { AgentDecisionControls } from "./AgentDecisionControls";
 import { StatusPill } from "@/shared/design-system/components";
 import {
   altairMcCardClass,
@@ -68,6 +70,7 @@ export function MarketingCommandView({
   awaitingReply,
   platformUnavailableReason,
   canAsk,
+  decisions,
 }: {
   readonly lanes: readonly CommandLane[];
   readonly attention: readonly AttentionItem[];
@@ -76,6 +79,15 @@ export function MarketingCommandView({
   readonly awaitingReply: boolean;
   readonly platformUnavailableReason: string | null;
   readonly canAsk: boolean;
+  /**
+   * Decisions already recorded in Altair OS, so one is never offered twice.
+   *
+   * Needed because the two sides disagree for a while by design: a decision
+   * recorded here sits unapplied until the platform's next pull, so the
+   * snapshot still reports the approval as PENDING. Without this the operator
+   * would be shown buttons for something they just decided.
+   */
+  readonly decisions: readonly AgentDecisionRecord[];
 }) {
   return (
     <div
@@ -92,7 +104,7 @@ export function MarketingCommandView({
         <TodayPlan lanes={lanes} />
       </div>
       <div className="space-y-3">
-        <NeedsAttention items={attention} />
+        <NeedsAttention items={attention} decisions={decisions} />
         <RecentActivity entries={activity} />
       </div>
     </div>
@@ -304,9 +316,15 @@ function TodayPlan({ lanes }: { readonly lanes: readonly CommandLane[] }) {
 
 function NeedsAttention({
   items,
+  decisions,
 }: {
   readonly items: readonly AttentionItem[];
+  readonly decisions: readonly AgentDecisionRecord[];
 }) {
+  // Keyed exactly as the Advanced tab keys it, because it is the same queue.
+  const decisionBySubject = new Map(
+    decisions.map((entry) => [entry.decisionKey, entry]),
+  );
   return (
     <section
       className={`${altairMcCardClass} ${altairMcCardPadClass}`}
@@ -344,6 +362,25 @@ function NeedsAttention({
                     >
                       Open
                     </a>
+                  ) : null}
+                  {/* ============ THE ONE DELEGATION ON THIS SURFACE ============
+                      The operator decides, right where the Chief explained
+                      what is pending — through the SAME server action, the
+                      same decision key and the same queue the Advanced tab
+                      writes to. No second approval path exists, the Chief
+                      cannot press this, and recording a decision publishes
+                      nothing: the platform applies it on its next cycle
+                      through its own permission engine. */}
+                  {item.decidableApprovalId ? (
+                    <AgentDecisionControls
+                      subjectKind="approval"
+                      subjectId={item.decidableApprovalId}
+                      existingDecision={
+                        decisionBySubject.get(
+                          `approval:${item.decidableApprovalId}`,
+                        )?.decision ?? null
+                      }
+                    />
                   ) : null}
                 </div>
               </div>

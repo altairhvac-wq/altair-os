@@ -31,7 +31,9 @@ function check(name, condition, detail) {
 
 const read = (p) => readFileSync(p, "utf8");
 const strip = (src) =>
-  src.replace(/\/\*[\s\S]*?\*\//g, "").replace(new RegExp("//[^\\n]*", "g"), "");
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(new RegExp("//[^\\n]*", "g"), "");
 
 const MIGRATION = "supabase/migrations/188_agent_chief_messages.sql";
 const ROUTE = "app/api/agent/chief-messages/route.ts";
@@ -94,13 +96,11 @@ const lane = (lanes, key) => lanes.find((l) => l.key === key);
 
 console.log("\nA platform that is not reporting is not a quiet day");
 
-check(
-  "a fresh snapshot is fresh",
-  cmd.isSnapshotFresh(baseState()) === true,
-);
+check("a fresh snapshot is fresh", cmd.isSnapshotFresh(baseState()) === true);
 check(
   "a stale snapshot is not",
-  cmd.isSnapshotFresh(baseState({ snapshot: { generatedAt: STALE } })) === false,
+  cmd.isSnapshotFresh(baseState({ snapshot: { generatedAt: STALE } })) ===
+    false,
 );
 check(
   "an absent snapshot is not",
@@ -114,10 +114,7 @@ check(
     lane(lanes, "research").state === "unknown",
     lane(lanes, "research"),
   );
-  check(
-    "and so does Director",
-    lane(lanes, "director").state === "unknown",
-  );
+  check("and so does Director", lane(lanes, "director").state === "unknown");
   check(
     "and YouTube, whose renders the platform owns",
     lane(lanes, "youtube").state === "unknown",
@@ -165,7 +162,10 @@ console.log("\nLanes come from rows, not from a hardcoded workflow");
       ],
     }),
   );
-  check("a page published today reports done", lane(lanes, "website").state === "done");
+  check(
+    "a page published today reports done",
+    lane(lanes, "website").state === "done",
+  );
   check("and names it", lane(lanes, "website").detail.includes("A Post"));
 }
 {
@@ -183,15 +183,25 @@ console.log("\nLanes come from rows, not from a hardcoded workflow");
       ],
     }),
   );
-  check("a failed delivery blocks its lane", lane(lanes, "youtube").state === "blocked");
-  check("and shows the stored reason", lane(lanes, "youtube").detail === "It broke.");
+  check(
+    "a failed delivery blocks its lane",
+    lane(lanes, "youtube").state === "blocked",
+  );
+  check(
+    "and shows the stored reason",
+    lane(lanes, "youtube").detail === "It broke.",
+  );
 }
 {
   const lanes = cmd.buildTodayPlan(
     baseState({
       snapshot: { rendersInProgress: 2 },
       connections: [
-        { provider: "youtube", label: "YouTube", channelState: "DIRECT_PUBLISH_READY" },
+        {
+          provider: "youtube",
+          label: "YouTube",
+          channelState: "DIRECT_PUBLISH_READY",
+        },
       ],
     }),
   );
@@ -204,7 +214,11 @@ console.log("\nLanes come from rows, not from a hardcoded workflow");
   const lanes = cmd.buildTodayPlan(
     baseState({
       connections: [
-        { provider: "facebook", label: "Facebook", channelState: "REAUTH_REQUIRED" },
+        {
+          provider: "facebook",
+          label: "Facebook",
+          channelState: "REAUTH_REQUIRED",
+        },
       ],
     }),
   );
@@ -222,7 +236,13 @@ console.log("\nOnly things a person must act on");
   const items = cmd.buildAttentionItems(
     baseState({
       sitePages: [
-        { slug: "ok", title: "Fine", state: "published", publishedAt: FRESH, updatedAt: FRESH },
+        {
+          slug: "ok",
+          title: "Fine",
+          state: "published",
+          publishedAt: FRESH,
+          updatedAt: FRESH,
+        },
       ],
       deliveries: [
         {
@@ -235,7 +255,11 @@ console.log("\nOnly things a person must act on");
         },
       ],
       connections: [
-        { provider: "youtube", label: "YouTube", channelState: "DIRECT_PUBLISH_READY" },
+        {
+          provider: "youtube",
+          label: "YouTube",
+          channelState: "DIRECT_PUBLISH_READY",
+        },
       ],
     }),
   );
@@ -261,7 +285,10 @@ console.log("\nOnly things a person must act on");
       },
     }),
   );
-  check("a pending approval is surfaced", items.some((i) => i.kind === "approval"));
+  check(
+    "a pending approval is surfaced",
+    items.some((i) => i.kind === "approval"),
+  );
   check("with the stored summary", items[0].detail === "Publish the reel");
 }
 {
@@ -308,14 +335,25 @@ console.log("\nOnly things a person must act on");
       ],
     }),
   );
-  check("a failed publish is surfaced", items.some((i) => i.kind === "failed_publish"));
+  check(
+    "a failed publish is surfaced",
+    items.some((i) => i.kind === "failed_publish"),
+  );
 }
 {
   const items = cmd.buildAttentionItems(
     baseState({
       connections: [
-        { provider: "youtube", label: "YouTube", channelState: "TOKEN_EXPIRED" },
-        { provider: "facebook", label: "Facebook", channelState: "NOT_CONFIGURED" },
+        {
+          provider: "youtube",
+          label: "YouTube",
+          channelState: "TOKEN_EXPIRED",
+        },
+        {
+          provider: "facebook",
+          label: "Facebook",
+          channelState: "NOT_CONFIGURED",
+        },
       ],
     }),
   );
@@ -329,17 +367,34 @@ console.log("\nOnly things a person must act on");
   const items = cmd.buildAttentionItems(
     baseState({
       connections: [
-        { provider: "youtube", label: "YouTube", channelState: "REAUTH_REQUIRED" },
+        {
+          provider: "youtube",
+          label: "YouTube",
+          channelState: "REAUTH_REQUIRED",
+        },
       ],
     }),
   );
-  check("a connection needing a human is surfaced", items.some((i) => i.kind === "connection"));
+  check(
+    "a connection needing a human is surfaced",
+    items.some((i) => i.kind === "connection"),
+  );
   check("and points at Settings", items[0].href === "/settings/integrations");
 }
 {
   const items = cmd.buildAttentionItems({
     ...baseState({
-      snapshot: { approvals: [{ approvalId: "a", humanSummary: "x", requestedAt: FRESH, isExpired: false, decision: "PENDING" }] },
+      snapshot: {
+        approvals: [
+          {
+            approvalId: "a",
+            humanSummary: "x",
+            requestedAt: FRESH,
+            isExpired: false,
+            decision: "PENDING",
+          },
+        ],
+      },
     }),
     snapshot: null,
   });
@@ -459,8 +514,7 @@ check(
 );
 check(
   "the company is taken from the session, not from the caller",
-  action.includes("context.company.id") &&
-    !/companyId:\s*input\./.test(action),
+  action.includes("context.company.id") && !/companyId:\s*input\./.test(action),
 );
 
 console.log("\nMigration posture");
@@ -470,14 +524,21 @@ check(
     migration,
   ),
 );
-check("row level security is enabled", migration.includes("enable row level security"));
+check(
+  "row level security is enabled",
+  migration.includes("enable row level security"),
+);
 check(
   "operators read, the server writes",
-  migration.includes("revoke insert, update, delete on table public.agent_chief_messages from authenticated"),
+  migration.includes(
+    "revoke insert, update, delete on table public.agent_chief_messages from authenticated",
+  ),
 );
 check(
   "anon can never read a conversation",
-  migration.includes("revoke all on table public.agent_chief_messages from anon"),
+  migration.includes(
+    "revoke all on table public.agent_chief_messages from anon",
+  ),
 );
 check(
   "an answer must reference the question it answers",
@@ -494,13 +555,149 @@ check(
   !/AGENT_INGEST_SECRET|SERVICE_ROLE|ANTHROPIC/.test(view),
 );
 
+/* ================= delegation: deciding, and only deciding ================= */
+
+console.log("\nThe only delegable item is a human approval decision");
+
+{
+  const items = cmd.buildAttentionItems(
+    baseState({
+      snapshot: {
+        approvals: [
+          {
+            approvalId: "a-decide",
+            humanSummary: "Publish the reel",
+            requestedAt: FRESH,
+            isExpired: false,
+            decision: "PENDING",
+          },
+        ],
+      },
+      deliveries: [
+        {
+          provider: "youtube",
+          state: "failed",
+          settledAt: FRESH,
+          failureDetail: "quota",
+          permalink: null,
+          createdAt: FRESH,
+        },
+      ],
+      connections: [
+        {
+          provider: "facebook",
+          label: "Facebook",
+          channelState: "NEEDS_RECONNECT",
+        },
+      ],
+    }),
+  );
+
+  const approval = items.find((item) => item.kind === "approval");
+  check(
+    "an open approval carries the platform approval id to decide",
+    approval?.decidableApprovalId === "a-decide",
+    approval,
+  );
+  check(
+    "NOTHING ELSE IS DECIDABLE — a failed delivery is a repair, not a decision",
+    items
+      .filter((item) => item.kind !== "approval")
+      .every((item) => item.decidableApprovalId === null),
+    items
+      .filter((item) => item.decidableApprovalId !== null)
+      .map((i) => i.kind),
+  );
+}
+{
+  // The two exclusions that must survive: an approval that can no longer be
+  // decided must not reach the surface at all, or it would be offered buttons.
+  const decided = cmd.buildAttentionItems(
+    baseState({
+      snapshot: {
+        approvals: [
+          {
+            approvalId: "a-done",
+            humanSummary: "Already handled",
+            requestedAt: FRESH,
+            isExpired: false,
+            decision: "APPROVED",
+          },
+        ],
+      },
+    }),
+  );
+  check(
+    "AN ALREADY-DECIDED APPROVAL IS NEVER OFFERED AGAIN",
+    decided.every((item) => item.decidableApprovalId === null),
+    decided,
+  );
+
+  const expired = cmd.buildAttentionItems(
+    baseState({
+      snapshot: {
+        approvals: [
+          {
+            approvalId: "a-old",
+            humanSummary: "Too late",
+            requestedAt: FRESH,
+            isExpired: true,
+            decision: "PENDING",
+          },
+        ],
+      },
+    }),
+  );
+  check(
+    "AN EXPIRED APPROVAL IS NEVER OFFERED",
+    expired.every((item) => item.decidableApprovalId === null),
+    expired,
+  );
+}
+
+console.log("\nDeciding reuses the one approval path, and adds no authority");
+check(
+  "the command surface renders the EXISTING decision control",
+  view.includes('from "./AgentDecisionControls"') &&
+    view.includes("<AgentDecisionControls"),
+);
+check(
+  "it is rendered only for a decidable approval",
+  /item\.decidableApprovalId \?\s*\(\s*<AgentDecisionControls/.test(view),
+);
+check(
+  'it declares subjectKind="approval" and nothing else',
+  view.includes('subjectKind="approval"') &&
+    !/subjectKind="(?!approval)/.test(view),
+);
+check(
+  "a decision already recorded here suppresses the buttons",
+  view.includes("existingDecision={") && view.includes("decisionBySubject"),
+);
+check(
+  "THE COMMAND SURFACE OPENS NO SECOND APPROVAL PATH",
+  !/agent_marketing_decisions|recordAgentDecision\b|createServiceRoleClient/.test(
+    view,
+  ),
+);
+check(
+  "and still executes nothing itself",
+  !/dispatchPublish|assertPublishAllowed|claimDelivery/.test(
+    view.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
+  ),
+);
+
 console.log("\nThe operating state is company-scoped and derived");
 check(
   "every read filters on the company",
-  stateQuery.split(".select(").slice(1).every((chunk) =>
-    chunk.includes('.eq("company_id", input.companyId)') ||
-    chunk.includes("input.companyId"),
-  ),
+  stateQuery
+    .split(".select(")
+    .slice(1)
+    .every(
+      (chunk) =>
+        chunk.includes('.eq("company_id", input.companyId)') ||
+        chunk.includes("input.companyId"),
+    ),
 );
 check(
   "connection health reuses the existing state machine",
