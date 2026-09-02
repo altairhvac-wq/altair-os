@@ -86,6 +86,16 @@ export type MarketingPost = {
    * company's video regardless of which code path writes it.
    */
   videoMediaAssetId?: string;
+  /**
+   * The creative brief this post was fanned out from (migration 182), when
+   * there is one. Null for a hand-authored post.
+   *
+   * For a `website` post this is also the join to its published page:
+   * `marketing_site_pages.content_package_id`. It is the ONLY link between
+   * the two, deliberately — a page and a post share no title or slug that
+   * could be matched on without guessing.
+   */
+  contentPackageId?: string;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;

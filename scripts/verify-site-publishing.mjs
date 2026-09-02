@@ -412,6 +412,185 @@ check(
 );
 check("the route emits a meta description", route.includes("description: page.metaDescription"));
 
+/* ===================== the Marketing editor panel ===================== */
+
+console.log("\nThe Website publishing panel projects, and never invents");
+
+const panelMod = await loadPureModule(
+  "shared/types/site-publishing-details.ts",
+  "panel",
+);
+const { buildSitePublishingPanel, isInSitemap } = panelMod;
+
+const publishedDetails = (over = {}) => ({
+  page: {
+    id: "p1",
+    slug: "the-post",
+    state: "published",
+    revision: 2,
+    canonicalUrl: "https://altair.test/insights/the-post",
+    metaTitle: "The Post",
+    metaDescription: "A description.",
+    publishedAt: "2026-09-01T10:00:00.000Z",
+    updatedAt: "2026-09-01T11:00:00.000Z",
+    ...over.page,
+  },
+  delivery: {
+    state: "posted",
+    settledAt: "2026-09-01T10:00:01.000Z",
+    failureDetail: null,
+    verified: {
+      slug: "the-post",
+      pageState: "published",
+      canonicalUrl: "https://altair.test/insights/the-post",
+      revision: 2,
+      verifiedAt: "2026-09-01T10:00:01.000Z",
+    },
+    ...over.delivery,
+  },
+  brief: { primaryKeyword: "a keyword", searchIntent: "an intent" },
+  latestChangeNote: "Why it changed.",
+});
+
+const value = (panel, label) =>
+  panel.rows.find((r) => r.label === label)?.value ?? null;
+
+{
+  const panel = buildSitePublishingPanel(publishedDetails());
+  check("a published page reports Published", panel.statusLabel === "Published");
+  check("with a success tone", panel.statusTone === "success");
+  check(
+    "and offers the recorded canonical as the public URL",
+    panel.publicUrl === "https://altair.test/insights/the-post",
+  );
+  check("the slug is shown", value(panel, "Slug") === "the-post");
+  check("the revision is shown", value(panel, "Revision") === "r2");
+  check("the meta title is shown", value(panel, "Meta title") === "The Post");
+  check("the meta description is shown", value(panel, "Meta description") === "A description.");
+  check("the delivery state is shown", value(panel, "Delivery state") === "posted");
+  check(
+    "the readback verification is shown",
+    String(value(panel, "Verified on readback")).startsWith("published"),
+  );
+  check("sitemap inclusion is derived, not fetched", value(panel, "In sitemap") === "Yes");
+  check("the primary keyword is shown", value(panel, "Primary keyword") === "a keyword");
+  check("the search intent is shown", value(panel, "Search intent") === "an intent");
+  check("the latest change note is shown", value(panel, "Latest change note") === "Why it changed.");
+}
+
+console.log("\nAn unpublished page never gets a public link");
+{
+  const draft = buildSitePublishingPanel({
+    ...publishedDetails(),
+    page: { ...publishedDetails().page, state: "draft" },
+  });
+  check("A DRAFT OFFERS NO PUBLIC URL", draft.publicUrl === null);
+  check("and does not claim to be published", draft.statusLabel === "Draft");
+  check("and is not reported in the sitemap", value(draft, "In sitemap") === "No");
+}
+{
+  const archived = buildSitePublishingPanel({
+    ...publishedDetails(),
+    page: { ...publishedDetails().page, state: "archived" },
+  });
+  check("an archived page offers no public URL", archived.publicUrl === null);
+}
+{
+  const noCanonical = buildSitePublishingPanel({
+    ...publishedDetails(),
+    page: { ...publishedDetails().page, canonicalUrl: null },
+  });
+  check(
+    "a page with no recorded canonical offers no link — none is invented",
+    noCanonical.publicUrl === null,
+  );
+  check("and is not claimed to be in the sitemap", value(noCanonical, "In sitemap") === "No");
+}
+
+console.log("\nNothing is invented when data is absent");
+{
+  const never = buildSitePublishingPanel({
+    page: null,
+    delivery: null,
+    brief: null,
+    latestChangeNote: null,
+  });
+  check("a post that was never published says so", never.statusLabel === "Not published");
+  check("with no public URL", never.publicUrl === null);
+  check(
+    "and every row reads unavailable rather than guessing",
+    never.rows.every((r) => r.value === null),
+  );
+}
+{
+  const failedPublish = buildSitePublishingPanel({
+    page: null,
+    delivery: { state: "failed", settledAt: null, failureDetail: "It broke.", verified: null },
+    brief: null,
+    latestChangeNote: null,
+  });
+  check(
+    "a failed publish is reported as a failure, not as 'not published'",
+    failedPublish.statusLabel === "Publish failed" && failedPublish.statusTone === "danger",
+  );
+  check("and shows the stored failure detail", failedPublish.summary === "It broke.");
+  check("and still offers no URL", failedPublish.publicUrl === null);
+}
+{
+  const unsettled = buildSitePublishingPanel({
+    ...publishedDetails(),
+    delivery: { ...publishedDetails().delivery, state: "in_flight" },
+  });
+  check(
+    "a live page whose delivery never settled is a warning, not a success",
+    unsettled.statusTone === "warning",
+  );
+}
+
+console.log("\nThe panel is website-only and stores nothing");
+
+const hubView = read("shared/components/marketing-hub/MarketingHubPageView.tsx");
+check(
+  "the panel renders only for website posts",
+  hubView.includes('selectedPost.channelTarget === "website"'),
+);
+const panelSource = read("shared/components/marketing-hub/WebsitePublishingPanel.tsx");
+check(
+  "the public link is the recorded canonical, never assembled from a slug",
+  panelSource.includes("href={panel.publicUrl}") && !panelSource.includes("/insights/"),
+);
+check("the external link carries noopener", panelSource.includes('rel="noopener noreferrer"'));
+check(
+  "the panel offers no publish, retry or unpublish action",
+  // Comment-stripped: the panel documents in prose that the publish path is
+  // `dispatchPublish` and that it deliberately does not call it, and
+  // matching the raw file read that explanation as evidence of the call.
+  // The same trap the migration check hit with `body_html`.
+  !strip(panelSource).includes("onClick") &&
+    !strip(panelSource).includes("dispatchPublish"),
+);
+
+const detailsQuery = read("lib/database/queries/marketing-site-pages.ts");
+const detailsFn = detailsQuery.slice(
+  detailsQuery.indexOf("export async function getSitePublishingDetailsForPost"),
+);
+check(
+  "the post to page join is the content package, not a title or slug match",
+  detailsFn.includes('.eq("content_package_id", input.contentPackageId)') &&
+    !detailsFn.includes(".ilike("),
+);
+check(
+  "every read in the details query is company-scoped",
+  detailsFn
+    .split(".select(")
+    .slice(1)
+    .every((chunk) => chunk.includes('.eq("company_id", input.companyId)')),
+);
+check(
+  "the post carries its package id, so no fuzzy match is needed",
+  read("shared/types/marketing-post.ts").includes("contentPackageId?: string;"),
+);
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed.`);

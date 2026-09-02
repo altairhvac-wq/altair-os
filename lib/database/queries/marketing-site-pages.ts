@@ -4,6 +4,7 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient as createReadClient } from "@/lib/supabase/server";
 import type { SitePageState } from "@/shared/types/site-page";
+import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 
 /**
  * Reads and writes for the Altair site's pages (migration 187).
@@ -346,4 +347,163 @@ export async function publishSitePage(
   }
 
   return { page, created: existing === null };
+}
+
+/* ------------------------------------------- the Marketing editor panel */
+
+/**
+ * Everything the Marketing editor shows about ONE website post's
+ * publication, assembled from rows that already exist.
+ *
+ * ============ THE JOIN IS THE PACKAGE, NOT THE TITLE ============
+ * A post reaches its page through `marketing_posts.content_package_id` ->
+ * `marketing_site_pages.content_package_id`. That column existed on the post
+ * row since migration 182 and was dropped by the mapper, which is why this
+ * looked unlinkable and why the temptation was to match on title or slug.
+ * Matching on either is a guess: two posts can share a title, a slug can be
+ * disambiguated to `-2`, and neither is a key.
+ *
+ * A post with no package has no page, and says so.
+ *
+ * ============ COMPANY SCOPING ============
+ * Every read is filtered on the caller's `companyId`, on top of the service
+ * role's own lack of RLS. A page belonging to another company cannot be
+ * reached even by passing its package id, because the package id is only
+ * ever taken from a post this company owns.
+ */
+export async function getSitePublishingDetailsForPost(input: {
+  companyId: string;
+  marketingPostId: string;
+  contentPackageId: string | null;
+}): Promise<SitePublishingDetails> {
+  const supabase = createServiceRoleClient();
+
+  const empty: SitePublishingDetails = {
+    page: null,
+    delivery: null,
+    brief: null,
+    latestChangeNote: null,
+  };
+
+  // The delivery is keyed by the POST, so it exists even when a publish
+  // failed before a page was ever written — which is exactly the state worth
+  // showing rather than an empty card.
+  const deliveryRead = await deliveriesForSite(supabase)
+    .select("delivery_state, settled_at, failure_detail, provider_result")
+    .eq("company_id", input.companyId)
+    .eq("marketing_post_id", input.marketingPostId)
+    .eq("provider", "altair_site")
+    .maybeSingle();
+
+  const deliveryRow = deliveryRead.data as
+    | {
+        delivery_state: string;
+        settled_at: string | null;
+        failure_detail: string | null;
+        provider_result: Record<string, unknown> | null;
+      }
+    | null;
+
+  const result = deliveryRow?.provider_result ?? null;
+  const asString = (v: unknown) => (typeof v === "string" ? v : null);
+  const asNumber = (v: unknown) => (typeof v === "number" ? v : null);
+
+  const delivery: SitePublishingDetails["delivery"] = deliveryRow
+    ? {
+        state: deliveryRow.delivery_state,
+        settledAt: deliveryRow.settled_at,
+        failureDetail: deliveryRow.failure_detail,
+        verified: result
+          ? {
+              slug: asString(result.slug),
+              pageState: asString(result.pageState),
+              canonicalUrl: asString(result.canonicalUrl),
+              revision: asNumber(result.revision),
+              verifiedAt: asString(result.verifiedAt),
+            }
+          : null,
+      }
+    : null;
+
+  if (!input.contentPackageId) {
+    return { ...empty, delivery };
+  }
+
+  const pageRead = await sitePagesTable(supabase)
+    .select(PAGE_SELECT)
+    .eq("company_id", input.companyId)
+    .eq("content_package_id", input.contentPackageId)
+    .maybeSingle();
+
+  const page = pageRead.data ? toPage(pageRead.data as SitePageRow) : null;
+
+  // The brief is the package's own jsonb. Read defensively: it is written by
+  // whatever produced the package, so nothing here may assume a shape.
+  const packageRead = await contentPackagesForSite(supabase)
+    .select("brief")
+    .eq("company_id", input.companyId)
+    .eq("id", input.contentPackageId)
+    .maybeSingle();
+
+  const briefRaw =
+    (packageRead.data as { brief?: Record<string, unknown> } | null)?.brief ??
+    null;
+
+  const brief = briefRaw
+    ? {
+        primaryKeyword: asString(briefRaw.primaryKeyword),
+        searchIntent: asString(briefRaw.searchIntent),
+      }
+    : null;
+
+  let latestChangeNote: string | null = null;
+  if (page) {
+    const revisionRead = await revisionsTable(supabase)
+      .select("change_note")
+      .eq("company_id", input.companyId)
+      .eq("page_id", page.id)
+      .order("revision", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    latestChangeNote =
+      (revisionRead.data as { change_note: string | null } | null)
+        ?.change_note ?? null;
+  }
+
+  return {
+    page: page
+      ? {
+          id: page.id,
+          slug: page.slug,
+          state: page.pageState,
+          revision: page.revision,
+          canonicalUrl: page.canonicalUrl,
+          metaTitle: page.metaTitle,
+          metaDescription: page.metaDescription,
+          publishedAt: page.publishedAt,
+          updatedAt: page.updatedAt,
+        }
+      : null,
+    delivery,
+    brief,
+    latestChangeNote,
+  };
+}
+
+function deliveriesForSite(client: AnyClient) {
+  // marketing_channel_deliveries: migration 143 — wire into Database types on next gen types run
+  return (
+    client as AnyClient & {
+      from(table: "marketing_channel_deliveries"): ReturnType<AnyClient["from"]>;
+    }
+  ).from("marketing_channel_deliveries");
+}
+
+function contentPackagesForSite(client: AnyClient) {
+  // marketing_content_packages: migration 182 — wire into Database types on next gen types run
+  return (
+    client as AnyClient & {
+      from(table: "marketing_content_packages"): ReturnType<AnyClient["from"]>;
+    }
+  ).from("marketing_content_packages");
 }

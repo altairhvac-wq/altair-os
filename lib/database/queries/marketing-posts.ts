@@ -33,6 +33,9 @@ type MarketingPostRow = {
   deleted_at: string | null;
   founder_screenshot_reference: string | null;
   video_media_asset_id: string | null;
+  // marketing_posts.content_package_id: migration 182 — wire into Database
+  // types on next gen types run.
+  content_package_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -97,6 +100,12 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     deletedAt: row.deleted_at ?? null,
     founderScreenshotReference: row.founder_screenshot_reference ?? undefined,
     videoMediaAssetId: row.video_media_asset_id ?? undefined,
+    // Migration 182 put this on the row and the mapper dropped it, so the
+    // link from a post to the creative brief it came from — and through that
+    // to its published site page — was unreachable from the application. The
+    // alternative was matching a page to a post by title or slug, which is a
+    // guess dressed as a join.
+    contentPackageId: row.content_package_id ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

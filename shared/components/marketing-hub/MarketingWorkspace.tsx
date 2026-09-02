@@ -5,6 +5,7 @@ import { MarketingTodayView } from "./MarketingTodayView";
 import { MarketingSettingsView } from "./MarketingSettingsView";
 import { MarketingAutomationSection } from "./MarketingAutomationSection";
 import { MarketingHubPageView } from "./MarketingHubPageView";
+import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
 import type {
@@ -51,6 +52,12 @@ import type { ReelVideoOption } from "@/shared/types/marketing-reel";
 
 type MarketingWorkspaceProps = {
   posts: MarketingPost[];
+  /**
+   * Publishing details per website post id, projected server-side from rows
+   * that already exist. Absent for every non-website post, which is why the
+   * SEO panel cannot appear on one.
+   */
+  sitePublishingDetails?: Record<string, SitePublishingDetails>;
   connectedAccounts: MarketingConnectedAccount[];
   videoOptions: ReelVideoOption[];
   rationaleByPostId?: Record<string, string | undefined>;
@@ -143,6 +150,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           />
           <MarketingHubPageView
             initialPosts={props.posts}
+            sitePublishingDetails={props.sitePublishingDetails}
             connectedAccounts={props.connectedAccounts}
             videoOptions={props.videoOptions}
             companyName={props.companyName}

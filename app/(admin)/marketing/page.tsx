@@ -8,6 +8,7 @@ import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { hasCompanyRole } from "@/lib/database/types/roles";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
+import { getSitePublishingDetailsForPost } from "@/lib/database/queries/marketing-site-pages";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listAgentDecisionsSince } from "@/lib/database/queries/agent-decisions";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
@@ -119,9 +120,30 @@ export default async function MarketingPage({
     nowIso: renderedAt,
   });
 
+  // ============ WEBSITE POSTS ONLY ============
+  // Resolved server-side for the website posts alone, so a Facebook draft
+  // costs nothing and no SEO shape reaches the client for a post that has
+  // none. Company-scoped by construction: the package id is only ever taken
+  // from a post this company owns.
+  const sitePublishingDetails = Object.fromEntries(
+    await Promise.all(
+      posts
+        .filter((post) => post.channelTarget === "website")
+        .map(async (post) => [
+          post.id,
+          await getSitePublishingDetailsForPost({
+            companyId: companyContext.company.id,
+            marketingPostId: post.id,
+            contentPackageId: post.contentPackageId ?? null,
+          }),
+        ]),
+    ),
+  );
+
   return (
     <MarketingWorkspace
       posts={posts}
+      sitePublishingDetails={sitePublishingDetails}
       automationHealth={automationHealth}
       // The same section Advanced renders in full. Today reads it only to
       // tell "being prepared" from "could not be prepared" from "nothing
