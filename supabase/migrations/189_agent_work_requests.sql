@@ -14,10 +14,12 @@
 -- independent humans therefore have to agree before a model is ever paid —
 -- one in the browser, one at the laptop.
 --
--- CLOSED VOCABULARY. `kind` is a CHECK-constrained enum of parameterless,
--- non-publishing analysis runs. There is no free-text command, no argument
--- and no shell here, so this queue cannot become arbitrary execution. Adding
--- a kind is a migration and a code change, deliberately.
+-- CLOSED VOCABULARY. `kind` is a CHECK-constrained enum of non-publishing
+-- runs. There is no free-text command and no shell here, so this queue cannot
+-- become arbitrary execution. Adding a kind is a migration and a code change,
+-- deliberately. Migration 191 (patched into this file for fresh environments)
+-- added typed `params` for the Chief-delegated staging kinds: params are data
+-- a gated runner validates and reads — never a command.
 --
 -- IDEMPOTENT BY CONSTRUCTION. `request_key` is unique per company: a
 -- double-clicked button is one row, and `applied_at` makes a re-pull a no-op.
@@ -34,6 +36,10 @@ create table if not exists public.agent_work_requests (
   -- Stable idempotency key: one request per logical click per company.
   request_key text not null,
   kind text not null,
+  -- Typed per-kind parameters (contract v2, migration 191): the operator's
+  -- topic and options, validated on enqueue and again by the platform before
+  -- anything runs. Null for the original parameterless kinds.
+  params jsonb,
   -- Why the operator asked. Context for the audit trail, never a parameter:
   -- nothing on the platform side reads this as an instruction.
   note text,
@@ -56,7 +62,18 @@ create table if not exists public.agent_work_requests (
   constraint agent_work_requests_key_unique
     unique (company_id, request_key),
   constraint agent_work_requests_kind_check
-    check (kind in ('performance_review', 'finance_report')),
+    check (kind in (
+      'performance_review',
+      'finance_report',
+      'research_topic',
+      'director_plan',
+      'create_video',
+      'youtube_draft',
+      'seo_draft',
+      'content_campaign'
+    )),
+  constraint agent_work_requests_params_size_check
+    check (params is null or pg_column_size(params) <= 8192),
   constraint agent_work_requests_outcome_check
     check (outcome is null or outcome in ('completed', 'refused', 'failed')),
   -- An outcome and an applied timestamp arrive together or not at all.

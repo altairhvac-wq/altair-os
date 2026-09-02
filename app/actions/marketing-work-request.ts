@@ -7,6 +7,7 @@ import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { enqueueWorkRequest } from "@/lib/database/queries/agent-work-requests";
 import {
   isWorkRequestKind,
+  OPERATOR_BUTTON_KINDS,
   WORK_REQUEST_NOTE_MAX,
 } from "@/shared/types/agent-work-request";
 
@@ -62,6 +63,14 @@ export async function requestWorkAction(input: {
     // Refused rather than defaulted. Guessing which analysis someone meant is
     // exactly the vague-language failure this layer must not have.
     return { error: "That is not something the Chief can be asked to run." };
+  }
+  if (!(OPERATOR_BUTTON_KINDS as readonly string[]).includes(input.kind)) {
+    // The parameterized kinds need a topic this button cannot supply — they
+    // are queued by the Chief from a chat message, where the topic is the
+    // operator's own words. A half-formed task is worse than no button.
+    return {
+      error: "Ask the Chief for that in the conversation — it needs a topic.",
+    };
   }
 
   const requestKey = input.requestKey.trim();

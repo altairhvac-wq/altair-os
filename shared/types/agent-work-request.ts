@@ -1,31 +1,66 @@
 /**
  * The closed vocabulary of work an operator may request from the Chief.
  *
- * ============ WHY THIS LIST IS SHORT, AND WHY IT IS A LIST ============
- * Every entry is a PARAMETERLESS, NON-PUBLISHING analysis run that already
- * exists on the Agent Platform as its own gated entry point. There is no
- * free-text command, no argument and no shell anywhere in this path, so the
- * request queue cannot become arbitrary execution — which is the whole point.
- * Adding a kind takes a migration and a code change on both sides.
+ * ============ TWO WAYS TO ASK, ONE QUEUE, ONE RULE ============
+ * The original two kinds are PARAMETERLESS buttons (`OPERATOR_BUTTON_KINDS`):
+ * a button can name an analysis but must not invent a topic. The newer kinds
+ * carry typed `params` and are queued by the CHIEF from the operator's own
+ * chat message — the platform's `chief:respond` interprets the sentence,
+ * validates the shape, and enqueues here with a deterministic per-question
+ * request key. Either way the KIND is a closed enum, params are validated on
+ * enqueue AND re-validated by the platform before running, and there is no
+ * free-text command anywhere in this path.
  *
- * Kinds that were deliberately NOT included: research investigations, Director
- * planning and content-task creation all need parameters (which metric, which
- * topic, which package) that an operator has not supplied and that this layer
- * must not invent. Offering a button that queues a half-formed task would be
- * worse than not offering it.
- *
- * ============ REQUESTING IS NOT RUNNING ============
+ * ============ REQUESTING IS NOT RUNNING, CREATING IS NOT PUBLISHING ============
  * A request records that a human asked. The platform decides whether anything
  * happens, and each runner keeps its own consent gate — so a request whose
- * gate is off comes back `refused`, having spent nothing.
+ * gate is off comes back `refused`, having spent nothing. Every parameterized
+ * kind STAGES drafts for review; none of them publishes, uploads or posts.
  */
 
 export const WORK_REQUEST_KINDS = [
   "performance_review",
   "finance_report",
+  "research_topic",
+  "director_plan",
+  "create_video",
+  "youtube_draft",
+  "seo_draft",
+  "content_campaign",
 ] as const;
 
 export type WorkRequestKind = (typeof WORK_REQUEST_KINDS)[number];
+
+/** The parameterless kinds that render as one-click buttons. */
+export const OPERATOR_BUTTON_KINDS = [
+  "performance_review",
+  "finance_report",
+] as const satisfies readonly WorkRequestKind[];
+
+export const CONTENT_FORMATS = [
+  "diagram_explainer",
+  "screen_recording",
+  "short_narrated_video",
+  "founder_on_camera",
+  "long_form_youtube",
+  "seo_article",
+  "social_only",
+] as const;
+
+export const CAMPAIGN_OUTPUTS = [
+  "youtube_long",
+  "short_videos",
+  "seo_article",
+  "social_posts",
+  "diagram_explainer",
+] as const;
+
+export const PLATFORM_TARGETS = [
+  "facebook",
+  "instagram",
+  "youtube",
+  "website",
+] as const;
 
 export type WorkRequestDescriptor = {
   readonly kind: WorkRequestKind;
@@ -60,6 +95,48 @@ export const WORK_REQUEST_DESCRIPTORS: Readonly<
       "Totals what the agents have spent against the configured budgets. Read-only — it changes no budget and moves no money.",
     platformGate: "RUN_FINANCE_REPORT",
   },
+  research_topic: {
+    kind: "research_topic",
+    label: "Research a topic",
+    detail:
+      "Stages a topic research report the Director and drafts can build on. Internal only — it publishes nothing.",
+    platformGate: "RUN_RESEARCH_TOPIC",
+  },
+  director_plan: {
+    kind: "director_plan",
+    label: "Director format decision",
+    detail:
+      "The Director decides the strongest format for an idea (diagram, video, article, founder voice…). A recommendation — it produces or publishes nothing.",
+    platformGate: "RUN_DIRECTOR_FORMAT",
+  },
+  create_video: {
+    kind: "create_video",
+    label: "Create a video plan",
+    detail:
+      "Stages a video plan or explainer draft (the Director picks the format unless one was named). A DRAFT — nothing is rendered or posted.",
+    platformGate: "RUN_CREATE_VIDEO",
+  },
+  youtube_draft: {
+    kind: "youtube_draft",
+    label: "Draft a YouTube script",
+    detail:
+      "Stages a long-form YouTube script draft with sections and visual direction. A DRAFT — nothing is uploaded.",
+    platformGate: "RUN_YOUTUBE_DRAFT",
+  },
+  seo_draft: {
+    kind: "seo_draft",
+    label: "Draft an SEO article",
+    detail:
+      "Stages a complete SEO article draft with its meta/SEO envelope. A DRAFT — no page is published.",
+    platformGate: "RUN_SEO_DRAFT",
+  },
+  content_campaign: {
+    kind: "content_campaign",
+    label: "Run a content campaign",
+    detail:
+      "Researches once, asks the Director for a strategy, then stages the requested drafts sharing that research. All DRAFTS — nothing is published.",
+    platformGate: "RUN_CONTENT_CAMPAIGN",
+  },
 };
 
 /**
@@ -72,6 +149,8 @@ export type WorkRequestOutcome = "completed" | "refused" | "failed";
 export type WorkRequest = {
   readonly id: string;
   readonly kind: WorkRequestKind;
+  readonly requestKey: string;
+  readonly params: Readonly<Record<string, unknown>> | null;
   readonly note: string | null;
   readonly requestedByEmail: string | null;
   readonly requestedAt: string;
@@ -89,6 +168,205 @@ export function isWorkRequestKind(value: unknown): value is WorkRequestKind {
   );
 }
 
+/* ------------------------------------------------ params validation */
+
+type FieldSpec =
+  | { readonly type: "string"; readonly min: number; readonly max: number }
+  | { readonly type: "enum"; readonly values: readonly string[] }
+  | { readonly type: "int"; readonly min: number; readonly max: number }
+  | {
+      readonly type: "enum_array";
+      readonly values: readonly string[];
+      readonly min: number;
+      readonly max: number;
+    };
+
+type ParamsSpec = Readonly<
+  Record<string, FieldSpec & { readonly required?: boolean }>
+>;
+
+const topicField = { type: "string", min: 3, max: 300 } as const;
+const shortText = { type: "string", min: 1, max: 300 } as const;
+const longText = { type: "string", min: 1, max: 500 } as const;
+const artifactRef = { type: "string", min: 1, max: 80 } as const;
+
+/**
+ * Per-kind params shapes — the SAME contract the platform's
+ * `work-request-params.ts` enforces with zod. Both sides refusing on the
+ * same shape is what keeps this queue from hiding malformed work.
+ * `null` = the kind takes no params at all.
+ */
+const PARAMS_SPECS: Readonly<Record<WorkRequestKind, ParamsSpec | null>> = {
+  performance_review: null,
+  finance_report: null,
+  research_topic: {
+    topic: { ...topicField, required: true },
+    question: longText,
+    objective: shortText,
+  },
+  director_plan: {
+    topic: topicField,
+    sourceArtifactId: artifactRef,
+    request: longText,
+  },
+  create_video: {
+    topic: { ...topicField, required: true },
+    objective: shortText,
+    audience: shortText,
+    format: { type: "enum", values: CONTENT_FORMATS },
+    platform: { type: "enum", values: PLATFORM_TARGETS },
+    durationSeconds: { type: "int", min: 5, max: 1200 },
+    sourceArtifactId: artifactRef,
+  },
+  youtube_draft: {
+    topic: { ...topicField, required: true },
+    audience: shortText,
+    objective: shortText,
+    sourceArtifactId: artifactRef,
+  },
+  seo_draft: {
+    topic: { ...topicField, required: true },
+    primaryKeyword: { type: "string", min: 2, max: 120 },
+    objective: shortText,
+    sourceArtifactId: artifactRef,
+  },
+  content_campaign: {
+    topic: { ...topicField, required: true },
+    objective: shortText,
+    audience: shortText,
+    outputs: {
+      type: "enum_array",
+      values: CAMPAIGN_OUTPUTS,
+      min: 1,
+      max: CAMPAIGN_OUTPUTS.length,
+      required: true,
+    },
+    shortCount: { type: "int", min: 1, max: 3 },
+  },
+};
+
+// director_plan additionally needs at least one of topic/sourceArtifactId;
+// campaign params may carry a sourceArtifactId too.
+const CAMPAIGN_EXTRA: ParamsSpec = { sourceArtifactId: artifactRef };
+
+function checkField(spec: FieldSpec, value: unknown): boolean {
+  switch (spec.type) {
+    case "string":
+      return (
+        typeof value === "string" &&
+        value.trim().length >= spec.min &&
+        value.length <= spec.max
+      );
+    case "enum":
+      return typeof value === "string" && spec.values.includes(value);
+    case "int":
+      return (
+        typeof value === "number" &&
+        Number.isInteger(value) &&
+        value >= spec.min &&
+        value <= spec.max
+      );
+    case "enum_array":
+      return (
+        Array.isArray(value) &&
+        value.length >= spec.min &&
+        value.length <= spec.max &&
+        value.every((entry) => typeof entry === "string" && spec.values.includes(entry)) &&
+        new Set(value).size === value.length
+      );
+  }
+}
+
+export type ParamsValidation =
+  | { readonly ok: true; readonly params: Readonly<Record<string, unknown>> | null }
+  | { readonly ok: false; readonly error: string };
+
+/**
+ * Validate params for one kind, fail-closed and strict: unknown keys are
+ * refused (someone is smuggling), required keys must be present, and a
+ * parameterless kind must carry none.
+ */
+export function validateWorkRequestParams(
+  kind: WorkRequestKind,
+  raw: unknown,
+): ParamsValidation {
+  const spec = PARAMS_SPECS[kind];
+
+  if (spec === null) {
+    if (raw === undefined || raw === null) return { ok: true, params: null };
+    return { ok: false, error: `${kind} takes no parameters.` };
+  }
+
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return { ok: false, error: `${kind} requires a parameters object.` };
+  }
+
+  const effectiveSpec: ParamsSpec =
+    kind === "content_campaign" ? { ...spec, ...CAMPAIGN_EXTRA } : spec;
+
+  const value = raw as Record<string, unknown>;
+  for (const key of Object.keys(value)) {
+    if (!(key in effectiveSpec)) {
+      return { ok: false, error: `${kind} does not take a "${key}" parameter.` };
+    }
+  }
+  for (const [key, field] of Object.entries(effectiveSpec)) {
+    const present = value[key] !== undefined && value[key] !== null;
+    if (!present) {
+      if (field.required === true) {
+        return { ok: false, error: `${kind} requires "${key}".` };
+      }
+      continue;
+    }
+    if (!checkField(field, value[key])) {
+      return { ok: false, error: `${kind} parameter "${key}" is invalid.` };
+    }
+  }
+
+  if (
+    kind === "director_plan" &&
+    value.topic === undefined &&
+    value.sourceArtifactId === undefined
+  ) {
+    return {
+      ok: false,
+      error: "director_plan needs a topic or a source artifact.",
+    };
+  }
+
+  // Strip anything null/undefined so what is stored is exactly what was
+  // validated.
+  const params: Record<string, unknown> = {};
+  for (const key of Object.keys(effectiveSpec)) {
+    if (value[key] !== undefined && value[key] !== null) params[key] = value[key];
+  }
+  return { ok: true, params: Object.keys(params).length === 0 ? null : params };
+}
+
+/* ------------------------------------------------ chief-command grouping */
+
+const CHIEF_COMMAND_KEY_PATTERN = /^chief-cmd:([^:]+):\d+-[a-z_]+$/;
+
+/**
+ * The conversation question a request was queued FROM, when the Chief queued
+ * it (`chief-cmd:<questionId>:<n>-<kind>`), or null for button requests.
+ * This is how the Command surface attaches real request state under the
+ * Chief's answer bubble — derived from rows, never simulated.
+ */
+export function chiefCommandQuestionId(requestKey: string): string | null {
+  const match = CHIEF_COMMAND_KEY_PATTERN.exec(requestKey);
+  return match ? (match[1] ?? null) : null;
+}
+
+/** A short human name for one request, topic included when it carries one. */
+export function workRequestDisplayLabel(request: WorkRequest): string {
+  const label = WORK_REQUEST_DESCRIPTORS[request.kind].label;
+  // Optional chaining, not a null check: rows read through older projections
+  // may lack the params field entirely, and a label must never throw.
+  const topic = request.params?.topic;
+  return typeof topic === "string" ? `${label} — ${topic}` : label;
+}
+
 /**
  * What the operator is told about one request, without ever implying it ran.
  *
@@ -97,10 +375,10 @@ export function isWorkRequestKind(value: unknown): value is WorkRequestKind {
  * as failure.
  */
 export function describeWorkRequest(request: WorkRequest): string {
-  const label = WORK_REQUEST_DESCRIPTORS[request.kind].label;
+  const label = workRequestDisplayLabel(request);
 
   if (request.outcome === "completed") {
-    return `${label} — done.`;
+    return `${label} — done.${request.outcomeDetail ? ` ${request.outcomeDetail}` : ""}`;
   }
   if (request.outcome === "refused") {
     return `${label} — not run. ${

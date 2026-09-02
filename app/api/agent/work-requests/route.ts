@@ -101,6 +101,7 @@ export async function GET(request: Request) {
       seq: entry.seq,
       id: entry.id,
       kind: entry.kind,
+      params: entry.params,
       note: entry.note,
       requestedByEmail: entry.requestedByEmail,
       requestedAt: entry.requestedAt,

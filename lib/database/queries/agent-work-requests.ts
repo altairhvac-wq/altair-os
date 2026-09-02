@@ -4,6 +4,7 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   isWorkRequestKind,
+  validateWorkRequestParams,
   type WorkRequest,
   type WorkRequestKind,
   type WorkRequestOutcome,
@@ -25,6 +26,7 @@ type WorkRequestRow = {
   company_id: string;
   request_key: string;
   kind: string;
+  params: unknown;
   note: string | null;
   requested_by_email: string | null;
   requested_at: string;
@@ -34,7 +36,15 @@ type WorkRequestRow = {
 };
 
 const REQUEST_SELECT =
-  "id, seq, company_id, request_key, kind, note, requested_by_email, requested_at, applied_at, outcome, outcome_detail";
+  "id, seq, company_id, request_key, kind, params, note, requested_by_email, requested_at, applied_at, outcome, outcome_detail";
+
+/** Params are display/transport data here; only their SHAPE is trusted. */
+function toParamsObject(value: unknown): Readonly<Record<string, unknown>> | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
 
 type AnyClient = ReturnType<typeof createServiceRoleClient>;
 
@@ -67,6 +77,8 @@ function toWorkRequest(row: WorkRequestRow): WorkRequest | null {
   return {
     id: row.id,
     kind: row.kind,
+    requestKey: row.request_key,
+    params: toParamsObject(row.params),
     note: row.note,
     requestedByEmail: row.requested_by_email,
     requestedAt: row.requested_at,
@@ -170,11 +182,100 @@ export async function enqueueWorkRequest(input: {
 
 /* ------------------------------------------------- the platform's side */
 
+/**
+ * Queue requests ON THE OPERATOR'S BEHALF — the Chief converting a chat
+ * message into typed work. Batch, because a compound ask queues several.
+ *
+ * Kind and params are validated PER ITEM against the same closed contract
+ * the browser path uses; an invalid item is refused (reported by key), never
+ * repaired and never inserted. `requested_by_user_id` is null — the asking
+ * human is carried in `requestedByEmail` from the conversation row, and the
+ * request key (`chief-cmd:<questionId>:<n>-<kind>`) makes re-posts collapse
+ * on the unique index instead of double-queueing.
+ */
+export async function enqueueWorkRequestsFromAgent(input: {
+  companyId: string;
+  requests: ReadonlyArray<{
+    requestKey: string;
+    kind: string;
+    params: unknown;
+    note?: string | null;
+    requestedByEmail?: string | null;
+  }>;
+}): Promise<
+  | { queued: number; duplicates: number; invalid: { requestKey: string; error: string }[] }
+  | { error: string }
+> {
+  const supabase = createServiceRoleClient();
+  let queued = 0;
+  let duplicates = 0;
+  const invalid: { requestKey: string; error: string }[] = [];
+
+  for (const request of input.requests) {
+    const key = typeof request.requestKey === "string" ? request.requestKey.trim() : "";
+    if (!key || key.length > 200) {
+      invalid.push({ requestKey: key || "(missing)", error: "requestKey is invalid" });
+      continue;
+    }
+    if (!isWorkRequestKind(request.kind)) {
+      invalid.push({ requestKey: key, error: "unknown kind" });
+      continue;
+    }
+    const params = validateWorkRequestParams(request.kind, request.params ?? null);
+    if (!params.ok) {
+      invalid.push({ requestKey: key, error: params.error });
+      continue;
+    }
+
+    const note =
+      typeof request.note === "string" && request.note.trim()
+        ? request.note.trim().slice(0, 1000)
+        : null;
+    const email =
+      typeof request.requestedByEmail === "string" && request.requestedByEmail.trim()
+        ? request.requestedByEmail.trim().slice(0, 320)
+        : null;
+
+    const insert = await workRequestsTable(supabase)
+      .insert({
+        company_id: input.companyId,
+        request_key: key,
+        kind: request.kind,
+        params: params.params,
+        note,
+        requested_by_user_id: null,
+        requested_by_email: email,
+      })
+      .select("id")
+      .single();
+
+    if (!insert.error) {
+      queued += 1;
+      continue;
+    }
+    // Insert-first-then-interpret: the unique index is the idempotency.
+    if (insert.error.code === "23505") {
+      duplicates += 1;
+      continue;
+    }
+    console.error("[enqueueWorkRequestsFromAgent] insert failed:", {
+      companyId: input.companyId,
+      code: insert.error.code,
+    });
+    return {
+      error: mapDatabaseError(insert.error) ?? "A request could not be queued.",
+    };
+  }
+
+  return { queued, duplicates, invalid };
+}
+
 export type PulledWorkRequest = {
   readonly seq: number;
   readonly id: string;
   readonly companyId: string;
   readonly kind: WorkRequestKind;
+  readonly params: Readonly<Record<string, unknown>> | null;
   readonly note: string | null;
   readonly requestedByEmail: string | null;
   readonly requestedAt: string;
@@ -220,6 +321,7 @@ export async function listUnappliedWorkRequests(input: {
       id: row.id,
       companyId: row.company_id,
       kind: row.kind,
+      params: toParamsObject(row.params),
       note: row.note,
       requestedByEmail: row.requested_by_email,
       requestedAt: row.requested_at,
