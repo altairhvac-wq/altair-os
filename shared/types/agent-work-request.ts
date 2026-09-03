@@ -27,6 +27,7 @@ export const WORK_REQUEST_KINDS = [
   "youtube_draft",
   "seo_draft",
   "content_campaign",
+  "schedule_mutation",
 ] as const;
 
 export type WorkRequestKind = (typeof WORK_REQUEST_KINDS)[number];
@@ -137,6 +138,13 @@ export const WORK_REQUEST_DESCRIPTORS: Readonly<
       "Researches once, asks the Director for a strategy, then stages the requested drafts sharing that research. All DRAFTS — nothing is published.",
     platformGate: "RUN_CONTENT_CAMPAIGN",
   },
+  schedule_mutation: {
+    kind: "schedule_mutation",
+    label: "Change the content schedule",
+    detail:
+      "Interprets one instruction (“increase Facebook to three posts a day”, “pause video until Friday”) and updates the Chief's standing production cadence, focus theme, pause state or autonomous render limits. Every numeric ceiling is enforced by the platform after the call — an instruction that would exceed one is refused, nothing changes, and no post is created or published.",
+    platformGate: "RUN_CONTENT_GOALS_MUTATION",
+  },
 };
 
 /**
@@ -243,6 +251,9 @@ const PARAMS_SPECS: Readonly<Record<WorkRequestKind, ParamsSpec | null>> = {
     },
     shortCount: { type: "int", min: 1, max: 3 },
   },
+  schedule_mutation: {
+    instruction: { ...longText, required: true },
+  },
 };
 
 // director_plan additionally needs at least one of topic/sourceArtifactId;
@@ -271,14 +282,19 @@ function checkField(spec: FieldSpec, value: unknown): boolean {
         Array.isArray(value) &&
         value.length >= spec.min &&
         value.length <= spec.max &&
-        value.every((entry) => typeof entry === "string" && spec.values.includes(entry)) &&
+        value.every(
+          (entry) => typeof entry === "string" && spec.values.includes(entry),
+        ) &&
         new Set(value).size === value.length
       );
   }
 }
 
 export type ParamsValidation =
-  | { readonly ok: true; readonly params: Readonly<Record<string, unknown>> | null }
+  | {
+      readonly ok: true;
+      readonly params: Readonly<Record<string, unknown>> | null;
+    }
   | { readonly ok: false; readonly error: string };
 
 /**
@@ -307,7 +323,10 @@ export function validateWorkRequestParams(
   const value = raw as Record<string, unknown>;
   for (const key of Object.keys(value)) {
     if (!(key in effectiveSpec)) {
-      return { ok: false, error: `${kind} does not take a "${key}" parameter.` };
+      return {
+        ok: false,
+        error: `${kind} does not take a "${key}" parameter.`,
+      };
     }
   }
   for (const [key, field] of Object.entries(effectiveSpec)) {
@@ -338,7 +357,8 @@ export function validateWorkRequestParams(
   // validated.
   const params: Record<string, unknown> = {};
   for (const key of Object.keys(effectiveSpec)) {
-    if (value[key] !== undefined && value[key] !== null) params[key] = value[key];
+    if (value[key] !== undefined && value[key] !== null)
+      params[key] = value[key];
   }
   return { ok: true, params: Object.keys(params).length === 0 ? null : params };
 }
@@ -364,7 +384,11 @@ export function workRequestDisplayLabel(request: WorkRequest): string {
   // Optional chaining, not a null check: rows read through older projections
   // may lack the params field entirely, and a label must never throw.
   const topic = request.params?.topic;
-  return typeof topic === "string" ? `${label} — ${topic}` : label;
+  if (typeof topic === "string") return `${label} — ${topic}`;
+  // schedule_mutation carries no topic — its whole content is the owner's
+  // instruction, so that is the thing worth showing beside the label.
+  const instruction = request.params?.instruction;
+  return typeof instruction === "string" ? `${label} — ${instruction}` : label;
 }
 
 /**
