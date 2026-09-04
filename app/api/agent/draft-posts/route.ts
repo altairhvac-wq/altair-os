@@ -59,6 +59,18 @@ const MAX_TITLE_CHARS = 200;
 const MAX_TEXT_CHARS = 5_000;
 const MAX_CTA_CHARS = 500;
 
+/**
+ * Mirrors agent-platform's own RENDER_QUALITY_STATES
+ * (src/video/quality-classification.ts) and migration 195's CHECK
+ * constraint. Kept as a literal list rather than imported: this route has no
+ * dependency on that repository, the same reason ALLOWED_CHANNELS above is a
+ * literal too.
+ */
+const QUALITY_STATES = ["STUB", "REVIEWABLE_CREATIVE", "PRODUCTION_READY"] as const;
+
+/** Mirrors video-plan.ts's own directorRationale.max(2000) and migration 195's length check. */
+const MAX_DIRECTOR_RATIONALE_CHARS = 2_000;
+
 type IncomingPost = {
   channel?: unknown;
   text?: unknown;
@@ -73,6 +85,9 @@ type Body = {
   forDate?: unknown;
   titleBase?: unknown;
   posts?: unknown;
+  costUsd?: unknown;
+  qualityState?: unknown;
+  directorRationale?: unknown;
 };
 
 function reject(status: number, error: string) {
@@ -105,6 +120,37 @@ function candidateUuid(value: unknown): string | null {
 
 function channelLabel(channel: AllowedChannel): string {
   return channel === "facebook" ? "Facebook Reel" : "Instagram Reel";
+}
+
+/**
+ * Migration 195 enrichment, read leniently. Each is optional and a caller
+ * that got one wrong (out of range, wrong type, unrecognized state) simply
+ * does not get it attached — that is the same "attach only what is actually
+ * known" rule the agent-platform side already follows, and it means a
+ * malformed enrichment value can never fail the one thing this route exists
+ * to do: get the draft in front of a human. `undefined` here, not `null` —
+ * an explicit null would overwrite nothing (there is no update path) but
+ * would still be worth distinguishing from "not sent" in the insert layer.
+ */
+function readCostUsd(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined;
+}
+
+function readQualityState(value: unknown): string | undefined {
+  return typeof value === "string" &&
+    (QUALITY_STATES as readonly string[]).includes(value)
+    ? value
+    : undefined;
+}
+
+function readDirectorRationale(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed && trimmed.length <= MAX_DIRECTOR_RATIONALE_CHARS
+    ? trimmed
+    : undefined;
 }
 
 export async function POST(request: Request) {
@@ -227,6 +273,9 @@ export async function POST(request: Request) {
   }
 
   const sourceId = candidateUuid(body.candidateArtifactId);
+  const costUsd = readCostUsd(body.costUsd);
+  const qualityState = readQualityState(body.qualityState);
+  const directorRationale = readDirectorRationale(body.directorRationale);
 
   const results: {
     channel: AllowedChannel;
@@ -245,6 +294,9 @@ export async function POST(request: Request) {
       suggestedHashtags: post.hashtags,
       sourceId,
       videoMediaAssetId: asset.id,
+      ...(costUsd !== undefined ? { costUsd } : {}),
+      ...(qualityState !== undefined ? { qualityState } : {}),
+      ...(directorRationale !== undefined ? { directorRationale } : {}),
     });
 
     results.push({

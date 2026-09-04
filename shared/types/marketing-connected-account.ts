@@ -1,7 +1,17 @@
-export type MarketingConnectedProvider =
-  | "facebook"
-  | "instagram"
-  | "google_business";
+import type { IntegrationKind, IntegrationProvider } from "./integration-provider";
+import type { MarketingPublishCapability } from "./marketing-channel-connection";
+
+/**
+ * ============ ONE PROVIDER VOCABULARY, NOT TWO ============
+ * This used to be a hand-written three-value union while the SQL enum had
+ * five, and `lib/integrations/oauth-state.ts` derives its provider allowlist
+ * from the options list below — so YouTube and TikTok could not even have an
+ * OAuth state minted, though the database had accepted those labels since
+ * migration 143. Aliasing to `IntegrationProvider` makes that drift
+ * unrepresentable: there is now exactly one place a provider is spelled, and
+ * `scripts/verify-integration-registry.mjs` proves it matches the SQL enum.
+ */
+export type MarketingConnectedProvider = IntegrationProvider;
 
 export type MarketingConnectedAccountStatus =
   | "connected"
@@ -18,7 +28,36 @@ export type MarketingConnectedAccount = {
   providerResourceId?: string;
   providerResourceName?: string;
   status: MarketingConnectedAccountStatus;
+  /** What this connection IS — see `./integration-provider`. */
+  integrationKind: IntegrationKind;
+  /** What we ASKED the provider for at authorize time. */
   scopes: string[];
+  /**
+   * What the provider actually GRANTED, read back after consent (migration
+   * 181). A partial consent makes this differ from `scopes`, and the
+   * difference is the diagnosis when a publish later fails with an opaque
+   * permission error. Empty until a capability probe has run.
+   */
+  grantedScopes: string[];
+  /** Why the last capability probe failed, if it did. */
+  capabilityProbeError?: string;
+  /** When this connection last completed an operation against the provider. */
+  lastSuccessAt?: string;
+  lastAttemptAt?: string;
+  /**
+   * What this connection can DO, independent of whether the token is valid.
+   *
+   * The column has existed since migration 143 and was never read by any
+   * query — both `listMarketingConnectedAccounts` and the admin query used
+   * explicit select lists that omitted it, so the value could not reach the
+   * state machine that exists to consume it. Selecting it is what makes
+   * `deriveMarketingChannelState` able to tell "connected but not permitted
+   * to publish" from "connected and ready".
+   */
+  publishCapability: MarketingPublishCapability;
+  /** Operator-facing reason for the capability, naming the next human step. */
+  capabilityDetail?: string;
+  capabilityCheckedAt?: string;
   tokenExpiresAt?: string;
   connectedBy?: string;
   connectedAt?: string;
@@ -29,6 +68,24 @@ export type MarketingConnectedAccount = {
   updatedAt: string;
 };
 
+/**
+ * The providers the MARKETING HUB card renders, in its order.
+ *
+ * ============ A DISPLAY LIST, NOT AN ALLOWLIST ============
+ * Deliberately still the three Meta-era providers. This drives
+ * `buildMarketingConnectedAccountStatusRows`, which paints
+ * `MarketingConnectedAccountsCard` and the Company settings Connections
+ * rows — surfaces about the Facebook/Instagram publishing relationship.
+ * Every provider Altair supports is enumerated in
+ * `INTEGRATION_PROVIDERS` and rendered by Settings → Integrations instead.
+ *
+ * `lib/integrations/oauth-state.ts` used to derive its provider allowlist
+ * from THIS list, which made a presentation array into a security control:
+ * a provider was authorizable only if the Marketing card happened to show
+ * it. That is why YouTube and TikTok could not be connected despite the SQL
+ * enum accepting them since migration 143. The allowlist now derives from
+ * `INTEGRATION_PROVIDERS`; this list is free to stay about the Hub.
+ */
 export const MARKETING_CONNECTED_PROVIDER_OPTIONS: {
   value: MarketingConnectedProvider;
   label: string;

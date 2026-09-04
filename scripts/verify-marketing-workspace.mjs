@@ -62,7 +62,8 @@ const RECENT = "2026-08-18T09:00:00.000Z";
 const OLD = "2026-08-10T09:00:00.000Z";
 
 const listSection = (items, support) => ({
-  support: support ?? (items.length > 0 ? "SUPPORTED_WITH_DATA" : "SUPPORTED_EMPTY"),
+  support:
+    support ?? (items.length > 0 ? "SUPPORTED_WITH_DATA" : "SUPPORTED_EMPTY"),
   unsupportedReason: null,
   items,
 });
@@ -132,7 +133,13 @@ const render = (over = {}) => ({
   ...over,
 });
 
-const stored = ({ schedules = [schedule()], status, renders = [], producedAt = RECENT, upcomingSupport } = {}) => ({
+const stored = ({
+  schedules = [schedule()],
+  status,
+  renders = [],
+  producedAt = RECENT,
+  upcomingSupport,
+} = {}) => ({
   producedAt,
   snapshot: {
     contractVersion: 1,
@@ -143,7 +150,11 @@ const stored = ({ schedules = [schedule()], status, renders = [], producedAt = R
       recentActivity: listSection([]),
       agentStatus: listSection([]),
       upcomingWork: upcomingSupport
-        ? { support: upcomingSupport, unsupportedReason: "The platform cannot enumerate schedules.", items: [] }
+        ? {
+            support: upcomingSupport,
+            unsupportedReason: "The platform cannot enumerate schedules.",
+            items: [],
+          }
         : listSection(schedules),
       campaign: listSection([]),
       recommendations: listSection([]),
@@ -184,12 +195,18 @@ console.log("\nAutomation health — absence is never rendered as Off");
 // ---------------------------------------------------------------------------
 
 const never = health({ snapshot: null });
-check("no snapshot reports UNKNOWN, not Off", never.state === "UNKNOWN", never.state);
+check(
+  "no snapshot reports UNKNOWN, not Off",
+  never.state === "UNKNOWN",
+  never.state,
+);
 check("no snapshot never claims a next run", never.nextRunAtIso === null);
 check("no snapshot raises no attention items", never.attention.length === 0);
 check("no snapshot still explains itself", never.detail.length > 20);
 
-const unsupported = health({ snapshot: stored({ upcomingSupport: "NOT_SUPPORTED" }) });
+const unsupported = health({
+  snapshot: stored({ upcomingSupport: "NOT_SUPPORTED" }),
+});
 check(
   "NOT_SUPPORTED schedules report UNKNOWN, not Off",
   unsupported.state === "UNKNOWN",
@@ -215,7 +232,9 @@ check(
 );
 
 const shortList = health({
-  snapshot: stored({ schedules: [schedule({ jobName: "marketing.performance-sweep" })] }),
+  snapshot: stored({
+    schedules: [schedule({ jobName: "marketing.performance-sweep" })],
+  }),
 });
 check(
   "a short list with no daily job reports Off",
@@ -229,32 +248,55 @@ console.log("\nAutomation health — schedule states");
 
 const on = health({ snapshot: stored() });
 check("an active daily schedule reports On", on.state === "ON", on.state);
-check("On carries the next run", on.nextRunAtIso === "2026-08-19T13:00:00.000Z", on.nextRunAtIso);
+check(
+  "On carries the next run",
+  on.nextRunAtIso === "2026-08-19T13:00:00.000Z",
+  on.nextRunAtIso,
+);
 check("On states the cadence", on.detail.includes("once a day"), on.detail);
-check("a healthy workspace raises no attention", on.attention.length === 0, on.attention);
+check(
+  "a healthy workspace raises no attention",
+  on.attention.length === 0,
+  on.attention,
+);
 
-const once = health({ snapshot: stored({ schedules: [schedule({ intervalMs: null })] }) });
+const once = health({
+  snapshot: stored({ schedules: [schedule({ intervalMs: null })] }),
+});
 check(
   "a one-time schedule is neither On nor Off",
   once.state === "ONCE",
   once.state,
 );
-check("a one-time schedule still shows its run time", once.nextRunAtIso !== null);
+check(
+  "a one-time schedule still shows its run time",
+  once.nextRunAtIso !== null,
+);
 check(
   "a one-time schedule says there is no recurring one",
   once.detail.includes("no recurring daily schedule"),
   once.detail,
 );
 
-const paused = health({ snapshot: stored({ schedules: [schedule({ scheduleState: "PAUSED" })] }) });
+const paused = health({
+  snapshot: stored({ schedules: [schedule({ scheduleState: "PAUSED" })] }),
+});
 check("a paused schedule reports Off", paused.state === "OFF", paused.state);
-check("a paused schedule needs attention", paused.attention.some((r) => r.includes("paused")), paused.attention);
+check(
+  "a paused schedule needs attention",
+  paused.attention.some((r) => r.includes("paused")),
+  paused.attention,
+);
 check("a paused schedule advertises no next run", paused.nextRunAtIso === null);
 
 const failedSchedule = health({
   snapshot: stored({ schedules: [schedule({ scheduleState: "FAILED" })] }),
 });
-check("a failed schedule reports Off", failedSchedule.state === "OFF", failedSchedule.state);
+check(
+  "a failed schedule reports Off",
+  failedSchedule.state === "OFF",
+  failedSchedule.state,
+);
 check(
   "a failed schedule needs attention",
   failedSchedule.attention.some((r) => r.includes("failed state")),
@@ -262,7 +304,9 @@ check(
 );
 
 const renamed = health({
-  snapshot: stored({ schedules: [schedule({ jobName: "content.daily_pilot" })] }),
+  snapshot: stored({
+    schedules: [schedule({ jobName: "content.daily_pilot" })],
+  }),
 });
 check(
   "a job name that does not match the mirror is not treated as the daily pilot",
@@ -275,7 +319,9 @@ console.log("\nAutomation health — attention is named, never counted");
 // ---------------------------------------------------------------------------
 
 const withFailures = health({
-  snapshot: stored({ status: automationStatus({ schedulesFailed: 2, tasksFailed: 1 }) }),
+  snapshot: stored({
+    status: automationStatus({ schedulesFailed: 2, tasksFailed: 1 }),
+  }),
 });
 check(
   "failed schedules are named",
@@ -346,7 +392,8 @@ check(
 );
 check(
   "a draft with NO video is not a candidate",
-  state.selectTodayCandidates([post({ videoMediaAssetId: undefined })]).length === 0,
+  state.selectTodayCandidates([post({ videoMediaAssetId: undefined })])
+    .length === 0,
 );
 check(
   "a published post is not a candidate",
@@ -372,7 +419,11 @@ check(
 // `social_post` — and an SEO page has no rendered Reel, so even if that guard
 // were relaxed the post could not satisfy this filter. Both facts are why an
 // SEO approval cannot appear in the daily social queue.
-const seoShaped = post({ id: "seo", videoMediaAssetId: undefined, title: "How to size a heat pump" });
+const seoShaped = post({
+  id: "seo",
+  videoMediaAssetId: undefined,
+  title: "How to size a heat pump",
+});
 check(
   "an SEO-shaped draft (no video) never enters the daily social queue",
   state.selectTodayCandidates([seoShaped]).length === 0,
@@ -383,12 +434,22 @@ console.log("\nToday — the empty states are told apart");
 // ---------------------------------------------------------------------------
 
 const today = (input) =>
-  state.deriveMarketingTodayState({ posts: [], renders: null, nowIso: NOW, ...input });
+  state.deriveMarketingTodayState({
+    posts: [],
+    renders: null,
+    nowIso: NOW,
+    ...input,
+  });
 
 check(
   "a waiting candidate short-circuits every other state",
-  today({ posts: [post()], renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "FAILED" })] } })
-    .kind === "AWAITING_DECISION",
+  today({
+    posts: [post()],
+    renders: {
+      support: "SUPPORTED_WITH_DATA",
+      items: [render({ renderState: "FAILED" })],
+    },
+  }).kind === "AWAITING_DECISION",
 );
 check(
   "nothing reported reads as nothing waiting",
@@ -396,13 +457,25 @@ check(
 );
 check(
   "NOT_SUPPORTED renders read as nothing waiting, not as a failure",
-  today({ renders: { support: "NOT_SUPPORTED", items: [render({ renderState: "FAILED" })] } }).kind === "NOTHING",
+  today({
+    renders: {
+      support: "NOT_SUPPORTED",
+      items: [render({ renderState: "FAILED" })],
+    },
+  }).kind === "NOTHING",
 );
 
 const preparing = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "PENDING" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "PENDING" })],
+  },
 });
-check("a pending render reads as being prepared", preparing.kind === "PREPARING", preparing.kind);
+check(
+  "a pending render reads as being prepared",
+  preparing.kind === "PREPARING",
+  preparing.kind,
+);
 check(
   "being prepared uses the required wording",
   preparing.headline === "Today's video is being prepared",
@@ -410,17 +483,34 @@ check(
 );
 
 const withStage = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "PENDING", stage: "compose" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "PENDING", stage: "compose" })],
+  },
 });
-check("a reported stage is shown", withStage.detail.includes("compose"), withStage.detail);
+check(
+  "a reported stage is shown",
+  withStage.detail.includes("compose"),
+  withStage.detail,
+);
 
 const failed = today({
   renders: {
     support: "SUPPORTED_WITH_DATA",
-    items: [render({ renderState: "FAILED", failureName: "FfmpegExit", failureMessage: "code 234" })],
+    items: [
+      render({
+        renderState: "FAILED",
+        failureName: "FfmpegExit",
+        failureMessage: "code 234",
+      }),
+    ],
   },
 });
-check("a failed render reads as could not be prepared", failed.kind === "FAILED", failed.kind);
+check(
+  "a failed render reads as could not be prepared",
+  failed.kind === "FAILED",
+  failed.kind,
+);
 check(
   "failure uses the required wording",
   failed.headline === "Today's video could not be prepared",
@@ -433,7 +523,10 @@ check(
 );
 
 const failedSilently = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "FAILED" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "FAILED" })],
+  },
 });
 check(
   "a failure with no reason says so instead of inventing one",
@@ -442,7 +535,10 @@ check(
 );
 
 const unknown = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "UNKNOWN" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "UNKNOWN" })],
+  },
 });
 check(
   "UNKNOWN is not rendered as a failure",
@@ -451,12 +547,22 @@ check(
 );
 
 const cancelled = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "CANCELLED" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "CANCELLED" })],
+  },
 });
-check("a cancelled render says it was cancelled", cancelled.headline.includes("cancelled"), cancelled.headline);
+check(
+  "a cancelled render says it was cancelled",
+  cancelled.headline.includes("cancelled"),
+  cancelled.headline,
+);
 
 const completed = today({
-  renders: { support: "SUPPORTED_WITH_DATA", items: [render({ renderState: "COMPLETED" })] },
+  renders: {
+    support: "SUPPORTED_WITH_DATA",
+    items: [render({ renderState: "COMPLETED" })],
+  },
 });
 check(
   "a completed render with no post says exactly that",
@@ -467,7 +573,9 @@ check(
 const staleRender = today({
   renders: {
     support: "SUPPORTED_WITH_DATA",
-    items: [render({ renderState: "FAILED", recordedAt: OLD, submittedAt: OLD })],
+    items: [
+      render({ renderState: "FAILED", recordedAt: OLD, submittedAt: OLD }),
+    ],
   },
 });
 check(
@@ -480,8 +588,16 @@ const twoRenders = today({
   renders: {
     support: "SUPPORTED_WITH_DATA",
     items: [
-      render({ jobId: "older", renderState: "FAILED", recordedAt: "2026-08-18T06:00:00.000Z" }),
-      render({ jobId: "newer", renderState: "PENDING", recordedAt: "2026-08-18T11:00:00.000Z" }),
+      render({
+        jobId: "older",
+        renderState: "FAILED",
+        recordedAt: "2026-08-18T06:00:00.000Z",
+      }),
+      render({
+        jobId: "newer",
+        renderState: "PENDING",
+        recordedAt: "2026-08-18T11:00:00.000Z",
+      }),
     ],
   },
 });
@@ -494,7 +610,9 @@ check(
 const noStamps = today({
   renders: {
     support: "SUPPORTED_WITH_DATA",
-    items: [render({ renderState: "PENDING", recordedAt: null, submittedAt: null })],
+    items: [
+      render({ renderState: "PENDING", recordedAt: null, submittedAt: null }),
+    ],
   },
 });
 check(
@@ -510,7 +628,9 @@ console.log("\nConsolidation — one home per capability");
 const src = (path) => readFileSync(path, "utf8");
 const today_ = src("shared/components/marketing-hub/MarketingTodayView.tsx");
 const workspace = src("shared/components/marketing-hub/MarketingWorkspace.tsx");
-const settings = src("shared/components/marketing-hub/MarketingSettingsView.tsx");
+const settings = src(
+  "shared/components/marketing-hub/MarketingSettingsView.tsx",
+);
 const hub = src("shared/components/marketing-hub/MarketingHubPageView.tsx");
 
 check(
@@ -527,22 +647,101 @@ check(
 );
 check(
   "the primary view derives its states rather than hand-writing them",
-  today_.includes("deriveMarketingTodayState") && today_.includes("selectTodayCandidates"),
+  today_.includes("deriveMarketingTodayState") &&
+    today_.includes("selectTodayCandidates"),
 );
 check(
-  "Today is the workspace's default tab",
-  /useState<TabId>\("today"\)/.test(workspace),
+  // Was "Today is the default tab", then "Command is offered before Today".
+  // Today has since become Publishing, so the sibling it was compared against
+  // no longer exists. The invariant worth keeping is unchanged: SOME tab is
+  // the default and it is the FIRST one offered.
+  "Command is the workspace's default tab, and is offered first",
+  /useState<TabId>\("command"\)/.test(workspace) &&
+    workspace.indexOf('{ id: "command"') < workspace.indexOf('{ id: "content"'),
 );
 check(
-  "the diagnostics section is mounted exactly once, under Advanced",
-  workspace.split("<MarketingAutomationSection").length === 2 &&
-    workspace.indexOf('tab === "advanced"') <
-      workspace.indexOf("<MarketingAutomationSection"),
+  // Was "Today is still reachable as its own tab". The daily go-out view was
+  // not deleted in the reorganisation — it is what Publishing renders — and
+  // that, not the label it used to carry, is what must stay true.
+  "the daily go-out view is still reachable, now under Publishing",
+  workspace.includes('{ id: "publishing"') &&
+    workspace.indexOf('tab === "publishing"') <
+      workspace.indexOf("<MarketingTodayView"),
 );
 check(
-  "the manual-posts view is mounted exactly once, under Advanced",
+  "every destination in the hierarchy is offered",
+  [
+    "command",
+    "content",
+    "publishing",
+    "performance",
+    "website",
+    "history",
+    "settings",
+  ].every(
+    (id) =>
+      workspace.includes(`{ id: "${id}"`) &&
+      workspace.includes(`tab === "${id}"`),
+  ),
+);
+check(
+  // Was "mounted exactly once, under Advanced". The dashboard is now mounted
+  // three times ON PURPOSE, each asking for a different slice — so counting
+  // mounts is the wrong invariant. What must hold is that the slices are
+  // DISJOINT, or a section would render twice in one workspace.
+  "NO AUTOMATION SECTION IS RENDERED BY TWO TABS",
+  (() => {
+    const asked = [...workspace.matchAll(/only=\{\[([^\]]*)\]\}/g)].flatMap(
+      (m) => [...m[1].matchAll(/"([a-zA-Z]+)"/g)].map((k) => k[1]),
+    );
+    return asked.length > 0 && new Set(asked).size === asked.length;
+  })(),
+);
+check(
+  // The other half of splitting a dashboard: nothing may be lost in the move.
+  "AND NO SECTION WAS LOST IN THE REORGANISATION",
+  (() => {
+    const automation = src(
+      "shared/components/marketing-hub/MarketingAutomationSection.tsx",
+    );
+    const declared = [
+      ...((automation.match(
+        /AUTOMATION_SECTION_KEYS = \[([\s\S]*?)\] as const/,
+      ) ?? [])[1]?.matchAll(/"([a-zA-Z]+)"/g) ?? []),
+    ].map((m) => m[1]);
+    const asked = new Set(
+      [...workspace.matchAll(/only=\{\[([^\]]*)\]\}/g)].flatMap((m) =>
+        [...m[1].matchAll(/"([a-zA-Z]+)"/g)].map((k) => k[1]),
+      ),
+    );
+    return declared.length > 0 && declared.every((key) => asked.has(key));
+  })(),
+);
+check(
+  "every automation mount asks for an explicit slice",
+  workspace.split("<MarketingAutomationSection").length - 1 ===
+    workspace.split("only={[").length - 1,
+);
+check(
+  // Was "under Advanced". The post editor moved to Content and must still be
+  // mounted exactly once — two mounts would be two editors over one store.
+  "the manual-posts view is mounted exactly once, under Content",
   workspace.split("<MarketingHubPageView").length === 2 &&
-    workspace.indexOf('tab === "advanced"') < workspace.indexOf("<MarketingHubPageView"),
+    workspace.indexOf('tab === "content"') <
+      workspace.indexOf("<MarketingHubPageView"),
+);
+check(
+  "the Website tab reads pages and cannot edit them",
+  (() => {
+    const site = src(
+      "shared/components/marketing-hub/MarketingWebsiteView.tsx",
+    );
+    return (
+      workspace.includes("<MarketingWebsiteView") &&
+      !/use client/.test(site) &&
+      !/Action\(|<form|<input|<textarea/.test(site)
+    );
+  })(),
 );
 check(
   "settings owns the only connected-accounts card in the workspace",
@@ -585,7 +784,11 @@ check(
   !/from "@\/app\/actions/.test(settings),
 );
 check("settings renders no form", !settings.includes("<form"), "form found");
-check("settings renders no button", !settings.includes("<button"), "button found");
+check(
+  "settings renders no button",
+  !settings.includes("<button"),
+  "button found",
+);
 check(
   "settings says where the schedule is actually changed",
   settings.includes("it does not set it"),

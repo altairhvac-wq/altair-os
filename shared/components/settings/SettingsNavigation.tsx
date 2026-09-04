@@ -7,6 +7,7 @@ import {
   Building2,
   CreditCard,
   LayoutDashboard,
+  Plug,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,11 +21,19 @@ type SettingsNavigationItem = {
 };
 
 /**
- * Settings IA v2 — four destinations, nothing else. Preferences, Documents,
- * and Integrations merged into Company; Notifications retired (the header
- * bell is the notifications UI); System Check reachable from Overview's
- * owner tile. Legacy routes all server-redirect, so plain prefix matching
- * covers every pathname a user can sit on.
+ * Settings IA v2 — Preferences and Documents merged into Company;
+ * Notifications retired (the header bell is the notifications UI); System
+ * Check reachable from Overview's owner tile. Legacy routes all
+ * server-redirect, so plain prefix matching covers every pathname a user can
+ * sit on.
+ *
+ * Integrations was merged into Company too, and has been un-merged. That was
+ * the right call while the only integration was Facebook and its entire state
+ * was "connected or not". It stops being right with nine providers across
+ * three kinds, each carrying configuration, connection health, granted scopes
+ * and a provider-side capability no token reflects — Company's Connections
+ * rows cannot express that without becoming this page. Company keeps a
+ * summary and links here, so there is still one home for the detail.
  */
 const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
   {
@@ -45,6 +54,12 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
     description: "Altair plan and customer payment collection.",
     href: "/settings/billing",
     icon: CreditCard,
+  },
+  {
+    label: "Integrations",
+    description: "Publishing channels, creative sources, and their status.",
+    href: "/settings/integrations",
+    icon: Plug,
   },
   {
     label: "Users",

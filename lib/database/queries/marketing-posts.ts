@@ -33,6 +33,14 @@ type MarketingPostRow = {
   deleted_at: string | null;
   founder_screenshot_reference: string | null;
   video_media_asset_id: string | null;
+  // marketing_posts.content_package_id: migration 182 — wire into Database
+  // types on next gen types run.
+  content_package_id: string | null;
+  // marketing_posts.cost_usd / quality_state / director_rationale: migration
+  // 195 — wire into Database types on next gen types run.
+  cost_usd: number | null;
+  quality_state: string | null;
+  director_rationale: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -97,6 +105,15 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     deletedAt: row.deleted_at ?? null,
     founderScreenshotReference: row.founder_screenshot_reference ?? undefined,
     videoMediaAssetId: row.video_media_asset_id ?? undefined,
+    // Migration 182 put this on the row and the mapper dropped it, so the
+    // link from a post to the creative brief it came from — and through that
+    // to its published site page — was unreachable from the application. The
+    // alternative was matching a page to a post by title or slug, which is a
+    // guess dressed as a join.
+    contentPackageId: row.content_package_id ?? undefined,
+    costUsd: row.cost_usd ?? undefined,
+    qualityState: row.quality_state ?? undefined,
+    directorRationale: row.director_rationale ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -665,6 +682,17 @@ export type AgentDraftPostInput = {
   suggestedHashtags: string[];
   sourceId: string | null;
   videoMediaAssetId: string;
+  /**
+   * Migration 195 enrichment. Each is independently optional and written
+   * ONLY here, at creation — there is no update path for any of the three,
+   * matching this function's own "it never updates" rule below. Omit (do
+   * not pass `null`) when the caller does not know a value; the column
+   * simply stays null, exactly as it does for every post this route never
+   * touches.
+   */
+  costUsd?: number | null;
+  qualityState?: string | null;
+  directorRationale?: string | null;
 };
 
 /**
@@ -727,7 +755,19 @@ export async function createAgentDraftMarketingPost(
   // `MarketingPostInsert` types `created_by` as string, and intersecting that
   // with null collapses the field to `never`. Omit and re-add instead: the
   // column is nullable in the schema, and no human created this row.
-  const insert: Omit<MarketingPostInsert, "created_by"> & { created_by: null } = {
+  //
+  // cost_usd/quality_state/director_rationale (migration 195) are not part of
+  // `MarketingPostInsert` at all — no other writer in this file may set them
+  // — so they are added directly here, and only when the caller actually
+  // supplied a value; an absent field is never sent as an explicit `null`,
+  // which would be indistinguishable from "known to have no value" once
+  // written.
+  const insert: Omit<MarketingPostInsert, "created_by"> & {
+    created_by: null;
+    cost_usd?: number | null;
+    quality_state?: string | null;
+    director_rationale?: string | null;
+  } = {
     company_id: input.companyId,
     created_by: null,
     title: input.title,
@@ -739,6 +779,13 @@ export async function createAgentDraftMarketingPost(
     source_type: AGENT_DAILY_REEL_SOURCE,
     source_id: input.sourceId,
     video_media_asset_id: input.videoMediaAssetId,
+    ...(input.costUsd !== undefined ? { cost_usd: input.costUsd } : {}),
+    ...(input.qualityState !== undefined
+      ? { quality_state: input.qualityState }
+      : {}),
+    ...(input.directorRationale !== undefined
+      ? { director_rationale: input.directorRationale }
+      : {}),
   };
 
   const { data, error } = await marketingPostsServiceTable(client)

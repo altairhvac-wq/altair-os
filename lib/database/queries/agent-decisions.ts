@@ -150,12 +150,28 @@ export async function recordAgentDecision(
   return { ok: true, duplicate: false, error: null };
 }
 
-/** Decisions after a cursor, oldest first, bounded. */
+/**
+ * Decisions after a cursor, oldest first, bounded. `null` on a read failure.
+ *
+ * ============ "NO WORK" AND "COULD NOT TELL" ARE DIFFERENT FACTS ============
+ * This returned `[]` on error, so the bridge route answered 200 with an empty
+ * list and the platform's integration cycle recorded a clean pass: "Cycle
+ * complete. Both halves settled.", exit 0, gateway healthy, normal interval.
+ * A lost SELECT grant on this table — precisely the 42501 grant-shaped class
+ * this project hit live on 2026-09-01 — would therefore leave every human
+ * APPROVED/REJECTED undelivered indefinitely while every log line and exit
+ * code said the system was fine.
+ *
+ * Both sibling queues (`listQueuedChiefQuestions`, `listUnappliedWorkRequests`)
+ * return null for exactly this reason and cite that incident; this one, the
+ * oldest of the three, never got the fix. Now it does: the route turns null
+ * into a 503 the puller can see and back off from.
+ */
 export async function listAgentDecisionsSince(
   companyId: string,
   sinceSeq: number,
   limit = 100,
-): Promise<AgentDecisionRecord[]> {
+): Promise<AgentDecisionRecord[] | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await decisionsTable(supabase)
     .select(
@@ -172,7 +188,8 @@ export async function listAgentDecisionsSince(
       code: error.code,
       message: error.message,
     });
-    return [];
+    // Null, never an empty list. See the note above this function.
+    return null;
   }
 
   return ((data ?? []) as unknown[]).map((row) => {

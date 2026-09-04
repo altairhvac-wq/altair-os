@@ -15,6 +15,8 @@ const FOUNDER_ACCESS: DashboardData["access"] = {
   canViewTechnicianRoster: true,
   canManageCustomers: true,
   canManageTeamMembers: true,
+  canManageIntegrations: true,
+  canViewIntegrations: true,
 };
 
 const REPORT_META = buildReportSectionMeta({

@@ -168,11 +168,31 @@ export function describeDeliveryDecision(
 }
 
 /** What a settled attempt records. */
+/**
+ * Provider-reported facts about what was delivered, destined for
+ * `marketing_channel_deliveries.provider_result` (migration 186).
+ *
+ * Deliberately open-ended and deliberately small. Each provider reports
+ * different things — YouTube a privacyStatus and an uploadStatus, TikTok a
+ * publish id and a poll state — and the ledger stores what the adapter
+ * actually read back rather than a shape invented here. The 2 KB CHECK in
+ * SQL is what keeps it from becoming a place to dump a response body.
+ */
+export type DeliveryProviderResult = Readonly<
+  Record<string, string | number | boolean | null>
+>;
+
 export type DeliverySettlement =
   | {
       readonly outcome: "posted";
       readonly providerPostId: string;
       readonly providerPermalink?: string | null;
+      /**
+       * What the provider said about the object it created — for YouTube the
+       * VISIBILITY, which is the one property the private-only canary was
+       * authorized on and which no id can record.
+       */
+      readonly providerResult?: DeliveryProviderResult;
     }
   | {
       readonly outcome: "draft";

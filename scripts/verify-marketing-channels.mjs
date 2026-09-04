@@ -8,24 +8,13 @@
  *
  * Run: node scripts/verify-marketing-channels.mjs
  */
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
-import ts from "typescript";
+// `marketing-channel-connection.ts` now derives its descriptors from the
+// capability matrix, so loading it means loading its relative imports too.
+// `loadPureModule` emits the whole relative graph into one temp directory
+// under real filenames, so what runs here is the real module graph.
+import { loadPureModule } from "./lib/load-pure-module.mjs";
 
-function loadTs(path) {
-  const { outputText } = ts.transpileModule(readFileSync(path, "utf8"), {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  });
-  const dir = mkdtempSync(join(tmpdir(), "chan-"));
-  const file = join(dir, "m.mjs");
-  writeFileSync(file, outputText);
-  return import(pathToFileURL(file).href);
-}
+const loadTs = (path) => loadPureModule(path, "chan");
 
 let failures = 0;
 let checks = 0;

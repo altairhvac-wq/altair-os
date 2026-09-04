@@ -21,6 +21,8 @@ import {
 import { FounderScreenshotCaptureControl } from "@/shared/components/marketing-hub/FounderScreenshotCaptureControl";
 import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
+import { WebsitePublishingPanel } from "@/shared/components/marketing-hub/WebsitePublishingPanel";
+import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import {
   FOUNDER_MARKETING_TEMPLATES,
   MARKETING_POST_TEMPLATES,
@@ -49,6 +51,8 @@ type ViewMode = "list" | "create" | "edit" | "pick-completed-job";
 
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
+  /** Per website post id. Non-website posts are absent by construction. */
+  sitePublishingDetails?: Record<string, SitePublishingDetails>;
   connectedAccounts: MarketingConnectedAccount[];
   /** Stored renders for this company. Identities and shapes, never URLs. */
   videoOptions?: ReelVideoOption[];
@@ -307,6 +311,7 @@ function MarketingPostTemplateIdeas({
 
 export function MarketingHubPageView({
   initialPosts,
+  sitePublishingDetails,
   connectedAccounts,
   videoOptions = [],
   companyName,
@@ -478,7 +483,8 @@ export function MarketingHubPageView({
           </div>
         ) : viewMode === "edit" && selectedPost ? (
           <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-            <MarketingPostDraftForm
+            <div className="w-full max-w-3xl">
+              <MarketingPostDraftForm
               key={selectedPost.id}
               mode="edit"
               post={selectedPost}
@@ -490,7 +496,19 @@ export function MarketingHubPageView({
               onSuccess={handleEditSuccess}
               onCancel={handleCloseForm}
               onRecurringCreated={handleRecurringCreated}
-            />
+              />
+              {/* ============ WEBSITE POSTS ONLY ============
+                  A Facebook post has no slug, canonical or meta description,
+                  and rendering empty SEO rows on one would imply those
+                  fields were meant to be filled in. The details are resolved
+                  server-side and are absent for every other channel. */}
+              {selectedPost.channelTarget === "website" &&
+              sitePublishingDetails?.[selectedPost.id] ? (
+                <WebsitePublishingPanel
+                  details={sitePublishingDetails[selectedPost.id]}
+                />
+              ) : null}
+            </div>
           </div>
         ) : (
           <>
@@ -677,7 +695,13 @@ export function MarketingHubPageView({
                                 },
                               )}
                               {" · "}
-                              Copy and post manually
+                              {/* A website post goes out through the
+                                  altair_site publisher, so telling someone
+                                  to copy and paste it describes a workflow
+                                  that is not the one that runs. */}
+                              {post.channelTarget === "website"
+                                ? "Publishes to the Altair website"
+                                : "Copy and post manually"}
                             </p>
                           ) : null}
                         </div>
@@ -719,9 +743,18 @@ export function MarketingHubPageView({
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-altair-ink">Manual posts</h2>
+          <h2 className="text-lg font-semibold text-altair-ink">Posts</h2>
           <p className="mt-0.5 text-sm text-altair-ink-muted">
-            Copy-ready drafts your team writes and posts by hand. Separate from
+            {/* ============ NOT ALL OF THESE ARE MANUAL ============
+                This list was called "Manual posts" and described as copy-ready
+                drafts posted by hand, which was true of every channel it had
+                when that copy was written. Website posts now publish through
+                the altair_site publisher and arrive here with a live URL, so
+                a heading calling them manual describes the wrong workflow to
+                whoever opens one. Social channels are unchanged and still say
+                so. */}
+            Drafts your team writes. Social channels are copied and posted by
+            hand; website posts publish to the Altair website. Separate from
             the daily video.
           </p>
         </div>

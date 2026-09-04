@@ -108,6 +108,39 @@ steps.push(
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
 );
 
+/**
+ * ============ THE PUBLISHING / INTEGRATION FOUNDATION ============
+ * Appended at the END deliberately. This runner stops at the first failure,
+ * so a new verifier inserted earlier would mask every step after it — and
+ * these are the newest and least settled checks in the repo.
+ *
+ * All of them are static: they read source and SQL, stub every client, and
+ * cannot open a socket or reach a provider.
+ */
+steps.push(
+  { name: "integration-registry", script: "scripts/verify-integration-registry.mjs" },
+  { name: "integration-migrations", script: "scripts/verify-integration-migrations.mjs" },
+  { name: "integration-rows", script: "scripts/verify-integration-rows.mjs" },
+  { name: "integration-credentials", script: "scripts/verify-integration-credentials.mjs" },
+  { name: "publishing-package", script: "scripts/verify-publishing-package.mjs" },
+  { name: "publish-job", script: "scripts/verify-publish-job-machine.mjs" },
+  { name: "publish-gate", script: "scripts/verify-publish-gate.mjs" },
+  { name: "media-multiformat", script: "scripts/verify-media-multiformat.mjs" },
+  { name: "creative-assets", script: "scripts/verify-creative-assets.mjs" },
+  { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
+  { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
+  { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
+  { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
+  { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
+  // Behavioural, not static: the two above read these modules as text and
+  // were green through a tenant-starvation outage. This one executes them.
+  {
+    name: "agent-queue-integrity",
+    script: "scripts/verify-agent-queue-integrity.mjs",
+  },
+  { name: "agent-heartbeat", script: "scripts/verify-agent-heartbeat.mjs" },
+);
+
 const results = [];
 let failed = false;
 

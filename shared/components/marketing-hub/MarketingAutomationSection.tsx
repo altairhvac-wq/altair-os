@@ -46,8 +46,35 @@ import type {
  * has never reported in. That is NOT an empty dashboard.
  */
 
+/**
+ * The dashboard's sections, named so a caller can render a subset.
+ *
+ * Added so Marketing's tabs can each show the part of the automation picture
+ * they are about — Performance the campaign, History the runs — WITHOUT this
+ * component being split into three. Every section keeps its own support level,
+ * empty state and decision controls exactly as it had them; the only thing
+ * that changes is which ones are asked for.
+ */
+export const AUTOMATION_SECTION_KEYS = [
+  "summary",
+  "approvals",
+  "recentActivity",
+  "upcomingWork",
+  "agentStatus",
+  "campaign",
+  "recommendations",
+  "videoRenders",
+] as const;
+
+export type AutomationSectionKey = (typeof AUTOMATION_SECTION_KEYS)[number];
+
 type MarketingAutomationSectionProps = {
   stored: StoredAgentSnapshot | null;
+  /**
+   * Which sections to render. Omitted means all of them, so the existing
+   * full-dashboard caller is unchanged and cannot be broken by this.
+   */
+  only?: readonly AutomationSectionKey[];
   /** Decisions already recorded, so a subject is never offered twice. */
   decisions: AgentDecisionRecord[];
   /**
@@ -181,11 +208,16 @@ function AutomationSection<T>({
 
 export function MarketingAutomationSection({
   stored,
+  only,
   decisions,
   bridgeConfigured,
   storedMediaJobIds,
   nowIso,
 }: MarketingAutomationSectionProps) {
+  // Absent means everything: a caller that does not ask for a subset gets the
+  // dashboard it always got.
+  const shows = (key: AutomationSectionKey) =>
+    only === undefined || only.includes(key);
   const nowMs = Date.parse(nowIso);
   const decisionBySubject = new Map(
     decisions.map((entry) => [entry.decisionKey, entry]),
@@ -226,489 +258,522 @@ export function MarketingAutomationSection({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-2.5">
-        <SectionHeader title="Marketing automation" />
+      {shows("summary") ? (
+        <section className="space-y-2.5">
+          <SectionHeader title="Marketing automation" />
 
-        <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone={receivedStale ? "warning" : "success"} size="sm">
-              {receivedStale ? "Report is stale" : "Connected"}
-            </StatusPill>
-            <span className="text-xs text-altair-ink-muted">
-              Last report {formatRelative(stored.receivedAt, nowMs)} · produced{" "}
-              {formatDateTime(stored.producedAt)}
-            </span>
-            {status ? (
-              <ProvenanceNote
-                data={status.dataProvenance}
-                model={status.modelProvenance}
-              />
-            ) : null}
-            {stored.droppedItems > 0 ? (
-              <StatusPill tone="danger" size="sm">
-                {stored.droppedItems} row(s) unreadable — contract drift
+          <div className={`${altairMcCardClass} ${altairMcCardPadClass}`}>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill
+                tone={receivedStale ? "warning" : "success"}
+                size="sm"
+              >
+                {receivedStale ? "Report is stale" : "Connected"}
               </StatusPill>
-            ) : null}
+              <span className="text-xs text-altair-ink-muted">
+                Last report {formatRelative(stored.receivedAt, nowMs)} ·
+                produced {formatDateTime(stored.producedAt)}
+              </span>
+              {status ? (
+                <ProvenanceNote
+                  data={status.dataProvenance}
+                  model={status.modelProvenance}
+                />
+              ) : null}
+              {stored.droppedItems > 0 ? (
+                <StatusPill tone="danger" size="sm">
+                  {stored.droppedItems} row(s) unreadable — contract drift
+                </StatusPill>
+              ) : null}
+            </div>
           </div>
-        </div>
 
-        {status ? (
-          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-            <MetricCard
-              label="Active schedules"
-              value={String(status.schedulesActive)}
-              description={
-                status.nextScheduledRunAt
-                  ? `Next ${formatDateTime(status.nextScheduledRunAt)}`
-                  : "Nothing scheduled"
-              }
-              tone={status.schedulesActive > 0 ? "info" : "neutral"}
-            />
-            <MetricCard
-              label="Last completed run"
-              value={
-                hoursSince === null ? "Never" : `${Math.round(hoursSince)}h ago`
-              }
-              description={
-                looksStalled
-                  ? "A schedule is active but nothing has completed"
-                  : "Automation is producing work"
-              }
-              tone={looksStalled ? "warning" : "success"}
-            />
-            <MetricCard
-              label="Awaiting approval"
-              value={String(status.tasksAwaitingApproval)}
-              description={`${status.approvalsPending} approval(s) pending`}
-              tone={
-                status.tasksAwaitingApproval + status.approvalsPending > 0
-                  ? "warning"
-                  : "neutral"
-              }
-            />
-            <MetricCard
-              label="Failed"
-              value={String(status.tasksFailed)}
-              description={
-                status.lastFailedRunAt
-                  ? `Last ${formatDateTime(status.lastFailedRunAt)}`
-                  : "No failures on record"
-              }
-              tone={status.tasksFailed > 0 ? "danger" : "neutral"}
-            />
-          </div>
-        ) : null}
-      </section>
+          {status ? (
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+              <MetricCard
+                label="Active schedules"
+                value={String(status.schedulesActive)}
+                description={
+                  status.nextScheduledRunAt
+                    ? `Next ${formatDateTime(status.nextScheduledRunAt)}`
+                    : "Nothing scheduled"
+                }
+                tone={status.schedulesActive > 0 ? "info" : "neutral"}
+              />
+              <MetricCard
+                label="Last completed run"
+                value={
+                  hoursSince === null
+                    ? "Never"
+                    : `${Math.round(hoursSince)}h ago`
+                }
+                description={
+                  looksStalled
+                    ? "A schedule is active but nothing has completed"
+                    : "Automation is producing work"
+                }
+                tone={looksStalled ? "warning" : "success"}
+              />
+              <MetricCard
+                label="Awaiting approval"
+                value={String(status.tasksAwaitingApproval)}
+                description={`${status.approvalsPending} approval(s) pending`}
+                tone={
+                  status.tasksAwaitingApproval + status.approvalsPending > 0
+                    ? "warning"
+                    : "neutral"
+                }
+              />
+              <MetricCard
+                label="Failed"
+                value={String(status.tasksFailed)}
+                description={
+                  status.lastFailedRunAt
+                    ? `Last ${formatDateTime(status.lastFailedRunAt)}`
+                    : "No failures on record"
+                }
+                tone={status.tasksFailed > 0 ? "danger" : "neutral"}
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* Attention first: the only thing on this page a human must act on. */}
-      <AutomationSection
-        title="Approvals needed"
-        section={snapshot.sections.approvals}
-        emptyTitle="Nothing is waiting on you"
-        emptyDescription="The agents have not proposed any action that needs a human decision."
-      >
-        {(items) => (
-          <ul className={altairMcListClass}>
-            {items.map((item) => (
-              <li
-                key={item.approvalId}
-                className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill
-                    tone={
-                      item.isExpired
-                        ? "danger"
-                        : item.approvalDecision === "PENDING"
-                          ? "warning"
-                          : "neutral"
-                    }
-                    size="sm"
-                  >
-                    {item.isExpired ? "EXPIRED" : item.approvalDecision}
-                  </StatusPill>
-                  <span className="text-xs font-semibold text-altair-ink">
-                    {item.toolId}
-                  </span>
-                  {item.deliveryState ? (
+      {shows("approvals") ? (
+        <AutomationSection
+          title="Approvals needed"
+          section={snapshot.sections.approvals}
+          emptyTitle="Nothing is waiting on you"
+          emptyDescription="The agents have not proposed any action that needs a human decision."
+        >
+          {(items) => (
+            <ul className={altairMcListClass}>
+              {items.map((item) => (
+                <li
+                  key={item.approvalId}
+                  className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusPill
                       tone={
-                        item.deliveryState === "UNKNOWN" ? "warning" : "neutral"
-                      }
-                      size="sm"
-                    >
-                      delivery {item.deliveryState}
-                    </StatusPill>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-altair-ink-secondary">
-                  {item.humanSummary}
-                </p>
-                <p className="mt-1 text-[11px] text-altair-ink-muted">
-                  Requested {formatDateTime(item.requestedAt)} · expires{" "}
-                  {formatDateTime(item.expiresAt)}
-                </p>
-                {/* Only a still-open approval is decidable. An expired or
-                    already-decided one is history, and offering buttons on it
-                    would invite a decision that can no longer mean anything. */}
-                {item.approvalDecision === "PENDING" && !item.isExpired ? (
-                  <AgentDecisionControls
-                    subjectKind="approval"
-                    subjectId={item.approvalId}
-                    existingDecision={
-                      decisionBySubject.get(`approval:${item.approvalId}`)
-                        ?.decision ?? null
-                    }
-                  />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="Today's activity"
-        section={snapshot.sections.recentActivity}
-        emptyTitle="No agent runs recorded"
-        emptyDescription="Nothing has executed yet. When a scheduled sweep produces work, it appears here."
-      >
-        {(items) => (
-          <ul className={altairMcListClass}>
-            {items.slice(0, 10).map((item) => (
-              <li
-                key={item.runId}
-                className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <StatusPill
-                      tone={
-                        item.runState === "COMPLETED"
-                          ? "success"
-                          : item.runState === "FAILED"
-                            ? "danger"
-                            : "info"
-                      }
-                      size="sm"
-                    >
-                      {item.runState}
-                    </StatusPill>
-                    <span className="truncate text-xs font-semibold text-altair-ink">
-                      {item.taskType}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-altair-ink-muted">
-                    {formatRelative(item.completedAt ?? item.startedAt, nowMs)}
-                  </span>
-                </div>
-                {item.errorSummary ? (
-                  <p className="mt-1 text-[11px] leading-relaxed text-altair-danger">
-                    {item.errorSummary}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="Upcoming automation"
-        section={snapshot.sections.upcomingWork}
-        emptyTitle="No automation scheduled"
-        emptyDescription="No recurring marketing work is installed on the Agent Platform yet."
-      >
-        {(items) => (
-          <ul className={altairMcListClass}>
-            {items.map((item) => (
-              <li
-                key={item.scheduleId}
-                className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <StatusPill
-                      tone={
-                        item.scheduleState === "ACTIVE" ? "success" : "neutral"
-                      }
-                      size="sm"
-                    >
-                      {item.scheduleState}
-                    </StatusPill>
-                    <span className="truncate text-xs font-semibold text-altair-ink">
-                      {item.name}
-                    </span>
-                    <span className="text-[11px] text-altair-ink-muted">
-                      {formatInterval(item.intervalMs)}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-altair-ink-muted">
-                    {item.isDue
-                      ? "Due now"
-                      : `Next ${formatDateTime(item.nextRunAt)}`}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="Agent status"
-        section={snapshot.sections.agentStatus}
-        emptyTitle="No agents installed"
-        emptyDescription="The Agent Platform has no marketing agents registered for this workspace."
-      >
-        {(items) => (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
-              <article key={item.agentId} className={altairMcTileClass}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill
-                    tone={item.enabled ? "success" : "neutral"}
-                    size="sm"
-                  >
-                    {item.enabled ? "Enabled" : "Disabled"}
-                  </StatusPill>
-                  {/* Authority, stated plainly — a read-only agent cannot post. */}
-                  <StatusPill
-                    tone={item.canActExternally ? "warning" : "neutral"}
-                    size="sm"
-                  >
-                    {item.canActExternally ? "Can act externally" : "Read-only"}
-                  </StatusPill>
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-altair-ink">
-                  {item.name}
-                </p>
-                <p className="mt-1 text-[11px] text-altair-ink-muted">
-                  {item.grantedToolCount} tool(s) · {item.runsCompleted}{" "}
-                  completed · {item.runsFailed} failed · {item.openTaskCount}{" "}
-                  open
-                </p>
-                <p className="mt-1 text-[11px] text-altair-ink-muted">
-                  Last run {formatRelative(item.lastRunAt, nowMs)}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="Current campaign"
-        section={snapshot.sections.campaign}
-        emptyTitle="No campaign metrics in the last review"
-        emptyDescription="The most recent marketing review examined no channels."
-      >
-        {(items) => (
-          <div className="space-y-2.5">
-            {items.map((item) => (
-              <article
-                key={item.channel}
-                className={`${altairMcCardClass} ${altairMcCardPadClass}`}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-altair-ink">
-                    Channel {item.channel}
-                  </span>
-                  <StatusPill
-                    tone={item.provenance === "LIVE" ? "success" : "warning"}
-                    size="sm"
-                  >
-                    {item.provenance}
-                  </StatusPill>
-                  {item.signalCount > 0 ? (
-                    <StatusPill tone="warning" size="sm">
-                      {item.signalCount} signal(s)
-                    </StatusPill>
-                  ) : null}
-                  <span className="text-[11px] text-altair-ink-muted">
-                    Observed {formatDateTime(item.observedAt)}
-                  </span>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-                  {item.metrics.map((metric) => (
-                    <MetricCard
-                      key={metric.metric}
-                      label={metric.metric}
-                      value={
-                        metric.latest === null ? "—" : String(metric.latest)
-                      }
-                      description={`${metric.pointsExamined} point(s)`}
-                      trend={
-                        metric.percentChange === null
-                          ? undefined
-                          : `${metric.percentChange > 0 ? "+" : ""}${metric.percentChange.toFixed(1)}%`
-                      }
-                      tone={
-                        metric.direction === "UP"
-                          ? "success"
-                          : metric.direction === "DOWN"
-                            ? "danger"
+                        item.isExpired
+                          ? "danger"
+                          : item.approvalDecision === "PENDING"
+                            ? "warning"
                             : "neutral"
                       }
-                    />
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="AI recommendations"
-        section={snapshot.sections.recommendations}
-        emptyTitle="No recommendations yet"
-        emptyDescription="The marketing agent has not produced a review. Recommendations are advice only — nothing is acted on automatically."
-      >
-        {(items) => (
-          <div className="space-y-2.5">
-            {items.slice(0, 5).map((item) => (
-              <article
-                key={item.artifactId}
-                className={`${altairMcCardClass} ${altairMcCardPadClass}`}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill tone="neutral" size="sm">
-                    Advice only
-                  </StatusPill>
-                  <ProvenanceNote
-                    data={item.dataProvenance}
-                    model={item.modelProvenance}
-                  />
-                  {item.resolvedWithoutModel ? (
-                    <StatusPill tone="neutral" size="sm">
-                      Resolved without a model
-                    </StatusPill>
-                  ) : null}
-                  <span className="text-[11px] text-altair-ink-muted">
-                    {formatDateTime(item.createdAt)}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-altair-ink">
-                  {item.headline ?? item.title}
-                </p>
-                {item.diagnosis ? (
-                  <p className="mt-1 text-xs leading-relaxed text-altair-ink-secondary">
-                    {item.diagnosis}
-                  </p>
-                ) : null}
-                {item.actions.length > 0 ? (
-                  <ul className="mt-2 space-y-1.5">
-                    {item.actions.slice(0, 4).map((action, index) => (
-                      <li
-                        key={`${item.artifactId}-${index}`}
-                        className="text-xs leading-relaxed text-altair-ink-secondary"
-                      >
-                        <span className="font-semibold text-altair-ink">
-                          {action.kind.replace(/_/g, " ")}
-                        </span>{" "}
-                        — {action.action}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        )}
-      </AutomationSection>
-
-      <AutomationSection
-        title="Video production"
-        section={snapshot.sections.videoRenders}
-        emptyTitle="No video jobs"
-        emptyDescription="No render has been submitted to the video engine for this workspace."
-      >
-        {(items) => (
-          <ul className={altairMcListClass}>
-            {items.map((item) => (
-              <li
-                key={item.jobId}
-                className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <StatusPill
-                      tone={
-                        item.renderState === "COMPLETED"
-                          ? "success"
-                          : item.renderState === "FAILED"
-                            ? "danger"
-                            : item.renderState === "UNKNOWN"
-                              ? "warning"
-                              : "info"
-                      }
                       size="sm"
                     >
-                      {item.renderState}
+                      {item.isExpired ? "EXPIRED" : item.approvalDecision}
                     </StatusPill>
-                    <span className="truncate text-xs font-semibold text-altair-ink">
-                      {item.jobId}
+                    <span className="text-xs font-semibold text-altair-ink">
+                      {item.toolId}
                     </span>
-                    {item.attempt > 1 ? (
-                      <StatusPill tone="warning" size="sm">
-                        attempt {item.attempt}
+                    {item.deliveryState ? (
+                      <StatusPill
+                        tone={
+                          item.deliveryState === "UNKNOWN"
+                            ? "warning"
+                            : "neutral"
+                        }
+                        size="sm"
+                      >
+                        delivery {item.deliveryState}
                       </StatusPill>
                     ) : null}
                   </div>
-                  <span className="text-[11px] text-altair-ink-muted">
-                    {item.stage ? `stage ${item.stage} · ` : ""}
-                    {formatRelative(item.recordedAt ?? item.submittedAt, nowMs)}
-                  </span>
-                </div>
-                {/* Describable, not locatable. The master exists only on the
+                  <p className="mt-1 text-xs leading-relaxed text-altair-ink-secondary">
+                    {item.humanSummary}
+                  </p>
+                  <p className="mt-1 text-[11px] text-altair-ink-muted">
+                    Requested {formatDateTime(item.requestedAt)} · expires{" "}
+                    {formatDateTime(item.expiresAt)}
+                  </p>
+                  {/* Only a still-open approval is decidable. An expired or
+                    already-decided one is history, and offering buttons on it
+                    would invite a decision that can no longer mean anything. */}
+                  {item.approvalDecision === "PENDING" && !item.isExpired ? (
+                    <AgentDecisionControls
+                      subjectKind="approval"
+                      subjectId={item.approvalId}
+                      existingDecision={
+                        decisionBySubject.get(`approval:${item.approvalId}`)
+                          ?.decision ?? null
+                      }
+                    />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("recentActivity") ? (
+        <AutomationSection
+          title="Today's activity"
+          section={snapshot.sections.recentActivity}
+          emptyTitle="No agent runs recorded"
+          emptyDescription="Nothing has executed yet. When a scheduled sweep produces work, it appears here."
+        >
+          {(items) => (
+            <ul className={altairMcListClass}>
+              {items.slice(0, 10).map((item) => (
+                <li
+                  key={item.runId}
+                  className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <StatusPill
+                        tone={
+                          item.runState === "COMPLETED"
+                            ? "success"
+                            : item.runState === "FAILED"
+                              ? "danger"
+                              : "info"
+                        }
+                        size="sm"
+                      >
+                        {item.runState}
+                      </StatusPill>
+                      <span className="truncate text-xs font-semibold text-altair-ink">
+                        {item.taskType}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-altair-ink-muted">
+                      {formatRelative(
+                        item.completedAt ?? item.startedAt,
+                        nowMs,
+                      )}
+                    </span>
+                  </div>
+                  {item.errorSummary ? (
+                    <p className="mt-1 text-[11px] leading-relaxed text-altair-danger">
+                      {item.errorSummary}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("upcomingWork") ? (
+        <AutomationSection
+          title="Upcoming automation"
+          section={snapshot.sections.upcomingWork}
+          emptyTitle="No automation scheduled"
+          emptyDescription="No recurring marketing work is installed on the Agent Platform yet."
+        >
+          {(items) => (
+            <ul className={altairMcListClass}>
+              {items.map((item) => (
+                <li
+                  key={item.scheduleId}
+                  className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <StatusPill
+                        tone={
+                          item.scheduleState === "ACTIVE"
+                            ? "success"
+                            : "neutral"
+                        }
+                        size="sm"
+                      >
+                        {item.scheduleState}
+                      </StatusPill>
+                      <span className="truncate text-xs font-semibold text-altair-ink">
+                        {item.name}
+                      </span>
+                      <span className="text-[11px] text-altair-ink-muted">
+                        {formatInterval(item.intervalMs)}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-altair-ink-muted">
+                      {item.isDue
+                        ? "Due now"
+                        : `Next ${formatDateTime(item.nextRunAt)}`}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("agentStatus") ? (
+        <AutomationSection
+          title="Agent status"
+          section={snapshot.sections.agentStatus}
+          emptyTitle="No agents installed"
+          emptyDescription="The Agent Platform has no marketing agents registered for this workspace."
+        >
+          {(items) => (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((item) => (
+                <article key={item.agentId} className={altairMcTileClass}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill
+                      tone={item.enabled ? "success" : "neutral"}
+                      size="sm"
+                    >
+                      {item.enabled ? "Enabled" : "Disabled"}
+                    </StatusPill>
+                    {/* Authority, stated plainly — a read-only agent cannot post. */}
+                    <StatusPill
+                      tone={item.canActExternally ? "warning" : "neutral"}
+                      size="sm"
+                    >
+                      {item.canActExternally
+                        ? "Can act externally"
+                        : "Read-only"}
+                    </StatusPill>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-altair-ink">
+                    {item.name}
+                  </p>
+                  <p className="mt-1 text-[11px] text-altair-ink-muted">
+                    {item.grantedToolCount} tool(s) · {item.runsCompleted}{" "}
+                    completed · {item.runsFailed} failed · {item.openTaskCount}{" "}
+                    open
+                  </p>
+                  <p className="mt-1 text-[11px] text-altair-ink-muted">
+                    Last run {formatRelative(item.lastRunAt, nowMs)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("campaign") ? (
+        <AutomationSection
+          title="Current campaign"
+          section={snapshot.sections.campaign}
+          emptyTitle="No campaign metrics in the last review"
+          emptyDescription="The most recent marketing review examined no channels."
+        >
+          {(items) => (
+            <div className="space-y-2.5">
+              {items.map((item) => (
+                <article
+                  key={item.channel}
+                  className={`${altairMcCardClass} ${altairMcCardPadClass}`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-altair-ink">
+                      Channel {item.channel}
+                    </span>
+                    <StatusPill
+                      tone={item.provenance === "LIVE" ? "success" : "warning"}
+                      size="sm"
+                    >
+                      {item.provenance}
+                    </StatusPill>
+                    {item.signalCount > 0 ? (
+                      <StatusPill tone="warning" size="sm">
+                        {item.signalCount} signal(s)
+                      </StatusPill>
+                    ) : null}
+                    <span className="text-[11px] text-altair-ink-muted">
+                      Observed {formatDateTime(item.observedAt)}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                    {item.metrics.map((metric) => (
+                      <MetricCard
+                        key={metric.metric}
+                        label={metric.metric}
+                        value={
+                          metric.latest === null ? "—" : String(metric.latest)
+                        }
+                        description={`${metric.pointsExamined} point(s)`}
+                        trend={
+                          metric.percentChange === null
+                            ? undefined
+                            : `${metric.percentChange > 0 ? "+" : ""}${metric.percentChange.toFixed(1)}%`
+                        }
+                        tone={
+                          metric.direction === "UP"
+                            ? "success"
+                            : metric.direction === "DOWN"
+                              ? "danger"
+                              : "neutral"
+                        }
+                      />
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("recommendations") ? (
+        <AutomationSection
+          title="AI recommendations"
+          section={snapshot.sections.recommendations}
+          emptyTitle="No recommendations yet"
+          emptyDescription="The marketing agent has not produced a review. Recommendations are advice only — nothing is acted on automatically."
+        >
+          {(items) => (
+            <div className="space-y-2.5">
+              {items.slice(0, 5).map((item) => (
+                <article
+                  key={item.artifactId}
+                  className={`${altairMcCardClass} ${altairMcCardPadClass}`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill tone="neutral" size="sm">
+                      Advice only
+                    </StatusPill>
+                    <ProvenanceNote
+                      data={item.dataProvenance}
+                      model={item.modelProvenance}
+                    />
+                    {item.resolvedWithoutModel ? (
+                      <StatusPill tone="neutral" size="sm">
+                        Resolved without a model
+                      </StatusPill>
+                    ) : null}
+                    <span className="text-[11px] text-altair-ink-muted">
+                      {formatDateTime(item.createdAt)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-altair-ink">
+                    {item.headline ?? item.title}
+                  </p>
+                  {item.diagnosis ? (
+                    <p className="mt-1 text-xs leading-relaxed text-altair-ink-secondary">
+                      {item.diagnosis}
+                    </p>
+                  ) : null}
+                  {item.actions.length > 0 ? (
+                    <ul className="mt-2 space-y-1.5">
+                      {item.actions.slice(0, 4).map((action, index) => (
+                        <li
+                          key={`${item.artifactId}-${index}`}
+                          className="text-xs leading-relaxed text-altair-ink-secondary"
+                        >
+                          <span className="font-semibold text-altair-ink">
+                            {action.kind.replace(/_/g, " ")}
+                          </span>{" "}
+                          — {action.action}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
+        </AutomationSection>
+      ) : null}
+
+      {shows("videoRenders") ? (
+        <AutomationSection
+          title="Video production"
+          section={snapshot.sections.videoRenders}
+          emptyTitle="No video jobs"
+          emptyDescription="No render has been submitted to the video engine for this workspace."
+        >
+          {(items) => (
+            <ul className={altairMcListClass}>
+              {items.map((item) => (
+                <li
+                  key={item.jobId}
+                  className={`${altairMcListRowClass} border-b border-[var(--north-star-plate-border)] last:border-b-0`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <StatusPill
+                        tone={
+                          item.renderState === "COMPLETED"
+                            ? "success"
+                            : item.renderState === "FAILED"
+                              ? "danger"
+                              : item.renderState === "UNKNOWN"
+                                ? "warning"
+                                : "info"
+                        }
+                        size="sm"
+                      >
+                        {item.renderState}
+                      </StatusPill>
+                      <span className="truncate text-xs font-semibold text-altair-ink">
+                        {item.jobId}
+                      </span>
+                      {item.attempt > 1 ? (
+                        <StatusPill tone="warning" size="sm">
+                          attempt {item.attempt}
+                        </StatusPill>
+                      ) : null}
+                    </div>
+                    <span className="text-[11px] text-altair-ink-muted">
+                      {item.stage ? `stage ${item.stage} · ` : ""}
+                      {formatRelative(
+                        item.recordedAt ?? item.submittedAt,
+                        nowMs,
+                      )}
+                    </span>
+                  </div>
+                  {/* Describable, not locatable. The master exists only on the
                     machine that rendered it, so these facts are all a remote
                     reviewer can have — and claiming "ready to watch" without a
                     way to watch it would be the lie. */}
-                {item.hasRenderedMaster ? (
-                  <p className="mt-1 text-[11px] text-altair-ink-muted">
-                    {[
-                      formatDuration(item.durationMs),
-                      item.widthPx && item.heightPx
-                        ? `${item.widthPx}×${item.heightPx}`
-                        : null,
-                      item.videoCodec,
-                      item.hasAudio === null
-                        ? null
-                        : item.hasAudio
-                          ? "audio"
-                          : "no audio",
-                      formatBytes(item.outputBytes),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "Master rendered"}
-                  </p>
-                ) : null}
-                {/* Storage decides, not the snapshot. A job whose media has
+                  {item.hasRenderedMaster ? (
+                    <p className="mt-1 text-[11px] text-altair-ink-muted">
+                      {[
+                        formatDuration(item.durationMs),
+                        item.widthPx && item.heightPx
+                          ? `${item.widthPx}×${item.heightPx}`
+                          : null,
+                        item.videoCodec,
+                        item.hasAudio === null
+                          ? null
+                          : item.hasAudio
+                            ? "audio"
+                            : "no audio",
+                        formatBytes(item.outputBytes),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Master rendered"}
+                    </p>
+                  ) : null}
+                  {/* Storage decides, not the snapshot. A job whose media has
                     been transported into this deployment's private bucket is
                     playable here regardless of what the rendering machine
                     still reports about its own local file; one that has not
                     been transported says so plainly rather than offering a
                     button that would fail. */}
-                {storedMedia.has(item.jobId) ? (
-                  <MarketingMediaPreview sourceJobId={item.jobId} />
-                ) : item.previewAvailability === "NOT_TRANSPORTED" ? (
-                  <p className="mt-1 text-[11px] text-altair-ink-muted">
-                    Preview unavailable — the file exists only on the machine
-                    that rendered it.
-                  </p>
-                ) : null}
-                {item.failureName ? (
-                  <p className="mt-1 text-[11px] leading-relaxed text-altair-danger">
-                    {item.failureName}
-                    {item.failureMessage ? `: ${item.failureMessage}` : ""}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </AutomationSection>
+                  {storedMedia.has(item.jobId) ? (
+                    <MarketingMediaPreview sourceJobId={item.jobId} />
+                  ) : item.previewAvailability === "NOT_TRANSPORTED" ? (
+                    <p className="mt-1 text-[11px] text-altair-ink-muted">
+                      Preview unavailable — the file exists only on the machine
+                      that rendered it.
+                    </p>
+                  ) : null}
+                  {item.failureName ? (
+                    <p className="mt-1 text-[11px] leading-relaxed text-altair-danger">
+                      {item.failureName}
+                      {item.failureMessage ? `: ${item.failureMessage}` : ""}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </AutomationSection>
+      ) : null}
 
       {snapshot.knownGaps.length > 0 ? (
         <section className="space-y-2.5">

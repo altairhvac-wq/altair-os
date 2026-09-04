@@ -67,6 +67,17 @@ export const COMPANY_ROLE_PERMISSIONS = {
     "technician",
     "subcontractor",
   ] as const satisfies readonly CompanyRole[],
+  /**
+   * Connecting, disconnecting and re-probing publishing integrations.
+   *
+   * Owner/admin only, matching the write policies migration 089 already put
+   * on `marketing_connected_accounts` — the RLS and the permission agree, so
+   * neither is the surprise. Deliberately NARROWER than `dispatchJobs`,
+   * which grants the READ of connection status: a dispatcher should be able
+   * to see that Facebook needs reconnecting without being able to hand a
+   * third party a new grant on the company's behalf.
+   */
+  manageIntegrations: ["owner", "admin"] as const satisfies readonly CompanyRole[],
 } as const;
 
 export type CompanyPermission = keyof typeof COMPANY_ROLE_PERMISSIONS;
