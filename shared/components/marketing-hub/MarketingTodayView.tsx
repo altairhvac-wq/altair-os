@@ -81,12 +81,35 @@ type MarketingTodayViewProps = {
  * only audio fact the platform snapshot carries, and it means A TRACK EXISTS —
  * not that anyone can hear it — so it is worded as presence, never as sound.
  */
+/**
+ * A friendly label and a color cue for agent-platform's own
+ * STUB / REVIEWABLE_CREATIVE / PRODUCTION_READY render-quality verdict
+ * (migration 195's `quality_state`). Unrecognized text is shown verbatim
+ * rather than hidden — a value this reader does not know about is still a
+ * real fact from the platform, not nothing.
+ */
+function formatQualityState(state: string): { label: string; className: string } {
+  if (state === "STUB")
+    return { label: "Stub (placeholder render)", className: "text-altair-danger" };
+  if (state === "REVIEWABLE_CREATIVE")
+    return {
+      label: "Reviewable creative",
+      className: "text-altair-ink-secondary",
+    };
+  if (state === "PRODUCTION_READY")
+    return { label: "Production ready", className: "text-altair-success" };
+  return { label: state, className: "text-altair-ink-secondary" };
+}
+
 function ReelIdentityPanel({
   sourceJobId,
   mark,
   render,
   timeZone,
   storedAt,
+  durationMs,
+  costUsd,
+  qualityState,
 }: {
   sourceJobId: string;
   mark: ReelVersionMark | undefined;
@@ -100,6 +123,11 @@ function ReelIdentityPanel({
     | undefined;
   timeZone: string;
   storedAt: string | null;
+  /** Phase 1: `marketing_media_assets.duration_ms`, already on every stored video — no backend change. */
+  durationMs: number | null;
+  /** Phase 2 (migration 195). Undefined — not null — when this post never had a value; the row is omitted rather than shown as "not reported". */
+  costUsd?: number;
+  qualityState?: string;
 }) {
   const identity = parseRenderJobId(sourceJobId);
   const supersededBy = mark && !mark.isNewest ? mark.siblingCount - 1 : 0;
@@ -175,6 +203,44 @@ function ReelIdentityPanel({
               ? "NO audio track"
               : "not reported"}
         </dd>
+
+        <dt className="uppercase tracking-wide text-altair-ink-muted">Duration</dt>
+        <dd className="text-altair-ink-secondary">
+          {typeof durationMs === "number" && durationMs > 0
+            ? `${(durationMs / 1000).toFixed(1)}s`
+            : "not reported"}
+        </dd>
+
+        {/* Migration 195 enrichment. Omitted entirely rather than "not
+            reported" — unlike the render facts above, most existing posts
+            (and any post from a deployment that never configured cost
+            tracking or quality classification) genuinely have no value here,
+            and a blank row for a fact this page never claimed to know would
+            just be noise. */}
+        {typeof costUsd === "number" ? (
+          <>
+            <dt className="uppercase tracking-wide text-altair-ink-muted">
+              Est. cost
+            </dt>
+            <dd className="text-altair-ink-secondary">
+              ${costUsd.toFixed(2)}
+            </dd>
+          </>
+        ) : null}
+
+        {typeof qualityState === "string"
+          ? (() => {
+              const quality = formatQualityState(qualityState);
+              return (
+                <>
+                  <dt className="uppercase tracking-wide text-altair-ink-muted">
+                    Quality
+                  </dt>
+                  <dd className={quality.className}>{quality.label}</dd>
+                </>
+              );
+            })()
+          : null}
       </dl>
     </div>
   );
@@ -270,7 +336,14 @@ export function MarketingTodayView({
           const video = post.videoMediaAssetId
             ? videoById.get(post.videoMediaAssetId)
             : undefined;
-          const rationale = rationaleByPostId[post.id];
+          // The daily-pilot queue's own rationale (lib/marketing/store.ts,
+          // via marketing_items) takes priority when it exists — it predates
+          // migration 195 and nothing here should change what a post already
+          // showed. `post.directorRationale` is the fallback for a post this
+          // queue mechanism never touched, e.g. one opened by
+          // /api/agent/draft-posts for the transported-render pipeline,
+          // which has never gone through marketing_items at all.
+          const rationale = rationaleByPostId[post.id] ?? post.directorRationale;
           return (
             <section
               key={post.id}
@@ -296,6 +369,9 @@ export function MarketingTodayView({
                     render={renderByJobId.get(video.sourceJobId)}
                     timeZone={timeZone}
                     storedAt={video.storedAt}
+                    durationMs={video.durationMs}
+                    costUsd={post.costUsd}
+                    qualityState={post.qualityState}
                   />
                   <MarketingMediaPreview sourceJobId={video.sourceJobId} />
                 </>

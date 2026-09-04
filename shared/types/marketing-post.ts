@@ -96,6 +96,25 @@ export type MarketingPost = {
    * could be matched on without guessing.
    */
   contentPackageId?: string;
+  /**
+   * Migration 195, agent-rendered posts only. Estimated USD cost of the
+   * render, agent-platform's own render-quality verdict, and the Director's
+   * stated rationale for this content's format/treatment — all three
+   * written once, at draft-creation time, by /api/agent/draft-posts, and
+   * never updated afterward. Undefined for a hand-authored post, a post
+   * created before this column existed, or an agent-rendered post whose
+   * value this platform never had — never fabricated for those.
+   */
+  costUsd?: number;
+  /**
+   * NOT the same vocabulary as `creative_generation_candidates.quality_state`
+   * (migration 185, a human's review of a generated image). This is
+   * agent-platform's own STUB / REVIEWABLE_CREATIVE / PRODUCTION_READY
+   * verdict for the rendered video (src/video/quality-classification.ts in
+   * that repository).
+   */
+  qualityState?: string;
+  directorRationale?: string;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
