@@ -87,6 +87,12 @@ type MarketingTodayViewProps = {
  * (migration 195's `quality_state`). Unrecognized text is shown verbatim
  * rather than hidden — a value this reader does not know about is still a
  * real fact from the platform, not nothing.
+ *
+ * Labeled "Render QA" on the card, deliberately not "Quality": this is an
+ * AUTOMATED classification (stub ingredients / missing guard data / measured
+ * silence — see quality-classification.ts on the agent-platform side), not a
+ * human or creative judgment of how good the content is. "Quality" alone
+ * would overstate what this row actually asserts.
  */
 function formatQualityState(state: string): { label: string; className: string } {
   if (state === "STUB")
@@ -234,7 +240,7 @@ function ReelIdentityPanel({
               return (
                 <>
                   <dt className="uppercase tracking-wide text-altair-ink-muted">
-                    Quality
+                    Render QA
                   </dt>
                   <dd className={quality.className}>{quality.label}</dd>
                 </>
