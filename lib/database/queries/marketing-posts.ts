@@ -626,11 +626,7 @@ export async function archiveMarketingPost(
   // rejects unknown columns before any SQL runs), which would leave the
   // reject button dead — the opposite of "only the label is lost". Fall back
   // to the exact pre-196 write and say what was dropped, loudly.
-  if (
-    error &&
-    options?.reason !== undefined &&
-    isMissingDatabaseColumnError(error)
-  ) {
+  if (error && options !== undefined && isMissingDatabaseColumnError(error)) {
     console.error(
       "[archiveMarketingPost] archived_reason/archived_tags columns missing (migration 196 not applied) — archiving without the label",
       { postId, reason: options.reason },

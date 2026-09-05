@@ -332,7 +332,9 @@ export function MarketingTodayView({
       const result = await archiveMarketingPostAction(post.id, { reason });
       if (result?.error) setError(result.error);
       else {
-        setRejectPickerFor(null);
+        // Close only THIS post's picker — an in-flight success must not
+        // slam shut a picker the founder just opened on another card.
+        setRejectPickerFor((current) => (current === post.id ? null : current));
         onChanged();
       }
     } finally {
