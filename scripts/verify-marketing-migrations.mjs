@@ -31,6 +31,7 @@ const MIGRATIONS = {
   143: "supabase/migrations/143_marketing_channel_publishing.sql",
   144: "supabase/migrations/144_marketing_media_assets.sql",
   145: "supabase/migrations/145_marketing_reel_publishing.sql",
+  196: "supabase/migrations/196_marketing_reject_reasons.sql",
 };
 
 let failures = 0;
@@ -449,6 +450,64 @@ check(
   // that bytes are reached through a short-lived grant, and prose must not be
   // able to fail a structural check.
   !/\bgrant\s+[\w,\s]+\s+on\s+/.test(sql145) && !/\brevoke\s+/.test(sql145),
+);
+
+// ---------------------------------------------------------------- 196
+const sql196 = loadSql(MIGRATIONS[196]);
+console.log("\n196 — reject reasons (label-factory foundation)");
+
+check(
+  "THE CONSTRAINT SWAP IS ONE STATEMENT — no window without a subject_kind CHECK",
+  /alter\s+table\s+public\.agent_marketing_decisions\s+drop\s+constraint\s+if\s+exists\s+agent_marketing_decisions_subject_kind_check\s*,\s*add\s+constraint\s+agent_marketing_decisions_subject_kind_check/.test(
+    sql196,
+  ),
+);
+check(
+  "targets the exact constraint name 142 created",
+  (sql196.match(/agent_marketing_decisions_subject_kind_check/g) ?? [])
+    .length >= 2,
+);
+check(
+  "the new kind list is a strict superset of 142's — existing rows all validate",
+  /check\s*\(\s*subject_kind\s+in\s*\(\s*'approval'\s*,\s*'recommendation'\s*,\s*'video_render'\s*,\s*'marketing_post'\s*\)\s*\)/.test(
+    sql196,
+  ),
+);
+check(
+  "adds archived_reason idempotently, bounded",
+  /alter\s+table\s+public\.marketing_posts\s+add\s+column\s+if\s+not\s+exists\s+archived_reason\s+text/.test(
+    sql196,
+  ) && /char_length\s*\(\s*archived_reason\s*\)\s*<=\s*200/.test(sql196),
+);
+check(
+  "adds archived_tags idempotently, as a JSON array or null",
+  /alter\s+table\s+public\.marketing_posts\s+add\s+column\s+if\s+not\s+exists\s+archived_tags\s+jsonb/.test(
+    sql196,
+  ) && /jsonb_typeof\s*\(\s*archived_tags\s*\)\s*=\s*'array'/.test(sql196),
+);
+check(
+  "does NOT put the reason vocabulary in a CHECK — versioning belongs to the reader",
+  !/archived_reason\s+text[\s\S]*?\bin\s*\(\s*'/.test(sql196),
+);
+check(
+  "adds deliveries.published_text idempotently, bounded",
+  /alter\s+table\s+public\.marketing_channel_deliveries\s+add\s+column\s+if\s+not\s+exists\s+published_text\s+text/.test(
+    sql196,
+  ) && /char_length\s*\(\s*published_text\s*\)\s*<=\s*10000/.test(sql196),
+);
+check(
+  "creates no new table and no RLS policy — columns ride existing grants",
+  !/create\s+table/.test(sql196) && !/create\s+policy/.test(sql196),
+);
+check(
+  "grants and revokes nothing",
+  !/\bgrant\s+[\w,\s]+\s+on\s+/.test(sql196) && !/\brevoke\s+/.test(sql196),
+);
+check(
+  "196 contains no destructive statement (the constraint swap is the one intended drop)",
+  !/\b(drop\s+table|drop\s+schema|truncate|delete\s+from|drop\s+database|drop\s+column)\b/.test(
+    sql196,
+  ),
 );
 
 console.log(

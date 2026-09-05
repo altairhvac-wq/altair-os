@@ -23,6 +23,13 @@ export const AGENT_DECISION_SUBJECT_KINDS = [
   "approval",
   "recommendation",
   "video_render",
+  /**
+   * A decision ABOUT a marketing draft post — the reject-with-reason label
+   * (migration 196 extends the database CHECK to match). Rows of this kind
+   * are learning signal for the agent platform's pull, never authorization:
+   * the same rule the header states for every other kind applies unchanged.
+   */
+  "marketing_post",
 ] as const;
 export type AgentDecisionSubjectKind =
   (typeof AGENT_DECISION_SUBJECT_KINDS)[number];

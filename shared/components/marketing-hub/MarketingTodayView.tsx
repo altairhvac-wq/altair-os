@@ -9,6 +9,11 @@ import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
 import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
 import {
+  REJECT_REASON_LABELS,
+  REJECT_REASONS,
+  type RejectReason,
+} from "@/shared/types/marketing-reject-reasons";
+import {
   deriveMarketingTodayState,
   selectTodayCandidates,
   type MarketingAutomationHealth,
@@ -269,6 +274,12 @@ export function MarketingTodayView({
   onChanged,
 }: MarketingTodayViewProps) {
   const [rejecting, setRejecting] = useState<string | null>(null);
+  /** Post id whose reject-reason picker is open, and the picked reason.
+   * "" = no reason picked yet — the picker never pre-selects one, because a
+   * hurried default click would record a label nobody actually chose, and
+   * these labels are training data. */
+  const [rejectPickerFor, setRejectPickerFor] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<RejectReason | "">("");
   const [error, setError] = useState<string | null>(null);
   const timeZone = useCompanyTimezone();
 
@@ -309,13 +320,23 @@ export function MarketingTodayView({
       })
     : null;
 
-  async function reject(post: MarketingPost) {
+  async function reject(post: MarketingPost, reason: RejectReason) {
     setError(null);
     setRejecting(post.id);
     try {
-      const result = await archiveMarketingPostAction(post.id);
+      // The reason rides the SAME button press that archives — the label
+      // factory lives on the control the founder already uses, never on a
+      // parallel surface (the zero-rows decision channel is the cautionary
+      // precedent). SUPERSEDED exists so clearing a stale draft is
+      // distinguishable from rejecting a bad one.
+      const result = await archiveMarketingPostAction(post.id, { reason });
       if (result?.error) setError(result.error);
-      else onChanged();
+      else {
+        // Close only THIS post's picker — an in-flight success must not
+        // slam shut a picker the founder just opened on another card.
+        setRejectPickerFor((current) => (current === post.id ? null : current));
+        onChanged();
+      }
     } finally {
       setRejecting(null);
     }
@@ -432,14 +453,57 @@ export function MarketingTodayView({
                   videoOptions={videoOptions}
                   onPublished={onChanged}
                 />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  loading={rejecting === post.id}
-                  onClick={() => void reject(post)}
-                >
-                  Reject
-                </Button>
+                {rejectPickerFor === post.id ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <select
+                      className="rounded border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] px-2 py-1 text-xs text-altair-ink"
+                      value={rejectReason}
+                      onChange={(event) =>
+                        setRejectReason(event.target.value as RejectReason | "")
+                      }
+                    >
+                      <option value="" disabled>
+                        Pick a reason…
+                      </option>
+                      {REJECT_REASONS.map((code) => (
+                        <option key={code} value={code}>
+                          {REJECT_REASON_LABELS[code]}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={rejectReason === ""}
+                      loading={rejecting === post.id}
+                      onClick={() => {
+                        if (rejectReason !== "") void reject(post, rejectReason);
+                      }}
+                    >
+                      Confirm reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="quiet"
+                      onClick={() => setRejectPickerFor(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      // Fresh picker per post — a reason picked for one draft
+                      // must never linger as another draft's default.
+                      setRejectReason("");
+                      setRejectPickerFor(post.id);
+                    }}
+                  >
+                    Reject
+                  </Button>
+                )}
               </div>
               {error ? (
                 <p className="text-[11px] text-altair-danger">{error}</p>
