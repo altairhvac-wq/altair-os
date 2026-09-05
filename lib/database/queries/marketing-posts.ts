@@ -571,6 +571,19 @@ export async function duplicateMarketingPost(
 export async function archiveMarketingPost(
   companyId: string,
   postId: string,
+  options?: {
+    /**
+     * One-tap reject reason (vocabulary:
+     * shared/types/marketing-reject-reasons.ts) and optional weakness tags.
+     * OMITTED = today's exact behavior, byte for byte: the update touches
+     * only status/archived_at, so this stays deployable ahead of migration
+     * 196 and a reasonless archive never writes the new columns at all.
+     * The whole point of recording these: a rejection currently teaches the
+     * system nothing — no reason, no actor, no signal.
+     */
+    reason?: string;
+    tags?: readonly string[];
+  },
 ): Promise<{ post: MarketingPost | null; error: string | null }> {
   const existing = await getMarketingPostById(companyId, postId);
   if (!existing) {
@@ -588,6 +601,10 @@ export async function archiveMarketingPost(
     .update({
       status: "archived",
       archived_at: now,
+      ...(options?.reason !== undefined ? { archived_reason: options.reason } : {}),
+      ...(options?.tags !== undefined && options.tags.length > 0
+        ? { archived_tags: [...options.tags] }
+        : {}),
     })
     .eq("company_id", companyId)
     .eq("id", postId)

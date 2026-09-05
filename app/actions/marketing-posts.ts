@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { recordAgentDecision } from "@/lib/database/queries/agent-decisions";
+import {
+  isRejectReason,
+  REJECT_REASON_TAXONOMY_VERSION,
+} from "@/shared/types/marketing-reject-reasons";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import {
@@ -768,6 +773,21 @@ export async function markMarketingPostPostedAction(
 
 export async function archiveMarketingPostAction(
   postId: string,
+  options?: {
+    /**
+     * One-tap reject reason + optional weakness tags — the label-factory
+     * foundation. Optional end to end: a reasonless archive behaves exactly
+     * as it always has. When a reason IS given, it is (1) validated against
+     * the versioned vocabulary, (2) stored on the post (columns from
+     * migration 196), and (3) recorded on the agent decision channel as
+     * subject_kind 'marketing_post' so the platform's existing pull finally
+     * learns a draft was rejected, and why. The decision-channel write is
+     * best-effort: an environment that has not applied 196 archives
+     * normally and only the label is lost — loudly, in the server log.
+     */
+    reason?: string;
+    tags?: readonly string[];
+  },
 ): Promise<MarketingPostActionResult> {
   const permission = await assertMarketingPostManager();
   if (permission.error || !permission.context) {
@@ -778,6 +798,15 @@ export async function archiveMarketingPostAction(
   if (!normalizedPostId) {
     return { error: "A valid marketing post is required." };
   }
+
+  const reason = options?.reason?.trim();
+  if (reason !== undefined && reason !== "" && !isRejectReason(reason)) {
+    return { error: "Unknown reject reason. Pick one from the list." };
+  }
+  const tags = (options?.tags ?? [])
+    .map((tag) => tag.trim())
+    .filter((tag) => tag !== "")
+    .slice(0, 8);
 
   const existing = await getMarketingPostById(
     permission.context.company.id,
@@ -794,12 +823,36 @@ export async function archiveMarketingPostAction(
   const { post, error } = await archiveMarketingPost(
     permission.context.company.id,
     normalizedPostId,
+    reason !== undefined && reason !== "" ? { reason, tags } : undefined,
   );
 
   if (error || !post) {
     return {
       error: error ?? "We couldn't archive this marketing post. Try again.",
     };
+  }
+
+  if (reason !== undefined && reason !== "") {
+    const decision = await recordAgentDecision({
+      companyId: permission.context.company.id,
+      subjectKind: "marketing_post",
+      subjectId: normalizedPostId,
+      decision: "REJECTED",
+      note:
+        tags.length > 0
+          ? `${REJECT_REASON_TAXONOMY_VERSION}:${reason} tags=${tags.join(",")}`
+          : `${REJECT_REASON_TAXONOMY_VERSION}:${reason}`,
+      decidedByUserId: null,
+      decidedByEmail: permission.context.user.email ?? null,
+    });
+    if (!decision.ok) {
+      // The archive stood; only the label channel failed (most likely
+      // migration 196 not applied yet). Say so where an operator will look.
+      console.error("[archiveMarketingPostAction] reject reason not recorded on decision channel", {
+        postId: normalizedPostId,
+        reason,
+      });
+    }
   }
 
   revalidateMarketingPaths();
