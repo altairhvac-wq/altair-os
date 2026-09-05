@@ -799,13 +799,21 @@ export async function archiveMarketingPostAction(
     return { error: "A valid marketing post is required." };
   }
 
-  const reason = options?.reason?.trim();
+  // Server actions receive whatever JSON the client sends — guard the types
+  // before touching them, or a crafted payload turns .trim() into a 500.
+  const reason =
+    typeof options?.reason === "string" ? options.reason.trim() : undefined;
   if (reason !== undefined && reason !== "" && !isRejectReason(reason)) {
     return { error: "Unknown reject reason. Pick one from the list." };
   }
-  const tags = (options?.tags ?? [])
+  // Tags ride the decision note comma-joined, so a tag may not contain the
+  // separator (or whitespace) and stays short enough that eight of them can
+  // never push the note past the channel's 1000-char CHECK. Invalid tags are
+  // dropped, not repaired — repairing would invent a label nobody chose.
+  const tags = (Array.isArray(options?.tags) ? options.tags : [])
+    .filter((tag): tag is string => typeof tag === "string")
     .map((tag) => tag.trim())
-    .filter((tag) => tag !== "")
+    .filter((tag) => tag !== "" && tag.length <= 40 && !/[\s,]/.test(tag))
     .slice(0, 8);
 
   const existing = await getMarketingPostById(
@@ -842,7 +850,7 @@ export async function archiveMarketingPostAction(
         tags.length > 0
           ? `${REJECT_REASON_TAXONOMY_VERSION}:${reason} tags=${tags.join(",")}`
           : `${REJECT_REASON_TAXONOMY_VERSION}:${reason}`,
-      decidedByUserId: null,
+      decidedByUserId: permission.context.user.id ?? null,
       decidedByEmail: permission.context.user.email ?? null,
     });
     if (!decision.ok) {

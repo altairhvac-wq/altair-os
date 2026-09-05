@@ -33,18 +33,20 @@
 -- alter table public.marketing_posts drop column if exists archived_reason;
 -- alter table public.marketing_posts drop column if exists archived_tags;
 -- alter table public.marketing_channel_deliveries drop column if exists published_text;
--- alter table public.agent_marketing_decisions drop constraint agent_marketing_decisions_subject_kind_check;
--- alter table public.agent_marketing_decisions add constraint agent_marketing_decisions_subject_kind_check
---   check (subject_kind in ('approval', 'recommendation', 'video_render'));
+-- alter table public.agent_marketing_decisions
+--   drop constraint if exists agent_marketing_decisions_subject_kind_check,
+--   add constraint agent_marketing_decisions_subject_kind_check
+--     check (subject_kind in ('approval', 'recommendation', 'video_render'));
 -- (Reversing the CHECK requires no 'marketing_post' rows to exist yet;
 -- rows are learning signal, not authorization, and may also simply be left.)
 
+-- ONE statement, deliberately: prod applies migrations by hand, and a
+-- drop-then-add as two statements has a window (crash between them, psql
+-- without -1) where the table carries NO subject_kind constraint at all.
 alter table public.agent_marketing_decisions
-  drop constraint if exists agent_marketing_decisions_subject_kind_check;
-
-alter table public.agent_marketing_decisions
+  drop constraint if exists agent_marketing_decisions_subject_kind_check,
   add constraint agent_marketing_decisions_subject_kind_check
-  check (subject_kind in ('approval', 'recommendation', 'video_render', 'marketing_post'));
+    check (subject_kind in ('approval', 'recommendation', 'video_render', 'marketing_post'));
 
 alter table public.marketing_posts
   add column if not exists archived_reason text

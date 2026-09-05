@@ -274,9 +274,12 @@ export function MarketingTodayView({
   onChanged,
 }: MarketingTodayViewProps) {
   const [rejecting, setRejecting] = useState<string | null>(null);
-  /** Post id whose reject-reason picker is open, and the picked reason. */
+  /** Post id whose reject-reason picker is open, and the picked reason.
+   * "" = no reason picked yet — the picker never pre-selects one, because a
+   * hurried default click would record a label nobody actually chose, and
+   * these labels are training data. */
   const [rejectPickerFor, setRejectPickerFor] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState<RejectReason>("SCRIPT_WEAK");
+  const [rejectReason, setRejectReason] = useState<RejectReason | "">("");
   const [error, setError] = useState<string | null>(null);
   const timeZone = useCompanyTimezone();
 
@@ -454,9 +457,12 @@ export function MarketingTodayView({
                       className="rounded border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] px-2 py-1 text-xs text-altair-ink"
                       value={rejectReason}
                       onChange={(event) =>
-                        setRejectReason(event.target.value as RejectReason)
+                        setRejectReason(event.target.value as RejectReason | "")
                       }
                     >
+                      <option value="" disabled>
+                        Pick a reason…
+                      </option>
                       {REJECT_REASONS.map((code) => (
                         <option key={code} value={code}>
                           {REJECT_REASON_LABELS[code]}
@@ -466,8 +472,11 @@ export function MarketingTodayView({
                     <Button
                       size="sm"
                       variant="secondary"
+                      disabled={rejectReason === ""}
                       loading={rejecting === post.id}
-                      onClick={() => void reject(post, rejectReason)}
+                      onClick={() => {
+                        if (rejectReason !== "") void reject(post, rejectReason);
+                      }}
                     >
                       Confirm reject
                     </Button>
@@ -483,7 +492,12 @@ export function MarketingTodayView({
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => setRejectPickerFor(post.id)}
+                    onClick={() => {
+                      // Fresh picker per post — a reason picked for one draft
+                      // must never linger as another draft's default.
+                      setRejectReason("");
+                      setRejectPickerFor(post.id);
+                    }}
                   >
                     Reject
                   </Button>

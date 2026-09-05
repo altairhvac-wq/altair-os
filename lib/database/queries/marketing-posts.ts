@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import { mapDatabaseError } from "@/lib/database/errors";
+import {
+  isMissingDatabaseColumnError,
+  mapDatabaseError,
+} from "@/lib/database/errors";
 import type {
   MarketingChannel,
   MarketingPost,
@@ -597,22 +600,53 @@ export async function archiveMarketingPost(
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  const { data, error } = await marketingPostsTable(supabase)
-    .update({
+  // status != archived in the WRITE itself, not just the read above: two
+  // sessions racing to reject the same draft must settle by row count, and
+  // the loser must not overwrite the winner's archived_at/reason.
+  const applyUpdate = (payload: Record<string, unknown>) =>
+    marketingPostsTable(supabase)
+      .update(payload)
+      .eq("company_id", companyId)
+      .eq("id", postId)
+      .neq("status", "archived")
+      .is("deleted_at", null)
+      .select("*")
+      .single();
+
+  let { data, error } = await applyUpdate({
+    status: "archived",
+    archived_at: now,
+    ...(options?.reason !== undefined ? { archived_reason: options.reason } : {}),
+    ...(options?.tags !== undefined && options.tags.length > 0
+      ? { archived_tags: [...options.tags] }
+      : {}),
+  });
+
+  // Ahead of migration 196 the labeled UPDATE is refused whole (PostgREST
+  // rejects unknown columns before any SQL runs), which would leave the
+  // reject button dead — the opposite of "only the label is lost". Fall back
+  // to the exact pre-196 write and say what was dropped, loudly.
+  if (
+    error &&
+    options?.reason !== undefined &&
+    isMissingDatabaseColumnError(error)
+  ) {
+    console.error(
+      "[archiveMarketingPost] archived_reason/archived_tags columns missing (migration 196 not applied) — archiving without the label",
+      { postId, reason: options.reason },
+    );
+    ({ data, error } = await applyUpdate({
       status: "archived",
       archived_at: now,
-      ...(options?.reason !== undefined ? { archived_reason: options.reason } : {}),
-      ...(options?.tags !== undefined && options.tags.length > 0
-        ? { archived_tags: [...options.tags] }
-        : {}),
-    })
-    .eq("company_id", companyId)
-    .eq("id", postId)
-    .is("deleted_at", null)
-    .select("*")
-    .single();
+    }));
+  }
 
   if (error || !data) {
+    // No row matched: with the status predicate above, the dominant cause is
+    // a concurrent archive that won the race after our read check passed.
+    if (error?.code === "PGRST116") {
+      return { post: null, error: "This post is already archived." };
+    }
     return {
       post: null,
       error: mapDatabaseError(error),
