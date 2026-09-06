@@ -107,6 +107,7 @@ steps.push(
   },
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
+  { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
 );
 
 /**

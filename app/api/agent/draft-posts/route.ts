@@ -83,6 +83,32 @@ const QUALITY_STATES = ["STUB", "REVIEWABLE_CREATIVE", "PRODUCTION_READY"] as co
 const MAX_DIRECTOR_RATIONALE_CHARS = 2_000;
 
 /**
+ * ==================== PER-CHANNEL LIMITS, ENFORCED AT THE DOOR ====================
+ * These were only ever applied four layers below this one, by a silent
+ * `.slice()` in `buildYouTubeUploadInitRequest`. A 200-character title was
+ * accepted here, stored, shown to the founder for approval, and then cut
+ * mid-word at upload — so the thing a human approved was not the thing that
+ * published.
+ *
+ * Refusing here instead makes the copy the founder reads the copy that
+ * ships. It also gives the authoring side a real error to fix rather than a
+ * silent truncation nobody sees until the video is live.
+ *
+ * The generic MAX_* constants above still bound every channel; these are the
+ * narrower, platform-specific ceilings on top.
+ */
+const CHANNEL_TITLE_LIMITS: Record<AllowedChannel, number> = {
+  // Google's documented snippet.title ceiling. Mirrors YOUTUBE_MAX_TITLE in
+  // lib/integrations/channel-publish-requests.ts, which does the truncating
+  // this check exists to make unreachable.
+  youtube: 100,
+  // Meta imposes no separate title on a Reel — the row title is internal
+  // labelling only, so the generic bound is the right one.
+  facebook: MAX_TITLE_CHARS,
+  instagram: MAX_TITLE_CHARS,
+};
+
+/**
  * ==================== THE MEASURED VERDICT, WHICH IS NOT qualityState ====================
  * `qualityState` above is agent-platform's PROVENANCE classification: what
  * ingredients the job asked for, and what the renderer said about its own
@@ -118,6 +144,17 @@ type IncomingPost = {
   text?: unknown;
   callToAction?: unknown;
   hashtags?: unknown;
+  /**
+   * Director-authored title for THIS channel, when the plan carried one.
+   *
+   * Absent means the caller had no approved per-channel title and the route
+   * falls back to the shared `titleBase` with a channel suffix, exactly as
+   * before. Present means a model authored it deliberately at planning time,
+   * and it is used VERBATIM — the fallback's `— YouTube Short` suffix is
+   * this route inventing marketing copy, which is precisely what a plan-time
+   * title exists to stop.
+   */
+  title?: unknown;
 };
 
 type Body = {
@@ -334,6 +371,7 @@ export async function POST(request: Request) {
     text: string;
     callToAction: string | null;
     hashtags: string[];
+    title?: string;
   }[] = [];
 
   for (const entry of body.posts as IncomingPost[]) {
@@ -367,11 +405,24 @@ export async function POST(request: Request) {
         )
       : [];
 
+    // The per-channel title, when the plan carried one. Refused rather than
+    // truncated: a title the founder approves must be the title that ships.
+    const title = typeof entry.title === "string" ? entry.title.trim() : "";
+    if (title.length > CHANNEL_TITLE_LIMITS[entry.channel]) {
+      return reject(
+        400,
+        `Post for '${entry.channel}' has a title of ${title.length} characters, over the ` +
+          `${CHANNEL_TITLE_LIMITS[entry.channel]}-character limit for that channel. ` +
+          `Titles are not truncated here — shorten it at the source.`,
+      );
+    }
+
     requested.push({
       channel: entry.channel,
       text,
       callToAction: cta || null,
       hashtags,
+      ...(title ? { title } : {}),
     });
   }
 
@@ -406,7 +457,11 @@ export async function POST(request: Request) {
   for (const post of requested) {
     const created = await createAgentDraftMarketingPost({
       companyId,
-      title: `${titleBase} — ${channelLabel(post.channel)}`,
+      // Director-authored when the plan carried one; otherwise the shared
+      // base plus a channel suffix. The fallback is this route ASSEMBLING a
+      // title, which for YouTube is the published video's name — so a
+      // plan-time title always wins over it.
+      title: post.title ?? `${titleBase} — ${channelLabel(post.channel)}`,
       channelTarget: post.channel as MarketingChannel,
       postText: post.text,
       callToAction: post.callToAction,

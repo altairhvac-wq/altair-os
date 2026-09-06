@@ -59,7 +59,8 @@
     "verify:queue-integrity": "node scripts/verify-agent-queue-integrity.mjs",
     "mutate:queue-integrity": "node scripts/mutate-agent-queue-integrity.mjs",
     "verify:heartbeat": "node scripts/verify-agent-heartbeat.mjs",
-    "verify:measured-render-qa": "node scripts/verify-measured-render-qa.mjs"
+    "verify:measured-render-qa": "node scripts/verify-measured-render-qa.mjs",
+    "verify:platform-copy": "node scripts/verify-platform-specific-copy.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",
