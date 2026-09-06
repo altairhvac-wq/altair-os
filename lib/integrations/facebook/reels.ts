@@ -3,13 +3,15 @@ import "server-only";
 import {
   REEL_POLL_INTERVAL_MS,
   REEL_POLL_MAX_ATTEMPTS,
-  decideFacebookUploadPhase,
+  classifyOembedVisibility,
+  decideFacebookPublishReadiness,
   decideInstagramContainerPhase,
   graphVersionSupportsReels,
   isTrustedReelUploadUrl,
   normalizeFacebookPermalink,
   FACEBOOK_UPLOAD_HOST,
   type FacebookVideoStatus,
+  type OembedVisibility,
 } from "@/shared/types/marketing-reel";
 import { getFacebookOAuthConfig } from "./env";
 import { graphBaseUrl, readFacebookJson } from "./graph";
@@ -57,6 +59,29 @@ export type ReelPublishResult = {
    */
   readonly providerMediaId: string;
   readonly permalinkUrl?: string;
+  /**
+   * The video's status object as READ BACK after publishing (Facebook only;
+   * best-effort — a failed read never fails a publish that happened). This is
+   * the settlement evidence: phases, and Meta's own bytes_transferred count.
+   */
+  readonly providerStatus?: FacebookVideoStatus;
+  /**
+   * Wire-level evidence from the phases themselves, kept because the
+   * 2026-09-06 investigation had NOTHING to reconstruct the original start/
+   * upload/finish responses from — only the video id survived.
+   */
+  readonly phaseEvidence?: {
+    readonly startVideoId: string;
+    readonly uploadHttpStatus: number;
+    readonly finishSuccess: boolean | null;
+  };
+  /**
+   * Non-privileged public-visibility probe (oEmbed with the APP token),
+   * run after publish. PUBLIC / NOT_PUBLIC / UNKNOWN — an app without the
+   * approved oEmbed feature reads UNKNOWN, which the ledger records as null,
+   * never as a pass. Facebook only; best-effort.
+   */
+  readonly publicVisibility?: OembedVisibility;
 };
 
 /**
@@ -146,7 +171,12 @@ type FacebookReelStartResponse = {
  *              -> a video_id and an upload_url
  *   2. upload  POST {upload_url}  with the `file_url` header
  *              -> Meta fetches the bytes itself, asynchronously
- *   3. wait    GET /{video_id}?fields=status  until uploading_phase completes
+ *   3. wait    GET /{video_id}?fields=status  until uploading AND processing
+ *              complete — a watchable rendition must exist BEFORE anything is
+ *              published (2026-09-06 incident: publishing on upload-complete
+ *              alone put the golden Reel public ~55s before Meta finished
+ *              transcoding; the public got grey while the owner's preview of
+ *              the source bytes played fine)
  *   4. finish  POST /{page-id}/video_reels  upload_phase=finish
  *              video_state=PUBLISHED
  *
@@ -229,6 +259,7 @@ export async function publishFacebookPageReel(input: {
     },
     cache: "no-store",
   });
+  const uploadHttpStatus = uploadResponse.status;
 
   if (!uploadResponse.ok) {
     let detail = `Facebook rejected the Reel upload (${uploadResponse.status}).`;
@@ -248,7 +279,7 @@ export async function publishFacebookPageReel(input: {
   }
 
   // ------------------------------------------------------------ 3. wait
-  await waitForFacebookUpload({ videoId, accessToken });
+  await waitForFacebookReadiness({ videoId, accessToken });
 
   // ---------------------------------------------------------- 4. finish
   const finishUrl = new URL(
@@ -288,41 +319,114 @@ export async function publishFacebookPageReel(input: {
     field: "permalink_url",
   });
 
+  // Settlement evidence: the status as it stands right after publishing —
+  // phases plus Meta's own bytes_transferred. Best-effort: a failed read
+  // must never fail a publish that already happened.
+  const providerStatus = await fetchFacebookVideoStatus({
+    videoId,
+    accessToken,
+  }).catch(() => undefined);
+
+  // Non-privileged public-visibility probe. Uses the APP token, never the
+  // Page token — a Page token proved the wrong oracle on 2026-09-06 (it can
+  // read renditions of content the public cannot see). Best-effort.
+  const publicVisibility = await probeReelPublicVisibility(videoId).catch(
+    () => undefined,
+  );
+
   // The video id is both the media object and the published object on
   // Facebook — `finish` returns only `{success: true}`, so there is no
   // separate post id to record.
-  return { providerPostId: videoId, providerMediaId: videoId, permalinkUrl };
+  return {
+    providerPostId: videoId,
+    providerMediaId: videoId,
+    permalinkUrl,
+    ...(providerStatus ? { providerStatus } : {}),
+    phaseEvidence: {
+      startVideoId: videoId,
+      uploadHttpStatus,
+      finishSuccess: typeof finish.success === "boolean" ? finish.success : null,
+    },
+    ...(publicVisibility ? { publicVisibility } : {}),
+  };
 }
 
-async function waitForFacebookUpload(input: {
+/**
+ * The public-visibility oracle: oEmbed with the APP access token — a
+ * non-privileged, public-content read. Only a 200-with-html proves PUBLIC;
+ * a definitive content refusal proves NOT_PUBLIC; an app-feature refusal
+ * (Meta #10 — oEmbed Read not approved for this app) is UNKNOWN and must be
+ * recorded as such, never as either verdict.
+ */
+export async function probeReelPublicVisibility(
+  videoId: string,
+): Promise<OembedVisibility> {
+  const config = getFacebookOAuthConfig();
+  const appToken = `${config.appId}|${config.appSecret}`;
+  const url = new URL(`${graphBaseUrl(config.graphApiVersion)}/oembed_video`);
+  url.searchParams.set(
+    "url",
+    `https://www.facebook.com/reel/${encodeURIComponent(videoId)}/`,
+  );
+  url.searchParams.set("omitscript", "true");
+  url.searchParams.set("access_token", appToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  let body: {
+    html?: string | null;
+    error?: { code?: number | null; error_subcode?: number | null } | null;
+  } | null = null;
+  try {
+    body = (await response.json()) as typeof body;
+  } catch {
+    body = null;
+  }
+  return classifyOembedVisibility({ httpStatus: response.status, body });
+}
+
+async function fetchFacebookVideoStatus(input: {
+  videoId: string;
+  accessToken: string;
+}): Promise<FacebookVideoStatus | undefined> {
+  const config = getFacebookOAuthConfig();
+  const url = new URL(
+    `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(input.videoId)}`,
+  );
+  url.searchParams.set("fields", "status");
+  url.searchParams.set("access_token", input.accessToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  const data = await readFacebookJson<{ status?: FacebookVideoStatus }>(
+    response,
+    "Facebook Reel status",
+  );
+  return data.status;
+}
+
+async function waitForFacebookReadiness(input: {
   videoId: string;
   accessToken: string;
 }): Promise<void> {
-  const config = getFacebookOAuthConfig();
-
   for (let attempt = 0; attempt < REEL_POLL_MAX_ATTEMPTS; attempt += 1) {
-    const url = new URL(
-      `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(input.videoId)}`,
-    );
-    url.searchParams.set("fields", "status");
-    url.searchParams.set("access_token", input.accessToken);
+    const status = await fetchFacebookVideoStatus(input);
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-
-    const data = await readFacebookJson<{ status?: FacebookVideoStatus }>(
-      response,
-      "Facebook Reel upload status",
-    );
-
-    const phase = decideFacebookUploadPhase(data.status);
+    // Upload AND processing — nothing is published until a watchable
+    // rendition exists. See decideFacebookPublishReadiness for why upload
+    // alone was the 2026-09-06 grey-window defect.
+    const phase = decideFacebookPublishReadiness(status);
     if (phase === "READY") return;
     if (phase === "FAILED") {
       throw new Error(
-        "Facebook could not fetch the video. Check that the media URL is reachable and has not expired.",
+        "Facebook could not fetch or process the video. Check that the media URL is reachable and the video meets Reel requirements.",
       );
     }
 
@@ -332,7 +436,7 @@ async function waitForFacebookUpload(input: {
   // Bounded on purpose — see REEL_POLL_BUDGET_MS. Nothing is published, so the
   // caller settles this as a clean, retryable failure.
   throw new Error(
-    "Facebook did not finish fetching the video in time. Nothing was published — try again.",
+    "Facebook did not finish fetching and processing the video in time. Nothing was published — try again.",
   );
 }
 

@@ -31,9 +31,11 @@ import {
   describeMediaReadDecision,
 } from "@/shared/types/marketing-media";
 import {
+  buildReelSettlementResult,
   decideReelMedia,
   describeReelMediaDecision,
   mayAttemptReel,
+  type FacebookVideoStatus,
 } from "@/shared/types/marketing-reel";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
@@ -45,9 +47,14 @@ import type {
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 import {
   claimDelivery,
+  recordDeliveryPlaybackVerification,
   recordDeliveryProviderMedia,
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
+import {
+  reconcileMarketingDeliveries,
+  type DeliveryReconciliationFinding,
+} from "@/lib/marketing/delivery-reconciliation";
 import {
   describeDeliveryDecision,
   mayPublish,
@@ -62,6 +69,16 @@ export type MarketingPublishActionResult = {
   platform?: "facebook" | "instagram";
   /** Set on Reel publishes: the Facebook video id / Instagram container id. */
   providerMediaId?: string;
+  /**
+   * Non-privileged public-visibility probe result (Facebook Reels). PUBLIC is
+   * the only value that means a non-admin can see it; UNKNOWN means the probe
+   * could not answer (e.g. the app lacks the approved oEmbed feature) — never
+   * treat it as success. 2026-09-06: the provider accepted three Reels that
+   * no non-admin could open.
+   */
+  publicVisibility?: "PUBLIC" | "NOT_PUBLIC" | "UNKNOWN";
+  /** A publish that succeeded at the provider but carries an unresolved public-visibility concern. */
+  warning?: string;
 };
 
 /**
@@ -180,6 +197,20 @@ async function settlePublishedDelivery(
 }
 
 function assertPublishPrerequisites(): string | null {
+  // ==================== INCIDENT KILL-SWITCH (2026-09-06) ====================
+  // A hard stop for ALL Meta publishing from this app, controlled by one env
+  // var so containment does not require a code deploy — set it in Vercel and
+  // every publish button starts refusing with the reason. Publishing here is
+  // already click-gated to founders; this exists for the state where clicking
+  // itself must be off (a delivery incident under investigation).
+  const disabled = (process.env.MARKETING_PUBLISH_DISABLED ?? "").trim();
+  if (disabled && disabled !== "0" && disabled.toLowerCase() !== "false") {
+    return (
+      "Marketing publishing is disabled while a delivery incident is open " +
+      "(MARKETING_PUBLISH_DISABLED is set). Clear the env var to re-enable."
+    );
+  }
+
   if (!isIntegrationEncryptionConfigured()) {
     return "Integration encryption is not configured. Set INTEGRATIONS_ENCRYPTION_KEY, then reconnect Facebook.";
   }
@@ -265,7 +296,7 @@ function refuseVideoPostOnTextPath(post: MarketingPost): string | null {
 async function resolveReelMediaForPublish(input: {
   companyId: string;
   post: MarketingPost;
-}): Promise<{ videoUrl?: string; error?: string }> {
+}): Promise<{ videoUrl?: string; byteSize?: number | null; error?: string }> {
   const assetId = input.post.videoMediaAssetId?.trim();
   if (!assetId) {
     return { error: describeReelMediaDecision("NO_MEDIA") };
@@ -300,7 +331,10 @@ async function resolveReelMediaForPublish(input: {
     return { error: grant.error ?? "Could not open the video for publishing." };
   }
 
-  return { videoUrl: grant.grant.url };
+  // byteSize rides along for the TRANSPORT_BYTES_VERIFIED settlement state:
+  // Meta reports bytes_transferred after its fetch, and the settle compares
+  // the two — the bytes that arrived must be the bytes that were approved.
+  return { videoUrl: grant.grant.url, byteSize: asset.byteSize ?? null };
 }
 
 async function loadConnectedFacebookPage(input: {
@@ -863,6 +897,13 @@ export async function publishMarketingReelToFacebookAction(
     providerPostId: string;
     providerMediaId: string;
     permalinkUrl?: string;
+    providerStatus?: FacebookVideoStatus;
+    phaseEvidence?: {
+      startVideoId: string;
+      uploadHttpStatus: number;
+      finishSuccess: boolean | null;
+    };
+    publicVisibility?: "PUBLIC" | "NOT_PUBLIC" | "UNKNOWN";
   };
 
   try {
@@ -902,11 +943,46 @@ export async function publishMarketingReelToFacebookAction(
     return { error: messageText };
   }
 
+  // The settlement carries the delivery-verification evidence (2026-09-06
+  // incident): the wire-phase evidence, Meta's phase statuses, its own
+  // bytes_transferred against the stored asset's size, the provider's own
+  // publish claim — and the three PUBLIC facts, which start unestablished
+  // and are never inferred from privileged reads. The oEmbed probe (APP
+  // token, non-privileged) may settle publicPermalinkAccessible either way;
+  // UNKNOWN stays null.
+  const probedVisibility = publishResult.publicVisibility;
   const settlement = {
     outcome: "posted",
     providerPostId: publishResult.providerPostId,
     providerPermalink: publishResult.permalinkUrl ?? null,
+    providerResult: {
+      ...buildReelSettlementResult({
+        status: publishResult.providerStatus ?? null,
+        expectedByteSize: media.byteSize ?? null,
+        phaseEvidence: publishResult.phaseEvidence ?? null,
+      }),
+      ...(probedVisibility === "PUBLIC"
+        ? { publicPermalinkAccessible: true }
+        : probedVisibility === "NOT_PUBLIC"
+          ? { publicPermalinkAccessible: false }
+          : {}),
+      ...(probedVisibility ? { publicVisibilityProbe: probedVisibility } : {}),
+    },
   } as const;
+
+  // Said to the founder, not just written to the ledger. The provider
+  // accepted the publish either way — but "posted" must never read as
+  // "the public can see it" again.
+  const visibilityWarning =
+    probedVisibility === "PUBLIC"
+      ? undefined
+      : probedVisibility === "NOT_PUBLIC"
+        ? "Facebook accepted the Reel, but a non-privileged check says it is NOT publicly visible. " +
+          "If the Facebook app is in Development Mode, its posts are served only to app-role users — " +
+          "switch the app to Live in developers.facebook.com, then verify from a non-admin account."
+        : "Facebook accepted the Reel, but public visibility could NOT be verified automatically " +
+          "(the app lacks the approved oEmbed feature). Verify from a non-admin account before " +
+          "treating this as delivered.";
 
   const settled = await settlePublishedDelivery(
     deliveryId,
@@ -948,6 +1024,8 @@ export async function publishMarketingReelToFacebookAction(
     providerMediaId: publishResult.providerMediaId,
     permalinkUrl: publishResult.permalinkUrl,
     platform: "facebook",
+    ...(probedVisibility ? { publicVisibility: probedVisibility } : {}),
+    ...(visibilityWarning ? { warning: visibilityWarning } : {}),
   };
 }
 
@@ -1082,10 +1160,21 @@ export async function publishMarketingReelToInstagramAction(
     return { error: messageText };
   }
 
+  // Instagram's evidence differs from Facebook's by construction: the
+  // container poller only reaches `media_publish` after Meta reports the
+  // container FINISHED — processing completed by sequence, not by a separate
+  // read. publicPlaybackVerified starts false for the same reason as
+  // Facebook: nothing this app reads on its own proves a stranger can watch.
   const settlement = {
     outcome: "posted",
     providerPostId: publishResult.providerPostId,
     providerPermalink: publishResult.permalinkUrl ?? null,
+    providerResult: {
+      igContainerId: publishResult.providerMediaId,
+      igContainerFinishedBeforePublish: true,
+      providerProcessingComplete: true,
+      publicPlaybackVerified: false,
+    },
   } as const;
 
   const settled = await settlePublishedDelivery(
@@ -1129,4 +1218,67 @@ export async function publishMarketingReelToInstagramAction(
     permalinkUrl: publishResult.permalinkUrl,
     platform: "instagram",
   };
+}
+
+/**
+ * Records PUBLIC_PLAYBACK_VERIFIED on a posted delivery — the founder clicked
+ * this AFTER watching the Reel play from a logged-out or non-admin surface.
+ *
+ * Deliberately manual. The 2026-09-06 incident proved that every signal this
+ * app can read on its own — provider acceptance, a thumbnail, owner playback,
+ * even a fetched rendition — can hold while real public viewers get grey.
+ * The one observation that settles it is a human watching from an account
+ * that is not an admin of the Page, and that observation cannot be automated
+ * from here.
+ */
+export async function confirmReelPublicPlaybackAction(
+  deliveryId: string,
+): Promise<{ error?: string; verified?: boolean }> {
+  const permission = await assertFounderPublishAccess();
+  if ("error" in permission) {
+    return { error: permission.error };
+  }
+
+  const normalizedDeliveryId = normalizeId(deliveryId);
+  if (!normalizedDeliveryId) {
+    return { error: "A delivery id is required." };
+  }
+
+  const recorded = await recordDeliveryPlaybackVerification({
+    companyId: permission.context.company.id,
+    deliveryId: normalizedDeliveryId,
+    verifiedBy: permission.context.user.email ?? permission.context.user.id,
+    nowIso: new Date().toISOString(),
+  });
+  if (recorded.error) {
+    return { error: recorded.error };
+  }
+
+  revalidateMarketingPaths();
+  return { verified: true };
+}
+
+/**
+ * Founder-invoked delivery reconciliation (2026-09-06 incident): re-reads
+ * every posted delivery against the provider — object still exists? can a
+ * NON-privileged reader see it? — and downgrades `posted` rows to
+ * `posted_unverified` when the answer is no. Never publishes, never deletes,
+ * never touches marketing_posts. See lib/marketing/delivery-reconciliation.
+ */
+export async function reconcileMarketingDeliveriesAction(): Promise<{
+  error?: string;
+  findings?: DeliveryReconciliationFinding[];
+}> {
+  const permission = await assertFounderPublishAccess();
+  if ("error" in permission) {
+    return { error: permission.error };
+  }
+
+  const findings = await reconcileMarketingDeliveries({
+    companyId: permission.context.company.id,
+    nowIso: new Date().toISOString(),
+  });
+
+  revalidateMarketingPaths();
+  return { findings };
 }

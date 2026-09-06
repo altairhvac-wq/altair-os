@@ -444,3 +444,134 @@ export async function listUnsettledDeliveries(
   }
   return (result.data as DeliveryRow[]).map(toRecord);
 }
+
+/**
+ * Records that a HUMAN verified public playback of a posted delivery from a
+ * non-admin surface — the PUBLIC_PLAYBACK_VERIFIED settlement state.
+ *
+ * ==================== WHY THIS IS A SEPARATE WRITE ====================
+ * `posted` records that the provider accepted the publish. The 2026-09-06
+ * incident's lesson is that acceptance, a thumbnail, and OWNER playback all
+ * held while public viewers got grey — so public playback is its own fact,
+ * writable only after the fact it records: somebody who is not a Page admin
+ * watched it play. It merges into `provider_result` (migration 186's flat
+ * 2 KB ledger) rather than adding a column, alongside the phase evidence the
+ * settle wrote.
+ *
+ * Company-scoped and state-guarded: only a POSTED row of the caller's own
+ * company can be marked, and the merge preserves every existing key.
+ */
+export async function recordDeliveryPlaybackVerification(input: {
+  companyId: string;
+  deliveryId: string;
+  verifiedBy: string;
+  nowIso: string;
+}): Promise<{ error?: string }> {
+  const client = createServiceRoleClient();
+
+  const existing = await deliveriesTable(client)
+    .select("id, provider_result, delivery_state")
+    .eq("id", input.deliveryId)
+    .eq("company_id", input.companyId)
+    .maybeSingle();
+
+  if (existing.error || !existing.data) {
+    return { error: "Delivery not found." };
+  }
+  const row = existing.data as {
+    id: string;
+    provider_result: Record<string, unknown> | null;
+    delivery_state: string;
+  };
+  if (row.delivery_state !== "posted") {
+    return {
+      error: `Only a posted delivery can be verified (this one is ${row.delivery_state}).`,
+    };
+  }
+
+  const merged = {
+    ...(row.provider_result ?? {}),
+    publicPlaybackVerified: true,
+    publicPlaybackVerifiedAt: input.nowIso,
+    publicPlaybackVerifiedBy: input.verifiedBy,
+  };
+
+  const result = await deliveriesTable(client)
+    .update({ provider_result: merged })
+    .eq("id", input.deliveryId)
+    .eq("company_id", input.companyId)
+    .eq("delivery_state", "posted")
+    .select("id")
+    .maybeSingle();
+
+  if (result.error || !result.data) {
+    console.error("[recordDeliveryPlaybackVerification] write failed:", {
+      deliveryId: input.deliveryId,
+      error: result.error,
+    });
+    return { error: "Could not record the playback verification. Try again." };
+  }
+  return {};
+}
+
+/**
+ * ONE-WAY downgrade: `posted` → `posted_unverified` (migration 197).
+ *
+ * Recorded when reconciliation finds the provider object missing, or a
+ * non-privileged probe finds it not publicly accessible — the 2026-09-06
+ * incident's two observed shapes. The row keeps every original fact and the
+ * evidence merges into `provider_result`; nothing is deleted, and nothing
+ * ever promotes the row back (a genuine re-publish claims a NEW row).
+ */
+export async function downgradePostedDelivery(input: {
+  companyId: string;
+  deliveryId: string;
+  reason: string;
+  evidence: Record<string, string | number | boolean | null>;
+  nowIso: string;
+}): Promise<{ error?: string }> {
+  const client = createServiceRoleClient();
+
+  const existing = await deliveriesTable(client)
+    .select("id, provider_result, delivery_state")
+    .eq("id", input.deliveryId)
+    .eq("company_id", input.companyId)
+    .maybeSingle();
+
+  if (existing.error || !existing.data) {
+    return { error: "Delivery not found." };
+  }
+  const row = existing.data as {
+    provider_result: Record<string, unknown> | null;
+    delivery_state: string;
+  };
+  if (row.delivery_state !== "posted") {
+    return {
+      error: `Only a posted delivery can be downgraded (this one is ${row.delivery_state}).`,
+    };
+  }
+
+  const merged = {
+    ...(row.provider_result ?? {}),
+    ...input.evidence,
+    downgradedAt: input.nowIso,
+    downgradeReason: input.reason,
+  };
+
+  const result = await deliveriesTable(client)
+    .update({ delivery_state: "posted_unverified", provider_result: merged })
+    .eq("id", input.deliveryId)
+    .eq("company_id", input.companyId)
+    .eq("delivery_state", "posted")
+    .select("id")
+    .maybeSingle();
+
+  if (result.error || !result.data) {
+    console.error("[downgradePostedDelivery] write failed:", {
+      deliveryId: input.deliveryId,
+      error: result.error,
+    });
+    return { error: "Could not record the downgrade. Try again." };
+  }
+  return {};
+}

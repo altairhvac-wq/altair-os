@@ -292,13 +292,23 @@ export function decideInstagramContainerPhase(
  * publishing_phase: { status }, video_status }`, each phase status one of
  * `not_started | in_progress | complete | error`.
  *
- * Only the UPLOAD phase gates `finish`. Processing continues after publish on
- * Meta's side and waiting for it here would burn the budget on something that
- * does not block us.
+ * ==================== THE 2026-09-06 INCIDENT, IN ONE COMMENT ====================
+ * This module used to say "only the UPLOAD phase gates finish. Processing
+ * continues after publish on Meta's side and waiting for it here would burn
+ * the budget on something that does not block us." That assumption published
+ * the golden Reel at 23:26:26 while Meta was still transcoding (the rendition
+ * store's updated_time lands ~55s later), so for that window the Reel existed
+ * publicly with no working public rendition — thumbnail fine, owner playback
+ * fine, public viewers grey. Processing does not block the FINISH CALL; it
+ * blocks a WATCHABLE REEL, which is the thing being published.
  */
 export type FacebookVideoStatus = {
   readonly video_status?: string | null;
-  readonly uploading_phase?: { readonly status?: string | null } | null;
+  readonly uploading_phase?: {
+    readonly status?: string | null;
+    /** Meta's count of bytes it fetched — the transport-integrity witness. */
+    readonly bytes_transferred?: number | null;
+  } | null;
   readonly processing_phase?: { readonly status?: string | null } | null;
   readonly publishing_phase?: { readonly status?: string | null } | null;
 };
@@ -317,6 +327,38 @@ export function decideFacebookUploadPhase(
   if (!uploading && (overall === "ready" || overall === "upload_complete")) {
     return "READY";
   }
+  return "WORKING";
+}
+
+/**
+ * Publish readiness: upload complete AND processing complete.
+ *
+ * `finish` with `video_state=PUBLISHED` is the point of no return; after it
+ * the Reel is public with whatever renditions exist. Requiring
+ * `processing_phase: complete` first means nothing goes public until Meta has
+ * a watchable transcode — closing the grey-window defect above. A processing
+ * ERROR is terminal (FAILED, retryable: nothing was published). A status
+ * where processing never reaches complete inside the poll budget fails
+ * CLOSED, as a clean retryable refusal — a slow transcode surfaces as "try
+ * again", never as a public Reel nobody can watch.
+ *
+ * `video_status: ready` alone also satisfies readiness: it is Meta's own
+ * top-level "this video is watchable", and some responses carry only it.
+ */
+export function decideFacebookPublishReadiness(
+  status: FacebookVideoStatus | null | undefined,
+): ReelPhaseDecision {
+  if (!status) return "WORKING";
+
+  const uploading = (status.uploading_phase?.status ?? "").trim().toLowerCase();
+  const processing = (status.processing_phase?.status ?? "").trim().toLowerCase();
+  const overall = (status.video_status ?? "").trim().toLowerCase();
+
+  if (uploading === "error" || processing === "error" || overall === "error") {
+    return "FAILED";
+  }
+  if (overall === "ready") return "READY";
+  if (uploading === "complete" && processing === "complete") return "READY";
   return "WORKING";
 }
 
@@ -570,4 +612,143 @@ export function markReelVersions(
     });
   }
   return marks;
+}
+
+/* ---------------------------------------------- delivery settlement evidence */
+
+/**
+ * The flat provider-result record a Reel settle writes (migration 186's
+ * 2 KB ledger — flat keys by contract, never a response-body dump).
+ *
+ * ==================== THE SIX SETTLEMENT STATES ====================
+ * The 2026-09-06 incident, both halves: `posted` was standing in for a stack
+ * of distinct facts, and no layer may vouch for another. Provider-side facts
+ * (readable with the Page token — PRIVILEGED):
+ *
+ *   PROVIDER_UPLOAD_COMPLETE      uploading_phase complete; Meta's own
+ *                                 bytes_transferred vs the stored asset's
+ *                                 size is the transport-bytes witness.
+ *   PROVIDER_PROCESSING_COMPLETE  processing_phase complete (or
+ *                                 video_status: ready) — a rendition exists.
+ *   PROVIDER_PUBLISH_CONFIRMED    publishing_phase complete with
+ *                                 publish_status: published — the PROVIDER'S
+ *                                 CLAIM that it published, nothing more.
+ *
+ * Public-side facts — NEVER inferable from privileged access. Three
+ * API-published Reels carried published=true, privacy=EVERYONE, every phase
+ * complete, healthy token-fetched renditions — and a non-admin got "This
+ * page isn't available right now" (the app was serving them as
+ * Development-Mode test content, visible to role users only):
+ *
+ *   PUBLIC_PERMALINK_ACCESSIBLE   the permalink opens for a non-admin. The
+ *                                 only automatable signal is oEmbed with an
+ *                                 APP token (a non-privileged, public-content
+ *                                 read) — and only a definitive answer is
+ *                                 recorded; an unapproved oEmbed feature
+ *                                 records null/unknown, never a pass.
+ *   PUBLIC_PAGE_LISTED            a human saw it on the public Page's Reels
+ *                                 tab from a non-admin surface.
+ *   PUBLIC_PLAYBACK_VERIFIED      a human watched video AND audio play from
+ *                                 a non-admin surface.
+ *
+ * At settle time the three public facts are false/null. They are recorded
+ * later — by the oEmbed probe (permalink only) and by the founder's explicit
+ * confirmation. A delivery may honestly read `posted` with all three public
+ * facts unestablished forever; what it may never do is claim them.
+ */
+export function buildReelSettlementResult(input: {
+  readonly status: FacebookVideoStatus | null;
+  readonly expectedByteSize: number | null;
+  /** Phase-response evidence captured on the wire, when the flow kept it. */
+  readonly phaseEvidence?: {
+    readonly startVideoId?: string | null;
+    readonly uploadHttpStatus?: number | null;
+    readonly finishSuccess?: boolean | null;
+  } | null;
+}): Readonly<Record<string, string | number | boolean | null>> {
+  const uploading = input.status?.uploading_phase ?? null;
+  const bytes = typeof uploading?.bytes_transferred === "number"
+    ? uploading.bytes_transferred
+    : null;
+  const processing = (input.status?.processing_phase?.status ?? null) as string | null;
+  const publishing = input.status?.publishing_phase ?? null;
+  const overall = (input.status?.video_status ?? null) as string | null;
+  const uploadComplete = (uploading?.status ?? "").trim().toLowerCase() === "complete";
+  const processingComplete =
+    (processing ?? "").trim().toLowerCase() === "complete" ||
+    (overall ?? "").trim().toLowerCase() === "ready";
+  const publishConfirmed =
+    (publishing?.status ?? "").trim().toLowerCase() === "complete" &&
+    ((publishing as { publish_status?: string | null } | null)?.publish_status ?? "")
+      .trim()
+      .toLowerCase() === "published";
+  return {
+    fbUploadingPhase: (uploading?.status ?? null) as string | null,
+    fbProcessingPhase: processing,
+    fbPublishingPhase: (publishing?.status ?? null) as string | null,
+    fbPublishStatus:
+      ((publishing as { publish_status?: string | null } | null)?.publish_status ??
+        null) as string | null,
+    fbVideoStatus: overall,
+    fbStartVideoId: input.phaseEvidence?.startVideoId ?? null,
+    fbUploadHttpStatus: input.phaseEvidence?.uploadHttpStatus ?? null,
+    fbFinishSuccess: input.phaseEvidence?.finishSuccess ?? null,
+    transportBytesTransferred: bytes,
+    transportBytesExpected: input.expectedByteSize,
+    transportBytesVerified:
+      bytes !== null && input.expectedByteSize !== null
+        ? bytes === input.expectedByteSize
+        : null,
+    providerUploadComplete: uploadComplete,
+    providerProcessingComplete: processingComplete,
+    providerPublishConfirmed: publishConfirmed,
+    publicPermalinkAccessible: null,
+    publicPageListed: null,
+    publicPlaybackVerified: false,
+  };
+}
+
+/* ------------------------------------------------ public-visibility oracle */
+
+export const OEMBED_VISIBILITY = [
+  /** oEmbed returned embed HTML: a non-privileged read can see it. */
+  "PUBLIC",
+  /** oEmbed definitively refused the CONTENT: not publicly visible. */
+  "NOT_PUBLIC",
+  /**
+   * The probe could not answer — most commonly Meta error #10, "your use of
+   * this endpoint must be reviewed and approved": the APP lacks the oEmbed
+   * Read feature, which says nothing about the video. Unknown is recorded as
+   * null in the ledger, never as a pass OR a fail.
+   */
+  "UNKNOWN",
+] as const;
+export type OembedVisibility = (typeof OEMBED_VISIBILITY)[number];
+
+/**
+ * Classify an oEmbed response into the public-visibility verdict.
+ *
+ * Conservative on purpose: only HTTP 200 with embed html proves PUBLIC, and
+ * only Meta's not-found/unsupported content errors (#24, and the generic
+ * "Unsupported get request" GraphMethodException #100 subcode 33 — what a
+ * non-public object returns to a non-privileged reader) prove NOT_PUBLIC.
+ * Everything else — app-feature refusals (#10), rate limits, transport
+ * failures — is UNKNOWN.
+ */
+export function classifyOembedVisibility(input: {
+  readonly httpStatus: number;
+  readonly body: {
+    readonly html?: string | null;
+    readonly error?: {
+      readonly code?: number | null;
+      readonly error_subcode?: number | null;
+    } | null;
+  } | null;
+}): OembedVisibility {
+  if (input.httpStatus === 200 && input.body?.html) return "PUBLIC";
+  const code = input.body?.error?.code ?? null;
+  const sub = input.body?.error?.error_subcode ?? null;
+  if (code === 24) return "NOT_PUBLIC";
+  if (code === 100 && sub === 33) return "NOT_PUBLIC";
+  return "UNKNOWN";
 }
