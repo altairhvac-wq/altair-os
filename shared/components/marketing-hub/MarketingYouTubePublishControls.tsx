@@ -6,6 +6,11 @@ import { publishMarketingPostToYouTubeAction } from "@/app/actions/marketing-pub
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingPost } from "@/shared/types/marketing-post";
+import type { ReelVideoOption } from "@/shared/types/marketing-reel";
+import {
+  decideYouTubeShortEligibility,
+  describeYouTubeShortEligibility,
+} from "@/shared/types/youtube-shorts";
 
 /**
  * Publishing a post to YouTube — always as a PRIVATE upload.
@@ -24,6 +29,8 @@ import type { MarketingPost } from "@/shared/types/marketing-post";
 type MarketingYouTubePublishControlsProps = {
   post: MarketingPost;
   connectedAccounts: MarketingConnectedAccount[];
+  /** Stored renders for this company. Identity and shape only — no URLs. */
+  videoOptions: ReelVideoOption[];
   disabled?: boolean;
   onPublished: () => void;
 };
@@ -56,6 +63,7 @@ function listConnectedYouTubeChannels(
 export function MarketingYouTubePublishControls({
   post,
   connectedAccounts,
+  videoOptions,
   disabled = false,
   onPublished,
 }: MarketingYouTubePublishControlsProps) {
@@ -63,6 +71,24 @@ export function MarketingYouTubePublishControls({
     () => listConnectedYouTubeChannels(connectedAccounts),
     [connectedAccounts],
   );
+
+  // The same pure decision a draft record would carry: is the ATTACHED
+  // render technically shaped like a Short? Informational, not a gate —
+  // uploads land private either way, and a vertical explainer that is not a
+  // Short is still a legitimate upload. What matters is that the answer
+  // comes from measured facts and says "unknown" when facts are missing.
+  const attachedVideo =
+    videoOptions.find((option) => option.id === post.videoMediaAssetId) ?? null;
+  const shortsLine = attachedVideo
+    ? describeYouTubeShortEligibility(
+        decideYouTubeShortEligibility({
+          contentType: "video/mp4",
+          durationMs: attachedVideo.durationMs,
+          widthPx: attachedVideo.widthPx,
+          heightPx: attachedVideo.heightPx,
+        }),
+      )
+    : null;
 
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -186,6 +212,11 @@ export function MarketingYouTubePublishControls({
           {missingVideoReason ? (
             <p className="text-xs leading-relaxed text-slate-500">
               {missingVideoReason}
+            </p>
+          ) : shortsLine ? (
+            <p className="text-xs leading-relaxed text-slate-500">
+              {shortsLine} Shorts placement is YouTube&rsquo;s decision; this
+              only reports the render&rsquo;s shape.
             </p>
           ) : null}
         </div>

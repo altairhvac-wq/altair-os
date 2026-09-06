@@ -403,4 +403,16 @@ export type MediaReadGrant = {
   readonly objectKey: string;
   readonly contentType: string;
   readonly byteSize: number | null;
+  /**
+   * The SHA-256 the uploader reported for this object
+   * (`client_reported_sha256`), lowercase hex — or null when none was
+   * recorded. Carried on the grant so the LAST hop can close the identity
+   * chain: a provider transport that has the bytes in hand anyway verifies
+   * them against this digest and refuses a mismatch BEFORE contacting the
+   * provider. That is the one check that catches an object overwritten in
+   * storage after QA looked at it — the deterministic object key plus
+   * upsert semantics make that substitution physically possible, and size
+   * alone cannot detect a same-length swap.
+   */
+  readonly expectedSha256: string | null;
 };

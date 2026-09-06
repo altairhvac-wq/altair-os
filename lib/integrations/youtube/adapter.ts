@@ -261,6 +261,10 @@ export const youtubeAdapter: PublisherAdapter = {
       mediaUrl: video.url,
       contentType: video.contentType,
       byteSize: video.byteSize,
+      // The grant's digest, when the asset recorded one — the transport
+      // verifies the fetched bytes against it before a single byte is PUT.
+      // Null means identity is UNVERIFIED for this asset, not verified-ok.
+      expectedSha256: video.expectedSha256 ?? null,
     });
 
     // The provider-side object now exists. Reported before anything else can

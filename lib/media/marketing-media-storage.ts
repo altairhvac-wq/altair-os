@@ -113,12 +113,33 @@ export async function createMediaReadGrant(input: {
   readonly contentType: string;
   readonly byteSize: number | null;
   readonly nowMs: number;
+  /**
+   * The asset's `client_reported_sha256`, when the caller holds one. A
+   * well-formed digest travels on the grant for the transport-side identity
+   * check; a malformed one is logged and dropped rather than either
+   * bricking the publish or being compared as if it meant something.
+   */
+  readonly expectedSha256?: string | null;
 }): Promise<{ grant?: MediaReadGrant; error?: string }> {
   if (!mediaKeyBelongsToCompany(input.objectKey, input.companyId)) {
     console.error("[createMediaReadGrant] cross-company key refused:", {
       objectKey: input.objectKey,
     });
     return { error: "This media does not belong to the active company." };
+  }
+
+  let expectedSha256: string | null = null;
+  if (input.expectedSha256) {
+    const normalized = input.expectedSha256.trim().toLowerCase();
+    if (/^[0-9a-f]{64}$/.test(normalized)) {
+      expectedSha256 = normalized;
+    } else {
+      // Client-reported and malformed: diagnostic noise, not an identity.
+      console.error("[createMediaReadGrant] malformed reported sha ignored:", {
+        objectKey: input.objectKey,
+        length: input.expectedSha256.length,
+      });
+    }
   }
 
   const client = createServiceRoleClient();
@@ -143,6 +164,7 @@ export async function createMediaReadGrant(input: {
       objectKey: input.objectKey,
       contentType: input.contentType,
       byteSize: input.byteSize,
+      expectedSha256,
     },
   };
 }

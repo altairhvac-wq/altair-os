@@ -185,7 +185,12 @@ export const INTEGRATION_STATE_TONE: Readonly<
   NOT_CONFIGURED: "neutral",
   NOT_CONNECTED: "neutral",
   CONNECTING: "info",
-  TOKEN_EXPIRED: "warning",
+  // The ordinary resting state of a Google connection between uses — the
+  // access token expires hourly BY DESIGN and heals without anyone. Warning
+  // tone here trained the owner to react to normal physics (and, before the
+  // derivation was fixed, to reconnect daily). Info says what is true:
+  // nothing has gone wrong, and nobody needs to do anything.
+  TOKEN_EXPIRED: "info",
   REAUTH_REQUIRED: "warning",
   API_ACCESS_REQUIRED: "warning",
   DRAFT_UPLOAD_ONLY: "info",
@@ -204,7 +209,12 @@ export const INTEGRATION_STATE_LABEL: Readonly<
   NOT_CONFIGURED: "Not available",
   NOT_CONNECTED: "Not connected",
   CONNECTING: "Connecting",
-  TOKEN_EXPIRED: "Refreshing",
+  // NOT "Refreshing": no refresh is in progress when this renders. The state
+  // means "expired and able to refresh itself on the next scheduled run or
+  // publish" — a capability, not an activity. A refresh that IS in progress
+  // lives inside one request and is over before any page could observe it,
+  // which is why the model deliberately has no rendered in-flight state.
+  TOKEN_EXPIRED: "Auto-refresh",
   REAUTH_REQUIRED: "Reconnect needed",
   API_ACCESS_REQUIRED: "Awaiting approval",
   DRAFT_UPLOAD_ONLY: "Drafts only",

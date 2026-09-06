@@ -217,6 +217,20 @@ check(
   expiredWithRefresh.state === "TOKEN_EXPIRED" &&
     expiredWithRefresh.action === "none",
 );
+// The badge must tell the truth about this state: nothing is actively
+// refreshing when it renders, and nothing is wrong. "Refreshing" (an
+// activity that is not happening) and a warning tone (for hourly physics)
+// both trained the owner to react to a non-event.
+check(
+  "the expired-but-refreshable badge claims a CAPABILITY, not an activity",
+  expiredWithRefresh.statusLabel === "Auto-refresh",
+  expiredWithRefresh.statusLabel,
+);
+check(
+  "and carries the info tone — normal lifecycle, never a warning",
+  expiredWithRefresh.tone === "info",
+  expiredWithRefresh.tone,
+);
 
 // The proven-terminal status — written only by the credential seam after the
 // provider rejected a refresh — outranks a stored refresh token.

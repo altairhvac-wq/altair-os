@@ -210,6 +210,11 @@ export async function publishMarketingPostToYouTubeAction(
     objectKey: media.objectKey,
     contentType: media.contentType,
     byteSize: media.byteSize,
+    // The transport's recorded digest rides the grant so the upload can
+    // prove the bytes it fetches are the artifact QA approved. Null when the
+    // asset predates digest recording — identity then stays unverified
+    // rather than pretending.
+    expectedSha256: media.clientReportedSha256,
     nowMs: Date.now(),
   });
   if (grant.error || !grant.grant) {

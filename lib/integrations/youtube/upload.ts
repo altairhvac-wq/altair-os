@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+
 import {
   buildYouTubeUploadInitRequest,
   describeRequestForLog,
@@ -95,6 +97,19 @@ export type YouTubeUploadInput = {
   readonly mediaUrl: string;
   readonly contentType: string;
   readonly byteSize: number;
+  /**
+   * The digest the bytes must carry, lowercase hex — or null when the asset
+   * has none recorded, in which case identity stays UNVERIFIED and the
+   * upload proceeds on size alone (the honest pre-existing behavior).
+   *
+   * This is the closing link of the media identity chain: QA looked at a
+   * file, the transport hashed that file into `client_reported_sha256`, and
+   * the object key it landed under is deterministic and over-writable — so
+   * only comparing the digest against the bytes ACTUALLY FETCHED here can
+   * prove YouTube is being handed the artifact QA approved. The comparison
+   * runs BEFORE the PUT, so a mismatch uploads nothing and orphans nothing.
+   */
+  readonly expectedSha256: string | null;
 };
 
 export type YouTubeUploadResult = {
@@ -218,6 +233,27 @@ export async function uploadYouTubeVideo(
       actual: bytes.byteLength,
     });
     throw new YouTubeApiError(0, "media_size_mismatch");
+  }
+
+  // ============ MEDIA IDENTITY, PROVEN AT THE LAST HOP ============
+  // The bytes are fully in hand and NOTHING has been sent, so this is the
+  // one place a digest check costs a hash and nothing else: a mismatch here
+  // uploads zero bytes, creates no provider object, and needs no
+  // reconciliation. Size passed above, so what a mismatch means is exactly
+  // the failure this exists to catch — a same-length object swapped under
+  // the deterministic key after QA looked at it, or an upload the transport
+  // hashed differently than storage now serves. Hash prefixes are logged
+  // (media digests are not secrets); the operator-facing code is the enum.
+  if (input.expectedSha256) {
+    const actualSha256 = createHash("sha256").update(bytes).digest("hex");
+    if (actualSha256 !== input.expectedSha256) {
+      console.error("[uploadYouTubeVideo] media hash mismatch:", {
+        expectedPrefix: input.expectedSha256.slice(0, 12),
+        actualPrefix: actualSha256.slice(0, 12),
+        byteLength: bytes.byteLength,
+      });
+      throw new YouTubeApiError(0, "media_hash_mismatch");
+    }
   }
 
   const uploadResponse = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
