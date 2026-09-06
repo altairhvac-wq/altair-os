@@ -106,6 +106,7 @@ steps.push(
     script: "scripts/verify-payment-intent-failed-handler.mjs",
   },
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
+  { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
 );
 
 /**
