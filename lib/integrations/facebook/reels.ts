@@ -3,7 +3,7 @@ import "server-only";
 import {
   REEL_POLL_INTERVAL_MS,
   REEL_POLL_MAX_ATTEMPTS,
-  decideFacebookUploadPhase,
+  decideFacebookPublishReadiness,
   decideInstagramContainerPhase,
   graphVersionSupportsReels,
   isTrustedReelUploadUrl,
@@ -57,6 +57,12 @@ export type ReelPublishResult = {
    */
   readonly providerMediaId: string;
   readonly permalinkUrl?: string;
+  /**
+   * The video's status object as READ BACK after publishing (Facebook only;
+   * best-effort — a failed read never fails a publish that happened). This is
+   * the settlement evidence: phases, and Meta's own bytes_transferred count.
+   */
+  readonly providerStatus?: FacebookVideoStatus;
 };
 
 /**
@@ -146,7 +152,12 @@ type FacebookReelStartResponse = {
  *              -> a video_id and an upload_url
  *   2. upload  POST {upload_url}  with the `file_url` header
  *              -> Meta fetches the bytes itself, asynchronously
- *   3. wait    GET /{video_id}?fields=status  until uploading_phase completes
+ *   3. wait    GET /{video_id}?fields=status  until uploading AND processing
+ *              complete — a watchable rendition must exist BEFORE anything is
+ *              published (2026-09-06 incident: publishing on upload-complete
+ *              alone put the golden Reel public ~55s before Meta finished
+ *              transcoding; the public got grey while the owner's preview of
+ *              the source bytes played fine)
  *   4. finish  POST /{page-id}/video_reels  upload_phase=finish
  *              video_state=PUBLISHED
  *
@@ -248,7 +259,7 @@ export async function publishFacebookPageReel(input: {
   }
 
   // ------------------------------------------------------------ 3. wait
-  await waitForFacebookUpload({ videoId, accessToken });
+  await waitForFacebookReadiness({ videoId, accessToken });
 
   // ---------------------------------------------------------- 4. finish
   const finishUrl = new URL(
@@ -288,41 +299,64 @@ export async function publishFacebookPageReel(input: {
     field: "permalink_url",
   });
 
+  // Settlement evidence: the status as it stands right after publishing —
+  // phases plus Meta's own bytes_transferred. Best-effort: a failed read
+  // must never fail a publish that already happened.
+  const providerStatus = await fetchFacebookVideoStatus({
+    videoId,
+    accessToken,
+  }).catch(() => undefined);
+
   // The video id is both the media object and the published object on
   // Facebook — `finish` returns only `{success: true}`, so there is no
   // separate post id to record.
-  return { providerPostId: videoId, providerMediaId: videoId, permalinkUrl };
+  return {
+    providerPostId: videoId,
+    providerMediaId: videoId,
+    permalinkUrl,
+    ...(providerStatus ? { providerStatus } : {}),
+  };
 }
 
-async function waitForFacebookUpload(input: {
+async function fetchFacebookVideoStatus(input: {
+  videoId: string;
+  accessToken: string;
+}): Promise<FacebookVideoStatus | undefined> {
+  const config = getFacebookOAuthConfig();
+  const url = new URL(
+    `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(input.videoId)}`,
+  );
+  url.searchParams.set("fields", "status");
+  url.searchParams.set("access_token", input.accessToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  const data = await readFacebookJson<{ status?: FacebookVideoStatus }>(
+    response,
+    "Facebook Reel status",
+  );
+  return data.status;
+}
+
+async function waitForFacebookReadiness(input: {
   videoId: string;
   accessToken: string;
 }): Promise<void> {
-  const config = getFacebookOAuthConfig();
-
   for (let attempt = 0; attempt < REEL_POLL_MAX_ATTEMPTS; attempt += 1) {
-    const url = new URL(
-      `${graphBaseUrl(config.graphApiVersion)}/${encodeURIComponent(input.videoId)}`,
-    );
-    url.searchParams.set("fields", "status");
-    url.searchParams.set("access_token", input.accessToken);
+    const status = await fetchFacebookVideoStatus(input);
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-
-    const data = await readFacebookJson<{ status?: FacebookVideoStatus }>(
-      response,
-      "Facebook Reel upload status",
-    );
-
-    const phase = decideFacebookUploadPhase(data.status);
+    // Upload AND processing — nothing is published until a watchable
+    // rendition exists. See decideFacebookPublishReadiness for why upload
+    // alone was the 2026-09-06 grey-window defect.
+    const phase = decideFacebookPublishReadiness(status);
     if (phase === "READY") return;
     if (phase === "FAILED") {
       throw new Error(
-        "Facebook could not fetch the video. Check that the media URL is reachable and has not expired.",
+        "Facebook could not fetch or process the video. Check that the media URL is reachable and the video meets Reel requirements.",
       );
     }
 
@@ -332,7 +366,7 @@ async function waitForFacebookUpload(input: {
   // Bounded on purpose — see REEL_POLL_BUDGET_MS. Nothing is published, so the
   // caller settles this as a clean, retryable failure.
   throw new Error(
-    "Facebook did not finish fetching the video in time. Nothing was published — try again.",
+    "Facebook did not finish fetching and processing the video in time. Nothing was published — try again.",
   );
 }
 

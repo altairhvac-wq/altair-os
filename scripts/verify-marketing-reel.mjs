@@ -229,12 +229,93 @@ check(
 );
 check("a missing status waits", r.decideFacebookUploadPhase(null) === "WORKING");
 check(
-  "processing is NOT waited on — it continues after publish",
+  "the raw upload-phase read still ignores processing (its callers gate on readiness below)",
   r.decideFacebookUploadPhase({
     uploading_phase: { status: "complete" },
     processing_phase: { status: "in_progress" },
   }) === "READY",
 );
+
+/* ------------------------------------------- publish readiness (incident) */
+console.log("\nFacebook publish readiness — nothing public before a watchable rendition");
+check(
+  "upload complete + processing in progress WAITS — the 2026-09-06 grey window",
+  r.decideFacebookPublishReadiness({
+    uploading_phase: { status: "complete" },
+    processing_phase: { status: "in_progress" },
+  }) === "WORKING",
+);
+check(
+  "upload complete + processing complete is ready",
+  r.decideFacebookPublishReadiness({
+    uploading_phase: { status: "complete" },
+    processing_phase: { status: "complete" },
+  }) === "READY",
+);
+check(
+  "a processing error is terminal",
+  r.decideFacebookPublishReadiness({
+    uploading_phase: { status: "complete" },
+    processing_phase: { status: "error" },
+  }) === "FAILED",
+);
+check(
+  "Meta's own top-level ready satisfies readiness",
+  r.decideFacebookPublishReadiness({ video_status: "ready" }) === "READY",
+);
+check(
+  "a missing status waits",
+  r.decideFacebookPublishReadiness(null) === "WORKING",
+);
+check(
+  "upload alone — processing not started — waits",
+  r.decideFacebookPublishReadiness({
+    uploading_phase: { status: "complete" },
+  }) === "WORKING",
+);
+
+/* -------------------------------------------- settlement evidence record */
+console.log("\nSettlement evidence — the four states never vouch for each other");
+{
+  const settled = r.buildReelSettlementResult({
+    status: {
+      video_status: "ready",
+      uploading_phase: { status: "complete", bytes_transferred: 25415189 },
+      processing_phase: { status: "complete" },
+      publishing_phase: { status: "complete" },
+    },
+    expectedByteSize: 25415189,
+  });
+  check(
+    "matching byte counts verify transport",
+    settled.transportBytesVerified === true &&
+      settled.transportBytesTransferred === 25415189,
+  );
+  check("processing completion is recorded", settled.providerProcessingComplete === true);
+  check(
+    "public playback starts UNVERIFIED — no other state implies it",
+    settled.publicPlaybackVerified === false,
+  );
+  check(
+    "the record is flat (migration 186's 2KB ledger contract)",
+    Object.values(settled).every(
+      (v) => v === null || ["string", "number", "boolean"].includes(typeof v),
+    ),
+  );
+  const mismatch = r.buildReelSettlementResult({
+    status: {
+      uploading_phase: { status: "complete", bytes_transferred: 100 },
+      processing_phase: { status: "complete" },
+    },
+    expectedByteSize: 25415189,
+  });
+  check("a byte mismatch records transport as NOT verified", mismatch.transportBytesVerified === false);
+  const unknown = r.buildReelSettlementResult({ status: null, expectedByteSize: null });
+  check(
+    "absent evidence is null, never a claimed pass",
+    unknown.transportBytesVerified === null && unknown.providerProcessingComplete === false,
+  );
+}
 
 /* --------------------------------------------------------- upload host */
 console.log("\nUpload host pinning — the token goes nowhere else");

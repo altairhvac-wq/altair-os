@@ -292,13 +292,23 @@ export function decideInstagramContainerPhase(
  * publishing_phase: { status }, video_status }`, each phase status one of
  * `not_started | in_progress | complete | error`.
  *
- * Only the UPLOAD phase gates `finish`. Processing continues after publish on
- * Meta's side and waiting for it here would burn the budget on something that
- * does not block us.
+ * ==================== THE 2026-09-06 INCIDENT, IN ONE COMMENT ====================
+ * This module used to say "only the UPLOAD phase gates finish. Processing
+ * continues after publish on Meta's side and waiting for it here would burn
+ * the budget on something that does not block us." That assumption published
+ * the golden Reel at 23:26:26 while Meta was still transcoding (the rendition
+ * store's updated_time lands ~55s later), so for that window the Reel existed
+ * publicly with no working public rendition — thumbnail fine, owner playback
+ * fine, public viewers grey. Processing does not block the FINISH CALL; it
+ * blocks a WATCHABLE REEL, which is the thing being published.
  */
 export type FacebookVideoStatus = {
   readonly video_status?: string | null;
-  readonly uploading_phase?: { readonly status?: string | null } | null;
+  readonly uploading_phase?: {
+    readonly status?: string | null;
+    /** Meta's count of bytes it fetched — the transport-integrity witness. */
+    readonly bytes_transferred?: number | null;
+  } | null;
   readonly processing_phase?: { readonly status?: string | null } | null;
   readonly publishing_phase?: { readonly status?: string | null } | null;
 };
@@ -317,6 +327,38 @@ export function decideFacebookUploadPhase(
   if (!uploading && (overall === "ready" || overall === "upload_complete")) {
     return "READY";
   }
+  return "WORKING";
+}
+
+/**
+ * Publish readiness: upload complete AND processing complete.
+ *
+ * `finish` with `video_state=PUBLISHED` is the point of no return; after it
+ * the Reel is public with whatever renditions exist. Requiring
+ * `processing_phase: complete` first means nothing goes public until Meta has
+ * a watchable transcode — closing the grey-window defect above. A processing
+ * ERROR is terminal (FAILED, retryable: nothing was published). A status
+ * where processing never reaches complete inside the poll budget fails
+ * CLOSED, as a clean retryable refusal — a slow transcode surfaces as "try
+ * again", never as a public Reel nobody can watch.
+ *
+ * `video_status: ready` alone also satisfies readiness: it is Meta's own
+ * top-level "this video is watchable", and some responses carry only it.
+ */
+export function decideFacebookPublishReadiness(
+  status: FacebookVideoStatus | null | undefined,
+): ReelPhaseDecision {
+  if (!status) return "WORKING";
+
+  const uploading = (status.uploading_phase?.status ?? "").trim().toLowerCase();
+  const processing = (status.processing_phase?.status ?? "").trim().toLowerCase();
+  const overall = (status.video_status ?? "").trim().toLowerCase();
+
+  if (uploading === "error" || processing === "error" || overall === "error") {
+    return "FAILED";
+  }
+  if (overall === "ready") return "READY";
+  if (uploading === "complete" && processing === "complete") return "READY";
   return "WORKING";
 }
 
@@ -570,4 +612,62 @@ export function markReelVersions(
     });
   }
   return marks;
+}
+
+/* ---------------------------------------------- delivery settlement evidence */
+
+/**
+ * The flat provider-result record a Reel settle writes (migration 186's
+ * 2 KB ledger — flat keys by contract, never a response-body dump).
+ *
+ * ==================== THE FOUR SETTLEMENT STATES ====================
+ * The 2026-09-06 incident's core finding: `posted` was standing in for four
+ * distinct facts, and no layer was allowed to vouch for another —
+ *
+ *   MASTER_VISUALLY_VALID        the renderer's frame-integrity scan of the
+ *                                master's own pixels (recorded in the render
+ *                                report, not here — it exists before any
+ *                                delivery does).
+ *   TRANSPORT_BYTES_VERIFIED     Meta's own bytes_transferred equals the
+ *                                media asset's byte size — the bytes that
+ *                                arrived are the bytes that were approved.
+ *   PROVIDER_PROCESSING_COMPLETE Meta's processing_phase reached complete
+ *                                (or video_status: ready) — a watchable
+ *                                rendition exists.
+ *   PUBLIC_PLAYBACK_VERIFIED     a human confirmed playback from a
+ *                                NON-admin surface. Never inferred: owner
+ *                                playback, thumbnails and API acceptance all
+ *                                lied during this incident's window.
+ *
+ * A delivery may read `posted` with `publicPlaybackVerified: false`
+ * indefinitely — that is the honest state "Meta accepted it and nobody has
+ * proven a stranger can watch it yet."
+ */
+export function buildReelSettlementResult(input: {
+  readonly status: FacebookVideoStatus | null;
+  readonly expectedByteSize: number | null;
+}): Readonly<Record<string, string | number | boolean | null>> {
+  const uploading = input.status?.uploading_phase ?? null;
+  const bytes = typeof uploading?.bytes_transferred === "number"
+    ? uploading.bytes_transferred
+    : null;
+  const processing = (input.status?.processing_phase?.status ?? null) as string | null;
+  const overall = (input.status?.video_status ?? null) as string | null;
+  const processingComplete =
+    (processing ?? "").toLowerCase() === "complete" ||
+    (overall ?? "").toLowerCase() === "ready";
+  return {
+    fbUploadingPhase: (uploading?.status ?? null) as string | null,
+    fbProcessingPhase: processing,
+    fbPublishingPhase: (input.status?.publishing_phase?.status ?? null) as string | null,
+    fbVideoStatus: overall,
+    transportBytesTransferred: bytes,
+    transportBytesExpected: input.expectedByteSize,
+    transportBytesVerified:
+      bytes !== null && input.expectedByteSize !== null
+        ? bytes === input.expectedByteSize
+        : null,
+    providerProcessingComplete: processingComplete,
+    publicPlaybackVerified: false,
+  };
 }
