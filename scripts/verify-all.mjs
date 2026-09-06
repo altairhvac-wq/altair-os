@@ -108,6 +108,13 @@ steps.push(
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
   { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
+  {
+    name: "publish-payload-limits",
+    script: "scripts/verify-publish-payload-limits.mjs",
+    // Imports the shipped body builder and summary bounder, so it needs
+    // the alias loader — it tests the REAL functions, not a copy.
+    typescript: true,
+  },
 );
 
 /**

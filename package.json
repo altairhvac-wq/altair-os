@@ -60,7 +60,8 @@
     "mutate:queue-integrity": "node scripts/mutate-agent-queue-integrity.mjs",
     "verify:heartbeat": "node scripts/verify-agent-heartbeat.mjs",
     "verify:measured-render-qa": "node scripts/verify-measured-render-qa.mjs",
-    "verify:platform-copy": "node scripts/verify-platform-specific-copy.mjs"
+    "verify:platform-copy": "node scripts/verify-platform-specific-copy.mjs",
+    "verify:payload-limits": "node --experimental-strip-types --import ./scripts/lib/ts-alias-loader-register.mjs scripts/verify-publish-payload-limits.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",
