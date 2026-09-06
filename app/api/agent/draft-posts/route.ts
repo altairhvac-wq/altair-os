@@ -51,8 +51,19 @@ export const runtime = "nodejs";
 const ROUTE_NAME = "agent-draft-posts";
 const MAX_BODY_BYTES = 32_000;
 
-/** Only the two channels the daily reel targets. Not the full channel enum. */
-const ALLOWED_CHANNELS = ["facebook", "instagram"] as const;
+/**
+ * The channels the daily reel pipeline may target. Not the full channel
+ * enum: `website` is first-party with its own path, and a channel appears
+ * here only once its whole publish lane exists — connect flow, adapter,
+ * founder control, private/approval gates. YouTube joined once all of that
+ * shipped (PR #5/#6): drafts land in Today beside the Meta pair, and the
+ * only publish action they can reach uploads PRIVATE after a founder click.
+ *
+ * The agent platform mirrors this list in `draft-post-transport.ts`
+ * (DRAFT_POST_CHANNELS); the two literals are kept in step by hand across
+ * the repo boundary, so widen BOTH or the new channel is simply never sent.
+ */
+const ALLOWED_CHANNELS = ["facebook", "instagram", "youtube"] as const;
 type AllowedChannel = (typeof ALLOWED_CHANNELS)[number];
 
 const MAX_TITLE_CHARS = 200;
@@ -119,7 +130,17 @@ function candidateUuid(value: unknown): string | null {
 }
 
 function channelLabel(channel: AllowedChannel): string {
-  return channel === "facebook" ? "Facebook Reel" : "Instagram Reel";
+  // Exhaustive over the allowlist — a switch, not a ternary, so adding a
+  // channel above without naming it here is a compile error rather than a
+  // draft silently titled after the wrong platform.
+  switch (channel) {
+    case "facebook":
+      return "Facebook Reel";
+    case "instagram":
+      return "Instagram Reel";
+    case "youtube":
+      return "YouTube Short";
+  }
 }
 
 /**
