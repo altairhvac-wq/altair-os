@@ -147,6 +147,16 @@ export async function completeYouTubeConnect(
 
   let saved = 0;
   for (const channel of channels) {
+    // One object, reused by the correction below — so the correction can
+    // only ever FLIP the refresh-token claim, never drop a sibling key a
+    // future change adds here.
+    const connectionMetadata = {
+      // Recorded so a later reader can tell a refreshable connection from
+      // one that will simply die — Google issues a refresh token only on
+      // the first consent unless prompt=consent forces a new one.
+      hasRefreshToken: tokens.refreshToken != null,
+    };
+
     const account = await upsertMarketingConnectedResource({
       companyId: input.companyId,
       connectedBy: input.connectedBy,
@@ -161,12 +171,7 @@ export async function completeYouTubeConnect(
       publishCapability: capability,
       capabilityDetail: detail,
       tokenExpiresAt,
-      metadata: {
-        // Recorded so a later reader can tell a refreshable connection from
-        // one that will simply die — Google issues a refresh token only on
-        // the first consent unless prompt=consent forces a new one.
-        hasRefreshToken: tokens.refreshToken != null,
-      },
+      metadata: connectionMetadata,
     });
 
     if (account.error || !account.account) {
@@ -215,7 +220,9 @@ export async function completeYouTubeConnect(
       if (presence.present) {
         const corrected = await setConnectionMetadata({
           connectedAccountId: account.account.id,
-          metadata: { hasRefreshToken: true },
+          // Spread over what this connect just wrote, so a future second
+          // metadata key cannot be silently deleted by this correction.
+          metadata: { ...connectionMetadata, hasRefreshToken: true },
         });
         if (corrected.error) {
           console.error("[completeYouTubeConnect] metadata correction failed:", {

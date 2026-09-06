@@ -1,6 +1,10 @@
 import "server-only";
 
-import { listRefreshableConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts-admin";
+import {
+  listRefreshableConnectedAccounts,
+  setConnectionMetadata,
+} from "@/lib/database/queries/marketing-connected-accounts-admin";
+import { readSecretRefreshTokenPresence } from "@/lib/database/queries/marketing-connected-account-secrets";
 import { hasStoredRefreshToken } from "@/shared/types/marketing-channel-connection";
 import type { CredentialFailure } from "./credentials";
 import { getUsableAccessToken } from "./credential-lifecycle";
@@ -58,9 +62,22 @@ export const CREDENTIAL_MAINTENANCE_OUTCOMES = [
   "reauth_required",
   "misconfigured",
   "transient",
+  /**
+   * The time budget ran out before this connection was reached. Not a
+   * failure of the connection — a fact about the run, reported instead of
+   * hidden, exactly as `workflow-reminders` reports `stoppedForTime`. The
+   * host route shares Vercel's 60-second Hobby ceiling with the insights
+   * collection that runs after this pass, so the pass takes a bounded slice
+   * and defers the tail to tomorrow (and to the next publish, which
+   * refreshes on its own).
+   */
+  "deferred",
 ] as const;
 export type CredentialMaintenanceOutcome =
   (typeof CREDENTIAL_MAINTENANCE_OUTCOMES)[number];
+
+/** Default slice of the cron's 60-second ceiling this pass may consume. */
+export const CREDENTIAL_MAINTENANCE_BUDGET_MS = 15_000;
 
 export type CredentialMaintenanceAttempt = {
   readonly connectedAccountId: string;
@@ -107,7 +124,11 @@ function outcomeForFailure(reason: CredentialFailure): {
  */
 export async function maintainIntegrationCredentials(input: {
   readonly nowIso: string;
+  /** Milliseconds this pass may spend. Defaults to the 15s budget above. */
+  readonly budgetMs?: number;
 }): Promise<CredentialMaintenanceSummary> {
+  const deadline =
+    Date.now() + (input.budgetMs ?? CREDENTIAL_MAINTENANCE_BUDGET_MS);
   const accounts = await listRefreshableConnectedAccounts();
 
   const tally: Record<CredentialMaintenanceOutcome, number> = {
@@ -117,6 +138,7 @@ export async function maintainIntegrationCredentials(input: {
     reauth_required: 0,
     misconfigured: 0,
     transient: 0,
+    deferred: 0,
   };
   const attempts: CredentialMaintenanceAttempt[] = [];
 
@@ -125,7 +147,46 @@ export async function maintainIntegrationCredentials(input: {
     let reason: CredentialFailure | null = null;
     let detail: string | null = null;
 
-    if (!hasStoredRefreshToken(account.metadata)) {
+    if (Date.now() >= deadline) {
+      // Out of budget. Recorded per-account so the summary still covers
+      // every row and "the run was cut short" is visible, not inferred.
+      tally.deferred += 1;
+      attempts.push({
+        connectedAccountId: account.id,
+        companyId: account.companyId,
+        provider: account.provider,
+        outcome: "deferred",
+        reason: null,
+        detail: null,
+      });
+      continue;
+    }
+
+    let refreshTokenStored = hasStoredRefreshToken(account.metadata);
+
+    if (!refreshTokenStored) {
+      // The metadata claim is conservative, and its one corrective write at
+      // connect time is best-effort — so this pass re-derives it daily from
+      // the presence fact itself (a service-role SELECT of presence, never
+      // content). A row whose secret holds a refresh token the metadata
+      // denies gets its claim healed here, instead of showing "Reconnect
+      // needed" at every expiry until a human obliges.
+      const presence = await readSecretRefreshTokenPresence(account.id);
+      if (presence.present) {
+        refreshTokenStored = true;
+        const corrected = await setConnectionMetadata({
+          connectedAccountId: account.id,
+          metadata: { ...account.metadata, hasRefreshToken: true },
+        });
+        if (corrected.error) {
+          console.error("[credential-maintenance] metadata heal failed:", {
+            connectedAccountId: account.id,
+          });
+        }
+      }
+    }
+
+    if (!refreshTokenStored) {
       // Without a refresh token the seam would refuse before contacting
       // Google, and the display already derives REAUTH_REQUIRED at expiry.
       // Recording the fact daily keeps it visible without generating a

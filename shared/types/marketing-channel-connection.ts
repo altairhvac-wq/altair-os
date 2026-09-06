@@ -139,6 +139,45 @@ export function hasStoredRefreshToken(
   return metadata?.hasRefreshToken === true;
 }
 
+/**
+ * The one projection from a connected-account domain object to the facts the
+ * state machine reads.
+ *
+ * Three surfaces used to build this eight-field object by hand — the
+ * Integrations page, the Command operating state, and the YouTube publish
+ * action — each with its own comment insisting they must not disagree. A
+ * comment is not an enforcement: the `hasRefreshToken: false` hardcode that
+ * caused the daily-reconnect incident lived in exactly two of those hand
+ * copies. Now the mapping exists once, beside the machine that consumes it.
+ *
+ * Structural parameter on purpose: this module stays pure and imports no
+ * domain type, and anything shaped like a connected account (the domain
+ * mapper's output) satisfies it.
+ */
+export function toMarketingChannelAccountFacts(account: {
+  readonly status: MarketingChannelAccountFacts["status"];
+  readonly publishCapability?: MarketingPublishCapability | null;
+  readonly tokenExpiresAt?: string | null;
+  readonly metadata?: Readonly<Record<string, unknown>> | null;
+  readonly lastError?: string | null;
+  readonly capabilityDetail?: string | null;
+  readonly providerAccountName?: string | null;
+  readonly providerResourceName?: string | null;
+}): MarketingChannelAccountFacts {
+  return {
+    status: account.status,
+    // 'none' is the honest reading of "never established", exactly as the
+    // domain mapper defaults it.
+    publishCapability: account.publishCapability ?? "none",
+    tokenExpiresAt: account.tokenExpiresAt ?? null,
+    hasRefreshToken: hasStoredRefreshToken(account.metadata),
+    lastError: account.lastError ?? null,
+    capabilityDetail: account.capabilityDetail ?? null,
+    accountName: account.providerAccountName ?? null,
+    resourceName: account.providerResourceName ?? null,
+  };
+}
+
 export type DeriveMarketingChannelStateInput = {
   /** Client id/secret present on this deployment for this provider. */
   readonly configured: boolean;
@@ -286,10 +325,15 @@ export function describeMarketingChannelState(
     case "TOKEN_EXPIRED":
       return "Access expired. It refreshes itself before the next scheduled run or publish — nothing to do.";
     case "REAUTH_REQUIRED":
-      return (
-        account?.lastError ??
-        `Access cannot be refreshed. Reconnect ${descriptor.label}.`
-      );
+      // The recorded reason is shown ONLY on the proven branch, where the
+      // credential seam wrote `last_error` and `status='expired'` in the
+      // same stroke and the two therefore describe the same event. The
+      // derived branch (no refresh token, time expiry) may carry an older
+      // unrelated `last_error` on a still-connected row; quoting it here
+      // would caption this state with somebody else's incident.
+      return account?.status === "expired" && account.lastError
+        ? account.lastError
+        : `Access cannot be refreshed. Reconnect ${descriptor.label}.`;
     case "API_ACCESS_REQUIRED":
       return (
         account?.capabilityDetail ??

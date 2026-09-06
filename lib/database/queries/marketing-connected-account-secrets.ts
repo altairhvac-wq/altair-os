@@ -78,6 +78,19 @@ export type UpsertMarketingConnectedAccountSecretResult = {
 /**
  * Encrypts and upserts OAuth tokens for a connected account.
  * Accepts plaintext only at this server-only boundary; stores ciphertext only.
+ *
+ * ============ A RULE FOR EVERY REFRESH-TOKEN PROVIDER'S CONNECT FLOW ============
+ * User-scoped surfaces cannot read this table, so they learn "can this
+ * connection heal itself?" from `metadata.hasRefreshToken` on the ACCOUNT
+ * row. Any connect flow for a provider with `requiresRefreshToken: true`
+ * (TikTok, LinkedIn, Reddit, Google Business are declared so in the
+ * capability matrix) must therefore project the stored truth into that
+ * metadata key — including the reconnect edge where the provider omits the
+ * refresh token and this upsert PRESERVES the stored one, making the token
+ * response alone the wrong source. `youtube/complete-connect.ts` is the
+ * worked example (`readSecretRefreshTokenPresence` + metadata correction).
+ * Omitting this reproduces the YouTube incident: every ordinary expiry
+ * renders as "Reconnect needed" for a connection that could have healed.
  */
 export async function upsertMarketingConnectedAccountSecret(
   input: UpsertMarketingConnectedAccountSecretInput,
@@ -111,8 +124,11 @@ export async function upsertMarketingConnectedAccountSecret(
     return { error: "Failed to encrypt integration secret." };
   }
 
-  const payload: Record<string, unknown> = {
-    connected_account_id: connectedAccountId,
+  // Built WITHOUT the key column: an UPDATE pins the row with `.eq()`, and
+  // keeping the id out of the shared payload means a future field added here
+  // cannot accidentally ride into the wrong statement. The upsert branch
+  // adds the id explicitly.
+  const columns: Record<string, unknown> = {
     access_token_encrypted: accessTokenEncrypted,
     encryption_key_version: input.encryptionKeyVersion ?? 1,
     token_hash: hashTokenForLookup(accessTokenPlaintext),
@@ -122,7 +138,7 @@ export async function upsertMarketingConnectedAccountSecret(
   // stored value on a conflict-update and stays null on a fresh insert —
   // exactly the "keep what you already hold" semantics `undefined` means.
   if (input.refreshTokenPlaintext !== undefined) {
-    payload.refresh_token_encrypted = refreshTokenEncrypted;
+    columns.refresh_token_encrypted = refreshTokenEncrypted;
   }
 
   const supabase = createServiceRoleClient();
@@ -131,12 +147,10 @@ export async function upsertMarketingConnectedAccountSecret(
     // The CAS path. `updated_at` moves on every write (trigger, migration
     // 090), so matching the value read earlier is matching "nobody wrote
     // since I looked".
-    const { connected_account_id: _omit, ...updatePayload } = payload;
-    void _omit;
     const { data, error } = await marketingConnectedAccountSecretsTable(
       supabase,
     )
-      .update(updatePayload)
+      .update(columns)
       .eq("connected_account_id", connectedAccountId)
       .eq("updated_at", input.expectedUpdatedAt)
       .select("connected_account_id")
@@ -162,7 +176,7 @@ export async function upsertMarketingConnectedAccountSecret(
   }
 
   const { error } = await marketingConnectedAccountSecretsTable(supabase).upsert(
-    payload,
+    { connected_account_id: connectedAccountId, ...columns },
     { onConflict: "connected_account_id" },
   );
 

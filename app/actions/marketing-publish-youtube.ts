@@ -15,12 +15,13 @@ import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { isYouTubeOAuthConfigured } from "@/lib/integrations/youtube/env";
 import { createMediaReadGrant } from "@/lib/media/marketing-media-storage";
 import { dispatchPublish } from "@/lib/publishing/dispatch";
+import {
+  decideMediaRead,
+  describeMediaReadDecision,
+} from "@/shared/types/marketing-media";
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
 import { capabilityFor } from "@/shared/types/integration-capability";
-import {
-  hasStoredRefreshToken,
-  type MarketingChannelAccountFacts,
-} from "@/shared/types/marketing-channel-connection";
+import { toMarketingChannelAccountFacts } from "@/shared/types/marketing-channel-connection";
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 
 /**
@@ -136,16 +137,21 @@ export async function publishMarketingPostToYouTubeAction(
   }
 
   const asset = await getMediaAssetById(companyId, videoAssetId);
-  if (!asset) {
-    return { error: "The attached video could not be found." };
+
+  // The same pure decision every other media reader runs — company scoping,
+  // stored state, and the object-key re-derivation defense — rather than a
+  // hand-rolled subset that would drift from it.
+  const mediaDecision = decideMediaRead(asset, companyId);
+  if (mediaDecision !== "GRANT") {
+    return { error: describeMediaReadDecision(mediaDecision) };
   }
-  if (asset.uploadState !== "stored") {
-    return { error: "The attached video has not finished uploading to storage." };
-  }
-  if (!asset.contentType.startsWith("video/")) {
+  // Non-null after READABLE; the decision refuses a missing asset.
+  const media = asset as NonNullable<typeof asset>;
+
+  if (!media.contentType.startsWith("video/")) {
     return { error: "The attached media is not a video." };
   }
-  if (!asset.byteSize || asset.byteSize <= 0) {
+  if (!media.byteSize || media.byteSize <= 0) {
     // YouTube's resumable upload needs a declared length; a guessed one
     // produces a corrupt video rather than an error.
     return { error: "The attached video has no recorded size, so it cannot be uploaded." };
@@ -201,9 +207,9 @@ export async function publishMarketingPostToYouTubeAction(
   // no live signed URL behind.
   const grant = await createMediaReadGrant({
     companyId,
-    objectKey: asset.objectKey,
-    contentType: asset.contentType,
-    byteSize: asset.byteSize,
+    objectKey: media.objectKey,
+    contentType: media.contentType,
+    byteSize: media.byteSize,
     nowMs: Date.now(),
   });
   if (grant.error || !grant.grant) {
@@ -211,16 +217,10 @@ export async function publishMarketingPostToYouTubeAction(
   }
 
   // ------------------------------------------------------- the dispatch
-  const facts: MarketingChannelAccountFacts = {
-    status: account.status,
-    publishCapability: account.publishCapability,
-    tokenExpiresAt: account.tokenExpiresAt ?? null,
-    hasRefreshToken: hasStoredRefreshToken(account.metadata),
-    lastError: account.lastError ?? null,
-    capabilityDetail: account.capabilityDetail ?? null,
-    accountName: account.providerAccountName ?? null,
-    resourceName: account.providerResourceName ?? null,
-  };
+  // The shared projection the Integrations page and the Command surface use
+  // — one mapping, so a publish can never judge health on different facts
+  // than the page that told the operator it was healthy.
+  const facts = toMarketingChannelAccountFacts(account);
 
   const result = await dispatchPublish({
     account: {

@@ -45,6 +45,10 @@ const REWRITES = [
     '"./admin-stub.mjs"',
   ],
   [
+    '"@/lib/database/queries/marketing-connected-account-secrets"',
+    '"./secrets-stub.mjs"',
+  ],
+  [
     '"@/shared/types/marketing-channel-connection"',
     '"./channel-connection.mjs"',
   ],
@@ -77,8 +81,28 @@ writeFileSync(
   join(dir, "admin-stub.mjs"),
   `
 export let accounts = [];
-export function __setAccounts(next) { accounts = next; }
+export const metadataWrites = [];
+export function __setAccounts(next) { accounts = next; metadataWrites.length = 0; }
 export async function listRefreshableConnectedAccounts() { return accounts; }
+export async function setConnectionMetadata(input) { metadataWrites.push(input); return {}; }
+`,
+);
+
+/**
+ * The secrets stub — presence only, per account id, mirroring the real
+ * helper's shape. The maintenance pass asks it only for accounts whose
+ * metadata DENIES a refresh token, so scripting is keyed rather than queued.
+ */
+writeFileSync(
+  join(dir, "secrets-stub.mjs"),
+  `
+export const presenceCalls = [];
+export let presenceById = {};
+export function __setPresence(next) { presenceById = next; presenceCalls.length = 0; }
+export async function readSecretRefreshTokenPresence(id) {
+  presenceCalls.push(id);
+  return { present: presenceById[id] === true };
+}
 `,
 );
 
@@ -109,6 +133,7 @@ emit("shared/types/marketing-channel-connection.ts", "channel-connection.mjs");
 emit("lib/integrations/credential-maintenance.ts", "maintenance.mjs");
 
 const adminStub = await import(pathToFileURL(join(dir, "admin-stub.mjs")).href);
+const secretsStub = await import(pathToFileURL(join(dir, "secrets-stub.mjs")).href);
 const lifecycle = await import(pathToFileURL(join(dir, "lifecycle-stub.mjs")).href);
 const maintenance = await import(pathToFileURL(join(dir, "maintenance.mjs")).href);
 
@@ -138,6 +163,7 @@ console.log("\nSelection: what the pass touches and what it must not");
     account("acct-no-rt", { metadata: {} }),
     account("acct-rt-false", { metadata: { hasRefreshToken: false } }),
   ]);
+  secretsStub.__setPresence({}); // neither denied account actually holds one
   lifecycle.__load([okRefreshed()]);
 
   const summary = await maintenance.maintainIntegrationCredentials({ nowIso: NOW });
@@ -160,6 +186,64 @@ console.log("\nSelection: what the pass touches and what it must not");
   check(
     "the summary covers every account exactly once",
     summary.attempted === 3 && summary.attempts.length === 3,
+  );
+  check(
+    "a denied claim is verified against presence before it is believed",
+    secretsStub.presenceCalls.length === 2 &&
+      secretsStub.presenceCalls.includes("acct-no-rt") &&
+      secretsStub.presenceCalls.includes("acct-rt-false"),
+    secretsStub.presenceCalls,
+  );
+  check(
+    "an accurate denial writes no metadata",
+    adminStub.metadataWrites.length === 0,
+    adminStub.metadataWrites,
+  );
+}
+
+console.log("\nThe metadata heal: a wrong denial is corrected from presence");
+
+{
+  adminStub.__setAccounts([
+    account("acct-lied", { metadata: { hasRefreshToken: false, other: "kept" } }),
+  ]);
+  secretsStub.__setPresence({ "acct-lied": true });
+  lifecycle.__load([okRefreshed()]);
+
+  const summary = await maintenance.maintainIntegrationCredentials({ nowIso: NOW });
+
+  check(
+    "a secret that exists overrules metadata that denies it — the seam is called",
+    lifecycle.calls.length === 1 && summary.counts.refreshed === 1,
+    summary.counts,
+  );
+  check(
+    "and the claim is healed in place, preserving the rest of the metadata",
+    adminStub.metadataWrites.length === 1 &&
+      adminStub.metadataWrites[0]?.metadata?.hasRefreshToken === true &&
+      adminStub.metadataWrites[0]?.metadata?.other === "kept",
+    adminStub.metadataWrites,
+  );
+}
+
+console.log("\nThe time budget: the pass defers, never overruns");
+
+{
+  adminStub.__setAccounts([account("a-1"), account("a-2"), account("a-3")]);
+  secretsStub.__setPresence({});
+  lifecycle.__load([]);
+
+  const summary = await maintenance.maintainIntegrationCredentials({
+    nowIso: NOW,
+    budgetMs: 0, // already out of time before the first account
+  });
+
+  check(
+    "an exhausted budget defers every remaining account without a provider call",
+    summary.counts.deferred === 3 &&
+      lifecycle.calls.length === 0 &&
+      summary.attempts.every((a) => a.outcome === "deferred"),
+    summary.counts,
   );
 }
 

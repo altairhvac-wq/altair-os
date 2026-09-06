@@ -575,6 +575,13 @@ export async function recordRefreshedTokenExpiry(input: {
     .update({
       token_expires_at: input.tokenExpiresAt,
       last_success_at: input.nowIso,
+      // A successful refresh FALSIFIES a terminal verdict: the provider just
+      // honored the stored grant, so a row sitting at `expired` (proven
+      // rejection) or `error` (decrypt fault, since repaired) returns to
+      // `connected` here rather than staying pinned at a state the evidence
+      // now contradicts — the row would otherwise be unrecoverable short of
+      // a manual reconnect, because this very guard used to skip it.
+      status: "connected",
       // A refresh that worked clears the last failure note. Leaving it would
       // keep a resolved problem on screen next to a healthy connection.
       last_error: null,
@@ -582,8 +589,8 @@ export async function recordRefreshedTokenExpiry(input: {
     .eq("id", connectedAccountId)
     // Never resurrect a connection a human disconnected while a refresh was
     // in flight: that would silently re-arm a destination someone switched
-    // off. The row is matched on being connected, so a disconnect wins.
-    .eq("status", "connected")
+    // off. Only live-ish rows are matched, so a disconnect wins.
+    .in("status", ["connected", "expired", "error"])
     .select("id")
     .maybeSingle();
 
@@ -654,6 +661,58 @@ export async function markConnectionReauthRequired(input: {
     return {
       error:
         mapDatabaseError(error) ?? "Failed to record the reauth requirement.",
+    };
+  }
+
+  return {};
+}
+
+/**
+ * Record that this connection's stored credential cannot be USED on this
+ * deployment — ciphertext present but undecryptable (a key rotation gone
+ * wrong is the usual cause).
+ *
+ * Distinct from `markConnectionReauthRequired` on purpose: the provider was
+ * never asked and proved nothing, so `expired` (proven terminal grant) would
+ * be a lie. `error` renders as ERROR — danger tone, the recorded reason,
+ * and a reconnect action, which genuinely repairs this class of fault by
+ * re-encrypting fresh tokens under the current key. Without this mark the
+ * row keeps claiming TOKEN_EXPIRED ("it refreshes itself") while every
+ * publish quietly fails at decrypt.
+ *
+ * Same one-way guard as the reauth mark: only a `connected` row transitions,
+ * and a successful refresh (`recordRefreshedTokenExpiry`) heals it back.
+ */
+export async function markConnectionError(input: {
+  connectedAccountId: string;
+  detail: string;
+  nowIso: string;
+}): Promise<{ error?: string }> {
+  const connectedAccountId = input.connectedAccountId.trim();
+  if (!connectedAccountId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await marketingConnectedAccountsTable(supabase)
+    .update({
+      status: "error",
+      last_error: input.detail,
+      last_attempt_at: input.nowIso,
+    })
+    .eq("id", connectedAccountId)
+    .eq("status", "connected")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[markConnectionError] update failed:", {
+      connectedAccountId,
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      error: mapDatabaseError(error) ?? "Failed to record the connection error.",
     };
   }
 

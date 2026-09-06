@@ -108,18 +108,26 @@ export type IntegrationRow = {
 
 /**
  * Deterministic on server and client alike — a fixed locale and UTC, so the
- * same row cannot hydrate into different text than it rendered.
+ * same row cannot hydrate into different text than it rendered. (The shared
+ * `formatDateInTimeZone` helper is deliberately NOT used here: its default
+ * argument reads mutable module state, and this module's whole design is
+ * that identical inputs always render identical rows.)
  */
 const HEALTH_DATE = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   timeZone: "UTC",
 });
-
-function formatHealthDate(iso: string): string | null {
-  const parsed = Date.parse(iso);
-  return Number.isNaN(parsed) ? null : HEALTH_DATE.format(parsed);
-}
+const HEALTH_DATE_WITH_YEAR = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const HEALTH_YEAR = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 /** States where a connection exists and its durability is worth a line. */
 const HEALTH_LINE_STATES: ReadonlySet<MarketingChannelState> = new Set([
@@ -134,10 +142,15 @@ export function buildConnectionHealthLine(
 ): string | null {
   if (!account?.connectedAt || !HEALTH_LINE_STATES.has(state)) return null;
 
-  const connected = formatHealthDate(account.connectedAt);
-  if (!connected) return null;
+  // "Self-refresh" is a fact about connections that HOLD a refresh token.
+  // A Facebook Page token neither expires nor refreshes, so the line would
+  // read "not yet proven" forever — a permanent caveat about a concern that
+  // does not exist there. No refresh token, no line.
+  if (!account.hasRefreshToken) return null;
 
   const connectedMs = Date.parse(account.connectedAt);
+  if (Number.isNaN(connectedMs)) return null;
+
   const successMs = account.lastSuccessAt
     ? Date.parse(account.lastSuccessAt)
     : Number.NaN;
@@ -145,11 +158,17 @@ export function buildConnectionHealthLine(
   // Proven means a credential SUCCESS after this consent — a refresh or a
   // publish that used the stored credential — not the consent itself.
   const proven = !Number.isNaN(successMs) && successMs > connectedMs;
-  const provenDate = proven ? formatHealthDate(account.lastSuccessAt as string) : null;
 
-  return proven && provenDate
-    ? `Connected since ${connected} · self-refresh proven ${provenDate}`
-    : `Connected since ${connected} · self-refresh not yet proven`;
+  // Compact month-day within one year; both dates carry the year whenever
+  // they differ, so "proven Jan 10" can never read as earlier than
+  // "since Mar 15" across a year boundary.
+  const spansYears =
+    proven && HEALTH_YEAR.format(connectedMs) !== HEALTH_YEAR.format(successMs);
+  const fmt = spansYears ? HEALTH_DATE_WITH_YEAR : HEALTH_DATE;
+
+  return proven
+    ? `Connected since ${fmt.format(connectedMs)} · self-refresh proven ${fmt.format(successMs)}`
+    : `Connected since ${fmt.format(connectedMs)} · self-refresh not yet proven`;
 }
 
 /**

@@ -6,7 +6,7 @@ import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing
 import { capabilityFor } from "@/shared/types/integration-capability";
 import {
   deriveMarketingChannelState,
-  hasStoredRefreshToken,
+  toMarketingChannelAccountFacts,
 } from "@/shared/types/marketing-channel-connection";
 import { isIntegrationProvider } from "@/shared/types/integration-provider";
 import type { MarketingOperatingState } from "@/shared/types/marketing-command";
@@ -98,9 +98,10 @@ export async function getMarketingOperatingState(input: {
     };
   });
 
-  // Connection health is DERIVED by the existing state machine, never
-  // re-implemented here — the Integrations page and this surface must not be
-  // able to disagree about whether a connection is healthy.
+  // Connection health is DERIVED by the existing state machine through the
+  // one shared facts projection, never re-implemented here — the
+  // Integrations page and this surface cannot disagree about whether an
+  // expired token can heal itself, because they run the same code.
   const connections = accounts
     .filter((account) => isIntegrationProvider(account.provider))
     .map((account) => ({
@@ -108,19 +109,7 @@ export async function getMarketingOperatingState(input: {
       label: capabilityFor(account.provider).label,
       channelState: deriveMarketingChannelState({
         configured: true,
-        account: {
-          status: account.status,
-          publishCapability: account.publishCapability ?? "none",
-          tokenExpiresAt: account.tokenExpiresAt ?? null,
-          // From account metadata, exactly as the Integrations page reads
-          // it — the two surfaces must not disagree about whether an
-          // expired token can heal itself.
-          hasRefreshToken: hasStoredRefreshToken(account.metadata),
-          lastError: account.lastError ?? null,
-          capabilityDetail: account.capabilityDetail ?? null,
-          accountName: account.providerAccountName ?? null,
-          resourceName: account.providerResourceName ?? null,
-        },
+        account: toMarketingChannelAccountFacts(account),
         nowIso: input.nowIso,
       }),
     }));

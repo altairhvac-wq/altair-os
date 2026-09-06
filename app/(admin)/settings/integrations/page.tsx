@@ -4,7 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import { getConfiguredIntegrationProviders } from "@/lib/integrations/configuration";
 import { IntegrationsSettingsView } from "@/shared/components/settings/IntegrationsSettingsView";
-import { hasStoredRefreshToken } from "@/shared/types/marketing-channel-connection";
+import { toMarketingChannelAccountFacts } from "@/shared/types/marketing-channel-connection";
 import {
   buildIntegrationRows,
   formatIntegrationConnectFlash,
@@ -56,23 +56,16 @@ export default async function IntegrationsSettingsPage({
     companyContext.company.id,
   );
 
+  // The shared projection — `hasRefreshToken` comes from account METADATA,
+  // the non-secret fact the connect flows maintain, never from the secrets
+  // table this user-scoped read must not touch. The `false` hardcoded here
+  // before sent the owner to reconnect YouTube every morning: one hour after
+  // every consent, an ordinary expiry rendered as REAUTH_REQUIRED while a
+  // perfectly good refresh token sat encrypted in the secrets table.
   const facts: IntegrationAccountFacts[] = accounts.map((account) => ({
+    ...toMarketingChannelAccountFacts(account),
     id: account.id,
     provider: account.provider,
-    status: account.status,
-    publishCapability: account.publishCapability,
-    tokenExpiresAt: account.tokenExpiresAt ?? null,
-    // From account METADATA — the non-secret projection the connect flows
-    // maintain — never from the secrets table, which this user-scoped read
-    // cannot and must not touch. The hardcoded `false` that stood here sent
-    // the owner to reconnect YouTube every morning: one hour after every
-    // consent, an ordinary access-token expiry rendered as REAUTH_REQUIRED
-    // while a perfectly good refresh token sat in the secrets table.
-    hasRefreshToken: hasStoredRefreshToken(account.metadata),
-    lastError: account.lastError ?? null,
-    capabilityDetail: account.capabilityDetail ?? null,
-    accountName: account.providerAccountName ?? null,
-    resourceName: account.providerResourceName ?? null,
     lastSuccessAt: account.lastSuccessAt ?? null,
     connectedAt: account.connectedAt ?? null,
   }));

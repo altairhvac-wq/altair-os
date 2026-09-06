@@ -47,7 +47,10 @@ import "server-only";
  * existing `upsertMarketingConnectedAccountSecret`, which owns the one
  * cipher call and the token hash.
  */
-import { markConnectionReauthRequired } from "@/lib/database/queries/marketing-connected-accounts-admin";
+import {
+  markConnectionError,
+  markConnectionReauthRequired,
+} from "@/lib/database/queries/marketing-connected-accounts-admin";
 import { upsertMarketingConnectedAccountSecret } from "@/lib/database/queries/marketing-connected-account-secrets";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { isTokenExpired } from "@/shared/types/marketing-channel-connection";
@@ -629,13 +632,23 @@ export async function refreshIfNeeded(input: {
       columnKeyVersion: row.encryption_key_version,
       errorName: errorName(error),
     });
-    return {
-      ok: false,
-      reason: "DECRYPT_FAILED",
-      detail: clampDetail(
-        "The stored refresh token could not be decrypted, so the provider was not contacted. Check INTEGRATIONS_ENCRYPTION_KEY, and INTEGRATIONS_ENCRYPTION_KEY_PREVIOUS if a rotation is in progress, then reconnect.",
-      ),
-    };
+    const detail = clampDetail(
+      "The stored refresh token could not be decrypted, so the provider was not contacted. Check INTEGRATIONS_ENCRYPTION_KEY, and INTEGRATIONS_ENCRYPTION_KEY_PREVIOUS if a rotation is in progress, then reconnect.",
+    );
+    // Without this mark the row keeps rendering TOKEN_EXPIRED — "it
+    // refreshes itself, nothing to do" — while every publish quietly dies
+    // at decrypt. ERROR is the honest state: the recorded reason names the
+    // key vars, and reconnecting genuinely repairs it by re-encrypting
+    // under the current key. Best-effort like the other health writes.
+    const marked = await markConnectionError({
+      connectedAccountId: account.connectedAccountId,
+      detail,
+      nowIso,
+    });
+    if (marked.error) {
+      logCredentialEvent("decrypt fault not recorded", account, {});
+    }
+    return { ok: false, reason: "DECRYPT_FAILED", detail };
   }
 
   if (!refreshPlaintext) {
@@ -737,38 +750,92 @@ export async function refreshIfNeeded(input: {
   const nextRefreshPlaintext =
     outcome.refreshTokenPlaintext?.trim() || refreshPlaintext;
 
-  const write = await upsertMarketingConnectedAccountSecret({
+  // ============ THE STALE-WRITER GUARD ============
+  // Land only if nobody wrote since this row was read. Two paths can refresh
+  // the same credential — a publish and the daily maintenance run — and
+  // Google answers both. The danger is not the double refresh (Google keeps
+  // the refresh token valid and both access tokens work); it is a stale
+  // writer overwriting a ROTATION the other writer stored.
+  //
+  // A conflict does NOT immediately mean another refresh SUCCEEDED: the
+  // failure counter and the lifecycle stamps move `updated_at` too. So the
+  // conflict is discriminated on `last_refreshed_at`:
+  //   advanced  → a concurrent refresh landed; its credential is newer than
+  //               ours, so take THEIRS from the table.
+  //   unchanged → the version moved for bookkeeping (a failure count from a
+  //               loser); OUR freshly-minted token is the newest credential
+  //               in existence, so the write retries once against the new
+  //               version. No newer rotation can be clobbered on this
+  //               branch, because none was stored.
+  // Bounded at one retry — a second conflict falls back to the stored
+  // credential rather than looping against a hot row.
+  let casRow = row;
+  let write = await upsertMarketingConnectedAccountSecret({
     connectedAccountId: account.connectedAccountId,
     accessTokenPlaintext: accessToken,
     refreshTokenPlaintext: nextRefreshPlaintext,
     // Never the helper's default of `1`. See `currentSecretKeyVersion`.
     encryptionKeyVersion: keyVersion,
-    // ============ THE STALE-WRITER GUARD ============
-    // Land only if nobody wrote since this row was read. Two paths can
-    // refresh the same credential — a publish and the daily maintenance run
-    // — and Google answers both. The danger is not the double refresh
-    // (Google keeps the refresh token valid and both access tokens work);
-    // it is THIS write overwriting a rotation the other writer stored. A
-    // conflict means the other writer's credential is the newer one, so it
-    // is taken below instead of being clobbered.
-    ...(row.updated_at ? { expectedUpdatedAt: row.updated_at } : {}),
+    ...(casRow.updated_at ? { expectedUpdatedAt: casRow.updated_at } : {}),
   });
 
   if (write.conflict) {
-    logCredentialEvent("concurrent refresh detected; kept the newer credential", account, {});
     const reread = await readSecretRow(account);
     if (!reread.ok) return reread.failure;
-    const stored = decryptStoredAccessToken(account, reread.row);
-    if (!stored.ok) return stored;
-    return {
-      ok: true,
-      accessToken: stored.accessToken,
-      // Not refreshed BY US — the winner's lifecycle wrapper persisted the
-      // new expiry on the account row; null here says "unknown, but usable
-      // now" and keeps this loser's stale clock out of that column.
-      refreshed: false,
-      tokenExpiresAt: null,
-    };
+
+    const successLandedElsewhere =
+      reread.row.last_refreshed_at !== row.last_refreshed_at;
+
+    // The freshest row this function holds, for the give-up branch below.
+    let newestRow = reread.row;
+
+    const retryVersion = reread.row.updated_at;
+    if (!successLandedElsewhere && retryVersion) {
+      casRow = reread.row;
+      write = await upsertMarketingConnectedAccountSecret({
+        connectedAccountId: account.connectedAccountId,
+        accessTokenPlaintext: accessToken,
+        refreshTokenPlaintext: nextRefreshPlaintext,
+        encryptionKeyVersion: keyVersion,
+        expectedUpdatedAt: retryVersion,
+      });
+
+      if (write.conflict) {
+        // A third write landed between the re-read and the retry. Whatever
+        // is stored now is newer than what this function read; fetch it for
+        // the fallback rather than handing back a twice-stale copy.
+        const latest = await readSecretRow(account);
+        if (!latest.ok) return latest.failure;
+        newestRow = latest.row;
+      }
+    }
+
+    if (write.conflict) {
+      // KNOWN LIMIT, acceptable for the providers connected today: when a
+      // concurrent refresh SUCCEEDED, "theirs" is taken on write order, not
+      // issuance order. For Google that is always safe — refresh tokens are
+      // multi-use and not rotated on refresh — but a rotating provider
+      // (TikTok-class) could theoretically have issued OUR discarded
+      // response last. Serializing that fully needs a lease, which stays
+      // unbuilt until a rotating provider actually connects; the capability
+      // matrix's requiresRefreshToken flag marks where to look first.
+      logCredentialEvent(
+        "concurrent refresh detected; kept the newer credential",
+        account,
+        {},
+      );
+      const stored = decryptStoredAccessToken(account, newestRow);
+      if (!stored.ok) return stored;
+      return {
+        ok: true,
+        accessToken: stored.accessToken,
+        // Not refreshed BY US — the winner's lifecycle wrapper persisted the
+        // new expiry on the account row; null here says "unknown, but usable
+        // now" and keeps this loser's stale clock out of that column.
+        refreshed: false,
+        tokenExpiresAt: null,
+      };
+    }
   }
 
   if (write.error) {
