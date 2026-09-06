@@ -4,7 +4,10 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import { getLatestAgentMarketingSnapshot } from "@/lib/database/queries/agent-snapshots";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import { capabilityFor } from "@/shared/types/integration-capability";
-import { deriveMarketingChannelState } from "@/shared/types/marketing-channel-connection";
+import {
+  deriveMarketingChannelState,
+  hasStoredRefreshToken,
+} from "@/shared/types/marketing-channel-connection";
 import { isIntegrationProvider } from "@/shared/types/integration-provider";
 import type { MarketingOperatingState } from "@/shared/types/marketing-command";
 
@@ -109,7 +112,10 @@ export async function getMarketingOperatingState(input: {
           status: account.status,
           publishCapability: account.publishCapability ?? "none",
           tokenExpiresAt: account.tokenExpiresAt ?? null,
-          hasRefreshToken: false,
+          // From account metadata, exactly as the Integrations page reads
+          // it — the two surfaces must not disagree about whether an
+          // expired token can heal itself.
+          hasRefreshToken: hasStoredRefreshToken(account.metadata),
           lastError: account.lastError ?? null,
           capabilityDetail: account.capabilityDetail ?? null,
           accountName: account.providerAccountName ?? null,

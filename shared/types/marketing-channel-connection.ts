@@ -62,9 +62,25 @@ export const MARKETING_CHANNEL_STATES = [
   "NOT_CONNECTED",
   /** Authorize started, callback not yet completed. */
   "CONNECTING",
-  /** Connected; the token is past its expiry and refresh has not run. */
+  /**
+   * Connected; the access token is past its expiry and a stored refresh
+   * token can mint a new one. The ordinary resting state of a Google
+   * connection between uses — access tokens live about an hour — and it
+   * recovers without a human: the daily credential maintenance run and
+   * every publish refresh it. (The mission-contract name for this state is
+   * ACCESS_TOKEN_EXPIRED_REFRESHABLE; transient refresh failures and
+   * in-flight refreshes also render here rather than as a fault.)
+   */
   "TOKEN_EXPIRED",
-  /** Connected, but the provider needs the human to authorize again. */
+  /**
+   * Only a human consenting again can fix this, and that is PROVEN, never
+   * inferred from a clock: either no refresh token is stored at all, or the
+   * row's `status` is `expired` — written by the credential seam alone,
+   * after the provider rejected the refresh terminally (`invalid_grant`:
+   * consent revoked, refresh token expired or invalidated, account gone).
+   * An access token merely past its expiry NEVER renders here while a
+   * refresh token is stored.
+   */
   "REAUTH_REQUIRED",
   /** Connected and healthy, but the provider grants us no publish access. */
   "API_ACCESS_REQUIRED",
@@ -79,6 +95,13 @@ export type MarketingChannelState = (typeof MARKETING_CHANNEL_STATES)[number];
 
 /** The subset of a connected-account row this derivation needs. */
 export type MarketingChannelAccountFacts = {
+  /**
+   * `expired` is a PROVEN terminal fact, not a clock reading: the credential
+   * seam writes it only after the provider rejected a refresh in a way that
+   * no retry can repair (Google's `invalid_grant` — consent revoked, refresh
+   * token expired or invalidated, account gone). Time-based expiry never
+   * writes this status; it is derived from `tokenExpiresAt` at read time.
+   */
   readonly status: "connected" | "expired" | "disconnected" | "error";
   readonly publishCapability: MarketingPublishCapability;
   readonly tokenExpiresAt: string | null;
@@ -88,6 +111,33 @@ export type MarketingChannelAccountFacts = {
   readonly accountName: string | null;
   readonly resourceName: string | null;
 };
+
+/**
+ * Whether a refresh token is stored for this connection, read from the
+ * account row's metadata — the one non-secret projection of the secrets
+ * table a user-scoped read is allowed to see.
+ *
+ * ============ WHY THIS EXISTS ============
+ * The Integrations page and the Command surface hard-coded
+ * `hasRefreshToken: false` because a user-scoped read must not touch
+ * `marketing_connected_account_secrets` — a correct rule with a wrong
+ * consequence: one hour after every connect, an ordinary access-token
+ * expiry rendered as REAUTH_REQUIRED ("reconnect it") instead of
+ * TOKEN_EXPIRED ("it refreshes itself"). The owner reconnected YouTube
+ * daily to fix a connection that was never broken.
+ *
+ * The connect flows record `hasRefreshToken` into account metadata at the
+ * moment the secret is stored, and keep it true to the stored secret when a
+ * provider omits a rotation. Absence of the key reads as false — the
+ * conservative direction: it can only send someone to reconnect a
+ * connection that would have healed, never claim self-healing for one that
+ * cannot.
+ */
+export function hasStoredRefreshToken(
+  metadata: Readonly<Record<string, unknown>> | null | undefined,
+): boolean {
+  return metadata?.hasRefreshToken === true;
+}
 
 export type DeriveMarketingChannelStateInput = {
   /** Client id/secret present on this deployment for this provider. */
@@ -122,16 +172,23 @@ export function deriveMarketingChannelState(
 
   if (account.status === "error") return "ERROR";
 
+  // ============ PROVEN TERMINAL BEATS EVERYTHING TIME COULD SAY ============
+  // `expired` on the row is written by exactly one path — the credential seam,
+  // after the provider rejected the refresh with a terminal error. A stored
+  // refresh token that the provider has already refused is not a reason for
+  // hope, so the hasRefreshToken branch below must not see this case: only a
+  // human consenting again fixes it, which is precisely REAUTH_REQUIRED.
+  if (account.status === "expired") return "REAUTH_REQUIRED";
+
   // Expiry is a fact about time, not a status someone remembered to write —
   // so an account still marked `connected` whose token expired five minutes
   // ago reports expired, without waiting for a background job to notice.
-  const expired =
-    account.status === "expired" || isTokenExpired(account.tokenExpiresAt, input.nowIso);
-
-  if (expired) {
+  if (isTokenExpired(account.tokenExpiresAt, input.nowIso)) {
     // A refresh token means this is recoverable without the human; without
     // one, only a fresh consent will fix it. Different states because they
-    // ask different things of the operator.
+    // ask different things of the operator. This is the ordinary lifecycle
+    // of a Google connection — access tokens live about an hour — and it
+    // must never be presented as a fault.
     return account.hasRefreshToken ? "TOKEN_EXPIRED" : "REAUTH_REQUIRED";
   }
 
@@ -227,9 +284,12 @@ export function describeMarketingChannelState(
     case "CONNECTING":
       return `Waiting for ${descriptor.label} to finish authorizing…`;
     case "TOKEN_EXPIRED":
-      return "Access expired. It will refresh automatically on the next publish.";
+      return "Access expired. It refreshes itself before the next scheduled run or publish — nothing to do.";
     case "REAUTH_REQUIRED":
-      return `Access expired and cannot refresh. Reconnect ${descriptor.label}.`;
+      return (
+        account?.lastError ??
+        `Access cannot be refreshed. Reconnect ${descriptor.label}.`
+      );
     case "API_ACCESS_REQUIRED":
       return (
         account?.capabilityDetail ??

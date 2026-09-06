@@ -600,3 +600,150 @@ export async function recordRefreshedTokenExpiry(input: {
 
   return {};
 }
+
+/**
+ * Record that the provider rejected this connection's refresh TERMINALLY.
+ *
+ * ============ THE ONE WRITER OF status = 'expired' ============
+ * `deriveMarketingChannelState` renders `status = 'expired'` as
+ * REAUTH_REQUIRED unconditionally, so this status must mean something a
+ * human can rely on: the provider was actually asked, and answered that no
+ * retry will ever succeed (Google's `invalid_grant`). The credential seam is
+ * the only caller, and it calls this on exactly that answer. Time-based
+ * expiry, transient failures, quota, and network faults must never reach
+ * here — they are derived or counted, not written as a terminal status.
+ *
+ * The guard matches `connected` only, for the same reason
+ * `recordRefreshedTokenExpiry` does: a disconnect that happened while the
+ * refresh was in flight wins, and an account already marked expired has
+ * nothing new to learn. Reconnecting heals this fully —
+ * `upsertMarketingConnectedResource` writes `status: 'connected'` and clears
+ * `last_error`.
+ *
+ * `detail` becomes the operator-facing copy on the Integrations card. Fixed
+ * prose from the seam only; never a provider's own words.
+ */
+export async function markConnectionReauthRequired(input: {
+  connectedAccountId: string;
+  detail: string;
+  nowIso: string;
+}): Promise<{ error?: string }> {
+  const connectedAccountId = input.connectedAccountId.trim();
+  if (!connectedAccountId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await marketingConnectedAccountsTable(supabase)
+    .update({
+      status: "expired",
+      last_error: input.detail,
+      last_attempt_at: input.nowIso,
+    })
+    .eq("id", connectedAccountId)
+    .eq("status", "connected")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[markConnectionReauthRequired] update failed:", {
+      connectedAccountId,
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      error:
+        mapDatabaseError(error) ?? "Failed to record the reauth requirement.",
+    };
+  }
+
+  return {};
+}
+
+/**
+ * Correct `metadata.hasRefreshToken` to the stored truth.
+ *
+ * Used by connect flows for the one edge where what Google returned and what
+ * the secrets table holds diverge: a reconnect where Google omitted the
+ * refresh token. The secret upsert preserves the previously stored refresh
+ * token in that case, so the metadata written from the token response alone
+ * would claim `false` for a connection that can in fact refresh — and the
+ * Integrations page would send the owner to reconnect it at the next expiry.
+ *
+ * The merge is read-free: `metadata` is passed whole by the caller, who has
+ * just written it and therefore holds the current value.
+ */
+export async function setConnectionMetadata(input: {
+  connectedAccountId: string;
+  metadata: Record<string, unknown>;
+}): Promise<{ error?: string }> {
+  const connectedAccountId = input.connectedAccountId.trim();
+  if (!connectedAccountId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await marketingConnectedAccountsTable(supabase)
+    .update({ metadata: input.metadata })
+    .eq("id", connectedAccountId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[setConnectionMetadata] update failed:", {
+      connectedAccountId,
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      error: mapDatabaseError(error) ?? "Failed to update connection metadata.",
+    };
+  }
+
+  return {};
+}
+
+/**
+ * Every connection the daily credential maintenance run should look at:
+ * third-party publishers, still `connected`, holding a token that expires.
+ *
+ * ============ WHAT IS DELIBERATELY EXCLUDED ============
+ *   first_party        no delegated credential exists (migration 181 forbids
+ *                      even a token_expires_at on the row)
+ *   asset sources      they hold credentials but publish nothing; their
+ *                      tokens are refreshed when their collectors run
+ *   status 'expired'   PROVEN terminal — the provider already said no retry
+ *                      will succeed, and asking again every morning is how a
+ *                      dead credential generates provider traffic forever
+ *   status 'error' / 'disconnected'   a human is already involved
+ *   token_expires_at null             the token does not expire (Facebook
+ *                      Page tokens); there is nothing to maintain
+ *
+ * Cross-company on purpose: credentials must stay alive for every tenant
+ * with a connection, not only tenants with an active marketing HQ.
+ */
+export async function listRefreshableConnectedAccounts(): Promise<
+  MarketingConnectedAccount[]
+> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await marketingConnectedAccountsTable(supabase)
+    .select(ACCOUNT_SELECT)
+    .eq("status", "connected")
+    .eq("integration_kind", "publisher")
+    .not("token_expires_at", "is", null)
+    .order("company_id", { ascending: true })
+    .order("provider", { ascending: true });
+
+  if (error) {
+    console.error("[listRefreshableConnectedAccounts] query failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as MarketingConnectedAccountRow[]).map(
+    mapMarketingConnectedAccountRow,
+  );
+}

@@ -6,6 +6,7 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { MarketingMediaPreview } from "./MarketingMediaPreview";
 import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
+import { MarketingYouTubePublishControls } from "./MarketingYouTubePublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
 import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
 import {
@@ -447,12 +448,23 @@ export function MarketingTodayView({
                 {/* Approve IS publish. The button that recorded a decision and
                     did nothing else lived on this page and was the single most
                     misleading control in the product. */}
-                <MarketingReelPublishControls
-                  post={post}
-                  connectedAccounts={connectedAccounts}
-                  videoOptions={videoOptions}
-                  onPublished={onChanged}
-                />
+                {post.channelTarget === "youtube" ? (
+                  // The controls agree with the post's declared destination —
+                  // a YouTube-targeted post never renders Meta buttons, and
+                  // vice versa. The server action re-checks the same fact.
+                  <MarketingYouTubePublishControls
+                    post={post}
+                    connectedAccounts={connectedAccounts}
+                    onPublished={onChanged}
+                  />
+                ) : (
+                  <MarketingReelPublishControls
+                    post={post}
+                    connectedAccounts={connectedAccounts}
+                    videoOptions={videoOptions}
+                    onPublished={onChanged}
+                  />
+                )}
                 {rejectPickerFor === post.id ? (
                   <span className="flex flex-wrap items-center gap-2">
                     <select

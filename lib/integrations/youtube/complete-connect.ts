@@ -1,7 +1,13 @@
 import "server-only";
 
-import { upsertMarketingConnectedAccountSecret } from "@/lib/database/queries/marketing-connected-account-secrets";
-import { upsertMarketingConnectedResource } from "@/lib/database/queries/marketing-connected-accounts-admin";
+import {
+  readSecretRefreshTokenPresence,
+  upsertMarketingConnectedAccountSecret,
+} from "@/lib/database/queries/marketing-connected-account-secrets";
+import {
+  setConnectionMetadata,
+  upsertMarketingConnectedResource,
+} from "@/lib/database/queries/marketing-connected-accounts-admin";
 import { currentSecretKeyVersion } from "@/lib/integrations/credentials";
 import type { MarketingPublishCapability } from "@/shared/types/marketing-channel-connection";
 import { deriveYouTubeCapability as deriveYouTubeCapabilityPure } from "./capability";
@@ -195,6 +201,29 @@ export async function completeYouTubeConnect(
         connectedAccountId: account.account.id,
       });
       return { errorCode: "persist", error: "Saving the credential failed." };
+    }
+
+    if (tokens.refreshToken == null) {
+      // Google said nothing about a refresh token, and the secret upsert
+      // preserved whatever was already stored — so what the metadata may
+      // claim ("no refresh token") and what the table holds can now
+      // disagree. Read the presence back and correct the claim, because
+      // `deriveMarketingChannelState` steers the owner to reconnect on the
+      // strength of this one boolean. Presence only — the ciphertext is
+      // never read here.
+      const presence = await readSecretRefreshTokenPresence(account.account.id);
+      if (presence.present) {
+        const corrected = await setConnectionMetadata({
+          connectedAccountId: account.account.id,
+          metadata: { hasRefreshToken: true },
+        });
+        if (corrected.error) {
+          console.error("[completeYouTubeConnect] metadata correction failed:", {
+            companyId: input.companyId,
+            connectedAccountId: account.account.id,
+          });
+        }
+      }
     }
 
     saved += 1;

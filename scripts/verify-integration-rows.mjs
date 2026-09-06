@@ -218,6 +218,63 @@ check(
     expiredWithRefresh.action === "none",
 );
 
+// The proven-terminal status — written only by the credential seam after the
+// provider rejected a refresh — outranks a stored refresh token.
+const provenDead = build({
+  accounts: [
+    healthy("youtube", {
+      status: "expired",
+      lastError: "Access to youtube expired and cannot be refreshed because the provider rejected the refresh. Reconnect it.",
+    }),
+  ],
+}).find((r) => r.provider === "youtube");
+check(
+  "a PROVEN terminal rejection asks for reconnect even with a refresh token stored",
+  provenDead.state === "REAUTH_REQUIRED" && provenDead.action === "reconnect",
+  provenDead.state,
+);
+check(
+  "and shows the seam's recorded reason rather than generic copy",
+  provenDead.detail.includes("rejected the refresh"),
+  provenDead.detail,
+);
+
+console.log("\nThe connection health line — durable vs recently reauthorized");
+
+const freshlyReauthorized = build({
+  accounts: [
+    healthy("youtube", {
+      connectedAt: "2026-08-30T10:00:00.000Z",
+      lastSuccessAt: "2026-08-28T00:00:00.000Z", // before the reconnect
+    }),
+  ],
+}).find((r) => r.provider === "youtube");
+check(
+  "a reconnect with no later credential success reads NOT YET PROVEN",
+  (freshlyReauthorized.healthLine ?? "").includes("not yet proven"),
+  freshlyReauthorized.healthLine,
+);
+
+const durable = build({
+  accounts: [
+    healthy("youtube", {
+      connectedAt: "2026-08-25T10:00:00.000Z",
+      lastSuccessAt: "2026-08-31T09:00:00.000Z", // a refresh AFTER consent
+    }),
+  ],
+}).find((r) => r.provider === "youtube");
+check(
+  "a credential success after consent reads PROVEN, with both dates",
+  (durable.healthLine ?? "").includes("self-refresh proven") &&
+    (durable.healthLine ?? "").includes("Aug 25") &&
+    (durable.healthLine ?? "").includes("Aug 31"),
+  durable.healthLine,
+);
+check(
+  "no health line renders for a connection that does not exist",
+  build({}).every((r) => r.healthLine === null),
+);
+
 const errored = build({
   accounts: [healthy("facebook", { status: "error", lastError: "Page token revoked." })],
 }).find((r) => r.provider === "facebook");

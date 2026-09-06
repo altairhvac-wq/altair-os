@@ -3,6 +3,7 @@ import {
   getCronSecret,
   isAuthorizedCronRequest,
 } from "@/lib/automation/env";
+import { maintainIntegrationCredentials } from "@/lib/integrations/credential-maintenance";
 import { collectReelInsightsForCompany } from "@/lib/marketing/reel-insights-collector";
 import { listCompaniesWithActiveMarketingHq } from "@/lib/marketing/store";
 import {
@@ -57,6 +58,18 @@ export async function GET(request: Request) {
     callback: async () => {
       const { runId, startedAt } = await recordPlatformAutomationRunStarted(AUTOMATION_KEY);
       try {
+        // ============ CREDENTIAL MAINTENANCE, FIRST ============
+        // The daily heartbeat that keeps every refreshable third-party
+        // publisher credential alive across days when nothing publishes —
+        // the defect that had YouTube "expiring" every morning. It runs
+        // before insights so a token the collector is about to use has just
+        // been proven, and it is platform-wide where insights are per-HQ:
+        // a credential must stay alive for every tenant with a connection.
+        // The summary carries outcomes and ids only, never a token.
+        const credentialMaintenance = await maintainIntegrationCredentials({
+          nowIso: new Date().toISOString(),
+        });
+
         const companyIds = await listCompaniesWithActiveMarketingHq();
         let collected = 0;
         let notReady = 0;
@@ -98,21 +111,49 @@ export async function GET(request: Request) {
           }
         }
 
+        // A misconfigured credential path (encryption, adapter) is a
+        // deployment fault and reddens the run; a connection needing human
+        // reauth is truth the Integrations page now shows, not an outage.
+        const maintenanceFaults = credentialMaintenance.counts.misconfigured;
+        const errorParts: string[] = [];
+        if (failed > 0) {
+          errorParts.push(
+            `${failed} delivery collection ${failed === 1 ? "error" : "errors"}`,
+          );
+        }
+        if (maintenanceFaults > 0) {
+          errorParts.push(
+            `${maintenanceFaults} credential ${maintenanceFaults === 1 ? "path is" : "paths are"} misconfigured`,
+          );
+        }
+        if (credentialMaintenance.counts.reauth_required > 0) {
+          errorParts.push(
+            `${credentialMaintenance.counts.reauth_required} connection${credentialMaintenance.counts.reauth_required === 1 ? "" : "s"} need${credentialMaintenance.counts.reauth_required === 1 ? "s" : ""} reconnect`,
+          );
+        }
+
         await recordPlatformAutomationRunFinished(runId, {
           automationKey: AUTOMATION_KEY,
           startedAt,
-          status: failed > 0 ? "failed" : "succeeded",
+          status: failed > 0 || maintenanceFaults > 0 ? "failed" : "succeeded",
           companyCount: companyIds.length,
-          totals: { completed: collected, created: metricsWritten, errorCount: failed },
-          errorSummary: failed > 0
-            ? sanitizeErrorSummary(`${failed} delivery collection ${failed === 1 ? "error" : "errors"}`)
-            : null,
+          totals: { completed: collected, created: metricsWritten, errorCount: failed + maintenanceFaults },
+          errorSummary:
+            errorParts.length > 0
+              ? sanitizeErrorSummary(errorParts.join("; "))
+              : null,
         });
 
         return NextResponse.json({
-          ok: failed === 0,
+          ok: failed === 0 && maintenanceFaults === 0,
           route: ROUTE_NAME,
           companyCount: companyIds.length,
+          credentialMaintenance: {
+            attempted: credentialMaintenance.attempted,
+            counts: credentialMaintenance.counts,
+            // Bounded like `attempts` below, and token-free by construction.
+            attempts: credentialMaintenance.attempts.slice(0, 20),
+          },
           collected,
           notReady,
           // History and non-Reel posts. Reported separately and deliberately

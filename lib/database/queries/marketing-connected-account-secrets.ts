@@ -41,12 +41,38 @@ export type UpsertMarketingConnectedAccountSecretInput = {
   connectedAccountId: string;
   /** Plaintext access token — encrypted here; never persisted in plaintext. */
   accessTokenPlaintext: string;
+  /**
+   * Three meanings, and the difference is a stored credential's life:
+   *
+   *   a string    the provider issued (or rotated) a refresh token — store it
+   *   undefined   the provider SAID NOTHING — keep whatever is stored.
+   *               Google routinely returns no refresh token on a repeat
+   *               authorization and on every ordinary refresh; writing null
+   *               for "not mentioned" is how a working connection loses the
+   *               only credential that can refresh it and dies at the next
+   *               expiry with nothing able to say why.
+   *   null        the provider said there is none — clear it
+   */
   refreshTokenPlaintext?: string | null;
   encryptionKeyVersion?: number;
+  /**
+   * Compare-and-swap guard: the `updated_at` the caller read before deciding
+   * to write. When set, the write lands only if the row is still exactly
+   * that version; a concurrent writer having landed first comes back as
+   * `{ conflict: true }` with the row untouched — never as a stale
+   * credential silently overwriting a newer one.
+   *
+   * CAS is an UPDATE, so it also refuses to create a row: a caller holding
+   * an expected version read one, and a row that has since vanished is a
+   * conflict too (a disconnect won the race).
+   */
+  expectedUpdatedAt?: string;
 };
 
 export type UpsertMarketingConnectedAccountSecretResult = {
   error?: string;
+  /** CAS only: another writer landed first. Nothing was written. */
+  conflict?: boolean;
 };
 
 /**
@@ -85,15 +111,58 @@ export async function upsertMarketingConnectedAccountSecret(
     return { error: "Failed to encrypt integration secret." };
   }
 
+  const payload: Record<string, unknown> = {
+    connected_account_id: connectedAccountId,
+    access_token_encrypted: accessTokenEncrypted,
+    encryption_key_version: input.encryptionKeyVersion ?? 1,
+    token_hash: hashTokenForLookup(accessTokenPlaintext),
+  };
+
+  // Only when the provider actually spoke. An omitted column preserves the
+  // stored value on a conflict-update and stays null on a fresh insert —
+  // exactly the "keep what you already hold" semantics `undefined` means.
+  if (input.refreshTokenPlaintext !== undefined) {
+    payload.refresh_token_encrypted = refreshTokenEncrypted;
+  }
+
   const supabase = createServiceRoleClient();
+
+  if (input.expectedUpdatedAt !== undefined) {
+    // The CAS path. `updated_at` moves on every write (trigger, migration
+    // 090), so matching the value read earlier is matching "nobody wrote
+    // since I looked".
+    const { connected_account_id: _omit, ...updatePayload } = payload;
+    void _omit;
+    const { data, error } = await marketingConnectedAccountSecretsTable(
+      supabase,
+    )
+      .update(updatePayload)
+      .eq("connected_account_id", connectedAccountId)
+      .eq("updated_at", input.expectedUpdatedAt)
+      .select("connected_account_id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[upsertMarketingConnectedAccountSecret] CAS failed:", {
+        connectedAccountId,
+        code: error.code,
+        message: error.message,
+      });
+      return {
+        error:
+          mapDatabaseError(error) ?? "Failed to save connected account secret.",
+      };
+    }
+
+    if (!data) {
+      return { conflict: true };
+    }
+
+    return {};
+  }
+
   const { error } = await marketingConnectedAccountSecretsTable(supabase).upsert(
-    {
-      connected_account_id: connectedAccountId,
-      access_token_encrypted: accessTokenEncrypted,
-      refresh_token_encrypted: refreshTokenEncrypted,
-      encryption_key_version: input.encryptionKeyVersion ?? 1,
-      token_hash: hashTokenForLookup(accessTokenPlaintext),
-    },
+    payload,
     { onConflict: "connected_account_id" },
   );
 
@@ -111,6 +180,45 @@ export async function upsertMarketingConnectedAccountSecret(
   }
 
   return {};
+}
+
+/**
+ * Whether a refresh token ciphertext is stored for this account — presence
+ * only, never content. This is the non-secret fact the connect flows project
+ * into `metadata.hasRefreshToken` so user-scoped surfaces can render an
+ * expiry honestly without touching this table.
+ */
+export async function readSecretRefreshTokenPresence(
+  connectedAccountId: string,
+): Promise<{ present?: boolean; error?: string }> {
+  const normalizedId = connectedAccountId.trim();
+  if (!normalizedId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await marketingConnectedAccountSecretsTable(supabase)
+    .select("refresh_token_encrypted")
+    .eq("connected_account_id", normalizedId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[readSecretRefreshTokenPresence] lookup failed:", {
+      connectedAccountId: normalizedId,
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      error:
+        mapDatabaseError(error) ?? "Failed to read connected account secret.",
+    };
+  }
+
+  const encrypted = (
+    data as { refresh_token_encrypted?: string | null } | null
+  )?.refresh_token_encrypted?.trim();
+
+  return { present: Boolean(encrypted) };
 }
 
 export type GetMarketingConnectedAccountAccessTokenResult = {

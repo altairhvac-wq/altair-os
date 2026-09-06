@@ -172,6 +172,15 @@ function IntegrationRowItem({
           <span className="block text-xs leading-5 text-altair-ink-muted">
             {row.identity ? `${row.identity} — ${row.detail}` : row.detail}
           </span>
+          {row.healthLine ? (
+            // Durable vs recently reauthorized, in one quiet line: a
+            // connection is proven only once a credential refresh has
+            // succeeded AFTER the current consent. Built deterministically
+            // in the projection, so server and client render one text.
+            <span className="mt-0.5 block text-[10px] leading-4 text-altair-ink-muted">
+              {row.healthLine}
+            </span>
+          ) : null}
           {row.missingEnvVars.length > 0 ? (
             // NAMES only. A value here would put a credential in the DOM of
             // every admin who opens this page.

@@ -47,6 +47,7 @@ import "server-only";
  * existing `upsertMarketingConnectedAccountSecret`, which owns the one
  * cipher call and the token hash.
  */
+import { markConnectionReauthRequired } from "@/lib/database/queries/marketing-connected-accounts-admin";
 import { upsertMarketingConnectedAccountSecret } from "@/lib/database/queries/marketing-connected-account-secrets";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { isTokenExpired } from "@/shared/types/marketing-channel-connection";
@@ -94,7 +95,7 @@ export const REFRESH_FAILURE_CEILING = 1000;
 export const CREDENTIAL_DETAIL_MAX = 500;
 
 const SECRET_COLUMNS =
-  "access_token_encrypted, refresh_token_encrypted, encryption_key_version, refresh_expires_at, refresh_failure_count, last_refreshed_at";
+  "access_token_encrypted, refresh_token_encrypted, encryption_key_version, refresh_expires_at, refresh_failure_count, last_refreshed_at, updated_at";
 
 /** Non-secret, fixed, and never stored. See `currentSecretKeyVersion`. */
 const KEY_VERSION_PROBE = "integration-key-version-probe";
@@ -173,6 +174,8 @@ type SecretRow = {
   refresh_expires_at: string | null;
   refresh_failure_count: number | null;
   last_refreshed_at: string | null;
+  /** The version this read observed — the CAS guard for the write-back. */
+  updated_at: string | null;
 };
 
 type SecretsClient = ReturnType<typeof createServiceRoleClient>;
@@ -282,6 +285,12 @@ function firstPartyRefusal(
   };
 }
 
+function reauthDetail(account: CredentialAccountFacts, because: string): string {
+  return clampDetail(
+    `Access to ${account.provider} expired and cannot be refreshed because ${because}. Reconnect it.`,
+  );
+}
+
 function reauthRequired(
   account: CredentialAccountFacts,
   because: string,
@@ -289,9 +298,7 @@ function reauthRequired(
   return {
     ok: false,
     reason: "REAUTH_REQUIRED",
-    detail: clampDetail(
-      `Access to ${account.provider} expired and cannot be refreshed because ${because}. Reconnect it.`,
-    ),
+    detail: reauthDetail(account, because),
   };
 }
 
@@ -680,10 +687,24 @@ export async function refreshIfNeeded(input: {
     });
 
     if (outcome.reason === "REAUTH_REQUIRED") {
-      return reauthRequired(
-        account,
-        "the provider rejected the refresh",
-      );
+      // ============ THE PROVEN TERMINAL TRANSITION ============
+      // The provider was asked and answered that no retry will succeed. This
+      // is the one moment `status = 'expired'` may be written — the status
+      // `deriveMarketingChannelState` renders as REAUTH_REQUIRED — so the
+      // Integrations page reports "reconnect it" from evidence rather than
+      // from a clock. Recording it is best-effort for the same reason the
+      // failure counter is: the caller is already being told, and a health
+      // write must not add a second error class.
+      const because = "the provider rejected the refresh";
+      const marked = await markConnectionReauthRequired({
+        connectedAccountId: account.connectedAccountId,
+        detail: reauthDetail(account, because),
+        nowIso,
+      });
+      if (marked.error) {
+        logCredentialEvent("reauth requirement not recorded", account, {});
+      }
+      return reauthRequired(account, because);
     }
 
     return {
@@ -722,7 +743,33 @@ export async function refreshIfNeeded(input: {
     refreshTokenPlaintext: nextRefreshPlaintext,
     // Never the helper's default of `1`. See `currentSecretKeyVersion`.
     encryptionKeyVersion: keyVersion,
+    // ============ THE STALE-WRITER GUARD ============
+    // Land only if nobody wrote since this row was read. Two paths can
+    // refresh the same credential — a publish and the daily maintenance run
+    // — and Google answers both. The danger is not the double refresh
+    // (Google keeps the refresh token valid and both access tokens work);
+    // it is THIS write overwriting a rotation the other writer stored. A
+    // conflict means the other writer's credential is the newer one, so it
+    // is taken below instead of being clobbered.
+    ...(row.updated_at ? { expectedUpdatedAt: row.updated_at } : {}),
   });
+
+  if (write.conflict) {
+    logCredentialEvent("concurrent refresh detected; kept the newer credential", account, {});
+    const reread = await readSecretRow(account);
+    if (!reread.ok) return reread.failure;
+    const stored = decryptStoredAccessToken(account, reread.row);
+    if (!stored.ok) return stored;
+    return {
+      ok: true,
+      accessToken: stored.accessToken,
+      // Not refreshed BY US — the winner's lifecycle wrapper persisted the
+      // new expiry on the account row; null here says "unknown, but usable
+      // now" and keeps this loser's stale clock out of that column.
+      refreshed: false,
+      tokenExpiresAt: null,
+    };
+  }
 
   if (write.error) {
     // The dangerous window, now closed as honestly as it can be: the
