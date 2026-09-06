@@ -50,6 +50,7 @@
  *        [--apply]
  */
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
@@ -440,6 +441,10 @@ heading("Applying");
 
 // -------------------------------------------------------- storage upload
 const videoBytes = fs.readFileSync(videoPath);
+// The digest of the EXACT bytes this run uploads, recorded on the asset so
+// the publish path's identity check covers the canary too — the same chain
+// the agent transport establishes for real renders.
+const videoSha256 = crypto.createHash("sha256").update(videoBytes).digest("hex");
 const upload = await supabase.storage
   .from("marketing-media")
   .upload(objectKey, videoBytes, {
@@ -454,6 +459,7 @@ if (upload.error) {
   die();
 }
 step(`uploaded          ${objectKey}`);
+step(`sha256            ${videoSha256.slice(0, 16)}…`);
 
 // ---------------------------------------------------------- media asset
 // unique (company_id, source_job_id) makes this idempotent in the database.
@@ -467,6 +473,7 @@ const assetUpsert = await supabase
       object_key: objectKey,
       content_type: "video/mp4",
       byte_size: videoStat.size,
+      client_reported_sha256: videoSha256,
       upload_state: "stored",
       stored_at: nowIso,
     },
@@ -559,6 +566,9 @@ const grant = await createMediaReadGrant({
   objectKey,
   contentType: "video/mp4",
   byteSize: videoStat.size,
+  // The digest computed above — the upload verifies the fetched bytes
+  // against it before anything reaches YouTube.
+  expectedSha256: videoSha256,
   nowMs: Date.now(),
 });
 

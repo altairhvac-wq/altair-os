@@ -455,6 +455,7 @@ export function MarketingTodayView({
                   <MarketingYouTubePublishControls
                     post={post}
                     connectedAccounts={connectedAccounts}
+                    videoOptions={videoOptions}
                     onPublished={onChanged}
                   />
                 ) : (

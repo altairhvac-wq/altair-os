@@ -38,6 +38,7 @@
  *
  * Run: node scripts/verify-youtube-upload.mjs
  */
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -751,6 +752,85 @@ console.log("\nInvalid media is refused rather than uploaded");
     threw !== null && threw.code === "unknown_media_size",
   );
   check("and sends nothing", calls.length === 0);
+}
+
+/* ================================================================== */
+/*                    MEDIA IDENTITY (the hash gate)                  */
+/* ================================================================== */
+
+console.log("\nThe bytes uploaded are the bytes QA approved");
+
+{
+  // A grant carrying the CORRECT digest of the payload publishes normally.
+  const goodSha = createHash("sha256").update(PAYLOAD).digest("hex");
+  reset(happyRouter());
+  const outcome = await youtubeAdapter.publish(
+    publishInput({
+      package: {
+        ...publishInput().package,
+        media: [
+          { ...publishInput().package.media[0], expectedSha256: goodSha },
+        ],
+      },
+    }),
+  );
+  check(
+    "a matching digest publishes",
+    outcome.outcome === "posted",
+    outcome,
+  );
+}
+
+{
+  // The failure this gate exists for: the object under the deterministic key
+  // is not the artifact whose digest was recorded — a same-length swap that
+  // the size check cannot see.
+  const wrongSha = createHash("sha256").update(new Uint8Array([9, 9, 9])).digest("hex");
+  reset(happyRouter());
+  let threw = null;
+  try {
+    await youtubeAdapter.publish(
+      publishInput({
+        package: {
+          ...publishInput().package,
+          media: [
+            { ...publishInput().package.media[0], expectedSha256: wrongSha },
+          ],
+        },
+      }),
+    );
+  } catch (error) {
+    threw = error;
+  }
+  check(
+    "A DIGEST MISMATCH REFUSES THE PUBLISH",
+    threw !== null && threw.code === "media_hash_mismatch",
+    threw?.code,
+  );
+  check(
+    "AND ZERO BYTES REACH YOUTUBE — no PUT, no orphan, nothing to reconcile",
+    !calls.some((c) => c.method === "PUT"),
+    calls.map((c) => `${c.method} ${c.url.slice(0, 60)}`),
+  );
+  check(
+    "no digest appears in the thrown error",
+    threw !== null && !String(threw.message).includes(wrongSha),
+    threw?.message,
+  );
+}
+
+{
+  // An asset with NO recorded digest stays honest: identity is unverified,
+  // not falsely verified — and the upload proceeds exactly as before this
+  // gate existed. (The grant in the default publishInput carries no
+  // expectedSha256 at all; this pins that omission as a legal, working state
+  // so older assets cannot be bricked by the new check.)
+  reset(happyRouter());
+  const outcome = await youtubeAdapter.publish(publishInput());
+  check(
+    "a grant without a digest still publishes (identity unverified, said so)",
+    outcome.outcome === "posted",
+  );
 }
 
 {
