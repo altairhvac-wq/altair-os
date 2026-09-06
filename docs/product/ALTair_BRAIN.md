@@ -590,10 +590,17 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 
 ### Publishing & Integration Foundation
 
-**Status:** Foundation built and gated — NOT live. No provider adapter is
-registered, no worker or cron runs the queue, and `MARKETING_PUBLISH_MODE`
-defaults to off. Facebook/Instagram remain the only paths that actually
-publish, unchanged, through the existing `app/actions/marketing-publish.ts`.
+**Status:** Live for two providers behind the gate. The YouTube publisher
+adapter is registered and reachable two ways: the supervised canary
+(`scripts/youtube-canary.mjs`) and the founder Today surface
+(`publishMarketingPostToYouTubeAction` → `dispatchPublish`) — both
+private-only by adapter literal + preflight + readback, both requiring a
+recorded human approval and `MARKETING_PUBLISH_MODE=live`. The Altair site
+first-party adapter publishes SEO pages through the same dispatcher.
+Facebook/Instagram still publish through the pre-dispatcher actions in
+`app/actions/marketing-publish.ts`, unchanged. No worker runs the queue
+(184) yet; the one scheduled consumer of this layer is the daily credential
+maintenance pass below.
 
 **Description:** A provider-agnostic layer so each platform can be connected
 one at a time without redesigning the system for every platform. Extends the
@@ -614,9 +621,27 @@ no third-party credential).
   NOT_CONFIGURED → NOT_CONNECTED → CONNECTING → TOKEN_EXPIRED /
   REAUTH_REQUIRED / API_ACCESS_REQUIRED / DRAFT_UPLOAD_ONLY →
   DIRECT_PUBLISH_READY / ERROR. Configuration, connection health and
-  provider-granted capability are three independent facts.
+  provider-granted capability are three independent facts. REAUTH_REQUIRED
+  is PROVEN, never inferred from a clock: it renders only when no refresh
+  token is stored (`metadata.hasRefreshToken`, the non-secret projection) or
+  when `status='expired'` — written by the credential seam alone, on a
+  terminal provider rejection (`invalid_grant`). An ordinary access-token
+  expiry with a stored refresh token is TOKEN_EXPIRED and self-heals.
+- Durable credential lifecycle (`lib/integrations/credentials.ts` +
+  `credential-maintenance.ts`): compare-and-swap secret writes discriminated
+  on `last_refreshed_at` (a stale refresher can never overwrite a newer
+  rotation), refresh-token preservation when a provider omits one
+  (undefined = "not mentioned" ≠ null = "there is none"), terminal
+  `invalid_grant` marks the account row, and a daily maintenance pass from
+  the `marketing-insights` cron refreshes every refreshable third-party
+  publisher credential so connections survive days when nothing publishes.
+  The Integrations card shows "self-refresh proven <date>" vs "not yet
+  proven" so a reconnect cannot masquerade as a repair.
 - Settings → Integrations (`/settings/integrations`): read-only cards per
-  provider across three sections. Only the Facebook connect hop is wired.
+  provider across three sections. Facebook and YouTube connect hops are
+  wired (YouTube: `/api/marketing/connected-accounts/youtube/authorize` +
+  callback, `access_type=offline&prompt=consent`, per-channel rows, granted
+  scopes read back).
 - Adapter port + registry + credential seam (`lib/integrations/`): a typed
   boundary; the registry fails closed with no fallback adapter; one module
   reads/decrypts/refreshes every stored secret.

@@ -3,6 +3,8 @@ import {
   getCronSecret,
   isAuthorizedCronRequest,
 } from "@/lib/automation/env";
+import { maintainIntegrationCredentials } from "@/lib/integrations/credential-maintenance";
+import { countLabel } from "@/shared/lib/plural";
 import { collectReelInsightsForCompany } from "@/lib/marketing/reel-insights-collector";
 import { listCompaniesWithActiveMarketingHq } from "@/lib/marketing/store";
 import {
@@ -57,6 +59,46 @@ export async function GET(request: Request) {
     callback: async () => {
       const { runId, startedAt } = await recordPlatformAutomationRunStarted(AUTOMATION_KEY);
       try {
+        // ============ CREDENTIAL MAINTENANCE, FIRST ============
+        // The daily heartbeat that keeps every refreshable third-party
+        // publisher credential alive across days when nothing publishes —
+        // the defect that had YouTube "expiring" every morning. It runs
+        // before insights so a token the collector is about to use has just
+        // been proven, and it is platform-wide where insights are per-HQ:
+        // a credential must stay alive for every tenant with a connection.
+        // The summary carries outcomes and ids only, never a token.
+        //
+        // Isolated in its own catch: a crash in the credential pass must
+        // redden the run WITHOUT costing every tenant its insight
+        // collection — the two concerns share a route, not a fate.
+        let credentialMaintenance: Awaited<
+          ReturnType<typeof maintainIntegrationCredentials>
+        >;
+        let maintenanceCrashed = false;
+        try {
+          credentialMaintenance = await maintainIntegrationCredentials({
+            nowIso: new Date().toISOString(),
+          });
+        } catch (error) {
+          maintenanceCrashed = true;
+          console.error("[marketing-insights] credential maintenance crashed:", {
+            errorName: error instanceof Error ? error.name : "unknown",
+          });
+          credentialMaintenance = {
+            attempted: 0,
+            counts: {
+              fresh: 0,
+              refreshed: 0,
+              no_refresh_token: 0,
+              reauth_required: 0,
+              misconfigured: 0,
+              transient: 0,
+              deferred: 0,
+            },
+            attempts: [],
+          };
+        }
+
         const companyIds = await listCompaniesWithActiveMarketingHq();
         let collected = 0;
         let notReady = 0;
@@ -98,21 +140,52 @@ export async function GET(request: Request) {
           }
         }
 
+        // A misconfigured credential path (encryption, adapter) is a
+        // deployment fault and reddens the run; a connection needing human
+        // reauth is truth the Integrations page now shows, not an outage.
+        const maintenanceFaults =
+          credentialMaintenance.counts.misconfigured + (maintenanceCrashed ? 1 : 0);
+        const errorParts: string[] = [];
+        if (maintenanceCrashed) {
+          errorParts.push("credential maintenance crashed");
+        }
+        if (failed > 0) {
+          errorParts.push(
+            `${countLabel(failed, "delivery collection error")}`,
+          );
+        }
+        if (maintenanceFaults > 0) {
+          errorParts.push(
+            `${countLabel(maintenanceFaults, "misconfigured credential path")}`,
+          );
+        }
+        // Deliberately NOT in errorSummary: a connection needing reconnect
+        // is not a run failure, and the automation UI renders any non-null
+        // summary in the danger tone. The count travels in the response and
+        // the Integrations page shows the state itself.
+
         await recordPlatformAutomationRunFinished(runId, {
           automationKey: AUTOMATION_KEY,
           startedAt,
-          status: failed > 0 ? "failed" : "succeeded",
+          status: failed > 0 || maintenanceFaults > 0 ? "failed" : "succeeded",
           companyCount: companyIds.length,
-          totals: { completed: collected, created: metricsWritten, errorCount: failed },
-          errorSummary: failed > 0
-            ? sanitizeErrorSummary(`${failed} delivery collection ${failed === 1 ? "error" : "errors"}`)
-            : null,
+          totals: { completed: collected, created: metricsWritten, errorCount: failed + maintenanceFaults },
+          errorSummary:
+            errorParts.length > 0
+              ? sanitizeErrorSummary(errorParts.join("; "))
+              : null,
         });
 
         return NextResponse.json({
-          ok: failed === 0,
+          ok: failed === 0 && maintenanceFaults === 0,
           route: ROUTE_NAME,
           companyCount: companyIds.length,
+          credentialMaintenance: {
+            attempted: credentialMaintenance.attempted,
+            counts: credentialMaintenance.counts,
+            // Bounded like `attempts` below, and token-free by construction.
+            attempts: credentialMaintenance.attempts.slice(0, 20),
+          },
           collected,
           notReady,
           // History and non-Reel posts. Reported separately and deliberately

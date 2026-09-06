@@ -75,6 +75,22 @@ check("expired WITHOUT a refresh token escalates to REAUTH_REQUIRED",
 check("an unknown expiry is NOT treated as expired",
   derive({ tokenExpiresAt: null }) === "DIRECT_PUBLISH_READY");
 
+// status 'expired' is written by exactly one path — the credential seam, on a
+// terminal provider rejection — so it is PROVEN, and proof outranks the
+// refresh token: a stored token the provider already refused is not hope.
+check("PROVEN terminal status reports REAUTH_REQUIRED even with a refresh token stored",
+  derive({ status: "expired", tokenExpiresAt: "2026-09-01T00:00:00.000Z" }) === "REAUTH_REQUIRED");
+check("proven terminal outranks a live-looking clock too",
+  derive({ status: "expired", tokenExpiresAt: null }) === "REAUTH_REQUIRED");
+
+// The metadata projection the display paths read instead of the secrets table.
+check("hasStoredRefreshToken reads only an explicit true",
+  conn.hasStoredRefreshToken({ hasRefreshToken: true }) === true &&
+  conn.hasStoredRefreshToken({ hasRefreshToken: "yes" }) === false &&
+  conn.hasStoredRefreshToken({}) === false &&
+  conn.hasStoredRefreshToken(null) === false &&
+  conn.hasStoredRefreshToken(undefined) === false);
+
 // Ordering: a dead token must not be reported as a missing API grant, or the
 // operator is sent to a developer console to fix something that isn't broken.
 check("expiry is evaluated BEFORE capability",

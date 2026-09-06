@@ -78,6 +78,10 @@ const REWRITES = [
     '"@/lib/database/queries/marketing-connected-account-secrets"',
     '"./secrets-store.mjs"',
   ],
+  [
+    '"@/lib/database/queries/marketing-connected-accounts-admin"',
+    '"./accounts-admin-stub.mjs"',
+  ],
   ['"@/lib/database/errors"', '"./db-errors.mjs"'],
   ['"@/lib/supabase/service"', '"./supabase-service.mjs"'],
   ['"@/lib/integrations/crypto"', '"./crypto-stub.mjs"'],
@@ -116,6 +120,29 @@ writeFileSync(join(dir, "server-only.mjs"), "export {};\n");
 writeFileSync(
   join(dir, "db-errors.mjs"),
   'export function mapDatabaseError(e) { return `DB: ${e?.message ?? "unknown"}`; }\n',
+);
+
+/**
+ * The accounts-admin stub. `markConnectionReauthRequired` is the seam's one
+ * write OUTSIDE its own table — the proven-terminal transition the state
+ * machine renders as REAUTH_REQUIRED — so every call is recorded for the
+ * assertions: the invalid_grant scenario must make exactly one, and every
+ * other failure class must make none.
+ */
+writeFileSync(
+  join(dir, "accounts-admin-stub.mjs"),
+  `
+export const markCalls = [];
+export async function markConnectionReauthRequired(input) {
+  markCalls.push(input);
+  return {};
+}
+export const errorCalls = [];
+export async function markConnectionError(input) {
+  errorCalls.push(input);
+  return {};
+}
+`,
 );
 
 /**
@@ -270,6 +297,9 @@ const registrySource = stripComments(
 );
 
 const db = await import(pathToFileURL(join(dir, "supabase-service.mjs")).href);
+const adminStub = await import(
+  pathToFileURL(join(dir, "accounts-admin-stub.mjs")).href
+);
 const cryptoStub = await import(pathToFileURL(join(dir, "crypto-stub.mjs")).href);
 const registryStub = await import(
   pathToFileURL(join(dir, "registry-stub.mjs")).href
@@ -907,6 +937,13 @@ try {
       db.__ops()[1].payload,
     );
 
+    // Before the terminal case: no failure so far has marked the account.
+    check(
+      "NO TRANSIENT FAILURE WROTE THE TERMINAL STATUS",
+      adminStub.markCalls.length === 0,
+      adminStub.markCalls,
+    );
+
     // A revoked grant is a different answer to the operator.
     adapterWith(async () => ({
       ok: false,
@@ -936,6 +973,202 @@ try {
     check(
       "and is still counted",
       db.__ops()[1].payload.refresh_failure_count === 1,
+    );
+
+    // ============ THE PROVEN TERMINAL TRANSITION ============
+    // `status = 'expired'` renders as REAUTH_REQUIRED unconditionally, so
+    // the seam must write it on exactly this answer and no other.
+    check(
+      "THE PROVIDER'S TERMINAL ANSWER MARKS THE ACCOUNT — once",
+      adminStub.markCalls.length === 1 &&
+        adminStub.markCalls[0]?.connectedAccountId === "acct-1" &&
+        adminStub.markCalls[0]?.nowIso === NOW,
+      adminStub.markCalls,
+    );
+    check(
+      "with the seam's own fixed prose, never the provider's",
+      /reconnect/i.test(adminStub.markCalls[0]?.detail ?? "") &&
+        !(adminStub.markCalls[0]?.detail ?? "").includes("invalid_grant"),
+      adminStub.markCalls[0]?.detail,
+    );
+    check(
+      "and the marked detail carries no plaintext",
+      !SECRETS.some((secret) =>
+        (adminStub.markCalls[0]?.detail ?? "").includes(secret),
+      ),
+    );
+  }
+
+  /* ============================================== the concurrent refresh */
+
+  console.log("\nTwo refreshers cannot clobber each other's credential");
+
+  {
+    // The CAS-armed read: the row now reports the version this refresh saw.
+    const CAS_SEEN = "2026-09-01T11:00:00.000Z";
+
+    adapterWith(async () => ({
+      ok: true,
+      accessTokenPlaintext: ACCESS_NEW,
+      tokenExpiresAt: FUTURE,
+    }));
+    db.__load([
+      okRow(
+        secretRow({
+          refresh_token_encrypted: cipher(REFRESH_OLD),
+          updated_at: CAS_SEEN,
+        }),
+      ),
+      okRow({ connected_account_id: "acct-1" }), // CAS update matched
+      okRow({ connected_account_id: "acct-1" }), // lifecycle update
+    ]);
+
+    const winner = await run(
+      credentials.refreshIfNeeded({
+        account: account({ tokenExpiresAt: PAST }),
+        nowIso: NOW,
+      }),
+    );
+
+    check(
+      "with a version in hand the write is compare-and-swap, not a blind upsert",
+      db.__ops()[1]?.verb === "update" &&
+        db.__ops()[1]?.filters.some(
+          ([k, c, v]) => k === "eq" && c === "updated_at" && v === CAS_SEEN,
+        ),
+      db.__ops()[1],
+    );
+    check(
+      "the CAS winner returns its refreshed token as usual",
+      winner.ok === true && winner.accessToken === ACCESS_NEW && winner.refreshed === true,
+      winner.ok ? "" : winner,
+    );
+
+    // ============ THE STALE WRITER, DISCRIMINATED ============
+    // A conflict does not by itself mean another refresh SUCCEEDED — the
+    // failure counter moves `updated_at` too. The seam discriminates on
+    // `last_refreshed_at`:
+
+    // Case 1: a concurrent refresh LANDED (last_refreshed_at advanced).
+    // Keep the winner's newer credential; never overwrite it.
+    adapterWith(async () => ({
+      ok: true,
+      accessTokenPlaintext: ACCESS_NEW,
+      refreshTokenPlaintext: REFRESH_NEW,
+      tokenExpiresAt: FUTURE,
+    }));
+    db.__load([
+      okRow(
+        secretRow({
+          refresh_token_encrypted: cipher(REFRESH_OLD),
+          updated_at: CAS_SEEN,
+          last_refreshed_at: null,
+        }),
+      ),
+      noRow(), // CAS: the version moved — someone else wrote first
+      okRow(
+        // The re-read hands back what the WINNER stored — including the
+        // success stamp that proves a refresh, not a counter, moved the row.
+        secretRow({
+          access_token_encrypted: cipher(ACCESS_LIVE),
+          refresh_token_encrypted: cipher(REFRESH_NEW),
+          updated_at: "2026-09-01T11:59:59.000Z",
+          last_refreshed_at: "2026-09-01T11:59:58.000Z",
+        }),
+      ),
+    ]);
+
+    const loser = await run(
+      credentials.refreshIfNeeded({
+        account: account({ tokenExpiresAt: PAST }),
+        nowIso: NOW,
+      }),
+    );
+
+    check(
+      "THE STALE WRITER KEEPS THE NEWER STORED CREDENTIAL, NOT ITS OWN",
+      loser.ok === true && loser.accessToken === ACCESS_LIVE,
+      loser.ok ? loser.accessToken === ACCESS_LIVE ? "" : "wrong token" : loser,
+    );
+    check(
+      "and does not claim the refresh as its own",
+      loser.refreshed === false,
+      loser,
+    );
+    check(
+      "so the winner's expiry on the account row is left alone",
+      loser.tokenExpiresAt === null,
+      loser.tokenExpiresAt,
+    );
+    check(
+      "exactly three queries: read, refused CAS, re-read — no success stamp",
+      db.__ops().length === 3,
+      db.__ops().map((op) => `${op.verb}:${op.table}`),
+    );
+    check(
+      "the conflict did not mark the account terminally",
+      adminStub.markCalls.length === 1,
+      adminStub.markCalls.length,
+    );
+
+    // Case 2: only BOOKKEEPING moved the row (a loser's failure count —
+    // last_refreshed_at unchanged). OUR freshly-minted token is the newest
+    // credential in existence; handing back the STORED one would return the
+    // very expired token this refresh replaced. The write retries once
+    // against the new version and lands.
+    adapterWith(async () => ({
+      ok: true,
+      accessTokenPlaintext: ACCESS_NEW,
+      tokenExpiresAt: FUTURE,
+    }));
+    const CAS_BUMPED = "2026-09-01T11:30:00.000Z";
+    db.__load([
+      okRow(
+        secretRow({
+          refresh_token_encrypted: cipher(REFRESH_OLD),
+          updated_at: CAS_SEEN,
+          last_refreshed_at: null,
+        }),
+      ),
+      noRow(), // CAS #1: counter bump moved the version
+      okRow(
+        secretRow({
+          refresh_token_encrypted: cipher(REFRESH_OLD),
+          refresh_failure_count: 1,
+          updated_at: CAS_BUMPED,
+          last_refreshed_at: null, // unchanged — no success landed
+        }),
+      ),
+      okRow({ connected_account_id: "acct-1" }), // CAS #2 lands
+      okRow({ connected_account_id: "acct-1" }), // lifecycle stamp
+    ]);
+
+    const retried = await run(
+      credentials.refreshIfNeeded({
+        account: account({ tokenExpiresAt: PAST }),
+        nowIso: NOW,
+      }),
+    );
+
+    check(
+      "A BOOKKEEPING BUMP DOES NOT COST THE FRESH TOKEN — the CAS retries once",
+      retried.ok === true &&
+        retried.accessToken === ACCESS_NEW &&
+        retried.refreshed === true,
+      retried.ok ? "" : retried,
+    );
+    check(
+      "the retry pinned the RE-READ version, not the stale one",
+      db.__ops()[3]?.verb === "update" &&
+        db.__ops()[3]?.filters.some(
+          ([k, c, v]) => k === "eq" && c === "updated_at" && v === CAS_BUMPED,
+        ),
+      db.__ops()[3],
+    );
+    check(
+      "five queries: read, CAS, re-read, retried CAS, success stamp",
+      db.__ops().length === 5,
+      db.__ops().map((op) => `${op.verb}:${op.table}`),
     );
   }
 
@@ -992,6 +1225,40 @@ try {
       "naming the env var to check, by NAME",
       (result.detail ?? "").includes("INTEGRATIONS_ENCRYPTION_KEY"),
       result.detail,
+    );
+
+    // An undecryptable REFRESH token on the refresh path is a per-row fault
+    // the operator must see: without a status mark the row keeps rendering
+    // TOKEN_EXPIRED ("it refreshes itself") while every publish dies at
+    // decrypt. It is marked ERROR — never `expired`, which claims a proven
+    // provider rejection that did not happen.
+    db.__load([
+      okRow(
+        secretRow({ refresh_token_encrypted: "garbage" }),
+      ),
+    ]);
+    const refreshDecrypt = await run(
+      credentials.refreshIfNeeded({
+        account: account({ tokenExpiresAt: PAST }),
+        nowIso: NOW,
+      }),
+    );
+    check(
+      "an undecryptable refresh token reports DECRYPT_FAILED without contacting anyone",
+      refreshDecrypt.ok === false && refreshDecrypt.reason === "DECRYPT_FAILED",
+      refreshDecrypt,
+    );
+    check(
+      "AND MARKS THE ROW AS ERROR — visible, not self-healing",
+      adminStub.errorCalls.length === 1 &&
+        adminStub.errorCalls[0]?.connectedAccountId === "acct-1" &&
+        /INTEGRATIONS_ENCRYPTION_KEY/.test(adminStub.errorCalls[0]?.detail ?? ""),
+      adminStub.errorCalls,
+    );
+    check(
+      "never as the proven-terminal status the provider did not prove",
+      adminStub.markCalls.length === 1, // unchanged from the invalid_grant case
+      adminStub.markCalls.length,
     );
 
     db.__load([noRow()]);

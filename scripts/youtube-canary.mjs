@@ -117,6 +117,14 @@ const CONFIRM = flag("confirm");
 const VIDEO = flag("video");
 const APPROVER = flag("approved-by");
 const TITLE = flag("title") ?? "Altair canary — private upload test";
+/**
+ * Distinguishes one canary RUN from another. The default identity is stable
+ * per company, which makes a re-run idempotent — the duplicate guard refuses
+ * it, correctly. A deliberate second verification (say, after an OAuth
+ * repair) passes --job-suffix to mint a distinct post and delivery, leaving
+ * the first run's ledger row untouched as history.
+ */
+const JOB_SUFFIX = (flag("job-suffix") ?? "").replace(/[^a-z0-9-]/gi, "");
 
 /* ------------------------------------------------------------- reporting */
 
@@ -403,7 +411,9 @@ step(`approver          ${approver.email} (${membership.role})`);
 
 // One deterministic identity for the whole canary, so every row this creates
 // is found rather than duplicated on a second run.
-const SOURCE_JOB_ID = `canary-youtube-${account.company_id.slice(0, 8)}`;
+const SOURCE_JOB_ID = `canary-youtube-${account.company_id.slice(0, 8)}${
+  JOB_SUFFIX ? `-${JOB_SUFFIX}` : ""
+}`;
 const objectKey = buildMediaObjectKey({
   companyId: account.company_id,
   sourceJobId: SOURCE_JOB_ID,

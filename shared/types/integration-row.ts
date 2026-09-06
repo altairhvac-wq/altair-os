@@ -91,7 +91,85 @@ export type IntegrationRow = {
   readonly connectedAccountId: string | null;
   /** ISO timestamp of the last successful use, when known. */
   readonly lastSuccessAt: string | null;
+  /**
+   * One quiet line separating a DURABLE connection from a recently
+   * (re)authorized one, or null when the state makes it meaningless.
+   *
+   * "Self-refresh proven" is the fact that matters after the reconnect
+   * loop this page used to cause: a connection is only proven durable when
+   * a credential refresh has SUCCEEDED after the current consent —
+   * `last_success_at` later than `connected_at`. A connection someone just
+   * reauthorized shows "not yet proven" until the daily maintenance run or
+   * the next publish confirms it, which is exactly the difference between
+   * "fixed" and "fixed until tomorrow morning".
+   */
+  readonly healthLine: string | null;
 };
+
+/**
+ * Deterministic on server and client alike — a fixed locale and UTC, so the
+ * same row cannot hydrate into different text than it rendered. (The shared
+ * `formatDateInTimeZone` helper is deliberately NOT used here: its default
+ * argument reads mutable module state, and this module's whole design is
+ * that identical inputs always render identical rows.)
+ */
+const HEALTH_DATE = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const HEALTH_DATE_WITH_YEAR = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const HEALTH_YEAR = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** States where a connection exists and its durability is worth a line. */
+const HEALTH_LINE_STATES: ReadonlySet<MarketingChannelState> = new Set([
+  "DIRECT_PUBLISH_READY",
+  "DRAFT_UPLOAD_ONLY",
+  "TOKEN_EXPIRED",
+]);
+
+export function buildConnectionHealthLine(
+  state: MarketingChannelState,
+  account: IntegrationAccountFacts | null,
+): string | null {
+  if (!account?.connectedAt || !HEALTH_LINE_STATES.has(state)) return null;
+
+  // "Self-refresh" is a fact about connections that HOLD a refresh token.
+  // A Facebook Page token neither expires nor refreshes, so the line would
+  // read "not yet proven" forever — a permanent caveat about a concern that
+  // does not exist there. No refresh token, no line.
+  if (!account.hasRefreshToken) return null;
+
+  const connectedMs = Date.parse(account.connectedAt);
+  if (Number.isNaN(connectedMs)) return null;
+
+  const successMs = account.lastSuccessAt
+    ? Date.parse(account.lastSuccessAt)
+    : Number.NaN;
+
+  // Proven means a credential SUCCESS after this consent — a refresh or a
+  // publish that used the stored credential — not the consent itself.
+  const proven = !Number.isNaN(successMs) && successMs > connectedMs;
+
+  // Compact month-day within one year; both dates carry the year whenever
+  // they differ, so "proven Jan 10" can never read as earlier than
+  // "since Mar 15" across a year boundary.
+  const spansYears =
+    proven && HEALTH_YEAR.format(connectedMs) !== HEALTH_YEAR.format(successMs);
+  const fmt = spansYears ? HEALTH_DATE_WITH_YEAR : HEALTH_DATE;
+
+  return proven
+    ? `Connected since ${fmt.format(connectedMs)} · self-refresh proven ${fmt.format(successMs)}`
+    : `Connected since ${fmt.format(connectedMs)} · self-refresh not yet proven`;
+}
 
 /**
  * State → pill tone. A total record, so a new `MarketingChannelState` is a
@@ -174,6 +252,8 @@ export type IntegrationAccountFacts = MarketingChannelAccountFacts & {
   readonly id: string;
   readonly provider: IntegrationProvider;
   readonly lastSuccessAt: string | null;
+  /** When the current authorization was granted (reset on every reconnect). */
+  readonly connectedAt: string | null;
 };
 
 function isPublishChannel(
@@ -265,6 +345,7 @@ export function buildIntegrationRows(
           : [],
       connectedAccountId: account?.id ?? null,
       lastSuccessAt: account?.lastSuccessAt ?? null,
+      healthLine: buildConnectionHealthLine(state, account),
     } satisfies IntegrationRow;
   });
 }
