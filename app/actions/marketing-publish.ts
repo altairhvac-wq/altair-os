@@ -52,6 +52,10 @@ import {
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
 import {
+  reconcileMarketingDeliveries,
+  type DeliveryReconciliationFinding,
+} from "@/lib/marketing/delivery-reconciliation";
+import {
   describeDeliveryDecision,
   mayPublish,
   type PostedDeliverySettlement,
@@ -65,6 +69,16 @@ export type MarketingPublishActionResult = {
   platform?: "facebook" | "instagram";
   /** Set on Reel publishes: the Facebook video id / Instagram container id. */
   providerMediaId?: string;
+  /**
+   * Non-privileged public-visibility probe result (Facebook Reels). PUBLIC is
+   * the only value that means a non-admin can see it; UNKNOWN means the probe
+   * could not answer (e.g. the app lacks the approved oEmbed feature) — never
+   * treat it as success. 2026-09-06: the provider accepted three Reels that
+   * no non-admin could open.
+   */
+  publicVisibility?: "PUBLIC" | "NOT_PUBLIC" | "UNKNOWN";
+  /** A publish that succeeded at the provider but carries an unresolved public-visibility concern. */
+  warning?: string;
 };
 
 /**
@@ -884,6 +898,12 @@ export async function publishMarketingReelToFacebookAction(
     providerMediaId: string;
     permalinkUrl?: string;
     providerStatus?: FacebookVideoStatus;
+    phaseEvidence?: {
+      startVideoId: string;
+      uploadHttpStatus: number;
+      finishSuccess: boolean | null;
+    };
+    publicVisibility?: "PUBLIC" | "NOT_PUBLIC" | "UNKNOWN";
   };
 
   try {
@@ -924,21 +944,45 @@ export async function publishMarketingReelToFacebookAction(
   }
 
   // The settlement carries the delivery-verification evidence (2026-09-06
-  // incident): Meta's phase statuses, its own bytes_transferred against the
-  // stored asset's size (TRANSPORT_BYTES_VERIFIED), whether a watchable
-  // rendition existed (PROVIDER_PROCESSING_COMPLETE), and
-  // publicPlaybackVerified: false — which stays false until a human confirms
-  // playback from a non-admin surface. `posted` alone no longer implies any
-  // of these.
+  // incident): the wire-phase evidence, Meta's phase statuses, its own
+  // bytes_transferred against the stored asset's size, the provider's own
+  // publish claim — and the three PUBLIC facts, which start unestablished
+  // and are never inferred from privileged reads. The oEmbed probe (APP
+  // token, non-privileged) may settle publicPermalinkAccessible either way;
+  // UNKNOWN stays null.
+  const probedVisibility = publishResult.publicVisibility;
   const settlement = {
     outcome: "posted",
     providerPostId: publishResult.providerPostId,
     providerPermalink: publishResult.permalinkUrl ?? null,
-    providerResult: buildReelSettlementResult({
-      status: publishResult.providerStatus ?? null,
-      expectedByteSize: media.byteSize ?? null,
-    }),
+    providerResult: {
+      ...buildReelSettlementResult({
+        status: publishResult.providerStatus ?? null,
+        expectedByteSize: media.byteSize ?? null,
+        phaseEvidence: publishResult.phaseEvidence ?? null,
+      }),
+      ...(probedVisibility === "PUBLIC"
+        ? { publicPermalinkAccessible: true }
+        : probedVisibility === "NOT_PUBLIC"
+          ? { publicPermalinkAccessible: false }
+          : {}),
+      ...(probedVisibility ? { publicVisibilityProbe: probedVisibility } : {}),
+    },
   } as const;
+
+  // Said to the founder, not just written to the ledger. The provider
+  // accepted the publish either way — but "posted" must never read as
+  // "the public can see it" again.
+  const visibilityWarning =
+    probedVisibility === "PUBLIC"
+      ? undefined
+      : probedVisibility === "NOT_PUBLIC"
+        ? "Facebook accepted the Reel, but a non-privileged check says it is NOT publicly visible. " +
+          "If the Facebook app is in Development Mode, its posts are served only to app-role users — " +
+          "switch the app to Live in developers.facebook.com, then verify from a non-admin account."
+        : "Facebook accepted the Reel, but public visibility could NOT be verified automatically " +
+          "(the app lacks the approved oEmbed feature). Verify from a non-admin account before " +
+          "treating this as delivered.";
 
   const settled = await settlePublishedDelivery(
     deliveryId,
@@ -980,6 +1024,8 @@ export async function publishMarketingReelToFacebookAction(
     providerMediaId: publishResult.providerMediaId,
     permalinkUrl: publishResult.permalinkUrl,
     platform: "facebook",
+    ...(probedVisibility ? { publicVisibility: probedVisibility } : {}),
+    ...(visibilityWarning ? { warning: visibilityWarning } : {}),
   };
 }
 
@@ -1210,4 +1256,29 @@ export async function confirmReelPublicPlaybackAction(
 
   revalidateMarketingPaths();
   return { verified: true };
+}
+
+/**
+ * Founder-invoked delivery reconciliation (2026-09-06 incident): re-reads
+ * every posted delivery against the provider — object still exists? can a
+ * NON-privileged reader see it? — and downgrades `posted` rows to
+ * `posted_unverified` when the answer is no. Never publishes, never deletes,
+ * never touches marketing_posts. See lib/marketing/delivery-reconciliation.
+ */
+export async function reconcileMarketingDeliveriesAction(): Promise<{
+  error?: string;
+  findings?: DeliveryReconciliationFinding[];
+}> {
+  const permission = await assertFounderPublishAccess();
+  if ("error" in permission) {
+    return { error: permission.error };
+  }
+
+  const findings = await reconcileMarketingDeliveries({
+    companyId: permission.context.company.id,
+    nowIso: new Date().toISOString(),
+  });
+
+  revalidateMarketingPaths();
+  return { findings };
 }

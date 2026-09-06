@@ -3,6 +3,7 @@ import "server-only";
 import {
   REEL_POLL_INTERVAL_MS,
   REEL_POLL_MAX_ATTEMPTS,
+  classifyOembedVisibility,
   decideFacebookPublishReadiness,
   decideInstagramContainerPhase,
   graphVersionSupportsReels,
@@ -10,6 +11,7 @@ import {
   normalizeFacebookPermalink,
   FACEBOOK_UPLOAD_HOST,
   type FacebookVideoStatus,
+  type OembedVisibility,
 } from "@/shared/types/marketing-reel";
 import { getFacebookOAuthConfig } from "./env";
 import { graphBaseUrl, readFacebookJson } from "./graph";
@@ -63,6 +65,23 @@ export type ReelPublishResult = {
    * the settlement evidence: phases, and Meta's own bytes_transferred count.
    */
   readonly providerStatus?: FacebookVideoStatus;
+  /**
+   * Wire-level evidence from the phases themselves, kept because the
+   * 2026-09-06 investigation had NOTHING to reconstruct the original start/
+   * upload/finish responses from — only the video id survived.
+   */
+  readonly phaseEvidence?: {
+    readonly startVideoId: string;
+    readonly uploadHttpStatus: number;
+    readonly finishSuccess: boolean | null;
+  };
+  /**
+   * Non-privileged public-visibility probe (oEmbed with the APP token),
+   * run after publish. PUBLIC / NOT_PUBLIC / UNKNOWN — an app without the
+   * approved oEmbed feature reads UNKNOWN, which the ledger records as null,
+   * never as a pass. Facebook only; best-effort.
+   */
+  readonly publicVisibility?: OembedVisibility;
 };
 
 /**
@@ -240,6 +259,7 @@ export async function publishFacebookPageReel(input: {
     },
     cache: "no-store",
   });
+  const uploadHttpStatus = uploadResponse.status;
 
   if (!uploadResponse.ok) {
     let detail = `Facebook rejected the Reel upload (${uploadResponse.status}).`;
@@ -307,6 +327,13 @@ export async function publishFacebookPageReel(input: {
     accessToken,
   }).catch(() => undefined);
 
+  // Non-privileged public-visibility probe. Uses the APP token, never the
+  // Page token — a Page token proved the wrong oracle on 2026-09-06 (it can
+  // read renditions of content the public cannot see). Best-effort.
+  const publicVisibility = await probeReelPublicVisibility(videoId).catch(
+    () => undefined,
+  );
+
   // The video id is both the media object and the published object on
   // Facebook — `finish` returns only `{success: true}`, so there is no
   // separate post id to record.
@@ -315,7 +342,50 @@ export async function publishFacebookPageReel(input: {
     providerMediaId: videoId,
     permalinkUrl,
     ...(providerStatus ? { providerStatus } : {}),
+    phaseEvidence: {
+      startVideoId: videoId,
+      uploadHttpStatus,
+      finishSuccess: typeof finish.success === "boolean" ? finish.success : null,
+    },
+    ...(publicVisibility ? { publicVisibility } : {}),
   };
+}
+
+/**
+ * The public-visibility oracle: oEmbed with the APP access token — a
+ * non-privileged, public-content read. Only a 200-with-html proves PUBLIC;
+ * a definitive content refusal proves NOT_PUBLIC; an app-feature refusal
+ * (Meta #10 — oEmbed Read not approved for this app) is UNKNOWN and must be
+ * recorded as such, never as either verdict.
+ */
+export async function probeReelPublicVisibility(
+  videoId: string,
+): Promise<OembedVisibility> {
+  const config = getFacebookOAuthConfig();
+  const appToken = `${config.appId}|${config.appSecret}`;
+  const url = new URL(`${graphBaseUrl(config.graphApiVersion)}/oembed_video`);
+  url.searchParams.set(
+    "url",
+    `https://www.facebook.com/reel/${encodeURIComponent(videoId)}/`,
+  );
+  url.searchParams.set("omitscript", "true");
+  url.searchParams.set("access_token", appToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  let body: {
+    html?: string | null;
+    error?: { code?: number | null; error_subcode?: number | null } | null;
+  } | null = null;
+  try {
+    body = (await response.json()) as typeof body;
+  } catch {
+    body = null;
+  }
+  return classifyOembedVisibility({ httpStatus: response.status, body });
 }
 
 async function fetchFacebookVideoStatus(input: {

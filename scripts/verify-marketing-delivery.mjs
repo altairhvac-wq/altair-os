@@ -253,10 +253,56 @@ check(
 );
 check("whitespace is collapsed", d.clampFailureDetail("a\n\n  b") === "a b");
 
-console.log("\nState vocabulary matches migration 143");
+console.log("\nState vocabulary matches migrations 143 + 197");
 check(
-  "four states, matching the CHECK constraint",
-  d.MARKETING_DELIVERY_STATES.join(",") === "in_flight,posted,draft,failed",
+  "five states, matching the CHECK constraint",
+  d.MARKETING_DELIVERY_STATES.join(",") ===
+    "in_flight,posted,draft,failed,posted_unverified",
+);
+check(
+  "a downgraded row refuses a republish — the suppressed object may still exist",
+  d.decideDelivery(
+    {
+      id: "x",
+      companyId: "c",
+      marketingPostId: "p",
+      connectedAccountId: "a",
+      provider: "facebook",
+      deliveryState: "posted_unverified",
+      providerPostId: "123",
+      providerMediaId: "123",
+      providerPermalink: null,
+      failureDetail: null,
+      createdAt: "2026-09-06T00:00:00.000Z",
+      settledAt: "2026-09-06T00:00:10.000Z",
+    },
+    "2026-09-06T01:00:00.000Z",
+  ) === "POSTED_UNVERIFIED" &&
+    d.mayPublish("POSTED_UNVERIFIED") === false,
+);
+check(
+  "and its operator copy names the object and warns about double-posting",
+  (() => {
+    const copy = d.describeDeliveryDecision(
+      "POSTED_UNVERIFIED",
+      "Facebook",
+      {
+        id: "x",
+        companyId: "c",
+        marketingPostId: "p",
+        connectedAccountId: "a",
+        provider: "facebook",
+        deliveryState: "posted_unverified",
+        providerPostId: "123",
+        providerMediaId: "123",
+        providerPermalink: null,
+        failureDetail: null,
+        createdAt: "2026-09-06T00:00:00.000Z",
+        settledAt: null,
+      },
+    );
+    return copy.includes("123") && /twice/.test(copy);
+  })(),
 );
 
 /**

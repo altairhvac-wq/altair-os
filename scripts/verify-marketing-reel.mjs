@@ -275,26 +275,38 @@ check(
 );
 
 /* -------------------------------------------- settlement evidence record */
-console.log("\nSettlement evidence — the four states never vouch for each other");
+console.log("\nSettlement evidence — the six states never vouch for each other");
 {
   const settled = r.buildReelSettlementResult({
     status: {
       video_status: "ready",
       uploading_phase: { status: "complete", bytes_transferred: 25415189 },
       processing_phase: { status: "complete" },
-      publishing_phase: { status: "complete" },
+      publishing_phase: { status: "complete", publish_status: "published" },
     },
     expectedByteSize: 25415189,
+    phaseEvidence: { startVideoId: "111", uploadHttpStatus: 200, finishSuccess: true },
   });
   check(
     "matching byte counts verify transport",
     settled.transportBytesVerified === true &&
       settled.transportBytesTransferred === 25415189,
   );
+  check("upload completion is recorded", settled.providerUploadComplete === true);
   check("processing completion is recorded", settled.providerProcessingComplete === true);
   check(
-    "public playback starts UNVERIFIED — no other state implies it",
-    settled.publicPlaybackVerified === false,
+    "publish CONFIRMED requires publishing complete AND publish_status published",
+    settled.providerPublishConfirmed === true,
+  );
+  check(
+    "the wire-phase evidence is preserved (2026-09-06: nothing survived to reconstruct)",
+    settled.fbStartVideoId === "111" && settled.fbUploadHttpStatus === 200 && settled.fbFinishSuccess === true,
+  );
+  check(
+    "ALL THREE public facts start unestablished — none inferable from provider phases",
+    settled.publicPermalinkAccessible === null &&
+      settled.publicPageListed === null &&
+      settled.publicPlaybackVerified === false,
   );
   check(
     "the record is flat (migration 186's 2KB ledger contract)",
@@ -310,12 +322,54 @@ console.log("\nSettlement evidence — the four states never vouch for each othe
     expectedByteSize: 25415189,
   });
   check("a byte mismatch records transport as NOT verified", mismatch.transportBytesVerified === false);
+  const unpublished = r.buildReelSettlementResult({
+    status: {
+      uploading_phase: { status: "complete" },
+      processing_phase: { status: "complete" },
+      publishing_phase: { status: "complete", publish_status: "draft" },
+    },
+    expectedByteSize: null,
+  });
+  check(
+    "a draft publish_status never reads as publish-confirmed",
+    unpublished.providerPublishConfirmed === false,
+  );
   const unknown = r.buildReelSettlementResult({ status: null, expectedByteSize: null });
   check(
     "absent evidence is null, never a claimed pass",
     unknown.transportBytesVerified === null && unknown.providerProcessingComplete === false,
   );
 }
+
+/* ------------------------------------------ public-visibility classifier */
+console.log("\noEmbed classifier — the only automatable non-privileged oracle");
+check(
+  "200 with embed html is PUBLIC",
+  r.classifyOembedVisibility({ httpStatus: 200, body: { html: "<iframe/>" } }) === "PUBLIC",
+);
+check(
+  "Meta #10 (app feature not approved) is UNKNOWN — it says nothing about the video",
+  r.classifyOembedVisibility({ httpStatus: 400, body: { error: { code: 10 } } }) === "UNKNOWN",
+);
+check(
+  "Meta #24 is NOT_PUBLIC",
+  r.classifyOembedVisibility({ httpStatus: 400, body: { error: { code: 24 } } }) === "NOT_PUBLIC",
+);
+check(
+  "GraphMethodException 100/33 (does not exist / cannot be loaded) is NOT_PUBLIC",
+  r.classifyOembedVisibility({
+    httpStatus: 400,
+    body: { error: { code: 100, error_subcode: 33 } },
+  }) === "NOT_PUBLIC",
+);
+check(
+  "a 200 WITHOUT html proves nothing",
+  r.classifyOembedVisibility({ httpStatus: 200, body: {} }) === "UNKNOWN",
+);
+check(
+  "transport garbage is UNKNOWN, never a verdict",
+  r.classifyOembedVisibility({ httpStatus: 500, body: null }) === "UNKNOWN",
+);
 
 /* --------------------------------------------------------- upload host */
 console.log("\nUpload host pinning — the token goes nowhere else");
