@@ -54,6 +54,40 @@ export type MarketingPostSource =
   | "agent_daily_reel"
   | "other";
 
+/**
+ * The three states the upstream integrity policy can reach, and the reason
+ * there are three rather than two.
+ *
+ * `UNEVALUATED` is not a softer FAIL — it says a check that was supposed to
+ * run could not, so nothing is known. It refuses as hard as FAIL upstream and
+ * stays separate because the two need opposite fixes: FAIL is a bad render,
+ * UNEVALUATED is a blind spot in the measuring.
+ */
+export const MEASURED_RENDER_QA_STATES = [
+  "PASS",
+  "FAIL",
+  "UNEVALUATED",
+] as const;
+export type MeasuredRenderQaState = (typeof MEASURED_RENDER_QA_STATES)[number];
+
+export type MeasuredRenderQa = {
+  state: MeasuredRenderQaState;
+  /**
+   * The policy version that produced the state, e.g. `truthline-L0-v2`.
+   * Thresholds and the armed check-set move with this string, so two verdicts
+   * are only comparable under the same one.
+   */
+  policyVersion: string;
+  /** One line, as the policy wrote it. */
+  summary: string;
+  /**
+   * Finding codes the policy recorded but did NOT enforce — the WARN rung
+   * between "clean" and "refused" (e.g. `AUDIO_LOUDNESS_OFF_TARGET`). An
+   * empty list on a PASS means measured with nothing to note.
+   */
+  advisories: string[];
+};
+
 export type MarketingPost = {
   id: string;
   companyId: string;
@@ -114,6 +148,24 @@ export type MarketingPost = {
    * that repository).
    */
   qualityState?: string;
+  /**
+   * Migration 198 — the MEASURED render verdict, and a different fact from
+   * `qualityState` above.
+   *
+   * `qualityState` is derived from PROVENANCE: which ingredients the job spec
+   * asked for and what the renderer reported about its own output. It never
+   * opens the finished file. `renderQa` is the Truthline integrity verdict,
+   * computed by decoding the delivered master and measuring it — loudness,
+   * peak, speech-band energy, per-frame luma, content hash.
+   *
+   * Undefined means NO MEASURED VERDICT WAS TRANSPORTED — a hand-authored
+   * post, a post predating the column, or a render the measurement gate did
+   * not run on. It does not mean the render was fine, and no reader may
+   * present it as though it did. "Measured, but the measurement could not
+   * complete" has its own value, `UNEVALUATED`, precisely so that the two
+   * never have to share `undefined`.
+   */
+  renderQa?: MeasuredRenderQa;
   directorRationale?: string;
   createdBy?: string;
   createdAt: string;
