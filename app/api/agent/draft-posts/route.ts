@@ -12,6 +12,7 @@ import {
   type AgentDraftPostOutcome,
 } from "@/lib/database/queries/marketing-posts";
 import { isSafeSourceJobId } from "@/shared/types/marketing-media";
+import { boundRenderQaSummary } from "@/shared/lib/render-qa-summary";
 import type { MarketingChannel } from "@/shared/types/marketing-post";
 
 /**
@@ -127,7 +128,6 @@ const CHANNEL_TITLE_LIMITS: Record<AllowedChannel, number> = {
  * a present one saying UNEVALUATED.
  */
 const RENDER_QA_STATES = ["PASS", "FAIL", "UNEVALUATED"] as const;
-const MAX_RENDER_QA_SUMMARY_CHARS = 1_000;
 const MAX_RENDER_QA_POLICY_CHARS = 64;
 const MAX_RENDER_QA_ADVISORIES = 32;
 const MAX_RENDER_QA_ADVISORY_CODE_CHARS = 64;
@@ -270,10 +270,25 @@ function readRenderQa(value: unknown): RenderQa | undefined {
   if (!policyVersion || policyVersion.length > MAX_RENDER_QA_POLICY_CHARS) {
     return undefined;
   }
-  const summary = typeof raw.summary === "string" ? raw.summary.trim() : "";
-  if (!summary || summary.length > MAX_RENDER_QA_SUMMARY_CHARS) {
+  // ============ AN OVERLONG SUMMARY IS VERBOSE, NOT MALFORMED ============
+  // This used to `return undefined` for a summary over the limit, which threw
+  // away the STATE, the POLICY VERSION and the ADVISORIES along with it — so a
+  // render that was measured and FAILED displayed as "Not measured". That is
+  // the subsystem's own cardinal error running backwards: a known result shown
+  // as unknown, on the strength of a prose field being wordy.
+  //
+  // An absent or empty summary is still a refusal: a verdict with no sentence
+  // in it was not assembled by anything this route should trust. But length is
+  // not a trust signal — the state and the codes are the load-bearing parts,
+  // the full diagnostic already lives in the platform's own `qa.video_verdict`
+  // artifact, and the DB column is bounded at the same 1000 characters. So an
+  // overlong one is bounded here, with a visible marker, and the verdict
+  // survives intact.
+  const rawSummary = typeof raw.summary === "string" ? raw.summary.trim() : "";
+  if (!rawSummary) {
     return undefined;
   }
+  const summary = boundRenderQaSummary(rawSummary);
 
   // Advisories are optional; an absent list is an empty one. Unusable entries
   // are dropped individually — an over-long code is noise, not a reason to

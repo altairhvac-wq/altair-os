@@ -37,7 +37,10 @@ import {
 } from "@/shared/types/marketing-reel";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
-import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
+import {
+  buildMarketingPostBodyFromPost,
+  checkMarketingPostBodyFits,
+} from "@/shared/lib/marketing-post-body";
 import type {
   MarketingPost,
   MarketingPostSource,
@@ -401,7 +404,15 @@ export async function publishMarketingPostToFacebookAction(
     };
   }
 
-  const message = buildMarketingPostBodyFromPost(draft.post);
+  // Measured on the FINAL assembled string — post text + call to action +
+  // hashtags — because a caption that fits alone can still overflow once the
+  // other two are appended. Checked BEFORE the delivery is claimed, so a
+  // refusal leaves no claimed row behind.
+  const bodyFit = checkMarketingPostBodyFits(draft.post, "facebook");
+  if (bodyFit.error) {
+    return { error: bodyFit.error };
+  }
+  const message = bodyFit.body;
   const pageId = pageLoad.account.providerResourceId!;
   const screenshotRef = draft.post.founderScreenshotReference?.trim();
 
@@ -637,7 +648,15 @@ export async function publishMarketingPostToInstagramAction(
     };
   }
 
-  const caption = buildMarketingPostBodyFromPost(draft.post);
+  // Measured on the FINAL assembled string — post text + call to action +
+  // hashtags — because a caption that fits alone can still overflow once the
+  // other two are appended. Checked BEFORE the delivery is claimed, so a
+  // refusal leaves no claimed row behind.
+  const bodyFit = checkMarketingPostBodyFits(draft.post, "instagram");
+  if (bodyFit.error) {
+    return { error: bodyFit.error };
+  }
+  const caption = bodyFit.body;
 
   // Claimed under the INSTAGRAM provider, not Facebook. They are separate
   // rows for the same post on purpose: publishing to the Page and to the
@@ -839,7 +858,15 @@ export async function publishMarketingReelToFacebookAction(
     return { error: media.error ?? "Could not open the video for publishing." };
   }
 
-  const description = buildMarketingPostBodyFromPost(draft.post);
+  // Measured on the FINAL assembled string — post text + call to action +
+  // hashtags — because a caption that fits alone can still overflow once the
+  // other two are appended. Checked BEFORE the delivery is claimed, so a
+  // refusal leaves no claimed row behind.
+  const bodyFit = checkMarketingPostBodyFits(draft.post, "facebook");
+  if (bodyFit.error) {
+    return { error: bodyFit.error };
+  }
+  const description = bodyFit.body;
   const pageId = pageLoad.account.providerResourceId!;
 
   const claim = await claimDelivery({
@@ -1026,7 +1053,15 @@ export async function publishMarketingReelToInstagramAction(
     return { error: media.error ?? "Could not open the video for publishing." };
   }
 
-  const caption = buildMarketingPostBodyFromPost(draft.post);
+  // Measured on the FINAL assembled string — post text + call to action +
+  // hashtags — because a caption that fits alone can still overflow once the
+  // other two are appended. Checked BEFORE the delivery is claimed, so a
+  // refusal leaves no claimed row behind.
+  const bodyFit = checkMarketingPostBodyFits(draft.post, "instagram");
+  if (bodyFit.error) {
+    return { error: bodyFit.error };
+  }
+  const caption = bodyFit.body;
 
   const claim = await claimDelivery({
     companyId: permission.context.company.id,

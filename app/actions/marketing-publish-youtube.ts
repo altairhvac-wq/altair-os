@@ -19,7 +19,10 @@ import {
   decideMediaRead,
   describeMediaReadDecision,
 } from "@/shared/types/marketing-media";
-import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
+import {
+  checkMarketingPostBodyFits,
+  checkMarketingPostTitleFits,
+} from "@/shared/lib/marketing-post-body";
 import { capabilityFor } from "@/shared/types/integration-capability";
 import { toMarketingChannelAccountFacts } from "@/shared/types/marketing-channel-connection";
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
@@ -221,6 +224,22 @@ export async function publishMarketingPostToYouTubeAction(
     return { error: grant.error ?? "Could not mint a read link for the video." };
   }
 
+  // ------------------------------------------------- the payload must fit
+  // Measured on the FINAL assembled description — post text + call to action
+  // + hashtags — and on the title, against YouTube's own declared ceilings.
+  // Without this the description reached `buildYouTubeUploadInitRequest` and
+  // was silently cut at 5000, which is the founder approving one thing and
+  // Google publishing another. Checked before the dispatch, so a refusal
+  // claims no delivery and uploads no bytes.
+  const bodyFit = checkMarketingPostBodyFits(post, "youtube");
+  if (bodyFit.error) {
+    return { error: bodyFit.error };
+  }
+  const titleFit = checkMarketingPostTitleFits(post.title, "youtube");
+  if (titleFit.error) {
+    return { error: titleFit.error };
+  }
+
   // ------------------------------------------------------- the dispatch
   // The shared projection the Integrations page and the Command surface use
   // — one mapping, so a publish can never judge health on different facts
@@ -241,7 +260,7 @@ export async function publishMarketingPostToYouTubeAction(
     marketingPostId: normalizedPostId,
     jobApprovedAt: approval.approvedAt,
     title: post.title,
-    body: buildMarketingPostBodyFromPost(post),
+    body: bodyFit.body,
     hashtags: post.suggestedHashtags,
     link: null,
     media: [grant.grant],

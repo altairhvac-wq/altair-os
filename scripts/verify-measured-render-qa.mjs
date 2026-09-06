@@ -196,8 +196,20 @@ check(
 );
 
 check(
-  "refuses a verdict missing its summary",
-  /function\s+readRenderQa[\s\S]*?!summary[\s\S]*?return\s+undefined;/.test(route),
+  "refuses a verdict whose summary is missing or empty",
+  /function\s+readRenderQa[\s\S]*?!rawSummary[\s\S]*?return\s+undefined;/.test(route),
+);
+
+check(
+  "BOUNDS an overlong summary instead of discarding the verdict",
+  // The regression this replaces: `summary.length > MAX` used to
+  // `return undefined`, throwing away the state, the policy version and the
+  // advisories with it — so a measured FAIL displayed as "Not measured".
+  // Length is not a trust signal; absence is.
+  /boundRenderQaSummary\(rawSummary\)/.test(route) &&
+    !/summary\.length\s*>\s*MAX_RENDER_QA_SUMMARY_CHARS[\s\S]{0,80}return\s+undefined/.test(
+      route,
+    ),
 );
 
 check(
