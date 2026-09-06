@@ -82,6 +82,37 @@ const QUALITY_STATES = ["STUB", "REVIEWABLE_CREATIVE", "PRODUCTION_READY"] as co
 /** Mirrors video-plan.ts's own directorRationale.max(2000) and migration 195's length check. */
 const MAX_DIRECTOR_RATIONALE_CHARS = 2_000;
 
+/**
+ * ==================== THE MEASURED VERDICT, WHICH IS NOT qualityState ====================
+ * `qualityState` above is agent-platform's PROVENANCE classification: what
+ * ingredients the job asked for, and what the renderer said about its own
+ * output. `renderQa` is the Truthline integrity verdict — the result of
+ * decoding the delivered master and MEASURING it. They answer different
+ * questions and migration 198's header explains why both columns exist.
+ *
+ * Mirrored as literals rather than imported, for the same reason
+ * ALLOWED_CHANNELS and QUALITY_STATES are: this route has no dependency on
+ * the agent-platform repository.
+ *
+ * UNEVALUATED is a value, not an absence. "The measurement could not run" is
+ * a different answer from "it ran and found nothing", and the whole upstream
+ * policy exists to keep those apart — so it survives the wire, and so does
+ * the distinction between an absent `renderQa` (nothing was transported) and
+ * a present one saying UNEVALUATED.
+ */
+const RENDER_QA_STATES = ["PASS", "FAIL", "UNEVALUATED"] as const;
+const MAX_RENDER_QA_SUMMARY_CHARS = 1_000;
+const MAX_RENDER_QA_POLICY_CHARS = 64;
+const MAX_RENDER_QA_ADVISORIES = 32;
+const MAX_RENDER_QA_ADVISORY_CODE_CHARS = 64;
+
+type RenderQa = {
+  state: (typeof RENDER_QA_STATES)[number];
+  policyVersion: string;
+  summary: string;
+  advisories: string[];
+};
+
 type IncomingPost = {
   channel?: unknown;
   text?: unknown;
@@ -98,6 +129,7 @@ type Body = {
   posts?: unknown;
   costUsd?: unknown;
   qualityState?: unknown;
+  renderQa?: unknown;
   directorRationale?: unknown;
 };
 
@@ -164,6 +196,71 @@ function readQualityState(value: unknown): string | undefined {
     (QUALITY_STATES as readonly string[]).includes(value)
     ? value
     : undefined;
+}
+
+/**
+ * Reads a measured verdict, or nothing.
+ *
+ * ==================== A MALFORMED VERDICT IS NO VERDICT ====================
+ * Every branch here returns `undefined` rather than a partial object. A row
+ * carrying `state: 'PASS'` with a missing policy version would be a QA claim
+ * this route assembled itself, and the card that renders it says "Not
+ * measured" for `undefined` — which is true — where a half-built verdict
+ * would read as a pass nobody computed. The two collapses this whole
+ * subsystem exists to prevent are "unmeasured shown as fine" and "unknown
+ * shown as known", and a lenient parser here would reintroduce both at the
+ * last hop.
+ */
+function readRenderQa(value: unknown): RenderQa | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return undefined;
+  }
+  const raw = value as {
+    state?: unknown;
+    policyVersion?: unknown;
+    summary?: unknown;
+    advisories?: unknown;
+  };
+
+  if (
+    typeof raw.state !== "string" ||
+    !(RENDER_QA_STATES as readonly string[]).includes(raw.state)
+  ) {
+    return undefined;
+  }
+  const policyVersion =
+    typeof raw.policyVersion === "string" ? raw.policyVersion.trim() : "";
+  if (!policyVersion || policyVersion.length > MAX_RENDER_QA_POLICY_CHARS) {
+    return undefined;
+  }
+  const summary = typeof raw.summary === "string" ? raw.summary.trim() : "";
+  if (!summary || summary.length > MAX_RENDER_QA_SUMMARY_CHARS) {
+    return undefined;
+  }
+
+  // Advisories are optional; an absent list is an empty one. Unusable entries
+  // are dropped individually — an over-long code is noise, not a reason to
+  // discard a verdict whose state and summary are sound.
+  const advisories: string[] = [];
+  if (Array.isArray(raw.advisories)) {
+    for (const entry of raw.advisories) {
+      if (advisories.length >= MAX_RENDER_QA_ADVISORIES) break;
+      if (
+        typeof entry === "string" &&
+        entry.trim() &&
+        entry.trim().length <= MAX_RENDER_QA_ADVISORY_CODE_CHARS
+      ) {
+        advisories.push(entry.trim());
+      }
+    }
+  }
+
+  return {
+    state: raw.state as RenderQa["state"],
+    policyVersion,
+    summary,
+    advisories,
+  };
 }
 
 function readDirectorRationale(value: unknown): string | undefined {
@@ -296,6 +393,7 @@ export async function POST(request: Request) {
   const sourceId = candidateUuid(body.candidateArtifactId);
   const costUsd = readCostUsd(body.costUsd);
   const qualityState = readQualityState(body.qualityState);
+  const renderQa = readRenderQa(body.renderQa);
   const directorRationale = readDirectorRationale(body.directorRationale);
 
   const results: {
@@ -317,6 +415,7 @@ export async function POST(request: Request) {
       videoMediaAssetId: asset.id,
       ...(costUsd !== undefined ? { costUsd } : {}),
       ...(qualityState !== undefined ? { qualityState } : {}),
+      ...(renderQa !== undefined ? { renderQa } : {}),
       ...(directorRationale !== undefined ? { directorRationale } : {}),
     });
 

@@ -44,6 +44,13 @@ type MarketingPostRow = {
   cost_usd: number | null;
   quality_state: string | null;
   director_rationale: string | null;
+  // marketing_posts.render_qa_*: migration 198 — the MEASURED Truthline
+  // verdict, which is a different fact from quality_state above (provenance).
+  // Wire into Database types on next gen types run.
+  render_qa_state: string | null;
+  render_qa_policy: string | null;
+  render_qa_summary: string | null;
+  render_qa_advisories: unknown;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -90,6 +97,44 @@ function marketingPostsTable(client: MarketingPostsClient) {
   }).from("marketing_posts");
 }
 
+/**
+ * The measured verdict off one row, or `undefined`.
+ *
+ * ==================== ALL FOUR, OR NONE ====================
+ * A row with `render_qa_state` set and `render_qa_policy` missing cannot
+ * happen through the only writer (the route inserts the four together or
+ * inserts none), so if it is ever seen, the row was written by something
+ * else or a migration went sideways. Returning `undefined` for it is the
+ * safe reading: the card then says "Not measured", which is true, instead of
+ * showing a state whose provenance this code cannot account for.
+ *
+ * `PASS` in particular must never be assembled here out of a partial row —
+ * that is the exact shape of the failure the whole measured-QA path was
+ * built to end.
+ */
+function readRenderQaRow(row: MarketingPostRow): MarketingPost["renderQa"] {
+  const state = row.render_qa_state;
+  if (
+    state !== "PASS" &&
+    state !== "FAIL" &&
+    state !== "UNEVALUATED"
+  ) {
+    return undefined;
+  }
+  if (!row.render_qa_policy || !row.render_qa_summary) return undefined;
+  const advisories = Array.isArray(row.render_qa_advisories)
+    ? row.render_qa_advisories.filter(
+        (entry): entry is string => typeof entry === "string",
+      )
+    : [];
+  return {
+    state,
+    policyVersion: row.render_qa_policy,
+    summary: row.render_qa_summary,
+    advisories,
+  };
+}
+
 function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
   return {
     id: row.id,
@@ -116,6 +161,11 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     contentPackageId: row.content_package_id ?? undefined,
     costUsd: row.cost_usd ?? undefined,
     qualityState: row.quality_state ?? undefined,
+    // A verdict is only a verdict whole: a state with no policy version is
+    // not comparable to anything and must not be shown as though it were.
+    // Reading it as one object keeps "measured" and "not measured" the only
+    // two things a card can see.
+    renderQa: readRenderQaRow(row),
     directorRationale: row.director_rationale ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
@@ -740,6 +790,17 @@ export type AgentDraftPostInput = {
   costUsd?: number | null;
   qualityState?: string | null;
   directorRationale?: string | null;
+  /**
+   * Migration 198. Same insert-only rule as the three above. Passed whole or
+   * not at all — a half-written verdict is the failure mode this column set
+   * exists to prevent.
+   */
+  renderQa?: {
+    state: string;
+    policyVersion: string;
+    summary: string;
+    advisories: string[];
+  };
 };
 
 /**
@@ -814,6 +875,10 @@ export async function createAgentDraftMarketingPost(
     cost_usd?: number | null;
     quality_state?: string | null;
     director_rationale?: string | null;
+    render_qa_state?: string;
+    render_qa_policy?: string;
+    render_qa_summary?: string;
+    render_qa_advisories?: string[];
   } = {
     company_id: input.companyId,
     created_by: null,
@@ -832,6 +897,14 @@ export async function createAgentDraftMarketingPost(
       : {}),
     ...(input.directorRationale !== undefined
       ? { director_rationale: input.directorRationale }
+      : {}),
+    ...(input.renderQa !== undefined
+      ? {
+          render_qa_state: input.renderQa.state,
+          render_qa_policy: input.renderQa.policyVersion,
+          render_qa_summary: input.renderQa.summary,
+          render_qa_advisories: input.renderQa.advisories,
+        }
       : {}),
   };
 

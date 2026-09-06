@@ -21,7 +21,10 @@ import {
   type TodayStateInput,
 } from "@/shared/types/marketing-workspace-state";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
-import type { MarketingPost } from "@/shared/types/marketing-post";
+import type {
+  MarketingPost,
+  MeasuredRenderQa,
+} from "@/shared/types/marketing-post";
 import {
   markReelVersions,
   parseRenderJobId,
@@ -113,6 +116,59 @@ function formatQualityState(state: string): { label: string; className: string }
   return { label: state, className: "text-altair-ink-secondary" };
 }
 
+/**
+ * The MEASURED verdict's label — and the one piece of wording on this card
+ * that has to be exactly right.
+ *
+ * ==================== ABSENCE IS NOT A PASS, AND SAYS SO ====================
+ * `undefined` means no measured verdict was transported for this post. That
+ * is not "fine", it is "nobody looked", and the label says the second. The
+ * whole upstream policy is built on keeping "not measured" apart from
+ * "measured and clean"; a UI that renders the first as a blank space, or
+ * worse as a green tick, throws that distinction away at the last hop —
+ * which is the only hop a founder actually sees.
+ *
+ * `UNEVALUATED` is the third state and gets its own words too: the
+ * measurement RAN and could not reach an answer. That is a fault in the
+ * measuring, not in the video, and it needs a different fix from a FAIL.
+ */
+function formatMeasuredRenderQa(qa: MeasuredRenderQa | undefined): {
+  label: string;
+  className: string;
+} {
+  if (!qa) {
+    return {
+      label: "Not measured",
+      className: "text-altair-ink-muted",
+    };
+  }
+  if (qa.state === "FAIL") {
+    return {
+      label: `Failed — ${qa.summary}`,
+      className: "text-altair-danger",
+    };
+  }
+  if (qa.state === "UNEVALUATED") {
+    return {
+      label: `Could not be measured — ${qa.summary}`,
+      className: "text-altair-warning",
+    };
+  }
+  // PASS. Advisories are the WARN rung: the file is deliverable and something
+  // about it was still worth writing down. Naming the codes keeps the row
+  // honest without turning a pass into a scare.
+  return {
+    label:
+      qa.advisories.length > 0
+        ? `Passed with notes — ${qa.advisories.join(", ")}`
+        : "Passed",
+    className:
+      qa.advisories.length > 0
+        ? "text-altair-ink-secondary"
+        : "text-altair-success",
+  };
+}
+
 function ReelIdentityPanel({
   sourceJobId,
   mark,
@@ -122,6 +178,7 @@ function ReelIdentityPanel({
   durationMs,
   costUsd,
   qualityState,
+  renderQa,
 }: {
   sourceJobId: string;
   mark: ReelVersionMark | undefined;
@@ -140,6 +197,11 @@ function ReelIdentityPanel({
   /** Phase 2 (migration 195). Undefined — not null — when this post never had a value; the row is omitted rather than shown as "not reported". */
   costUsd?: number;
   qualityState?: string;
+  /**
+   * The measured Truthline verdict (migration 198). Undefined means none was
+   * transported — which the panel states out loud rather than hiding.
+   */
+  renderQa?: MeasuredRenderQa;
 }) {
   const identity = parseRenderJobId(sourceJobId);
   const supersededBy = mark && !mark.isNewest ? mark.siblingCount - 1 : 0;
@@ -240,13 +302,39 @@ function ReelIdentityPanel({
           </>
         ) : null}
 
+        {/*
+          ============ RENDER QA IS ALWAYS SHOWN, INCLUDING WHEN IT IS ABSENT ============
+          Every other row on this panel is omitted when it has no value, which
+          is right for a cost or a duration: a missing number says nothing
+          anyone could misread. A missing QA verdict is different. Hiding it
+          left a founder unable to tell "measured and clean" from "never
+          measured" — the card looked the same either way, and the quiet
+          version of that mistake is what shipped a −35.8 LUFS master and a
+          silent placeholder to Instagram.
+
+          So this row is unconditional, and `undefined` gets words rather than
+          an empty space.
+        */}
+        <dt className="uppercase tracking-wide text-altair-ink-muted">
+          Render QA
+        </dt>
+        <dd className={formatMeasuredRenderQa(renderQa).className}>
+          {formatMeasuredRenderQa(renderQa).label}
+        </dd>
+
+        {/*
+          The provenance verdict, kept as its own row and its own words. It
+          answers "were the ingredients real?", not "does the file measure
+          clean?", and stacking them under one label would let the weaker
+          claim borrow the stronger one's authority.
+        */}
         {typeof qualityState === "string"
           ? (() => {
               const quality = formatQualityState(qualityState);
               return (
                 <>
                   <dt className="uppercase tracking-wide text-altair-ink-muted">
-                    Render QA
+                    Ingredients
                   </dt>
                   <dd className={quality.className}>{quality.label}</dd>
                 </>
@@ -400,6 +488,7 @@ export function MarketingTodayView({
                     durationMs={video.durationMs}
                     costUsd={post.costUsd}
                     qualityState={post.qualityState}
+                    renderQa={post.renderQa}
                   />
                   <MarketingMediaPreview sourceJobId={video.sourceJobId} />
                 </>
