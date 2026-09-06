@@ -642,6 +642,22 @@ no third-party credential).
   wired (YouTube: `/api/marketing/connected-accounts/youtube/authorize` +
   callback, `access_type=offline&prompt=consent`, per-channel rows, granted
   scopes read back).
+- Media identity gate: every rendered asset's `client_reported_sha256`
+  (recorded by both ingest lanes — the agent transport and the founder
+  media route) rides the read grant, and the YouTube transport hashes the
+  fetched bytes against it BEFORE the PUT. A mismatch uploads nothing; an
+  asset with no digest is an explicit UNVERIFIED state, not a pass.
+- Shorts eligibility (`shared/types/youtube-shorts.ts`): pure tri-state
+  decision from measured duration/dimensions (square-or-vertical, ≤3 min,
+  per current primary Google docs); unknown facts are named, definite
+  failures outrank unknowns, and the publish control shows the verdict as
+  information — Shorts-feed placement stays YouTube's call.
+- Daily reel drafts fan out to facebook, instagram AND youtube
+  (`/api/agent/draft-posts` allowlist ↔ agent-platform
+  `DRAFT_POST_CHANNELS`, two hand-mirrored literals across the repo
+  boundary — widen both or the channel is 400'd/never sent). YouTube
+  drafts are titled "… — YouTube Short" and reach only the founder's
+  private-only publish control.
 - Adapter port + registry + credential seam (`lib/integrations/`): a typed
   boundary; the registry fails closed with no fallback adapter; one module
   reads/decrypts/refreshes every stored secret.
