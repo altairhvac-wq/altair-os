@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Button,
   StatusPill,
@@ -252,6 +253,31 @@ export function MarketingStudioView() {
             .
           </p>
         </div>
+
+        {/* The editor exists for exactly one episode so far — the one that has
+            actually been rendered. Offering the link on every episode would
+            promise a project that does not exist. */}
+        {episode.number === 1 ? (
+          <div className="border-t border-[var(--north-star-plate-border)] p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h4 className="text-xs font-semibold text-altair-ink">
+                  Open in the editor
+                </h4>
+                <p className="mt-0.5 text-xs text-altair-ink-muted">
+                  This episode has been rendered, so its timeline carries
+                  measured narration timings and real frames.
+                </p>
+              </div>
+              <Link
+                href="/studio/editor/hvac-01"
+                className="shrink-0 rounded-[var(--radius-card)] bg-altair-graphite px-3 py-1.5 text-xs font-medium text-altair-ink-on-graphite"
+              >
+                Open editor
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         <div className="border-t border-[var(--north-star-plate-border)] p-3.5">
           <div className="flex flex-wrap items-center justify-between gap-2">

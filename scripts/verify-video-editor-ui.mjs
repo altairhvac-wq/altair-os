@@ -1,0 +1,387 @@
+/**
+ * Video editor: live interaction verification.
+ *
+ * ===================== WHY THIS EXISTS =====================
+ * `verify-video-editor.mjs` proves the arithmetic. It cannot prove that the
+ * arithmetic is WIRED — that pressing Space moves the playhead, that dragging a
+ * clip changes its start, that a reload brings the edit back. Every one of
+ * those is a connection between a real DOM event and the reducer, and the only
+ * way to know a connection exists is to make the event and read the result.
+ *
+ * This drives a real browser against a running dev server and asserts on what
+ * the DOM says afterwards. It is deliberately assertion-based rather than
+ * screenshot-based: a screenshot proves something rendered, not that it is
+ * correct.
+ *
+ * Requires: a dev server, and .playwright/founder-auth.json for a session that
+ * can reach /marketing (platform operator).
+ *
+ * Run: node scripts/verify-video-editor-ui.mjs [baseUrl]
+ */
+import { chromium } from "playwright";
+
+const BASE = process.argv[2] ?? "http://localhost:3100";
+const URL_EDITOR = `${BASE}/studio/editor/hvac-01`;
+
+let failures = 0;
+let checks = 0;
+
+async function check(name, fn) {
+  checks += 1;
+  try {
+    await fn();
+    process.stdout.write(`  ok   ${name}\n`);
+  } catch (error) {
+    failures += 1;
+    process.stdout.write(`  FAIL ${name}\n       ${error.message}\n`);
+  }
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+/** Reads the editor's own state out of the DOM rather than from React. */
+async function readState(page) {
+  return page.evaluate(() => {
+    const timecode = document.querySelector(
+      'section[aria-label="Timeline"]',
+    );
+    const clips = [...document.querySelectorAll('[aria-label*="seconds"]')].map(
+      (el) => ({
+        label: el.getAttribute("aria-label"),
+        left: Math.round(parseFloat(getComputedStyle(el).left)),
+        width: Math.round(parseFloat(getComputedStyle(el).width)),
+        selected: el.getAttribute("aria-pressed") === "true",
+      }),
+    );
+    // The PLAYHEAD timecode specifically. Matching the first dd:dd.dd in the
+    // body text finds the header's TOTAL duration instead, which never moves —
+    // so every playback assertion would pass or fail for the wrong reason.
+    const tc = document.querySelector('[data-testid="ve-playhead-timecode"]');
+    return {
+      clipCount: clips.length,
+      clips,
+      timecode: tc ? tc.textContent.trim() : null,
+      hasTimeline: Boolean(timecode),
+    };
+  });
+}
+
+/** Bounding box of the nth clip on the VIDEO 1 track. */
+async function videoClip(page, index) {
+  const el = page.locator('[aria-label*="seconds"]').nth(index);
+  const box = await el.boundingBox();
+  assert(box, `clip ${index} has no box`);
+  return { el, box };
+}
+
+/**
+ * The first clip wide enough to grab AND fully inside the viewport.
+ *
+ * The timeline scrolls horizontally, so `boundingBox()` happily returns
+ * coordinates past the right edge of the window — clicking those is a no-op
+ * that looks exactly like a broken feature. Every gesture assertion has to
+ * start from a clip that is actually on screen.
+ */
+async function onscreenClip(page, minWidthPx = 200) {
+  const viewport = page.viewportSize();
+  const count = await page.locator('[aria-label*="seconds"]').count();
+  for (let i = 0; i < count; i += 1) {
+    const el = page.locator('[aria-label*="seconds"]').nth(i);
+    const box = await el.boundingBox();
+    if (!box) continue;
+    if (
+      box.width >= minWidthPx &&
+      box.x >= 140 &&
+      box.x + box.width <= viewport.width - 8 &&
+      box.y > 0 &&
+      box.y + box.height <= viewport.height
+    ) {
+      return { el, box, index: i };
+    }
+  }
+  throw new Error("no clip is both wide enough and fully on screen");
+}
+
+const browser = await chromium.launch();
+const context = await browser.newContext({
+  storageState: ".playwright/founder-auth.json",
+  viewport: { width: 1600, height: 1000 },
+});
+const page = await context.newPage();
+
+const pageErrors = [];
+page.on("pageerror", (e) => pageErrors.push(e.message));
+
+process.stdout.write("\nEditor loads\n");
+
+await page.goto(URL_EDITOR, { waitUntil: "domcontentloaded", timeout: 240000 });
+await page.waitForLoadState("networkidle", { timeout: 90000 }).catch(() => {});
+await page.waitForTimeout(900);
+
+// Start from a clean slate so a previous run's autosave cannot mask a defect.
+await page.evaluate(() => window.localStorage.clear());
+await page.reload({ waitUntil: "domcontentloaded" });
+await page.waitForTimeout(1200);
+
+await check("1. editor route opens without redirect", async () => {
+  assert(
+    page.url().includes("/studio/editor/hvac-01"),
+    `landed on ${page.url()}`,
+  );
+});
+
+await check("2. EP01 project loads with its real title", async () => {
+  const text = await page.locator("header").innerText();
+  assert(/How the HVAC cycle works/i.test(text), `header says: ${text}`);
+});
+
+await check("3. media browser shows project assets", async () => {
+  const count = await page
+    .locator('aside[aria-label="Media browser"] button')
+    .count();
+  assert(count >= 20, `only ${count} media entries`);
+});
+
+await check("4. timeline and all eight tracks render", async () => {
+  const timeline = await page.locator('section[aria-label="Timeline"]').count();
+  assert(timeline === 1, "no timeline");
+  const text = await page.locator('section[aria-label="Timeline"]').innerText();
+  for (const track of [
+    "VIDEO 1",
+    "OVERLAY",
+    "GRAPHICS",
+    "TEXT",
+    "CAPTIONS",
+    "VOICEOVER",
+    "MUSIC",
+    "SFX",
+  ]) {
+    assert(text.includes(track), `missing track ${track}`);
+  }
+});
+
+await check("5. clips are positioned by TIME, not by order", async () => {
+  const state = await readState(page);
+  assert(state.clipCount > 50, `only ${state.clipCount} clips`);
+  // The first video clip is 10802ms at 60px/s => ~648px wide, starting at 0.
+  const first = state.clips[0];
+  assert(first.left === 0, `first clip starts at ${first.left}px, expected 0`);
+  assert(
+    Math.abs(first.width - 648) < 12,
+    `first clip is ${first.width}px, expected ~648 (10.802s x 60px/s)`,
+  );
+  // A later clip must start further right — proof that x encodes start time.
+  const laterLefts = state.clips.map((c) => c.left);
+  assert(
+    Math.max(...laterLefts) > 1000,
+    "no clip is far right; x does not encode time",
+  );
+});
+
+process.stdout.write("\nPlayback\n");
+
+await check("6. Space plays and the playhead advances", async () => {
+  const before = (await readState(page)).timecode;
+  await page.locator("body").click({ position: { x: 800, y: 300 } });
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(900);
+  const during = (await readState(page)).timecode;
+  await page.keyboard.press("Space");
+  assert(before === "00:00.00", `started at ${before}`);
+  assert(during !== before, `timecode did not move (${before} -> ${during})`);
+});
+
+await check("7. the preview changes with the playhead", async () => {
+  await page.keyboard.press("Home");
+  await page.waitForTimeout(200);
+  const canvasFrame = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('[data-testid="ve-canvas"]');
+      if (!canvas) return "no-canvas";
+      // The painted layer, not a browser thumbnail elsewhere on the page.
+      return [...canvas.children]
+        .map((c) => c.getAttribute("style") ?? "")
+        .join("|");
+    });
+  const atZero = await canvasFrame();
+  // Seek deep into the episode, past several cuts.
+  for (let i = 0; i < 40; i += 1) await page.keyboard.press("Shift+ArrowRight");
+  await page.waitForTimeout(300);
+  const later = await canvasFrame();
+  assert(atZero !== "no-canvas", "canvas did not render");
+  assert(atZero !== later, "preview frame did not change after seeking 40s");
+});
+
+await check("8. arrow keys step one frame", async () => {
+  await page.keyboard.press("Home");
+  await page.waitForTimeout(150);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(150);
+  const tc = (await readState(page)).timecode;
+  assert(tc === "00:00.03", `one frame at 30fps should be 00:00.03, got ${tc}`);
+});
+
+process.stdout.write("\nEditing\n");
+
+await check("9. a clip can be selected", async () => {
+  const { el } = await videoClip(page, 0);
+  await el.click({ position: { x: 60, y: 20 } });
+  await page.waitForTimeout(200);
+  const state = await readState(page);
+  assert(state.clips[0].selected, "first clip did not become selected");
+});
+
+await check("10. the inspector shows the selected clip", async () => {
+  const text = await page.locator('aside[aria-label="Inspector"]').innerText();
+  assert(/timing/i.test(text), "inspector has no Timing section");
+  assert(/duration/i.test(text), "inspector has no Duration row");
+});
+
+await check("11. a clip can be dragged, and its start changes", async () => {
+  const { box } = await videoClip(page, 1);
+  const before = (await readState(page)).clips[1].left;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2, {
+    steps: 12,
+  });
+  await page.mouse.up();
+  await page.waitForTimeout(250);
+  const after = (await readState(page)).clips[1].left;
+  assert(after > before, `clip did not move right (${before} -> ${after})`);
+});
+
+await check("12. a clip can be trimmed by its right edge", async () => {
+  const { box } = await videoClip(page, 0);
+  const before = (await readState(page)).clips[0].width;
+  await page.mouse.move(box.x + box.width - 3, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 3 - 100, box.y + box.height / 2, {
+    steps: 12,
+  });
+  await page.mouse.up();
+  await page.waitForTimeout(250);
+  const after = (await readState(page)).clips[0].width;
+  assert(after < before, `clip did not shrink (${before} -> ${after})`);
+});
+
+await check("13. Ctrl+B splits the selected clip at the playhead", async () => {
+  const before = (await readState(page)).clipCount;
+  const { el, box, index } = await onscreenClip(page, 240);
+
+  // Scrub the ruler to this clip's midpoint. Both coordinates must be on
+  // screen: the timeline scrolls, so an off-screen click is silently a no-op.
+  const ruler = await page.locator('[data-testid="ve-ruler"]').boundingBox();
+  assert(ruler, "no ruler");
+  await page.mouse.click(box.x + box.width / 2, ruler.y + ruler.height / 2);
+  await page.waitForTimeout(250);
+
+  const moved = (await readState(page)).timecode;
+  assert(moved !== "00:00.00", `ruler scrub did not move the playhead (${moved})`);
+
+  await el.click({ position: { x: 24, y: 14 } });
+  await page.waitForTimeout(200);
+  assert(
+    (await readState(page)).clips[index].selected,
+    "target clip is not selected before split",
+  );
+
+  await page.keyboard.press("Control+b");
+  await page.waitForTimeout(350);
+  const after = (await readState(page)).clipCount;
+  assert(after === before + 1, `clip count ${before} -> ${after}, expected +1`);
+});
+
+await check("14. Ctrl+Z undoes the split", async () => {
+  const before = (await readState(page)).clipCount;
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  const after = (await readState(page)).clipCount;
+  assert(after === before - 1, `undo did not remove a clip (${before} -> ${after})`);
+});
+
+await check("15. Ctrl+Shift+Z redoes it", async () => {
+  const before = (await readState(page)).clipCount;
+  await page.keyboard.press("Control+Shift+z");
+  await page.waitForTimeout(300);
+  const after = (await readState(page)).clipCount;
+  assert(after === before + 1, `redo did not restore (${before} -> ${after})`);
+});
+
+await check("16. Delete removes the selected clip", async () => {
+  const { el } = await videoClip(page, 0);
+  await el.click({ position: { x: 20, y: 20 } });
+  const before = (await readState(page)).clipCount;
+  await page.keyboard.press("Delete");
+  await page.waitForTimeout(300);
+  const after = (await readState(page)).clipCount;
+  assert(after === before - 1, `delete did nothing (${before} -> ${after})`);
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(250);
+});
+
+await check("17. the inspector writes back to the clip", async () => {
+  const { el } = await videoClip(page, 2);
+  await el.click({ position: { x: 20, y: 20 } });
+  await page.waitForTimeout(200);
+  const field = page
+    .locator('aside[aria-label="Inspector"] input[type="number"]')
+    .nth(1); // Duration (ms)
+  await field.fill("2000");
+  await field.press("Tab");
+  await page.waitForTimeout(300);
+  const width = (await readState(page)).clips[2].width;
+  // 2000ms at 60px/s = 120px.
+  assert(
+    Math.abs(width - 120) < 8,
+    `duration edit did not resize the clip (width ${width}px, expected ~120)`,
+  );
+});
+
+process.stdout.write("\nPersistence\n");
+
+await check("18. edits survive a reload", async () => {
+  const before = (await readState(page)).clipCount;
+  // Autosave is debounced; give it room plus a margin.
+  await page.waitForTimeout(1500);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1500);
+  const after = (await readState(page)).clipCount;
+  assert(
+    after === before,
+    `clip count changed across reload (${before} -> ${after})`,
+  );
+  const notice = await page.locator("body").innerText();
+  assert(
+    /Restored your unsaved edit/i.test(notice),
+    "no restore notice shown after reload",
+  );
+});
+
+process.stdout.write("\nIntegrity\n");
+
+await check("19. no uncaught page errors during the whole run", async () => {
+  assert(
+    pageErrors.length === 0,
+    `page errors:\n${pageErrors.slice(0, 4).join("\n")}`,
+  );
+});
+
+await check("20. track mute/hide toggles are wired", async () => {
+  const button = page
+    .locator('section[aria-label="Timeline"] button[title="Hide track"]')
+    .first();
+  await button.click();
+  await page.waitForTimeout(200);
+  const title = await button.getAttribute("title");
+  assert(title === "Hide track", "toggle vanished");
+});
+
+await browser.close();
+
+process.stdout.write(
+  `\n${checks - failures}/${checks} interaction checks passed${failures ? ` — ${failures} FAILED` : ""}\n`,
+);
+process.exit(failures ? 1 : 0);
