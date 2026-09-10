@@ -66,7 +66,8 @@
     "build:editor-demo": "node scripts/build-editor-demo-project.mjs",
     "verify:edit-learning": "node --import ./scripts/video-editor-register.mjs scripts/verify-edit-learning.mjs",
     "verify:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/verify-agent-learning-loop.mjs",
-    "proof:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/proof-agent-learning-loop.mjs"
+    "proof:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/proof-agent-learning-loop.mjs",
+    "verify:agent-loop-ui": "node scripts/verify-agent-loop-ui.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",
