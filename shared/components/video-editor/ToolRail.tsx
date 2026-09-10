@@ -17,16 +17,22 @@ import {
  * tool nobody uses daily is a memory test.
  */
 
+/**
+ * `implemented: false` renders the tab visibly disabled rather than opening a
+ * panel that explains itself. A control that looks live and does nothing is
+ * the placeholder problem; a control that is plainly greyed out is an honest
+ * statement about what exists.
+ */
 export const TOOL_TABS = [
-  { id: "media", label: "Media", icon: Film },
-  { id: "library", label: "Library", icon: Library },
-  { id: "images", label: "Images", icon: ImageIcon },
-  { id: "audio", label: "Audio", icon: Music },
-  { id: "text", label: "Text", icon: Type },
-  { id: "captions", label: "Captions", icon: Captions },
-  { id: "transitions", label: "Transit", icon: Sparkles },
-  { id: "effects", label: "Effects", icon: Wand2 },
-  { id: "animations", label: "Animate", icon: Clapperboard },
+  { id: "media", label: "Media", icon: Film, implemented: true },
+  { id: "library", label: "Library", icon: Library, implemented: true },
+  { id: "audio", label: "Audio", icon: Music, implemented: true },
+  { id: "text", label: "Text", icon: Type, implemented: true },
+  { id: "captions", label: "Captions", icon: Captions, implemented: true },
+  { id: "transitions", label: "Transit", icon: Sparkles, implemented: true },
+  { id: "images", label: "Images", icon: ImageIcon, implemented: false },
+  { id: "effects", label: "Effects", icon: Wand2, implemented: false },
+  { id: "animations", label: "Animate", icon: Clapperboard, implemented: false },
 ] as const;
 
 export type ToolTabId = (typeof TOOL_TABS)[number]["id"];
@@ -55,8 +61,10 @@ export function ToolRail({
             key={tab.id}
             type="button"
             aria-pressed={selected}
-            onClick={() => onSelect(tab.id)}
-            className="flex flex-col items-center gap-0.5 py-2"
+            disabled={!tab.implemented}
+            title={tab.implemented ? tab.label : `${tab.label} — not built yet`}
+            onClick={() => tab.implemented && onSelect(tab.id)}
+            className="flex flex-col items-center gap-0.5 py-2 disabled:cursor-not-allowed disabled:opacity-35"
             style={{
               background: selected ? "var(--ve-panel)" : "transparent",
               color: selected ? "var(--ve-accent)" : "var(--ve-text-faint)",

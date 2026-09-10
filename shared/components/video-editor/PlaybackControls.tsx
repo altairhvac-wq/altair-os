@@ -6,6 +6,8 @@ import {
   Pause,
   Play,
   SkipBack,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { formatTimecode } from "@/shared/types/video-editor";
 
@@ -25,6 +27,11 @@ export function PlaybackControls({
   onPlayPause,
   onSeek,
   onStepFrame,
+  muted,
+  onToggleMute,
+  audioBlocked,
+  onUnlockAudio,
+  audioClipCount,
 }: {
   readonly playheadMs: number;
   readonly durationMs: number;
@@ -33,6 +40,12 @@ export function PlaybackControls({
   readonly onPlayPause: () => void;
   readonly onSeek: (ms: number) => void;
   readonly onStepFrame: (direction: -1 | 1) => void;
+  readonly muted: boolean;
+  readonly onToggleMute: () => void;
+  /** True when the browser refused playback without a user gesture. */
+  readonly audioBlocked: boolean;
+  readonly onUnlockAudio: () => void;
+  readonly audioClipCount: number;
 }) {
   return (
     <div
@@ -99,13 +112,48 @@ export function PlaybackControls({
         </TransportButton>
       </div>
 
-      <span
-        className="text-[10px]"
-        style={{ color: "var(--ve-text-faint)" }}
-        title="The production renderer crossfades every cut, so the exported master is slightly shorter than the timeline."
-      >
-        {fps} fps · preview
-      </span>
+      <div className="flex items-center gap-2">
+        {audioBlocked ? (
+          // The browser blocked playback. Said out loud, with the fix attached:
+          // a moving playhead and no sound otherwise reads as a broken editor.
+          <button
+            type="button"
+            onClick={onUnlockAudio}
+            className="h-6 rounded px-2 text-[10px] font-medium"
+            style={{
+              background: "var(--ve-accent)",
+              color: "var(--ve-on-accent)",
+            }}
+          >
+            Enable audio
+          </button>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={onToggleMute}
+          title={muted ? "Unmute (M)" : "Mute (M)"}
+          aria-label={muted ? "Unmute" : "Mute"}
+          aria-pressed={muted}
+          data-testid="ve-master-mute"
+          className="flex size-7 items-center justify-center rounded"
+          style={{ color: muted ? "var(--ve-accent)" : "var(--ve-text-dim)" }}
+        >
+          {muted ? (
+            <VolumeX className="size-3.5" />
+          ) : (
+            <Volume2 className="size-3.5" />
+          )}
+        </button>
+
+        <span
+          className="text-[10px]"
+          style={{ color: "var(--ve-text-faint)" }}
+          title={`${audioClipCount} narration clips loaded. The production renderer crossfades every cut, so the exported master is slightly shorter than the timeline.`}
+        >
+          {fps} fps · preview
+        </span>
+      </div>
     </div>
   );
 }

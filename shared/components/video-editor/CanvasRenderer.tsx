@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  isVisualTrackKind,
   visualClipsAt,
   type EditorClip,
   type EditorProject,
+  type EditorTransform,
   type EditorTrack,
 } from "@/shared/types/video-editor";
+import { CanvasSelection } from "./CanvasSelection";
 
 /**
  * The project canvas at one instant.
@@ -32,14 +35,36 @@ export function CanvasRenderer({
   frames,
   selectedIds,
   onSelectClip,
+  stageScale,
+  onTransform,
+  onGestureEnd,
 }: {
   readonly project: EditorProject;
   readonly timeMs: number;
   readonly frames: Readonly<Record<string, string>>;
   readonly selectedIds: readonly string[];
   readonly onSelectClip: (clipId: string) => void;
+  readonly stageScale: number;
+  readonly onTransform: (
+    clipId: string,
+    next: EditorTransform,
+    coalesceKey: string,
+  ) => void;
+  readonly onGestureEnd: () => void;
 }) {
   const layers = visualClipsAt(project, timeMs);
+
+  /**
+   * Handles are drawn for a selected clip only when it is VISIBLE at the
+   * current time. Manipulating a clip you cannot see would move something
+   * off-screen with no feedback, which is how an edit gets made by accident.
+   */
+  const manipulable = layers.find(
+    ({ track, clip }) =>
+      selectedIds.includes(clip.id) &&
+      isVisualTrackKind(track.kind) &&
+      track.kind !== "caption",
+  );
 
   return (
     <div
@@ -57,10 +82,27 @@ export function CanvasRenderer({
           track={track}
           clip={clip}
           frames={frames}
-          selected={selectedIds.includes(clip.id)}
+          // The selection outline moves to the handle frame when this clip is
+          // directly manipulable, so the frame is not drawn twice.
+          selected={
+            selectedIds.includes(clip.id) && manipulable?.clip.id !== clip.id
+          }
           onSelect={() => onSelectClip(clip.id)}
         />
       ))}
+
+      {manipulable ? (
+        <CanvasSelection
+          clip={manipulable.clip}
+          frameWidth={project.width}
+          frameHeight={project.height}
+          stageScale={stageScale}
+          onTransform={(next, key) =>
+            onTransform(manipulable.clip.id, next, key)
+          }
+          onGestureEnd={onGestureEnd}
+        />
+      ) : null}
     </div>
   );
 }

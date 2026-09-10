@@ -157,12 +157,6 @@ export function AssetBrowser({
           />
         ) : null}
 
-        {tab === "images" || tab === "effects" || tab === "animations" ? (
-          <Explain
-            title="Not implemented"
-            body="This panel is a named placeholder, not a wired control. It is listed so the rail matches the planned tool set — nothing here pretends to work."
-          />
-        ) : null}
       </div>
     </aside>
   );

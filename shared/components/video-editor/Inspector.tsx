@@ -290,6 +290,19 @@ function ClipProperties({
               )
             }
           />
+          <NumberField
+            label="Rotation"
+            value={clip.transform?.rotation ?? 0}
+            step={1}
+            onChange={(v) =>
+              onPatch(
+                clip.id,
+                { transform: { ...clip.transform, rotation: v } },
+                "Rotation",
+                `rot:${clip.id}`,
+              )
+            }
+          />
           <SelectField
             label="Fit"
             value={clip.transform?.fit ?? "cover"}

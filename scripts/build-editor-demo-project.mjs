@@ -37,6 +37,14 @@ const FRAME_QUALITY = 4; // ffmpeg -q:v, 2 (best) .. 31 (worst)
 /** Waveform resolution. 240 peaks across a clip survives any timeline zoom
  *  we allow while staying a short array in the committed module. */
 const PEAK_BUCKETS = 240;
+/**
+ * Narration is re-encoded rather than copied. The masters are 22kHz mono PCM
+ * (6.3 MB for this episode); at 64k AAC the same audio is ~1.4 MB, which is
+ * the difference between an editor that seeks instantly and one that stalls.
+ * Nothing downstream uses these files - the RENDER still reads the original
+ * WAVs - so this is a preview encode and lossy is the correct trade.
+ */
+const AUDIO_BITRATE = "64k";
 
 function read(file) {
   return JSON.parse(fs.readFileSync(path.join(SLIDE_SYSTEM, file), "utf8"));
@@ -65,6 +73,11 @@ for (const png of fs.readdirSync(slidesDir).filter((f) => f.endsWith(".png"))) {
   frameFor.set(id, `/studio/${STEM}/${id}.jpg`);
 }
 process.stdout.write(`frames: ${frameFor.size} -> ${OUT_PUBLIC}\n`);
+
+/* -- 1b. Narration audio, for preview playback ------------------------- */
+
+const OUT_AUDIO = path.join(OUT_PUBLIC, "audio");
+fs.mkdirSync(OUT_AUDIO, { recursive: true });
 
 /* ── 2. Waveform peaks ───────────────────────────────────────────────────── */
 
@@ -104,6 +117,34 @@ const wavs = fs
   .readdirSync(audioDir)
   .filter((f) => f.endsWith(".wav"))
   .sort();
+
+/** Encodes one narration clip to AAC and returns its public URL + duration. */
+function publishAudio(wavName) {
+  const stem = wavName.replace(/[.]wav$/, "");
+  const out = path.join(OUT_AUDIO, `${stem}.m4a`);
+  execFileSync("ffmpeg", [
+    "-v", "error", "-y",
+    "-i", path.join(audioDir, wavName),
+    "-c:a", "aac", "-b:a", AUDIO_BITRATE, "-ac", "1",
+    "-movflags", "+faststart",
+    out,
+  ]);
+  const durationSec = Number(
+    execFileSync("ffprobe", [
+      "-v", "error",
+      "-show_entries", "format=duration",
+      "-of", "csv=p=0",
+      out,
+    ])
+      .toString()
+      .trim(),
+  );
+  return {
+    url: `/studio/${STEM}/audio/${stem}.m4a`,
+    fileDurationMs: Math.round(durationSec * 1000),
+  };
+}
+
 
 /* ── 3. Assemble the project ─────────────────────────────────────────────── */
 
@@ -155,6 +196,7 @@ for (const beat of report.beats) {
   // a per-slide voice clip would restart the line at every cut.
   const wav = wavs[wavIndex];
   wavIndex += 1;
+  const published = wav ? publishAudio(wav) : null;
   voice.push({
     id: `vo-${beat.beat}`,
     kind: "audio",
@@ -162,9 +204,15 @@ for (const beat of report.beats) {
     label: beat.beat,
     startMs: cursor - total,
     durationMs: total,
+    // Where the VOICE actually starts inside this clip. A beat carries a
+    // lead-in before the line and a tail after it, so audio that began at
+    // offset 0 would speak early by exactly the lead.
+    audioOffsetMs: beat.leadInMs ?? 0,
     speechMs: beat.speechMs,
     words: beat.words,
     wpm: beat.wpm,
+    audioUrl: published ? published.url : null,
+    audioFileMs: published ? published.fileDurationMs : null,
     peaks: wav ? peaksFor(path.join(audioDir, wav)) : [],
   });
 
@@ -232,8 +280,15 @@ fs.writeFileSync(
 );
 
 const bytes = fs.statSync(OUT_MODULE).size;
+const audioFiles = fs.readdirSync(OUT_AUDIO);
+const audioBytes = audioFiles.reduce(
+  (n, f) => n + fs.statSync(path.join(OUT_AUDIO, f)).size,
+  0,
+);
+
 process.stdout.write(
   `project: ${visual.length} visual, ${captions.length} captions, ${voice.length} voice\n` +
+    `audio:   ${audioFiles.length} clips, ${Math.round(audioBytes / 1024)} KB\n` +
     `module:  ${OUT_MODULE} (${Math.round(bytes / 1024)} KB)\n` +
     `timing:  raw ${payload.rawMs}ms, out ${payload.expectedOutMs}ms\n`,
 );

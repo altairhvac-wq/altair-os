@@ -68,6 +68,10 @@ function TimelineClipImpl({
       tabIndex={-1}
       aria-label={`${clip.label}, ${(clip.durationMs / 1000).toFixed(1)} seconds`}
       aria-pressed={selected}
+      // Which lane this clip lives on, readable from the DOM. Used by the
+      // interaction tests to target a canvas-manipulable clip rather than a
+      // caption, and useful in devtools for the same reason.
+      data-track-kind={trackKind}
       onPointerDown={(event) => onPointerDown(event, clip, "move")}
       className="absolute top-0 select-none overflow-hidden rounded-[2px]"
       style={{

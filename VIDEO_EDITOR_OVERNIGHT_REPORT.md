@@ -1,7 +1,11 @@
 # Altair Video Editor — build report
 
-Built 2026-09-09. A nonlinear video editor inside altair-os, compiling down to
-the existing AltairDemoTool render pipeline.
+Built 2026-09-09, extended 2026-09-10 (Phase 2.5). A nonlinear video editor
+inside altair-os, compiling down to the existing AltairDemoTool render pipeline.
+
+**Phase 2.5 added:** real narration playback, direct canvas manipulation, the
+layered-composition bridge, placeholder removal, and the human-edit learning
+foundation — see `HUMAN_EDIT_LEARNING_REPORT.md` for that last one.
 
 **Read this first:** this was one working session, not an unattended overnight
 run. Everything below is what actually exists and was actually verified. The
@@ -14,20 +18,20 @@ run. Everything below is what actually exists and was actually verified. The
 The dev server on port 3100 may still be running. If not:
 
 ```bash
-cd C:/Users/User/Desktop/altair-os && npm run dev -- --port 3100
+cd C:/Users/User/Desktop/altair-os && npm run dev
 ```
 
-Then: **http://localhost:3100/studio/editor/hvac-01**
+Then: **http://localhost:3000/studio/editor/hvac-01**
 
 Or navigate: `/marketing` → **Studio** tab → EP01 → **Open editor**.
 
 Requires a platform-operator session (`PLATFORM_ADMIN_EMAILS` in `.env.local`,
 already set).
 
-Re-run every check:
+Re-run every check (the dev server is on **3000** now, not 3100):
 
 ```bash
-npm run verify:video-editor && npm run verify:video-editor-ui -- http://localhost:3100 && npx tsc --noEmit && npm run lint && npm run build
+npm run verify:video-editor && npm run verify:edit-learning && node scripts/verify-video-editor-ui.mjs http://localhost:3000 && npx tsc --noEmit && npm run lint && npm run build
 ```
 
 ---
@@ -171,8 +175,9 @@ EP04 ("The package unit") was also rendered earlier: `out/hvac-04-master.mp4`,
 | `npx tsc --noEmit` | clean |
 | `npm run lint` | **0 errors**, 137 warnings (133 pre-existing; 4 mine, all the deliberately-downgraded `set-state-in-effect`) |
 | `npm run build` | ✓ Compiled successfully, 85/85 static pages |
-| `npm run verify:video-editor` | **43/43** |
-| `npm run verify:video-editor-ui` | **20/20** |
+| `npm run verify:video-editor` | **47/47** |
+| `npm run verify:edit-learning` | **32/32** |
+| `npm run verify:video-editor-ui` | **30/30** |
 
 The 20 live checks drive a real browser and assert on the DOM — editor opens,
 EP01 loads, assets display, all eight tracks render, **clips are positioned by
@@ -230,9 +235,13 @@ scrolled timeline, so clicks silently no-op.
 - **Transitions** — per-clip `transitionInMs` is editable and compiles to a
   drop, because the renderer only has one global crossfade. Cut and dissolve
   exist; there is no transition picker UI.
-- **Direct canvas manipulation** — clicking a canvas element selects its clip.
-  Drag handles are not built, but the DOM-layer architecture makes them
-  ordinary children rather than a rewrite.
+- ~~Direct canvas manipulation~~ — **built in Phase 2.5.** A selected visual
+  clip gets a selection frame with four corner handles and a rotate handle.
+  Drag moves, corners scale, the round handle rotates. Screen deltas are divided
+  by the stage scale, so a drag means the same thing at every window size. Every
+  gesture writes through the same `updateClip` action the inspector uses, so
+  canvas edits are undoable, inspectable and persistent for free. Crop is not
+  built.
 - **Code animations** — `codeAnimation` is a valid clip kind and tracks accept
   it; nothing generates one yet.
 
@@ -242,8 +251,12 @@ scrolled timeline, so clicks silently no-op.
   start a job. The renderer needs local ffmpeg and the asset library on the
   laptop, so a button claiming to render would be a promise the web app cannot
   keep.
-- **No audio playback.** The waveforms are real and the playhead is accurate,
-  but nothing is audible during preview.
+- ~~No audio playback.~~ **Built in Phase 2.5.** 19 narration clips are served
+  as AAC from `/studio/hvac-01/audio/`, pooled as real `<audio>` elements, and
+  scheduled against the playhead with drift correction. Play, pause, seek,
+  per-track mute, per-clip volume and a master mute (M) all work; the browser's
+  autoplay block is surfaced with an "Enable audio" control rather than
+  swallowed.
 - **No Altair library browsing.** The library is a librarian-indexed tree under
   `ALTAIR_ASSET_LIBRARY_ROOT` on the laptop; nothing in this app can read it and
   no route serves it. That panel says so rather than showing invented assets.
@@ -297,3 +310,139 @@ Neither was published anywhere.
 6. **`describeOutputPlacement`** from the renderer gives per-entry output-clock
    positions; feeding the transport from it would make the editor's clock the
    render's clock by construction.
+
+---
+
+# Phase 2.5 — 2026-09-10
+
+## Placeholders removed
+
+| Was | Now |
+|---|---|
+| Images / Effects / Animations panels explaining they were placeholders | The three tool-rail tabs are **`disabled`**, greyed and titled "not built yet". A control that looks live and does nothing is the placeholder problem; a greyed-out one is an honest statement. |
+| Waveforms with no audio behind them | 19 real narration files, served and audible |
+| Rotation tracked by the model and diff but absent from the inspector | Rotation field added |
+| Export produced the project JSON | Export compiles, bakes, and emits the render package |
+
+The library panel still shows an honest empty state rather than a grid — the
+asset root genuinely is not reachable from the web app, and the instruction was
+to say so rather than invent assets.
+
+## Audio
+
+`shared/components/video-editor/useAudioEngine.ts`
+
+The **timeline is the master clock** and audio follows it. The alternative —
+one audio element as the clock — is right for a single continuous file and
+wrong here: there are 19 separate clips an operator can move, trim and delete,
+so the element you picked as the clock would stop existing.
+
+Following costs drift, so drift is corrected: any element more than **140ms**
+from where the timeline says it should be gets its `currentTime` reset. Wide
+enough that decode jitter does not cause constant reseeking (audible as
+stutter), tight enough to be imperceptible.
+
+Elements are appended to a hidden `[data-testid="ve-audio-pool"]` container
+rather than left detached, so what is sounding is inspectable and testable.
+
+`audioOffsetMs` per clip is the beat's lead-in — audio starting at clip offset 0
+would speak early by exactly that lead.
+
+Verified live: `vo-hook-1` sounds at t=0; seeking to 60s switches to `vo-s2-1`;
+pause and mute both silence everything.
+
+## Canvas manipulation
+
+`shared/components/video-editor/CanvasSelection.tsx`
+
+Drag to move, four corner handles to scale, a round handle to rotate. Screen
+deltas are **divided by the stage scale**, so a drag means the same thing at
+every window size — measured: an 80px screen drag at 0.42 scale wrote 190
+project px, and the inspector agreed.
+
+One real bug found by measurement, not by looking: handles centred on the frame
+corner had their outer half clipped by the canvas's `overflow: hidden`, and
+`elementFromPoint` at the corner returned the panel behind. They are now inset
+inside the frame.
+
+## The composition bridge
+
+`shared/lib/video-editor/bake.ts` + `AltairDemoTool/production/slide-system/bake-editor-scenes.mjs`
+
+The renderer takes one still per entry. The slide system already manufactures
+its stills by pointing Playwright at HTML and screenshotting at 1920×1080 — so
+anything the editor's preview can express in DOM can be flattened into a PNG the
+renderer accepts as an ordinary entry. **The renderer is untouched.**
+
+The compiler now emits a `BakePlan`, and **bakeable properties stop being
+drops**, because they now survive to the master. The invariant is asserted in
+tests: *every non-default property appears in exactly one of `drops` or
+`bakedProperties` — never neither.* `compileProjectToTimeline(project, { bake: false })`
+returns the old honest drop list for a caller that cannot composite.
+
+Proved end to end: an edit that scales the opening shot 1.25× and adds a red
+text overlay compiles to **3 scenes, 0 drops, 0 errors**, and the baker
+composited them — `ui-audit/video-editor/bake-composited-scene.png`.
+
+Two real problems found while proving it:
+- Captions were forcing a bake on nearly every interval (29 scenes for an
+  episode with one overlay) and would have been **rendered twice** — once baked
+  into the picture, once by the renderer's own caption channel. Captions are now
+  excluded from the composite and from video cut points. 29 scenes → 3;
+  27 entries instead of 29.
+- The baker's progress line printed `[object Object]` instead of a layer count.
+
+## Render / export
+
+Export compiles, builds the bake plan, and downloads
+`hvac-01-timeline.json` containing the timeline, the bake plan, the baked
+properties, the drop report, blocking errors and the project. The confirmation
+reads either *"Package ready — 27 entries, 152s after crossfades, 3 to
+composite"* or *"Blocked — N issues must be fixed before rendering"*.
+
+**It does not start a render.** A constrained job API was not built: the
+renderer needs local ffmpeg and the asset library, so the states
+`Rendering / Audio conform / Complete` are not observable from the browser and
+showing them would be theatre. The two states that ARE real — Ready and
+Blocked — are shown. Running the package is two commands on the laptop.
+
+## New files (Phase 2.5)
+
+| Path | What |
+|---|---|
+| `shared/types/edit-learning.ts` | Event, session, diff and preference schema |
+| `shared/lib/video-editor/diff.ts` | `diffEditorProjects` — deterministic, 13 entry types |
+| `shared/lib/video-editor/learning.ts` | Statistics, aggregation, preferences, confidence |
+| `shared/lib/video-editor/session.ts` | Event derivation, session lifecycle, storage |
+| `shared/lib/video-editor/bake.ts` | The composition bridge's plan |
+| `shared/components/video-editor/useAudioEngine.ts` | Scheduled narration playback |
+| `shared/components/video-editor/CanvasSelection.tsx` | Canvas handles |
+| `shared/components/marketing-hub/StudioLearningPanel.tsx` | Operator learning view |
+| `scripts/verify-edit-learning.mjs` | 32 checks |
+| `AltairDemoTool/.../bake-editor-scenes.mjs` | Executes a bake plan |
+| `public/studio/hvac-01/audio/*.m4a` | 19 narration clips, 1.25 MB |
+
+## End-to-end proof
+
+All twelve requested steps pass in `verify-video-editor-ui.mjs` (30/30) plus the
+bake proof above. Screenshots:
+
+- `ui-audit/video-editor/editor-canvas-manipulation.png`
+- `ui-audit/video-editor/editor-approved.png`
+- `ui-audit/video-editor/studio-learning-panel.png`
+- `ui-audit/video-editor/bake-composited-scene.png`
+
+## Test-hygiene bug worth recording
+
+Test 20 hid the VIDEO track and never restored it, so every later canvas
+assertion failed for a reason that had nothing to do with the canvas. Three
+"canvas is broken" failures were one un-restored toggle. Tests that mutate
+shared state now restore it.
+
+## Still not built
+
+- No render job API (above).
+- No crop.
+- Sessions are localStorage, per browser.
+- Library browsing still needs a media endpoint plus generated thumbnails.
+- No agent consumes preferences yet — the read interface exists and is tested.

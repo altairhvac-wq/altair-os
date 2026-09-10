@@ -27,9 +27,21 @@ import {
 } from "@/shared/lib/video-editor/persistence";
 import type { LoadedEpisode } from "@/shared/lib/video-editor/demo-project";
 import {
+  appendEvent,
+  approveSession,
+  createSession,
+  deriveEditEvent,
+  loadSessions,
+  saveSessions,
+  upsertSession,
+} from "@/shared/lib/video-editor/session";
+import { diffEditorProjects } from "@/shared/lib/video-editor/diff";
+import type { EditSession } from "@/shared/types/edit-learning";
+import {
   compileProjectToTimeline,
   describeCompileResult,
 } from "@/shared/lib/video-editor/compile";
+import { describeBakePlan } from "@/shared/lib/video-editor/bake";
 import {
   projectDurationMs,
   type EditorClip,
@@ -42,6 +54,7 @@ import { PlaybackControls } from "./PlaybackControls";
 import { PreviewMonitor } from "./PreviewMonitor";
 import { Timeline } from "./Timeline";
 import { ToolRail, type ToolTabId } from "./ToolRail";
+import { useAudioEngine } from "./useAudioEngine";
 import { editorThemeVars } from "./editor-theme";
 
 /**
@@ -71,7 +84,20 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
     createEditorState,
   );
 
-  const dispatch = rawDispatch as React.Dispatch<EditorAction>;
+  /**
+   * Dispatch, with the action remembered so the capture effect below can
+   * derive an event from (previous state, action, next state). The action is
+   * stashed rather than the event computed here, because computing it here
+   * would mean running the reducer a second time and guessing at the ids the
+   * real run will mint.
+   */
+  const dispatch = useCallback(
+    (action: EditorAction) => {
+      lastActionRef.current = action;
+      (rawDispatch as React.Dispatch<EditorAction>)(action);
+    },
+    [rawDispatch],
+  );
   const project = currentProject(state);
   const durationMs = useMemo(() => projectDurationMs(project), [project]);
   const selected = useMemo(() => selectedClips(state), [state]);
@@ -89,6 +115,22 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
   const [timelineHeight, setTimelineHeight] = useState<number | null>(null);
   const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
   const [exportSummary, setExportSummary] = useState<string | null>(null);
+  const [masterMuted, setMasterMuted] = useState(false);
+  const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
+  const [capturedEvents, setCapturedEvents] = useState(0);
+
+  /* ── Edit session ─────────────────────────────────────────────────────── */
+  /**
+   * The session opens against the ORIGINAL episode — the bot's draft — not
+   * against a restored autosave. That distinction is the whole experiment: the
+   * control condition has to be what the agent produced, or the diff measures
+   * an operator against their own earlier self.
+   */
+  const sessionRef = useRef<EditSession | null>(null);
+  const sessionStartRef = useRef<number>(0);
+  const eventSeqRef = useRef(0);
+  const lastActionRef = useRef<EditorAction | null>(null);
+  const prevStateRef = useRef<ReturnType<typeof createEditorState> | null>(null);
 
   /* ── Restore a stored draft, once, on mount ───────────────────────────── */
   const restoredRef = useRef(false);
@@ -162,6 +204,64 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [state.isPlaying, durationMs, dispatch]);
+
+  /* ── Session capture ──────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (sessionRef.current) return;
+    sessionStartRef.current = Date.now();
+    sessionRef.current = createSession({
+      id: `session-${episode.project.id}-${sessionStartRef.current}`,
+      projectId: episode.project.id,
+      generatedProjectSnapshot: episode.project,
+      generatedBy: episode.meta.generatedBy,
+      startedAt: new Date(sessionStartRef.current).toISOString(),
+      scope: { series: episode.meta.series, format: "long-form-educational" },
+    });
+    prevStateRef.current = createEditorState(episode.project);
+  }, [episode]);
+
+  /**
+   * One event per committed change.
+   *
+   * Consecutive events of the same action on the same clip REPLACE each other,
+   * mirroring the history's gesture coalescing: a drag commits ~200 revisions
+   * and is one editorial decision, so recording two hundred of them would drown
+   * the signal it is supposed to carry.
+   */
+  useEffect(() => {
+    const action = lastActionRef.current;
+    const previous = prevStateRef.current;
+    prevStateRef.current = state;
+    if (!action || !previous || !sessionRef.current) return;
+
+    const event = deriveEditEvent(previous, action, state, {
+      projectId: episode.project.id,
+      timestampMs: Date.now() - sessionStartRef.current,
+      makeId: () => `evt-${(eventSeqRef.current += 1)}`,
+    });
+    if (!event) return;
+
+    const existing = sessionRef.current.events;
+    const last = existing[existing.length - 1];
+    if (last && last.action === event.action && last.clipId === event.clipId) {
+      sessionRef.current = {
+        ...sessionRef.current,
+        events: [...existing.slice(0, -1), { ...event, id: last.id }],
+      };
+    } else {
+      sessionRef.current = appendEvent(sessionRef.current, event);
+    }
+    setCapturedEvents(sessionRef.current.events.length);
+  }, [state, episode.project.id]);
+
+  /* ── Audio ────────────────────────────────────────────────────────────── */
+  const audioEngine = useAudioEngine({
+    project,
+    sources: episode.audio,
+    playheadMs: state.playheadMs,
+    isPlaying: state.isPlaying,
+    masterMuted,
+  });
 
   /* ── Keyboard ─────────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -242,6 +342,10 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
         case "Backspace":
           event.preventDefault();
           dispatch({ type: "deleteSelected" });
+          break;
+        case "m":
+        case "M":
+          setMasterMuted((v) => !v);
           break;
         case "Escape":
           dispatch({ type: "clearSelection" });
@@ -337,6 +441,11 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
       expectedOutputMs: result.expectedOutputMs,
       blockingErrors: result.errors,
       droppedProperties: result.drops,
+      // What the laptop must composite before rendering, and what survives
+      // because of it. Together with `droppedProperties` this accounts for
+      // every non-default property in the project.
+      bakePlan: result.bakePlan,
+      bakedProperties: result.bakedProperties,
       project,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -350,9 +459,48 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
     URL.revokeObjectURL(url);
     setExportSummary(
       result.errors.length
-        ? `Exported with ${result.errors.length} blocking issue${result.errors.length === 1 ? "" : "s"} — ${describeCompileResult(result)}`
-        : `Exported — ${describeCompileResult(result)}`,
+        ? `Blocked — ${result.errors.length} issue${result.errors.length === 1 ? "" : "s"} must be fixed before rendering. ${describeCompileResult(result)}`
+        : `Package ready — ${describeCompileResult(result)}, ${describeBakePlan(result.bakePlan)}. Run it on the production laptop.`,
     );
+  }, [project]);
+
+  /**
+   * Approve: write the approved snapshot ALONGSIDE the draft, never over it,
+   * and compute the diff that becomes evidence.
+   *
+   * Approval is not publishing. Nothing leaves this machine here — the session
+   * is stored, the operator is told what was captured, and the decision to
+   * render or publish stays a separate, later action.
+   */
+  const handleApprove = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+
+    const approved = approveSession(session, project, new Date().toISOString());
+    sessionRef.current = approved;
+
+    const stored = upsertSession(loadSessions(), approved);
+    const ok = saveSessions(stored);
+
+    const diff = diffEditorProjects(
+      approved.generatedProjectSnapshot,
+      project,
+    );
+    const parts = [
+      `${diff.summary.totalChanges} change${diff.summary.totalChanges === 1 ? "" : "s"} captured for learning`,
+    ];
+    if (diff.summary.clipsShortened) {
+      parts.push(`${diff.summary.clipsShortened} shortened`);
+    }
+    if (diff.summary.clipsRemoved) {
+      parts.push(`${diff.summary.clipsRemoved} removed`);
+    }
+    if (diff.summary.captionEdits) {
+      parts.push(`${diff.summary.captionEdits} caption${diff.summary.captionEdits === 1 ? "" : "s"} edited`);
+    }
+    if (!ok) parts.push("(not stored — browser blocked local storage)");
+
+    setApprovalNotice(`Approved — ${parts.join(", ")}`);
   }, [project]);
 
   const toggleTrack = useCallback(
@@ -383,9 +531,11 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
           onUndo={() => dispatch({ type: "undo" })}
           onRedo={() => dispatch({ type: "redo" })}
           onExport={handleExport}
+          onApprove={handleApprove}
+          capturedEvents={capturedEvents}
         />
 
-        {restoredNotice || exportSummary ? (
+        {approvalNotice || restoredNotice || exportSummary ? (
           <div
             className="flex shrink-0 items-center gap-2 px-3 py-1 text-[11px]"
             style={{
@@ -394,10 +544,11 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
               borderBottom: "1px solid var(--ve-line)",
             }}
           >
-            {exportSummary ?? restoredNotice}
+            {approvalNotice ?? exportSummary ?? restoredNotice}
             <button
               type="button"
               onClick={() => {
+                setApprovalNotice(null);
                 setExportSummary(null);
                 setRestoredNotice(null);
               }}
@@ -425,6 +576,16 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
               frames={episode.frames}
               selectedIds={state.selection.clipIds}
               onSelectClip={(clipId) => handleSelect(clipId, false)}
+              onTransform={(clipId, transform, coalesceKey) =>
+                dispatch({
+                  type: "updateClip",
+                  clipId,
+                  patch: { transform },
+                  label: "Transform on canvas",
+                  coalesceKey,
+                })
+              }
+              onGestureEnd={() => dispatch({ type: "endGesture" })}
             />
             <PlaybackControls
               playheadMs={state.playheadMs}
@@ -441,6 +602,11 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
                   ms: state.playheadMs + (direction * 1000) / project.fps,
                 })
               }
+              muted={masterMuted}
+              onToggleMute={() => setMasterMuted((v) => !v)}
+              audioBlocked={audioEngine.blocked}
+              onUnlockAudio={audioEngine.unlock}
+              audioClipCount={audioEngine.loadedCount}
             />
           </main>
 

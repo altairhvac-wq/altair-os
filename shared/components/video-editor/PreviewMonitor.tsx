@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { EditorProject } from "@/shared/types/video-editor";
+import type {
+  EditorProject,
+  EditorTransform,
+} from "@/shared/types/video-editor";
 import { CanvasRenderer } from "./CanvasRenderer";
 
 /**
@@ -19,12 +22,20 @@ export function PreviewMonitor({
   frames,
   selectedIds,
   onSelectClip,
+  onTransform,
+  onGestureEnd,
 }: {
   readonly project: EditorProject;
   readonly timeMs: number;
   readonly frames: Readonly<Record<string, string>>;
   readonly selectedIds: readonly string[];
   readonly onSelectClip: (clipId: string) => void;
+  readonly onTransform: (
+    clipId: string,
+    next: EditorTransform,
+    coalesceKey: string,
+  ) => void;
+  readonly onGestureEnd: () => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.3);
@@ -78,6 +89,9 @@ export function PreviewMonitor({
             frames={frames}
             selectedIds={selectedIds}
             onSelectClip={onSelectClip}
+            stageScale={scale}
+            onTransform={onTransform}
+            onGestureEnd={onGestureEnd}
           />
         </div>
       </div>

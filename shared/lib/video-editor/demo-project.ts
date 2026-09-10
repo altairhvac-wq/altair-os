@@ -23,10 +23,17 @@ export type WaveformPeaks = Readonly<Record<string, readonly number[]>>;
 /** Frame URLs, likewise — the project stores an assetId, not a URL. */
 export type FrameSources = Readonly<Record<string, string>>;
 
+/** Narration files, keyed by clip id. See useAudioEngine for why these are
+ *  a side map rather than fields on the clip. */
+export type AudioSourceMap = Readonly<
+  Record<string, { url: string; offsetMs: number; fileMs: number }>
+>;
+
 export type LoadedEpisode = {
   readonly project: EditorProject;
   readonly peaks: WaveformPeaks;
   readonly frames: FrameSources;
+  readonly audio: AudioSourceMap;
   readonly captionText: Readonly<Record<string, string>>;
   readonly meta: {
     readonly stem: string;
@@ -35,6 +42,8 @@ export type LoadedEpisode = {
     readonly expectedOutMs: number;
     readonly transitionMs: number;
     readonly masterSha256: string;
+    /** Which agent produced this draft, when one did. */
+    readonly generatedBy?: string;
   };
 };
 
@@ -44,6 +53,8 @@ export function loadDemoEpisode(): LoadedEpisode {
   const frames: Record<string, string> = {};
   const peaks: Record<string, readonly number[]> = {};
   const captionText: Record<string, string> = {};
+  const audio: Record<string, { url: string; offsetMs: number; fileMs: number }> =
+    {};
 
   const videoClips: EditorClip[] = DEMO_EPISODE.visual.map((v) => {
     if (v.frame) frames[v.id] = v.frame;
@@ -73,6 +84,17 @@ export function loadDemoEpisode(): LoadedEpisode {
 
   const voiceClips: EditorClip[] = DEMO_EPISODE.voice.map((v) => {
     peaks[v.id] = v.peaks;
+    // The generator writes `audioUrl` and `audioFileMs` together or not at all,
+    // so the url guard covers both. `as const` makes them literal types, which
+    // is why a `??` fallback here would narrow to `never` rather than defend
+    // against anything.
+    if (v.audioUrl) {
+      audio[v.id] = {
+        url: v.audioUrl,
+        offsetMs: v.audioOffsetMs,
+        fileMs: v.audioFileMs,
+      };
+    }
     return {
       id: v.id,
       kind: "audio",
@@ -107,6 +129,7 @@ export function loadDemoEpisode(): LoadedEpisode {
     },
     peaks,
     frames,
+    audio,
     captionText,
     meta: {
       stem: DEMO_EPISODE.stem,
@@ -115,6 +138,11 @@ export function loadDemoEpisode(): LoadedEpisode {
       expectedOutMs: DEMO_EPISODE.expectedOutMs,
       transitionMs: DEMO_EPISODE.transitionMs,
       masterSha256: DEMO_EPISODE.masterSha256,
+      // The slide pipeline authored this cut: the pacing rule chose every
+      // duration and the visual plan chose every slide. That makes it a
+      // machine-generated draft, and naming it is what lets a later diff say
+      // whose work the human corrected.
+      generatedBy: "slide-system/render-episode",
     },
   };
 }

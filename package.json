@@ -63,7 +63,8 @@
     "verify:platform-copy": "node scripts/verify-platform-specific-copy.mjs",
     "verify:video-editor": "node --import ./scripts/video-editor-register.mjs scripts/verify-video-editor.mjs",
     "verify:video-editor-ui": "node scripts/verify-video-editor-ui.mjs",
-    "build:editor-demo": "node scripts/build-editor-demo-project.mjs"
+    "build:editor-demo": "node scripts/build-editor-demo-project.mjs",
+    "verify:edit-learning": "node --import ./scripts/video-editor-register.mjs scripts/verify-edit-learning.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

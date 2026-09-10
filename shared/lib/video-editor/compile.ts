@@ -33,6 +33,7 @@ import {
   type EditorProject,
   type EditorTrack,
 } from "@/shared/types/video-editor";
+import { needsBake, sceneFor, type BakePlan, type BakeScene } from "./bake";
 
 /** Matches TRANSITION_MS in render-episode.mjs. */
 export const RENDER_TRANSITION_MS = 260;
@@ -80,6 +81,17 @@ export type CompileResult = {
   readonly errors: readonly string[];
   /** Output length after crossfades: raw − (n−1) × transitionMs. */
   readonly expectedOutputMs: number;
+  /**
+   * Scenes the laptop must composite before rendering. Anything represented
+   * here is NOT a drop: it survives to the master, through the bake.
+   */
+  readonly bakePlan: BakePlan;
+  /**
+   * Properties that survive BECAUSE the bake runs, as `clipId:property`.
+   * The invariant this exists to make checkable: every non-default property is
+   * in exactly one of `drops` or `bakedProperties` — never in neither.
+   */
+  readonly bakedProperties: readonly string[];
 };
 
 function describeTrack(track: EditorTrack): string {
@@ -98,6 +110,10 @@ function cutPoints(project: EditorProject): number[] {
   const points = new Set<number>([0]);
   for (const track of project.tracks) {
     if (track.hidden || isAudioTrackKind(track.kind)) continue;
+    // A caption appearing is not a picture cut. Letting captions punctuate the
+    // entry list would slice every shot into caption-shaped pieces and add a
+    // crossfade at each one.
+    if (track.kind === "caption") continue;
     for (const clip of track.clips) {
       points.add(clip.startMs);
       points.add(clipEndMs(clip));
@@ -108,49 +124,43 @@ function cutPoints(project: EditorProject): number[] {
 
 export function compileProjectToTimeline(
   project: EditorProject,
-  opts: { readonly transitionMs?: number } = {},
+  opts: {
+    readonly transitionMs?: number;
+    /**
+     * Whether the caller can run the bake pass. Defaults to true because the
+     * production path can; a caller that cannot composite passes false and gets
+     * the honest drop list instead of a promise nobody will keep.
+     */
+    readonly bake?: boolean;
+  } = {},
 ): CompileResult {
   const transitionMs = opts.transitionMs ?? RENDER_TRANSITION_MS;
+  const bakeEnabled = opts.bake ?? true;
   const drops: CompileDrop[] = [];
   const errors: string[] = [];
+  const bakedProperties: string[] = [];
+  const scenes: BakeScene[] = [];
 
   /* ── 1. What cannot survive, per clip ─────────────────────────────────── */
   for (const track of project.tracks) {
     for (const clip of track.clips) {
-      const t = clip.transform;
-      if (t) {
-        if (t.scale !== undefined && t.scale !== 1) {
+      // Transforms are no longer dropped. The filter graph still cannot express
+      // them, but the bake pass composites them into the frame before the
+      // renderer sees it, so they DO reach the master. A bakeable property
+      // therefore belongs in the bake plan rather than the drop report — and
+      // every property must appear in exactly one of the two, never neither.
+      if (bakeEnabled) {
+        for (const reason of needsBake(clip)) {
+          bakedProperties.push(`${clip.id}:${reason}`);
+        }
+      } else {
+        for (const reason of needsBake(clip)) {
           drops.push({
             clipId: clip.id,
             clipLabel: clip.label,
-            property: "transform.scale",
+            property: `transform.${reason}`,
             reason:
-              "The filter graph has no per-entry scale; `motion` is a global config value and offers only a 1.02/1.05 pan overscale.",
-          });
-        }
-        if ((t.x ?? 0) !== 0 || (t.y ?? 0) !== 0) {
-          drops.push({
-            clipId: clip.id,
-            clipLabel: clip.label,
-            property: "transform.position",
-            reason: "There is no per-entry position; entries fill the frame.",
-          });
-        }
-        if (t.rotation !== undefined && t.rotation !== 0) {
-          drops.push({
-            clipId: clip.id,
-            clipLabel: clip.label,
-            property: "transform.rotation",
-            reason: "The filter graph has no rotation stage.",
-          });
-        }
-        if (t.opacity !== undefined && t.opacity !== 1) {
-          drops.push({
-            clipId: clip.id,
-            clipLabel: clip.label,
-            property: "transform.opacity",
-            reason:
-              "Opacity would require a compositing layer; the graph concatenates, it does not blend.",
+              "The filter graph has no per-entry transform, and baking is disabled for this compile.",
           });
         }
       }
@@ -198,19 +208,35 @@ export function compileProjectToTimeline(
     // Sample at the midpoint: a boundary instant belongs to the next entry,
     // and sampling exactly on it would pick up the clip that just ended.
     const mid = (startMs + endMs) / 2;
-    const stack = visualClipsAt(project, mid);
+    const stack = visualClipsAt(project, mid).filter(
+      (s) => s.track.kind !== "caption",
+    );
     if (stack.length === 0) continue;
 
     const top = stack[stack.length - 1];
 
-    if (stack.length > 1) {
+    const scene = bakeEnabled
+      ? sceneFor(
+          project,
+          entries.length,
+          startMs,
+          endMs,
+          stack.map((s) => ({ clip: s.clip, trackKind: s.track.kind })),
+        )
+      : null;
+
+    if (scene) {
+      scenes.push(scene);
+    } else if (stack.length > 1) {
+      // Only reachable with baking disabled: the layers genuinely cannot be
+      // carried, so each one is named.
       for (const under of stack.slice(0, -1)) {
         drops.push({
           clipId: under.clip.id,
           clipLabel: under.clip.label,
           property: `layer under ${describeTrack(top.track)}`,
           reason:
-            "The renderer composites one visual layer per instant. Overlapping layers must be baked into a single frame before export.",
+            "The renderer composites one visual layer per instant, and baking is disabled for this compile.",
         });
       }
     }
@@ -219,7 +245,10 @@ export function compileProjectToTimeline(
       stepIndex: entries.length,
       startMs,
       endMs,
-      screenshotPath: top.clip.assetId ?? top.clip.id,
+      // A baked scene REPLACES the source frame for this entry.
+      screenshotPath: scene
+        ? scene.outputName
+        : (top.clip.assetId ?? top.clip.id),
       ...(top.clip.transform?.fit
         ? { sourceTreatment: { fit: top.clip.transform.fit } }
         : {}),
@@ -287,7 +316,19 @@ export function compileProjectToTimeline(
     drops,
     errors,
     expectedOutputMs,
+    bakePlan: {
+      projectId: project.id,
+      width: project.width,
+      height: project.height,
+      scenes,
+    },
+    bakedProperties,
   };
+}
+
+/** Properties that survive BECAUSE of the bake. Reported, never silent. */
+export function bakedPropertyCount(result: CompileResult): number {
+  return result.bakePlan.scenes.reduce((n, s) => n + s.reasons.length, 0);
 }
 
 /** A one-line human summary, for the export dialog. */
@@ -296,6 +337,9 @@ export function describeCompileResult(result: CompileResult): string {
     `${result.timeline.entries.length} entries`,
     `${Math.round(result.expectedOutputMs / 1000)}s after crossfades`,
   ];
+  if (result.bakePlan.scenes.length) {
+    parts.push(`${result.bakePlan.scenes.length} to composite`);
+  }
   if (result.drops.length) parts.push(`${result.drops.length} dropped`);
   if (result.errors.length) parts.push(`${result.errors.length} blocking`);
   return parts.join(" · ");

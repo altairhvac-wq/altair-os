@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Check, Download, Loader2, Redo2, Undo2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  CheckCheck,
+  Download,
+  Loader2,
+  Redo2,
+  Undo2,
+} from "lucide-react";
 import { formatTimecode } from "@/shared/types/video-editor";
 
 export type SaveState = "saved" | "saving" | "dirty" | "unavailable";
@@ -22,6 +30,8 @@ export function EditorHeader({
   onUndo,
   onRedo,
   onExport,
+  onApprove,
+  capturedEvents,
 }: {
   readonly title: string;
   readonly durationMs: number;
@@ -34,6 +44,9 @@ export function EditorHeader({
   readonly onUndo: () => void;
   readonly onRedo: () => void;
   readonly onExport: () => void;
+  readonly onApprove: () => void;
+  /** Edits captured so far in this session, shown on the approve control. */
+  readonly capturedEvents: number;
 }) {
   return (
     <header
@@ -93,14 +106,36 @@ export function EditorHeader({
         <button
           type="button"
           onClick={onExport}
+          title="Compile to the renderer timeline and download it with the drop report"
           className="ml-1 flex h-7 items-center gap-1.5 rounded px-2.5 text-[11px] font-medium"
+          style={{
+            background: "var(--ve-raised)",
+            color: "var(--ve-text)",
+            border: "1px solid var(--ve-line-strong)",
+          }}
+        >
+          <Download className="size-3.5" />
+          Export
+        </button>
+
+        {/* Approval is the LEARNING action, so it carries the accent and the
+            export does not. Approving does not publish and does not render. */}
+        <button
+          type="button"
+          onClick={onApprove}
+          data-testid="ve-approve"
+          title="Record this cut as the approved edit and capture the diff from the generated draft"
+          className="flex h-7 items-center gap-1.5 rounded px-2.5 text-[11px] font-medium"
           style={{
             background: "var(--ve-accent)",
             color: "var(--ve-on-accent)",
           }}
         >
-          <Download className="size-3.5" />
-          Export
+          <CheckCheck className="size-3.5" />
+          Approve
+          {capturedEvents > 0 ? (
+            <span className="opacity-70">· {capturedEvents}</span>
+          ) : null}
         </button>
       </div>
     </header>

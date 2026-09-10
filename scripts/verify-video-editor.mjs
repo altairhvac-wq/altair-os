@@ -57,6 +57,7 @@ import {
 
 import {
   RENDER_TRANSITION_MS,
+  bakedPropertyCount,
   compileProjectToTimeline,
 } from "@/shared/lib/video-editor/compile";
 
@@ -573,8 +574,8 @@ check("an entry shorter than the crossfade is refused", () => {
   );
 });
 
-check("an overlay layer is reported as dropped, and wins its span", () => {
-  const p = compilable([
+const overlaid = () =>
+  compilable([
     {
       id: "t-overlay",
       kind: "overlay",
@@ -584,21 +585,45 @@ check("an overlay layer is reported as dropped, and wins its span", () => {
       ],
     },
   ]);
-  const r = compileProjectToTimeline(p);
-  assert.ok(
-    r.drops.some((d) => /layer under/.test(d.property)),
-    "an overlapping layer must produce a drop",
+
+check("overlapping layers become a bake scene, not a drop", () => {
+  const r = compileProjectToTimeline(overlaid());
+  assert.equal(
+    r.drops.filter((d) => /layer under/.test(d.property)).length,
+    0,
+    "with baking on, an overlap is composited rather than lost",
   );
-  const covering = r.timeline.entries.find(
+  const scene = r.bakePlan.scenes.find(
+    (sc) => sc.startMs === 1000 && sc.endMs === 3000,
+  );
+  assert.ok(scene, "no bake scene for the overlap span");
+  assert.equal(scene.layers.length, 2, "both layers must reach the compositor");
+  assert.equal(
+    scene.layers[scene.layers.length - 1].clipId,
+    "o",
+    "the overlay must be the top layer",
+  );
+  assert.ok(scene.reasons.some((x) => /overlapping/.test(x)));
+
+  // The entry now points at the composited frame, not at either source.
+  const entry = r.timeline.entries.find(
     (e) => e.startMs === 1000 && e.endMs === 3000,
   );
-  assert.ok(covering, "no entry was cut for the overlay's span");
-  assert.equal(covering.screenshotPath, "logo", "overlay must paint above video");
+  assert.equal(entry.screenshotPath, scene.outputName);
 });
 
-check("unrepresentable clip properties each produce a named drop", () => {
+check("with baking disabled the overlap IS a drop", () => {
+  const r = compileProjectToTimeline(overlaid(), { bake: false });
+  assert.ok(
+    r.drops.some((d) => /layer under/.test(d.property)),
+    "a caller that cannot composite must be told what it loses",
+  );
+  assert.equal(r.bakePlan.scenes.length, 0);
+});
+
+const decorated = () => {
   const p = compilable();
-  const decorated = {
+  return {
     ...p,
     tracks: p.tracks.map((t) => ({
       ...t,
@@ -613,23 +638,53 @@ check("unrepresentable clip properties each produce a named drop", () => {
       ),
     })),
   };
-  const r = compileProjectToTimeline(decorated);
-  for (const property of [
-    "transform.scale",
-    "transform.position",
-    "transform.rotation",
-    "transform.opacity",
-    "audio.volume",
-    "audio.fade",
-  ]) {
+};
+
+check("bakeable properties are baked; audio properties still drop", () => {
+  const r = compileProjectToTimeline(decorated());
+  for (const property of ["scale", "position", "rotation", "opacity"]) {
     assert.ok(
-      r.drops.some((d) => d.property === property),
-      `no drop reported for ${property}`,
+      r.bakedProperties.some((b) => b.endsWith(`:${property}`)),
+      `${property} should be baked, not lost`,
+    );
+    assert.ok(
+      !r.drops.some((d) => d.property === `transform.${property}`),
+      `${property} must not ALSO be reported as dropped`,
     );
   }
-  for (const drop of r.drops) {
+  // Audio has no compositing escape hatch: the bake paints pictures.
+  assert.ok(r.drops.some((d) => d.property === "audio.volume"));
+  assert.ok(r.drops.some((d) => d.property === "audio.fade"));
+  assert.ok(bakedPropertyCount(r) > 0);
+});
+
+check("no property vanishes from BOTH lists", () => {
+  // The invariant the whole honesty argument rests on: anything the renderer
+  // cannot express natively is either baked or reported, never neither.
+  const r = compileProjectToTimeline(decorated());
+  const accounted = new Set([
+    ...r.bakedProperties.map((b) => b.split(":")[1]),
+    ...r.drops.map((d) => d.property.replace(/^transform[.]/, "")),
+  ]);
+  for (const property of ["scale", "position", "rotation", "opacity"]) {
+    assert.ok(accounted.has(property), `${property} is unaccounted for`);
+  }
+});
+
+check("every drop names its clip and its reason", () => {
+  for (const drop of compileProjectToTimeline(decorated()).drops) {
     assert.ok(drop.clipId && drop.clipLabel && drop.reason, "drop is incomplete");
   }
+});
+
+check("a plain project needs no bake scenes at all", () => {
+  const r = compileProjectToTimeline(compilable());
+  assert.equal(
+    r.bakePlan.scenes.length,
+    0,
+    "baking untransformed single-layer frames would be wasted Playwright time",
+  );
+  assert.equal(r.timeline.entries[0].screenshotPath, "slide-a");
 });
 
 check("hidden tracks do not contribute entries", () => {

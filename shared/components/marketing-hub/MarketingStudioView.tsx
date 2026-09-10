@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { StudioLearningPanel } from "./StudioLearningPanel";
 import {
   Button,
   StatusPill,
@@ -325,6 +326,9 @@ export function MarketingStudioView() {
           </pre>
         </div>
       </section>
+
+      {/* ── Learned from edits ────────────────────────────────────────── */}
+      <StudioLearningPanel />
 
       {/* ── Capture plan ──────────────────────────────────────────────── */}
       <section className={altairMcCardClass}>
