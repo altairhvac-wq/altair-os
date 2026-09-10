@@ -1,0 +1,139 @@
+{
+  "draftA": {
+    "status": "COMPLETED",
+    "sawGuidance": false,
+    "generatedWith": {
+      "agentVersion": "content.draft_video_plan.plan@v1",
+      "preferenceSetVersion": null,
+      "preferenceKeysSupplied": []
+    },
+    "plan": {
+      "objective": "Explain how the refrigeration cycle moves heat",
+      "audience": "homeowners and new technicians",
+      "hook": "Cold air is not made. It is moved.",
+      "beats": [
+        {
+          "narration": "Cold air is not made. It is moved.",
+          "visualDirection": "Title card, cycle outline",
+          "caption": "Cold air is moved",
+          "kind": "diagram_graphic"
+        },
+        {
+          "narration": "Start at the compressor, where cool vapor arrives from the suction line.",
+          "visualDirection": "Compressor cutaway",
+          "caption": "Start at the compressor",
+          "kind": "narration"
+        },
+        {
+          "narration": "It leaves as hot high pressure vapor, hotter than the outdoor air.",
+          "visualDirection": "Discharge line, hot vapor pill",
+          "caption": "Hot high-pressure vapor",
+          "kind": "diagram_graphic"
+        },
+        {
+          "narration": "The condenser gives that heat up to the air outside.",
+          "visualDirection": "Condenser coil, airflow arrows",
+          "caption": "Heat leaves at the condenser",
+          "kind": "narration"
+        },
+        {
+          "narration": "And that is the loop.",
+          "visualDirection": "Full cycle recap",
+          "caption": "That is the loop",
+          "kind": "diagram_graphic"
+        }
+      ],
+      "cta": "Subscribe for the rest of the series",
+      "targetDurationSeconds": 60,
+      "voiceNotes": null,
+      "platformCopy": null,
+      "generatedWith": {
+        "agentVersion": "content.draft_video_plan.plan@v1",
+        "preferenceSetVersion": null,
+        "preferenceKeysSupplied": []
+      },
+      "topic": "How the HVAC cycle works",
+      "format": "short_narrated_video",
+      "platform": null,
+      "lineage": {
+        "researchArtifactId": null,
+        "formatDecisionArtifactId": null
+      },
+      "directorRationale": null
+    }
+  },
+  "draftB": {
+    "status": "COMPLETED",
+    "sawGuidance": true,
+    "generatedWith": {
+      "agentVersion": "content.draft_video_plan.plan@v1",
+      "preferenceSetVersion": 1,
+      "preferenceKeysSupplied": [
+        "static_visual_duration",
+        "opening_visual_replacement",
+        "total_runtime",
+        "draft_acceptance"
+      ]
+    },
+    "guidanceShown": "# HUMAN-LEARNED EDITING PREFERENCES\n\nDerived from edits a human made to previous generated drafts for series \"How HVAC Actually Works\", format \"short_narrated_video\". Preference set v1, generated 2026-09-10T12:00:00.000Z.\n\n- Humans consistently shorten static visuals. Prefer 2.9–3.9 second stills.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- The opening visual is replaced in 100% of approvals. Treat the first shot as the weakest first-pass decision and generate alternatives.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- Approved cuts run shorter than drafts by a median of 11.2s. Aim first drafts tighter.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- 0% of generated clips are approved untouched.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n\nHow to weigh these:\n- STRONG preferences should normally be followed. Depart from one only\n  when this specific piece has a reason the evidence does not cover.\n- GUIDANCE preferences are evidence, not instruction. Take them into\n  account; they do not settle the question.\n- These describe what humans CHANGED about earlier drafts. They are not a\n  brief, and they never outrank the topic, the research findings, or the\n  Director's rationale.",
+    "plan": {
+      "objective": "Explain how the refrigeration cycle moves heat",
+      "audience": "homeowners and new technicians",
+      "hook": "Cold air is not made. It is moved.",
+      "beats": [
+        {
+          "narration": "Cold air is not made. It is moved.",
+          "visualDirection": "Title card, cycle outline",
+          "caption": "Cold air is moved",
+          "kind": "diagram_graphic"
+        },
+        {
+          "narration": "Start at the compressor, where cool vapor arrives from the suction line.",
+          "visualDirection": "Compressor cutaway",
+          "caption": "Start at the compressor",
+          "kind": "narration"
+        },
+        {
+          "narration": "It leaves as hot high pressure vapor, hotter than the outdoor air.",
+          "visualDirection": "Discharge line, hot vapor pill",
+          "caption": "Hot high-pressure vapor",
+          "kind": "diagram_graphic"
+        },
+        {
+          "narration": "The condenser gives that heat up to the air outside.",
+          "visualDirection": "Condenser coil, airflow arrows",
+          "caption": "Heat leaves at the condenser",
+          "kind": "narration"
+        },
+        {
+          "narration": "And that is the loop.",
+          "visualDirection": "Full cycle recap",
+          "caption": "That is the loop",
+          "kind": "diagram_graphic"
+        }
+      ],
+      "cta": "Subscribe for the rest of the series",
+      "targetDurationSeconds": 60,
+      "voiceNotes": null,
+      "platformCopy": null,
+      "generatedWith": {
+        "agentVersion": "content.draft_video_plan.plan@v1",
+        "preferenceSetVersion": 1,
+        "preferenceKeysSupplied": [
+          "static_visual_duration",
+          "opening_visual_replacement",
+          "total_runtime",
+          "draft_acceptance"
+        ]
+      },
+      "topic": "How the HVAC cycle works",
+      "format": "short_narrated_video",
+      "platform": null,
+      "lineage": {
+        "researchArtifactId": null,
+        "formatDecisionArtifactId": null
+      },
+      "directorRationale": null
+    }
+  }
+}

@@ -36,6 +36,8 @@ import {
   upsertSession,
 } from "@/shared/lib/video-editor/session";
 import { diffEditorProjects } from "@/shared/lib/video-editor/diff";
+import { buildScorecard, type Scorecard } from "@/shared/lib/video-editor/scorecard";
+import type { DraftGenerationMetadata } from "@/shared/lib/video-editor/draft-from-plan";
 import type { EditSession } from "@/shared/types/edit-learning";
 import {
   compileProjectToTimeline,
@@ -76,7 +78,16 @@ const AUTOSAVE_DEBOUNCE_MS = 700;
 const DEFAULT_TIMELINE_FRACTION = 0.44;
 const MIN_TIMELINE_PX = 160;
 
-export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode }) {
+export function VideoEditorShell({
+  episode,
+  draftBanner,
+  draftMetadata,
+}: {
+  readonly episode: LoadedEpisode;
+  /** One line naming the agent and preference set behind a generated draft. */
+  readonly draftBanner?: string;
+  readonly draftMetadata?: DraftGenerationMetadata;
+}) {
   const [state, rawDispatch] = useReducer(
     (s: Parameters<typeof editorReducer>[0], a: EditorAction) =>
       editorReducer(s, a),
@@ -116,6 +127,7 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
   const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
   const [exportSummary, setExportSummary] = useState<string | null>(null);
   const [masterMuted, setMasterMuted] = useState(false);
+  const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
   const [capturedEvents, setCapturedEvents] = useState(0);
 
@@ -213,7 +225,7 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
       id: `session-${episode.project.id}-${sessionStartRef.current}`,
       projectId: episode.project.id,
       generatedProjectSnapshot: episode.project,
-      generatedBy: episode.meta.generatedBy,
+      generatedBy: draftMetadata?.agentVersion ?? episode.meta.generatedBy,
       startedAt: new Date(sessionStartRef.current).toISOString(),
       scope: { series: episode.meta.series, format: "long-form-educational" },
     });
@@ -486,6 +498,9 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
       approved.generatedProjectSnapshot,
       project,
     );
+    setScorecard(
+      buildScorecard(approved.generatedProjectSnapshot, project, diff),
+    );
     const parts = [
       `${diff.summary.totalChanges} change${diff.summary.totalChanges === 1 ? "" : "s"} captured for learning`,
     ];
@@ -535,6 +550,28 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
           capturedEvents={capturedEvents}
         />
 
+        {draftBanner && !approvalNotice ? (
+          <div
+            className="flex shrink-0 items-center gap-2 px-3 py-1 text-[11px]"
+            style={{
+              background: "var(--ve-raised)",
+              color: "var(--ve-text-dim)",
+              borderBottom: "1px solid var(--ve-line)",
+            }}
+          >
+            <span
+              className="rounded px-1.5 py-0.5 text-[10px] font-medium"
+              style={{
+                background: "var(--ve-accent-wash)",
+                color: "var(--ve-accent)",
+              }}
+            >
+              GENERATED DRAFT
+            </span>
+            {draftBanner}
+          </div>
+        ) : null}
+
         {approvalNotice || restoredNotice || exportSummary ? (
           <div
             className="flex shrink-0 items-center gap-2 px-3 py-1 text-[11px]"
@@ -557,6 +594,13 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
               Dismiss
             </button>
           </div>
+        ) : null}
+
+        {scorecard ? (
+          <ScorecardStrip
+            scorecard={scorecard}
+            onDismiss={() => setScorecard(null)}
+          />
         ) : null}
 
         <div className="flex min-h-0 flex-1">
@@ -663,6 +707,59 @@ export function VideoEditorShell({ episode }: { readonly episode: LoadedEpisode 
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Bot draft → human approved, as numbers.
+ *
+ * Shown once, after approval, and dismissible. It is the answer to the only
+ * question that matters about the loop over time — how much did I have to
+ * change what the agent made — and every figure comes from the deterministic
+ * diff rather than from anything that could be described as an opinion.
+ */
+function ScorecardStrip({
+  scorecard,
+  onDismiss,
+}: {
+  readonly scorecard: Scorecard;
+  readonly onDismiss: () => void;
+}) {
+  return (
+    <div
+      data-testid="ve-scorecard"
+      className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5"
+      style={{
+        background: "var(--ve-panel)",
+        borderBottom: "1px solid var(--ve-line-strong)",
+      }}
+    >
+      <span
+        className="text-[11px] font-medium"
+        style={{ color: "var(--ve-text)" }}
+      >
+        {scorecard.headline}
+      </span>
+      {scorecard.lines.map((line) => (
+        <span
+          key={line.label}
+          className="text-[11px] tabular-nums"
+          style={{
+            color: line.isChange ? "var(--ve-accent)" : "var(--ve-text-dim)",
+          }}
+        >
+          {line.label}: {line.value}
+        </span>
+      ))}
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="ml-auto text-[11px] underline"
+        style={{ color: "var(--ve-text-faint)" }}
+      >
+        Dismiss
+      </button>
     </div>
   );
 }

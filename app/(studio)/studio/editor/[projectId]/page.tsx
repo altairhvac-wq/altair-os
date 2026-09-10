@@ -6,7 +6,7 @@ import {
   DEMO_PROJECT_ID,
   loadDemoEpisode,
 } from "@/shared/lib/video-editor/demo-project";
-import { VideoEditorShell } from "@/shared/components/video-editor/VideoEditorShell";
+import { StudioProjectLoader } from "@/shared/components/video-editor/StudioProjectLoader";
 
 export const metadata: Metadata = {
   title: "Editor",
@@ -25,10 +25,13 @@ export const metadata: Metadata = {
  * A failure answers 404, not 403, matching `requirePlatformAdmin`: an internal
  * surface should not confirm it exists to someone who may not use it.
  *
- * ==================== ONE PROJECT, FOR NOW ====================
- * The only project that exists is the generated snapshot of the rendered EP01.
- * An unknown id 404s rather than opening an empty editor, because an editor
- * with no project is indistinguishable from one that failed to load.
+ * ==================== TWO KINDS OF PROJECT ====================
+ * The rendered demo episode is resolved HERE, on the server, because its
+ * frames, audio and measured timings are committed to this repository. An
+ * agent-generated draft cannot be: it lives in the operator's browser, so the
+ * id is handed to a client loader that can actually see it. This route
+ * therefore does not 404 an unknown id — it cannot know — and the loader shows
+ * an honest "not in this browser" instead.
  */
 export default async function StudioEditorPage({
   params,
@@ -48,9 +51,10 @@ export default async function StudioEditorPage({
     notFound();
   }
 
-  if (projectId !== DEMO_PROJECT_ID) {
-    notFound();
-  }
-
-  return <VideoEditorShell episode={loadDemoEpisode()} />;
+  return (
+    <StudioProjectLoader
+      projectId={projectId}
+      demoEpisode={projectId === DEMO_PROJECT_ID ? loadDemoEpisode() : null}
+    />
+  );
 }

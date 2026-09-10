@@ -446,3 +446,30 @@ shared state now restore it.
 - Sessions are localStorage, per browser.
 - Library browsing still needs a media endpoint plus generated thumbnails.
 - No agent consumes preferences yet — the read interface exists and is tested.
+
+---
+
+# Phase 3 — 2026-09-10
+
+The learning loop is closed: an agent generates an editable draft, a human
+edits and approves it, and a later agent run consumes the eligible corrections.
+Full detail in **`AGENT_EDIT_LEARNING_LOOP_REPORT.md`**.
+
+What changed in the editor itself:
+
+- **A generated draft opens with its provenance.** `/studio/editor/<draft-id>`
+  resolves an agent draft client-side (they live in the browser; the server
+  route cannot see them) and shows a `GENERATED DRAFT` banner naming the agent
+  and preference set behind it.
+- **A scorecard after approval.** Bot draft → human approved, as numbers, from
+  the deterministic diff: clips retained, shortened, moved, assets replaced,
+  opening replaced, visual changes/minute, runtime delta.
+- **The learning panel has three states** — Collecting evidence / Candidate /
+  Active guidance — and shows each preference's scope, so it never claims to
+  have "learned" something after one session.
+- **`shared/lib/video-editor/pacing.ts`** mirrors the renderer's pacing rule so
+  a generated draft has the shape the renderer will produce.
+  `verify:agent-loop` reads `render-episode.mjs` and fails if they drift.
+
+Suites now: **47/47** editor logic, **32/32** learning, **28/28** agent loop,
+**30/30** browser, **2895** platform tests, tsc clean, 0 lint errors, build ✓.

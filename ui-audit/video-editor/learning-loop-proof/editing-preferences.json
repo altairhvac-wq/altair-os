@@ -1,0 +1,71 @@
+{
+  "set": {
+    "version": 1,
+    "generatedAt": "2026-09-10T12:00:00.000Z",
+    "scope": {
+      "format": "short_narrated_video",
+      "series": "How HVAC Actually Works"
+    },
+    "preferences": [
+      {
+        "key": "static_visual_duration",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "Humans consistently shorten static visuals. Prefer 2.9–3.9 second stills.",
+        "metrics": {
+          "botMedianMs": 6200,
+          "humanMedianMs": 3400,
+          "sessionsShorter": 9,
+          "sessionsLonger": 0
+        }
+      },
+      {
+        "key": "opening_visual_replacement",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "The opening visual is replaced in 100% of approvals. Treat the first shot as the weakest first-pass decision and generate alternatives.",
+        "metrics": {
+          "replacedSessions": 9,
+          "totalSessions": 9,
+          "rate": 1
+        }
+      },
+      {
+        "key": "total_runtime",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "Approved cuts run shorter than drafts by a median of 11.2s. Aim first drafts tighter.",
+        "metrics": {
+          "medianDeltaMs": -11200,
+          "sessionsShorter": 9,
+          "sessionsLonger": 0
+        }
+      },
+      {
+        "key": "draft_acceptance",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "0% of generated clips are approved untouched.",
+        "metrics": {
+          "unchangedRatio": 0,
+          "totalSessions": 9
+        }
+      }
+    ]
+  },
+  "guidance": "# HUMAN-LEARNED EDITING PREFERENCES\n\nDerived from edits a human made to previous generated drafts for series \"How HVAC Actually Works\", format \"short_narrated_video\". Preference set v1, generated 2026-09-10T12:00:00.000Z.\n\n- Humans consistently shorten static visuals. Prefer 2.9–3.9 second stills.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- The opening visual is replaced in 100% of approvals. Treat the first shot as the weakest first-pass decision and generate alternatives.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- Approved cuts run shorter than drafts by a median of 11.2s. Aim first drafts tighter.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n- 0% of generated clips are approved untouched.\n  Evidence: 9 approved editing sessions.\n  Confidence: 90% (strong).\n\nHow to weigh these:\n- STRONG preferences should normally be followed. Depart from one only\n  when this specific piece has a reason the evidence does not cover.\n- GUIDANCE preferences are evidence, not instruction. Take them into\n  account; they do not settle the question.\n- These describe what humans CHANGED about earlier drafts. They are not a\n  brief, and they never outrank the topic, the research findings, or the\n  Director's rationale.",
+  "suppliedKeys": [
+    "static_visual_duration",
+    "opening_visual_replacement",
+    "total_runtime",
+    "draft_acceptance"
+  ],
+  "provenance": {
+    "sessionsConsidered": 9,
+    "approvedSessions": 9,
+    "thresholds": {
+      "minSessions": 5,
+      "minConfidence": 0.7
+    }
+  }
+}

@@ -211,3 +211,25 @@ explicitly so a future ripple feature cannot change it silently.
    splitting by section (`hook` vs body vs `close`) is where the interesting
    signal probably is.
 4. **A second approved episode**, so scope actually has something to separate.
+
+---
+
+## Update — Phase 3 (2026-09-10)
+
+The loop this report describes is now **closed**. See
+`AGENT_EDIT_LEARNING_LOOP_REPORT.md`.
+
+What that changes about this document:
+
+- **"No agent consumes preferences yet"** is no longer true. The Director
+  (`content.draft_video_plan`) reads them, and a draft records which set it was
+  given.
+- The agent-facing contract is now a versioned envelope,
+  `EditingPreferenceSet` in `shared/types/editing-preferences.ts`, separate from
+  the internal `EditingPreference` so the two can move at different speeds.
+- Scope precedence is implemented and tested: `topic → series → format → global`,
+  most specific wins, applied per key.
+- Confidence is expressed to the agent as three bands — **strong / guidance /
+  weak** — with an explicit instruction per band. Weak never reaches a prompt.
+- Sessions are still localStorage. That remains the single blocking limitation,
+  and the cross-repo handoff is a file for exactly that reason.

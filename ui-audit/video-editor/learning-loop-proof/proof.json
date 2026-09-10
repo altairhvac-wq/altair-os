@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-09-10T12:00:00.000Z",
+  "thresholds": {
+    "minSessions": 5,
+    "minConfidence": 0.7
+  },
+  "fixtureSessions": 9,
+  "fixtureNote": "Synthetic sessions built by this script. Never written to the operator session store.",
+  "preferenceSet": {
+    "version": 1,
+    "generatedAt": "2026-09-10T12:00:00.000Z",
+    "scope": {
+      "format": "short_narrated_video",
+      "series": "How HVAC Actually Works"
+    },
+    "preferences": [
+      {
+        "key": "static_visual_duration",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "Humans consistently shorten static visuals. Prefer 2.9–3.9 second stills.",
+        "metrics": {
+          "botMedianMs": 6200,
+          "humanMedianMs": 3400,
+          "sessionsShorter": 9,
+          "sessionsLonger": 0
+        }
+      },
+      {
+        "key": "opening_visual_replacement",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "The opening visual is replaced in 100% of approvals. Treat the first shot as the weakest first-pass decision and generate alternatives.",
+        "metrics": {
+          "replacedSessions": 9,
+          "totalSessions": 9,
+          "rate": 1
+        }
+      },
+      {
+        "key": "total_runtime",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "Approved cuts run shorter than drafts by a median of 11.2s. Aim first drafts tighter.",
+        "metrics": {
+          "medianDeltaMs": -11200,
+          "sessionsShorter": 9,
+          "sessionsLonger": 0
+        }
+      },
+      {
+        "key": "draft_acceptance",
+        "evidenceSessions": 9,
+        "confidence": 0.9,
+        "recommendation": "0% of generated clips are approved untouched.",
+        "metrics": {
+          "unchangedRatio": 0,
+          "totalSessions": 9
+        }
+      }
+    ]
+  },
+  "suppliedKeys": [
+    "static_visual_duration",
+    "opening_visual_replacement",
+    "total_runtime",
+    "draft_acceptance"
+  ],
+  "draftA": {
+    "sawGuidance": false,
+    "generatedWith": {
+      "agentVersion": "content.draft_video_plan.plan@v1",
+      "preferenceSetVersion": null,
+      "preferenceKeysSupplied": []
+    },
+    "projectId": "draft-how-the-hvac-cycle-works-20260910120100",
+    "beats": 5,
+    "expectedMasterMs": 20804
+  },
+  "draftB": {
+    "sawGuidance": true,
+    "generatedWith": {
+      "agentVersion": "content.draft_video_plan.plan@v1",
+      "preferenceSetVersion": 1,
+      "preferenceKeysSupplied": [
+        "static_visual_duration",
+        "opening_visual_replacement",
+        "total_runtime",
+        "draft_acceptance"
+      ]
+    },
+    "projectId": "draft-how-the-hvac-cycle-works-20260910120200",
+    "beats": 5,
+    "expectedMasterMs": 20804
+  },
+  "humanEditOnDraftB": {
+    "headline": "67% of the generated cut was kept; 5 clips changed across 6 edits.",
+    "retentionRatio": 0.6666666666666666,
+    "summary": {
+      "totalChanges": 6,
+      "clipsAdded": 0,
+      "clipsRemoved": 0,
+      "clipsShortened": 5,
+      "clipsLengthened": 0,
+      "clipsMoved": 0,
+      "assetsReplaced": 1,
+      "textEdits": 0,
+      "captionEdits": 0,
+      "transformEdits": 0,
+      "audioEdits": 0,
+      "clipsUnchanged": 10,
+      "clipsInDraft": 15,
+      "durationDeltaMs": 0,
+      "openingVisualReplaced": true
+    },
+    "entries": [
+      "clip-beat-01 shortened by 1598ms (3995 → 2397)",
+      "clip-beat-01 asset none → operator-chosen-open",
+      "clip-beat-02 shortened by 1837ms (4592 → 2755)",
+      "clip-beat-03 shortened by 1837ms (4592 → 2755)",
+      "clip-beat-04 shortened by 1577ms (3943 → 2366)",
+      "clip-beat-05 shortened by 1889ms (4722 → 2833)"
+    ]
+  }
+}

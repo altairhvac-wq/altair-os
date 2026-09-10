@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { StudioLearningPanel } from "./StudioLearningPanel";
+import { StudioDraftIntake } from "./StudioDraftIntake";
 import {
   Button,
   StatusPill,
@@ -326,6 +327,9 @@ export function MarketingStudioView() {
           </pre>
         </div>
       </section>
+
+      {/* ── Agent drafts in, learned preferences out ──────────────────── */}
+      <StudioDraftIntake />
 
       {/* ── Learned from edits ────────────────────────────────────────── */}
       <StudioLearningPanel />

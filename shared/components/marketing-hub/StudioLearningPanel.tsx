@@ -7,12 +7,17 @@ import {
   StatusPill,
 } from "@/shared/design-system/components";
 import {
-  actionablePreferences,
   aggregate,
+  derivePreferences,
   summariseSession,
   type SessionStats,
 } from "@/shared/lib/video-editor/learning";
-import { derivePreferences } from "@/shared/lib/video-editor/learning";
+import {
+  PREFERENCE_STATE_LABEL,
+  preferenceState,
+  preferenceStrengthLabel,
+  type PreferenceState,
+} from "@/shared/lib/video-editor/preference-set";
 import { loadSessions } from "@/shared/lib/video-editor/session";
 import {
   DEFAULT_LEARNING_THRESHOLDS,
@@ -62,9 +67,6 @@ export function StudioLearningPanel() {
     .filter((s): s is SessionStats => s !== null);
   const totals = aggregate(stats);
   const preferences = derivePreferences(sessions);
-  const actionable = new Set(
-    actionablePreferences(preferences).map((p) => p.key),
-  );
 
   return (
     <section className={altairMcCardClass}>
@@ -116,11 +118,7 @@ export function StudioLearningPanel() {
 
           <ul>
             {preferences.map((preference) => (
-              <PreferenceRow
-                key={preference.key}
-                preference={preference}
-                usable={actionable.has(preference.key)}
-              />
+              <PreferenceRow key={preference.key} preference={preference} />
             ))}
           </ul>
         </>
@@ -156,11 +154,13 @@ function Stat({
 
 function PreferenceRow({
   preference,
-  usable,
 }: {
   readonly preference: EditingPreference;
-  readonly usable: boolean;
 }) {
+  const state: PreferenceState = preferenceState(preference);
+  const tone =
+    state === "active" ? "success" : state === "candidate" ? "warning" : "neutral";
+
   return (
     <li className="flex flex-wrap items-start justify-between gap-2 border-t border-[var(--north-star-plate-border)] px-3.5 py-2.5">
       <div className="min-w-0 flex-1">
@@ -168,14 +168,21 @@ function PreferenceRow({
           {preference.recommendation}
         </span>
         <span className="mt-0.5 block font-mono text-[10px] text-altair-ink-muted">
-          {preference.key} · {preference.evidenceCount} session
+          {preference.key} · scope {preference.scope}
+          {preference.scopeValue ? ` (${preference.scopeValue})` : ""} ·{" "}
+          {preference.evidenceCount} session
           {preference.evidenceCount === 1 ? "" : "s"} ·{" "}
           {Math.round(preference.confidence * 100)}% confidence
         </span>
       </div>
-      <StatusPill tone={usable ? "success" : "neutral"} size="sm">
-        {usable ? "Usable by agents" : "Needs more evidence"}
-      </StatusPill>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <StatusPill tone={tone} size="sm">
+          {PREFERENCE_STATE_LABEL[state]}
+        </StatusPill>
+        <span className="text-[10px] text-altair-ink-muted">
+          {preferenceStrengthLabel(preference.confidence)}
+        </span>
+      </div>
     </li>
   );
 }
