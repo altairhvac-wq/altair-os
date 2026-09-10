@@ -25,7 +25,10 @@ import {
   loadProject,
   saveProject,
 } from "@/shared/lib/video-editor/persistence";
-import type { LoadedEpisode } from "@/shared/lib/video-editor/demo-project";
+import {
+  audioRefsFrom,
+  type LoadedEpisode,
+} from "@/shared/lib/video-editor/demo-project";
 import {
   appendEvent,
   approveSession,
@@ -45,6 +48,7 @@ import {
   describeCompileResult,
 } from "@/shared/lib/video-editor/compile";
 import { describeBakePlan } from "@/shared/lib/video-editor/bake";
+import { canQueue } from "@/shared/lib/video-editor/render-job";
 import {
   projectDurationMs,
   type EditorClip,
@@ -78,6 +82,16 @@ const AUTOSAVE_DEBOUNCE_MS = 700;
 /** Where the timeline sits by default, as a fraction of the editor height. */
 const DEFAULT_TIMELINE_FRACTION = 0.44;
 const MIN_TIMELINE_PX = 160;
+
+/**
+ * Projects the laptop worker will render, mirrored from its ALLOWLIST.
+ *
+ * Checked here so the control is disabled rather than offered and refused, and
+ * checked THERE so the browser's opinion is not the security boundary. Both,
+ * because a client-side check is a courtesy and a worker-side check is the
+ * rule.
+ */
+const RENDERABLE_PROJECT_IDS = ["hvac-01", "hvac-04"];
 
 export function VideoEditorShell({
   episode,
@@ -445,8 +459,66 @@ export function VideoEditorShell({
    * plus a list of everything the edit contains that the renderer will not
    * carry — so the difference is known before the master exists, not after.
    */
+  /**
+   * Queue a render.
+   *
+   * The browser writes a JOB, never a command: a project id, a compiled
+   * timeline and a bake plan. Every binary, flag and path is chosen by the
+   * worker on the production laptop, which will only run the one pipeline it
+   * has. The project id is checked against the same allowlist the worker holds,
+   * here as well as there, so an unrenderable request is refused before it
+   * becomes a file rather than after it becomes a failed job.
+   *
+   * The two-command laptop render remains exactly what it was; this is a
+   * narrower second door onto the same compositor.
+   */
+  const handleQueueRender = useCallback(() => {
+    const result = compileProjectToTimeline(project, {
+      audio: audioRefsFrom(episode.audio),
+    });
+    const gate = canQueue({
+      projectId: project.id,
+      allowlist: RENDERABLE_PROJECT_IDS,
+      compileErrors: result.errors,
+    });
+
+    if (!gate.ok) {
+      setExportSummary(`Cannot queue — ${gate.reason}`);
+      return;
+    }
+
+    const jobId = `job-${Date.now().toString(36)}`;
+    const request = {
+      jobId,
+      projectId: project.id,
+      projectTitle: project.title,
+      requestedAt: new Date().toISOString(),
+      timeline: result.timeline,
+      bakePlan: result.bakePlan,
+      drops: result.drops,
+      expectedOutputMs: result.expectedOutputMs,
+      assetStem: project.id,
+    };
+
+    const blob = new Blob([JSON.stringify(request, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${jobId}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    setExportSummary(
+      `Queued ${jobId} — run it on the laptop: node production/slide-system/run-editor-render-job.mjs ${jobId}.json`,
+    );
+  }, [project]);
+
   const handleExport = useCallback(() => {
-    const result = compileProjectToTimeline(project);
+    const result = compileProjectToTimeline(project, {
+      audio: audioRefsFrom(episode.audio),
+    });
     const payload = {
       exportedAt: new Date().toISOString(),
       summary: describeCompileResult(result),
@@ -548,6 +620,8 @@ export function VideoEditorShell({
           onRedo={() => dispatch({ type: "redo" })}
           onExport={handleExport}
           onApprove={handleApprove}
+          onQueueRender={handleQueueRender}
+          canQueueRender={RENDERABLE_PROJECT_IDS.includes(project.id)}
           capturedEvents={capturedEvents}
         />
 

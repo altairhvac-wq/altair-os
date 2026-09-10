@@ -58,6 +58,14 @@ import {
   tailMs,
 } from "@/shared/lib/video-editor/pacing";
 import { buildScorecard } from "@/shared/lib/video-editor/scorecard";
+import {
+  RENDER_JOB_STATES,
+  applyStatus,
+  canQueue,
+  canTransition,
+  describeJobStatus,
+  isTerminal,
+} from "@/shared/lib/video-editor/render-job";
 import { diffEditorProjects } from "@/shared/lib/video-editor/diff";
 import {
   approveSession,
@@ -134,6 +142,14 @@ function shorteningSessions(count, scope, idPrefix = "s") {
 }
 
 const AT = "2026-09-10T12:00:00.000Z";
+
+const { loadDemoEpisode } = await import(
+  "@/shared/lib/video-editor/demo-project"
+);
+const { compileProjectToTimeline } = await import(
+  "@/shared/lib/video-editor/compile"
+);
+const loadedDemoProject = loadDemoEpisode().project;
 
 /* ══════════════════════════════════ pacing ═════════════════════════════════ */
 
@@ -588,6 +604,126 @@ check("scorecard numbers agree with the diff they came from", () => {
   const card = buildScorecard(generated, approved, diff);
   const shortened = card.lines.find((l) => l.label === "Clips shortened");
   assert.equal(Number(shortened.value), diff.summary.clipsShortened);
+});
+
+/* ════════════════════════════ render job bridge ════════════════════════════ */
+
+section("Render job");
+
+check("the lifecycle is ordered and terminal states are terminal", () => {
+  assert.deepEqual([...RENDER_JOB_STATES], [
+    "queued", "preparing_scenes", "rendering", "audio_conform", "complete", "failed",
+  ]);
+  assert.equal(isTerminal("complete"), true);
+  assert.equal(isTerminal("failed"), true);
+  assert.equal(isTerminal("rendering"), false);
+});
+
+check("a job moves forward one step at a time", () => {
+  assert.equal(canTransition("queued", "preparing_scenes"), true);
+  assert.equal(canTransition("preparing_scenes", "rendering"), true);
+  assert.equal(canTransition("rendering", "audio_conform"), true);
+  assert.equal(canTransition("audio_conform", "complete"), true);
+  assert.equal(canTransition("queued", "rendering"), false, "no skipping");
+  assert.equal(canTransition("rendering", "queued"), false, "no going back");
+});
+
+check("it may fail from anywhere but never leave a terminal state", () => {
+  for (const from of ["queued", "preparing_scenes", "rendering", "audio_conform"]) {
+    assert.equal(canTransition(from, "failed"), true, `${from} must be able to fail`);
+  }
+  // A worker that crashed and restarted must create a NEW job, so the record
+  // of what happened stays true.
+  assert.equal(canTransition("complete", "rendering"), false);
+  assert.equal(canTransition("failed", "queued"), false);
+  assert.equal(canTransition("complete", "failed"), false);
+});
+
+check("a late status write cannot resurrect a finished job", () => {
+  const done = { jobId: "j1", state: "complete", updatedAt: "t" };
+  const late = applyStatus(done, { state: "rendering", updatedAt: "t2" });
+  assert.equal(late.ok, false);
+  assert.match(late.reason, /complete cannot become rendering/);
+});
+
+check("queueing is refused for a project the worker will not render", () => {
+  const gate = canQueue({
+    projectId: "draft-something-else",
+    allowlist: ["hvac-01"],
+    compileErrors: [],
+  });
+  assert.equal(gate.ok, false);
+  assert.match(gate.reason, /not a project this worker will render/);
+});
+
+check("queueing is refused when the timeline would not render", () => {
+  // A job that exists only to fail is indistinguishable in the record from a
+  // real render problem.
+  const gate = canQueue({
+    projectId: "hvac-01",
+    allowlist: ["hvac-01"],
+    compileErrors: ["Entry 3 lasts 150ms, not longer than the 260ms crossfade."],
+  });
+  assert.equal(gate.ok, false);
+  assert.match(gate.reason, /blocking issue/);
+});
+
+check("a clean, allowlisted project queues", () => {
+  const gate = canQueue({
+    projectId: "hvac-01",
+    allowlist: ["hvac-01", "hvac-04"],
+    compileErrors: [],
+  });
+  assert.equal(gate.ok, true);
+});
+
+check("the real EP01 project passes the queue gate", () => {
+  const r = compileProjectToTimeline(loadedDemoProject);
+  const gate = canQueue({
+    projectId: loadedDemoProject.id,
+    allowlist: ["hvac-01", "hvac-04"],
+    compileErrors: r.errors,
+  });
+  assert.equal(gate.ok, true, `EP01 cannot be queued: ${JSON.stringify(gate)}`);
+});
+
+check("status descriptions name the outcome", () => {
+  assert.match(
+    describeJobStatus({ jobId: "j", state: "complete", updatedAt: "t", masterFile: "x.mp4" }),
+    /Complete — x\.mp4/,
+  );
+  assert.match(
+    describeJobStatus({ jobId: "j", state: "failed", updatedAt: "t", error: "boom" }),
+    /Failed — boom/,
+  );
+  assert.match(
+    describeJobStatus({ jobId: "j", state: "rendering", updatedAt: "t", detail: "23 entries" }),
+    /Rendering — 23 entries/,
+  );
+});
+
+check("the worker allowlist matches the editor's", () => {
+  // Both sides hold the list: the editor so the control is disabled rather than
+  // offered and refused, the worker because the browser's opinion is not the
+  // security boundary. They must agree or the button lies.
+  const workerSource = fs.readFileSync(
+    "C:/Users/User/Desktop/AltairDemoTool/production/slide-system/run-editor-render-job.mjs",
+    "utf8",
+  );
+  const shellSource = fs.readFileSync(
+    "shared/components/video-editor/VideoEditorShell.tsx",
+    "utf8",
+  );
+  const workerList = workerSource.match(/const ALLOWLIST = \[(.*?)\]/s)?.[1] ?? "";
+  const shellList =
+    shellSource.match(/const RENDERABLE_PROJECT_IDS = \[(.*?)\]/s)?.[1] ?? "";
+  const norm = (x) => x.replace(/["'\s]/g, "").split(",").filter(Boolean).sort().join(",");
+  assert.ok(norm(workerList).length > 0, "could not read the worker allowlist");
+  assert.equal(
+    norm(shellList),
+    norm(workerList),
+    "the editor and the worker disagree about which projects can render",
+  );
 });
 
 /* ══════════════════════════════════ result ═════════════════════════════════ */

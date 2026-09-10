@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  Clapperboard,
   Download,
   Loader2,
   Redo2,
@@ -31,6 +32,8 @@ export function EditorHeader({
   onRedo,
   onExport,
   onApprove,
+  onQueueRender,
+  canQueueRender,
   capturedEvents,
 }: {
   readonly title: string;
@@ -45,6 +48,9 @@ export function EditorHeader({
   readonly onRedo: () => void;
   readonly onExport: () => void;
   readonly onApprove: () => void;
+  readonly onQueueRender: () => void;
+  /** False when the laptop worker has no allowlist entry for this project. */
+  readonly canQueueRender: boolean;
   /** Edits captured so far in this session, shown on the approve control. */
   readonly capturedEvents: number;
 }) {
@@ -116,6 +122,27 @@ export function EditorHeader({
         >
           <Download className="size-3.5" />
           Export
+        </button>
+
+        <button
+          type="button"
+          onClick={onQueueRender}
+          disabled={!canQueueRender}
+          data-testid="ve-queue-render"
+          title={
+            canQueueRender
+              ? "Write a render job for the production laptop"
+              : "This project is not on the render worker's allowlist"
+          }
+          className="flex h-7 items-center gap-1.5 rounded px-2.5 text-[11px] font-medium disabled:cursor-not-allowed disabled:opacity-35"
+          style={{
+            background: "var(--ve-raised)",
+            color: "var(--ve-text)",
+            border: "1px solid var(--ve-line-strong)",
+          }}
+        >
+          <Clapperboard className="size-3.5" />
+          Render
         </button>
 
         {/* Approval is the LEARNING action, so it carries the accent and the

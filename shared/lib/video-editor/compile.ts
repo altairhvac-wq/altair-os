@@ -30,6 +30,7 @@ import {
   isAudioTrackKind,
   projectDurationMs,
   visualClipsAt,
+  type EditorClip,
   type EditorProject,
   type EditorTrack,
 } from "@/shared/types/video-editor";
@@ -51,8 +52,17 @@ export type TimelineEntry = {
   readonly endMs: number;
   /** Library-relative id or slide id. The laptop resolves it to a real path. */
   readonly screenshotPath: string;
+  /**
+   * Narration for this entry.
+   *
+   * A REFERENCE, not a path. The compiler runs in a browser and has no idea
+   * where the audio masters live; the worker on the production laptop resolves
+   * `ref` inside the episode's own audio directory, exactly as it resolves
+   * frames. A path here would be a path the browser chose, which is the thing
+   * the job contract exists to prevent.
+   */
   readonly audioClip?: {
-    readonly filePath: string;
+    readonly ref: string;
     readonly durationMs: number;
   };
   readonly sourceTreatment?: {
@@ -122,10 +132,54 @@ function cutPoints(project: EditorProject): number[] {
   return [...points].sort((a, b) => a - b);
 }
 
+/** Where a voice clip's audio can be found, keyed by clip id. */
+export type AudioRefs = Readonly<
+  Record<string, { readonly ref: string; readonly fileMs: number }>
+>;
+
+/**
+ * Narration that starts at an entry boundary, keyed by that entry's start.
+ *
+ * The renderer attaches at most ONE clip per entry and delays it to that
+ * entry's start (`adelay`), so a voice clip beginning mid-entry cannot be
+ * expressed: it would play early by the difference. Those are reported as
+ * drops rather than silently shifted, because a line that starts at the wrong
+ * moment is worse than a line that is missing and named.
+ */
+function narrationByStart(
+  project: EditorProject,
+  audio: AudioRefs,
+): { byStart: Map<number, { clip: EditorClip; ref: string; fileMs: number }>; loose: EditorClip[] } {
+  const byStart = new Map<
+    number,
+    { clip: EditorClip; ref: string; fileMs: number }
+  >();
+  const loose: EditorClip[] = [];
+  for (const track of project.tracks) {
+    if (track.kind !== "voice" || track.muted) continue;
+    for (const clip of track.clips) {
+      const source = audio[clip.id];
+      if (!source) continue;
+      if (byStart.has(clip.startMs)) {
+        loose.push(clip);
+        continue;
+      }
+      byStart.set(clip.startMs, { clip, ref: source.ref, fileMs: source.fileMs });
+    }
+  }
+  return { byStart, loose };
+}
+
 export function compileProjectToTimeline(
   project: EditorProject,
   opts: {
     readonly transitionMs?: number;
+    /**
+     * Narration references. Absent means the timeline compiles silent — which
+     * the compositor's own silent path currently mishandles, so a caller that
+     * has audio should always pass it.
+     */
+    readonly audio?: AudioRefs;
     /**
      * Whether the caller can run the bake pass. Defaults to true because the
      * production path can; a caller that cannot composite passes false and gets
@@ -136,6 +190,7 @@ export function compileProjectToTimeline(
 ): CompileResult {
   const transitionMs = opts.transitionMs ?? RENDER_TRANSITION_MS;
   const bakeEnabled = opts.bake ?? true;
+  const audio = opts.audio ?? {};
   const drops: CompileDrop[] = [];
   const errors: string[] = [];
   const bakedProperties: string[] = [];
@@ -196,6 +251,20 @@ export function compileProjectToTimeline(
     }
   }
 
+  const { byStart: narration, loose: looseNarration } = narrationByStart(
+    project,
+    audio,
+  );
+  for (const clip of looseNarration) {
+    drops.push({
+      clipId: clip.id,
+      clipLabel: clip.label,
+      property: "narration overlap",
+      reason:
+        "The renderer attaches at most one narration clip per entry. A second clip starting at the same instant cannot be carried.",
+    });
+  }
+
   /* ── 2. Layers that cannot coexist ────────────────────────────────────── */
   const points = cutPoints(project);
   const entries: TimelineEntry[] = [];
@@ -241,6 +310,8 @@ export function compileProjectToTimeline(
       }
     }
 
+    const voice = narration.get(startMs);
+
     entries.push({
       stepIndex: entries.length,
       startMs,
@@ -252,7 +323,11 @@ export function compileProjectToTimeline(
       ...(top.clip.transform?.fit
         ? { sourceTreatment: { fit: top.clip.transform.fit } }
         : {}),
+      ...(voice
+        ? { audioClip: { ref: voice.ref, durationMs: voice.fileMs } }
+        : {}),
     });
+    if (voice) narration.delete(startMs);
   }
 
   /* ── 3. Structural validation the renderer will not do for us ─────────── */
@@ -299,6 +374,16 @@ export function compileProjectToTimeline(
           "Music is one looped bed for the whole render, not a track of clips. Only the first is used.",
       });
     }
+  }
+
+  // Anything left has no entry beginning at its start — it would play early.
+  for (const [startMs, left] of narration) {
+    drops.push({
+      clipId: left.clip.id,
+      clipLabel: left.clip.label,
+      property: "narration start",
+      reason: `No visual cut begins at ${startMs}ms, and the renderer delays narration to its entry's start — this line would play early.`,
+    });
   }
 
   const totalDurationMs = projectDurationMs(project);

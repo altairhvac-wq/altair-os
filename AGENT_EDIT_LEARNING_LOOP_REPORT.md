@@ -224,6 +224,8 @@ threshold would corrupt the one dataset the system depends on.
 | `shared/lib/video-editor/draft-from-plan.ts` | `content.video_plan` → `EditorProject` |
 | `shared/lib/video-editor/draft-store.ts` | Generated drafts, per browser |
 | `shared/lib/video-editor/scorecard.ts` | Bot draft → human approved, from the diff |
+| `shared/lib/video-editor/render-job.ts` | The job contract and state machine |
+| `AltairDemoTool/.../run-editor-render-job.mjs` | The laptop worker |
 | `shared/components/video-editor/StudioProjectLoader.tsx` | Resolves demo episode vs generated draft |
 | `shared/components/marketing-hub/StudioDraftIntake.tsx` | Plan in, preference file out |
 | `scripts/verify-agent-learning-loop.mjs` | 28 checks |
@@ -259,7 +261,7 @@ threshold would corrupt the one dataset the system depends on.
 |---|---|
 | `npm run verify:video-editor` | **47/47** |
 | `npm run verify:edit-learning` | **32/32** |
-| `npm run verify:agent-loop` | **29/29** |
+| `npm run verify:agent-loop` | **39/39** |
 | `node scripts/verify-video-editor-ui.mjs` | **30/30** |
 | `npm run verify:agent-loop-ui` | **13/13** |
 | platform `vitest run --dir src` | **2897 passed, 0 failed** |
@@ -328,12 +330,77 @@ Mirrors are only useful while they are checked.
 - **`preferenceKeysApplied` is never populated.** The Director is not asked
   which preferences it acted on; verifying that would mean inferring intent
   from output. The supplied keys are a join key — the diffs measure the effect.
-- **Render job API — not built.** Deliberately deprioritised in favour of
-  closing the loop, per the phase brief.
+- ~~Render job API — not built.~~ **Built.** See below.
 - **The diagram planner (`diagram-plan.ts`) is not wired.** Short-form
   (`video-plan.ts`) and long-form (`youtube-draft.ts`) both inject preferences
   and record `generatedWith`; the diagram planner is a third handler and would
   need the same three lines.
+
+---
+
+## The render job bridge (secondary priority, built)
+
+`shared/lib/video-editor/render-job.ts` + `AltairDemoTool/production/slide-system/run-editor-render-job.mjs`
+
+**The browser never names a command.** A job carries a project id, a compiled
+timeline and a bake plan — no binary, no flag, no path. Every one of those is
+chosen by the worker on the laptop, which can only run the pipeline it already
+has. `projectId` is checked against an allowlist held on **both** sides: in the
+editor so the control is disabled rather than offered and refused, in the worker
+because the browser's opinion is not the security boundary. A drift check
+asserts the two lists agree.
+
+**`render-episode.mjs` is untouched.** The two-command render remains exactly
+what it was; this is a second, narrower door onto the same compositor.
+
+States, with legal transitions enforced: `Queued → Preparing scenes → Rendering
+→ Audio conform → Complete`, `Failed` reachable from anywhere, and **no exit
+from a terminal state** — a worker that crashed must create a new job rather
+than reopening a finished one, so the record stays true. Status is persisted to
+`<job>.status.json` at every transition.
+
+### Proved with a real render
+
+```
+job job-proof02 — How the HVAC cycle works
+  [preparing_scenes] 0 scenes
+  [rendering] 25 entries, 19 narration clips
+  [audio_conform]
+  [complete] 6.7 MB
+```
+
+`editor-hvac-01-job-proof02.mp4` — 1920×1080 h264 + AAC, **157.699s**, which
+matches the compiler's predicted `expectedOutputMs` of 157699ms **to the
+millisecond**. That equality is the strongest correctness signal in this phase:
+the editor's model of the render and the render agree exactly.
+
+### Two real bugs this surfaced
+
+1. **The compiler emitted no narration at all.** Timelines compiled silent.
+   Fixed: voice clips whose start matches an entry boundary now attach as
+   `audioClip: { ref, durationMs }` — a REFERENCE, not a path, because the
+   browser has no idea where the masters live and a path there would be a path
+   the browser chose. Narration that starts mid-entry is reported as a drop
+   rather than silently shifted, since the renderer delays audio to its entry's
+   start and the line would play early.
+
+2. **A pre-existing bug in `buildFilterGraph`'s silent path.** With zero audio
+   clips it builds an `anullsrc` input with its `-map` misordered, and ffmpeg
+   refuses the entire command (exit −22). `render-episode.mjs` never hits it
+   because every episode has narration. **Not fixed** — the brief says not to
+   destabilise rendering, and this is the compositor with a proven master behind
+   it. The worker refuses a narration-less job up front and names the real
+   reason instead of surfacing an ffmpeg argument-parsing error from two layers
+   down.
+
+### Still true of it
+
+- The job file moves by download-and-run, like every other handoff here.
+- Only allowlisted, already-rendered projects (`hvac-01`, `hvac-04`) can render:
+  a generated draft has no assets, so there is nothing to composite.
+- Frames resolve masters first, previews second, and the run writes a
+  `.resolution.json` saying which was used per entry — "the output looks soft"
+  should never be a mystery.
 
 ---
 

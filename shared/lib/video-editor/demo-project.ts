@@ -29,6 +29,20 @@ export type AudioSourceMap = Readonly<
   Record<string, { url: string; offsetMs: number; fileMs: number }>
 >;
 
+/**
+ * The same audio, addressed the way the RENDER worker needs it: a bare file
+ * stem, not a browser URL. `narration-000.m4a` in public is `narration-000.wav`
+ * in the episode's audio directory, and only the worker knows where that is.
+ */
+export function audioRefsFrom(audio: AudioSourceMap) {
+  const refs: Record<string, { ref: string; fileMs: number }> = {};
+  for (const [clipId, source] of Object.entries(audio)) {
+    const stem = source.url.split("/").pop()?.replace(/\.[a-z0-9]+$/i, "");
+    if (stem) refs[clipId] = { ref: stem, fileMs: source.fileMs };
+  }
+  return refs;
+}
+
 export type LoadedEpisode = {
   readonly project: EditorProject;
   readonly peaks: WaveformPeaks;
