@@ -38,6 +38,7 @@ import {
 import { diffEditorProjects } from "@/shared/lib/video-editor/diff";
 import { buildScorecard, type Scorecard } from "@/shared/lib/video-editor/scorecard";
 import type { DraftGenerationMetadata } from "@/shared/lib/video-editor/draft-from-plan";
+import { AGENT_FORMATS } from "@/shared/types/editing-preferences";
 import type { EditSession } from "@/shared/types/edit-learning";
 import {
   compileProjectToTimeline,
@@ -227,7 +228,7 @@ export function VideoEditorShell({
       generatedProjectSnapshot: episode.project,
       generatedBy: draftMetadata?.agentVersion ?? episode.meta.generatedBy,
       startedAt: new Date(sessionStartRef.current).toISOString(),
-      scope: { series: episode.meta.series, format: "long-form-educational" },
+      scope: { series: episode.meta.series, format: AGENT_FORMATS.longFormYoutube },
     });
     prevStateRef.current = createEditorState(episode.project);
   }, [episode]);

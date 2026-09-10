@@ -19,6 +19,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import {
+  AGENT_FORMATS,
+  AGENT_FORMAT_VALUES,
   EDITING_PREFERENCE_SET_VERSION,
   GUIDANCE_CONFIDENCE,
   SCOPE_PRECEDENCE,
@@ -174,6 +176,37 @@ check("the mirrored constants still match the renderer", () => {
     source.includes(`const TRANSITION_MS = ${TRANSITION_MS};`),
     "crossfade length drifted",
   );
+});
+
+check("the format vocabulary still matches the agent platform", () => {
+  // Scope matching is a string comparison, so a format the platform spells
+  // differently means the evidence silently never applies — no error, no
+  // warning, a loop that appears to work and does not. That happened before
+  // this check existed: Studio exported "long-form-educational" while the
+  // Director asked for "long_form_youtube".
+  const planSource = fs.readFileSync(
+    "C:/Users/User/Desktop/Altair-Agents/Altair-agent-platform/src/agents/content/video-plan.ts",
+    "utf8",
+  );
+  for (const format of [
+    AGENT_FORMATS.shortNarratedVideo,
+    AGENT_FORMATS.screenRecording,
+    AGENT_FORMATS.founderOnCamera,
+  ]) {
+    assert.ok(
+      planSource.includes(`'${format}'`),
+      `${format} is not a format video-plan.ts knows`,
+    );
+  }
+  const youtubeSource = fs.readFileSync(
+    "C:/Users/User/Desktop/Altair-Agents/Altair-agent-platform/src/agents/content/youtube-draft.ts",
+    "utf8",
+  );
+  assert.ok(
+    youtubeSource.includes(`'${AGENT_FORMATS.longFormYoutube}'`),
+    `${AGENT_FORMATS.longFormYoutube} is not the identifier youtube-draft.ts uses`,
+  );
+  assert.equal(AGENT_FORMAT_VALUES.length, 4);
 });
 
 check("word counting handles whitespace and empties", () => {

@@ -22,6 +22,7 @@ import {
 import { buildPreferenceSetFile } from "@/shared/lib/video-editor/preference-set";
 import { loadSessions } from "@/shared/lib/video-editor/session";
 import { HVAC_SERIES_NAME } from "@/shared/types/hvac-studio";
+import { AGENT_FORMATS } from "@/shared/types/editing-preferences";
 
 /**
  * Where an agent's plan becomes an editable draft, and where the evidence
@@ -107,7 +108,7 @@ export function StudioDraftIntake() {
     const draft = buildDraftFromPlan(
       {
         topic: plan.topic,
-        format: plan.format ?? "long-form-educational",
+        format: plan.format ?? AGENT_FORMATS.longFormYoutube,
         hook: plan.hook ?? "",
         beats: plan.beats,
         cta: plan.cta,

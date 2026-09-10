@@ -235,12 +235,13 @@ threshold would corrupt the one dataset the system depends on.
 |---|---|
 | `src/agents/content/editing-preferences.ts` | Loads and validates the preference file |
 | `src/agents/content/editing-preferences.test.ts` | 12 checks |
-| `src/agents/content/video-plan-preferences.test.ts` | 6 checks — injection and metadata |
+| `src/agents/content/video-plan-preferences.test.ts` | 8 checks — injection, metadata, long-form scope |
 | `src/agents/content/learning-loop.proof.test.ts` | Draft A vs Draft B, skips unless driven |
 
 ## Files modified
 
 - `video-plan.ts` — preference load step, guidance injection, `generatedWith`
+- `youtube-draft.ts` — the same three, asking for `long_form_youtube`
 - `config/env.ts` — `ALTAIR_EDITING_PREFERENCES`
 - `config/platform-config.ts` — `editingPreferencesFile` (so tests can supply one)
 - `VideoEditorShell.tsx` — draft banner, scorecard strip
@@ -257,9 +258,9 @@ threshold would corrupt the one dataset the system depends on.
 |---|---|
 | `npm run verify:video-editor` | **47/47** |
 | `npm run verify:edit-learning` | **32/32** |
-| `npm run verify:agent-loop` | **28/28** |
+| `npm run verify:agent-loop` | **29/29** |
 | `node scripts/verify-video-editor-ui.mjs` | **30/30** |
-| platform `vitest run --dir src` | **2895 passed, 0 failed** |
+| platform `vitest run --dir src` | **2897 passed, 0 failed** |
 | `npx tsc --noEmit` (both repos) | clean |
 | `npm run lint` | **0 errors** |
 | `npm run build` | ✓ |
@@ -267,6 +268,19 @@ threshold would corrupt the one dataset the system depends on.
 New coverage: scope resolution, confidence thresholds, session counting, agent
 serialization, generated-draft snapshots, draft metadata, Studio handoff,
 preference consumption, ignored low-confidence preferences, pacing-rule drift.
+
+### A silent mismatch caught late
+
+**Studio exported `format: "long-form-educational"` while the Director asks for
+`"long_form_youtube"`.** Scope matching is a string comparison, so the two would
+never have matched: the evidence would have been exported, loaded, validated,
+and then silently never applied — no error, no warning, a loop that appears to
+work and does not.
+
+Fixed by `AGENT_FORMATS` in `shared/types/editing-preferences.ts`, a mirror of
+the platform's own identifiers, and a drift check in `verify:agent-loop` that
+reads `video-plan.ts` and `youtube-draft.ts` and fails if either spelling moves.
+Mirrors are only useful while they are checked.
 
 ### Bugs found and fixed
 
@@ -312,9 +326,10 @@ preference consumption, ignored low-confidence preferences, pacing-rule drift.
   from output. The supplied keys are a join key — the diffs measure the effect.
 - **Render job API — not built.** Deliberately deprioritised in favour of
   closing the loop, per the phase brief.
-- **Long-form (`youtube-draft.ts`) is not wired.** Only
-  `content.draft_video_plan` injects preferences; the long-form and diagram
-  planners are separate handlers and would each need the same three lines.
+- **The diagram planner (`diagram-plan.ts`) is not wired.** Short-form
+  (`video-plan.ts`) and long-form (`youtube-draft.ts`) both inject preferences
+  and record `generatedWith`; the diagram planner is a third handler and would
+  need the same three lines.
 
 ---
 

@@ -210,3 +210,40 @@ export function suppliedPreferenceKeys(
     .filter((p) => strengthOf(p.confidence) !== "weak")
     .map((p) => p.key);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * Format vocabulary
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Format identifiers, which MUST match the agent platform's exactly.
+ *
+ * ==================== WHY THIS EXISTS ====================
+ * Scope matching is a string comparison. A preference set exported with
+ * `"long-form-educational"` and a Director asking for `"long_form_youtube"`
+ * do not match, so the evidence silently never applies — no error, no warning,
+ * just a loop that appears to work and never does. That is exactly what
+ * happened on 2026-09-10 before this constant existed.
+ *
+ * The values are copied from the platform:
+ *   `VIDEO_PLAN_FORMATS` in agents/content/video-plan.ts
+ *   `'long_form_youtube'` in agents/content/format-decision.ts:129
+ *
+ * Adding a format here is not enough to make it real — the platform has to know
+ * it too. This is a mirror, and mirrors are only useful while they are checked.
+ */
+export const AGENT_FORMATS = {
+  shortNarratedVideo: "short_narrated_video",
+  screenRecording: "screen_recording",
+  founderOnCamera: "founder_on_camera",
+  longFormYoutube: "long_form_youtube",
+} as const;
+
+export type AgentFormat = (typeof AGENT_FORMATS)[keyof typeof AGENT_FORMATS];
+
+export const AGENT_FORMAT_VALUES: readonly string[] = Object.values(AGENT_FORMATS);
+
+/** True when a format string is one an agent will actually ask for. */
+export function isAgentFormat(value: string): value is AgentFormat {
+  return AGENT_FORMAT_VALUES.includes(value);
+}
