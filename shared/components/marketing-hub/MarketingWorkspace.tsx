@@ -14,6 +14,7 @@ import type {
 } from "@/shared/types/marketing-command";
 import type { WorkRequest } from "@/shared/types/agent-work-request";
 import { MarketingWebsiteView, type SitePageRow } from "./MarketingWebsiteView";
+import { MarketingStudioView } from "./MarketingStudioView";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
@@ -131,6 +132,7 @@ const TABS = [
   { id: "command", label: "Command" },
   { id: "content", label: "Content" },
   { id: "publishing", label: "Publishing" },
+  { id: "studio", label: "Studio" },
   { id: "performance", label: "Performance" },
   { id: "website", label: "Website" },
   { id: "history", label: "History" },
@@ -147,7 +149,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
     <div className="space-y-6">
       {/* The shell's <main> clips horizontal overflow, so without its own
           scroller this bar CLIPS on a phone and the trailing tabs become
-          unreachable. `overflow-x-auto` + `shrink-0` keeps all seven tabs
+          unreachable. `overflow-x-auto` + `shrink-0` keeps every tab
           one swipe away; `min-h-11` keeps each a real thumb target. */}
       <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--north-star-plate-border)]">
         {TABS.map((entry) => (
@@ -222,6 +224,12 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           />
         </div>
       ) : null}
+
+      {/* Studio holds the episode PLAN, not renders — renders keep their one
+          home under Publishing. It reads nothing and writes nothing, so it
+          takes no props: everything it shows is the committed blueprint in
+          shared/types/hvac-studio.ts. */}
+      {tab === "studio" ? <MarketingStudioView /> : null}
 
       {tab === "performance" ? (
         <MarketingAutomationSection
