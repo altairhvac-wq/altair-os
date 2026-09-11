@@ -137,6 +137,21 @@ that leaks will be the one nobody thought to check.
   here" vs "no asset chosen for this beat".
 - **Studio intake** reports `4/6 shots` and the preflight findings *before* the
   operator decides to open a draft.
+- **`retention.ts` + the learning panel** — retention across sessions, split
+  into two rates that are never averaged together:
+  - **cut retention** — generated clips that survived untouched. Moves on
+    retiming and reordering. It is about *pacing*.
+  - **visual retention** — of the beats where the bot actually chose a library
+    asset, how many kept that choice. It is about *taste*, and Phase 4 is what
+    made it measurable.
+
+  A bot that times well and picks badly, and one that picks well and times
+  badly, produce the same single number and need opposite corrections. An
+  uncurated session reports `null`, never `0` — a plan with no chosen shots has
+  nothing to retain, and averaging it in as zero would make an uncurated draft
+  look like a wholly rejected one. Below **four** approved sessions no trend is
+  reported at all: the panel says how many more are needed instead of drawing an
+  arrow.
 
 ### AltairDemoTool — `export-library-previews.mjs`
 
@@ -206,8 +221,11 @@ rather than the subject matter.
 | `ui-audit/video-editor/curated-draft-proof/before-uncurated-draft.png` | narration, captions, timing — and an empty visual layer. The canvas reads *"no asset chosen for this beat"*. The inspector has no visual decision to show. |
 | `ui-audit/video-editor/curated-draft-proof/after-curated-draft.png` | an HVAC technician stepping out of a service van, under the caption "Written once. Typed again." The inspector names the asset, the intent, *strong · 0.73*, the reason, and four alternatives with thumbnails. |
 
-`inspector-visual-decision.png` and `studio-preflight-findings.png` (same folder) show the two
-panels close up.
+`inspector-visual-decision.png`, `studio-preflight-findings.png` and
+`studio-retention.png` (same folder) show the panels close up. The retention
+shot is the honest one: **94% of the cut kept, 75% of chosen shots kept (1 of 4
+swapped)** — and, from a single session, an explicit *"3 more approved sessions
+before a trend means anything"* rather than a direction.
 
 ---
 
@@ -235,8 +253,8 @@ have been caught by a fixture.
 | Suite | Result |
 | --- | --- |
 | Agent platform (`npm test`) | **2975 passed**, 5 skipped — up 78, all new |
-| `verify:curated-draft` (new) | **27/27** |
-| `verify:curated-draft-ui` (new, real browser) | **18/18** |
+| `verify:curated-draft` (new) | **38/38** |
+| `verify:curated-draft-ui` (new, real browser) | **20/20** |
 | `verify:video-editor` | 47/47 |
 | `verify:edit-learning` | 32/32 |
 | `verify:agent-loop` | 39/39 |
@@ -294,8 +312,9 @@ footage actually exists.
 3. **The diagram route stops at a decision.** A beat routed to `diagram` names
    the mode; it does not yet produce a templated scene. `diagram-plan.ts` is the
    producer and is not wired to curation.
-4. **Retention metrics are per-session, not aggregated.** The scorecard reports
-   one session's retention; there is no bot-vs-human rollup across sessions yet.
+4. **Retention has no server-side home.** The cross-session rollup exists and
+   is honest, but it reads the same per-browser session store as everything
+   else, so the number means "on this laptop". That is stated on the panel.
 5. **Only 7 HVAC-specific assets exist.** The deepest limit on curation quality
    is not the algorithm; it is that the library cannot answer an HVAC script.
    The pending requirements this phase produces are the shopping list.

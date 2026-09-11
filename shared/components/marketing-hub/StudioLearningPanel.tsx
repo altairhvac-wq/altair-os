@@ -20,6 +20,11 @@ import {
 } from "@/shared/lib/video-editor/preference-set";
 import { loadSessions } from "@/shared/lib/video-editor/session";
 import {
+  buildRetentionReport,
+  describeTrend,
+  MIN_SESSIONS_FOR_TREND,
+} from "@/shared/lib/video-editor/retention";
+import {
   DEFAULT_LEARNING_THRESHOLDS,
   type EditSession,
   type EditingPreference,
@@ -116,6 +121,8 @@ export function StudioLearningPanel() {
             />
           </dl>
 
+          <Retention sessions={sessions} />
+
           <ul>
             {preferences.map((preference) => (
               <PreferenceRow key={preference.key} preference={preference} />
@@ -129,6 +136,86 @@ export function StudioLearningPanel() {
         what makes this evidence shared rather than personal.
       </p>
     </section>
+  );
+}
+
+/**
+ * Retention over time — whether the bot is getting better.
+ *
+ * ==================== TWO RATES, DELIBERATELY SEPARATE ====================
+ * Cut retention moves when an operator retimes or reorders; visual retention
+ * moves when they swap a shot the bot chose. A bot that times well and picks
+ * badly, and one that picks well and times badly, produce the same single
+ * number and need opposite corrections — so they are never averaged together.
+ *
+ * ==================== IT REFUSES TO DRAW A TREND ====================
+ * Below four approved sessions there is no arrow, no direction, and no
+ * encouraging phrasing — just how many more are needed. Two points make a line;
+ * a line through two points is an anecdote with a slope. The same discipline
+ * the preference thresholds enforce, applied to reporting.
+ */
+function Retention({ sessions }: { readonly sessions: readonly EditSession[] }) {
+  const report = buildRetentionReport(sessions);
+  if (report.points.length === 0) return null;
+
+  return (
+    <div
+      data-testid="studio-retention"
+      className="border-t border-[var(--north-star-plate-border)] px-3.5 py-2.5"
+    >
+      <h4 className="text-[11px] font-semibold text-altair-ink">
+        Retention over time
+      </h4>
+
+      <dl className="mt-1.5 flex flex-wrap gap-x-6 gap-y-1.5">
+        <div>
+          <dt className="text-[11px] text-altair-ink-muted">Cut kept</dt>
+          <dd className="text-base font-semibold tabular-nums text-altair-ink">
+            {report.cutRetention === null
+              ? "—"
+              : `${Math.round(report.cutRetention * 100)}%`}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] text-altair-ink-muted">Chosen shots kept</dt>
+          <dd className="text-base font-semibold tabular-nums text-altair-ink">
+            {/*
+              An em dash, not 0%. No curated session has happened yet, which is
+              a different fact from every shot having been rejected — and the
+              line below says which.
+            */}
+            {report.visualRetention === null
+              ? "—"
+              : `${Math.round(report.visualRetention * 100)}%`}
+          </dd>
+          <dd className="text-[10px] text-altair-ink-muted">
+            {report.visualRetention === null
+              ? "no curated draft approved yet"
+              : `${report.assets.replaced} of ${report.assets.chosen} swapped, over ${report.curatedSessions} session${report.curatedSessions === 1 ? "" : "s"}`}
+          </dd>
+        </div>
+      </dl>
+
+      <ul className="mt-2 space-y-0.5 text-[11px] text-altair-ink-muted">
+        <li>
+          {describeTrend(report.cutTrend, report.points.length, "Cut retention")}
+        </li>
+        <li>
+          {describeTrend(
+            report.visualTrend,
+            report.curatedSessions,
+            "Shot retention",
+          )}
+        </li>
+      </ul>
+
+      {report.points.length < MIN_SESSIONS_FOR_TREND ? (
+        <p className="mt-1.5 text-[10px] text-altair-ink-muted">
+          These are averages, not a direction. A direction needs at least{" "}
+          {MIN_SESSIONS_FOR_TREND} approved sessions.
+        </p>
+      ) : null}
+    </div>
   );
 }
 

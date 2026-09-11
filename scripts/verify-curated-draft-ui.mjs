@@ -474,6 +474,51 @@ await check("capture the AFTER: the same plan, curated", async () => {
   await inspector.screenshot({ path: `${SHOTS}/inspector-visual-decision.png` });
 });
 
+process.stdout.write("\nRetention\n");
+
+await check("approving a curated draft records which shots survived", async () => {
+  await page.locator('[data-testid="ve-approve"]').click();
+  await page.waitForTimeout(900);
+  const stored = await page.evaluate(() => {
+    const raw = window.localStorage.getItem("altair.editor.sessions");
+    if (!raw) return null;
+    const session = JSON.parse(raw).sessions.at(-1);
+    const chosen = session.generatedProjectSnapshot.tracks
+      .flatMap((t) => t.clips)
+      .filter((c) => c.assetId).length;
+    return { chosen, hasApproved: Boolean(session.approvedProjectSnapshot) };
+  });
+  assert(stored, "no session was stored");
+  assert(stored.hasApproved, "the approved snapshot is missing");
+  // The generated snapshot must carry the bot's CHOICES, or visual retention
+  // has no denominator and the metric silently reads as "nothing to retain".
+  assert(
+    stored.chosen > 0,
+    "the generated snapshot records no chosen assets — visual retention cannot be computed",
+  );
+});
+
+await check("the learning panel reports shot retention, and refuses a trend", async () => {
+  await openStudio();
+  const panel = page.locator('[data-testid="studio-retention"]');
+  assert((await panel.count()) === 1, "no retention panel after an approval");
+  const text = await panel.innerText();
+  assert(/Cut kept/.test(text), `no cut retention: ${text}`);
+  assert(/Chosen shots kept/.test(text), `no shot retention: ${text}`);
+  assert(/swapped, over 1 session/.test(text), `the swap count is not shown: ${text}`);
+  // One session is not a trend, and the panel must say how many more it needs
+  // rather than drawing an arrow.
+  assert(
+    /more approved session/.test(text),
+    `one session produced a trend claim: ${text}`,
+  );
+  assert(
+    !/climbing|falling/.test(text),
+    `a direction was claimed from one session: ${text}`,
+  );
+  await panel.screenshot({ path: `${SHOTS}/studio-retention.png` });
+});
+
 process.stdout.write("\nIntegrity\n");
 
 await check("no uncaught page errors during the whole run", async () => {

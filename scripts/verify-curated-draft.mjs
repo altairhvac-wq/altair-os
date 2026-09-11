@@ -32,6 +32,13 @@ import {
 } from "@/shared/types/visual-selection";
 import { diffEditorProjects } from "@/shared/lib/video-editor/diff";
 import { trackAccepts } from "@/shared/types/video-editor";
+import {
+  buildRetentionReport,
+  describeRetention,
+  describeTrend,
+  filterByScope,
+  MIN_SESSIONS_FOR_TREND,
+} from "@/shared/lib/video-editor/retention";
 
 let failures = 0;
 let checks = 0;
@@ -370,7 +377,158 @@ check("filling a pending beat reads as an asset being added, not a cut change", 
   );
 });
 
-/* ════════════════════ 5. the vocabulary agrees ══════════════════════════ */
+/* ════════════════════ 5. retention across sessions ══════════════════════ */
+
+section("Retention is measured across sessions, and refuses to overclaim");
+
+/** An approved session: a generated project, and the version that was kept. */
+function sessionOf(id, approvedAt, generated, approved) {
+  return {
+    id,
+    projectId: generated.id,
+    generatedBy: "content.draft_video_plan@test",
+    generatedProjectSnapshot: generated,
+    approvedProjectSnapshot: approved,
+    events: [],
+    startedAt: approvedAt,
+    approvedAt,
+    scope: { format: "short_narrated_video" },
+  };
+}
+
+/** A draft of `n` curated beats, then the same with `swaps` shots replaced. */
+function curatedPair(n, swaps) {
+  const beats = Array.from({ length: n }, () => beat({ visual: visual() }));
+  const generated = buildDraftFromPlan(plan(beats), META).project;
+  let replaced = 0;
+  const approved = {
+    ...generated,
+    tracks: generated.tracks.map((track) => ({
+      ...track,
+      clips: track.clips.map((clip) => {
+        if (clip.assetId === undefined || replaced >= swaps) return clip;
+        replaced += 1;
+        return { ...clip, assetId: `raw-footage/hvac-trades/swap-${String(replaced)}.mp4` };
+      }),
+    })),
+  };
+  return [generated, approved];
+}
+
+check("visual retention counts swaps against the shots the bot chose", () => {
+  const [g, a] = curatedPair(4, 1);
+  const report = buildRetentionReport([sessionOf("s1", "2026-09-01T00:00:00Z", g, a)]);
+  const point = report.points[0];
+  assert.equal(point.assetsChosen, 4);
+  assert.equal(point.assetsReplaced, 1);
+  assert.equal(point.visualRetention, 0.75);
+});
+
+check("an UNcurated session has null visual retention, never zero", () => {
+  // A plan with no chosen shots has nothing to retain. Averaging it in as 0
+  // would make an uncurated draft look like a wholly rejected one.
+  const g = buildDraftFromPlan(plan([beat(), beat()]), META).project;
+  const report = buildRetentionReport([sessionOf("s1", "2026-09-01T00:00:00Z", g, g)]);
+  assert.equal(report.points[0].visualRetention, null);
+  assert.equal(report.visualRetention, null);
+  assert.equal(report.curatedSessions, 0);
+  // The cut, however, was fully retained and IS measurable.
+  assert.equal(report.cutRetention, 1);
+});
+
+check("a session still being edited is skipped, not counted as a rejection", () => {
+  const [g] = curatedPair(3, 0);
+  const open = sessionOf("s1", "2026-09-01T00:00:00Z", g, g);
+  const inProgress = { ...open, approvedProjectSnapshot: undefined, approvedAt: undefined };
+  assert.equal(buildRetentionReport([inProgress]).points.length, 0);
+});
+
+check("points come back oldest first, whatever order they were stored in", () => {
+  const [g, a] = curatedPair(3, 1);
+  const report = buildRetentionReport([
+    sessionOf("late", "2026-09-05T00:00:00Z", g, a),
+    sessionOf("early", "2026-09-01T00:00:00Z", g, a),
+  ]);
+  assert.deepEqual(
+    report.points.map((p) => p.sessionId),
+    ["early", "late"],
+  );
+});
+
+check("no trend is claimed from fewer than four sessions", () => {
+  const [g, a] = curatedPair(4, 1);
+  for (const n of [1, 2, 3]) {
+    const sessions = Array.from({ length: n }, (_, i) =>
+      sessionOf(`s${String(i)}`, `2026-09-0${String(i + 1)}T00:00:00Z`, g, a),
+    );
+    const report = buildRetentionReport(sessions);
+    assert.equal(report.cutTrend, null, `${String(n)} sessions produced a trend`);
+    assert.ok(
+      describeTrend(report.cutTrend, n, "Cut").includes("more approved session"),
+      "the refusal does not say how many more are needed",
+    );
+  }
+  assert.equal(MIN_SESSIONS_FOR_TREND, 4);
+});
+
+check("a real improvement is reported as improving", () => {
+  const sessions = [];
+  // Two bad sessions, then two good ones.
+  [3, 3, 0, 0].forEach((swaps, i) => {
+    const [g, a] = curatedPair(4, swaps);
+    sessions.push(sessionOf(`s${String(i)}`, `2026-09-0${String(i + 1)}T00:00:00Z`, g, a));
+  });
+  const report = buildRetentionReport(sessions);
+  assert.ok(report.visualTrend, "no trend from four sessions");
+  assert.equal(report.visualTrend.direction, "improving");
+  assert.ok(report.visualTrend.recent > report.visualTrend.earlier);
+});
+
+check("a flat run is called flat, not spun as improving", () => {
+  const sessions = [1, 1, 1, 1].map((swaps, i) => {
+    const [g, a] = curatedPair(4, swaps);
+    return sessionOf(`s${String(i)}`, `2026-09-0${String(i + 1)}T00:00:00Z`, g, a);
+  });
+  const trend = buildRetentionReport(sessions).visualTrend;
+  assert.equal(trend.direction, "flat");
+  assert.ok(describeTrend(trend, 4, "Shot retention").includes("flat"));
+});
+
+check("a decline is reported as a decline", () => {
+  const sessions = [0, 0, 3, 3].map((swaps, i) => {
+    const [g, a] = curatedPair(4, swaps);
+    return sessionOf(`s${String(i)}`, `2026-09-0${String(i + 1)}T00:00:00Z`, g, a);
+  });
+  assert.equal(buildRetentionReport(sessions).visualTrend.direction, "declining");
+});
+
+check("scope filtering keeps formats from averaging together", () => {
+  const [g, a] = curatedPair(4, 1);
+  const shorts = sessionOf("short", "2026-09-01T00:00:00Z", g, a);
+  const long = {
+    ...sessionOf("long", "2026-09-02T00:00:00Z", g, a),
+    scope: { format: "long_form_youtube" },
+  };
+  assert.equal(filterByScope([shorts, long], { format: "long_form_youtube" }).length, 1);
+  assert.equal(filterByScope([shorts, long], { format: "short_narrated_video" })[0].id, "short");
+});
+
+check("no sessions produces an honest sentence, not a blank", () => {
+  const report = buildRetentionReport([]);
+  assert.equal(report.points.length, 0);
+  assert.equal(report.cutRetention, null);
+  assert.ok(describeRetention(report).includes("nothing to measure"));
+});
+
+check("the description names the swap count, so the rate can be checked", () => {
+  const [g, a] = curatedPair(4, 1);
+  const text = describeRetention(
+    buildRetentionReport([sessionOf("s1", "2026-09-01T00:00:00Z", g, a)]),
+  );
+  assert.ok(text.includes("1 of 4 swapped"), `unexpected wording: ${text}`);
+});
+
+/* ════════════════════ 6. the vocabulary agrees ══════════════════════════ */
 
 section("The two repositories agree about one document");
 
@@ -411,7 +569,7 @@ check("a confidence outside 0..1 is clamped rather than displayed", () => {
   assert.equal(parseStudioBeatVisual(visual({ confidence: "0.5" })).visual.confidence, 0);
 });
 
-/* ════════════════════ 6. determinism ════════════════════════════════════ */
+/* ════════════════════ 7. determinism ════════════════════════════════════ */
 
 section("Determinism");
 
