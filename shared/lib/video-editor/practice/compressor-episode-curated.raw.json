@@ -1,0 +1,2031 @@
+{
+  "studioDraftVersion": 1,
+  "topic": "How an HVAC Compressor Works — And Why Different Systems Use Different Compressor Types",
+  "format": "long_form_youtube",
+  "hook": "Your air conditioner moves heat because one component changes the state of the refrigerant.",
+  "objective": "Explain what a compressor actually does to the refrigerant, then show why five different mechanisms exist and where each one belongs.",
+  "cta": "Once you can picture what the compressor is doing, the rest of the refrigeration cycle follows.",
+  "targetDurationSeconds": 285,
+  "beats": [
+    {
+      "narration": "Your air conditioner can move heat out of a house because of one component that changes the entire state of the refrigerant: the compressor.",
+      "visualDirection": "Wide shot of a residential outdoor condensing unit on its pad with the insulated suction line and bare liquid line entering the wall",
+      "caption": "It all starts with the compressor.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_008_condensing_unit_exterior_pad.jpg",
+        "previewUrl": "/studio/library/res-008-condensing-unit-exterior-pad.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 10 requirement terms (residential, outdoor, condensing, unit, pad, suction, line, liquid, entering, wall), 7 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_008_condensing_unit_exterior_pad.jpg",
+            "previewUrl": "/studio/library/res-008-condensing-unit-exterior-pad.jpg",
+            "score": 5,
+            "description": "A closed residential condensing unit on a concrete pad with its louvered coil guards, top fan grille and both refrigerant lines entering the wall."
+          },
+          {
+            "assetId": "res_020_split_system_outdoor_indoor_pair.jpg",
+            "previewUrl": "/studio/library/res-020-split-system-outdoor-indoor-pair.jpg",
+            "score": 4,
+            "description": "Wide shot of an outdoor condensing unit with its insulated line set running through the wall to a matched indoor furnace and coil."
+          },
+          {
+            "assetId": "tool_014_manifold_hung_on_condenser_wide.jpg",
+            "previewUrl": "/studio/library/tool-014-manifold-hung-on-condenser-wide.jpg",
+            "score": 3,
+            "description": "Wide shot of an analog refrigerant manifold hung on an outdoor condensing unit with its blue and red hoses landing on the suction and liquid service ports."
+          },
+          {
+            "assetId": "res_016_line_set_insulation_split_damage.jpg",
+            "previewUrl": "/studio/library/res-016-line-set-insulation-split-damage.jpg",
+            "score": 2,
+            "description": "A wall-mounted refrigerant line set whose foam suction insulation has split from sun exposure, exposing condensing bare copper."
+          },
+          {
+            "assetId": "res_031_heat_pump_outdoor_coil_frosted.jpg",
+            "previewUrl": "/studio/library/res-031-heat-pump-outdoor-coil-frosted.jpg",
+            "score": 1,
+            "description": "Wide shot of an outdoor heat pump running in heating with even white frost across the coil face, fan spinning, and the vapor and liquid lines entering the unit."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "But not every compressor works the same way. There are five mechanisms in common use, and the one a system uses tells you a lot about what that system is for.",
+      "visualDirection": "Bench lineup of four compressor families side by side showing the difference in size and construction",
+      "caption": "Five mechanisms. One job.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+        "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+        "intent": {
+          "purpose": "contrast",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 5 requirement terms (bench, lineup, four, compressor, family), 2 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 5,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 4,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "elec_026_ptcr_device_vs_relay_kit_comparison.jpg",
+            "previewUrl": "/studio/library/elec-026-ptcr-device-vs-relay-kit-comparison.jpg",
+            "score": 3,
+            "description": "Bench comparison of a small solid-state PTC start device beside a much larger conventional start capacitor and potential relay kit with its leads laid out."
+          },
+          {
+            "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup.jpg",
+            "previewUrl": "/studio/library/ctrl-026-refrigerant-high-and-low-pressure-switch-pair-closeup.jpg",
+            "score": 2,
+            "description": "Close-up of the high-pressure switch on the discharge line and the low-pressure switch on the compressor suction line, both threaded onto valve-core ports in one focal plane."
+          },
+          {
+            "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+            "score": 1,
+            "description": "Closeup of a sealed residential scroll compressor showing its tall narrow can, top discharge stub, low side suction connection and mounting grommets."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Before we look at the differences, we need to be precise about the job itself.",
+      "visualDirection": "On-screen text card introducing the compressor's job",
+      "caption": "First: what does it actually do?",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 5,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 4,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 3,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "elec_037_three_phase_vs_single_phase_compressor_terminals_comparison.jpg",
+            "previewUrl": "/studio/library/elec-037-three-phase-vs-single-phase-compressor-terminals-comparison.jpg",
+            "score": 2,
+            "description": "Two compressor terminal heads side by side — three evenly spaced identical pins on the three-phase unit against the unequal triangular C/S/R layout on the single-phase one."
+          },
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 1,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          }
+        ],
+        "warnings": [
+          "2 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Low pressure refrigerant vapour arrives at the compressor through the suction line. It is cold, and it is carrying the heat it picked up indoors.",
+      "visualDirection": "Close-up of a foam-insulated copper suction line running into equipment, cold and sweating",
+      "caption": "Low-pressure vapour in.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_016_line_set_insulation_split_damage.jpg",
+        "previewUrl": "/studio/library/res-016-line-set-insulation-split-damage.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": "still"
+        },
+        "reason": "matches 5 requirement terms (foam, copper, suction, line, equipment), 2 in curated tags",
+        "confidence": 0.47,
+        "candidates": [
+          {
+            "assetId": "res_016_line_set_insulation_split_damage.jpg",
+            "previewUrl": "/studio/library/res-016-line-set-insulation-split-damage.jpg",
+            "score": 5,
+            "description": "A wall-mounted refrigerant line set whose foam suction insulation has split from sun exposure, exposing condensing bare copper."
+          },
+          {
+            "assetId": "ctrl_011_refrigerant_pressure_switch_schrader.jpg",
+            "previewUrl": "/studio/library/ctrl-011-refrigerant-pressure-switch-schrader.jpg",
+            "score": 4,
+            "description": "Macro of a brass refrigerant pressure switch on a Schrader port, with a lightly frosted copper suction line running behind it."
+          },
+          {
+            "assetId": "res_020_split_system_outdoor_indoor_pair.jpg",
+            "previewUrl": "/studio/library/res-020-split-system-outdoor-indoor-pair.jpg",
+            "score": 3,
+            "description": "Wide shot of an outdoor condensing unit with its insulated line set running through the wall to a matched indoor furnace and coil."
+          },
+          {
+            "assetId": "res_011_txv_sensing_bulb_equalizer.jpg",
+            "previewUrl": "/studio/library/res-011-txv-sensing-bulb-equalizer.jpg",
+            "score": 2,
+            "description": "Closeup of a thermostatic expansion valve with its power head, insulated sensing bulb strapped to the suction line and external equalizer tapped downstream."
+          },
+          {
+            "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+            "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+            "score": 1,
+            "description": "Sectioned suction accumulator showing the inverted-U standpipe, its bottom metering orifice and a pool of liquid refrigerant and oil below."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "The compressor squeezes that vapour into a smaller volume. That is the whole mechanical act: it reduces the space the refrigerant occupies.",
+      "visualDirection": "Sectioned scroll compressor showing the compression element at the top and the electric motor windings below it",
+      "caption": "It reduces the volume.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_006_scroll_set_pair_spirals_macro.jpg",
+        "previewUrl": "/studio/library/res-006-scroll-set-pair-spirals-macro.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (scroll, compressor, compression, element), 4 in curated tags",
+        "confidence": 0.49,
+        "candidates": [
+          {
+            "assetId": "res_006_scroll_set_pair_spirals_macro.jpg",
+            "previewUrl": "/studio/library/res-006-scroll-set-pair-spirals-macro.jpg",
+            "score": 5,
+            "description": "Overhead macro of two meshed scroll involutes with crescent-shaped gas pockets, tip seals along the wrap edges and the center discharge port."
+          },
+          {
+            "assetId": "elec_037_three_phase_vs_single_phase_compressor_terminals_comparison.jpg",
+            "previewUrl": "/studio/library/elec-037-three-phase-vs-single-phase-compressor-terminals-comparison.jpg",
+            "score": 4,
+            "description": "Two compressor terminal heads side by side — three evenly spaced identical pins on the three-phase unit against the unequal triangular C/S/R layout on the single-phase one."
+          },
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 3,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          },
+          {
+            "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+            "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+            "score": 2,
+            "description": "Extreme macro of a rotary compressor's vane tip in line contact with the roller, crescent chambers open on either side and oil filming the sealing surfaces."
+          },
+          {
+            "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+            "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+            "score": 1,
+            "description": "Full-height cutaway of a scroll compressor showing the fixed scroll, orbiting scroll, Oldham coupling, eccentric crankshaft and motor stator in one stack."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Squeezing a gas raises its pressure, and compressing it also raises its temperature. Work is being added to the refrigerant, and that work shows up as heat.",
+      "visualDirection": "On-screen text card: compression raises both pressure and temperature",
+      "caption": "Pressure up. Temperature up.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "tool_015_compound_gauge_pt_scale_macro.jpg",
+            "previewUrl": "/studio/library/tool-015-compound-gauge-pt-scale-macro.jpg",
+            "score": 5,
+            "description": "Extreme macro of a blue low-side compound gauge face, its concentric colour rings and single pointer needle filling the frame under domed glass."
+          },
+          {
+            "assetId": "boil_005_expansion_tank_cutaway_diaphragm.jpg",
+            "previewUrl": "/studio/library/boil-005-expansion-tank-cutaway-diaphragm.jpg",
+            "score": 4,
+            "description": "Sectioned diaphragm expansion tank showing the rubber diaphragm separating the lower water chamber from the sealed upper air chamber."
+          },
+          {
+            "assetId": "boil_024_pumping_away_vs_pumping_toward_tank.jpg",
+            "previewUrl": "/studio/library/boil-024-pumping-away-vs-pumping-toward-tank.jpg",
+            "score": 3,
+            "description": "Two identical copper test rigs side by side, differing only in whether the circulator sits downstream or upstream of the expansion tank tee, each with a blank-faced gauge at the high point."
+          },
+          {
+            "assetId": "boil_030_pressure_reducing_fill_valve_sectioned.jpg",
+            "previewUrl": "/studio/library/boil-030-pressure-reducing-fill-valve-sectioned.jpg",
+            "score": 2,
+            "description": "Sectioned bronze boiler fill valve showing the sensing diaphragm, adjusting spring and lock nut, the plunger and seat, the debris-loaded inlet strainer and the fast-fill lever cam."
+          },
+          {
+            "assetId": "boil_031_diaphragm_tank_vs_steel_compression_tank.jpg",
+            "previewUrl": "/studio/library/boil-031-diaphragm-tank-vs-steel-compression-tank.jpg",
+            "score": 1,
+            "description": "Sectioned blue diaphragm expansion tank beside an opened steel compression tank, showing the butyl diaphragm and Schrader valve against a bare interior with a rust waterline."
+          }
+        ],
+        "warnings": [
+          "2 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "What leaves the discharge line is hot, high pressure vapour — hot enough that it can now give its heat up to the outdoor air, which is the entire point.",
+      "visualDirection": "Close-up of a compressor discharge stub and service valve with copper tubing leaving toward the condenser",
+      "caption": "Hot, high-pressure vapour out.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "pending_capture",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [
+            "condenser"
+          ],
+          "mediaPreference": "still"
+        },
+        "reason": "This beat claims to show the actual thing, so a generated image would make the video assert something untrue.",
+        "confidence": 0.9,
+        "candidates": [
+          {
+            "assetId": "res_003_recip_valve_plate_reed_valves_macro.jpg",
+            "previewUrl": "/studio/library/res-003-recip-valve-plate-reed-valves-macro.jpg",
+            "score": 5,
+            "description": "Extreme macro of a compressor valve plate showing the discharge reed under its lift retainer, the suction reed, the ports and the gasket faces."
+          },
+          {
+            "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+            "score": 4,
+            "description": "Closeup of a sealed residential scroll compressor showing its tall narrow can, top discharge stub, low side suction connection and mounting grommets."
+          },
+          {
+            "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup.jpg",
+            "previewUrl": "/studio/library/ctrl-026-refrigerant-high-and-low-pressure-switch-pair-closeup.jpg",
+            "score": 3,
+            "description": "Close-up of the high-pressure switch on the discharge line and the low-pressure switch on the compressor suction line, both threaded onto valve-core ports in one focal plane."
+          },
+          {
+            "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+            "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+            "score": 2,
+            "description": "Medium shot of a large semi-hermetic twin-screw compressor with flanged suction and discharge, oil separator vessel and capacity-control actuator."
+          },
+          {
+            "assetId": "tool_014_manifold_hung_on_condenser_wide.jpg",
+            "previewUrl": "/studio/library/tool-014-manifold-hung-on-condenser-wide.jpg",
+            "score": 1,
+            "description": "Wide shot of an analog refrigerant manifold hung on an outdoor condensing unit with its blue and red hoses landing on the suction and liquid service ports."
+          }
+        ],
+        "warnings": [
+          "the closest library asset was res_003_recip_valve_plate_reed_valves_macro.jpg at 78 points, below the selection floor",
+          "2 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": "Close-up of a compressor discharge stub and service valve with copper tubing leaving toward the condenser It must visibly contain: condenser. Preferred as still. Searched 227 library assets; the closest are related but none is recorded as containing condenser."
+      }
+    },
+    {
+      "narration": "One thing worth being strict about: a compressor is built to compress vapour, not liquid. Liquid does not compress, and a slug of it arriving at the compression element is how compressors die.",
+      "visualDirection": "Sectioned suction accumulator showing the inverted-U standpipe that protects the compressor from liquid",
+      "caption": "Vapour only. Never liquid.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+        "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 7 requirement terms (sectioned, suction, accumulator, inverted, standpipe, compressor, liquid), 4 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+            "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+            "score": 5,
+            "description": "Sectioned suction accumulator showing the inverted-U standpipe, its bottom metering orifice and a pool of liquid refrigerant and oil below."
+          },
+          {
+            "assetId": "res_025_rotary_compressor_ductless_exterior.jpg",
+            "previewUrl": "/studio/library/res-025-rotary-compressor-ductless-exterior.jpg",
+            "score": 4,
+            "description": "Closeup of a slim ductless rotary compressor with its suction accumulator brazed alongside, the suction tube feeding the cylinder and the discharge stub on top."
+          },
+          {
+            "assetId": "tool_023_charging_scale_metering_liquid_charge.jpg",
+            "previewUrl": "/studio/library/tool-023-charging-scale-metering-liquid-charge.jpg",
+            "score": 3,
+            "description": "A refrigerant cylinder inverted in a stand on a charging scale while a gloved hand barely cracks the manifold hand wheel."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 2,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "tool_021_recovery_machine_internals_cutaway.jpg",
+            "previewUrl": "/studio/library/tool-021-recovery-machine-internals-cutaway.jpg",
+            "score": 1,
+            "description": "Precision-sectioned recovery machine with its shell cut away to expose the oil-less compressor, condenser coil, fan and high-pressure cutout switch."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "That is why the compressor is called the heart of the refrigeration circuit. It is the only component that adds energy to the refrigerant, and it is what keeps the whole loop moving.",
+      "visualDirection": "Diagram of the refrigeration circuit with the compressor highlighted as the pump of the loop",
+      "caption": "The heart of the circuit.",
+      "kind": "diagram_graphic",
+      "visual": {
+        "mode": "diagram",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "explain",
+          "subject": "concept",
+          "mustShow": [
+            "diagram",
+            "loop"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as a diagram, and the library holds no pre-rendered graphic for it — it is drawn from a template.",
+        "confidence": 0.85,
+        "candidates": [
+          {
+            "assetId": "res_023_refrigerant_circuit_laid_out_overhead.jpg",
+            "previewUrl": "/studio/library/res-023-refrigerant-circuit-laid-out-overhead.jpg",
+            "score": 5,
+            "description": "Flat overhead layout of compressor, condenser coil, metering device and evaporator coil connected into a closed refrigerant loop on a bare bench."
+          },
+          {
+            "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup.jpg",
+            "previewUrl": "/studio/library/ctrl-026-refrigerant-high-and-low-pressure-switch-pair-closeup.jpg",
+            "score": 4,
+            "description": "Close-up of the high-pressure switch on the discharge line and the low-pressure switch on the compressor suction line, both threaded onto valve-core ports in one focal plane."
+          },
+          {
+            "assetId": "boil_004_circulator_pump_cutaway_impeller.jpg",
+            "previewUrl": "/studio/library/boil-004-circulator-pump-cutaway-impeller.jpg",
+            "score": 3,
+            "description": "Sectioned wet-rotor circulator showing the impeller in the volute, the stainless rotor can separating wet rotor from dry stator, the ceramic shaft and bearings, and the bleed screw."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 2,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 1,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          }
+        ],
+        "warnings": [
+          "1 asset was held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "So that is the job. Now: five ways of doing it.",
+      "visualDirection": "On-screen text card transitioning into the compressor types",
+      "caption": "Five ways to do that job.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 5,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "elec_024_current_relay_heavy_coil_orientation_macro.jpg",
+            "previewUrl": "/studio/library/elec-024-current-relay-heavy-coil-orientation-macro.jpg",
+            "score": 4,
+            "description": "Macro of a small current-type start relay plugged onto a hermetic compressor's terminals, its heavy few-turn coil and light normally-open contacts visible through the opened case."
+          },
+          {
+            "assetId": "boil_016_probe_low_water_cutoff_sectioned.jpg",
+            "previewUrl": "/studio/library/boil-016-probe-low-water-cutoff-sectioned.jpg",
+            "score": 3,
+            "description": "Sectioned probe-type low water cutoff showing the stainless probe rod and ceramic insulator, the control module, and the insulating mineral scale and dark oxide film on a used probe tip."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 2,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 1,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          }
+        ],
+        "warnings": [
+          "1 asset was held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Start with the one most likely to be in a modern home: the scroll compressor.",
+      "visualDirection": "Exterior of a sealed black hermetic scroll compressor standing upright",
+      "caption": "1. Scroll",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+        "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 5 requirement terms (exterior, sealed, hermetic, scroll, compressor), 4 in curated tags",
+        "confidence": 0.52,
+        "candidates": [
+          {
+            "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+            "score": 5,
+            "description": "Closeup of a sealed residential scroll compressor showing its tall narrow can, top discharge stub, low side suction connection and mounting grommets."
+          },
+          {
+            "assetId": "res_001_recip_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-001-recip-compressor-exterior-sealed.jpg",
+            "score": 4,
+            "description": "Tight low-angle closeup of a sealed welded hermetic reciprocating compressor showing its weld seam, three-pin terminal and copper stubs."
+          },
+          {
+            "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+            "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+            "score": 3,
+            "description": "Medium shot of a large semi-hermetic twin-screw compressor with flanged suction and discharge, oil separator vessel and capacity-control actuator."
+          },
+          {
+            "assetId": "elec_035_compressor_terminal_box_cover_removed_closeup.jpg",
+            "previewUrl": "/studio/library/elec-035-compressor-terminal-box-cover-removed-closeup.jpg",
+            "score": 2,
+            "description": "Close-up of a compressor terminal well with the cover removed, showing three glass-sealed pins, landed push-on leads and the retaining clip set aside."
+          },
+          {
+            "assetId": "chill_004_centrifugal_compressor_exterior.jpg",
+            "previewUrl": "/studio/library/chill-004-centrifugal-compressor-exterior.jpg",
+            "score": 1,
+            "description": "A centrifugal chiller compressor on top of its vessel, showing the cast volute housing, bolted inlet, motor barrel and gearbox section."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Inside are two spirals nested into each other. The upper one is fixed. The lower one does not spin — it orbits, tracing a small circle while an anti-rotation coupling stops it turning on its own axis.",
+      "visualDirection": "The two involute scroll plates separated and displayed so the spiral geometry is unmistakable",
+      "caption": "One scroll fixed. One orbiting.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_006_scroll_set_pair_spirals_macro.jpg",
+        "previewUrl": "/studio/library/res-006-scroll-set-pair-spirals-macro.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (two, involute, scroll, spiral), 2 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_006_scroll_set_pair_spirals_macro.jpg",
+            "previewUrl": "/studio/library/res-006-scroll-set-pair-spirals-macro.jpg",
+            "score": 5,
+            "description": "Overhead macro of two meshed scroll involutes with crescent-shaped gas pockets, tip seals along the wrap edges and the center discharge port."
+          },
+          {
+            "assetId": "elec_037_three_phase_vs_single_phase_compressor_terminals_comparison.jpg",
+            "previewUrl": "/studio/library/elec-037-three-phase-vs-single-phase-compressor-terminals-comparison.jpg",
+            "score": 4,
+            "description": "Two compressor terminal heads side by side — three evenly spaced identical pins on the three-phase unit against the unequal triangular C/S/R layout on the single-phase one."
+          },
+          {
+            "assetId": "elec_013_thermostat_cable_eight_conductor_macro.jpg",
+            "previewUrl": "/studio/library/elec-013-thermostat-cable-eight-conductor-macro.jpg",
+            "score": 3,
+            "description": "Overhead flat-lay of a thermostat cable with the jacket peeled back and the coloured conductors fanned out and separated on a neutral surface."
+          },
+          {
+            "assetId": "chill_028_chiller_dx_evaporator_barrel_cutaway.jpg",
+            "previewUrl": "/studio/library/chill-028-chiller-dx-evaporator-barrel-cutaway.jpg",
+            "score": 2,
+            "description": "Precision cutaway of a shell-and-tube DX evaporator barrel showing the tube bundle, water-side baffle plates, tube sheet and insulated shell."
+          },
+          {
+            "assetId": "elec_020_run_capacitor_sectioned_film_windings.jpg",
+            "previewUrl": "/studio/library/elec-020-run-capacitor-sectioned-film-windings.jpg",
+            "score": 1,
+            "description": "Precision cutaway of a dual run capacitor showing two separate wound metallized-film rolls, the oil-wetted interior and the scored can top."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "That orbit traps pockets of vapour at the outer edge of the spirals and walks them inward. As each pocket travels toward the centre it gets continuously smaller, so the gas is compressed progressively rather than all at once.",
+      "visualDirection": "Sectioned scroll compressor showing the nested spirals, the eccentric crankshaft and the motor windings below",
+      "caption": "Pockets shrink as they travel inward.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+        "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 5 requirement terms (scroll, compressor, eccentric, crankshaft, motor), 4 in curated tags",
+        "confidence": 0.44,
+        "candidates": [
+          {
+            "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+            "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+            "score": 5,
+            "description": "Full-height cutaway of a scroll compressor showing the fixed scroll, orbiting scroll, Oldham coupling, eccentric crankshaft and motor stator in one stack."
+          },
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 4,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          },
+          {
+            "assetId": "elec_037_three_phase_vs_single_phase_compressor_terminals_comparison.jpg",
+            "previewUrl": "/studio/library/elec-037-three-phase-vs-single-phase-compressor-terminals-comparison.jpg",
+            "score": 3,
+            "description": "Two compressor terminal heads side by side — three evenly spaced identical pins on the three-phase unit against the unequal triangular C/S/R layout on the single-phase one."
+          },
+          {
+            "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+            "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+            "score": 2,
+            "description": "Sectioned suction accumulator showing the inverted-U standpipe, its bottom metering orifice and a pool of liquid refrigerant and oil below."
+          },
+          {
+            "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+            "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+            "score": 1,
+            "description": "Cross-sectional cutaway of a rotary compressor cylinder showing the eccentric shaft, roller, spring-loaded vane, open suction port and discharge reed."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "The compressed vapour leaves through a port at the very centre. There are no suction or discharge valves to flutter, and far fewer moving parts than a piston machine.",
+      "visualDirection": "On-screen text card: fewer moving parts, no valves, smooth continuous compression",
+      "caption": "No valves. Fewer parts.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "boil_031_diaphragm_tank_vs_steel_compression_tank.jpg",
+            "previewUrl": "/studio/library/boil-031-diaphragm-tank-vs-steel-compression-tank.jpg",
+            "score": 5,
+            "description": "Sectioned blue diaphragm expansion tank beside an opened steel compression tank, showing the butyl diaphragm and Schrader valve against a bare interior with a rust waterline."
+          },
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 4,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          },
+          {
+            "assetId": "boil_030_pressure_reducing_fill_valve_sectioned.jpg",
+            "previewUrl": "/studio/library/boil-030-pressure-reducing-fill-valve-sectioned.jpg",
+            "score": 3,
+            "description": "Sectioned bronze boiler fill valve showing the sensing diaphragm, adjusting spring and lock nut, the plunger and seat, the debris-loaded inlet strainer and the fast-fill lever cam."
+          },
+          {
+            "assetId": "boil_032_zone_valve_head_and_end_switch_cutaway.jpg",
+            "previewUrl": "/studio/library/boil-032-zone-valve-head-and-end-switch-cutaway.jpg",
+            "score": 2,
+            "description": "Sectioned hydronic zone valve with the actuator head opened, showing the motor and gear train, paddle and seat, return spring, manual opener and the isolated end switch contacts."
+          },
+          {
+            "assetId": "boil_035_indirect_water_heater_coil_sectioned.jpg",
+            "previewUrl": "/studio/library/boil-035-indirect-water-heater-coil-sectioned.jpg",
+            "score": 1,
+            "description": "Sectioned indirect fired water heater showing the helical boiler-water coil inside the insulated tank, the dip tube, the sensor well and the boiler-side circulator, with no burner or flue."
+          }
+        ],
+        "warnings": [
+          "3 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "That is why scrolls run quietly and efficiently, and why they dominate residential and light commercial air conditioning today.",
+      "visualDirection": "Residential condensing unit in its outdoor setting, quiet and unremarkable",
+      "caption": "Quiet, efficient, everywhere.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_008_condensing_unit_exterior_pad.jpg",
+        "previewUrl": "/studio/library/res-008-condensing-unit-exterior-pad.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (residential, condensing, unit, outdoor), 4 in curated tags",
+        "confidence": 0.38,
+        "candidates": [
+          {
+            "assetId": "res_008_condensing_unit_exterior_pad.jpg",
+            "previewUrl": "/studio/library/res-008-condensing-unit-exterior-pad.jpg",
+            "score": 5,
+            "description": "A closed residential condensing unit on a concrete pad with its louvered coil guards, top fan grille and both refrigerant lines entering the wall."
+          },
+          {
+            "assetId": "res_020_split_system_outdoor_indoor_pair.jpg",
+            "previewUrl": "/studio/library/res-020-split-system-outdoor-indoor-pair.jpg",
+            "score": 4,
+            "description": "Wide shot of an outdoor condensing unit with its insulated line set running through the wall to a matched indoor furnace and coil."
+          },
+          {
+            "assetId": "tool_014_manifold_hung_on_condenser_wide.jpg",
+            "previewUrl": "/studio/library/tool-014-manifold-hung-on-condenser-wide.jpg",
+            "score": 3,
+            "description": "Wide shot of an analog refrigerant manifold hung on an outdoor condensing unit with its blue and red hoses landing on the suction and liquid service ports."
+          },
+          {
+            "assetId": "res_031_heat_pump_outdoor_coil_frosted.jpg",
+            "previewUrl": "/studio/library/res-031-heat-pump-outdoor-coil-frosted.jpg",
+            "score": 2,
+            "description": "Wide shot of an outdoor heat pump running in heating with even white frost across the coil face, fan spinning, and the vapor and liquid lines entering the unit."
+          },
+          {
+            "assetId": "tool_001_manifold_hose_service_port_hands.jpg",
+            "previewUrl": "/studio/library/tool-001-manifold-hose-service-port-hands.jpg",
+            "score": 1,
+            "description": "Gloved hands connecting a blue low-side refrigerant hose to the brass service port on a residential condensing unit."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Next, the mechanism that came first and is still working everywhere: the reciprocating compressor.",
+      "visualDirection": "Exterior of a semi-hermetic reciprocating compressor with bolted cylinder heads",
+      "caption": "2. Reciprocating",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_001_recip_compressor_exterior_sealed.jpg",
+        "previewUrl": "/studio/library/res-001-recip-compressor-exterior-sealed.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (exterior, hermetic, reciprocating, compressor), 4 in curated tags",
+        "confidence": 0.36,
+        "candidates": [
+          {
+            "assetId": "res_001_recip_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-001-recip-compressor-exterior-sealed.jpg",
+            "score": 5,
+            "description": "Tight low-angle closeup of a sealed welded hermetic reciprocating compressor showing its weld seam, three-pin terminal and copper stubs."
+          },
+          {
+            "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+            "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+            "score": 4,
+            "description": "Medium shot of a large semi-hermetic twin-screw compressor with flanged suction and discharge, oil separator vessel and capacity-control actuator."
+          },
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 3,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          },
+          {
+            "assetId": "chill_004_centrifugal_compressor_exterior.jpg",
+            "previewUrl": "/studio/library/chill-004-centrifugal-compressor-exterior.jpg",
+            "score": 2,
+            "description": "A centrifugal chiller compressor on top of its vessel, showing the cast volute housing, bolted inlet, motor barrel and gearbox section."
+          },
+          {
+            "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+            "score": 1,
+            "description": "Closeup of a sealed residential scroll compressor showing its tall narrow can, top discharge stub, low side suction connection and mounting grommets."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "A crankshaft drives a piston up and down inside a cylinder. If that sounds like a car engine, it is the same hardware — but running the other way. An engine burns fuel to turn a crankshaft. A compressor turns a crankshaft to squeeze gas.",
+      "visualDirection": "Sectioned reciprocating compressor exposing the piston, connecting rod and crankshaft in the crankcase",
+      "caption": "An engine in reverse.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+        "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (reciprocating, compressor, piston, crankshaft), 4 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 5,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          },
+          {
+            "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+            "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+            "score": 4,
+            "description": "Full-height cutaway of a scroll compressor showing the fixed scroll, orbiting scroll, Oldham coupling, eccentric crankshaft and motor stator in one stack."
+          },
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 3,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "tool_021_recovery_machine_internals_cutaway.jpg",
+            "previewUrl": "/studio/library/tool-021-recovery-machine-internals-cutaway.jpg",
+            "score": 2,
+            "description": "Precision-sectioned recovery machine with its shell cut away to expose the oil-less compressor, condenser coil, fan and high-pressure cutout switch."
+          },
+          {
+            "assetId": "res_003_recip_valve_plate_reed_valves_macro.jpg",
+            "previewUrl": "/studio/library/res-003-recip-valve-plate-reed-valves-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a compressor valve plate showing the discharge reed under its lift retainer, the suction reed, the ports and the gasket faces."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Above the piston sits a valve plate. On the down stroke a thin suction reed flexes open and lets vapour in. On the up stroke that reed seals, the gas is squeezed, and a discharge reed on the other side opens to let it out.",
+      "visualDirection": "Macro of a compressor valve plate showing the kidney-shaped ports and the thin steel suction and discharge reed valves",
+      "caption": "Two reeds. One up, one down.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_003_recip_valve_plate_reed_valves_macro.jpg",
+        "previewUrl": "/studio/library/res-003-recip-valve-plate-reed-valves-macro.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 8 requirement terms (macro, compressor, valve, plate, port, suction, discharge, reed), 6 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_003_recip_valve_plate_reed_valves_macro.jpg",
+            "previewUrl": "/studio/library/res-003-recip-valve-plate-reed-valves-macro.jpg",
+            "score": 5,
+            "description": "Extreme macro of a compressor valve plate showing the discharge reed under its lift retainer, the suction reed, the ports and the gasket faces."
+          },
+          {
+            "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+            "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+            "score": 4,
+            "description": "Cross-sectional cutaway of a rotary compressor cylinder showing the eccentric shaft, roller, spring-loaded vane, open suction port and discharge reed."
+          },
+          {
+            "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup.jpg",
+            "previewUrl": "/studio/library/ctrl-026-refrigerant-high-and-low-pressure-switch-pair-closeup.jpg",
+            "score": 3,
+            "description": "Close-up of the high-pressure switch on the discharge line and the low-pressure switch on the compressor suction line, both threaded onto valve-core ports in one focal plane."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 2,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+            "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+            "score": 1,
+            "description": "Medium shot of a large semi-hermetic twin-screw compressor with flanged suction and discharge, oil separator vessel and capacity-control actuator."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Reciprocating compressors handle high pressure differences well and can be opened and repaired, which is why they are still standard in commercial refrigeration and in low-temperature work.",
+      "visualDirection": "On-screen text card: strong at high compression ratios, serviceable, still standard in refrigeration",
+      "caption": "Serviceable. Strong at high lift.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "tool_002_manifold_gauge_set_analog_hoses.jpg",
+            "previewUrl": "/studio/library/tool-002-manifold-gauge-set-analog-hoses.jpg",
+            "score": 5,
+            "description": "An analog refrigeration manifold gauge set with blue and red gauges, brass body and three coloured hoses, shot from above on concrete."
+          },
+          {
+            "assetId": "boil_031_diaphragm_tank_vs_steel_compression_tank.jpg",
+            "previewUrl": "/studio/library/boil-031-diaphragm-tank-vs-steel-compression-tank.jpg",
+            "score": 4,
+            "description": "Sectioned blue diaphragm expansion tank beside an opened steel compression tank, showing the butyl diaphragm and Schrader valve against a bare interior with a rust waterline."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 3,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 2,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "ctrl_012_limit_switch_bimetal_disc_sectioned.jpg",
+            "previewUrl": "/studio/library/ctrl-012-limit-switch-bimetal-disc-sectioned.jpg",
+            "score": 1,
+            "description": "Sectioned high-limit snap disc switch mounted through a furnace heat-exchanger compartment wall with its sensing disc out in the circulating airstream."
+          }
+        ],
+        "warnings": [
+          "5 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Third: the rotary compressor — the one in your mini-split head and your window unit.",
+      "visualDirection": "Exterior of a small slim rotary compressor of the type used in ductless equipment, with its accumulator alongside",
+      "caption": "3. Rotary",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_025_rotary_compressor_ductless_exterior.jpg",
+        "previewUrl": "/studio/library/res-025-rotary-compressor-ductless-exterior.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 8 requirement terms (exterior, slim, rotary, compressor, ductless, equipment, accumulator, alongside), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_025_rotary_compressor_ductless_exterior.jpg",
+            "previewUrl": "/studio/library/res-025-rotary-compressor-ductless-exterior.jpg",
+            "score": 5,
+            "description": "Closeup of a slim ductless rotary compressor with its suction accumulator brazed alongside, the suction tube feeding the cylinder and the discharge stub on top."
+          },
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 4,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+            "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+            "score": 3,
+            "description": "Cross-sectional cutaway of a rotary compressor cylinder showing the eccentric shaft, roller, spring-loaded vane, open suction port and discharge reed."
+          },
+          {
+            "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+            "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+            "score": 2,
+            "description": "Sectioned suction accumulator showing the inverted-U standpipe, its bottom metering orifice and a pool of liquid refrigerant and oil below."
+          },
+          {
+            "assetId": "res_001_recip_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-001-recip-compressor-exterior-sealed.jpg",
+            "score": 1,
+            "description": "Tight low-angle closeup of a sealed welded hermetic reciprocating compressor showing its weld seam, three-pin terminal and copper stubs."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "A thick roller sits on an off-centre shaft inside a round cylinder. As the shaft turns, the roller rolls around the cylinder wall, and a spring-loaded vane presses against it, dividing the crescent-shaped space into two chambers.",
+      "visualDirection": "Sectioned rotary compressor cylinder looked into from above, showing the eccentric roller and the spring-loaded sliding vane",
+      "caption": "A roller, and one sliding vane.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+        "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 8 requirement terms (rotary, compressor, cylinder, eccentric, roller, spring, loaded, vane), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+            "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+            "score": 5,
+            "description": "Cross-sectional cutaway of a rotary compressor cylinder showing the eccentric shaft, roller, spring-loaded vane, open suction port and discharge reed."
+          },
+          {
+            "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+            "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+            "score": 4,
+            "description": "Extreme macro of a rotary compressor's vane tip in line contact with the roller, crescent chambers open on either side and oil filming the sealing surfaces."
+          },
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 3,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          },
+          {
+            "assetId": "boil_030_pressure_reducing_fill_valve_sectioned.jpg",
+            "previewUrl": "/studio/library/boil-030-pressure-reducing-fill-valve-sectioned.jpg",
+            "score": 2,
+            "description": "Sectioned bronze boiler fill valve showing the sensing diaphragm, adjusting spring and lock nut, the plunger and seat, the debris-loaded inlet strainer and the fast-fill lever cam."
+          },
+          {
+            "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+            "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+            "score": 1,
+            "description": "Full-height cutaway of a scroll compressor showing the fixed scroll, orbiting scroll, Oldham coupling, eccentric crankshaft and motor stator in one stack."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "One chamber is filling while the other is being squeezed shut. It is compact, it has very few parts, and it packs a lot of capacity into a small can — which is exactly what ductless equipment needs.",
+      "visualDirection": "Extreme macro of the contact line where the vane tip presses against the rolling piston",
+      "caption": "Compact. Few parts.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+        "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 8 requirement terms (extreme, macro, contact, line, vane, tip, rolling, piston), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+            "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+            "score": 5,
+            "description": "Extreme macro of a rotary compressor's vane tip in line contact with the roller, crescent chambers open on either side and oil filming the sealing surfaces."
+          },
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 4,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          },
+          {
+            "assetId": "elec_001_contactor_pitted_contacts_macro.jpg",
+            "previewUrl": "/studio/library/elec-001-contactor-pitted-contacts-macro.jpg",
+            "score": 3,
+            "description": "Extreme macro of arc-destroyed contactor contacts showing a crater on one face, a metal transfer spike opposite, and carbon tracking on the surrounding plastic."
+          },
+          {
+            "assetId": "elec_003_contactor_healthy_contacts_macro.jpg",
+            "previewUrl": "/studio/library/elec-003-contactor-healthy-contacts-macro.jpg",
+            "score": 2,
+            "description": "Extreme macro of the clean, unpitted silver contact buttons inside a brand-new contactor with the armature held open."
+          },
+          {
+            "assetId": "elec_011_overheated_lug_burnt_terminal_macro.jpg",
+            "previewUrl": "/studio/library/elec-011-overheated-lug-burnt-terminal-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a heat-ruined line lug termination with blued and blackened copper strands and insulation charred back from the barrel."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Fourth: the screw compressor. Here we move up into serious commercial tonnage.",
+      "visualDirection": "Large industrial twin-screw compressor on its steel skid with a coupled motor",
+      "caption": "4. Screw",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+        "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 5 requirement terms (large, twin, screw, compressor, skid), 2 in curated tags",
+        "confidence": 0.49,
+        "candidates": [
+          {
+            "assetId": "chill_001_screw_compressor_exterior_skid.jpg",
+            "previewUrl": "/studio/library/chill-001-screw-compressor-exterior-skid.jpg",
+            "score": 5,
+            "description": "Medium shot of a large semi-hermetic twin-screw compressor with flanged suction and discharge, oil separator vessel and capacity-control actuator."
+          },
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 4,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 3,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 2,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Two helical rotors mesh together inside a figure-eight bore. One has thick convex lobes, the other has matching concave flutes, and they turn in opposite directions.",
+      "visualDirection": "Sectioned screw compressor showing the two meshing helical rotors, their bearings and the capacity slide valve",
+      "caption": "Two rotors, meshing.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+        "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (screw, compressor, rotor, bearing), 4 in curated tags",
+        "confidence": 0.33,
+        "candidates": [
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 5,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 4,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "res_032_reversing_valve_sectioned_slide_pilot.jpg",
+            "previewUrl": "/studio/library/res-032-reversing-valve-sectioned-slide-pilot.jpg",
+            "score": 3,
+            "description": "Lengthwise cutaway of a reversing valve showing the slide covering two ports, the end pistons with their bleed holes and the pilot capillary connections."
+          },
+          {
+            "assetId": "boil_004_circulator_pump_cutaway_impeller.jpg",
+            "previewUrl": "/studio/library/boil-004-circulator-pump-cutaway-impeller.jpg",
+            "score": 2,
+            "description": "Sectioned wet-rotor circulator showing the impeller in the volute, the stainless rotor can separating wet rotor from dry stator, the ceramic shaft and bearings, and the bleed screw."
+          },
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Vapour is caught in the space between a lobe and a flute at the suction end. As the rotors turn, that pocket is carried along the length of the rotors and the space it occupies shrinks continuously until it is pushed out the discharge end.",
+      "visualDirection": "Extreme macro of the sealing line where a male rotor lobe sits inside a female rotor flute",
+      "caption": "The pocket shrinks along the rotor.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+        "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 9 requirement terms (extreme, macro, sealing, line, male, rotor, lobe, female, flute), 4 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "chill_003_screw_rotor_lobe_mesh_macro.jpg",
+            "previewUrl": "/studio/library/chill-003-screw-rotor-lobe-mesh-macro.jpg",
+            "score": 5,
+            "description": "Extreme macro of a male screw rotor lobe entering a female flute, showing the continuous sealing line, the oil film and the tip clearance to the bore."
+          },
+          {
+            "assetId": "elec_011_overheated_lug_burnt_terminal_macro.jpg",
+            "previewUrl": "/studio/library/elec-011-overheated-lug-burnt-terminal-macro.jpg",
+            "score": 4,
+            "description": "Extreme macro of a heat-ruined line lug termination with blued and blackened copper strands and insulation charred back from the barrel."
+          },
+          {
+            "assetId": "elec_003_contactor_healthy_contacts_macro.jpg",
+            "previewUrl": "/studio/library/elec-003-contactor-healthy-contacts-macro.jpg",
+            "score": 3,
+            "description": "Extreme macro of the clean, unpitted silver contact buttons inside a brand-new contactor with the armature held open."
+          },
+          {
+            "assetId": "elec_031_control_board_blade_fuse_macro.jpg",
+            "previewUrl": "/studio/library/elec-031-control-board-blade-fuse-macro.jpg",
+            "score": 2,
+            "description": "Extreme macro of a translucent blade fuse in its board clips with the metal element visible inside, next to a second fuse whose element has parted."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 1,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "There are no valves and no reversals of direction, so a screw runs smoothly and continuously — and it can hold a steady output under load in a way a piston machine cannot.",
+      "visualDirection": "Diagram of a screw compressor rotor pair showing the pocket shrinking from suction to discharge",
+      "caption": "Continuous. No valves.",
+      "kind": "diagram_graphic",
+      "visual": {
+        "mode": "diagram",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "explain",
+          "subject": "concept",
+          "mustShow": [
+            "diagram"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as a diagram, and the library holds no pre-rendered graphic for it — it is drawn from a template.",
+        "confidence": 0.85,
+        "candidates": [
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 5,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup.jpg",
+            "previewUrl": "/studio/library/ctrl-026-refrigerant-high-and-low-pressure-switch-pair-closeup.jpg",
+            "score": 4,
+            "description": "Close-up of the high-pressure switch on the discharge line and the low-pressure switch on the compressor suction line, both threaded onto valve-core ports in one focal plane."
+          },
+          {
+            "assetId": "res_007_rotary_rolling_piston_cutaway.jpg",
+            "previewUrl": "/studio/library/res-007-rotary-rolling-piston-cutaway.jpg",
+            "score": 3,
+            "description": "Cross-sectional cutaway of a rotary compressor cylinder showing the eccentric shaft, roller, spring-loaded vane, open suction port and discharge reed."
+          },
+          {
+            "assetId": "res_003_recip_valve_plate_reed_valves_macro.jpg",
+            "previewUrl": "/studio/library/res-003-recip-valve-plate-reed-valves-macro.jpg",
+            "score": 2,
+            "description": "Extreme macro of a compressor valve plate showing the discharge reed under its lift retainer, the suction reed, the ports and the gasket faces."
+          },
+          {
+            "assetId": "res_004_scroll_compressor_exterior_sealed.jpg",
+            "previewUrl": "/studio/library/res-004-scroll-compressor-exterior-sealed.jpg",
+            "score": 1,
+            "description": "Closeup of a sealed residential scroll compressor showing its tall narrow can, top discharge stub, low side suction connection and mounting grommets."
+          }
+        ],
+        "warnings": [
+          "5 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Fifth, and different in kind from all of the others: the centrifugal compressor.",
+      "visualDirection": "Centrifugal chiller compressor mounted on its vessel in a mechanical room, volute and motor barrel visible",
+      "caption": "5. Centrifugal",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_004_centrifugal_compressor_exterior.jpg",
+        "previewUrl": "/studio/library/chill-004-centrifugal-compressor-exterior.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 7 requirement terms (centrifugal, chiller, compressor, vessel, volute, motor, barrel), 5 in curated tags",
+        "confidence": 0.52,
+        "candidates": [
+          {
+            "assetId": "chill_004_centrifugal_compressor_exterior.jpg",
+            "previewUrl": "/studio/library/chill-004-centrifugal-compressor-exterior.jpg",
+            "score": 5,
+            "description": "A centrifugal chiller compressor on top of its vessel, showing the cast volute housing, bolted inlet, motor barrel and gearbox section."
+          },
+          {
+            "assetId": "chill_014_water_cooled_centrifugal_chiller_wide.jpg",
+            "previewUrl": "/studio/library/chill-014-water-cooled-centrifugal-chiller-wide.jpg",
+            "score": 4,
+            "description": "Wide low-angle aisle shot of two water-cooled centrifugal chillers with stacked shells, compressor motor housings and large overhead water headers."
+          },
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 3,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 2,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "chill_006_centrifugal_impeller_vanes_macro.jpg",
+            "previewUrl": "/studio/library/chill-006-centrifugal-impeller-vanes-macro.jpg",
+            "score": 1,
+            "description": "Macro of a mirror-polished centrifugal compressor impeller tilted toward camera, its curved backswept vanes raking away from the central inlet eye."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "The first four are positive displacement machines: they trap a volume of gas and physically make that volume smaller. A centrifugal does not do that at all.",
+      "visualDirection": "On-screen text card contrasting positive displacement with dynamic compression",
+      "caption": "Positive displacement vs dynamic.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 5,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 4,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "boil_031_diaphragm_tank_vs_steel_compression_tank.jpg",
+            "previewUrl": "/studio/library/boil-031-diaphragm-tank-vs-steel-compression-tank.jpg",
+            "score": 3,
+            "description": "Sectioned blue diaphragm expansion tank beside an opened steel compression tank, showing the butyl diaphragm and Schrader valve against a bare interior with a rust waterline."
+          },
+          {
+            "assetId": "ctrl_009_zone_control_panel_open_terminals.jpg",
+            "previewUrl": "/studio/library/ctrl-009-zone-control-panel-open-terminals.jpg",
+            "score": 2,
+            "description": "Close-up of an open zone control panel with several thermostat pairs landed on terminals, some zone LEDs lit and some dark, and damper leads exiting the bottom."
+          },
+          {
+            "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+            "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a rotary compressor's vane tip in line contact with the roller, crescent chambers open on either side and oil filming the sealing surfaces."
+          }
+        ],
+        "warnings": [
+          "4 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "It spins an impeller at very high speed and flings the refrigerant outward. That gives the vapour velocity — speed, not pressure.",
+      "visualDirection": "Macro of a polished centrifugal impeller tilted so the curved backswept vanes are looked into",
+      "caption": "The impeller adds velocity.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_006_centrifugal_impeller_vanes_macro.jpg",
+        "previewUrl": "/studio/library/chill-006-centrifugal-impeller-vanes-macro.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 8 requirement terms (macro, polished, centrifugal, impeller, tilted, curved, backswept, vane), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "chill_006_centrifugal_impeller_vanes_macro.jpg",
+            "previewUrl": "/studio/library/chill-006-centrifugal-impeller-vanes-macro.jpg",
+            "score": 5,
+            "description": "Macro of a mirror-polished centrifugal compressor impeller tilted toward camera, its curved backswept vanes raking away from the central inlet eye."
+          },
+          {
+            "assetId": "chill_031_inlet_guide_vane_ring_macro.jpg",
+            "previewUrl": "/studio/library/chill-031-inlet-guide-vane-ring-macro.jpg",
+            "score": 4,
+            "description": "Macro of a centrifugal chiller's inlet guide vane ring with vanes at partial angle, the synchronizing ring, linkage arms and actuator shaft."
+          },
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 3,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 2,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "res_026_rolling_piston_vane_contact_macro.jpg",
+            "previewUrl": "/studio/library/res-026-rolling-piston-vane-contact-macro.jpg",
+            "score": 1,
+            "description": "Extreme macro of a rotary compressor's vane tip in line contact with the roller, crescent chambers open on either side and oil filming the sealing surfaces."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "The pressure appears in the next step. The fast-moving vapour leaves the impeller into a widening passage, and as that passage opens out the refrigerant slows down — and its velocity converts into pressure.",
+      "visualDirection": "Sectioned centrifugal compressor showing the impeller, the diffuser passage and the spiral volute wrapping around it",
+      "caption": "Velocity converts to pressure.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+        "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 6 requirement terms (centrifugal, compressor, impeller, diffuser, passage, volute), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "chill_005_centrifugal_cutaway_impeller_volute.jpg",
+            "previewUrl": "/studio/library/chill-005-centrifugal-cutaway-impeller-volute.jpg",
+            "score": 5,
+            "description": "Precision cutaway of a centrifugal compressor showing the impeller vanes, the eye, the diffuser gap and the volute passage with a gloved hand for scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 4,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "boil_004_circulator_pump_cutaway_impeller.jpg",
+            "previewUrl": "/studio/library/boil-004-circulator-pump-cutaway-impeller.jpg",
+            "score": 3,
+            "description": "Sectioned wet-rotor circulator showing the impeller in the volute, the stainless rotor can separating wet rotor from dry stator, the ceramic shaft and bearings, and the bleed screw."
+          },
+          {
+            "assetId": "tool_021_recovery_machine_internals_cutaway.jpg",
+            "previewUrl": "/studio/library/tool-021-recovery-machine-internals-cutaway.jpg",
+            "score": 2,
+            "description": "Precision-sectioned recovery machine with its shell cut away to expose the oil-less compressor, condenser coil, fan and high-pressure cutout switch."
+          },
+          {
+            "assetId": "res_015_suction_accumulator_cutaway_standpipe.jpg",
+            "previewUrl": "/studio/library/res-015-suction-accumulator-cutaway-standpipe.jpg",
+            "score": 1,
+            "description": "Sectioned suction accumulator showing the inverted-U standpipe, its bottom metering orifice and a pool of liquid refrigerant and oil below."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "That approach only makes sense at large volumes, which is why centrifugals live in big water-cooled chillers moving hundreds of tons of cooling under an office block or a hospital.",
+      "visualDirection": "Wide shot of a water-cooled centrifugal chiller plant with its stacked vessels and heavy insulated piping",
+      "caption": "Big buildings. Big tonnage.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "chill_014_water_cooled_centrifugal_chiller_wide.jpg",
+        "previewUrl": "/studio/library/chill-014-water-cooled-centrifugal-chiller-wide.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 6 requirement terms (water, cooled, centrifugal, chiller, plant, stacked), 5 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "chill_014_water_cooled_centrifugal_chiller_wide.jpg",
+            "previewUrl": "/studio/library/chill-014-water-cooled-centrifugal-chiller-wide.jpg",
+            "score": 5,
+            "description": "Wide low-angle aisle shot of two water-cooled centrifugal chillers with stacked shells, compressor motor housings and large overhead water headers."
+          },
+          {
+            "assetId": "chill_013_air_cooled_chiller_exterior_fans.jpg",
+            "previewUrl": "/studio/library/chill-013-air-cooled-chiller-exterior-fans.jpg",
+            "score": 4,
+            "description": "Wide side-on shot of an air-cooled screw chiller on a concrete pad with its V-coil condenser banks, top fan row and insulated chilled water headers."
+          },
+          {
+            "assetId": "chill_007_mechanical_room_pumps_wide.jpg",
+            "previewUrl": "/studio/library/chill-007-mechanical-room-pumps-wide.jpg",
+            "score": 3,
+            "description": "A wide commercial mechanical room with two end-suction pumps on concrete pads, insulated steel piping overhead and control cabinets along the wall."
+          },
+          {
+            "assetId": "chill_023_penthouse_ahu_room_wide.jpg",
+            "previewUrl": "/studio/library/chill-023-penthouse-ahu-room-wide.jpg",
+            "score": 2,
+            "description": "Wide mechanical-room shot of a large built-up air handler with its insulated chilled water piping, control valve and supply duct."
+          },
+          {
+            "assetId": "chill_033_condenser_waterbox_tube_sheet_open.jpg",
+            "previewUrl": "/studio/library/chill-033-condenser-waterbox-tube-sheet-open.jpg",
+            "score": 1,
+            "description": "Medium shot straight into an opened condenser water box showing the full field of tube ends, some fouled, with the removed head and a cleaning brush staged beside it."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Put them next to each other and the pattern is clear. The mechanism follows the duty.",
+      "visualDirection": "Bench comparison of the compressor families together, showing the progression in size and construction",
+      "caption": "The mechanism follows the duty.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+        "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (bench, comparison, compressor, family), 3 in curated tags",
+        "confidence": 0.47,
+        "candidates": [
+          {
+            "assetId": "res_024_four_compressor_families_bench_lineup.jpg",
+            "previewUrl": "/studio/library/res-024-four-compressor-families-bench-lineup.jpg",
+            "score": 5,
+            "description": "Four compressor types — reciprocating, scroll, rotary and screw — lined up on one bench at true relative scale."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 4,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "elec_026_ptcr_device_vs_relay_kit_comparison.jpg",
+            "previewUrl": "/studio/library/elec-026-ptcr-device-vs-relay-kit-comparison.jpg",
+            "score": 3,
+            "description": "Bench comparison of a small solid-state PTC start device beside a much larger conventional start capacitor and potential relay kit with its leads laid out."
+          },
+          {
+            "assetId": "ctrl_014_thermostat_three_generations_comparison.jpg",
+            "previewUrl": "/studio/library/ctrl-014-thermostat-three-generations-comparison.jpg",
+            "score": 2,
+            "description": "Three generations of thermostat laid in a row with covers removed so all three terminal blocks are visible."
+          },
+          {
+            "assetId": "ctrl_028_outdoor_air_and_coil_thermistors_with_meter_comparison.jpg",
+            "previewUrl": "/studio/library/ctrl-028-outdoor-air-and-coil-thermistors-with-meter-comparison.jpg",
+            "score": 1,
+            "description": "Two thermistor probes side by side on a bench with an ohmmeter clipped to one and an ice water bath beside them."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Scroll and rotary for small, quiet, everyday loads. Reciprocating where pressure differences are large and service matters. Screw and centrifugal where the tonnage is measured in buildings, not rooms.",
+      "visualDirection": "On-screen text card summarising which compressor belongs to which duty",
+      "caption": "Small to large, quiet to heavy.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "emphasis",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "chill_002_screw_compressor_cutaway_twin_rotors.jpg",
+            "previewUrl": "/studio/library/chill-002-screw-compressor-cutaway-twin-rotors.jpg",
+            "score": 5,
+            "description": "Lengthwise cutaway of a twin-screw compressor showing the meshed male and female rotors running from the suction port at one end to the fixed discharge port at the other."
+          },
+          {
+            "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller.jpg",
+            "previewUrl": "/studio/library/chill-032-screw-rotors-beside-centrifugal-impeller.jpg",
+            "score": 4,
+            "description": "Bench comparison of a meshed pair of helical screw compressor rotors laid beside a centrifugal impeller at true relative scale."
+          },
+          {
+            "assetId": "elec_037_three_phase_vs_single_phase_compressor_terminals_comparison.jpg",
+            "previewUrl": "/studio/library/elec-037-three-phase-vs-single-phase-compressor-terminals-comparison.jpg",
+            "score": 3,
+            "description": "Two compressor terminal heads side by side — three evenly spaced identical pins on the three-phase unit against the unequal triangular C/S/R layout on the single-phase one."
+          },
+          {
+            "assetId": "res_002_recip_compressor_cutaway_piston_crank.jpg",
+            "previewUrl": "/studio/library/res-002-recip-compressor-cutaway-piston-crank.jpg",
+            "score": 2,
+            "description": "Vertical cutaway of a welded hermetic recip showing a vertical crankshaft with its eccentric above the motor driving a horizontal piston, the head at the outboard end of the bore, and the oil sump below the stator."
+          },
+          {
+            "assetId": "res_005_scroll_compressor_cutaway_scrollset.jpg",
+            "previewUrl": "/studio/library/res-005-scroll-compressor-cutaway-scrollset.jpg",
+            "score": 1,
+            "description": "Full-height cutaway of a scroll compressor showing the fixed scroll, orbiting scroll, Oldham coupling, eccentric crankshaft and motor stator in one stack."
+          }
+        ],
+        "warnings": [
+          "5 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "One last thing to keep in proportion. For all of that, the compressor is still only one of four components in the circuit.",
+      "visualDirection": "Diagram of the full refrigeration cycle showing compressor, condenser, metering device and evaporator in the loop",
+      "caption": "One of four.",
+      "kind": "diagram_graphic",
+      "visual": {
+        "mode": "diagram",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "explain",
+          "subject": "concept",
+          "mustShow": [
+            "diagram",
+            "cycle",
+            "condenser",
+            "loop"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as a diagram, and the library holds no pre-rendered graphic for it — it is drawn from a template.",
+        "confidence": 0.85,
+        "candidates": [
+          {
+            "assetId": "res_023_refrigerant_circuit_laid_out_overhead.jpg",
+            "previewUrl": "/studio/library/res-023-refrigerant-circuit-laid-out-overhead.jpg",
+            "score": 5,
+            "description": "Flat overhead layout of compressor, condenser coil, metering device and evaporator coil connected into a closed refrigerant loop on a bare bench."
+          },
+          {
+            "assetId": "res_011_txv_sensing_bulb_equalizer.jpg",
+            "previewUrl": "/studio/library/res-011-txv-sensing-bulb-equalizer.jpg",
+            "score": 4,
+            "description": "Closeup of a thermostatic expansion valve with its power head, insulated sensing bulb strapped to the suction line and external equalizer tapped downstream."
+          },
+          {
+            "assetId": "tool_021_recovery_machine_internals_cutaway.jpg",
+            "previewUrl": "/studio/library/tool-021-recovery-machine-internals-cutaway.jpg",
+            "score": 3,
+            "description": "Precision-sectioned recovery machine with its shell cut away to expose the oil-less compressor, condenser coil, fan and high-pressure cutout switch."
+          },
+          {
+            "assetId": "chill_029_chiller_electronic_expansion_valve_macro.jpg",
+            "previewUrl": "/studio/library/chill-029-chiller-electronic-expansion-valve-macro.jpg",
+            "score": 2,
+            "description": "Close-up of an electronic expansion valve on a chiller liquid line with its stepper motor head, cable, upstream sight glass and the insulated suction line nearby."
+          },
+          {
+            "assetId": "res_012_fixed_orifice_piston_macro.jpg",
+            "previewUrl": "/studio/library/res-012-fixed-orifice-piston-macro.jpg",
+            "score": 1,
+            "description": "Macro of a brass fixed-orifice piston beside its opened line-set connector body, the drilled orifice visible end-on."
+          }
+        ],
+        "warnings": [
+          "4 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "It raises the pressure. The condenser rejects the heat outdoors and turns the vapour to liquid. The metering device drops the pressure. The evaporator picks heat up indoors and boils that liquid back to vapour — and hands it to the compressor again.",
+      "visualDirection": "Close-up of a thermostatic expansion valve with its sensing bulb clamped to the suction line, frost forming past it",
+      "caption": "Compress. Reject. Meter. Absorb.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "res_011_txv_sensing_bulb_equalizer.jpg",
+        "previewUrl": "/studio/library/res-011-txv-sensing-bulb-equalizer.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": "still"
+        },
+        "reason": "matches 7 requirement terms (thermostatic, expansion, valve, sensing, bulb, suction, line), 2 in curated tags",
+        "confidence": 0.6,
+        "candidates": [
+          {
+            "assetId": "res_011_txv_sensing_bulb_equalizer.jpg",
+            "previewUrl": "/studio/library/res-011-txv-sensing-bulb-equalizer.jpg",
+            "score": 5,
+            "description": "Closeup of a thermostatic expansion valve with its power head, insulated sensing bulb strapped to the suction line and external equalizer tapped downstream."
+          },
+          {
+            "assetId": "chill_029_chiller_electronic_expansion_valve_macro.jpg",
+            "previewUrl": "/studio/library/chill-029-chiller-electronic-expansion-valve-macro.jpg",
+            "score": 4,
+            "description": "Close-up of an electronic expansion valve on a chiller liquid line with its stepper motor head, cable, upstream sight glass and the insulated suction line nearby."
+          },
+          {
+            "assetId": "ctrl_011_refrigerant_pressure_switch_schrader.jpg",
+            "previewUrl": "/studio/library/ctrl-011-refrigerant-pressure-switch-schrader.jpg",
+            "score": 3,
+            "description": "Macro of a brass refrigerant pressure switch on a Schrader port, with a lightly frosted copper suction line running behind it."
+          },
+          {
+            "assetId": "tool_014_manifold_hung_on_condenser_wide.jpg",
+            "previewUrl": "/studio/library/tool-014-manifold-hung-on-condenser-wide.jpg",
+            "score": 2,
+            "description": "Wide shot of an analog refrigerant manifold hung on an outdoor condensing unit with its blue and red hoses landing on the suction and liquid service ports."
+          },
+          {
+            "assetId": "chill_037_tower_cold_basin_strainer_and_makeup.jpg",
+            "previewUrl": "/studio/library/chill-037-tower-cold-basin-strainer-and-makeup.jpg",
+            "score": 1,
+            "description": "Close-up in a cooling tower cold basin gathering the suction strainer screen, makeup float valve, bleed line and overflow standpipe in one frame."
+          }
+        ],
+        "warnings": [
+          "no subject term matched this beat, so it was searched as trade work — the selection is only as good as that guess"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "Once you understand what the compressor is actually doing, the rest of the refrigeration cycle becomes much easier to visualise.",
+      "visualDirection": "Closing on-screen text card restating the payoff",
+      "caption": "Now the rest of the cycle makes sense.",
+      "kind": "on_screen_text",
+      "visual": {
+        "mode": "on_screen_text",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "explain",
+          "subject": "trade_work",
+          "mustShow": [],
+          "mediaPreference": null
+        },
+        "reason": "The plan marks this beat as on-screen text; it carries its own visual.",
+        "confidence": 1,
+        "candidates": [
+          {
+            "assetId": "ctrl_009_zone_control_panel_open_terminals.jpg",
+            "previewUrl": "/studio/library/ctrl-009-zone-control-panel-open-terminals.jpg",
+            "score": 5,
+            "description": "Close-up of an open zone control panel with several thermostat pairs landed on terminals, some zone LEDs lit and some dark, and damper leads exiting the bottom."
+          },
+          {
+            "assetId": "ctrl_024_defrost_control_board_in_outdoor_unit_medium.jpg",
+            "previewUrl": "/studio/library/ctrl-024-defrost-control-board-in-outdoor-unit-medium.jpg",
+            "score": 4,
+            "description": "Medium shot into an open heat pump control compartment showing the defrost board with its timer pin header, indicator LED, sensor leads, contactor and run capacitor."
+          },
+          {
+            "assetId": "boil_004_circulator_pump_cutaway_impeller.jpg",
+            "previewUrl": "/studio/library/boil-004-circulator-pump-cutaway-impeller.jpg",
+            "score": 3,
+            "description": "Sectioned wet-rotor circulator showing the impeller in the volute, the stainless rotor can separating wet rotor from dry stator, the ceramic shaft and bearings, and the bleed screw."
+          },
+          {
+            "assetId": "boil_005_expansion_tank_cutaway_diaphragm.jpg",
+            "previewUrl": "/studio/library/boil-005-expansion-tank-cutaway-diaphragm.jpg",
+            "score": 2,
+            "description": "Sectioned diaphragm expansion tank showing the rubber diaphragm separating the lower water chamber from the sealed upper air chamber."
+          },
+          {
+            "assetId": "boil_011_air_separator_cutaway_float_vent.jpg",
+            "previewUrl": "/studio/library/boil-011-air-separator-cutaway-float-vent.jpg",
+            "score": 1,
+            "description": "Sectioned combination air and dirt separator showing the copper coalescing mesh in the flow path, the float vent chamber, the magnet sleeve furred with iron particles and sludge above the blowdown valve."
+          }
+        ],
+        "warnings": [
+          "4 assets were held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": null
+      }
+    }
+  ],
+  "curation": {
+    "curatedAt": "2026-09-11T06:08:33.577Z",
+    "curatorVersion": "content.visual_curation@1",
+    "libraryCount": 229,
+    "orientation": "landscape",
+    "preflight": {
+      "score": 88,
+      "findings": [
+        {
+          "severity": "warning",
+          "beatIndex": 6,
+          "summary": "Beat 7 has no visual — needs a capture.",
+          "action": "Close-up of a compressor discharge stub and service valve with copper tubing leaving toward the condenser It must visibly contain: condenser. Preferred as still. Searched 227 library assets; the closest are related but none is recorded as containing condenser.",
+          "cost": 12
+        }
+      ],
+      "counts": {
+        "beats": 36,
+        "realAssets": 24,
+        "diagrams": 3,
+        "textCards": 8,
+        "pending": 1,
+        "distinctAssets": 21
+      },
+      "readyForStudio": true
+    }
+  }
+}

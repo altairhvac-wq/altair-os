@@ -15,6 +15,7 @@ import {
   type EditorProject,
   type EditorTrack,
 } from "@/shared/types/video-editor";
+import type { StudioBeatVisual } from "@/shared/types/visual-selection";
 import { DEMO_EPISODE } from "./demo-project-hvac-01";
 
 /** Peaks live outside the project: they are display data, not the edit. */
@@ -49,6 +50,16 @@ export type LoadedEpisode = {
   readonly frames: FrameSources;
   readonly audio: AudioSourceMap;
   readonly captionText: Readonly<Record<string, string>>;
+  /**
+   * The curation record behind each visual clip, when an agent chose it.
+   *
+   * OPTIONAL: the rendered demo episode has none — its slides were authored by
+   * the visual plan, not selected from a library — and every existing reader
+   * treats its absence as "nothing to explain". Present on a curated episode,
+   * where it is what lets the inspector say why a shot was chosen and offer the
+   * alternatives that were considered.
+   */
+  readonly visuals?: Readonly<Record<string, StudioBeatVisual>>;
   readonly meta: {
     readonly stem: string;
     readonly series: string;

@@ -1,0 +1,233 @@
+{
+  "topic": "How an HVAC Compressor Works — And Why Different Systems Use Different Compressor Types",
+  "format": "long_form_youtube",
+  "series": "hvac-fundamentals",
+  "objective": "Explain what a compressor actually does to the refrigerant, then show why five different mechanisms exist and where each one belongs.",
+  "audience": "apprentice and early-career HVAC technicians",
+  "hook": "Your air conditioner moves heat because one component changes the state of the refrigerant.",
+  "cta": "Once you can picture what the compressor is doing, the rest of the refrigeration cycle follows.",
+  "targetDurationSeconds": 285,
+  "beats": [
+    {
+      "narration": "Your air conditioner can move heat out of a house because of one component that changes the entire state of the refrigerant: the compressor.",
+      "visualDirection": "Wide shot of a residential outdoor condensing unit on its pad with the insulated suction line and bare liquid line entering the wall",
+      "caption": "It all starts with the compressor.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "But not every compressor works the same way. There are five mechanisms in common use, and the one a system uses tells you a lot about what that system is for.",
+      "visualDirection": "Bench lineup of four compressor families side by side showing the difference in size and construction",
+      "caption": "Five mechanisms. One job.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Before we look at the differences, we need to be precise about the job itself.",
+      "visualDirection": "On-screen text card introducing the compressor's job",
+      "caption": "First: what does it actually do?",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "Low pressure refrigerant vapour arrives at the compressor through the suction line. It is cold, and it is carrying the heat it picked up indoors.",
+      "visualDirection": "Close-up of a foam-insulated copper suction line running into equipment, cold and sweating",
+      "caption": "Low-pressure vapour in.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "The compressor squeezes that vapour into a smaller volume. That is the whole mechanical act: it reduces the space the refrigerant occupies.",
+      "visualDirection": "Sectioned scroll compressor showing the compression element at the top and the electric motor windings below it",
+      "caption": "It reduces the volume.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Squeezing a gas raises its pressure, and compressing it also raises its temperature. Work is being added to the refrigerant, and that work shows up as heat.",
+      "visualDirection": "On-screen text card: compression raises both pressure and temperature",
+      "caption": "Pressure up. Temperature up.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "What leaves the discharge line is hot, high pressure vapour — hot enough that it can now give its heat up to the outdoor air, which is the entire point.",
+      "visualDirection": "Close-up of a compressor discharge stub and service valve with copper tubing leaving toward the condenser",
+      "caption": "Hot, high-pressure vapour out.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "One thing worth being strict about: a compressor is built to compress vapour, not liquid. Liquid does not compress, and a slug of it arriving at the compression element is how compressors die.",
+      "visualDirection": "Sectioned suction accumulator showing the inverted-U standpipe that protects the compressor from liquid",
+      "caption": "Vapour only. Never liquid.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "That is why the compressor is called the heart of the refrigeration circuit. It is the only component that adds energy to the refrigerant, and it is what keeps the whole loop moving.",
+      "visualDirection": "Diagram of the refrigeration circuit with the compressor highlighted as the pump of the loop",
+      "caption": "The heart of the circuit.",
+      "kind": "diagram_graphic"
+    },
+    {
+      "narration": "So that is the job. Now: five ways of doing it.",
+      "visualDirection": "On-screen text card transitioning into the compressor types",
+      "caption": "Five ways to do that job.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "Start with the one most likely to be in a modern home: the scroll compressor.",
+      "visualDirection": "Exterior of a sealed black hermetic scroll compressor standing upright",
+      "caption": "1. Scroll",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Inside are two spirals nested into each other. The upper one is fixed. The lower one does not spin — it orbits, tracing a small circle while an anti-rotation coupling stops it turning on its own axis.",
+      "visualDirection": "The two involute scroll plates separated and displayed so the spiral geometry is unmistakable",
+      "caption": "One scroll fixed. One orbiting.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "That orbit traps pockets of vapour at the outer edge of the spirals and walks them inward. As each pocket travels toward the centre it gets continuously smaller, so the gas is compressed progressively rather than all at once.",
+      "visualDirection": "Sectioned scroll compressor showing the nested spirals, the eccentric crankshaft and the motor windings below",
+      "caption": "Pockets shrink as they travel inward.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "The compressed vapour leaves through a port at the very centre. There are no suction or discharge valves to flutter, and far fewer moving parts than a piston machine.",
+      "visualDirection": "On-screen text card: fewer moving parts, no valves, smooth continuous compression",
+      "caption": "No valves. Fewer parts.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "That is why scrolls run quietly and efficiently, and why they dominate residential and light commercial air conditioning today.",
+      "visualDirection": "Residential condensing unit in its outdoor setting, quiet and unremarkable",
+      "caption": "Quiet, efficient, everywhere.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Next, the mechanism that came first and is still working everywhere: the reciprocating compressor.",
+      "visualDirection": "Exterior of a semi-hermetic reciprocating compressor with bolted cylinder heads",
+      "caption": "2. Reciprocating",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "A crankshaft drives a piston up and down inside a cylinder. If that sounds like a car engine, it is the same hardware — but running the other way. An engine burns fuel to turn a crankshaft. A compressor turns a crankshaft to squeeze gas.",
+      "visualDirection": "Sectioned reciprocating compressor exposing the piston, connecting rod and crankshaft in the crankcase",
+      "caption": "An engine in reverse.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Above the piston sits a valve plate. On the down stroke a thin suction reed flexes open and lets vapour in. On the up stroke that reed seals, the gas is squeezed, and a discharge reed on the other side opens to let it out.",
+      "visualDirection": "Macro of a compressor valve plate showing the kidney-shaped ports and the thin steel suction and discharge reed valves",
+      "caption": "Two reeds. One up, one down.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Reciprocating compressors handle high pressure differences well and can be opened and repaired, which is why they are still standard in commercial refrigeration and in low-temperature work.",
+      "visualDirection": "On-screen text card: strong at high compression ratios, serviceable, still standard in refrigeration",
+      "caption": "Serviceable. Strong at high lift.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "Third: the rotary compressor — the one in your mini-split head and your window unit.",
+      "visualDirection": "Exterior of a small slim rotary compressor of the type used in ductless equipment, with its accumulator alongside",
+      "caption": "3. Rotary",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "A thick roller sits on an off-centre shaft inside a round cylinder. As the shaft turns, the roller rolls around the cylinder wall, and a spring-loaded vane presses against it, dividing the crescent-shaped space into two chambers.",
+      "visualDirection": "Sectioned rotary compressor cylinder looked into from above, showing the eccentric roller and the spring-loaded sliding vane",
+      "caption": "A roller, and one sliding vane.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "One chamber is filling while the other is being squeezed shut. It is compact, it has very few parts, and it packs a lot of capacity into a small can — which is exactly what ductless equipment needs.",
+      "visualDirection": "Extreme macro of the contact line where the vane tip presses against the rolling piston",
+      "caption": "Compact. Few parts.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Fourth: the screw compressor. Here we move up into serious commercial tonnage.",
+      "visualDirection": "Large industrial twin-screw compressor on its steel skid with a coupled motor",
+      "caption": "4. Screw",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Two helical rotors mesh together inside a figure-eight bore. One has thick convex lobes, the other has matching concave flutes, and they turn in opposite directions.",
+      "visualDirection": "Sectioned screw compressor showing the two meshing helical rotors, their bearings and the capacity slide valve",
+      "caption": "Two rotors, meshing.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Vapour is caught in the space between a lobe and a flute at the suction end. As the rotors turn, that pocket is carried along the length of the rotors and the space it occupies shrinks continuously until it is pushed out the discharge end.",
+      "visualDirection": "Extreme macro of the sealing line where a male rotor lobe sits inside a female rotor flute",
+      "caption": "The pocket shrinks along the rotor.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "There are no valves and no reversals of direction, so a screw runs smoothly and continuously — and it can hold a steady output under load in a way a piston machine cannot.",
+      "visualDirection": "Diagram of a screw compressor rotor pair showing the pocket shrinking from suction to discharge",
+      "caption": "Continuous. No valves.",
+      "kind": "diagram_graphic"
+    },
+    {
+      "narration": "Fifth, and different in kind from all of the others: the centrifugal compressor.",
+      "visualDirection": "Centrifugal chiller compressor mounted on its vessel in a mechanical room, volute and motor barrel visible",
+      "caption": "5. Centrifugal",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "The first four are positive displacement machines: they trap a volume of gas and physically make that volume smaller. A centrifugal does not do that at all.",
+      "visualDirection": "On-screen text card contrasting positive displacement with dynamic compression",
+      "caption": "Positive displacement vs dynamic.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "It spins an impeller at very high speed and flings the refrigerant outward. That gives the vapour velocity — speed, not pressure.",
+      "visualDirection": "Macro of a polished centrifugal impeller tilted so the curved backswept vanes are looked into",
+      "caption": "The impeller adds velocity.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "The pressure appears in the next step. The fast-moving vapour leaves the impeller into a widening passage, and as that passage opens out the refrigerant slows down — and its velocity converts into pressure.",
+      "visualDirection": "Sectioned centrifugal compressor showing the impeller, the diffuser passage and the spiral volute wrapping around it",
+      "caption": "Velocity converts to pressure.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "That approach only makes sense at large volumes, which is why centrifugals live in big water-cooled chillers moving hundreds of tons of cooling under an office block or a hospital.",
+      "visualDirection": "Wide shot of a water-cooled centrifugal chiller plant with its stacked vessels and heavy insulated piping",
+      "caption": "Big buildings. Big tonnage.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Put them next to each other and the pattern is clear. The mechanism follows the duty.",
+      "visualDirection": "Bench comparison of the compressor families together, showing the progression in size and construction",
+      "caption": "The mechanism follows the duty.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Scroll and rotary for small, quiet, everyday loads. Reciprocating where pressure differences are large and service matters. Screw and centrifugal where the tonnage is measured in buildings, not rooms.",
+      "visualDirection": "On-screen text card summarising which compressor belongs to which duty",
+      "caption": "Small to large, quiet to heavy.",
+      "kind": "on_screen_text"
+    },
+    {
+      "narration": "One last thing to keep in proportion. For all of that, the compressor is still only one of four components in the circuit.",
+      "visualDirection": "Diagram of the full refrigeration cycle showing compressor, condenser, metering device and evaporator in the loop",
+      "caption": "One of four.",
+      "kind": "diagram_graphic"
+    },
+    {
+      "narration": "It raises the pressure. The condenser rejects the heat outdoors and turns the vapour to liquid. The metering device drops the pressure. The evaporator picks heat up indoors and boils that liquid back to vapour — and hands it to the compressor again.",
+      "visualDirection": "Close-up of a thermostatic expansion valve with its sensing bulb clamped to the suction line, frost forming past it",
+      "caption": "Compress. Reject. Meter. Absorb.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Once you understand what the compressor is actually doing, the rest of the refrigeration cycle becomes much easier to visualise.",
+      "visualDirection": "Closing on-screen text card restating the payoff",
+      "caption": "Now the rest of the cycle makes sense.",
+      "kind": "on_screen_text"
+    }
+  ],
+  "lineage": {
+    "researchArtifactId": null,
+    "formatDecisionArtifactId": null
+  },
+  "directorRationale": "Practice episode authored to validate the Studio editor end to end against the new HVAC photo library: one complete, editable film with a real mix of photography, text cards and diagram placeholders."
+}

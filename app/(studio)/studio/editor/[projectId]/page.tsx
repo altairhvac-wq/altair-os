@@ -6,6 +6,10 @@ import {
   DEMO_PROJECT_ID,
   loadDemoEpisode,
 } from "@/shared/lib/video-editor/demo-project";
+import {
+  PRACTICE_PROJECT_ID,
+  loadPracticeEpisode,
+} from "@/shared/lib/video-editor/practice-project";
 import { StudioProjectLoader } from "@/shared/components/video-editor/StudioProjectLoader";
 
 export const metadata: Metadata = {
@@ -51,10 +55,16 @@ export default async function StudioEditorPage({
     notFound();
   }
 
-  return (
-    <StudioProjectLoader
-      projectId={projectId}
-      demoEpisode={projectId === DEMO_PROJECT_ID ? loadDemoEpisode() : null}
-    />
-  );
+  // Two committed episodes resolve here, both for the same reason: their
+  // frames, audio and measured timings are in this repository, so the server
+  // can hand the editor a whole project. Anything else is a draft in the
+  // operator's browser and only the client loader can see it.
+  const committed =
+    projectId === DEMO_PROJECT_ID
+      ? loadDemoEpisode()
+      : projectId === PRACTICE_PROJECT_ID
+        ? loadPracticeEpisode()
+        : null;
+
+  return <StudioProjectLoader projectId={projectId} demoEpisode={committed} />;
 }
