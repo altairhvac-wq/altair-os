@@ -1,0 +1,823 @@
+{
+  "generatedAt": "2026-09-11T06:41:34.207Z",
+  "method": "visual acceptance review, every image opened",
+  "framesOpened": 216,
+  "libraryTotal": 229,
+  "reviewedCategories": 6,
+  "counts": {
+    "MISLABELED": 21,
+    "QUESTIONABLE": 40,
+    "REGENERATE": 37,
+    "KEEP": 7
+  },
+  "unflagged": 131,
+  "policy": {
+    "deleted": 0,
+    "note": "Nothing is deleted. REGENERATE clears `approved`; every verdict carries a suitability penalty.",
+    "penalties": {
+      "REGENERATE": 0.45,
+      "MISLABELED": 0.2,
+      "QUESTIONABLE": 0.15,
+      "KEEP": 0
+    }
+  },
+  "usedInPracticeEpisode": [
+    {
+      "assetId": "chill_004_centrifugal_compressor_exterior",
+      "classification": "MISLABELED",
+      "severity": "notable"
+    },
+    {
+      "assetId": "chill_005_centrifugal_cutaway_impeller_volute",
+      "classification": "KEEP",
+      "severity": "cosmetic"
+    },
+    {
+      "assetId": "chill_006_centrifugal_impeller_vanes_macro",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic"
+    },
+    {
+      "assetId": "chill_014_water_cooled_centrifugal_chiller_wide",
+      "classification": "MISLABELED",
+      "severity": "notable"
+    },
+    {
+      "assetId": "res_001_recip_compressor_exterior_sealed",
+      "classification": "MISLABELED",
+      "severity": "blocking"
+    },
+    {
+      "assetId": "res_002_recip_compressor_cutaway_piston_crank",
+      "classification": "MISLABELED",
+      "severity": "notable"
+    },
+    {
+      "assetId": "res_003_recip_valve_plate_reed_valves_macro",
+      "classification": "REGENERATE",
+      "severity": "notable"
+    },
+    {
+      "assetId": "res_006_scroll_set_pair_spirals_macro",
+      "classification": "MISLABELED",
+      "severity": "notable"
+    },
+    {
+      "assetId": "res_007_rotary_rolling_piston_cutaway",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic"
+    },
+    {
+      "assetId": "res_011_txv_sensing_bulb_equalizer",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic"
+    },
+    {
+      "assetId": "res_015_suction_accumulator_cutaway_standpipe",
+      "classification": "REGENERATE",
+      "severity": "blocking"
+    },
+    {
+      "assetId": "res_026_rolling_piston_vane_contact_macro",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic"
+    }
+  ],
+  "findings": [
+    {
+      "assetId": "boil_001_cast_iron_boiler_basement_exterior",
+      "category": "Boilers & Hydronics",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The manifest promises a wide, full-height establishing shot of a standing cast-iron gas boiler with draft hood, flue connector, supply and return, relief valve and gas cock. Delivered: a medium three-quarter of a small grey box appliance on two loose concrete blocks, cropped well short of full height, with NO draft hood — the galvanised vent connector lands directly on the flue collar, which is impossible on an atmospheric cast-iron boiler — and no identifiable relief valve. It also does not read as the same boiler as boil_013, which breaks the cold-open-to-jacket-off cut the scene direction is built around."
+    },
+    {
+      "assetId": "boil_003_near_boiler_piping_assembly_wide",
+      "category": "Boilers & Hydronics",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The circulator is an invented casting. The volute has a third flange facing down, bolted to what reads unmistakably as a plain cast-iron 90-degree pipe elbow, whose open end is capped by the motor can. It corresponds to no real circulator and at a pause reads as a pipe fitting with a motor stuck on it. The teaching point — air separator with the tank tee'd below and the pump downstream, pumping away — is correct and clearly legible, and at normal viewing size the pump reads fine."
+    },
+    {
+      "assetId": "boil_006_zone_valves_bank_manifold",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The middle actuator head levitates roughly an inch above its valve bonnet, unsupported, upright and perfectly level, with only its wires attached — a clear AI artefact rather than a deliberate exploded view. Separately the frame does not deliver its manifest row: no relay panel, no transformer, no circulator and no purge valves are present, and only three heads are visible (a fourth is a sliver at the frame edge) against the four claimed. Billed as a medium shot, delivered as a tight macro."
+    },
+    {
+      "assetId": "boil_007_radiant_manifold_flow_meters",
+      "category": "Boilers & Hydronics",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The supply (upper) manifold's six downward compression outlets all dead-end in mid-air, and the return (lower) manifold's six upward ports are empty as well; every one of the six PEX loops is connected to one manifold only. As an installed assembly it cannot circulate — a student pausing here sees a manifold pair with twelve unpiped ports. The flow-meter row itself is the cleanest in the set (tick marks and floats, no numerals), so a tighter crop on the meters would rescue the frame. Human call on whether to re-crop or reshoot."
+    },
+    {
+      "assetId": "boil_008_fill_valve_backflow_preventer",
+      "category": "Boilers & Hydronics",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The reduced-pressure backflow preventer's relief port is hard-piped straight into a copper drop leg — no air gap, no funnel, no visible break. That is a code-prohibited direct connection on an RPZ and the frame presents it as normal practice. Compounding it, boil_029 shows what is clearly the same assembly WITH a correct air-gap funnel, so the two frames contradict each other. Worth a human decision: defensible if relabelled as a dual-check, wrong as captioned."
+    },
+    {
+      "assetId": "boil_009_relief_valve_discharge_piping_macro",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Both named subjects are broken. The test lever is not pinned to anything that could lift the disc: it hangs free beside a coil spring sitting exposed on the outside of the body (a boiler relief valve's spring is enclosed under the bonnet), with a torn/melted brass artefact at the spring's base. The outlet is worse: a male NPT thread runs straight into a plain copper tube with no adapter, union or solder joint, threads left fully exposed. This is the library's relief-valve-and-discharge-piping teaching frame, so both faults land on the lesson."
+    },
+    {
+      "assetId": "boil_010_closely_spaced_tees_primary_secondary",
+      "category": "Boilers & Hydronics",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Manifest calls for a wide shot with \"two pairs of closely spaced tees, secondary circulators on each branch, and blank-faced pipe thermometers in the supplies and common return.\" Delivered: a tight close-up of ONE pair of tees carrying ONE circulator, with no thermometers anywhere. What it does show (a single closely-spaced-tee pair) is correct and usable, but the metadata will mis-cue an automated picker onto the primary-secondary-with-two-loops beat."
+    },
+    {
+      "assetId": "boil_011_air_separator_cutaway_float_vent",
+      "category": "Boilers & Hydronics",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The cutaway body, coalescing mesh and sectioned float vent are excellent and match the filename. But the manifest also promises \"the magnet sleeve furred with iron particles and sludge above the blowdown valve\" — there is no magnet, no sludge and no blowdown valve in the frame; the bottom is a clean bare male thread. Do not let a picker select this for the magnetic dirt-separation beat."
+    },
+    {
+      "assetId": "boil_013_cast_iron_jacket_off_burner_tray",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The five brass orifice spuds are threaded into the TOP of the gas manifold and point straight up into open air, while the burner venturi bell mouths sit below and forward of the manifold facing a different direction entirely. No gas could reach any burner. The section block, tie rods and jacket panels are excellent, but the gas manifold and spud orifices are named teaching subjects in the caption and the burner tray occupies the lower half of the frame."
+    },
+    {
+      "assetId": "boil_016_probe_low_water_cutoff_sectioned",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Raised, clearly character-shaped garbled lettering runs the full length of the black control module's right-hand face — a nonsense glyph string, legible as lettering at full resolution. The library is specified to contain no legible text anywhere. The sectioned probe, ceramic insulator and scaled tip are otherwise the best LWCO teaching content in the set, so a tight re-crop that loses the module's side face would also rescue it."
+    },
+    {
+      "assetId": "boil_017_mod_con_sealed_exterior_concentric_vent",
+      "category": "Boilers & Hydronics",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Small white label-shaped marks sit around the two control buttons on the black bezel, and another at the panel's lower right. They do not resolve into characters even at full resolution, but they are text-shaped and sit exactly where printed labels go. The display itself is correctly blank. Worth a human look at 100% before ship, given the no-text spec."
+    },
+    {
+      "assetId": "boil_031_diaphragm_tank_vs_steel_compression_tank",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The sectioned blue diaphragm tank cannot exist. Its system connection (threaded nipple on top) and its Schrader air valve (upper-right shoulder) both open into the chamber ABOVE the diaphragm; the chamber below the diaphragm has no connection at all. As drawn you would be charging air into the water side, and the sealed cushion would have no valve. This is the frame that teaches diaphragm-tank anatomy, so the error teaches the wrong thing. The steel compression tank half is fine, though it stands on welded legs rather than hung the way one is actually installed."
+    },
+    {
+      "assetId": "boil_032_zone_valve_head_and_end_switch_cutaway",
+      "category": "Boilers & Hydronics",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Faint raised moulded lettering runs vertically on the manual-opener housing at the left of the frame. Considerably less legible than boil_016's but the same class of defect — it reads as characters at 3x. Everything else in this cutaway (motor, gear train, return spring, end switch, terminal block, sectioned body) is clean and well drawn."
+    },
+    {
+      "assetId": "boil_033_balancing_radiant_loop_flow_meter",
+      "category": "Boilers & Hydronics",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Both gloved hands are malformed. The upper hand is a mitten: no knuckles, no finger separation, just two oversized fused digits, and the one wrapping the manifold is anatomically far too long and thick. The lower hand pinches the hex key between two undifferentiated lobes with no opposed thumb. Hands are the entire subject of this in_use frame, and the defect is obvious the moment anyone pauses on it."
+    },
+    {
+      "assetId": "boil_034_cast_iron_radiator_valve_and_air_vent",
+      "category": "Boilers & Hydronics",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Description says \"in a finished room\" and places the air vent \"high on the far end column\"; the frame is shot against the library's bare concrete mechanical-room wall and floor, and the vent sits at the top of the SAME end column as the supply valve — the one place on a radiator you would not put it, since air collects away from the supply. Also billed as a closeup on the valve and vent but delivered as a full-radiator view with both at the extreme frame edge."
+    },
+    {
+      "assetId": "chill_004_centrifugal_compressor_exterior",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "No volute anywhere in frame, though the description explicitly names 'the cast volute housing.' The machine is a horizontal barrel with a large bolted round end cover, a constant-section elbow up to a top flange, a separate smooth motor barrel, and a prominent oil separator vessel with copper oil lines and brass fittings - the classic semi-hermetic screw package silhouette. Nothing here reads as centrifugal compression."
+    },
+    {
+      "assetId": "chill_005_centrifugal_cutaway_impeller_volute",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Excellent frame, no defects found. Metadata gap only: the 'gloved hand for scale' named in the description is absent, and nothing else in frame establishes scale for a machine whose size is part of the lesson."
+    },
+    {
+      "assetId": "chill_006_centrifugal_impeller_vanes_macro",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The wheel is a flat-backed two-dimensional backswept impeller with a plain bore and no inducer - the vanes are purely radial and there is no axial gas-entry eye. That contradicts chill_005's cutaway, which correctly shows a three-dimensional inducered wheel with alternating splitter blades, supposedly the same part. The absence of an inducer is the main thing distinguishing a compressor wheel from a pump wheel. The frame is otherwise clean and beautifully lit."
+    },
+    {
+      "assetId": "chill_007_mechanical_room_pumps_wide",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Two end-suction pump casings - each with its own discharge riser and butterfly valve going up - share a single motor at the far end of the line. The near pump has no driver at all. Worse, the drive train contains two red rubber pipe-type flexible connectors (identical to the correct one on the suction), one between the two casings and one between the second casing and the motor, where rigid shaft couplings belong. This is the establishing wide for the whole plant-hydronics topic."
+    },
+    {
+      "assetId": "chill_008_rooftop_unit_exterior_curb",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Strong establishing shot, no defects found. The only gap is metadata: the 'exterior disconnect box' named in the description is not visible anywhere on the cabinet."
+    },
+    {
+      "assetId": "chill_009_rooftop_unit_panels_open_compartments",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The description promises five elements in one frame; two are missing or wrong. There is no economizer/mixing section with dampers anywhere in the cabinet (compartments are compressors, blower, filters). The only coil is a narrow slab of bare return bends sitting outboard of the filter rack - i.e. upstream of the filters if air enters that end, which would be backwards - and it is far too shallow to read as the evaporator coil."
+    },
+    {
+      "assetId": "chill_011_cooling_tower_exterior_roof",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Strong establishing wide. Metadata gaps only: no 'faint plume above the stack,' and the condenser water piping runs horizontally along the roof deck rather than as the 'risers climbing to it' the subject describes."
+    },
+    {
+      "assetId": "chill_014_water_cooled_centrifugal_chiller_wide",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "One chiller is in frame, not 'two water-cooled centrifugal chillers side by side in a central plant,' and it is a normal eye-level three-quarter view, not the 'wide low-angle aisle shot' the description promises - so the plant-scale beat the metadata sells does not exist here. The compressor package on top (finned motor barrel, bolted housing, horizontal oil separator, brass oil piping) also reads as a screw package rather than a centrifugal."
+    },
+    {
+      "assetId": "chill_016_vfd_cabinet_open_drive_module",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Garbled pseudo-lettering on the door keypad: the buttons carry letterform shapes that read as 'run', 'ESC' and a two-line word, none resolving to real text. The copper lugs and cable ferrules also carry illegible stamped characters. The library is specified to contain no legible text at all, and invented garbled words are the worst version of a violation. Minor: the 'blank yellow warning placard' named in the description is absent."
+    },
+    {
+      "assetId": "chill_017_bas_control_cabinet_din_rail",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The DIN-rail I/O module faces carry vertical printed pseudo-labels and the green terminal blocks carry small printed marks on each pole. None of it resolves into readable characters, but it is unmistakably text-shaped and the library spec allows no text anywhere. Flagging for a human call on whether illegible label-smudge counts."
+    },
+    {
+      "assetId": "chill_018_butterfly_valve_strainer_chilled_water",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Neither named valve is in the picture. The single valve is a handwheel-operated rising-stem gate/globe valve with a bolted bonnet and gland - not 'a run of lug-body butterfly isolation valves.' There is no bronze circuit-setter balancing valve, no memory stop and no pair of P/T ports anywhere. What is actually shown (gate valve, vent cock, Y-strainer, drip pan, sweating uninsulated fittings) is well built and useful, but an automated picker asked for a butterfly valve or a balancing valve will pull this and be wrong on both."
+    },
+    {
+      "assetId": "chill_019_vav_box_damper_reheat_coil",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The two clear sensing tubes from the multi-point flow ring run down and dead-end on the floor of the box, connected to nothing - there is no VAV controller or transducer for them to land on, and the flow ring is the named teaching element. Separately, two water lines (the reheat coil return via an insulated section, and the control-valve outlet) both elbow into the blank side panel of a stainless electrical enclosure hanging off the casing, supported by nothing but those pipes. Water plumbed into a junction box is both impossible and reads as unsafe. Metadata also calls this a 'cutaway' / 'sectioned VAV terminal unit on a stand'; it is an installed hanging box with one access panel open."
+    },
+    {
+      "assetId": "chill_020_rtu_economizer_damper_actuator",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Genuinely good damper detail - actuator with manual-release lever, jackshaft, crank arms, interlocking push rod to the return section, blade edge seals, OA sensor. But it is described as the 'economizer section of an RTU' and it is a bare damper assembly standing on a concrete floor, not installed in a unit."
+    },
+    {
+      "assetId": "chill_021_rtu_blower_belt_tension_check",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Both gloved hands are malformed. The upper hand is a smooth mitten with a single grossly elongated, unsegmented digit roughly twice normal finger length curving down onto the belt, with the remaining fingers fused into one undifferentiated mass and no knuckle line. The lower hand has no finger separation at all - a thumb lobe and one rounded blob. Hands are the entire subject of this in_use frame and viewers read hands first."
+    },
+    {
+      "assetId": "chill_025_ahu_fan_array_bulkhead",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "These are axial/propeller fans - conical spinner hub, pitched flat blades, TEFC motor barrel mounted behind on a spider plate, flex conduit to a junction box - not the 'direct-drive plenum fans with inlet cones' the metadata names. A wall of propeller fans cannot develop AHU static pressure, so an instructor narrating 'fan wall of plenum fans' over this is teaching the wrong machine. Separately the description says six fans; there are five, the sixth cell holding a closed backdraft damper panel."
+    },
+    {
+      "assetId": "chill_026_ahu_mixing_box_freezestat_element",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The element serpentined across the coil face is drawn as roughly half-inch copper tubing with properly swept U-bends, brass P-clamps on a steel standoff rail, and grey union/compression fittings mid-run. A freezestat capillary is a hair-thin continuous tube with no fittings, held by small clips. At this gauge it reads to a student as a second refrigerant circuit bolted to the outside of a coil rather than a sensing element - and the capillary is the thing the frame is named for. (The freezestat body with its manual-reset button and the mixing dampers are both correct and well shot.)"
+    },
+    {
+      "assetId": "chill_028_chiller_dx_evaporator_barrel_cutaway",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The water-side 'baffle plates' are drawn as full circular discs meeting the shell wall all around, pierced only by tube holes. As drawn they would block shell-side water flow entirely; real segmental baffles have a cut segment to force crossflow. Everything else in this cutaway (tube bundle, tube sheet, bolted head, insulated shell) is excellent, so this is a one-element fix rather than a reshoot."
+    },
+    {
+      "assetId": "chill_032_screw_rotors_beside_centrifugal_impeller",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Both 'screw rotors' carry the same deep-concave female flute profile with knife-thin lobe crests. There is no convex-lobed male rotor, so the male/female pair this frame exists to teach is simply absent, and the two parts lie parallel rather than meshed (the description says 'a meshed pair'). The impeller is worse: several small stub vanes float mid-passage, unattached to either hub or rim and at inconsistent heights and angles, and the wheel is an open keyed-bore pump-style impeller with no inducer and no gas-entry eye. This is the one frame in the category whose entire job is 'screw compression vs centrifugal compression side by side,' and it gets both halves wrong."
+    },
+    {
+      "assetId": "chill_034_low_pressure_purge_unit_closeup",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The insulated purge return line runs right along the base and terminates inside a welded triangular structural gusset bolted to the frame - no nozzle, flange, valve or shell penetration is visible there, and the shell surface beyond the gusset is unbroken. Small and in shadow at the frame edge, so low confidence, but it matches the 'pipe into nothing' pattern seen in 019, 039 and 034's neighbours."
+    },
+    {
+      "assetId": "chill_036_drift_eliminator_blades_macro",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "The blade profile and droplets are correct. Two nits: the subject line says 'at the tower's air exit' but the pack is lying loose on a concrete slab against a concrete wall, and a stray brass valve body with a copper stub intrudes at frame left with no relation to the subject."
+    },
+    {
+      "assetId": "chill_037_tower_cold_basin_strainer_and_makeup",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Two issues. The makeup float valve body carries raised cast lettering of roughly five or six garbled characters - invented brand marking, against the no-text spec. Separately, the brass lever-handle valve that the description calls the bleed line discharges a clean stream straight back down into the basin rather than to drain or into the overflow standpipe, which would make a blowdown line pointless. Worth a human call on whether that dribble is meant to read as makeup instead."
+    },
+    {
+      "assetId": "chill_039_end_suction_pump_with_gauges",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The pump is not connected to its discharge piping. The volute's top discharge nozzle is closed off with a bolted blind flange carrying only a small brass air vent, while the discharge riser (braided flex connector, then gate valve) springs from the top of the coupling-guard housing between the pump and the motor. The discharge gauge's pigtail rises from that same phantom horizontal pipe. Minor: described as sitting on an 'inertia base' but it is a steel baseplate grouted to a concrete plinth with no isolators."
+    },
+    {
+      "assetId": "chill_043_bas_ddc_cabinet_with_technician",
+      "category": "Chillers & Commercial HVAC",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The gloved hand on the screwdriver is a lumpy mitten - digits fused with no clear count, an unexplained extra rounded lobe below the thumb with its own highlight and shadow, and the palm never closes around the handle, which sits in a gap rather than in a grip. Also a metadata mismatch: the description says 'gloved hands' but only one hand is gloved; the other is bare on the laptop."
+    },
+    {
+      "assetId": "ctrl_008_condensate_float_switch_drain_pan",
+      "category": "Controls",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The description follows 'the condensate path from the pan outlet through a deep properly formed trap to the float switch in the secondary pan below,' and the direction says to trace pan, outlet, trap, then float. The frame contains only the auxiliary pan with a rim-clipped float switch and a corroded drain opening - no primary pan outlet, no drain line and no trap anywhere. Two of the three named subjects are absent."
+    },
+    {
+      "assetId": "ctrl_009_zone_control_panel_open_terminals",
+      "category": "Controls",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Two problems. (1) Every one of the eleven relay bodies carries garbled pseudo-lettering - distinct nonsense character strings, clearly readable as text at a 3x crop and this is a tight board close-up the edit is meant to push into. The library spec permits no legible or garbled lettering anywhere. (2) All twelve zone LEDs are clear and unlit. The description says 'some zone LEDs lit and some dark' and the scene direction says the uneven lighting is the whole point of the frame, so the shot cannot do the job it was made for."
+    },
+    {
+      "assetId": "ctrl_010_zone_damper_actuator_duct_cutaway",
+      "category": "Controls",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Only the duct is cut away. The description promises a sectioned damper 'showing the blade mid-rotation, the gear train, the shaft coupling, the spring return that opens the blade on power loss and the manual override lever.' The actuator is an unopened sealed grey box - no gear train, no coupling, no spring return is visible; the override lever is the only listed internal present. A picker looking for spring-return footage will choose this and get nothing. The blade-and-shaft geometry also reads ambiguously: the shaft projects nearly parallel to the duct axis rather than clearly across the diameter."
+    },
+    {
+      "assetId": "ctrl_012_limit_switch_bimetal_disc_sectioned",
+      "category": "Controls",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The picture is a bench pair - one intact snap disc and one sectioned half - lying on a concrete surface. The manifest subject and description both place it 'mounted through a furnace heat-exchanger compartment wall with its sensing disc out in the circulating airstream.' There is no furnace, no compartment wall and no airstream in the frame. The image itself is excellent; the metadata is what needs fixing before an automated picker trusts it for an in-situ beat."
+    },
+    {
+      "assetId": "ctrl_013_sealed_furnace_closet_doors_closed_wide",
+      "category": "Controls",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Not a functioning installation. The furnace top is a flat closed panel with only the galvanized vent pipe rising from it - there is no supply plenum and no return duct anywhere in frame, so the vent occupies the position the supply outlet must be in. A tech audience will read that immediately in a shot the direction says to hold wide. Second contradiction: a single-wall galvanized flue (80% appliance) is paired with a white PVC condensate line running along the floor. Minor: a garbled glyph is stamped on the yellow gas-valve handle, and the handle sits perpendicular to the pipe, i.e. shut."
+    },
+    {
+      "assetId": "ctrl_015_classic_thermostat_bimetal_coil_and_anticipator_cutaway",
+      "category": "Controls",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "The mechanism the frame exists to teach is wrong. The bimetal coil's outer end terminates as a free tang that bends down and stops in mid-air near a terminal screw - it is not linked to the mercury bulb in any way. The bulb sits in a separate channel cradle rigidly anchored to the case, so the coil cannot tip it. The bulb itself is a glass vial with what reads as an open, threaded mouth, a single loose ball inside and no internal electrodes; the copper leads are soldered to the outside of the glass. Narrating 'the coil tips the bulb' over this image teaches the wrong thing."
+    },
+    {
+      "assetId": "ctrl_016_thermostat_subbase_terminals_hands_landing_wire_in_use",
+      "category": "Controls",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Malformed tool and bad hand. The stripped copper conductor in the upper hand does not end as a conductor - it morphs into a chrome flat-blade screwdriver tip pointed at the terminal, so wire and tool are one fused object. A second flat-blade driver comes in from below with a visibly kinked shank, and it is being used on Phillips-head terminal screws. The lower hand is a smooth fused mass: an index finger and thumb are readable, the remaining fingers have no separation and the grip on the driver is impossible. There is also a detached rounded grey shape floating behind the hand. Confirmed at 4x crop."
+    },
+    {
+      "assetId": "ctrl_019_pressure_switch_port_condensate_blocked_macro",
+      "category": "Controls",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The trapped condensate renders as a mirror-chrome sphere sitting in the hose bore - it reads as a ball bearing or a blob of mercury, not as water. The dark acidic residue around it is convincing, but this is the failure beat of the whole draft-proving sequence and the fluid has to read as water on a held macro with no narration over the image. Same rendering tic as the 'mercury' in ctrl_015. Human call on whether it survives at cut speed."
+    },
+    {
+      "assetId": "ctrl_021_flame_signal_microamp_test_meter_in_use",
+      "category": "Controls",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The meter display is completely blank. That is consistent with the library-wide no-numerals rule, but this frame's own direction calls it 'the proof shot of the episode - an invisible claim turned into a number on a display,' so the edit must composite a reading onto it and that needs flagging in the metadata. Secondary: at 3x the flame rod's shank appears to bolt metal-to-metal into the grounded brass mounting bracket with its white ceramic insulator sitting alongside rather than on the rod, which would short the sensor to chassis. The series clip-up itself (red on rod terminal, black on the disconnected sensor lead) is correct."
+    },
+    {
+      "assetId": "ctrl_026_refrigerant_high_and_low_pressure_switch_pair_closeup",
+      "category": "Controls",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The compressor is a squat welded dome hermetic of the domestic refrigeration type, not the tall scroll shell you find in the residential heat pump cabinet established two shots earlier by ctrl_023 and ctrl_024. Cut in sequence it will read as a different machine. Also, the high-pressure switch is threaded onto a port on the compressor shell top rather than onto the discharge line as the subject line states; the low-pressure switch on the suction line is correct."
+    },
+    {
+      "assetId": "ctrl_027_zone_trunk_with_motorized_dampers_overhead",
+      "category": "Controls",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Image is good and technically sound - three motorized dampers with correctly diametral shafts, a proper counterweighted barometric bypass, wiring bundled back. Two metadata mismatches worth correcting: the setting is a bare concrete mechanical space, not the 'attic' the subject line names, and the camera is a high three-quarter angle, not the 'straight-down overhead' the description and direction both specify."
+    },
+    {
+      "assetId": "ctrl_028_outdoor_air_and_coil_thermistors_with_meter_comparison",
+      "category": "Controls",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The meter is connected to nothing. Both alligator clips are clamped onto an unrelated white twin-lead cable lying on the bench that runs out of frame; neither thermistor's leads reach the clips - the left probe's black/white pair goes up to its own connector and the right probe's tan cable to its own. The description claims 'an ohmmeter clipped to one' and the direction says the meter and ice bath make resistance-versus-temperature testable on camera; as shot, no measurement is being made. Also a small stamped pseudo-character on the left sensor's stainless bracket."
+    },
+    {
+      "assetId": "ctrl_029_electric_heat_sequencer_bimetal_stack_cutaway",
+      "category": "Controls",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The two contact sets are mirror-symmetric with identical gaps. The description says 'staggered contact sets' and the staggering is precisely what makes this a sequencer rather than a relay - it is the reason the loads come on at different times. The heater-beside-the-blades relationship reads well; the delay mechanism does not."
+    },
+    {
+      "assetId": "elec_002_capacitor_bulged_vs_good_pair",
+      "category": "Electrical",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Subject and description both specify THREE capacitors in a row under a straightedge — flat and healthy, domed and bulging, split-seam vented. The frame contains two: healthy and split/vented. The missing middle state (domed but not yet vented) is the one a tech actually has to judge in the field, so the frame cannot carry the beat its metadata sells. Secondary: the failed can is a 2-terminal single and the healthy one is a 3-terminal dual, so the comparison is not like-for-like."
+    },
+    {
+      "assetId": "elec_003_contactor_healthy_contacts_macro",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The two visible silver contacts are flat plates, not the domed 'contact buttons' the description names, and the grey bar lying across them appears to bridge the two visible poles rather than the line and load side of a single pole — read literally that is L1 tied to L2. It is also a different contactor design from elec_001, which weakens the pitted-vs-healthy pairing the two frames are built for."
+    },
+    {
+      "assetId": "elec_005_contactor_welded_contacts_failure",
+      "category": "Electrical",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Two problems. (1) shot_type is 'comparison' and the description promises the welded contactor 'beside a new one, covers removed on both' — the frame contains one object only. (2) The damage has gone past the teaching point: the centre is a molten slag blob, so you cannot identify contacts at all, let alone contacts fused closed. It reads as generic melted geometry rather than 'the contactor never dropped out'."
+    },
+    {
+      "assetId": "elec_008_hard_start_kit_relay_capacitor",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "shot_type is 'overhead' but this is a low three-quarter angle, which will break any automated layout that groups overhead flat-lays. The start capacitor's top is also irregular — the blades sit on a small recessed plate with one leaning, and there is no vent. The bleed resistor across the relay terminals is correct factory practice, so that is fine."
+    },
+    {
+      "assetId": "elec_009_disconnect_pullout_removed_open",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The manifest says 'a GLOVED hand pulling the U-shaped disconnect block'; the hand in frame is bare. It is the only bare hand in the electrical set (007, 017, 025, 034, 036, 042 are all gloved) and it is on the one frame where the library should be modelling lock-out discipline. The hand geometry is also soft — the mass between thumb and the single nailed fingertip reads as more knuckles than it should."
+    },
+    {
+      "assetId": "elec_012_furnace_control_board_relays",
+      "category": "Electrical",
+      "classification": "MISLABELED",
+      "severity": "blocking",
+      "issue": "Metadata says 'mounted in the blower compartment with all harnesses landed' and calls out a blade fuse. The picture is a bare green PCB lying on concrete with ZERO wires connected to anything, and the fuse on it is a glass cartridge, not a blade fuse. The board also lacks the line-voltage and transformer terminations a furnace integrated control carries. A picker asked for 'control board in the furnace' will return a bench board, and the sequence's blade-fuse beat (elec_031) has no matching wide."
+    },
+    {
+      "assetId": "elec_013_thermostat_cable_eight_conductor_macro",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Conductor count and colours are exactly right (R/W/Y/G/B/O/Br/Bk), but the conductors read as heavy solid building wire relative to the jacket rather than 18 AWG thermostat wire, which undercuts the scale. The tool at the right edge is cropped into two dark jaw fragments that do not obviously belong to one plier or stripper — worth an eye before it goes on screen."
+    },
+    {
+      "assetId": "elec_016_contactor_coil_and_armature_cutaway",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The description's copper shading ring 'set into the pole face' is not present — and the shading ring is the specific thing this cutaway exists to show (it is why the coil does not buzz). Separately, worth a human eye: the coil and E-core sit BELOW the armature while the moving contacts sit above it, so a downward magnetic pull would appear to open the contacts rather than close them. Otherwise the coil, laminations, air gap and return spring all read well."
+    },
+    {
+      "assetId": "elec_018_three_pole_contactor_rooftop_medium",
+      "category": "Electrical",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "Subject and description both place this 'in the control section of a three-phase rooftop unit' / 'commercial rooftop control section'. The picture is a standalone galvanized junction box sitting on a concrete floor — no RTU, no rooftop, no surrounding control section. The contactor itself is correct (three line, three load, coil circuit), so only the context claim fails, but it is the claim a picker would select on."
+    },
+    {
+      "assetId": "elec_019_dual_run_capacitor_mounted_medium",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Description says 'three terminal groups wired out to the fan, the compressor and the contactor'. Zoomed in, the can top carries only two grommeted groups — a left oval with two blades and a right oval with three. A dual run capacitor needs three. Same wrong part count as elec_020 and elec_039."
+    },
+    {
+      "assetId": "elec_020_run_capacitor_sectioned_film_windings",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Called a DUAL run capacitor cutaway, but the can has only two terminal groups and each wound roll twists up to its own terminal. There is no shared common: no third terminal and no second connection off either roll. The whole reason to section a dual cap is to show HERM and FAN sharing C, and that is exactly what is missing. elec_006 shows three groups correctly, so the two frames contradict each other."
+    },
+    {
+      "assetId": "elec_022_potential_relay_terminal_numbers_closeup",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The filename promises terminal NUMBERS, which the library's no-text rule makes impossible to deliver, and the description concedes a 'blank molded label face'. What is left is an anonymous black brick with three spades on concrete — nothing identifies it as a potential relay rather than any other moulded component. Too generic to carry a cut, and the filename will mislead an automated picker looking for the 1/2/5 identification beat."
+    },
+    {
+      "assetId": "elec_025_hard_start_kit_wired_into_condenser_in_use",
+      "category": "Electrical",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Legible-class text violation. The black conductor at upper left carries white printed jacket legend, in focus, reading as garbled pseudo-lettering (roughly 'B FRIK 05 sK', partly mirrored). The library is specified to contain no legible text anywhere, and this is both a spec breach and a visible AI tell in an otherwise usable in-use frame."
+    },
+    {
+      "assetId": "elec_026_ptcr_device_vs_relay_kit_comparison",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The part standing in for the potential relay is a four-spade automotive-style cube (two copper, two brass, in two rows). A potential relay has three terminals. More damaging for a teaching sequence: it is a physically different part from the three-spade relay presented as the potential relay in elec_008, so the same component looks like two different devices across two frames of the same episode. The kit here also has no bleed resistor, which elec_008 shows fitted."
+    },
+    {
+      "assetId": "elec_028_fused_disconnect_cartridge_fuses_closeup",
+      "category": "Electrical",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Wired backwards. Both fuses run horizontally between the same two vertical pole blocks, and each block carries its line lug at the top and its load lug at the bottom. So each fuse bridges pole 1 to pole 2 (L1 to L2) while neither line lug is fused to its own load lug. In a real fusible switch the fuse sits in series with one leg — line clip above it, load clip below it. As drawn this is a dead short across the line, and it is the only frame in the category showing how a fused disconnect is built."
+    },
+    {
+      "assetId": "elec_029_hvac_double_pole_breaker_panel_overhead",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Plausible at a glance, does not hold up. Every branch breaker in the panel has no conductor landed at all, while the neutral bar is fully populated with whites and bare grounds. The bus stabs the two-pole breaker 'straddles' — named in the description — are not visible; it sits on black plastic. The interior geometry (two facing breaker columns up top, a sideways two-pole in the middle, four more at the bottom) does not resolve into a real load center bus layout."
+    },
+    {
+      "assetId": "elec_031_control_board_blade_fuse_macro",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The intact fuse and the blown fuse are different parts: the yellow one is larger and seated in proper board clips, the orange one is smaller and its blades go straight into solder pads with no clips, leaning at an angle. They could not share a footprint. Also, blade fuse colour encodes amperage and yellow is 20 A — the wrong rating cue for a 24 V control fuse, which is 3 A or 5 A. Since the no-text rule removes the printed rating, colour is the only cue left and it is misleading. The parted element itself reads beautifully."
+    },
+    {
+      "assetId": "elec_032_transformer_primary_taps_and_secondary_closeup",
+      "category": "Electrical",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The wire nut caps TWO primary leads together — the black common and the orange 208 tap — leaving only the red 240 tap loose. Correct practice, and what the description says ('three coloured primary tap leads with one capped off'), is to cap the UNUSED tap by itself and land common plus the used tap. As shown the transformer cannot be energised and the frame teaches the wrong capping habit in a sequence specifically about the 24-volt loop."
+    },
+    {
+      "assetId": "elec_033_forty_va_vs_seventy_five_va_transformer_comparison",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The smaller transformer has only three leads (red, blue, yellow). A control transformer needs a minimum of four — two primary, two secondary — and the larger unit beside it correctly has four. The size/lamination-stack comparison the frame is built on works well otherwise."
+    },
+    {
+      "assetId": "elec_035_compressor_terminal_box_cover_removed_closeup",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Description says 'landed push-on leads'; only two of the three terminals have a lead on them and the third stud is completely bare, which is not a state a wired compressor is ever in. The crimps are also red and blue PVC-insulated types — those are not used on compressor terminals because they melt; real ones are uninsulated with high-temp sleeving."
+    },
+    {
+      "assetId": "elec_036_ohming_compressor_windings_meter_in_use",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The short_description describes the winding-to-ground check — one probe on a terminal, the other 'on a scraped bare spot of the shell'. Zoomed in, both probes are on terminal pins (red in the upper-left tube, black on the lower-centre tube), which is a winding-to-winding reading. The ground/short-to-shell check the metadata names does not exist anywhere in the category. Terminal count is correct (three, triangular) — only the probe placement is wrong."
+    },
+    {
+      "assetId": "elec_039_burned_spade_terminal_vs_new_comparison",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The capacitor can in the background carries embossed letterforms on its top edge (reads roughly as 'N-W-S'), garbled and out of focus. Below the legibility threshold but it is the same class of breach as elec_025 and would be visible on a large display. The burned-vs-new connector comparison in the foreground is excellent and worth keeping if the can can be retouched."
+    },
+    {
+      "assetId": "elec_041_rodent_chewed_low_voltage_cable_macro",
+      "category": "Electrical",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Description promises 'two bared conductors resting against each other' — the short is the entire teaching point. Only one conductor is actually stripped to copper; the red beside it has intact insulation. Minor secondary: the jacket damage is a very regular honeycomb dimpling that reads more like foam texture than tooth marks."
+    },
+    {
+      "assetId": "res_001_recip_compressor_exterior_sealed",
+      "category": "Residential Equipment",
+      "classification": "MISLABELED",
+      "severity": "blocking",
+      "issue": "Filename and description promise a welded hermetic recip 'still sealed', shot low and tight on the weld seam, three-pin terminal and process stubs. The frame is a bolted commercial semi-hermetic in three-quarter bench view: two bolted cylinder-head covers, a bolted rectangular terminal box, a bolted round motor end cover, an oil sight glass, cast mounting feet and brass rotalock service valves. There is no weld seam, no fusite terminal cluster, no process stub, and it is not a residential machine. An automated picker trusting this row will use a commercial semi-hermetic to illustrate the sealed residential can."
+    },
+    {
+      "assetId": "res_002_recip_compressor_cutaway_piston_crank",
+      "category": "Residential Equipment",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "A well-made cutaway of the wrong compressor family and the opposite geometry. The description specifies a welded hermetic with a vertical crankshaft, the eccentric above the motor driving a horizontal piston, head at the outboard end of the bore and sump below the stator. The frame shows a bolted semi-hermetic with a horizontal crankshaft along the bottom, vertical cylinder bores with the valve deck on top, the motor stator on the same horizontal axis at the right end, and a crankcase sump with an oil pickup strainer. Same machine family as res_001, so the residential welded-hermetic recip beat has no correct imagery anywhere in the category."
+    },
+    {
+      "assetId": "res_003_recip_valve_plate_reed_valves_macro",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The valve plate has no gas ports. Both kidney-shaped reeds sit in blind machined pockets on the same top face with no holes through the plate beneath either of them, so nothing can pass. The description explicitly claims 'the ports' are visible. On a real plate the suction reed is on the underside opening into the cylinder and the discharge reed on top, and their shapes differ; here they are identical and co-planar. The brass retainer strip is riveted at its centre with its right end floating unanchored over a bolt hole. The piston beside it is fine."
+    },
+    {
+      "assetId": "res_006_scroll_set_pair_spirals_macro",
+      "category": "Residential Equipment",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The description promises an overhead macro of two MESHED scroll involutes with crescent-shaped gas pockets, tip seals along the wrap edges and the centre discharge port. The frame is the two scroll halves lying separated side by side at a three-quarter angle. Because they are not meshed there are no crescent pockets at all, no tip seal grooves are visible, and only the right-hand piece has a centre hole. The wraps are also shallow Archimedean spirals of under two turns rather than involutes. As a 'here are the two halves' shot it is fine; as filed it means the sequence has no frame showing the crescent gas pockets."
+    },
+    {
+      "assetId": "res_007_rotary_rolling_piston_cutaway",
+      "category": "Residential Equipment",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Mechanism reads correctly overall - roller offset in the bore creating the crescent, spring-loaded vane in its slot right beside the contact point, stator in oil below. Two soft spots: the shaft stub sits at the centre of the roller rather than on the bore axis, so the eccentric cam that should offset the roller is not depicted and the shaft ends up off the cylinder centreline; and the whole pump assembly floats above the stator with an unsupported void between them. Subtle enough that most viewers will not catch it."
+    },
+    {
+      "assetId": "res_011_txv_sensing_bulb_equalizer",
+      "category": "Residential Equipment",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The bulb strapped under two clamps to bare copper with the foam cut back is good practice and well shot, and the external equalizer taps the suction line downstream as claimed. But the capillary from the power head arcs down and disappears into the top edge of the pipe insulation without ever visibly reaching the bulb, and the bulb's near end is a closed dome with nothing attached. It may be tucking under the foam to the far end; at full resolution it reads as unconnected. Also the bulb is riding near 12 o'clock rather than 4 or 8 o'clock."
+    },
+    {
+      "assetId": "res_013_reversing_valve_solenoid_four_way",
+      "category": "Residential Equipment",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The picture is excellent and technically correct - flat elevation, one discharge stub up, three stubs down, pilot solenoid on the right end, pilot capillaries running the body - but it is a clean studio part shot on bare concrete against the studio wall. The subject line says 'in place inside the outdoor unit' and the description says 'inside a heat pump cabinet'. There is no cabinet, no coil and no surrounding components. Fix the metadata, not the frame."
+    },
+    {
+      "assetId": "res_015_suction_accumulator_cutaway_standpipe",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "The inverted-U standpipe is free-floating inside the shell and connects to nothing. The down-leg ends in the oil pool with its metering orifice (that detail is correct), but the other leg terminates in a blind capped stub in mid-shell. Both copper stubs pass through the shell wall near the top and open straight into the shell interior, so gas would go in the inlet and out the outlet without ever entering the U-tube. Forcing suction gas up over the standpipe so liquid drops out is the only mechanism this cutaway exists to teach, and it is not plumbed."
+    },
+    {
+      "assetId": "res_017_gas_furnace_panels_off_interior",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "The combustion train does not connect. The four burners fire vertically out of the top of the burner box into open cabinet space, and above them is a flat solid shelf with the clamshell heat exchanger resting on it - the clamshell has no burner inlet openings facing the burners, so the flue gas has nowhere to go. The brass manifold crosses in front of and below the venturi bells with no orifice spuds aligned to any burner axis. The igniter and sensor rods stand straight up out of the middle of the burner row, outside the flame rather than in it (the description claims the sensor is in the last flame). This is the establishing shot for the whole gas furnace episode, and its geometry directly contradicts res_018, which correctly shows burners firing horizontally into round heat-exchanger ports."
+    },
+    {
+      "assetId": "res_018_inshot_burners_blue_flame_macro",
+      "category": "Residential Equipment",
+      "classification": "KEEP",
+      "severity": "cosmetic",
+      "issue": "Strongest gas-side frame in the set and the mechanism is right - burners firing horizontally into the round heat-exchanger inlets. One small conflict with its own description: the flame sensor rod hooks into empty space above the second burner rather than being immersed in the end burner's flame, and the glowing hot surface igniter sits in the foreground alongside the row rather than in the first burner's flame. No action needed unless you narrate the sensor position over this shot."
+    },
+    {
+      "assetId": "res_023_refrigerant_circuit_laid_out_overhead",
+      "category": "Residential Equipment",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Loop order and flow direction are correct (compressor to condenser to metering device to evaporator to suction), which is the main job. Two things a human should rule on: the metering device is unmistakably a TXV - brass body, power head, feeder-tube distributor - but it has no sensing bulb and no external equalizer anywhere, so the valve as shown cannot modulate, and an instructor will get asked about it. Separately, shot_type and description both say flat overhead but the frame is a raised three-quarter view, which will trip any picker filtering on orientation."
+    },
+    {
+      "assetId": "res_026_rolling_piston_vane_contact_macro",
+      "category": "Residential Equipment",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "Beautiful oil-filmed surfaces, but almost unreadable as a subject - it needs the wide cutaway immediately before it to make any sense in a cut. The geometry at the vane also does not resolve: the cylinder bore relieves into wide V-notches on both sides of the vane slot instead of staying circular right up to the vane, so the 'crescent chambers' read as two triangular voids rather than a thin lune. Usable as a texture insert, questionable as a teaching frame."
+    },
+    {
+      "assetId": "res_028_gas_valve_manifold_orifice_macro",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The description promises a macro 'along the orifice axis' showing the brass orifice and the venturi bell it fires into. All three orifices on the manifold point outward toward the camera at roughly the same angle, while the single burner venturi bell sits well off to the right facing back along the manifold - perpendicular to every orifice and past the last one. No orifice is aimed into any venturi. The front orifice also appears threaded into the gas valve's outlet elbow rather than the manifold run, and the three orifices are spaced irregularly. The orifice-to-venturi relationship this frame exists to teach is not depicted."
+    },
+    {
+      "assetId": "res_032_reversing_valve_sectioned_slide_pilot",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The sectioned four-way valve only has three ports. Three copper stubs come off the bottom and the top wall of the body is shown in section as solid brass for its full length - the discharge port from the compressor is absent, so there is no way for high-pressure gas to enter the body. The slide, end pistons, bleed holes and both pilot capillary connections are all rendered correctly, which makes the missing fourth port the one thing wrong. res_013 shows the same valve externally with the correct one-up-three-down arrangement, so the section contradicts its own establishing shot."
+    },
+    {
+      "assetId": "res_040_psc_blower_assembly_pulled",
+      "category": "Residential Equipment",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Both hands are malformed and both are foreground. The left gloved hand supporting the blower housing is a fingerless mitten - a single thumb rides up over the inlet ring and the rest of the hand is one smooth featureless blob with no knuckles, no finger separations and no fingertips anywhere. The right arm comes in from frame right, runs bare forearm into a black glove cuff, and then simply ends: there is no palm and no fingers behind the speed leads at all. The steel cabinet rail also crosses in front of that wrist. This is the only hands-on-the-blower frame in the air-side sequence, and the bad hand sits dead centre-left where the eye lands first."
+    },
+    {
+      "assetId": "tool_003_vacuum_pump_connected_sight_glass",
+      "category": "Tools",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The manifest calls this a wide of the pump 'running on concrete beside an outdoor unit with a large-bore hose running up to a tee at the service valves'. There is no outdoor unit in the frame at all, the shot is a medium three-quarter product view against a bare wall, and the hose is a standard small-bore yellow charging hose running to a free-standing brass tee sitting unconnected on the floor. Hose bore is itself a teaching point in this evacuation episode. An automated picker asking for 'pump connected to the system' gets a pump connected to nothing."
+    },
+    {
+      "assetId": "tool_005_recovery_machine_cylinder_scale",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "Two separate problems. (1) Text spec violation: the machine's gauge dial carries legible garbled numerals - '00' at 12 o'clock, '35', '30', '10', '18', '60' - some mirrored. The library is specified to carry no numerals or words on dials. (2) Plumbing does not match the manifest: both hoses run from the machine to the SAME cylinder (blue to the cylinder's vapour valve, red to its liquid valve); there is no condensing unit anywhere in frame, so 'hoses from both system service ports into the machine inlet' is not depicted - as drawn it is a closed loop cylinder-to-cylinder. The machine also has no power cord while described as running."
+    },
+    {
+      "assetId": "tool_008_nitrogen_regulator_cylinder",
+      "category": "Tools",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Nitrogen is shown on a GREEN cylinder. In North America green is the oxygen colour and nitrogen bottles are black or grey - and this same library teaches oxy-fuel brazing a few frames later, so the association is actively risky. The same green bottle is reused in tool_024. Secondary: the small gauge sits on the cylinder inlet and the large one on the delivery side (usually the reverse or matched), and the delivery needle reads higher than the contents needle, opposite to the described 'contents in the thousands, delivery set low'. Dials are correctly blank with ticks only and the regulator body itself is sound."
+    },
+    {
+      "assetId": "tool_010_tubing_cutter_flaring_tools_overhead",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The flaring bar is malformed. At least four of its six holes are tapped with clearly visible screw threads - a flare bar's holes are smooth with a 45-degree chamfered lip, and threaded holes would shred the tube instead of forming a flare. The bar also has no clamping hardware: just two plain pins at the ends, no wing nuts or clamp screws, so the two halves could not grip a tube at all. Tubing cutter, swage punch, reamer and the clean/crushed tube ends are all fine."
+    },
+    {
+      "assetId": "tool_013_fin_comb_straightening_coil_hands",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The fin comb is a malformed tool: the tooth band is an island stranded in the middle of a blank paddle (real combs have teeth at the edge), there is a ghosted second row of teeth repeated below it, and a row of garbled glyph-like marks runs across the teeth. The tool is lying flat on the fin face rather than engaging between fins, and the promised straightened-behind/matted-ahead contrast is a frizzy patch off to the right, nowhere near the tool's path. The lower glove is also bad - two fused lobes with no knuckles, gripping nothing."
+    },
+    {
+      "assetId": "tool_014_manifold_hung_on_condenser_wide",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "Hoses are on the wrong lines. Magnified, the blue low-side hose lands on a brass tee fitted to the BARE copper liquid line, while the black-insulated suction line runs above it untouched; the red hose never reaches a port at all - it runs down the cabinet and off the bottom of the frame. The manifest specifies blue to the suction valve and red to the liquid port. In a superheat/subcooling episode this inverts the whole lesson. The composition (manifold hung on the corner, yellow centre hose coiled and capped) is otherwise exactly right."
+    },
+    {
+      "assetId": "tool_015_compound_gauge_pt_scale_macro",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "The gauge face is nothing but four concentric blue/white/green/orange rings and a bare needle - no tick marks, no pressure arc, no P/T rings, no datum. It reads as an archery target, not a compound gauge. The frame exists to teach reading the low-side gauge and there is nothing on the dial to read; it is also the most abstract image in the whole category. Re-shoot with a real compound scale (ticks and needle only, no numerals, per spec)."
+    },
+    {
+      "assetId": "tool_016_hose_depressor_meeting_schrader_core",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The single detail this frame exists to show is wrong. At 3x magnification the coupler's 'depressor pin' is a bent, hair-thin wispy filament hanging off a brass cone, not a machined pin. The coupler's bore is also smooth with only an O-ring - no female threads - while the port beneath it has coarse male threads, so the two could not mate. The composition and the Schrader core in the port below are both good; it is the contact moment that fails."
+    },
+    {
+      "assetId": "tool_017_digital_manifold_live_superheat_subcool",
+      "category": "Tools",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "Filename and subject both promise the live readout - suction and liquid pressure with calculated superheat and subcooling - and the screen is solid black. That is a consequence of the no-text rule, but this filename is the most misleading in the set for an automated picker. Everything physical is correct and well shot: both clamp thermistors placed properly, one on the insulated suction line and one on the bare liquid line. Human call on whether to keep it under a name that promises a reading it cannot show."
+    },
+    {
+      "assetId": "tool_018_sectioned_core_removal_tool",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "blocking",
+      "issue": "The cutaway shows an impossible flow path. The ball's bore faces the camera (perpendicular to the tool axis = closed) while the red handle lies parallel to the body (= open) - the valve contradicts its own handle. The extraction shaft comes through the packing nut and stops dead at the solid face of the ball, and the bore entering from the brass coupler on the left dead-ends on that same face, so no core could ever be passed out. The brass side port below the ball is a blind boss that intersects nothing. A cutaway's only job is to be correct about the internal path, and this one is not."
+    },
+    {
+      "assetId": "tool_020_vacuum_decay_test_setup_overhead",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The decay test is set up wrong twice over. The red ball-valve handle lies parallel to the brass run, which is OPEN - the frame is captioned 'isolation valve closed'. And the tee carrying the micron gauge sits between the pump and the ball valve, so closing that valve would isolate the gauge with the pump instead of with the system - the exact opposite of the rule tool_004 is used to teach ('well away from the pump'). A student copying this layout would pull a false decay result. Flat-lay, watch (correctly blank-dialled) and pump are otherwise clean."
+    },
+    {
+      "assetId": "tool_022_recovery_cylinder_collar_and_scale",
+      "category": "Tools",
+      "classification": "MISLABELED",
+      "severity": "notable",
+      "issue": "The named subject is the collar stamps - DOT marking, tare weight, water capacity - and the steel collar is completely blank, so the frame cannot serve the cue it is filed under. The 'scale' is also reduced to a small black display module lying on the concrete; the cylinder is not sitting on a platform. What IS right is good: correct grey body/yellow shoulder DOT recovery colours, blue vapour and red liquid valves, chained caps. Either rename it (cylinder and valve identification) or re-shoot with the scale in frame."
+    },
+    {
+      "assetId": "tool_023_charging_scale_metering_liquid_charge",
+      "category": "Tools",
+      "classification": "REGENERATE",
+      "severity": "notable",
+      "issue": "The manifold is broken as an instrument: both gauge faces are blank white discs with a thin coloured arc and NO needle, NO pivot and NO tick marks - the spec allows ticks and a needle, these have neither. Colour code is also wrong: both hand wheels are blue, including the high-side wheel under the red gauge, which is the one the gloved hand is on. Hookup is jumbled - the yellow hose is on the right/high-side port, the cylinder's blue hose is on the centre port, and the low-side port sits open to atmosphere, which would vent the charge. Everything else (inverted cylinder in its stand, valve guard down, correct R-22 light-green body) is right, so this is worth re-shooting rather than discarding the setup."
+    },
+    {
+      "assetId": "tool_027_capacitance_test_on_dual_run_cap",
+      "category": "Tools",
+      "classification": "QUESTIONABLE",
+      "severity": "notable",
+      "issue": "The probes sit on the two OUTER terminals of the dual run cap and skip the middle post. Read literally that is a HERM-to-FAN measurement - the two sections in series - not the C-to-HERM test the subject describes, and because the can carries no markings at all there is no way to defend the placement on screen. The discharge resistor with alligator clips in the foreground is an excellent safety detail and the rest of the frame is clean, so this is a placement call rather than a re-shoot."
+    },
+    {
+      "assetId": "tool_028_contactor_contacts_good_versus_pitted",
+      "category": "Tools",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The comparison itself is excellent - bright silver faces against black cratered ones, identically framed - but the terminal topology does not close. The centre pole has no lower load terminal; the actuator linkage occupies that space, and each pole shows only one stationary contact face above a single movable button, so no pole has a complete line-to-load path. Also the manifest says 'meter leads bridging a closed pole on each' while the picture shows one probe touching each contactor from opposite sides. Usable at cut speed; a sharp student on a push-in will ask where L2 lands."
+    },
+    {
+      "assetId": "tool_034_manometer_probes_across_air_handler",
+      "category": "Tools",
+      "classification": "QUESTIONABLE",
+      "severity": "cosmetic",
+      "issue": "The air handler's coil compartment is standing wide open while a total external static pressure reading is being taken. With the cabinet open that reading is meaningless, which undercuts the point of the frame. Everything else is right - grommeted taps, static tips in the supply plenum and at the blower, two hoses, correct instrument. A human call on whether showing the guts is worth the procedural inaccuracy in a static-pressure lesson."
+    }
+  ]
+}
