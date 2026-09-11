@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T06:41:34.207Z",
+  "generatedAt": "2026-09-11T07:10:05.589Z",
   "method": "visual acceptance review, every image opened",
   "framesOpened": 216,
   "libraryTotal": 229,
@@ -53,11 +53,6 @@
       "severity": "notable"
     },
     {
-      "assetId": "res_003_recip_valve_plate_reed_valves_macro",
-      "classification": "REGENERATE",
-      "severity": "notable"
-    },
-    {
       "assetId": "res_006_scroll_set_pair_spirals_macro",
       "classification": "MISLABELED",
       "severity": "notable"
@@ -71,11 +66,6 @@
       "assetId": "res_011_txv_sensing_bulb_equalizer",
       "classification": "QUESTIONABLE",
       "severity": "cosmetic"
-    },
-    {
-      "assetId": "res_015_suction_accumulator_cutaway_standpipe",
-      "classification": "REGENERATE",
-      "severity": "blocking"
     },
     {
       "assetId": "res_026_rolling_piston_vane_contact_macro",

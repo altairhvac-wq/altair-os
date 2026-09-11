@@ -16,7 +16,7 @@ the flag changes how eagerly the system reaches for it, not whether it exists.
 
 ## In the compressor practice episode
 
-12 of the episode's assets carry a flag:
+10 of the episode's assets carry a flag:
 
 - `chill_004_centrifugal_compressor_exterior` — **MISLABELED** (notable)
 - `chill_005_centrifugal_cutaway_impeller_volute` — **KEEP** (cosmetic)
@@ -24,11 +24,9 @@ the flag changes how eagerly the system reaches for it, not whether it exists.
 - `chill_014_water_cooled_centrifugal_chiller_wide` — **MISLABELED** (notable)
 - `res_001_recip_compressor_exterior_sealed` — **MISLABELED** (blocking)
 - `res_002_recip_compressor_cutaway_piston_crank` — **MISLABELED** (notable)
-- `res_003_recip_valve_plate_reed_valves_macro` — **REGENERATE** (notable)
 - `res_006_scroll_set_pair_spirals_macro` — **MISLABELED** (notable)
 - `res_007_rotary_rolling_piston_cutaway` — **QUESTIONABLE** (cosmetic)
 - `res_011_txv_sensing_bulb_equalizer` — **QUESTIONABLE** (cosmetic)
-- `res_015_suction_accumulator_cutaway_standpipe` — **REGENERATE** (blocking)
 - `res_026_rolling_piston_vane_contact_macro` — **QUESTIONABLE** (cosmetic)
 
 ## Findings

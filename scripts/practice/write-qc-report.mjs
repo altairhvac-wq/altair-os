@@ -170,8 +170,19 @@ for (const entry of index) {
   if (finding) entry.qcIssue = finding.issue;
 
   if (verdict === "REGENERATE") entry.approved = false;
-  if (penalty > 0 && typeof entry.reelSuitability === "number") {
-    entry.reelSuitability = Math.max(0, Number((entry.reelSuitability - penalty).toFixed(3)));
+
+  // ==================== THE PENALTY IS COMPUTED, NOT ACCUMULATED ====================
+  // Subtracting from the CURRENT suitability made this script destructive to
+  // run twice: a second pass took another 0.45 off an asset already docked for
+  // the same finding, and a third took it to zero. The librarian's own number
+  // is preserved once, and every run recomputes from it — so re-running after a
+  // revised verdict corrects the score instead of compounding it.
+  if (typeof entry.reelSuitability === "number") {
+    entry.reelSuitabilityBase ??= entry.reelSuitability;
+    entry.reelSuitability = Math.max(
+      0,
+      Number((entry.reelSuitabilityBase - penalty).toFixed(3)),
+    );
   }
   if (verdict) touched += 1;
 }
