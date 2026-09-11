@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { formatTimecode, type EditorProject } from "@/shared/types/video-editor";
 import type { ToolTabId } from "./ToolRail";
+import { LibraryPanel } from "./LibraryPanel";
 
 /**
  * Media browser.
@@ -13,12 +14,11 @@ import type { ToolTabId } from "./ToolRail";
  * episode was actually built from, as previews under /studio/. Those are the
  * only visual assets the browser can honestly display.
  *
- * "Library" does NOT invent a grid of HVAC photographs. The Altair asset
- * library is a librarian-indexed tree on the production laptop under
- * ALTAIR_ASSET_LIBRARY_ROOT; this application cannot read it, and no HTTP
- * surface serves it. So that panel states the situation and names what would
- * have to exist, rather than showing placeholder gradients pretending to be
- * photographs — which is exactly what the prototype this replaces did.
+ * "Library" now shows the real HVAC photo library. It used to say the library
+ * was unreachable, and that was true — it is a tree on the production laptop
+ * and this is a browser. What changed is that the library publishes a catalog
+ * into this app's public directory, with a thumbnail per asset. The panel reads
+ * a file the app serves; it still touches no disk. See LibraryPanel.
  */
 
 type Props = {
@@ -27,6 +27,12 @@ type Props = {
   readonly frames: Readonly<Record<string, string>>;
   readonly onInsertText: () => void;
   readonly onSelectClip: (clipId: string) => void;
+  /** Apply a library asset to the selected visual clip. */
+  readonly onApplyAsset: (assetId: string) => void;
+  /** The selected clip's current asset, so the grid can mark it. */
+  readonly selectedAssetId: string | null;
+  /** False when nothing applicable is selected — the grid disables itself. */
+  readonly canApplyAsset: boolean;
 };
 
 export function AssetBrowser({
@@ -35,6 +41,9 @@ export function AssetBrowser({
   frames,
   onInsertText,
   onSelectClip,
+  onApplyAsset,
+  selectedAssetId,
+  canApplyAsset,
 }: Props) {
   const [query, setQuery] = useState("");
 
@@ -130,9 +139,11 @@ export function AssetBrowser({
         ) : null}
 
         {tab === "library" ? (
-          <Explain
-            title="Not reachable from the browser"
-            body="The Altair asset library is a librarian-indexed tree on the production laptop under ALTAIR_ASSET_LIBRARY_ROOT. Nothing in this application can read it, and no route serves it. Wiring this panel means adding a media endpoint plus generated thumbnails — until then, showing a grid here would be inventing assets."
+          <LibraryPanel
+            projectAspect={project.width >= project.height ? "16:9" : "9:16"}
+            currentAssetId={selectedAssetId}
+            canApply={canApplyAsset}
+            onApply={onApplyAsset}
           />
         ) : null}
 

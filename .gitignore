@@ -107,3 +107,22 @@ next-env.d.ts
 # production/slide-system/export-library-previews.mjs; a draft whose thumbnails
 # are absent still opens and names every asset it chose.
 /public/studio/library/
+
+# The 9:16 derivatives of those same thumbnails, and the catalog that indexes
+# them. Same reasoning as above and the same regeneration step: the library is
+# private, the panel that browses it is a local-preview facility, and a catalog
+# of a private library is still a description of a private library. Rebuild
+# both with D:/Altair-HVAC-Library/_manifest/build-catalog.mjs.
+/public/studio/library-v/
+/public/studio/hvac-catalog.json
+
+# The practice episode's PHOTOGRAPH frames. Its cards and its narration are
+# rendered by this project and tracked below them, but these 21 files are
+# full-resolution crops of the private HVAC library staged where the render
+# worker and the scene bake look for them. Committing full-size library
+# imagery into a public deploy is a bigger step than solving the local
+# staging problem it solves. Restage with:
+#   node --import ./scripts/video-editor-register.mjs \
+#     scripts/practice/build-practice-episode.mjs
+/public/studio/compressor-01/*.jpg
+!/public/studio/compressor-01/clip-beat-*.jpg

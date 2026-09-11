@@ -53,8 +53,10 @@ import {
   projectDurationMs,
   type EditorClip,
   type EditorTrack,
+  isVisualTrackKind,
 } from "@/shared/types/video-editor";
 import { AssetBrowser } from "./AssetBrowser";
+import { useAssetCatalog } from "./LibraryPanel";
 import { EditorHeader, type SaveState } from "./EditorHeader";
 import { Inspector } from "./Inspector";
 import type { StudioBeatVisual } from "@/shared/types/visual-selection";
@@ -92,7 +94,7 @@ const MIN_TIMELINE_PX = 160;
  * because a client-side check is a courtesy and a worker-side check is the
  * rule.
  */
-const RENDERABLE_PROJECT_IDS = ["hvac-01", "hvac-04"];
+const RENDERABLE_PROJECT_IDS = ["hvac-01", "hvac-04", "compressor-01"];
 
 export function VideoEditorShell({
   episode,
@@ -136,6 +138,7 @@ export function VideoEditorShell({
     [rawDispatch],
   );
   const project = currentProject(state);
+  const { catalog } = useAssetCatalog(true);
   const durationMs = useMemo(() => projectDurationMs(project), [project]);
   const selected = useMemo(() => selectedClips(state), [state]);
 
@@ -441,6 +444,85 @@ export function VideoEditorShell({
     [dispatch],
   );
 
+  /**
+   * The clip a library asset would land on.
+   *
+   * A visual clip, and exactly one of them. Applying a photograph to a caption
+   * or a narration clip is not a thing anyone means to do, and applying one to
+   * a multi-selection would silently change several shots at once — so the
+   * browser's grid disables itself rather than guessing.
+   */
+  const assetTarget = useMemo(() => {
+    if (selected.length !== 1) return null;
+    const clip = selected[0];
+    if (clip === undefined) return null;
+    const track = project.tracks.find((t) => t.clips.some((c) => c.id === clip.id));
+    if (!track || !isVisualTrackKind(track.kind) || track.kind === "caption") return null;
+    return { clip, track };
+  }, [selected, project]);
+
+  /**
+   * The pictures on screen, following the edit.
+   *
+   * `episode.frames` is the COMMITTED map — the frame each clip had when the
+   * episode was built — and it cannot answer for a clip whose asset has since
+   * been replaced. Left alone it shows the old photograph after a swap, which
+   * is the one moment an operator most needs the monitor to be honest.
+   *
+   * The override is the library's own thumbnail, because that is the file that
+   * exists right now; the full-size frame is staged at render time from the
+   * library master. So the preview is the right PICTURE immediately, and the
+   * render is the right picture at full resolution.
+   */
+  const frames = useMemo(() => {
+    const committed = new Map<string, string | undefined>();
+    for (const t of episode.project.tracks) {
+      for (const c of t.clips) committed.set(c.id, c.assetId);
+    }
+    const byAsset = new Map(catalog?.assets.map((a) => [a.assetId, a.thumbnailUrl]) ?? []);
+    let changed = false;
+    const out: Record<string, string> = { ...episode.frames };
+    for (const t of project.tracks) {
+      for (const c of t.clips) {
+        if (c.assetId === undefined || c.assetId === committed.get(c.id)) continue;
+        const url = byAsset.get(c.assetId);
+        if (url === undefined) continue;
+        out[c.id] = url;
+        changed = true;
+      }
+    }
+    return changed ? out : episode.frames;
+  }, [catalog, episode.frames, episode.project, project]);
+
+  /**
+   * Put a library asset on the selected clip.
+   *
+   * This goes through the ordinary patch path, which is what makes it an
+   * ordinary edit: it joins the undo history, it autosaves, and the diff
+   * against the generated snapshot reports it as `asset_replaced` — the signal
+   * that says a human overrode the system's choice. A dedicated mutation here
+   * would put the single most valuable learning event outside the one channel
+   * that records them.
+   */
+  const handleApplyAsset = useCallback(
+    (assetId: string) => {
+      if (assetTarget === null) return;
+      // A card becomes a photograph the moment it is given one. Leaving it
+      // typed `slide` would send the compiler looking for a rendered card frame
+      // that no longer describes the clip. A clip on the TEXT track keeps its
+      // kind, because that track accepts nothing else.
+      const becomesImage =
+        assetTarget.track.kind !== "text" && assetTarget.clip.kind !== "video";
+      handlePatch(
+        assetTarget.clip.id,
+        becomesImage ? { assetId, kind: "image" } : { assetId },
+        "Apply library asset",
+      );
+    },
+    [assetTarget, handlePatch],
+  );
+
+
   const handleInsertText = useCallback(() => {
     const textTrack = project.tracks.find((t) => t.kind === "text");
     if (!textTrack) return;
@@ -694,16 +776,19 @@ export function VideoEditorShell({
           <AssetBrowser
             tab={tool}
             project={project}
-            frames={episode.frames}
+            frames={frames}
             onInsertText={handleInsertText}
             onSelectClip={(clipId) => handleSelect(clipId, false)}
+            onApplyAsset={handleApplyAsset}
+            selectedAssetId={assetTarget?.clip.assetId ?? null}
+            canApplyAsset={assetTarget !== null}
           />
 
           <main className="flex min-w-0 flex-1 flex-col">
             <PreviewMonitor
               project={project}
               timeMs={state.playheadMs}
-              frames={episode.frames}
+              frames={frames}
               selectedIds={state.selection.clipIds}
               onSelectClip={(clipId) => handleSelect(clipId, false)}
               onTransform={(clipId, transform, coalesceKey) =>
@@ -773,7 +858,7 @@ export function VideoEditorShell({
               playheadMs={state.playheadMs}
               selectedIds={state.selection.clipIds}
               peaks={episode.peaks}
-              frames={episode.frames}
+              frames={frames}
               snapEnabled={snapEnabled}
               onSeek={(ms) => dispatch({ type: "seek", ms })}
               onSelect={handleSelect}
