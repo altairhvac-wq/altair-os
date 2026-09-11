@@ -25,10 +25,20 @@
 
 import {
   EDITOR_DEFAULT_FRAME,
+  trackAccepts,
   type EditorClip,
+  type EditorClipKind,
   type EditorProject,
   type EditorTrack,
+  type EditorTrackKind,
 } from "@/shared/types/video-editor";
+import {
+  isPendingMode,
+  parseCurationPreflight,
+  parseStudioBeatVisual,
+  type CurationPreflight,
+  type StudioBeatVisual,
+} from "@/shared/types/visual-selection";
 import { expectedMasterMs, paceBeat, TRANSITION_MS } from "./pacing";
 
 /** The subset of `content.video_plan` this adapter needs. */
@@ -37,6 +47,15 @@ export type VideoPlanBeat = {
   readonly visualDirection: string;
   readonly caption: string;
   readonly kind?: string | null;
+  /**
+   * ==================== THE CURATED VISUAL, WHEN THERE IS ONE ====================
+   * Written by the agent platform's visual curation (`studio-draft.ts` there).
+   * OPTIONAL, and that is the whole compatibility story: a plan that predates
+   * curation still builds a draft, exactly as it did — the clip simply carries
+   * no `assetId`, which is the honest description of a plan that never chose
+   * one. Nothing branches on the field's absence except the one place below.
+   */
+  readonly visual?: unknown;
 };
 
 export type VideoPlanArtifact = {
@@ -48,6 +67,12 @@ export type VideoPlanArtifact = {
   readonly cta?: string;
   readonly targetDurationSeconds?: number;
   readonly series?: string;
+  /**
+   * The curation's own verdict on the plan it produced — score, counts and
+   * findings. Optional for the same reason `beat.visual` is: a plan nothing
+   * curated has no verdict, and that is a different fact from a bad one.
+   */
+  readonly curation?: unknown;
 };
 
 /**
@@ -76,12 +101,31 @@ export type GeneratedDraft = {
   readonly metadata: DraftGenerationMetadata;
   /** Caption text by clip id, mirroring the loaded-episode shape. */
   readonly captionText: Readonly<Record<string, string>>;
+  /**
+   * Preview image URL by clip id — the SAME map shape a rendered episode
+   * supplies, so the canvas, the timeline and the media browser all display a
+   * curated draft through the code paths they already had. Only clips whose
+   * asset has an exported thumbnail appear here; the rest keep the editor's
+   * existing named-placeholder behaviour, which is the truthful rendering of
+   * "this asset is chosen but not yet visible on this machine".
+   */
+  readonly frames: Readonly<Record<string, string>>;
+  /** The curation record by clip id, for the inspector and for swapping. */
+  readonly visuals: Readonly<Record<string, StudioBeatVisual>>;
   readonly summary: {
     readonly beats: number;
     readonly rawMs: number;
     readonly expectedMasterMs: number;
     /** True when every duration was estimated rather than measured. */
     readonly durationsEstimated: boolean;
+    /** How many beats arrived with a real library asset already chosen. */
+    readonly beatsWithAsset: number;
+    /** How many arrived as a named gap — a capture or a generation to do. */
+    readonly beatsPending: number;
+    /** Problems found while reading the curation. Shown, never swallowed. */
+    readonly visualProblems: readonly string[];
+    /** The curation's verdict, or null for a plan nothing curated. */
+    readonly preflight: CurationPreflight | null;
   };
 };
 
@@ -93,6 +137,13 @@ export type GeneratedDraft = {
  * animation is footage it loops — and putting them on the same track would
  * hide a distinction the compositor acts on.
  */
+/** Which track kind each of this adapter's track ids is. */
+const TRACK_KIND: Record<string, EditorTrackKind> = {
+  "t-video": "video",
+  "t-graphics": "graphics",
+  "t-text": "text",
+};
+
 function trackForKind(kind: string | null | undefined): string {
   switch (kind) {
     case "diagram_graphic":
@@ -108,6 +159,26 @@ function trackForKind(kind: string | null | undefined): string {
     default:
       return "t-video";
   }
+}
+
+/**
+ * The clip kind a SELECTED asset implies.
+ *
+ * The librarian's ids carry their extension, and that is the only fact here
+ * that decides whether the compositor loops footage or holds a still — see
+ * `isMotionAsset` in AltairDemoTool. An unrecognised extension falls back to
+ * the scene kind rather than guessing, because a guess that says "video" about
+ * a PNG produces a render that succeeds and is wrong.
+ */
+function clipKindForAsset(
+  assetId: string,
+  sceneKind: string | null | undefined,
+): EditorClip["kind"] {
+  const extension = /\.([a-z0-9]+)$/i.exec(assetId)?.[1]?.toLowerCase();
+  if (extension === undefined) return clipKindForScene(sceneKind);
+  if (["mp4", "mov", "webm", "m4v"].includes(extension)) return "video";
+  if (["png", "jpg", "jpeg", "webp", "gif"].includes(extension)) return "image";
+  return clipKindForScene(sceneKind);
 }
 
 function clipKindForScene(kind: string | null | undefined): EditorClip["kind"] {
@@ -141,9 +212,14 @@ export function buildDraftFromPlan(
   const captionClips: EditorClip[] = [];
   const voiceClips: EditorClip[] = [];
   const captionText: Record<string, string> = {};
+  const frames: Record<string, string> = {};
+  const visuals: Record<string, StudioBeatVisual> = {};
+  const visualProblems: string[] = [];
 
   let cursor = 0;
   let estimatedAny = false;
+  let beatsWithAsset = 0;
+  let beatsPending = 0;
 
   plan.beats.forEach((beat, index) => {
     const paced = paceBeat({
@@ -154,11 +230,43 @@ export function buildDraftFromPlan(
     if (!paced.measured) estimatedAny = true;
 
     const id = beatId(index);
-    const trackId = trackForKind(beat.kind);
+    let trackId = trackForKind(beat.kind);
+
+    /* ── The curated visual, when the plan carries one ─────────────────── */
+    const parsed = parseStudioBeatVisual(beat.visual);
+    const clipId = `clip-${id}`;
+    if (parsed !== null) {
+      visuals[clipId] = parsed.visual;
+      for (const problem of parsed.problems) {
+        visualProblems.push(`beat ${String(index + 1)}: ${problem}`);
+      }
+      if (parsed.visual.assetId !== null) beatsWithAsset += 1;
+      if (isPendingMode(parsed.visual.mode)) beatsPending += 1;
+      if (parsed.visual.previewUrl !== null) frames[clipId] = parsed.visual.previewUrl;
+    }
+
+    /**
+     * ==================== THE TRACK HAS TO ACCEPT THE CLIP ====================
+     * `trackForKind` routes by the SCENE kind, and the graphics track accepts
+     * stills only. A `diagram_graphic` beat that curation answered with an
+     * `.mp4` would therefore land as a video clip on a track that refuses
+     * video — an invalid project the editor would let nobody build by hand.
+     * The asset wins (it is the thing that actually exists) and the clip moves
+     * to the video track, which accepts every visual kind.
+     */
+    const clipKind: EditorClipKind =
+      parsed?.visual.assetId == null
+        ? clipKindForScene(beat.kind)
+        : clipKindForAsset(parsed.visual.assetId, beat.kind);
+    if (!trackAccepts(TRACK_KIND[trackId], clipKind)) trackId = "t-video";
 
     const visual: EditorClip = {
-      id: `clip-${id}`,
-      kind: clipKindForScene(beat.kind),
+      id: clipId,
+      // A curated beat's clip kind follows what was actually SELECTED, not what
+      // the scene kind implied: a beat the Director called `b_roll` that
+      // resolved to an `.mp4` is a video clip, and calling it a slide would
+      // make the compositor hold a still where footage belongs.
+      kind: clipKind,
       beatId: id,
       // The visual direction IS the label. It is what the Director decided
       // this shot should be, and it is the thing an operator is judging when
@@ -166,6 +274,12 @@ export function buildDraftFromPlan(
       label: beat.visualDirection.slice(0, 60),
       startMs: cursor,
       durationMs: paced.totalMs,
+      // ==================== THE POINT OF THE WHOLE PHASE ====================
+      // A generated draft used to arrive with narration, timing and an empty
+      // visual layer, because `visualDirection` became a LABEL and nothing
+      // ever resolved it to a file. This one line is where a curated plan
+      // stops being a description of a video and starts being one.
+      ...(parsed?.visual.assetId == null ? {} : { assetId: parsed.visual.assetId }),
     };
     const list = visualByTrack.get(trackId) ?? [];
     list.push(visual);
@@ -216,6 +330,8 @@ export function buildDraftFromPlan(
     .reduce((n, t) => n + t.clips.length, 0);
 
   return {
+    frames,
+    visuals,
     project: {
       id: draftProjectId(plan, metadata),
       title: plan.topic,
@@ -232,6 +348,10 @@ export function buildDraftFromPlan(
       rawMs: cursor,
       expectedMasterMs: expectedMasterMs(cursor, visualCount),
       durationsEstimated: estimatedAny,
+      beatsWithAsset,
+      beatsPending,
+      visualProblems,
+      preflight: parseCurationPreflight(plan.curation),
     },
   };
 }

@@ -65,6 +65,8 @@
     "verify:video-editor-ui": "node scripts/verify-video-editor-ui.mjs",
     "build:editor-demo": "node scripts/build-editor-demo-project.mjs",
     "verify:edit-learning": "node --import ./scripts/video-editor-register.mjs scripts/verify-edit-learning.mjs",
+    "verify:curated-draft": "node --import ./scripts/video-editor-register.mjs scripts/verify-curated-draft.mjs",
+    "verify:curated-draft-ui": "node scripts/verify-curated-draft-ui.mjs",
     "verify:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/verify-agent-learning-loop.mjs",
     "proof:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/proof-agent-learning-loop.mjs",
     "verify:agent-loop-ui": "node scripts/verify-agent-loop-ui.mjs"

@@ -473,3 +473,23 @@ What changed in the editor itself:
 
 Suites now: **47/47** editor logic, **32/32** learning, **28/28** agent loop,
 **30/30** browser, **2895** platform tests, tsc clean, 0 lint errors, build ✓.
+
+---
+
+## Superseded in part by Phase 4
+
+The gap this report left open — **a generated draft arrives with narration and
+timing over an empty visual layer** — is closed. `buildDraftFromPlan` no longer
+turns `visualDirection` into a clip label and stops; it reads a curated
+`beat.visual`, puts a real library `assetId` on the clip, and returns a `frames`
+map so the canvas and timeline show the actual picture.
+
+Two statements in this report are now out of date:
+
+- *"a generated draft has no rendered frames … empty maps are the truthful
+  answer"* — true only for an **uncurated** plan. A curated one carries frames.
+- The media browser's Library panel still states that this application cannot
+  read the asset library. That remains true; what changed is that a draft now
+  carries the assets it chose, with thumbnails exported for exactly those.
+
+Suite counts here are also superseded — see `AUTONOMOUS_VISUAL_DRAFT_REPORT.md`.

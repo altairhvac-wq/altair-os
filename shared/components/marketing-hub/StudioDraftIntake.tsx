@@ -10,6 +10,7 @@ import {
 } from "@/shared/design-system/components";
 import {
   buildDraftFromPlan,
+  type GeneratedDraft,
   describeDraftOrigin,
   type VideoPlanArtifact,
 } from "@/shared/lib/video-editor/draft-from-plan";
@@ -23,6 +24,10 @@ import { buildPreferenceSetFile } from "@/shared/lib/video-editor/preference-set
 import { loadSessions } from "@/shared/lib/video-editor/session";
 import { HVAC_SERIES_NAME } from "@/shared/types/hvac-studio";
 import { AGENT_FORMATS } from "@/shared/types/editing-preferences";
+import {
+  describePreflight,
+  type CurationPreflight,
+} from "@/shared/types/visual-selection";
 
 /**
  * Where an agent's plan becomes an editable draft, and where the evidence
@@ -59,6 +64,105 @@ type Status =
   | { kind: "idle" }
   | { kind: "error"; message: string }
   | { kind: "ok"; message: string };
+
+/**
+ * What an operator needs to know before deciding whether to open a draft.
+ *
+ * The visual counts come first because they are the thing that changed: a
+ * pre-curation draft arrived with narration and timing over an empty visual
+ * layer, and nothing on this card said so. "6 beats, 48.2s" was true of both a
+ * draft with six real shots and a draft with none.
+ *
+ * A draft with no curation at all says that plainly rather than reporting zero
+ * assets, because those are different facts: one plan was never curated, the
+ * other was curated and found nothing.
+ */
+function describeImportedDraft(draft: GeneratedDraft): string {
+  const timing = `${draft.summary.beats} beats, ${(draft.summary.expectedMasterMs / 1000).toFixed(1)}s after crossfades`;
+  const curated = draft.summary.beatsWithAsset + draft.summary.beatsPending > 0;
+  if (!curated) {
+    return `Draft ready — ${timing}. This plan carries no curated visuals, so every clip is a description rather than a shot.`;
+  }
+  const gaps =
+    draft.summary.beatsPending > 0
+      ? `, ${draft.summary.beatsPending} still to produce`
+      : "";
+  const problems =
+    draft.summary.visualProblems.length > 0
+      ? ` ${draft.summary.visualProblems.length} visual${draft.summary.visualProblems.length === 1 ? "" : "s"} could not be read: ${draft.summary.visualProblems[0] ?? ""}`
+      : "";
+  return `Draft ready — ${timing}. ${draft.summary.beatsWithAsset} of ${draft.summary.beats} beats arrived with a real library asset${gaps}.${problems}`;
+}
+
+/**
+ * The curation's own verdict, where the decision to open a draft is made.
+ *
+ * ==================== A SCORE NOBODY CAN TAKE APART IS A NUMBER ====================
+ * The score is shown WITH its findings, never alone, because "64/100" invites
+ * exactly one response — argue with the number — while "beat 1 has no visual;
+ * here is what would have to be filmed" invites the useful one. Every finding
+ * carries an action for the same reason: the preflight that gets ignored is the
+ * one that says a draft is imperfect without saying what to do about it.
+ *
+ * Absent for a plan nothing curated. Reporting 0/100 there would be a judgment
+ * on a plan nobody judged.
+ */
+function Preflight({ preflight }: { readonly preflight: CurationPreflight | null }) {
+  const [open, setOpen] = useState(false);
+  if (preflight === null) return null;
+
+  const tone = !preflight.readyForStudio
+    ? "text-altair-danger"
+    : preflight.score >= 85
+      ? "text-altair-ink"
+      : "text-altair-ink-muted";
+
+  return (
+    <div className="mt-1" data-testid="studio-preflight">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex items-center gap-1.5 text-[11px] underline decoration-dotted"
+      >
+        <span className={`font-medium ${tone}`}>
+          Preflight {describePreflight(preflight)}
+        </span>
+        {preflight.findings.length > 0 ? (
+          <span className="text-altair-ink-muted">
+            · {preflight.findings.length}{" "}
+            {preflight.findings.length === 1 ? "finding" : "findings"}
+            {open ? " ▴" : " ▾"}
+          </span>
+        ) : null}
+      </button>
+
+      {!preflight.readyForStudio ? (
+        <span className="mt-0.5 block text-[11px] text-altair-danger">
+          Blocked — this draft is asking for a library we do not have.
+        </span>
+      ) : null}
+
+      {open && preflight.findings.length > 0 ? (
+        <ul className="mt-1.5 space-y-1.5">
+          {preflight.findings.map((finding, index) => (
+            <li
+              key={`${finding.severity}-${String(finding.beatIndex)}-${String(index)}`}
+              className="text-[11px] leading-relaxed"
+            >
+              <span className="font-medium text-altair-ink">
+                {finding.beatIndex === null
+                  ? "Whole video"
+                  : `Beat ${finding.beatIndex + 1}`}
+                : {finding.summary}
+              </span>
+              <span className="block text-altair-ink-muted">{finding.action}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 
 export function StudioDraftIntake() {
   const [drafts, setDrafts] = useState<StoredDraft[]>([]);
@@ -111,6 +215,7 @@ export function StudioDraftIntake() {
         format: plan.format ?? AGENT_FORMATS.longFormYoutube,
         hook: plan.hook ?? "",
         beats: plan.beats,
+        curation: (parsed as { curation?: unknown }).curation,
         cta: plan.cta,
         targetDurationSeconds: plan.targetDurationSeconds,
         series: plan.series,
@@ -138,7 +243,7 @@ export function StudioDraftIntake() {
     setStatus({
       kind: saved ? "ok" : "error",
       message: saved
-        ? `Draft ready — ${draft.summary.beats} beats, ${(draft.summary.expectedMasterMs / 1000).toFixed(1)}s after crossfades.`
+        ? describeImportedDraft(draft)
         : "This browser blocked local storage, so the draft was not kept.",
     });
   }
@@ -233,12 +338,20 @@ export function StudioDraftIntake() {
                   {describeDraftOrigin(draft.metadata)}
                 </span>
                 <span className="mt-0.5 block font-mono text-[10px] text-altair-ink-muted">
+                  {draft.summary.beatsWithAsset > 0 ||
+                  draft.summary.beatsPending > 0 ? (
+                    <span title="Beats that arrived with a real library asset">
+                      {draft.summary.beatsWithAsset}/{draft.summary.beats} shots
+                      ·{" "}
+                    </span>
+                  ) : null}
                   {draft.summary.beats} beats ·{" "}
                   {(draft.summary.expectedMasterMs / 1000).toFixed(1)}s ·{" "}
                   {draft.summary.durationsEstimated
                     ? "durations estimated"
                     : "durations measured"}
                 </span>
+                <Preflight preflight={draft.summary.preflight ?? null} />
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusPill tone="info" size="sm">

@@ -419,3 +419,25 @@ a server action called by Approve. Then `/api/agent/editing-preferences`
 After that, the metric worth watching is the one this phase makes computable:
 **retention ratio per episode over time** — how much of each generated cut
 survives approval. If the loop works, that number climbs.
+
+---
+
+## What Phase 4 added, and what it did not touch
+
+Nothing in the loop described here was rebuilt. Scope precedence, the confidence
+bands, the thresholds, the scorecard and the draft handoff are all as this report
+leaves them.
+
+What changed is what the Director's plan carries into that loop. A plan's beats
+now acquire real, ranked, explained visual selections before the draft is built
+(`AUTONOMOUS_VISUAL_DRAFT_REPORT.md`), so the diffs this loop measures can be
+about the **picture** and not only the cut.
+
+Two notes against this report's own closing paragraph:
+
+- **Retention ratio per episode** is still per-session only. There is no
+  bot-vs-human rollup across sessions yet; that is named as outstanding in the
+  Phase 4 report §7.
+- The plan schema gained an optional `visualIntent` field. It is offered to the
+  Director and never demanded — every intent today is derived deterministically,
+  so nothing about this loop's behaviour changed as a side effect.

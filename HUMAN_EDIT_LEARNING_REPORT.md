@@ -233,3 +233,19 @@ What that changes about this document:
   weak** — with an explicit instruction per band. Weak never reaches a prompt.
 - Sessions are still localStorage. That remains the single blocking limitation,
   and the cross-repo handoff is a file for exactly that reason.
+
+---
+
+## Extended by Phase 4
+
+The diff vocabulary this report established did not need to change to learn from
+visual decisions. `asset_replaced` already existed; what was missing was any way
+for a human to make that edit, because a generated clip had no asset to replace.
+
+Studio's inspector now shows the ranked candidates curation considered, and
+clicking one is an ordinary `onPatch`. So "the operator chose candidate 3 over
+candidate 1" became measurable evidence **with no change to this system** — see
+`AUTONOMOUS_VISUAL_DRAFT_REPORT.md` §2.
+
+The blocking limitation this report names — sessions are localStorage — is
+unchanged, and remains the top of the backlog.

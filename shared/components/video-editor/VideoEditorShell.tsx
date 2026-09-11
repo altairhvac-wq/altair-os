@@ -57,6 +57,7 @@ import {
 import { AssetBrowser } from "./AssetBrowser";
 import { EditorHeader, type SaveState } from "./EditorHeader";
 import { Inspector } from "./Inspector";
+import type { StudioBeatVisual } from "@/shared/types/visual-selection";
 import { PlaybackControls } from "./PlaybackControls";
 import { PreviewMonitor } from "./PreviewMonitor";
 import { Timeline } from "./Timeline";
@@ -97,11 +98,21 @@ export function VideoEditorShell({
   episode,
   draftBanner,
   draftMetadata,
+  visuals,
 }: {
   readonly episode: LoadedEpisode;
   /** One line naming the agent and preference set behind a generated draft. */
   readonly draftBanner?: string;
   readonly draftMetadata?: DraftGenerationMetadata;
+  /**
+   * The curation record by clip id, when the draft was curated.
+   *
+   * Read-only context for the inspector: why this shot, what else was
+   * considered, and how much the system believes its own choice. Swapping one
+   * goes through the ordinary `onPatch` path, so a swap is an ordinary edit
+   * and the diff already knows how to describe it (`asset_replaced`).
+   */
+  readonly visuals?: Readonly<Record<string, StudioBeatVisual>>;
 }) {
   const [state, rawDispatch] = useReducer(
     (s: Parameters<typeof editorReducer>[0], a: EditorAction) =>
@@ -733,6 +744,7 @@ export function VideoEditorShell({
             project={project}
             selected={selected}
             onPatch={handlePatch}
+            visuals={visuals ?? {}}
           />
         </div>
 

@@ -7,6 +7,13 @@ import {
   type EditorProject,
   type EditorTrack,
 } from "@/shared/types/video-editor";
+import {
+  confidenceBand,
+  describeVisualIntent,
+  isPendingMode,
+  VISUAL_MODE_LABEL,
+  type StudioBeatVisual,
+} from "@/shared/types/visual-selection";
 
 /**
  * Context-sensitive properties for whatever is selected.
@@ -30,9 +37,11 @@ type Props = {
     label: string,
     coalesceKey?: string,
   ) => void;
+  /** Curation records by clip id. Empty for an episode or an uncurated draft. */
+  readonly visuals?: Readonly<Record<string, StudioBeatVisual>>;
 };
 
-export function Inspector({ project, selected, onPatch }: Props) {
+export function Inspector({ project, selected, onPatch, visuals }: Props) {
   const clip = selected[0] ?? null;
   const track = clip
     ? (project.tracks.find((t) => t.clips.some((c) => c.id === clip.id)) ?? null)
@@ -55,6 +64,7 @@ export function Inspector({ project, selected, onPatch }: Props) {
           track={track}
           count={selected.length}
           onPatch={onPatch}
+          visual={visuals?.[clip.id] ?? null}
         />
       )}
     </aside>
@@ -89,11 +99,13 @@ function ClipProperties({
   track,
   count,
   onPatch,
+  visual,
 }: {
   readonly clip: EditorClip;
   readonly track: EditorTrack;
   readonly count: number;
   readonly onPatch: Props["onPatch"];
+  readonly visual: StudioBeatVisual | null;
 }) {
   const audio = isAudioTrackKind(track.kind);
   const isText = track.kind === "text" || clip.kind === "text";
@@ -104,6 +116,8 @@ function ClipProperties({
       <PanelTitle>
         {count > 1 ? `${count} clips selected` : clip.label}
       </PanelTitle>
+
+      {visual ? <VisualDecision clip={clip} visual={visual} onPatch={onPatch} /> : null}
 
       <Section title="Timing">
         <Row label="Track" value={track.name} />
@@ -551,5 +565,206 @@ function TextArea({
         style={fieldStyle}
       />
     </label>
+  );
+}
+
+/**
+ * Why this shot is here, what else was considered, and how to disagree.
+ *
+ * ==================== AN ASSET ID ALONE CANNOT BE ARGUED WITH ====================
+ * A curated draft arrives with a real library asset on the clip. Without this
+ * panel, an operator who thinks the shot is wrong has no way to see what the
+ * alternatives were and no way to act on it — so their only move is to delete
+ * the clip, which the learning loop reads as "the cut was wrong" rather than
+ * "the picture was wrong". Those are different lessons.
+ *
+ * Showing the ranked candidates makes a swap a MEASURABLE preference: the
+ * operator chose candidate 3 over candidate 1, and `diffEditorProjects`
+ * already has a word for that (`asset_replaced`). Nothing new is needed in the
+ * learning system; it just needed a way for the edit to happen at all.
+ *
+ * ==================== A PENDING BEAT IS NOT A BLANK ====================
+ * Where curation found nothing honest, the panel shows the requirement it
+ * wrote — what would have to be filmed or generated — rather than an empty
+ * frame. Nothing here triggers generation: producing the missing shot is a
+ * decision with a cost attached, and this panel's job is to make the decision
+ * legible, not to make it.
+ */
+function VisualDecision({
+  clip,
+  visual,
+  onPatch,
+}: {
+  readonly clip: EditorClip;
+  readonly visual: StudioBeatVisual;
+  readonly onPatch: Props["onPatch"];
+}) {
+  const band = confidenceBand(visual.confidence);
+  const bandColor =
+    band === "strong"
+      ? "var(--ve-ok, #4ade80)"
+      : band === "worth a look"
+        ? "var(--ve-warn, #fbbf24)"
+        : "var(--ve-danger, #f87171)";
+  const pending = isPendingMode(visual.mode);
+  const alternatives = visual.candidates.filter(
+    (candidate) => candidate.assetId !== clip.assetId,
+  );
+
+  return (
+    <Section title="Visual decision">
+      <div data-testid="ve-visual-decision">
+        <Row label="Mode" value={VISUAL_MODE_LABEL[visual.mode]} />
+        {/*
+          Wrapping, not truncating. `Row` clips its value to 60% of the panel
+          with an ellipsis, which is right for a timecode and wrong for the two
+          facts an operator is here to read: what the beat asked for, and which
+          file answered it. "establish / trade work — must …" and
+          "raw-footage/hvac-trades/hvac…" are both exactly as useless as showing
+          nothing, and the panel has the vertical room.
+        */}
+        <WrappingRow label="Intent" value={describeVisualIntent(visual.intent)} />
+        {clip.assetId ? <WrappingRow label="Asset" value={clip.assetId} mono /> : null}
+
+        <div className="flex items-center gap-1.5 py-1">
+          <span
+            className="text-[10px] uppercase tracking-wide"
+            style={{ color: "var(--ve-text-faint)" }}
+          >
+            Confidence
+          </span>
+          <span
+            className="rounded px-1.5 py-px text-[10px] font-medium"
+            style={{ background: "var(--ve-raised)", color: bandColor }}
+          >
+            {band} · {visual.confidence.toFixed(2)}
+          </span>
+        </div>
+
+        <p
+          className="py-1 text-[11px] leading-relaxed"
+          style={{ color: "var(--ve-text-dim)" }}
+        >
+          {visual.reason}
+        </p>
+
+        {visual.warnings.length > 0 ? (
+          <ul
+            className="mt-1 space-y-1 text-[10px] leading-relaxed"
+            style={{ color: "var(--ve-warn, #fbbf24)" }}
+          >
+            {visual.warnings.map((warning) => (
+              <li key={warning}>• {warning}</li>
+            ))}
+          </ul>
+        ) : null}
+
+        {pending && visual.pendingRequirement ? (
+          <div
+            data-testid="ve-pending-requirement"
+            className="mt-2 rounded p-2 text-[10px] leading-relaxed"
+            style={{
+              background: "var(--ve-raised)",
+              color: "var(--ve-text-dim)",
+              border: "1px solid var(--ve-line-strong)",
+            }}
+          >
+            <span
+              className="mb-1 block text-[10px] font-medium uppercase tracking-wide"
+              style={{ color: "var(--ve-text)" }}
+            >
+              Still to produce
+            </span>
+            {visual.pendingRequirement}
+          </div>
+        ) : null}
+
+        {alternatives.length > 0 ? (
+          <div className="mt-2">
+            <span
+              className="mb-1 block text-[10px] uppercase tracking-wide"
+              style={{ color: "var(--ve-text-faint)" }}
+            >
+              Also considered
+            </span>
+            <div className="space-y-1">
+              {alternatives.map((candidate) => (
+                <button
+                  key={candidate.assetId}
+                  type="button"
+                  data-testid="ve-swap-asset"
+                  data-asset-id={candidate.assetId}
+                  title={candidate.description ?? candidate.assetId}
+                  onClick={() =>
+                    // An ordinary patch. The reducer, the history and the diff
+                    // all treat this exactly as they treat a hand-typed change,
+                    // which is why a swap becomes learning evidence for free.
+                    onPatch(
+                      clip.id,
+                      { assetId: candidate.assetId },
+                      "Swap asset",
+                    )
+                  }
+                  className="flex w-full items-center gap-1.5 rounded p-1 text-left text-[10px]"
+                  style={{
+                    background: "var(--ve-raised)",
+                    color: "var(--ve-text-dim)",
+                    border: "1px solid var(--ve-line)",
+                  }}
+                >
+                  {candidate.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- a
+                    // locally-served thumbnail of known small size; next/image
+                    // would add a loader round trip for no benefit here.
+                    <img
+                      src={candidate.previewUrl}
+                      alt=""
+                      className="h-6 w-10 shrink-0 rounded-sm object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="flex h-6 w-10 shrink-0 items-center justify-center rounded-sm text-[8px]"
+                      style={{
+                        background: "var(--ve-panel)",
+                        color: "var(--ve-text-faint)",
+                      }}
+                    >
+                      no img
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 truncate">
+                    {candidate.assetId}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
+function WrappingRow({
+  label,
+  value,
+  mono,
+}: {
+  readonly label: string;
+  readonly value: string;
+  readonly mono?: boolean;
+}) {
+  return (
+    <div className="py-[3px]">
+      <span className="text-[11px]" style={{ color: "var(--ve-text-faint)" }}>
+        {label}
+      </span>
+      <div
+        className={`mt-px text-[11px] leading-snug ${mono ? "font-mono text-[10px]" : ""}`}
+        style={{ color: "var(--ve-text-dim)", wordBreak: "break-word" }}
+      >
+        {value}
+      </div>
+    </div>
   );
 }

@@ -1,0 +1,47 @@
+{
+  "topic": "The day a week you lose to paperwork",
+  "format": "short_narrated_video",
+  "objective": "Show a contractor that the admin time they treat as unavoidable is a system problem, not a discipline problem.",
+  "audience": "owner-operators running 2-8 HVAC technicians",
+  "hook": "You are not bad at paperwork. You are doing it twice.",
+  "cta": "See what one day of jobs looks like in Altair.",
+  "targetDurationSeconds": 55,
+  "beats": [
+    {
+      "narration": "Every contractor I talk to says the same thing. The work is fine. It is everything after the work that eats the week.",
+      "visualDirection": "Fast cuts: hand flipping a worn spiral notebook, a messy whiteboard schedule with crossed-out names, a shoebox overflowing with receipts",
+      "caption": "The work is fine. It is everything after.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "Here is what that actually costs. A tech finishes a job, writes it on paper, and then somebody types it in again tonight.",
+      "visualDirection": "Working technician in uniform, standing by a service van in a driveway, phone in hand, speaking directly to camera between jobs",
+      "caption": "Written once. Typed again.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "The same unit, the same customer, the second visit \u2014 and nobody can find what was done the first time.",
+      "visualDirection": "Split screen: tech scratching head looking at unfamiliar unit vs. same tech confidently pointing at a part",
+      "caption": "Second visit. No history.",
+      "kind": "b_roll"
+    },
+    {
+      "narration": "This is the whole fix. One schedule that everyone is looking at, with the address and the tech already on it.",
+      "visualDirection": "Screen recording: opening Altair OS to a clean daily schedule view showing jobs with times, addresses, and assigned techs",
+      "caption": "One schedule. Everyone sees it.",
+      "kind": "screen_recording"
+    },
+    {
+      "narration": "And when the job closes, the invoice is already written. You are not doing the paperwork. The paperwork happened.",
+      "visualDirection": "Screen recording: technician taps Mark Complete, invoice auto-generates, payment notification pops up on screen",
+      "caption": "Job closed. Invoice sent.",
+      "kind": "screen_recording"
+    },
+    {
+      "narration": "That is a day a week back. Not from working harder. From stopping doing the same job twice.",
+      "visualDirection": "Wide shot of a branded HVAC van pulling up to a job site, technician stepping out confidently",
+      "caption": "A day a week back.",
+      "kind": "b_roll"
+    }
+  ]
+}

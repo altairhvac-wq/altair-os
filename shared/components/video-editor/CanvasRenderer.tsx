@@ -224,9 +224,16 @@ function Layer({
     );
   }
 
-  // A clip whose frame has not been generated. Named rather than blank, so a
+  // A clip whose picture is not on screen. Named rather than blank, so a
   // missing asset is diagnosable from the monitor instead of looking like a
   // black frame the edit intended.
+  //
+  // ==================== TWO DIFFERENT ABSENCES ====================
+  // A clip with an `assetId` has had a real library asset CHOSEN for it and
+  // simply has no thumbnail exported on this machine; a clip without one has
+  // nothing chosen at all. Those need different answers from an operator — one
+  // is "run the thumbnail export", the other is "this beat still needs a shot"
+  // — and a single grey card saying the label would hide the difference.
   return (
     <div
       onPointerDown={(e) => {
@@ -236,15 +243,38 @@ function Layer({
       style={{
         ...base,
         display: "flex",
+        flexDirection: "column",
+        gap: 12,
         alignItems: "center",
         justifyContent: "center",
+        padding: "0 6%",
+        textAlign: "center",
         background: "#15171b",
         color: "#5a5f68",
         fontSize: 32,
         letterSpacing: "0.08em",
       }}
     >
-      {clip.label}
+      <span>{clip.label}</span>
+      {clip.assetId ? (
+        <span
+          data-testid="ve-canvas-asset-id"
+          style={{
+            fontSize: 15,
+            letterSpacing: "0.02em",
+            color: "#7c828d",
+            wordBreak: "break-all",
+          }}
+        >
+          {clip.assetId} — no thumbnail exported here
+        </span>
+      ) : (
+        <span
+          style={{ fontSize: 15, letterSpacing: "0.02em", color: "#6a7079" }}
+        >
+          no asset chosen for this beat
+        </span>
+      )}
     </div>
   );
 }

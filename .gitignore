@@ -97,3 +97,13 @@ next-env.d.ts
 # Probe output. Regenerate with the probe that writes it; it captures text
 # pulled straight off authenticated pages, so it can carry customer data.
 /ui-audit/text-contrast.json
+
+# Library thumbnails exported for a curated Studio draft. NOT tracked, and the
+# distinction from public/studio/<episode>/ matters: those are slides this
+# project rendered and owns, while these are downsampled frames of the private
+# asset library, exported only so an operator can SEE the shot a curation
+# chose. Committing them would put a private library into a public deploy to
+# solve a local-preview problem. Regenerate with AltairDemoTool's
+# production/slide-system/export-library-previews.mjs; a draft whose thumbnails
+# are absent still opens and names every asset it chose.
+/public/studio/library/

@@ -74,14 +74,19 @@ export function StudioProjectLoader({
     );
   }
 
-  // A generated draft has no rendered frames, no narration audio and no
-  // measured waveforms — nothing has been produced yet. Empty maps are the
-  // truthful answer; the editor already renders a named placeholder for a clip
-  // whose frame does not exist.
+  // A generated draft has no narration audio and no measured waveforms —
+  // nothing has been RENDERED yet. Empty maps are the truthful answer there.
+  //
+  // Frames are different now. A curated draft's clips name real library assets,
+  // and where a thumbnail for one has been exported the draft carries its URL —
+  // so the canvas, the timeline and the media browser show the actual picture
+  // through the same code paths a rendered episode uses. A clip whose asset has
+  // no exported thumbnail keeps the editor's named-placeholder behaviour, which
+  // is the honest rendering of "chosen, but not visible on this machine".
   const episode: LoadedEpisode = {
     project: draft.project,
     peaks: {},
-    frames: {},
+    frames: draft.frames ?? {},
     audio: {},
     captionText: draft.captionText,
     meta: {
@@ -100,6 +105,7 @@ export function StudioProjectLoader({
       episode={episode}
       draftBanner={describeDraftOrigin(draft.metadata)}
       draftMetadata={draft.metadata}
+      visuals={draft.visuals ?? {}}
     />
   );
 }

@@ -24,18 +24,33 @@
  */
 
 import type { EditorProject } from "@/shared/types/video-editor";
+import type { StudioBeatVisual } from "@/shared/types/visual-selection";
 import type {
   DraftGenerationMetadata,
   GeneratedDraft,
 } from "./draft-from-plan";
 
 const KEY = "altair.editor.drafts";
+
+/**
+ * ==================== WHY THE VERSION DID NOT MOVE ====================
+ * Curated drafts add two fields (`frames`, `visuals`) and both are read with a
+ * `?? {}`. A v1 draft stored before curation existed therefore opens exactly as
+ * it did — with no previews and no selection records, which is the truth about
+ * it. Bumping the version would have discarded every stored draft to gain
+ * nothing, and a store that silently empties itself on upgrade is how an
+ * operator loses an afternoon's work.
+ */
 const VERSION = 1;
 
 export type StoredDraft = {
   readonly project: EditorProject;
   readonly metadata: DraftGenerationMetadata;
   readonly captionText: Readonly<Record<string, string>>;
+  /** Absent on a draft stored before curation existed. */
+  readonly frames?: Readonly<Record<string, string>>;
+  /** Absent on a draft stored before curation existed. */
+  readonly visuals?: Readonly<Record<string, StudioBeatVisual>>;
   readonly summary: GeneratedDraft["summary"];
   readonly storedAt: string;
 };
@@ -74,6 +89,8 @@ export function saveDraft(draft: GeneratedDraft, storedAt: string): boolean {
           project: draft.project,
           metadata: draft.metadata,
           captionText: draft.captionText,
+          frames: draft.frames,
+          visuals: draft.visuals,
           summary: draft.summary,
           storedAt,
         },

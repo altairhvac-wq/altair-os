@@ -1,0 +1,404 @@
+{
+  "studioDraftVersion": 1,
+  "topic": "The day a week you lose to paperwork",
+  "format": "short_narrated_video",
+  "hook": "You are not bad at paperwork. You are doing it twice.",
+  "objective": "Show a contractor that the admin time they treat as unavoidable is a system problem, not a discipline problem.",
+  "cta": "See what one day of jobs looks like in Altair.",
+  "targetDurationSeconds": 55,
+  "beats": [
+    {
+      "narration": "Every contractor I talk to says the same thing. The work is fine. It is everything after the work that eats the week.",
+      "visualDirection": "Fast cuts: hand flipping a worn spiral notebook, a messy whiteboard schedule with crossed-out names, a shoebox overflowing with receipts",
+      "caption": "The work is fine. It is everything after.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "pending_generation",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "establish",
+          "subject": "document",
+          "mustShow": [
+            "notebook",
+            "receipt"
+          ],
+          "mediaPreference": "motion"
+        },
+        "reason": "Nothing in the library answers this beat, and it describes a scene rather than evidence — a generated image would be legitimate here.",
+        "confidence": 0.75,
+        "candidates": [
+          {
+            "assetId": "raw-footage/office-business/office-manager-head-in-hands-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-office-business-office-manager-head-in-hands-01.jpg",
+            "score": 5,
+            "description": "Same office, man with his hand to his head in front of a full whiteboard. Overwhelm. 5s."
+          },
+          {
+            "assetId": "raw-footage/office-business/office-manager-phone-stress-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-office-business-office-manager-phone-stress-01.jpg",
+            "score": 4,
+            "description": "Office manager on the phone at a desk against a wall of whiteboard schedules. 5s."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-doorstep-paperwork-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-doorstep-paperwork-01.jpg",
+            "score": 3,
+            "description": "Technician in a blue polo at a customer's door reading paperwork, service van behind. 4s."
+          },
+          {
+            "assetId": "raw-footage/lifestyle/young-man-coffee-mug-casual-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-lifestyle-young-man-coffee-mug-casual-01.jpg",
+            "score": 2,
+            "description": "Young man drinking from a white mug, casual, looking to camera. 5s."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-van-altair-laptop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-van-altair-laptop-01.jpg",
+            "score": 1,
+            "description": "HVAC tech at a service van, then holding an ALTAIR laptop and reacting to what he sees. 15s, vertical, audio."
+          }
+        ],
+        "warnings": [
+          "the closest library asset was raw-footage/office-business/office-manager-head-in-hands-01.mp4 at 70 points, below the selection floor"
+        ],
+        "pendingRequirement": "Fast cuts: hand flipping a worn spiral notebook, a messy whiteboard schedule with crossed-out names, a shoebox overflowing with receipts It must visibly contain: notebook, receipt. Preferred as motion. Searched 65 library assets; the closest are related but none is recorded as containing notebook or receipt."
+      }
+    },
+    {
+      "narration": "Here is what that actually costs. A tech finishes a job, writes it on paper, and then somebody types it in again tonight.",
+      "visualDirection": "Working technician in uniform, standing by a service van in a driveway, phone in hand, speaking directly to camera between jobs",
+      "caption": "Written once. Typed again.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "raw-footage/hvac-trades/hvac-tech-doorstep-paperwork-01.mp4",
+        "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-doorstep-paperwork-01.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [
+            "technician"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "matches 6 requirement terms (technician, standing, service, van, driveway, hand), 2 in curated tags",
+        "confidence": 0.73,
+        "candidates": [
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-doorstep-paperwork-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-doorstep-paperwork-01.jpg",
+            "score": 5,
+            "description": "Technician in a blue polo at a customer's door reading paperwork, service van behind. 4s."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-service-van-suburban-driveway-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-service-van-suburban-driveway-01.jpg",
+            "score": 4,
+            "description": "Service van parked in a suburban street, tech walking up the path. 4s."
+          },
+          {
+            "assetId": "altair/dispatch/altair-dispatch-overview.png",
+            "previewUrl": "/studio/library/altair-dispatch-altair-dispatch-overview.jpg",
+            "score": 3,
+            "description": "Altair mobile dispatch board: 12 jobs today, 9 completed, live job map, scheduled job cards."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-van-altair-laptop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-van-altair-laptop-01.jpg",
+            "score": 2,
+            "description": "HVAC tech at a service van, then holding an ALTAIR laptop and reacting to what he sees. 15s, vertical, audio."
+          },
+          {
+            "assetId": "images/trades/trades-handshake-service-van-sunset-01.png",
+            "previewUrl": "/studio/library/images-trades-trades-handshake-service-van-sunset-01.jpg",
+            "score": 1,
+            "description": "Handshake between a homeowner and a tech beside a LILA'S FIX-IT service van at sunset."
+          }
+        ],
+        "warnings": [],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "The same unit, the same customer, the second visit — and nobody can find what was done the first time.",
+      "visualDirection": "Split screen: tech scratching head looking at unfamiliar unit vs. same tech confidently pointing at a part",
+      "caption": "Second visit. No history.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "pending_generation",
+        "assetId": null,
+        "previewUrl": null,
+        "intent": {
+          "purpose": "contrast",
+          "subject": "trade_work",
+          "mustShow": [
+            "tech"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "Nothing in the library answers this beat, and it describes a scene rather than evidence — a generated image would be legitimate here.",
+        "confidence": 0.75,
+        "candidates": [
+          {
+            "assetId": "raw-footage/founder/presenter-woman-office-talking-02.mp4",
+            "previewUrl": "/studio/library/raw-footage-founder-presenter-woman-office-talking-02.jpg",
+            "score": 5,
+            "description": "Same presenter, longer take with gestures. 13s, audio."
+          },
+          {
+            "assetId": "altair/reel/altair-reports-operating-brief.png",
+            "previewUrl": "/studio/library/altair-reel-altair-reports-operating-brief.jpg",
+            "score": 4,
+            "description": "Altair 30-day operating brief: collected, outstanding, overdue and net income with sparklines."
+          },
+          {
+            "assetId": "raw-footage/founder/presenter-woman-office-talking-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-founder-presenter-woman-office-talking-01.jpg",
+            "score": 3,
+            "description": "Woman in a blazer talking to camera in a bright office. 10s, audio."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-van-altair-laptop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-van-altair-laptop-01.jpg",
+            "score": 2,
+            "description": "HVAC tech at a service van, then holding an ALTAIR laptop and reacting to what he sees. 15s, vertical, audio."
+          },
+          {
+            "assetId": "altair/reel/altair-estimate-new.png",
+            "previewUrl": "/studio/library/altair-reel-altair-estimate-new.jpg",
+            "score": 1,
+            "description": "Altair new-estimate builder on mobile: price book line item, unit price and $7,850 total."
+          }
+        ],
+        "warnings": [
+          "the closest library asset was raw-footage/founder/presenter-woman-office-talking-02.mp4 at 60 points, below the selection floor",
+          "1 asset was held back by the reuse rules for this beat"
+        ],
+        "pendingRequirement": "Split screen: tech scratching head looking at unfamiliar unit vs. same tech confidently pointing at a part It must visibly contain: tech. Searched 64 library assets; the closest are related but none is recorded as containing tech."
+      }
+    },
+    {
+      "narration": "This is the whole fix. One schedule that everyone is looking at, with the address and the tech already on it.",
+      "visualDirection": "Screen recording: opening Altair OS to a clean daily schedule view showing jobs with times, addresses, and assigned techs",
+      "caption": "One schedule. Everyone sees it.",
+      "kind": "screen_recording",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "altair/dispatch/altair-dispatch-overview.png",
+        "previewUrl": "/studio/library/altair-dispatch-altair-dispatch-overview.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "product_ui",
+          "mustShow": [
+            "altair",
+            "tech"
+          ],
+          "mediaPreference": "motion"
+        },
+        "reason": "matches 6 requirement terms (altair, schedule, view, job, time, tech), 2 in curated tags",
+        "confidence": 0.66,
+        "candidates": [
+          {
+            "assetId": "altair/dispatch/altair-dispatch-overview.png",
+            "previewUrl": "/studio/library/altair-dispatch-altair-dispatch-overview.jpg",
+            "score": 5,
+            "description": "Altair mobile dispatch board: 12 jobs today, 9 completed, live job map, scheduled job cards."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-van-altair-laptop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-van-altair-laptop-01.jpg",
+            "score": 4,
+            "description": "HVAC tech at a service van, then holding an ALTAIR laptop and reacting to what he sees. 15s, vertical, audio."
+          },
+          {
+            "assetId": "dispatch-day-overview--1080.png",
+            "previewUrl": "/studio/library/dispatch-day-overview-1080.jpg",
+            "score": 3,
+            "description": null
+          },
+          {
+            "assetId": "altair/navigation/altair-notifications-overview.png",
+            "previewUrl": "/studio/library/altair-navigation-altair-notifications-overview.jpg",
+            "score": 2,
+            "description": "Altair notifications: job completed and payment received entries."
+          },
+          {
+            "assetId": "altair/payroll/altair-payroll-time-entries.png",
+            "previewUrl": "/studio/library/altair-payroll-altair-payroll-time-entries.jpg",
+            "score": 1,
+            "description": "Altair payroll and time entries. Shows a smoke-test technician name."
+          }
+        ],
+        "warnings": [
+          "is image, the beat asked for video"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "And when the job closes, the invoice is already written. You are not doing the paperwork. The paperwork happened.",
+      "visualDirection": "Screen recording: technician taps Mark Complete, invoice auto-generates, payment notification pops up on screen",
+      "caption": "Job closed. Invoice sent.",
+      "kind": "screen_recording",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "altair/navigation/altair-notifications-overview.png",
+        "previewUrl": "/studio/library/altair-navigation-altair-notifications-overview.jpg",
+        "intent": {
+          "purpose": "evidence",
+          "subject": "product_ui",
+          "mustShow": [
+            "technician",
+            "taps",
+            "invoice",
+            "notification"
+          ],
+          "mediaPreference": null
+        },
+        "reason": "matches 4 requirement terms (mark, invoice, payment, notification), 2 in curated tags",
+        "confidence": 0.41,
+        "candidates": [
+          {
+            "assetId": "altair/navigation/altair-notifications-overview.png",
+            "previewUrl": "/studio/library/altair-navigation-altair-notifications-overview.jpg",
+            "score": 5,
+            "description": "Altair notifications: job completed and payment received entries."
+          },
+          {
+            "assetId": "altair/reel/altair-reports-operating-brief.png",
+            "previewUrl": "/studio/library/altair-reel-altair-reports-operating-brief.jpg",
+            "score": 4,
+            "description": "Altair 30-day operating brief: collected, outstanding, overdue and net income with sparklines."
+          },
+          {
+            "assetId": "altair/expenses/altair-expense-new.png",
+            "previewUrl": "/studio/library/altair-expenses-altair-expense-new.jpg",
+            "score": 3,
+            "description": "Altair new-expense form with receipt capture."
+          },
+          {
+            "assetId": "altair/payroll/altair-payroll-time-entries.png",
+            "previewUrl": "/studio/library/altair-payroll-altair-payroll-time-entries.jpg",
+            "score": 2,
+            "description": "Altair payroll and time entries. Shows a smoke-test technician name."
+          },
+          {
+            "assetId": "altair/pricing/altair-price-book-overview.png",
+            "previewUrl": "/studio/library/altair-pricing-altair-price-book-overview.jpg",
+            "score": 1,
+            "description": "Altair price book: 21 active services, 19 flagged as missing cost, price or category."
+          }
+        ],
+        "warnings": [
+          "the beat asks for technician, taps, and nothing recorded about this asset says it contains them"
+        ],
+        "pendingRequirement": null
+      }
+    },
+    {
+      "narration": "That is a day a week back. Not from working harder. From stopping doing the same job twice.",
+      "visualDirection": "Wide shot of a branded HVAC van pulling up to a job site, technician stepping out confidently",
+      "caption": "A day a week back.",
+      "kind": "b_roll",
+      "visual": {
+        "mode": "real_asset",
+        "assetId": "raw-footage/hvac-trades/hvac-tech-doorstep-paperwork-01.mp4",
+        "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-doorstep-paperwork-01.jpg",
+        "intent": {
+          "purpose": "establish",
+          "subject": "trade_work",
+          "mustShow": [
+            "hvac",
+            "technician"
+          ],
+          "mediaPreference": "motion"
+        },
+        "reason": "matches 4 requirement terms (hvac, van, technician, confidently), 3 in curated tags",
+        "confidence": 0.73,
+        "candidates": [
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-doorstep-paperwork-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-doorstep-paperwork-01.jpg",
+            "score": 5,
+            "description": "Technician in a blue polo at a customer's door reading paperwork, service van behind. 4s."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-tech-van-altair-laptop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-tech-van-altair-laptop-01.jpg",
+            "score": 4,
+            "description": "HVAC tech at a service van, then holding an ALTAIR laptop and reacting to what he sees. 15s, vertical, audio."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/hvac-service-van-suburban-driveway-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-hvac-service-van-suburban-driveway-01.jpg",
+            "score": 3,
+            "description": "Service van parked in a suburban street, tech walking up the path. 4s."
+          },
+          {
+            "assetId": "raw-footage/hvac-trades/contractor-throwing-paperwork-workshop-01.mp4",
+            "previewUrl": "/studio/library/raw-footage-hvac-trades-contractor-throwing-paperwork-workshop-01.jpg",
+            "score": 2,
+            "description": "Man in a hard hat hurling a stack of paperwork into the air in a cluttered workshop. Frustration, high motion."
+          },
+          {
+            "assetId": "dispatch-day-overview--1080.png",
+            "previewUrl": "/studio/library/dispatch-day-overview-1080.jpg",
+            "score": 1,
+            "description": null
+          }
+        ],
+        "warnings": [],
+        "pendingRequirement": null
+      }
+    }
+  ],
+  "curation": {
+    "curatedAt": "2026-09-11T02:18:08.628Z",
+    "curatorVersion": "content.visual_curation@1",
+    "libraryCount": 65,
+    "orientation": "portrait",
+    "preflight": {
+      "score": 64,
+      "findings": [
+        {
+          "severity": "warning",
+          "beatIndex": 0,
+          "summary": "Beat 1 has no visual — needs generation.",
+          "action": "Fast cuts: hand flipping a worn spiral notebook, a messy whiteboard schedule with crossed-out names, a shoebox overflowing with receipts It must visibly contain: notebook, receipt. Preferred as motion. Searched 65 library assets; the closest are related but none is recorded as containing notebook or receipt.",
+          "cost": 12
+        },
+        {
+          "severity": "warning",
+          "beatIndex": 2,
+          "summary": "Beat 3 has no visual — needs generation.",
+          "action": "Split screen: tech scratching head looking at unfamiliar unit vs. same tech confidently pointing at a part It must visibly contain: tech. Searched 64 library assets; the closest are related but none is recorded as containing tech.",
+          "cost": 12
+        },
+        {
+          "severity": "warning",
+          "beatIndex": 4,
+          "summary": "Beat 5's asset does not demonstrably show technician, taps, invoice, notification.",
+          "action": "Look at altair/navigation/altair-notifications-overview.png and either confirm it, swap it, or add the missing tag to the librarian's semantics so the next run finds it properly.",
+          "cost": 8
+        },
+        {
+          "severity": "note",
+          "beatIndex": 4,
+          "summary": "Beat 5's pick is a weak one (confidence 0.41).",
+          "action": "Worth a look before approving — the alternatives scored close, or the beat asked for more than the asset can show.",
+          "cost": 4
+        }
+      ],
+      "counts": {
+        "beats": 6,
+        "realAssets": 4,
+        "diagrams": 0,
+        "textCards": 0,
+        "pending": 2,
+        "distinctAssets": 3
+      },
+      "readyForStudio": true
+    }
+  }
+}
