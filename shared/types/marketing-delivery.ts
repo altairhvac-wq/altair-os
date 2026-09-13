@@ -26,16 +26,24 @@
  * a provider, or a crash.
  */
 
-/** Mirrors the `delivery_state` CHECK in migration 143. */
+/** Mirrors the `delivery_state` CHECK in migrations 143 + 197. */
 export const MARKETING_DELIVERY_STATES = [
   /** Claimed; the external call may be in progress or may have died. */
   "in_flight",
-  /** Published. The provider id is recorded. */
+  /** The provider accepted the publish. The provider id is recorded. */
   "posted",
   /** Delivered as an unpublished draft for a human to finish. */
   "draft",
   /** The attempt failed and no external object was created. */
   "failed",
+  /**
+   * The provider accepted this once, but reconciliation later found the
+   * object missing at the provider or not publicly accessible (2026-09-06
+   * incident: three API-published Reels read perfect provider metadata while
+   * non-admins got "This page isn't available"). ONE-WAY downgrade from
+   * `posted`; the row keeps every original fact and is never deleted.
+   */
+  "posted_unverified",
 ] as const;
 export type MarketingDeliveryState = (typeof MARKETING_DELIVERY_STATES)[number];
 
@@ -80,6 +88,13 @@ export const DELIVERY_DECISIONS = [
    * never be auto-retried.
    */
   "NEEDS_RECONCILIATION",
+  /**
+   * Published once, later downgraded: the provider object vanished or was
+   * found not publicly accessible. Publishing again is a HUMAN decision —
+   * the suppressed object may still exist (an app-mode gate lifts
+   * retroactively), so an automatic retry could double-post.
+   */
+  "POSTED_UNVERIFIED",
 ] as const;
 export type DeliveryDecision = (typeof DELIVERY_DECISIONS)[number];
 
@@ -100,6 +115,8 @@ export function decideDelivery(
   switch (existing.deliveryState) {
     case "posted":
       return "ALREADY_POSTED";
+    case "posted_unverified":
+      return "POSTED_UNVERIFIED";
     case "draft":
       return "ALREADY_DRAFTED";
     case "failed":
@@ -162,6 +179,18 @@ export function describeDeliveryDecision(
         `A previous publish to ${providerLabel} started but never reported back, ` +
         `so it may or may not have gone out. Check ${providerLabel} before trying again — ` +
         `retrying now could post twice.${handle}`
+      );
+    }
+    case "POSTED_UNVERIFIED": {
+      const handle = existing?.providerPostId
+        ? ` The ${providerLabel} object is ${existing.providerPostId}.`
+        : "";
+      return (
+        `This was published to ${providerLabel}, but the object later proved missing ` +
+        `or not publicly accessible.${handle} Investigate at ${providerLabel} — the ` +
+        `object may still exist and become visible (an app-mode gate lifts ` +
+        `retroactively), so publishing again could post twice. Duplicate the post ` +
+        `deliberately if you truly intend a second publish.`
       );
     }
   }
