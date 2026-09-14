@@ -40,14 +40,26 @@
  *   Provider is hardcoded to `youtube`. There is no provider argument.
  *   Every refusal happens BEFORE any row is written or any byte uploaded.
  *
+ * ===================== METADATA =====================
+ *   Real title/description are REQUIRED. They come from publishing.json
+ *   beside the video (the HVAC render pipeline writes it: youtubeTitle,
+ *   youtubeDescription, keywords, seriesId, episode, coverFile), or from
+ *   --publishing-file / --title / --description / --description-file.
+ *   Placeholder copy exists only behind --allow-canary-copy, for a
+ *   deliberate connectivity-only test. After upload, the delivery ledger's
+ *   readback is verified: title and description must match the intended
+ *   copy exactly and carry no internal canary/debug language — a mismatch
+ *   fails the run. (This closes the incident where "Supervised private
+ *   upload canary." shipped as a real Short's public description.)
+ *
  * Run:
  *   node --experimental-strip-types \
  *        --import ./scripts/lib/ts-alias-loader-register.mjs \
  *        scripts/youtube-canary.mjs \
  *        --confirm <project-ref> \
- *        --video ./tmp/canary.mp4 \
+ *        --video ui-audit/shorts/<short>/<version>/<short>-<version>.mp4 \
  *        --approved-by you@example.com \
- *        [--apply]
+ *        [--publishing-file <publishing.json>] [--apply]
  */
 
 import crypto from "node:crypto";
@@ -117,7 +129,33 @@ const APPLY = has("apply");
 const CONFIRM = flag("confirm");
 const VIDEO = flag("video");
 const APPROVER = flag("approved-by");
-const TITLE = flag("title") ?? "Altair canary — private upload test";
+/**
+ * PUBLISHING COPY — the fix for the placeholder-description incident.
+ *
+ * This script once hardcoded "Supervised private upload canary." into the
+ * post row AND the dispatch body, with no flag to override either; the row
+ * held internal job language and YouTube received it as the public
+ * description. Real copy now comes from, in order:
+ *
+ *   --title / --description / --description-file   explicit overrides
+ *   publishing.json                                 the render pipeline's
+ *     (via --publishing-file, or auto-discovered    sidecar: youtubeTitle,
+ *      beside --video)                              youtubeDescription,
+ *                                                   keywords, series/episode
+ *
+ * With no real copy the run is REFUSED. --allow-canary-copy restores the
+ * old placeholder strings for a deliberate connectivity-only test — that
+ * language lives in job records and this flag's name, never silently.
+ */
+const TITLE_FLAG = flag("title");
+const DESCRIPTION_FLAG = flag("description");
+const DESCRIPTION_FILE = flag("description-file");
+const PUBLISHING_FILE = flag("publishing-file");
+const ALLOW_CANARY_COPY = has("allow-canary-copy");
+const CANARY_TITLE = "Altair canary — private upload test";
+const CANARY_BODY = "Supervised private upload canary.";
+/** Internal phrases that must never ship in public-facing metadata. */
+const INTERNAL_MARKERS = ["canary", "supervised private upload", "privacy upload", "upload test"];
 /**
  * Distinguishes one canary RUN from another. The default identity is stable
  * per company, which makes a re-run idempotent — the duplicate guard refuses
@@ -239,6 +277,72 @@ if (videoStat.size > 2_147_483_648) {
   die();
 }
 step(`video             ${path.basename(videoPath)} (${videoStat.size} bytes)`);
+
+/* ----------------------------------------------- the publishing contract */
+
+const sidecarPath = PUBLISHING_FILE
+  ? path.resolve(PUBLISHING_FILE)
+  : path.join(path.dirname(videoPath), "publishing.json");
+let sidecar = null;
+if (fs.existsSync(sidecarPath)) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(sidecarPath, "utf8"));
+    if (typeof parsed.youtubeTitle === "string" && typeof parsed.youtubeDescription === "string") {
+      sidecar = parsed;
+      step(`publishing        ${sidecarPath}`);
+    } else {
+      fail(`${sidecarPath} lacks youtubeTitle/youtubeDescription strings.`);
+      die();
+    }
+  } catch (error) {
+    fail(`Could not parse ${sidecarPath}.`, String(error));
+    die();
+  }
+} else if (PUBLISHING_FILE) {
+  fail(`No publishing file at ${sidecarPath}.`);
+  die();
+}
+
+let TITLE = TITLE_FLAG ?? sidecar?.youtubeTitle;
+let DESCRIPTION =
+  DESCRIPTION_FLAG ??
+  (DESCRIPTION_FILE ? fs.readFileSync(path.resolve(DESCRIPTION_FILE), "utf8").trim() : undefined) ??
+  sidecar?.youtubeDescription;
+const TAGS = Array.isArray(sidecar?.keywords) ? sidecar.keywords.filter((k) => typeof k === "string") : [];
+
+if (TITLE === undefined || DESCRIPTION === undefined || DESCRIPTION.trim().length === 0) {
+  if (ALLOW_CANARY_COPY) {
+    TITLE = TITLE ?? CANARY_TITLE;
+    DESCRIPTION = DESCRIPTION && DESCRIPTION.trim().length > 0 ? DESCRIPTION : CANARY_BODY;
+    step("copy              CANARY PLACEHOLDERS (connectivity test, by explicit flag)");
+  } else {
+    fail(
+      "No real title/description for this upload.",
+      "Provide publishing.json beside the video (the render pipeline writes it), or --publishing-file / " +
+        "--title / --description(-file). A description that silently fell back to internal canary text is " +
+        "exactly the failure this script shipped once. For a connectivity-only test, pass --allow-canary-copy.",
+    );
+    die();
+  }
+} else {
+  // Production copy may never read like infrastructure. This is checked
+  // again after upload, against what YouTube itself returns.
+  const publicText = `${TITLE}\n${DESCRIPTION}`.toLowerCase();
+  const marker = INTERNAL_MARKERS.find((m) => publicText.includes(m));
+  if (marker !== undefined) {
+    fail(
+      `The title/description contains internal language ("${marker}").`,
+      "Canary/debug wording belongs in job records, never in public-facing copy.",
+    );
+    die();
+  }
+}
+step(`title             ${TITLE}`);
+step(
+  `description       ${DESCRIPTION.length} chars — "${DESCRIPTION.split(/\s+/).slice(0, 8).join(" ")}…"`,
+);
+if (TAGS.length > 0) step(`tags              ${TAGS.join(", ")}`);
+if (sidecar?.seriesId) step(`series/episode    ${sidecar.seriesId} #${sidecar.episode ?? "?"}`);
 
 /* --------------------------------------------------------------- client */
 
@@ -513,7 +617,9 @@ if (!postId) {
       company_id: account.company_id,
       title: TITLE,
       channel_target: PROVIDER,
-      post_text: "Supervised private upload canary.",
+      // The row holds the REAL public copy — the same text the dispatch
+      // carries. Internal job language lives in source_job ids, never here.
+      post_text: DESCRIPTION,
       status: "ready",
       source_type: "other",
       video_media_asset_id: mediaAssetId,
@@ -598,8 +704,8 @@ const result = await dispatchPublish({
   // what the gate sees is what the database holds.
   jobApprovedAt: job.approved_at,
   title: TITLE,
-  body: "Supervised private upload canary.",
-  hashtags: [],
+  body: DESCRIPTION,
+  hashtags: TAGS,
   link: null,
   media: [grant.grant],
   nowIso: new Date().toISOString(),
@@ -668,10 +774,52 @@ if (deliveryRow.error || !deliveryRow.data) {
         "  and investigate before running anything else.\n",
     );
   }
+
+  // ---- metadata fidelity, verified from the LEDGER's readback ----------
+  // The adapter already refuses a publish whose readback does not echo the
+  // copy it sent; this re-checks from the delivery row so the printed proof
+  // is independent of the return value — and fails the run if the public
+  // metadata is missing, wrong, or reads like infrastructure.
+  if (row.delivery_state === "posted") {
+    const gotTitle = (row.provider_result?.title ?? "").trim();
+    const gotDescription = (row.provider_result?.description ?? "").trim();
+    heading("Metadata readback");
+    console.log(`  title (readback)   ${gotTitle}`);
+    console.log(`  description        ${gotDescription.length} chars`);
+    let metadataBad = false;
+    if (gotTitle !== TITLE.trim()) {
+      console.error(`  *** title mismatch: intended "${TITLE}" ***`);
+      metadataBad = true;
+    }
+    if (gotDescription.length === 0) {
+      console.error("  *** description missing on YouTube ***");
+      metadataBad = true;
+    } else if (gotDescription !== DESCRIPTION.trim()) {
+      console.error("  *** description mismatch against the intended copy ***");
+      metadataBad = true;
+    }
+    if (!ALLOW_CANARY_COPY) {
+      const publicText = `${gotTitle}\n${gotDescription}`.toLowerCase();
+      const marker = INTERNAL_MARKERS.find((m) => publicText.includes(m));
+      if (marker !== undefined) {
+        console.error(`  *** internal language ("${marker}") in public metadata ***`);
+        metadataBad = true;
+      }
+    }
+    if (metadataBad) {
+      console.error(
+        "\n  The upload is PRIVATE but its metadata is not what was intended.\n" +
+          "  Fix the copy on YouTube or delete the video; do not approve it as-is.\n",
+      );
+      failed = true;
+    } else {
+      console.log("  metadata           VERIFIED: title and description match the intended copy");
+    }
+  }
 }
 
 console.log(
   "\nDisarm publishing now: set MARKETING_PUBLISH_MODE=off (or remove it) and redeploy.\n",
 );
 
-process.exit(result.ok ? 0 : 1);
+process.exit(result.ok && !failed ? 0 : 1);

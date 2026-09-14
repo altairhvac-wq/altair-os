@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   claimDelivery,
+  recordDeliveryProviderMedia,
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
 import { getUsableAccessToken } from "@/lib/integrations/credential-lifecycle";
@@ -379,6 +380,18 @@ export async function dispatchPublish(
       publishCapability: account.facts.publishCapability,
       grantedScopes: account.grantedScopes,
       accessToken: credential.accessToken,
+      // The breadcrumb for the risky window, exactly as the legacy Reel path
+      // places it: the provider-side object's id lands on the claimed row the
+      // moment it exists and BEFORE anything is published. The write throwing
+      // aborts the publish (nothing public yet — see
+      // `recordDeliveryProviderMedia`), and the catch below settles it
+      // `failed`, retryable. Adapters with no pre-publish object (YouTube)
+      // simply never call it. The insights collector reads this column to
+      // tell a Reel from a feed post, so omitting the callback would also
+      // make every dispatched Reel invisible to analytics.
+      onMediaCreated: async (providerMediaId) => {
+        await recordDeliveryProviderMedia({ deliveryId, providerMediaId });
+      },
     });
   } catch (error) {
     // The adapter throws on every failure, per the port. The provider's own

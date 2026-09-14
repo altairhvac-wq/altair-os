@@ -108,6 +108,14 @@ export type UpsertMarketingConnectedFacebookPageInput = {
   providerResourceId: string;
   providerResourceName: string;
   scopes: string[];
+  /**
+   * What Meta actually granted, read back from /me/permissions after
+   * consent — the evidence column (migration 181) the publish gate fails
+   * closed on. Distinct from `scopes`, which records what was ASKED for;
+   * the difference between the two is the diagnosis when a publish fails
+   * with an opaque permission error.
+   */
+  grantedScopes: string[];
   tokenExpiresAt?: string | null;
   metadata?: Record<string, unknown>;
 };
@@ -149,6 +157,7 @@ export async function upsertMarketingConnectedFacebookPage(
     provider_resource_name: input.providerResourceName,
     status: "connected" as const,
     scopes: input.scopes,
+    granted_scopes: input.grantedScopes,
     token_expires_at: input.tokenExpiresAt ?? null,
     connected_by: input.connectedBy,
     connected_at: now,
@@ -781,6 +790,39 @@ export async function setConnectionMetadata(input: {
  * Cross-company on purpose: credentials must stay alive for every tenant
  * with a connection, not only tenants with an active marketing HQ.
  */
+/**
+ * Service-role read of one connected account by id, for collectors that run
+ * with no user session (cron). The cookie-client
+ * `getMarketingConnectedAccountById` is the one page code should keep using;
+ * this exists because a metrics collector holds a delivery row's
+ * `connected_account_id` and needs the token expiry and integration kind to
+ * drive the credential seam — RLS has no user to scope by there.
+ */
+export async function getMarketingConnectedAccountByIdAdmin(
+  connectedAccountId: string,
+): Promise<MarketingConnectedAccount | null> {
+  const normalizedId = connectedAccountId.trim();
+  if (!normalizedId) return null;
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await marketingConnectedAccountsTable(supabase)
+    .select(ACCOUNT_SELECT)
+    .eq("id", normalizedId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getMarketingConnectedAccountByIdAdmin] query failed:", {
+      connectedAccountId: normalizedId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) return null;
+  return mapMarketingConnectedAccountRow(data as MarketingConnectedAccountRow);
+}
+
 export async function listRefreshableConnectedAccounts(): Promise<
   MarketingConnectedAccount[]
 > {

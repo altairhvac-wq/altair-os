@@ -297,6 +297,12 @@ export const youtubeAdapter: PublisherAdapter = {
       video: readback,
       expectedVideoId: uploaded.videoId,
       expectedChannelId: channelId,
+      // The adapter knows exactly what it sent; the readback must echo it.
+      // A publish whose metadata did not survive the trip is not a success.
+      // (Empty copy is not asserted: YouTube substitutes its own defaults
+      // for blanks, and the real guard against blank copy is upstream.)
+      expectedTitle: (input.package.title ?? "").trim().length > 0 ? (input.package.title as string) : undefined,
+      expectedDescription: input.package.body.trim().length > 0 ? input.package.body : undefined,
     });
 
     if (!verdict.ok) {
@@ -331,6 +337,10 @@ export const youtubeAdapter: PublisherAdapter = {
         uploadStatus: readback.uploadStatus,
         channelId: readback.channelId,
         videoId: readback.videoId,
+        // Metadata as YouTube holds it, so the ledger row itself proves the
+        // intended copy arrived (canary-placeholder incident).
+        title: readback.title,
+        description: readback.description,
       },
     };
   },

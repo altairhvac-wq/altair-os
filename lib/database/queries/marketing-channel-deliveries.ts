@@ -405,6 +405,56 @@ export async function listDeliveriesForPost(
  * settle raced, and asking Meta about nothing would be a request per run that
  * can never succeed.
  */
+/**
+ * Providers with a POSTED delivery for ANY post that publishes this video
+ * asset. The per-(post, provider) unique claim cannot see sibling posts of
+ * the same video — the bridge opens one draft per channel — so "is this
+ * exact video already live on that platform?" needs this cross-post read.
+ * Feeds `refuseDirectReelPublish`; read-only, service-role (the caller has
+ * already authorized the founder).
+ */
+export async function listPostedProvidersForVideoAsset(
+  companyId: string,
+  videoMediaAssetId: string,
+): Promise<string[]> {
+  const client = createServiceRoleClient();
+  const posts = await (
+    client as ServiceClient & {
+      from(table: "marketing_posts"): ReturnType<ServiceClient["from"]>;
+    }
+  )
+    .from("marketing_posts")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("video_media_asset_id", videoMediaAssetId);
+
+  if (posts.error || !posts.data || posts.data.length === 0) {
+    if (posts.error) {
+      // Fail CLOSED at the caller by reporting the read failed — an empty
+      // answer here would read as "no duplicates", which is the one wrong
+      // default for a duplicate guard.
+      throw new Error("Could not read sibling posts for the duplicate check.");
+    }
+    return [];
+  }
+
+  const postIds = (posts.data as { id: string }[]).map((row) => row.id);
+  const result = await deliveriesTable(client)
+    .select("provider")
+    .eq("company_id", companyId)
+    .eq("delivery_state", "posted")
+    .in("marketing_post_id", postIds);
+
+  if (result.error) {
+    throw new Error("Could not read sibling deliveries for the duplicate check.");
+  }
+  return [
+    ...new Set(
+      ((result.data ?? []) as { provider: string }[]).map((row) => row.provider),
+    ),
+  ];
+}
+
 export async function listPostedDeliveries(
   companyId: string,
 ): Promise<MarketingDeliveryRecord[]> {

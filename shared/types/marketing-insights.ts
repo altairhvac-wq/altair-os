@@ -19,6 +19,24 @@
  */
 export const METRIC_SOURCE = "meta_organic_reel";
 
+/**
+ * YouTube organic counters get their OWN source, deliberately not folded into
+ * `meta_organic_reel`: a YouTube "views" and an Instagram "views" are counted
+ * by different platforms under different rules, and a reader that averaged
+ * rows across the two sources would be averaging unlike things into one fake
+ * number. Cross-platform comparison happens downstream, per platform,
+ * side by side — never at the row level.
+ */
+export const YOUTUBE_METRIC_SOURCE = "youtube_organic_video";
+
+/**
+ * What `videos.list part=statistics` actually reports — three lifetime
+ * counters. Retention and impressions live in the YouTube Analytics API
+ * behind an ungranted scope, so they have no names here: a metric this list
+ * does not name is a metric this system does not claim to know.
+ */
+export const YOUTUBE_VIDEO_METRICS = ["views", "likes", "comments"] as const;
+
 export type InsightsProvider = "facebook" | "instagram";
 
 /**
@@ -241,6 +259,47 @@ export function buildMetricRows(
     value: m.value,
     observedOn,
   }));
+}
+
+/**
+ * The YouTube twin of `buildMetricRows` — same row shape, same provenance
+ * dimensions, its own `source` and its own subject type (the provider is the
+ * literal "youtube", which `InsightsProvider` deliberately excludes).
+ * `sourceJobId` may be empty for videos published before render-job
+ * attribution existed; the empty string is recorded honestly rather than
+ * the row being dropped, because downstream attribution for Shorts runs on
+ * `providerPostId` (the video id) as well.
+ */
+export type YouTubeMetricSubject = {
+  readonly companyId: string;
+  readonly deliveryId: string;
+  readonly providerPostId: string;
+  readonly marketingPostId: string;
+  readonly sourceJobId: string;
+};
+
+export function buildYouTubeMetricRows(
+  subject: YouTubeMetricSubject,
+  metrics: readonly CollectedMetric[],
+  observedOn: string,
+): MetricRow[] {
+  const known = new Set<string>(YOUTUBE_VIDEO_METRICS);
+  return metrics
+    .filter((m) => known.has(m.metric))
+    .map((m) => ({
+      companyId: subject.companyId,
+      source: YOUTUBE_METRIC_SOURCE,
+      metric: m.metric,
+      dimensions: {
+        deliveryId: subject.deliveryId,
+        provider: "youtube",
+        providerPostId: subject.providerPostId,
+        marketingPostId: subject.marketingPostId,
+        sourceJobId: subject.sourceJobId,
+      },
+      value: m.value,
+      observedOn,
+    }));
 }
 
 /** UTC day stamp. The unique index makes one reading per metric per day. */

@@ -40,6 +40,50 @@ const FACEBOOK_GRAPH_API_VERSION_ENV = "FACEBOOK_GRAPH_API_VERSION";
  */
 export const DEFAULT_FACEBOOK_GRAPH_API_VERSION = "v22.0";
 
+/**
+ * When Meta's data access for the connected Page expires.
+ *
+ * Read off the live token via `GET /debug_token` on 2026-09-13
+ * (`data_access_expires_at` = 2026-11-30). This is a property of the GRANT,
+ * not of the token: the Page token itself never expires, so nothing in
+ * `token_expires_at` or the channel state machine will ever warn about it —
+ * publishing and insights both go dark on this date with every stored
+ * credential still "valid". The only fix is a human re-consenting
+ * (reconnect Facebook), which resets the window and this constant.
+ */
+export const META_DATA_ACCESS_EXPIRES_ON = "2026-11-30";
+
+/** How far ahead the expiry starts being reported as a warning. */
+export const META_DATA_ACCESS_WARN_DAYS = 45;
+
+/**
+ * The operator-facing warning, or null while the expiry is comfortably far.
+ * Pure date math so schedulers and summaries on both repos can print the
+ * same sentence without holding a token.
+ */
+export function metaDataAccessWarning(nowIso: string): string | null {
+  const now = Date.parse(nowIso);
+  const expires = Date.parse(`${META_DATA_ACCESS_EXPIRES_ON}T00:00:00Z`);
+  if (Number.isNaN(now) || Number.isNaN(expires)) return null;
+
+  const daysLeft = Math.floor((expires - now) / 86_400_000);
+  if (daysLeft > META_DATA_ACCESS_WARN_DAYS) return null;
+
+  if (daysLeft < 0) {
+    return (
+      `Meta data access EXPIRED on ${META_DATA_ACCESS_EXPIRES_ON}. Facebook and Instagram ` +
+      "publishing and insights are dark until someone reconnects the Facebook Page " +
+      "(Integrations → Facebook), which renews the grant."
+    );
+  }
+
+  return (
+    `Meta data access expires ${META_DATA_ACCESS_EXPIRES_ON} (${daysLeft} day${daysLeft === 1 ? "" : "s"} left). ` +
+    "Reconnect the Facebook Page before then — the stored token stays 'valid' right through " +
+    "the cutoff, so nothing else will warn about this."
+  );
+}
+
 const FACEBOOK_OAUTH_CALLBACK_PATH =
   "/api/marketing/connected-accounts/facebook/callback";
 

@@ -25,6 +25,7 @@ import {
   publishInstagramReel,
 } from "@/lib/integrations/facebook/reels";
 import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
+import { refuseDirectReelPublish } from "@/lib/publishing/hvac-guard";
 import { createMediaReadGrant } from "@/lib/media/marketing-media-storage";
 import {
   decideMediaRead,
@@ -37,10 +38,7 @@ import {
 } from "@/shared/types/marketing-reel";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
-import {
-  buildMarketingPostBodyFromPost,
-  checkMarketingPostBodyFits,
-} from "@/shared/lib/marketing-post-body";
+import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
 import type {
   MarketingPost,
   MarketingPostSource,
@@ -48,6 +46,7 @@ import type {
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 import {
   claimDelivery,
+  listPostedProvidersForVideoAsset,
   recordDeliveryProviderMedia,
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
@@ -404,15 +403,7 @@ export async function publishMarketingPostToFacebookAction(
     };
   }
 
-  // Measured on the FINAL assembled string — post text + call to action +
-  // hashtags — because a caption that fits alone can still overflow once the
-  // other two are appended. Checked BEFORE the delivery is claimed, so a
-  // refusal leaves no claimed row behind.
-  const bodyFit = checkMarketingPostBodyFits(draft.post, "facebook");
-  if (bodyFit.error) {
-    return { error: bodyFit.error };
-  }
-  const message = bodyFit.body;
+  const message = buildMarketingPostBodyFromPost(draft.post);
   const pageId = pageLoad.account.providerResourceId!;
   const screenshotRef = draft.post.founderScreenshotReference?.trim();
 
@@ -648,15 +639,7 @@ export async function publishMarketingPostToInstagramAction(
     };
   }
 
-  // Measured on the FINAL assembled string — post text + call to action +
-  // hashtags — because a caption that fits alone can still overflow once the
-  // other two are appended. Checked BEFORE the delivery is claimed, so a
-  // refusal leaves no claimed row behind.
-  const bodyFit = checkMarketingPostBodyFits(draft.post, "instagram");
-  if (bodyFit.error) {
-    return { error: bodyFit.error };
-  }
-  const caption = bodyFit.body;
+  const caption = buildMarketingPostBodyFromPost(draft.post);
 
   // Claimed under the INSTAGRAM provider, not Facebook. They are separate
   // rows for the same post on purpose: publishing to the Page and to the
@@ -793,6 +776,54 @@ export async function publishMarketingPostToInstagramAction(
  * Publishes the video attached to a founder draft as a Facebook Page Reel.
  * Deliberate human click only — no scheduling and no auto-trigger.
  */
+/**
+ * The agent-managed guard, resolved from the rows and answered by the pure
+ * module in `lib/publishing/hvac-guard.ts` (its header carries the incident
+ * this exists for). Runs BEFORE anything is claimed, minted, or sent, in
+ * both Meta reel actions — an HVAC Short can never publish from a direct
+ * click, a bridge draft can never publish cross-platform, and an
+ * agent-managed video already live on the requested platform can never
+ * duplicate. A failed duplicate-check READ refuses too: "could not check"
+ * must never resolve to "go ahead".
+ */
+async function refuseAgentManagedDirectPublish(args: {
+  companyId: string;
+  post: {
+    sourceType: string;
+    channelTarget: string;
+    videoMediaAssetId?: string | null;
+  };
+  provider: "facebook" | "instagram";
+}): Promise<string | null> {
+  const assetId = args.post.videoMediaAssetId ?? null;
+  let videoSourceJobId: string | null = null;
+  let postedSiblingProviders: string[] = [];
+  if (assetId) {
+    const asset = await getMediaAssetById(args.companyId, assetId);
+    videoSourceJobId = asset?.sourceJobId ?? null;
+    try {
+      postedSiblingProviders = await listPostedProvidersForVideoAsset(
+        args.companyId,
+        assetId,
+      );
+    } catch {
+      return (
+        "Could not verify whether this video is already live on that platform, so " +
+        "publishing was refused rather than risking a duplicate. Try again."
+      );
+    }
+  }
+  return refuseDirectReelPublish({
+    requestedProvider: args.provider,
+    post: {
+      sourceType: args.post.sourceType,
+      channelTarget: args.post.channelTarget,
+    },
+    videoSourceJobId,
+    postedSiblingProviders,
+  });
+}
+
 export async function publishMarketingReelToFacebookAction(
   postId: string,
   connectedAccountId: string,
@@ -823,6 +854,15 @@ export async function publishMarketingReelToFacebookAction(
   });
   if (draft.error || !draft.post) {
     return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const managedRefusal = await refuseAgentManagedDirectPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+    provider: "facebook",
+  });
+  if (managedRefusal) {
+    return { error: managedRefusal };
   }
 
   const pageLoad = await loadConnectedFacebookPage({
@@ -858,15 +898,7 @@ export async function publishMarketingReelToFacebookAction(
     return { error: media.error ?? "Could not open the video for publishing." };
   }
 
-  // Measured on the FINAL assembled string — post text + call to action +
-  // hashtags — because a caption that fits alone can still overflow once the
-  // other two are appended. Checked BEFORE the delivery is claimed, so a
-  // refusal leaves no claimed row behind.
-  const bodyFit = checkMarketingPostBodyFits(draft.post, "facebook");
-  if (bodyFit.error) {
-    return { error: bodyFit.error };
-  }
-  const description = bodyFit.body;
+  const description = buildMarketingPostBodyFromPost(draft.post);
   const pageId = pageLoad.account.providerResourceId!;
 
   const claim = await claimDelivery({
@@ -1014,6 +1046,15 @@ export async function publishMarketingReelToInstagramAction(
     return { error: draft.error ?? "Marketing post not found." };
   }
 
+  const managedRefusal = await refuseAgentManagedDirectPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+    provider: "instagram",
+  });
+  if (managedRefusal) {
+    return { error: managedRefusal };
+  }
+
   const pageLoad = await loadConnectedFacebookPage({
     companyId: permission.context.company.id,
     connectedAccountId: normalizedAccountId,
@@ -1053,15 +1094,7 @@ export async function publishMarketingReelToInstagramAction(
     return { error: media.error ?? "Could not open the video for publishing." };
   }
 
-  // Measured on the FINAL assembled string — post text + call to action +
-  // hashtags — because a caption that fits alone can still overflow once the
-  // other two are appended. Checked BEFORE the delivery is claimed, so a
-  // refusal leaves no claimed row behind.
-  const bodyFit = checkMarketingPostBodyFits(draft.post, "instagram");
-  if (bodyFit.error) {
-    return { error: bodyFit.error };
-  }
-  const caption = bodyFit.body;
+  const caption = buildMarketingPostBodyFromPost(draft.post);
 
   const claim = await claimDelivery({
     companyId: permission.context.company.id,
