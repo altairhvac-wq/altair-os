@@ -8,7 +8,10 @@ import { MarketingMediaPreview } from "./MarketingMediaPreview";
 import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
 import { MarketingYouTubePublishControls } from "./MarketingYouTubePublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
-import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
+import {
+  archiveMarketingPostAction,
+  updateMarketingPostAction,
+} from "@/app/actions/marketing-posts";
 import {
   REJECT_REASON_LABELS,
   REJECT_REASONS,
@@ -349,7 +352,49 @@ function ReelIdentityPanel({
 function channelLabel(channel: string): string {
   if (channel === "facebook") return "Facebook";
   if (channel === "instagram") return "Instagram";
+  if (channel === "youtube") return "YouTube";
   return channel.charAt(0).toUpperCase() + channel.slice(1);
+}
+
+/**
+ * One VIDEO, one card — however many channels it is drafted for.
+ *
+ * ==================== WHY THE GROUP EXISTS ====================
+ * The morning workflow this file's header describes has always been "watch
+ * the video, read the Facebook copy, read the Instagram copy, decide" — one
+ * decision about one video. The bridge opens one draft ROW per channel
+ * (delivery claims are per channel, so that is the right storage), and
+ * rendering each row as its own card showed the same video two or three
+ * times with near-identical framing. Grouping is presentation only: the
+ * rows, the candidate rule (`selectTodayCandidates`, untouched) and the
+ * per-channel publish actions are exactly what they were.
+ */
+type TodayGroup = { key: string; posts: MarketingPost[] };
+
+const CHANNEL_ORDER: Record<string, number> = {
+  youtube: 0,
+  facebook: 1,
+  instagram: 2,
+};
+
+function groupByVideo(posts: readonly MarketingPost[]): TodayGroup[] {
+  const map = new Map<string, MarketingPost[]>();
+  for (const post of posts) {
+    // A post with no video cannot be a Today candidate, but the approved
+    // strip reuses this too — key by id there so nothing collapses wrongly.
+    const key = post.videoMediaAssetId ?? post.id;
+    const bucket = map.get(key);
+    if (bucket) bucket.push(post);
+    else map.set(key, [post]);
+  }
+  return [...map.entries()].map(([key, grouped]) => ({
+    key,
+    posts: [...grouped].sort(
+      (a, b) =>
+        (CHANNEL_ORDER[a.channelTarget] ?? 9) -
+        (CHANNEL_ORDER[b.channelTarget] ?? 9),
+    ),
+  }));
 }
 
 export function MarketingTodayView({
@@ -363,16 +408,42 @@ export function MarketingTodayView({
   onChanged,
 }: MarketingTodayViewProps) {
   const [rejecting, setRejecting] = useState<string | null>(null);
-  /** Post id whose reject-reason picker is open, and the picked reason.
+  /** Group key whose reject-reason picker is open, and the picked reason.
    * "" = no reason picked yet — the picker never pre-selects one, because a
    * hurried default click would record a label nobody actually chose, and
    * these labels are training data. */
   const [rejectPickerFor, setRejectPickerFor] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<RejectReason | "">("");
+  /** Group key mid-approval, and each group's optional distribution slot
+   * (datetime-local text, empty = approve without a slot). */
+  const [approving, setApproving] = useState<string | null>(null);
+  const [slotByGroup, setSlotByGroup] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const timeZone = useCompanyTimezone();
 
   const candidates = useMemo(() => selectTodayCandidates(posts), [posts]);
+  const groups = useMemo(() => groupByVideo(candidates), [candidates]);
+
+  /**
+   * Already approved for scheduled distribution: agent-proposed drafts that
+   * a person moved to `ready` (approved, slot pending) or `scheduled` (slot
+   * assigned). Shown below the queue so an approved Short remains visible
+   * with its release slot instead of silently vanishing — and scoped to the
+   * agent source so a founder's own manually-staged posts do not suddenly
+   * appear in an automation strip they never asked for.
+   */
+  const approvedGroups = useMemo(
+    () =>
+      groupByVideo(
+        posts.filter(
+          (post) =>
+            post.sourceType === "agent_daily_reel" &&
+            Boolean(post.videoMediaAssetId) &&
+            (post.status === "ready" || post.status === "scheduled"),
+        ),
+      ),
+    [posts],
+  );
 
   const todayState = useMemo(
     () => deriveMarketingTodayState({ posts, renders, nowIso }),
@@ -409,25 +480,65 @@ export function MarketingTodayView({
       })
     : null;
 
-  async function reject(post: MarketingPost, reason: RejectReason) {
+  async function reject(group: TodayGroup, reason: RejectReason) {
     setError(null);
-    setRejecting(post.id);
+    setRejecting(group.key);
     try {
       // The reason rides the SAME button press that archives — the label
       // factory lives on the control the founder already uses, never on a
       // parallel surface (the zero-rows decision channel is the cautionary
       // precedent). SUPERSEDED exists so clearing a stale draft is
-      // distinguishable from rejecting a bad one.
-      const result = await archiveMarketingPostAction(post.id, { reason });
-      if (result?.error) setError(result.error);
-      else {
-        // Close only THIS post's picker — an in-flight success must not
-        // slam shut a picker the founder just opened on another card.
-        setRejectPickerFor((current) => (current === post.id ? null : current));
-        onChanged();
+      // distinguishable from rejecting a bad one. One decision covers the
+      // whole video: every channel's draft is archived under the one reason,
+      // because "the Instagram copy is bad" still returns the VIDEO to
+      // rework — a per-channel partial reject was never a real state here.
+      for (const post of group.posts) {
+        const result = await archiveMarketingPostAction(post.id, { reason });
+        if (result?.error) {
+          setError(`${channelLabel(post.channelTarget)}: ${result.error}`);
+          return;
+        }
       }
+      // Close only THIS group's picker — an in-flight success must not
+      // slam shut a picker the founder just opened on another card.
+      setRejectPickerFor((current) => (current === group.key ? null : current));
+      onChanged();
     } finally {
       setRejecting(null);
+    }
+  }
+
+  /**
+   * APPROVED FOR SCHEDULED DISTRIBUTION — deliberately not a publish.
+   *
+   * Uses the EXISTING update action and its existing schedule/status
+   * coupling: a slot sets `scheduledAt` (the action derives `scheduled`),
+   * no slot sets `ready` (approved, slot pending). Nothing goes live from
+   * this button: distribution is the separate, operator-armed run, which is
+   * the entire point for Meta — Facebook and Instagram are PUBLIC the
+   * moment they publish, so "approve" must never be the same click.
+   */
+  async function approveForScheduledDistribution(group: TodayGroup) {
+    setError(null);
+    setApproving(group.key);
+    try {
+      const slot = (slotByGroup[group.key] ?? "").trim();
+      const scheduledAtIso = slot ? new Date(slot).toISOString() : null;
+      for (const post of group.posts) {
+        const result = await updateMarketingPostAction(
+          post.id,
+          scheduledAtIso
+            ? { scheduledAt: scheduledAtIso }
+            : { status: "ready" },
+        );
+        if (result?.error) {
+          setError(`${channelLabel(post.channelTarget)}: ${result.error}`);
+          return;
+        }
+      }
+      onChanged();
+    } finally {
+      setApproving(null);
     }
   }
 
@@ -438,7 +549,7 @@ export function MarketingTodayView({
         nextRunLabel={nextRunLabel}
       />
 
-      {candidates.length === 0 ? (
+      {groups.length === 0 ? (
         <section className="rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6">
           <h2 className="text-lg font-semibold text-altair-ink">
             {todayState.headline}
@@ -448,9 +559,10 @@ export function MarketingTodayView({
           </p>
         </section>
       ) : (
-        candidates.map((post) => {
-          const video = post.videoMediaAssetId
-            ? videoById.get(post.videoMediaAssetId)
+        groups.map((group) => {
+          const lead = group.posts[0];
+          const video = lead.videoMediaAssetId
+            ? videoById.get(lead.videoMediaAssetId)
             : undefined;
           // The daily-pilot queue's own rationale (lib/marketing/store.ts,
           // via marketing_items) takes priority when it exists — it predates
@@ -458,11 +570,42 @@ export function MarketingTodayView({
           // showed. `post.directorRationale` is the fallback for a post this
           // queue mechanism never touched, e.g. one opened by
           // /api/agent/draft-posts for the transported-render pipeline,
-          // which has never gone through marketing_items at all.
-          const rationale = rationaleByPostId[post.id] ?? post.directorRationale;
+          // which has never gone through marketing_items at all. In a group
+          // the channels share one render, so the first recorded rationale
+          // speaks for the video.
+          const rationale =
+            group.posts
+              .map((post) => rationaleByPostId[post.id] ?? post.directorRationale)
+              .find((value) => Boolean(value)) ?? undefined;
+          const hasMetaChannel = group.posts.some(
+            (post) =>
+              post.channelTarget === "facebook" ||
+              post.channelTarget === "instagram",
+          );
+          // HVAC Shorts have exactly one publish path: approval here, then
+          // the scheduled distribution run (hvac:distribute → dispatchPublish
+          // → adapter readback). Their cards render NO direct publish
+          // buttons, and the server actions refuse the click anyway
+          // (`lib/publishing/hvac-guard.ts`) — the missing button is
+          // courtesy, the refusal is the guarantee.
+          const isHvacManaged = Boolean(
+            video?.sourceJobId.startsWith("hvac-short-"),
+          );
+          // Sibling drafts of the SAME video that already went out. The
+          // delivery claim is per (post, provider), so a second sibling can
+          // still reach the same platform — a real duplicate, live on a real
+          // account. The queue cannot stop a determined click, but it can
+          // stop an uninformed one.
+          const postedSiblings = lead.videoMediaAssetId
+            ? posts.filter(
+                (post) =>
+                  post.videoMediaAssetId === lead.videoMediaAssetId &&
+                  post.status === "posted",
+              )
+            : [];
           return (
             <section
-              key={post.id}
+              key={group.key}
               className="rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6 space-y-5"
             >
               <header className="space-y-1">
@@ -473,8 +616,14 @@ export function MarketingTodayView({
                     judged. The render job id used to be the title here, which
                     told the reader nothing they could act on. */}
                 <h2 className="text-xl font-semibold text-altair-ink">
-                  {post.title}
+                  {lead.title}
                 </h2>
+                <p className="text-[11px] text-altair-ink-muted">
+                  Intended platforms:{" "}
+                  {group.posts
+                    .map((post) => channelLabel(post.channelTarget))
+                    .join(" · ")}
+                </p>
               </header>
 
               {video ? (
@@ -486,9 +635,9 @@ export function MarketingTodayView({
                     timeZone={timeZone}
                     storedAt={video.storedAt}
                     durationMs={video.durationMs}
-                    costUsd={post.costUsd}
-                    qualityState={post.qualityState}
-                    renderQa={post.renderQa}
+                    costUsd={lead.costUsd}
+                    qualityState={lead.qualityState}
+                    renderQa={lead.renderQa}
                   />
                   <MarketingMediaPreview sourceJobId={video.sourceJobId} />
                 </>
@@ -519,43 +668,105 @@ export function MarketingTodayView({
                 )}
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-altair-ink">
-                  {channelLabel(post.channelTarget)} copy
-                </h3>
-                <p className="mt-1 whitespace-pre-line rounded-md border border-[var(--north-star-plate-border)] p-3 text-sm text-altair-ink">
-                  {post.postText}
-                </p>
-                {post.suggestedHashtags.length > 0 ? (
-                  <p className="mt-1 text-[11px] text-altair-ink-muted">
-                    {post.suggestedHashtags.map((tag) => `#${tag}`).join(" ")}
+              {/* Every channel's copy, side by side — the founder reads what
+                  each platform will actually carry before one decision covers
+                  them all. Each block keeps its own existing publish-now
+                  control: those actions are unchanged, and for YouTube the
+                  strongest thing that button can do remains a PRIVATE upload. */}
+              {group.posts.map((post) => (
+                <div key={post.id}>
+                  <h3 className="text-sm font-medium text-altair-ink">
+                    {channelLabel(post.channelTarget)} copy
+                  </h3>
+                  <p className="mt-1 whitespace-pre-line rounded-md border border-[var(--north-star-plate-border)] p-3 text-sm text-altair-ink">
+                    {post.postText}
                   </p>
-                ) : null}
-              </div>
+                  {post.suggestedHashtags.length > 0 ? (
+                    <p className="mt-1 text-[11px] text-altair-ink-muted">
+                      {post.suggestedHashtags.map((tag) => `#${tag}`).join(" ")}
+                    </p>
+                  ) : null}
+                  <div className="mt-2">
+                    {isHvacManaged ? (
+                      <p className="text-[11px] text-altair-ink-muted">
+                        Publishes through the scheduled distribution run after
+                        approval — direct publish is disabled for HVAC Shorts
+                        (and refused server-side).
+                      </p>
+                    ) : post.channelTarget === "youtube" ? (
+                      // The controls agree with the post's declared
+                      // destination — a YouTube-targeted post never renders
+                      // Meta buttons, and vice versa. The server action
+                      // re-checks the same fact.
+                      <MarketingYouTubePublishControls
+                        post={post}
+                        connectedAccounts={connectedAccounts}
+                        videoOptions={videoOptions}
+                        onPublished={onChanged}
+                      />
+                    ) : (
+                      <MarketingReelPublishControls
+                        post={post}
+                        connectedAccounts={connectedAccounts}
+                        videoOptions={videoOptions}
+                        onPublished={onChanged}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {postedSiblings.length > 0 ? (
+                <p className="rounded-md border border-altair-danger/40 bg-[var(--surface-tile)] p-3 text-[12px] text-altair-danger">
+                  This video already went out from a sibling card:{" "}
+                  {postedSiblings
+                    .map((post) => channelLabel(post.channelTarget))
+                    .join(", ")}
+                  . Publishing the same platform again from here would post a
+                  DUPLICATE on the real account — check History before using
+                  the publish buttons above.
+                </p>
+              ) : null}
+
+              {hasMetaChannel ? (
+                <p className="rounded-md border border-altair-warning/40 bg-[var(--surface-tile)] p-3 text-[12px] text-altair-warning">
+                  Facebook and Instagram are public-on-publish: when
+                  distribution runs, those Reels are live immediately — Meta
+                  has no private or draft mode. YouTube uploads stay private
+                  until a person flips them.
+                </p>
+              ) : null}
 
               <div className="flex flex-wrap items-center gap-3 border-t border-[var(--north-star-plate-border)] pt-4">
-                {/* Approve IS publish. The button that recorded a decision and
-                    did nothing else lived on this page and was the single most
-                    misleading control in the product. */}
-                {post.channelTarget === "youtube" ? (
-                  // The controls agree with the post's declared destination —
-                  // a YouTube-targeted post never renders Meta buttons, and
-                  // vice versa. The server action re-checks the same fact.
-                  <MarketingYouTubePublishControls
-                    post={post}
-                    connectedAccounts={connectedAccounts}
-                    videoOptions={videoOptions}
-                    onPublished={onChanged}
+                {/* Approval here means APPROVED FOR SCHEDULED DISTRIBUTION —
+                    the existing update action moves every channel's draft to
+                    scheduled (slot given) or ready (slot pending). Nothing
+                    publishes from this button; the per-channel controls above
+                    remain the immediate path when a human wants one. */}
+                <label className="flex items-center gap-2 text-[11px] text-altair-ink-muted">
+                  Release slot
+                  <input
+                    type="datetime-local"
+                    className="rounded border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] px-2 py-1 text-xs text-altair-ink"
+                    value={slotByGroup[group.key] ?? ""}
+                    onChange={(event) =>
+                      setSlotByGroup((current) => ({
+                        ...current,
+                        [group.key]: event.target.value,
+                      }))
+                    }
                   />
-                ) : (
-                  <MarketingReelPublishControls
-                    post={post}
-                    connectedAccounts={connectedAccounts}
-                    videoOptions={videoOptions}
-                    onPublished={onChanged}
-                  />
-                )}
-                {rejectPickerFor === post.id ? (
+                </label>
+                <Button
+                  size="sm"
+                  loading={approving === group.key}
+                  onClick={() => void approveForScheduledDistribution(group)}
+                >
+                  {slotByGroup[group.key]?.trim()
+                    ? "Approve for scheduled distribution"
+                    : "Approve (slot pending)"}
+                </Button>
+                {rejectPickerFor === group.key ? (
                   <span className="flex flex-wrap items-center gap-2">
                     <select
                       className="rounded border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] px-2 py-1 text-xs text-altair-ink"
@@ -577,9 +788,9 @@ export function MarketingTodayView({
                       size="sm"
                       variant="secondary"
                       disabled={rejectReason === ""}
-                      loading={rejecting === post.id}
+                      loading={rejecting === group.key}
                       onClick={() => {
-                        if (rejectReason !== "") void reject(post, rejectReason);
+                        if (rejectReason !== "") void reject(group, rejectReason);
                       }}
                     >
                       Confirm reject
@@ -597,10 +808,10 @@ export function MarketingTodayView({
                     size="sm"
                     variant="secondary"
                     onClick={() => {
-                      // Fresh picker per post — a reason picked for one draft
+                      // Fresh picker per card — a reason picked for one draft
                       // must never linger as another draft's default.
                       setRejectReason("");
-                      setRejectPickerFor(post.id);
+                      setRejectPickerFor(group.key);
                     }}
                   >
                     Reject
@@ -614,6 +825,58 @@ export function MarketingTodayView({
           );
         })
       )}
+
+      {approvedGroups.length > 0 ? (
+        <section className="rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6">
+          <h2 className="text-lg font-semibold text-altair-ink">
+            Approved for scheduled distribution
+          </h2>
+          <p className="mt-1 text-[12px] text-altair-ink-muted">
+            Nothing publishes from this page automatically: the operator-armed
+            distribution run picks these up, publishes each platform
+            independently, and verifies every publish by readback. Facebook
+            and Instagram go PUBLIC at that moment.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {approvedGroups.map((group) => {
+              const lead = group.posts[0];
+              const slotIso =
+                group.posts
+                  .map((post) => post.scheduledAt)
+                  .find((value) => Boolean(value)) ?? null;
+              return (
+                <li
+                  key={group.key}
+                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3"
+                >
+                  <p className="text-sm font-medium text-altair-ink">
+                    {lead.title}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-altair-ink-muted">
+                    {group.posts
+                      .map(
+                        (post) =>
+                          `${channelLabel(post.channelTarget)}: ${post.status}`,
+                      )
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-altair-ink-secondary">
+                    {slotIso
+                      ? `Release slot: ${formatDateTimeInTimeZone(slotIso, timeZone, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}`
+                      : "Release slot: pending assignment"}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

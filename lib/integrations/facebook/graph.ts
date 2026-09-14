@@ -327,6 +327,37 @@ export async function fetchFacebookAssignedPages(
 }
 
 /**
+ * What Meta actually GRANTED at consent — read back from /me/permissions,
+ * not assumed from the constant we asked for. A user can untick individual
+ * permissions on the consent screen, and `declined`/`expired` entries are
+ * exactly the ones a later publish would fail on with an opaque error; the
+ * publish gate reads this evidence from `granted_scopes` (migration 181)
+ * and refuses up front instead.
+ */
+export async function fetchFacebookGrantedPermissions(
+  accessToken: string,
+): Promise<string[]> {
+  const config = getFacebookOAuthConfig();
+  const url = new URL(`${graphBaseUrl(config.graphApiVersion)}/me/permissions`);
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  const data = await readFacebookJson<{
+    data?: Array<{ permission?: string; status?: string }>;
+  }>(response, "Facebook granted permissions");
+
+  return (data.data ?? [])
+    .filter((entry) => entry.status === "granted")
+    .map((entry) => entry.permission?.trim() ?? "")
+    .filter((permission) => permission.length > 0);
+}
+
+/**
  * Fetches the Instagram Business account linked to a Page.
  * Used as a per-Page fallback when /me/accounts omits the nested field.
  */

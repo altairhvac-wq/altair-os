@@ -113,9 +113,23 @@ export type ReadbackInput = {
     readonly privacyStatus: string | null;
     readonly uploadStatus: string | null;
     readonly channelId: string | null;
+    readonly title?: string | null;
+    readonly description?: string | null;
   } | null;
   readonly expectedVideoId: string;
   readonly expectedChannelId: string;
+  /**
+   * Metadata fidelity (optional; the adapter supplies them from the package
+   * it just sent): the readback must echo the title and description the
+   * publish carried. Added closing the incident where "Supervised private
+   * upload canary." shipped as the public description of a real Short and
+   * no check anywhere could have noticed. Whether the COPY ITSELF is
+   * production-appropriate is the dispatching caller's check (the canary
+   * script scans for internal language before and after upload); this guard
+   * asserts YouTube holds exactly what was sent.
+   */
+  readonly expectedTitle?: string;
+  readonly expectedDescription?: string;
 };
 
 export type ReadbackVerdict =
@@ -183,6 +197,40 @@ export function verifyUploadReadback(input: ReadbackInput): ReadbackVerdict {
     };
   }
 
+  // ---- metadata fidelity (only when expectations are supplied) ----------
+  // Comparison is trimmed-exact: YouTube stores what it was sent, and a
+  // difference means the publish did not carry the intended copy.
+  if (input.expectedTitle !== undefined) {
+    const got = (input.video.title ?? "").trim();
+    if (got !== input.expectedTitle.trim()) {
+      return {
+        ok: false,
+        code: "title_mismatch",
+        detail:
+          `The uploaded video's title read back as "${got.slice(0, 80)}" but the publish carried ` +
+          `"${input.expectedTitle.trim().slice(0, 80)}". The intended metadata did not reach YouTube.`,
+      };
+    }
+  }
+  if (input.expectedDescription !== undefined) {
+    const got = (input.video.description ?? "").trim();
+    if (got.length === 0) {
+      return {
+        ok: false,
+        code: "description_missing",
+        detail: "The uploaded video read back with an empty description; the publish carried real copy.",
+      };
+    }
+    if (got !== input.expectedDescription.trim()) {
+      return {
+        ok: false,
+        code: "description_mismatch",
+        detail:
+          "The uploaded video's description does not match the copy the publish carried. " +
+          "The intended metadata did not reach YouTube.",
+      };
+    }
+  }
   return { ok: true };
 }
 

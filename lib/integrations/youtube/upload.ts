@@ -359,5 +359,79 @@ export async function fetchYouTubeVideoById(input: {
       typeof status.uploadStatus === "string" ? status.uploadStatus : null,
     channelId: typeof snippet.channelId === "string" ? snippet.channelId : null,
     title: typeof snippet.title === "string" ? snippet.title : null,
+    description:
+      typeof snippet.description === "string" ? snippet.description : null,
+  };
+}
+
+/**
+ * Lifetime counters for one video — `videos.list part=statistics,status`.
+ *
+ * ============ WHAT THE DATA API CAN AND CANNOT SAY ============
+ * `statistics` carries cumulative view/like/comment counts and nothing else.
+ * Retention, average view duration, impressions and click-through live in
+ * the YouTube ANALYTICS API, a different service behind a scope this
+ * connection was never granted — so they are not fields here, and a
+ * collector that wants them must say "unavailable", not zero. A count the
+ * API omits (comments disabled hides commentCount) comes back null for the
+ * same reason: null is "YouTube didn't say", 0 is "YouTube said zero".
+ *
+ * Works on the owner's PRIVATE videos because the request rides the same
+ * OAuth token the upload readback already proved can see them.
+ */
+export type YouTubeVideoStatistics = {
+  readonly videoId: string;
+  readonly privacyStatus: string | null;
+  readonly viewCount: number | null;
+  readonly likeCount: number | null;
+  readonly commentCount: number | null;
+};
+
+function countOrNull(raw: unknown): number | null {
+  if (typeof raw !== "string" && typeof raw !== "number") return null;
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+/** Returns null when YouTube reports no such video — a real answer. */
+export async function fetchYouTubeVideoStatistics(input: {
+  readonly accessToken: string;
+  readonly videoId: string;
+}): Promise<YouTubeVideoStatistics | null> {
+  const url = new URL(`${YOUTUBE_API_ORIGIN}/youtube/v3/videos`);
+  url.searchParams.set("part", "statistics,status");
+  url.searchParams.set("id", input.videoId);
+
+  const response = await withTimeout(READBACK_TIMEOUT_MS, (signal) =>
+    fetch(url.toString(), {
+      method: "GET",
+      headers: { authorization: `Bearer ${input.accessToken}` },
+      signal,
+    }),
+  );
+
+  const body = await readJsonSafely(response);
+
+  if (!response.ok) {
+    throw new YouTubeApiError(response.status, extractErrorCode(body));
+  }
+
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    throw new YouTubeApiError(response.status, "unreadable_video_response");
+  }
+
+  const item = body.items[0];
+  if (!isRecord(item)) return null;
+
+  const status = isRecord(item.status) ? item.status : {};
+  const statistics = isRecord(item.statistics) ? item.statistics : {};
+
+  return {
+    videoId: typeof item.id === "string" ? item.id : input.videoId,
+    privacyStatus:
+      typeof status.privacyStatus === "string" ? status.privacyStatus : null,
+    viewCount: countOrNull(statistics.viewCount),
+    likeCount: countOrNull(statistics.likeCount),
+    commentCount: countOrNull(statistics.commentCount),
   };
 }

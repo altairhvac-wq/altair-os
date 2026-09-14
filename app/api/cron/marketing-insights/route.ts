@@ -6,6 +6,8 @@ import {
 import { maintainIntegrationCredentials } from "@/lib/integrations/credential-maintenance";
 import { countLabel } from "@/shared/lib/plural";
 import { collectReelInsightsForCompany } from "@/lib/marketing/reel-insights-collector";
+import { collectYouTubeStatsForCompany } from "@/lib/marketing/youtube-stats-collector";
+import { metaDataAccessWarning } from "@/lib/integrations/facebook/env";
 import { listCompaniesWithActiveMarketingHq } from "@/lib/marketing/store";
 import {
   recordPlatformAutomationRunFinished,
@@ -106,6 +108,8 @@ export async function GET(request: Request) {
         let notAReel = 0;
         let failed = 0;
         let metricsWritten = 0;
+        let youtubeCollected = 0;
+        let youtubeSkipped = 0;
         const attempts: Record<string, unknown>[] = [];
 
         for (const companyId of companyIds) {
@@ -116,6 +120,28 @@ export async function GET(request: Request) {
           notAReel += summary.notAReel;
           failed += summary.failed;
           metricsWritten += summary.metricsWritten;
+
+          // The YouTube pass, isolated per company like the Meta one: it
+          // rides the same daily cadence, writes under its own source
+          // (`youtube_organic_video`), and one platform's trouble never
+          // stops the other's numbers from landing.
+          const youtube = await collectYouTubeStatsForCompany({ companyId });
+          youtubeCollected += youtube.collected;
+          youtubeSkipped += youtube.skipped;
+          failed += youtube.failed;
+          metricsWritten += youtube.metricsWritten;
+          for (const r of youtube.results) {
+            attempts.push({
+              provider: "youtube",
+              deliveryId: r.deliveryId,
+              providerPostId: r.providerPostId,
+              sourceJobId: r.sourceJobId,
+              outcome: r.outcome,
+              privacyStatus: r.privacyStatus ?? null,
+              detail: r.detail ?? null,
+              metricsWritten: r.metricsWritten,
+            });
+          }
 
           // ==================== PER-DELIVERY DETAIL ====================
           // The first live run reported 0 collected / 6 notReady / 5 failed and
@@ -194,7 +220,16 @@ export async function GET(request: Request) {
           unattributed,
           notAReel,
           failed,
+          youtubeCollected,
+          youtubeSkipped,
           metricsWritten,
+          // The grant-level expiry nothing else can see: the Page token stays
+          // "valid" straight through Meta's data-access cutoff, so the daily
+          // insights run is where the countdown surfaces. Null until the
+          // warning window opens.
+          metaDataAccessWarning: metaDataAccessWarning(
+            new Date().toISOString(),
+          ),
           // Bounded: a company with hundreds of posts should not return a
           // megabyte of JSON to a cron caller.
           attempts: attempts.slice(0, 50),
