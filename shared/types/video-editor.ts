@@ -109,6 +109,85 @@ export type EditorTransform = {
   readonly fit?: "cover" | "contain";
 };
 
+/* ── Camera motion ────────────────────────────────────────────────────────── */
+
+/**
+ * Camera moves for a still photograph.
+ *
+ * ==================== ONE GENERIC MODEL, PRESETS ON TOP ====================
+ * A preset does not select a code path; it fills in numbers. "Push in" IS
+ * `startScale 1 → endScale 1.12`, and nothing downstream knows the word. That
+ * is what lets the renderer express motion with one filter branch instead of
+ * nine, and what makes a custom move a later UI change rather than a new
+ * feature everywhere.
+ *
+ * `scale` is a multiplier on a frame-filling picture and is never below 1 —
+ * below 1 the photograph does not cover the frame and the edges go black.
+ * `x`/`y` are the picture's centre offset as a FRACTION of frame width and
+ * height, so the same numbers mean the same move at 1920x1080, at 1080x1920,
+ * and in the editor's scaled-down monitor. Keeping `|x| <= (scale-1)/2` keeps
+ * the picture over the frame; `clampMotion` enforces it.
+ */
+export const MOTION_PRESETS = [
+  "none",
+  "pushIn",
+  "pullOut",
+  "panLeft",
+  "panRight",
+  "panUp",
+  "panDown",
+  "slowZoom",
+  "kenBurns",
+] as const;
+
+export type MotionPreset = (typeof MOTION_PRESETS)[number];
+
+/**
+ * Easings are spelled as formulas FFmpeg can also evaluate — no CSS timing
+ * functions. A cubic-bezier cannot be solved inside a filter expression, so a
+ * move eased in CSS could not be reproduced in the master.
+ */
+export const MOTION_EASINGS = ["linear", "easeIn", "easeOut", "easeInOut"] as const;
+
+export type MotionEasing = (typeof MOTION_EASINGS)[number];
+
+export type EditorMotion = {
+  readonly preset: MotionPreset;
+  readonly startScale: number;
+  readonly endScale: number;
+  readonly startX: number;
+  readonly startY: number;
+  readonly endX: number;
+  readonly endY: number;
+  readonly easing: MotionEasing;
+};
+
+/* ── Transitions ──────────────────────────────────────────────────────────── */
+
+/**
+ * A transition INTO a clip. `cut` (or no transition at all) is a hard cut.
+ *
+ * The names match FFmpeg's `xfade` transitions one for one, because the
+ * renderer uses them literally. `slideLeft` is xfade's `slideleft`: the
+ * incoming picture enters from the right and travels left.
+ */
+export const TRANSITION_KINDS = [
+  "cut",
+  "crossfade",
+  "fadeBlack",
+  "slideLeft",
+  "slideRight",
+  "slideUp",
+  "slideDown",
+] as const;
+
+export type TransitionKind = (typeof TRANSITION_KINDS)[number];
+
+export type EditorTransition = {
+  readonly kind: TransitionKind;
+  readonly durationMs: number;
+};
+
 export type EditorTextStyle = {
   readonly text?: string;
   readonly fontSize?: number;
@@ -139,11 +218,30 @@ export type EditorClip = {
   /** Offset into the SOURCE media. Only meaningful for video/audio. */
   readonly trimInMs?: number;
   readonly transform?: EditorTransform;
+  /** Camera move over this clip's duration. Absent means a locked-off shot. */
+  readonly motion?: EditorMotion;
   readonly text?: EditorTextStyle;
   readonly audio?: EditorAudioStyle;
-  /** Cross-dissolve INTO this clip. 0 or absent is a hard cut. */
+  /** Transition INTO this clip. Absent is a hard cut. */
+  readonly transitionIn?: EditorTransition;
+  /**
+   * @deprecated Superseded by `transitionIn`. Projects stored before per-cut
+   * transitions existed carry only a dissolve length; `normalizeClip` reads one
+   * as a crossfade so an old autosave does not lose its dissolves.
+   */
   readonly transitionInMs?: number;
+  /** Excluded from the preview and the render, but kept on the timeline. */
+  readonly hidden?: boolean;
 };
+
+/** The transition into a clip, with the hard cut spelled out. */
+export function clipTransition(clip: EditorClip): EditorTransition {
+  if (clip.transitionIn) return clip.transitionIn;
+  if (clip.transitionInMs && clip.transitionInMs > 0) {
+    return { kind: "crossfade", durationMs: Math.round(clip.transitionInMs) };
+  }
+  return { kind: "cut", durationMs: 0 };
+}
 
 export type EditorTrack = {
   readonly id: string;
@@ -337,8 +435,35 @@ export const EDITOR_MIN_CLIP_MS = 100;
 export function normalizeClip(clip: EditorClip): EditorClip {
   const startMs = Math.max(0, Math.round(clip.startMs));
   const durationMs = Math.max(EDITOR_MIN_CLIP_MS, Math.round(clip.durationMs));
-  if (startMs === clip.startMs && durationMs === clip.durationMs) return clip;
-  return { ...clip, startMs, durationMs };
+  // An autosave written before per-cut transitions existed carries only a
+  // dissolve length. Reading it as a crossfade here means every later consumer
+  // sees one shape, and the old field never has to be understood again.
+  const migrated =
+    clip.transitionIn === undefined &&
+    clip.transitionInMs !== undefined &&
+    clip.transitionInMs > 0
+      ? ({ kind: "crossfade", durationMs: Math.round(clip.transitionInMs) } as const)
+      : null;
+  // A transition longer than the clip cannot complete before the clip ends.
+  const transitionIn =
+    migrated ??
+    (clip.transitionIn && clip.transitionIn.durationMs > durationMs
+      ? { ...clip.transitionIn, durationMs }
+      : null);
+
+  if (
+    startMs === clip.startMs &&
+    durationMs === clip.durationMs &&
+    transitionIn === null
+  ) {
+    return clip;
+  }
+  return {
+    ...clip,
+    startMs,
+    durationMs,
+    ...(transitionIn ? { transitionIn } : {}),
+  };
 }
 
 /**
@@ -369,8 +494,11 @@ export function splitClipAt(
     startMs: clip.startMs + offset,
     durationMs: clip.durationMs - offset,
     trimInMs: (clip.trimInMs ?? 0) + offset,
-    // A dissolve belongs to the head of the original clip; the new right-hand
-    // piece begins mid-shot and must not re-run it.
+    // A transition belongs to the head of the original clip; the new right-hand
+    // piece begins mid-shot and must not re-run it. BOTH fields are cleared:
+    // leaving the newer one set meant splitting a dissolved shot produced a
+    // second dissolve in the middle of it, from the shot into itself.
+    transitionIn: undefined,
     transitionInMs: undefined,
   };
   return [left, right];

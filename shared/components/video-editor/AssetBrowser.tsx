@@ -29,6 +29,8 @@ type Props = {
   readonly onSelectClip: (clipId: string) => void;
   /** Apply a library asset to the selected visual clip. */
   readonly onApplyAsset: (assetId: string) => void;
+  /** Add a library asset as a NEW clip at the playhead. */
+  readonly onAddAsset: (assetId: string) => void;
   /** The selected clip's current asset, so the grid can mark it. */
   readonly selectedAssetId: string | null;
   /** False when nothing applicable is selected — the grid disables itself. */
@@ -42,6 +44,7 @@ export function AssetBrowser({
   onInsertText,
   onSelectClip,
   onApplyAsset,
+  onAddAsset,
   selectedAssetId,
   canApplyAsset,
 }: Props) {
@@ -96,11 +99,14 @@ export function AssetBrowser({
               >
                 <div
                   className="aspect-video bg-cover bg-center"
+                  // `background` and `backgroundImage` in one style object is a
+                  // shorthand/longhand mix: React warns, and which one wins
+                  // depends on the order the two are applied in.
                   style={{
                     backgroundImage: frames[clip.id]
                       ? `url(${frames[clip.id]})`
                       : undefined,
-                    background: frames[clip.id] ? undefined : "var(--ve-high)",
+                    backgroundColor: "var(--ve-high)",
                   }}
                 />
                 <div className="px-1.5 py-1">
@@ -144,6 +150,7 @@ export function AssetBrowser({
             currentAssetId={selectedAssetId}
             canApply={canApplyAsset}
             onApply={onApplyAsset}
+            onAdd={onAddAsset}
           />
         ) : null}
 

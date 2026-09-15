@@ -27,24 +27,38 @@
 
 import {
   clipEndMs,
+  clipTransition,
   isAudioTrackKind,
   projectDurationMs,
   visualClipsAt,
   type EditorClip,
   type EditorProject,
   type EditorTrack,
+  type MotionEasing,
+  type TransitionKind,
 } from "@/shared/types/video-editor";
-import { needsBake, sceneFor, type BakePlan, type BakeScene } from "./bake";
+import {
+  needsBake,
+  nativeTransformReasons,
+  sceneFor,
+  type BakePlan,
+  type BakeScene,
+} from "./bake";
+import { isStillMotion, STILL_MOTION } from "./motion";
 
 /** Matches TRANSITION_MS in render-episode.mjs. */
 export const RENDER_TRANSITION_MS = 260;
 
 /**
- * The renderer refuses any entry not strictly longer than the crossfade
- * (CompositionError, buildFilterGraph.ts). Enforced here so the failure is a
- * readable report rather than a stack trace two machines away.
+ * The floor for an entry with no transition: a couple of frames, so it is at
+ * least one visible picture.
+ *
+ * It used to be `RENDER_TRANSITION_MS + 40` because EVERY cut carried the
+ * global crossfade, so every entry had to outlast a dissolve it might not
+ * want. With per-cut transitions the real constraint is per entry — see the
+ * check below, which adds the entry's own transition on top of this.
  */
-const MIN_ENTRY_MS = RENDER_TRANSITION_MS + 40;
+const MIN_ENTRY_MS = 80;
 
 export type TimelineEntry = {
   readonly stepIndex: number;
@@ -68,6 +82,38 @@ export type TimelineEntry = {
   readonly sourceTreatment?: {
     readonly fit: "cover" | "contain";
   };
+  /**
+   * The camera over this entry, in the renderer's own terms.
+   *
+   * Scale is a multiplier on a frame-filling picture; x/y are the picture's
+   * centre offset as a FRACTION of frame width and height. `progressStart` /
+   * `progressEnd` are the slice of the SOURCE CLIP this entry covers, because
+   * a clip that sits under an overlay is cut into several entries and each one
+   * must continue the same move rather than restart it.
+   *
+   * The editor and the filter graph evaluate the same formula — see
+   * `shared/lib/video-editor/motion.ts`.
+   */
+  readonly cameraMotion?: {
+    readonly startScale: number;
+    readonly endScale: number;
+    readonly startX: number;
+    readonly startY: number;
+    readonly endX: number;
+    readonly endY: number;
+    readonly easing: MotionEasing;
+    readonly progressStart: number;
+    readonly progressEnd: number;
+  };
+  /**
+   * The transition INTO this entry, held in place: the previous entry's last
+   * frame is held for `durationMs` and this one arrives over it. Timeline time
+   * therefore equals output time — see `composition.ts`.
+   */
+  readonly transitionIn?: {
+    readonly kind: TransitionKind;
+    readonly durationMs: number;
+  };
 };
 
 export type CompiledTimeline = {
@@ -89,7 +135,11 @@ export type CompileResult = {
   readonly drops: readonly CompileDrop[];
   /** Structural problems that would make the render wrong, not just lossy. */
   readonly errors: readonly string[];
-  /** Output length after crossfades: raw − (n−1) × transitionMs. */
+  /**
+   * Output length. Equal to the timeline's own length: a transition holds the
+   * outgoing frame rather than overlapping its neighbour, so the master is not
+   * shortened by one dissolve per cut the way the old global crossfade was.
+   */
   readonly expectedOutputMs: number;
   /**
    * Scenes the laptop must composite before rendering. Anything represented
@@ -99,9 +149,15 @@ export type CompileResult = {
   /**
    * Properties that survive BECAUSE the bake runs, as `clipId:property`.
    * The invariant this exists to make checkable: every non-default property is
-   * in exactly one of `drops` or `bakedProperties` — never in neither.
+   * in exactly one of `drops`, `bakedProperties` or `nativeProperties` — never
+   * in none of them.
    */
   readonly bakedProperties: readonly string[];
+  /**
+   * Properties the filter graph now carries itself: framing and camera motion.
+   * Neither dropped nor baked — rendered.
+   */
+  readonly nativeProperties: readonly string[];
 };
 
 function describeTrack(track: EditorTrack): string {
@@ -173,7 +229,6 @@ function narrationByStart(
 export function compileProjectToTimeline(
   project: EditorProject,
   opts: {
-    readonly transitionMs?: number;
     /**
      * Narration references. Absent means the timeline compiles silent — which
      * the compositor's own silent path currently mishandles, so a caller that
@@ -188,12 +243,16 @@ export function compileProjectToTimeline(
     readonly bake?: boolean;
   } = {},
 ): CompileResult {
-  const transitionMs = opts.transitionMs ?? RENDER_TRANSITION_MS;
+  // There is no global transition length any more. Each clip carries its own
+  // (`clipTransition`), so a caller cannot set one for the whole film — which
+  // was how the renderer and the editor came to disagree about the length of
+  // the master in the first place.
   const bakeEnabled = opts.bake ?? true;
   const audio = opts.audio ?? {};
   const drops: CompileDrop[] = [];
   const errors: string[] = [];
   const bakedProperties: string[] = [];
+  const nativeProperties: string[] = [];
   const scenes: BakeScene[] = [];
 
   /* ── 1. What cannot survive, per clip ─────────────────────────────────── */
@@ -240,14 +299,6 @@ export function compileProjectToTimeline(
         }
       }
 
-      if (clip.transitionInMs && clip.transitionInMs !== transitionMs) {
-        drops.push({
-          clipId: clip.id,
-          clipLabel: clip.label,
-          property: "transitionInMs",
-          reason: `Every cut uses the same ${transitionMs}ms crossfade; per-cut duration is not expressible.`,
-        });
-      }
     }
   }
 
@@ -312,6 +363,82 @@ export function compileProjectToTimeline(
 
     const voice = narration.get(startMs);
 
+    /* ── Framing and camera, per entry ──────────────────────────────────── */
+    // A baked scene already HAS the framing painted into its picture, and a
+    // still picture cannot move — so motion on a composited layer is a drop,
+    // named, rather than a move that silently does not happen.
+    let cameraMotion: TimelineEntry["cameraMotion"];
+    if (scene) {
+      for (const layer of stack) {
+        for (const reason of nativeTransformReasons(layer.clip)) {
+          if (reason === "motion") {
+            drops.push({
+              clipId: layer.clip.id,
+              clipLabel: layer.clip.label,
+              property: "motion",
+              reason:
+                "This instant composites several layers (or a rotation/opacity), so it is baked to one still. A still cannot carry a camera move.",
+            });
+          } else {
+            bakedProperties.push(`${layer.clip.id}:${reason}`);
+          }
+        }
+      }
+    } else {
+      const clip = top.clip;
+      const motion = clip.motion ?? STILL_MOTION;
+      const baseScale = clip.transform?.scale ?? 1;
+      const offsetX = (clip.transform?.x ?? 0) / project.width;
+      const offsetY = (clip.transform?.y ?? 0) / project.height;
+      const moving = !isStillMotion(clip.motion);
+      const framed = baseScale !== 1 || offsetX !== 0 || offsetY !== 0;
+
+      if (moving || framed) {
+        // The clip's framing and its move, composed into one spec — so the
+        // renderer applies exactly one scale and one offset, and cannot apply
+        // the framing twice.
+        const span = clip.durationMs > 0 ? clip.durationMs : 1;
+        cameraMotion = {
+          startScale: baseScale * motion.startScale,
+          endScale: baseScale * motion.endScale,
+          startX: offsetX + motion.startX,
+          startY: offsetY + motion.startY,
+          endX: offsetX + motion.endX,
+          endY: offsetY + motion.endY,
+          easing: motion.easing,
+          progressStart: (startMs - clip.startMs) / span,
+          progressEnd: (endMs - clip.startMs) / span,
+        };
+        for (const reason of nativeTransformReasons(clip)) {
+          nativeProperties.push(`${clip.id}:${reason}`);
+        }
+      } else if (clip.transform?.fit) {
+        nativeProperties.push(`${clip.id}:fit`);
+      }
+    }
+
+    /* ── The transition into this entry ─────────────────────────────────── */
+    // Only where a clip BEGINS. An entry boundary in the middle of a clip is
+    // the compiler slicing for an overlay, not an editorial cut, and putting a
+    // dissolve there would fade a shot into itself.
+    const transition = clipTransition(top.clip);
+    const beginsHere = startMs === top.clip.startMs;
+    const transitionIn =
+      beginsHere && transition.kind !== "cut" && transition.durationMs > 0
+        ? transition
+        : null;
+
+    if (transitionIn && entries.length === 0) {
+      // Nothing precedes the first entry, so there is nothing to come out of.
+      drops.push({
+        clipId: top.clip.id,
+        clipLabel: top.clip.label,
+        property: "transitionIn",
+        reason:
+          "This is the first shot in the film; a transition needs a picture to come from.",
+      });
+    }
+
     entries.push({
       stepIndex: entries.length,
       startMs,
@@ -323,6 +450,8 @@ export function compileProjectToTimeline(
       ...(top.clip.transform?.fit
         ? { sourceTreatment: { fit: top.clip.transform.fit } }
         : {}),
+      ...(cameraMotion ? { cameraMotion } : {}),
+      ...(transitionIn && entries.length > 0 ? { transitionIn } : {}),
       ...(voice
         ? { audioClip: { ref: voice.ref, durationMs: voice.fileMs } }
         : {}),
@@ -349,11 +478,19 @@ export function compileProjectToTimeline(
     }
   }
 
+  // An entry must outlast its own transition. With per-cut transitions this is
+  // per entry rather than one global floor: a hard cut needs only to be a
+  // couple of frames long, while a 600ms dissolve needs a shot to dissolve
+  // into.
   for (const entry of entries) {
     const length = entry.endMs - entry.startMs;
-    if (length < MIN_ENTRY_MS) {
+    const floor = Math.max(
+      MIN_ENTRY_MS,
+      (entry.transitionIn?.durationMs ?? 0) + 40,
+    );
+    if (length < floor) {
       errors.push(
-        `Entry ${entry.stepIndex} (${entry.screenshotPath}) lasts ${length}ms, which is not comfortably longer than the ${transitionMs}ms crossfade. The renderer refuses this.`,
+        `Entry ${entry.stepIndex} (${entry.screenshotPath}) lasts ${length}ms, which is not longer than its ${String(entry.transitionIn?.durationMs ?? 0)}ms transition plus a margin. The renderer refuses this.`,
       );
     }
   }
@@ -387,10 +524,17 @@ export function compileProjectToTimeline(
   }
 
   const totalDurationMs = projectDurationMs(project);
-  const expectedOutputMs =
-    entries.length > 0
-      ? totalDurationMs - (entries.length - 1) * transitionMs
-      : 0;
+  /**
+   * Output length EQUALS timeline length.
+   *
+   * The old global crossfade overlapped neighbouring entries, so the master
+   * came out (n-1) x 260ms shorter than the timeline — 9.1 seconds on this
+   * episode — and no clock in the editor could agree with the file. A
+   * transition now holds the outgoing frame instead of eating into it, so the
+   * two are the same number and a timecode in the editor is a timecode in the
+   * master.
+   */
+  const expectedOutputMs = entries.length > 0 ? totalDurationMs : 0;
 
   return {
     timeline: {
@@ -408,6 +552,7 @@ export function compileProjectToTimeline(
       scenes,
     },
     bakedProperties,
+    nativeProperties,
   };
 }
 
@@ -418,10 +563,14 @@ export function bakedPropertyCount(result: CompileResult): number {
 
 /** A one-line human summary, for the export dialog. */
 export function describeCompileResult(result: CompileResult): string {
+  const transitions = result.timeline.entries.filter((e) => e.transitionIn).length;
+  const moving = result.timeline.entries.filter((e) => e.cameraMotion).length;
   const parts = [
     `${result.timeline.entries.length} entries`,
-    `${Math.round(result.expectedOutputMs / 1000)}s after crossfades`,
+    `${Math.round(result.expectedOutputMs / 1000)}s`,
   ];
+  if (moving) parts.push(`${moving} with camera moves`);
+  if (transitions) parts.push(`${transitions} transitions`);
   if (result.bakePlan.scenes.length) {
     parts.push(`${result.bakePlan.scenes.length} to composite`);
   }

@@ -30,6 +30,7 @@ import {
   type EditorProject,
   type EditorTrack,
 } from "@/shared/types/video-editor";
+import { presetMotion } from "./motion";
 import type { StudioBeatVisual } from "@/shared/types/visual-selection";
 import type { LoadedEpisode } from "./demo-project";
 import { PRACTICE_EPISODE as SNAPSHOT } from "./practice/compressor-episode-snapshot";
@@ -82,12 +83,32 @@ export function loadPracticeEpisode(): LoadedEpisode {
       label: v.label,
       startMs: v.startMs,
       durationMs: v.durationMs,
-      // Restrained movement, varied per shot. `hold` is recorded as the
-      // absence of a transform rather than as a transform of zero, so a clip
-      // nobody has moved compiles byte-identically to one that never had the
-      // field.
-      ...(v.motion === "push-in" ? { transform: { scale: 1.06, fit: "cover" as const } } : {}),
-      ...(v.motion === "pan" ? { transform: { x: 2, fit: "cover" as const } } : {}),
+      /**
+       * Restrained movement, varied per shot — as a real camera move now.
+       *
+       * These used to be STATIC transforms standing in for motion: `push-in`
+       * was a fixed 6% crop and `pan` was a fixed 2px offset, so the film's
+       * most deliberate-looking shots did not move at all in the master (and
+       * the 2px offset exposed a black column at one edge). A `motion` is
+       * interpolated over the clip's duration by the preview and by the filter
+       * graph, from the same numbers.
+       *
+       * `hold` stays the ABSENCE of motion rather than a move of zero, so a
+       * shot nobody has touched still compiles byte-identically to one that
+       * never had the field.
+       */
+      ...(v.motion === "push-in"
+        ? { motion: presetMotion("pushIn", 0.6), transform: { fit: "cover" as const } }
+        : {}),
+      ...(v.motion === "pan"
+        ? { motion: presetMotion("panRight", 0.5), transform: { fit: "cover" as const } }
+        : {}),
+      // The dissolve this episode was cut with, as data rather than as a
+      // global the renderer applied behind the editor's back. The first shot
+      // has nothing to come from, so it is a cut.
+      ...(v.startMs === 0
+        ? {}
+        : { transitionIn: { kind: "crossfade" as const, durationMs: SNAPSHOT.transitionMs ?? 260 } }),
     });
   }
 

@@ -10,6 +10,7 @@ import {
   type EditorProject,
 } from "@/shared/types/video-editor";
 import { TIMELINE_GEOMETRY } from "./editor-theme";
+import { usePlaybackClock } from "./playback";
 
 /**
  * One pointer gesture on a clip: move, trim-start, or trim-end.
@@ -63,7 +64,6 @@ export type ClipGestureHandlers = {
 export function useClipGesture(opts: {
   readonly project: EditorProject;
   readonly pxPerSec: number;
-  readonly playheadMs: number;
   readonly snapEnabled: boolean;
   readonly onMove: (clipId: string, startMs: number) => void;
   readonly onTrim: (
@@ -77,13 +77,16 @@ export function useClipGesture(opts: {
   const {
     project,
     pxPerSec,
-    playheadMs,
     snapEnabled,
     onMove,
     onTrim,
     onSelect,
     onGestureEnd,
   } = opts;
+  // Read at pointer-down, not received as a prop. As a prop, the playhead
+  // changed this callback's identity every frame, which broke the memo on every
+  // TimelineClip and re-rendered all 108 of them sixty times a second.
+  const clock = usePlaybackClock();
 
   const gestureRef = useRef<GestureState | null>(null);
   const [active, setActive] = useState<{
@@ -121,7 +124,7 @@ export function useClipGesture(opts: {
       const snapTargets = snapEnabled
         ? snapTargetsMs(project, {
             excludeClipId: clip.id,
-            playheadMs,
+            playheadMs: Math.round(clock.getTime()),
           })
         : [];
       const toleranceMs = pxToMs(TIMELINE_GEOMETRY.snapPx, pxPerSec);
@@ -167,9 +170,9 @@ export function useClipGesture(opts: {
       window.addEventListener("pointercancel", finish);
     },
     [
+      clock,
       project,
       pxPerSec,
-      playheadMs,
       snapEnabled,
       onMove,
       onTrim,

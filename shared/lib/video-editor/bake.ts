@@ -84,17 +84,39 @@ const DEFAULT_TRANSFORM = {
   fit: "cover" as const,
 };
 
-/** True when the clip carries anything the filter graph cannot express alone. */
+/**
+ * True when the clip carries anything the filter graph cannot express alone.
+ *
+ * ==================== SCALE AND POSITION LEFT THIS LIST ====================
+ * They used to force a bake. The filter graph now carries a per-entry camera
+ * spec — a start and end scale and offset with an easing — and a static
+ * framing is simply a move whose start equals its end. Expressing them
+ * natively is what allows a shot to MOVE: a baked PNG is one picture, so a
+ * push-in composited into a still would render as a static crop, which is
+ * exactly what the last master did.
+ *
+ * Rotation and opacity stay: the graph has no per-entry rotate, and a
+ * partially transparent entry means compositing with whatever is under it.
+ */
 export function needsBake(clip: EditorClip): string[] {
   const reasons: string[] = [];
   const t = clip.transform;
   if (t) {
-    if (t.scale !== undefined && t.scale !== 1) reasons.push("scale");
-    if ((t.x ?? 0) !== 0 || (t.y ?? 0) !== 0) reasons.push("position");
     if (t.rotation !== undefined && t.rotation !== 0) reasons.push("rotation");
     if (t.opacity !== undefined && t.opacity !== 1) reasons.push("opacity");
   }
   if (clip.kind === "text") reasons.push("text layer");
+  return reasons;
+}
+
+/** Framing the filter graph now carries itself, reported as native, not baked. */
+export function nativeTransformReasons(clip: EditorClip): string[] {
+  const reasons: string[] = [];
+  const t = clip.transform;
+  if (t?.scale !== undefined && t.scale !== 1) reasons.push("scale");
+  if ((t?.x ?? 0) !== 0 || (t?.y ?? 0) !== 0) reasons.push("position");
+  if (t?.fit !== undefined) reasons.push("fit");
+  if (clip.motion && clip.motion.preset !== "none") reasons.push("motion");
   return reasons;
 }
 

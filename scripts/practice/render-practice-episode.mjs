@@ -33,8 +33,9 @@ const ALLOWLIST = ["hvac-01", "hvac-04", "compressor-01"];
 
 const episode = loadPracticeEpisode();
 
+// No global transition length: each clip carries its own, and the compiler
+// reads them. The snapshot's 260ms now lives on the clips themselves.
 const result = compileProjectToTimeline(episode.project, {
-  transitionMs: episode.meta.transitionMs,
   audio: audioRefsFrom(episode.audio),
 });
 

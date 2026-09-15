@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import {
+  Copy,
   Eye,
   EyeOff,
   Lock,
+  LockOpen,
+  Maximize2,
   Scissors,
   Trash2,
   Volume2,
@@ -27,6 +30,7 @@ import {
 import { TIMELINE_GEOMETRY } from "./editor-theme";
 import { TimelineClip } from "./TimelineClip";
 import { useClipGesture, type GestureMode } from "./useClipGesture";
+import { usePlaybackClock, usePlaybackFrame } from "./playback";
 
 /**
  * The multitrack timeline.
@@ -44,7 +48,6 @@ import { useClipGesture, type GestureMode } from "./useClipGesture";
 type Props = {
   readonly project: EditorProject;
   readonly pxPerSec: number;
-  readonly playheadMs: number;
   readonly selectedIds: readonly string[];
   readonly peaks: Readonly<Record<string, readonly number[]>>;
   readonly frames: Readonly<Record<string, string>>;
@@ -66,6 +69,9 @@ type Props = {
   readonly onZoom: (pxPerSec: number) => void;
   readonly onSplit: () => void;
   readonly onDelete: () => void;
+  readonly onDuplicate: () => void;
+  /** Zoom so the whole film fits the visible lanes. */
+  readonly onFit: (visibleWidthPx: number) => void;
   readonly onToggleSnap: () => void;
 };
 
@@ -73,7 +79,6 @@ export function Timeline(props: Props) {
   const {
     project,
     pxPerSec,
-    playheadMs,
     selectedIds,
     peaks,
     frames,
@@ -88,6 +93,8 @@ export function Timeline(props: Props) {
     onZoom,
     onSplit,
     onDelete,
+    onDuplicate,
+    onFit,
     onToggleSnap,
   } = props;
 
@@ -101,7 +108,6 @@ export function Timeline(props: Props) {
   const gesture = useClipGesture({
     project,
     pxPerSec,
-    playheadMs,
     snapEnabled,
     onMove: onMoveClip,
     onTrim: onTrimClip,
@@ -146,11 +152,14 @@ export function Timeline(props: Props) {
     return out;
   }, [pxPerSec, canvasMs]);
 
+  // Depends on the gesture's CALLBACK, not the gesture object — the object is
+  // new every render, and a new handler here defeats TimelineClip's memo.
+  const startGesture = gesture.onPointerDown;
   const handlePointerDown = useCallback(
-    (event: React.PointerEvent, clip: Parameters<typeof gesture.onPointerDown>[1], mode: GestureMode) => {
-      gesture.onPointerDown(event, clip, mode);
+    (event: React.PointerEvent, clip: Parameters<typeof startGesture>[1], mode: GestureMode) => {
+      startGesture(event, clip, mode);
     },
-    [gesture],
+    [startGesture],
   );
 
   return (
@@ -164,9 +173,13 @@ export function Timeline(props: Props) {
         className="flex h-9 shrink-0 items-center gap-1 px-2"
         style={{ borderBottom: "1px solid var(--ve-line)" }}
       >
-        <ToolbarButton onClick={onSplit} title="Split at playhead (Ctrl+B)">
+        <ToolbarButton onClick={onSplit} title="Split at playhead (S or Ctrl+B)">
           <Scissors className="size-3.5" />
           <span>Split</span>
+        </ToolbarButton>
+        <ToolbarButton onClick={onDuplicate} title="Duplicate selected (Ctrl+D)">
+          <Copy className="size-3.5" />
+          <span>Duplicate</span>
         </ToolbarButton>
         <ToolbarButton onClick={onDelete} title="Delete selected (Del)">
           <Trash2 className="size-3.5" />
@@ -203,6 +216,17 @@ export function Timeline(props: Props) {
           </span>
           <ToolbarButton onClick={() => onZoom(pxPerSec * 1.5)} title="Zoom in">
             <ZoomIn className="size-3.5" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => {
+              const scroller = scrollerRef.current;
+              if (!scroller) return;
+              onFit(scroller.clientWidth - TIMELINE_GEOMETRY.headerWidth);
+            }}
+            title="Fit the whole film"
+          >
+            <Maximize2 className="size-3.5" />
+            <span>Fit</span>
           </ToolbarButton>
         </div>
       </div>
@@ -318,29 +342,78 @@ export function Timeline(props: Props) {
           })}
 
           {/* Playhead — one element crossing every track. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute top-0 z-30"
-            style={{
-              left:
-                TIMELINE_GEOMETRY.headerWidth + msToPx(playheadMs, pxPerSec),
-              bottom: 0,
-              width: 1,
-              background: "var(--ve-accent)",
-            }}
-          >
-            <div
-              className="absolute -left-[5px] top-0 size-0"
-              style={{
-                borderLeft: "5.5px solid transparent",
-                borderRight: "5.5px solid transparent",
-                borderTop: "7px solid var(--ve-accent)",
-              }}
-            />
-          </div>
+          <Playhead pxPerSec={pxPerSec} scrollerRef={scrollerRef} />
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * The playhead, moved by the clock rather than by React.
+ *
+ * Its position is a transform written on each clock frame, so playing the
+ * film re-renders none of the timeline. React renders it only when the zoom
+ * changes; the layout effect then re-places it for the new scale.
+ *
+ * While playing it also turns the page: when the head reaches the right edge
+ * of the visible lanes, the timeline scrolls so the head sits near the left
+ * again. Once per page, not per frame — continuous scrolling makes clips
+ * impossible to read while they pass.
+ */
+function Playhead({
+  pxPerSec,
+  scrollerRef,
+}: {
+  readonly pxPerSec: number;
+  readonly scrollerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const clock = usePlaybackClock();
+  const ref = useRef<HTMLDivElement>(null);
+
+  const place = (ms: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const x = msToPx(ms, pxPerSec);
+    el.style.transform = `translate3d(${x}px, 0, 0)`;
+    el.dataset.ms = String(Math.round(ms));
+    const scroller = scrollerRef.current;
+    if (scroller && clock.isPlaying()) {
+      const laneWidth = scroller.clientWidth - TIMELINE_GEOMETRY.headerWidth;
+      if (x > scroller.scrollLeft + laneWidth - 24 || x < scroller.scrollLeft) {
+        scroller.scrollLeft = Math.max(0, x - 48);
+      }
+    }
+  };
+
+  useLayoutEffect(() => {
+    place(clock.getTime());
+  });
+  usePlaybackFrame(place);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      data-testid="ve-playhead"
+      className="pointer-events-none absolute top-0 z-30"
+      style={{
+        left: TIMELINE_GEOMETRY.headerWidth,
+        bottom: 0,
+        width: 1,
+        background: "var(--ve-accent)",
+        willChange: "transform",
+      }}
+    >
+      <div
+        className="absolute -left-[5px] top-0 size-0"
+        style={{
+          borderLeft: "5.5px solid transparent",
+          borderRight: "5.5px solid transparent",
+          borderTop: "7px solid var(--ve-accent)",
+        }}
+      />
+    </div>
   );
 }
 
@@ -389,9 +462,19 @@ function TrackHeader({
       >
         {track.name}
       </span>
-      {track.locked ? (
-        <Lock className="size-3" style={{ color: "var(--ve-text-faint)" }} />
-      ) : null}
+      <button
+        type="button"
+        title={track.locked ? "Unlock track" : "Lock track"}
+        aria-pressed={track.locked ?? false}
+        data-testid={`ve-lock-${track.id}`}
+        onClick={() => onToggle({ locked: !track.locked })}
+        className="rounded p-0.5 hover:brightness-150"
+        style={{
+          color: track.locked ? "var(--ve-accent)" : "var(--ve-text-faint)",
+        }}
+      >
+        {track.locked ? <Lock className="size-3" /> : <LockOpen className="size-3" />}
+      </button>
       <button
         type="button"
         title={audio ? "Mute track" : "Hide track"}

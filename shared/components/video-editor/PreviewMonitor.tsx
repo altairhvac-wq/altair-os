@@ -18,15 +18,15 @@ import { CanvasRenderer } from "./CanvasRenderer";
  */
 export function PreviewMonitor({
   project,
-  timeMs,
   frames,
   selectedIds,
   onSelectClip,
   onTransform,
   onGestureEnd,
+  onReplaceAsset,
+  onRemoveClip,
 }: {
   readonly project: EditorProject;
-  readonly timeMs: number;
   readonly frames: Readonly<Record<string, string>>;
   readonly selectedIds: readonly string[];
   readonly onSelectClip: (clipId: string) => void;
@@ -36,6 +36,9 @@ export function PreviewMonitor({
     coalesceKey: string,
   ) => void;
   readonly onGestureEnd: () => void;
+  /** Offered on the canvas when a picture fails to load. */
+  readonly onReplaceAsset?: (clipId: string) => void;
+  readonly onRemoveClip?: (clipId: string) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.3);
@@ -85,13 +88,14 @@ export function PreviewMonitor({
         >
           <CanvasRenderer
             project={project}
-            timeMs={timeMs}
             frames={frames}
             selectedIds={selectedIds}
             onSelectClip={onSelectClip}
             stageScale={scale}
             onTransform={onTransform}
             onGestureEnd={onGestureEnd}
+            {...(onReplaceAsset ? { onReplaceAsset } : {})}
+            {...(onRemoveClip ? { onRemoveClip } : {})}
           />
         </div>
       </div>

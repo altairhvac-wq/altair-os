@@ -130,9 +130,11 @@ type Props = {
   readonly currentAssetId: string | null;
   readonly canApply: boolean;
   readonly onApply: (assetId: string) => void;
+  /** Add as a NEW clip at the playhead, rather than replacing a shot. */
+  readonly onAdd?: (assetId: string) => void;
 };
 
-export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply }: Props) {
+export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply, onAdd }: Props) {
   const { catalog, error } = useAssetCatalog(true);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -188,11 +190,9 @@ export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply 
         <span className="text-[10px]" style={{ color: "var(--ve-text-faint)" }}>
           {results.length} of {catalog.totalAssets}
         </span>
-        {!canApply ? (
-          <span className="text-[10px]" style={{ color: "var(--ve-warn, #e0a44a)" }}>
-            select a visual clip to apply
-          </span>
-        ) : null}
+        <span className="text-[10px]" style={{ color: "var(--ve-text-faint)" }}>
+          {canApply ? "click to replace · + to add" : "select a clip to replace · + to add"}
+        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
@@ -201,18 +201,29 @@ export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply 
           const thumb = portrait && v ? v.thumbnailUrl : a.thumbnailUrl;
           const isCurrent = a.assetId === currentAssetId;
           return (
-            <button
+            // A div rather than a button, because the "+" control lives inside
+            // it and a button inside a button is invalid. Click and keyboard
+            // behaviour are wired explicitly instead.
+            <div
               key={a.assetId}
-              type="button"
-              disabled={!canApply}
+              role="button"
+              tabIndex={0}
+              aria-disabled={!canApply}
               data-testid="ve-library-asset"
               data-asset-id={a.assetId}
               title={`${a.subject}\n\n${a.description}`}
               onClick={() => onApply(a.assetId)}
-              className="group overflow-hidden rounded-[3px] text-left disabled:cursor-not-allowed disabled:opacity-55"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onApply(a.assetId);
+                }
+              }}
+              className="group cursor-pointer overflow-hidden rounded-[3px] text-left"
               style={{
                 background: "var(--ve-raised)",
                 border: `1px solid ${isCurrent ? "var(--ve-accent)" : "var(--ve-line)"}`,
+                opacity: canApply ? 1 : 0.75,
               }}
             >
               <div className="relative">
@@ -242,6 +253,22 @@ export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply 
                     <Smartphone className="size-2.5" style={{ color: "var(--ve-text-dim)" }} />
                   </span>
                 ) : null}
+                {onAdd ? (
+                  <button
+                    type="button"
+                    data-testid="ve-library-add"
+                    data-asset-id={a.assetId}
+                    title="Add as a new clip at the playhead (OVERLAY)"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAdd(a.assetId);
+                    }}
+                    className="absolute left-1 top-1 flex size-5 items-center justify-center rounded"
+                    style={{ background: "rgba(0,0,0,0.62)", color: "var(--ve-text)" }}
+                  >
+                    +
+                  </button>
+                ) : null}
               </div>
               <div className="px-1.5 py-1">
                 <div className="truncate text-[10px]" style={{ color: "var(--ve-text-dim)" }}>
@@ -252,7 +279,7 @@ export function LibraryPanel({ projectAspect, currentAssetId, canApply, onApply 
                   {a.qcStatus !== "KEEP" ? ` · ${a.qcStatus.toLowerCase()}` : ""}
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
         {results.length === 0 ? (

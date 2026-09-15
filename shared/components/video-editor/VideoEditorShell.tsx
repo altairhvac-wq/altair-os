@@ -50,6 +50,8 @@ import {
 import { describeBakePlan } from "@/shared/lib/video-editor/bake";
 import { canQueue } from "@/shared/lib/video-editor/render-job";
 import {
+  clampPxPerSec,
+  formatTimecode,
   projectDurationMs,
   type EditorClip,
   type EditorTrack,
@@ -57,6 +59,12 @@ import {
 } from "@/shared/types/video-editor";
 import { AssetBrowser } from "./AssetBrowser";
 import { useAssetCatalog } from "./LibraryPanel";
+import { PanelBoundary } from "./PanelBoundary";
+import {
+  assetPatchFor,
+  placeNewImageClip,
+  resolveAsset,
+} from "@/shared/lib/video-editor/media-insert";
 import { EditorHeader, type SaveState } from "./EditorHeader";
 import { Inspector } from "./Inspector";
 import type { StudioBeatVisual } from "@/shared/types/visual-selection";
@@ -66,19 +74,26 @@ import { Timeline } from "./Timeline";
 import { ToolRail, type ToolTabId } from "./ToolRail";
 import { useAudioEngine } from "./useAudioEngine";
 import { editorThemeVars } from "./editor-theme";
+import { PlaybackClockProvider } from "./playback";
+import {
+  PLAYBACK_RATES,
+  PlaybackClock,
+} from "@/shared/lib/video-editor/playback-clock";
 
 /**
- * The editor shell: owns the reducer, the clock, the keyboard, and the layout.
+ * The editor shell: owns the reducer, the playback clock, the keyboard, and
+ * the layout.
  *
- * ==================== THE CLOCK IS A rAF LOOP, NOT AN INTERVAL ====================
- * Playback advances the playhead from `performance.now()` deltas inside
- * requestAnimationFrame. A setInterval would drift against the display and
- * stutter whenever the main thread is busy — which, in an editor, is whenever
- * anything interesting is happening.
+ * ==================== PROJECT STATE AND PLAYBACK STATE ARE SEPARATE ====================
+ * The reducer holds the EDIT — tracks, clips, selection, zoom, history — and
+ * changes when the operator edits. The `PlaybackClock` holds TIME and changes
+ * continuously. They used to be one: the playhead was reducer state advanced by
+ * a `seek` dispatch every animation frame, so every frame re-rendered the whole
+ * editor (the 108-clip timeline, the inspector, the 160-tile photo library) and
+ * the clock's correctness depended on React committing between frames. It did
+ * not, and time ran backwards. See `playback-clock.ts` for the measurements.
  *
- * The loop reads its elapsed time from a ref rather than from state, so the
- * effect does not re-subscribe on every frame. The only thing state receives
- * is the resulting seek.
+ * Now nothing in this component re-renders while the film plays.
  */
 
 const AUTOSAVE_DEBOUNCE_MS = 700;
@@ -155,6 +170,8 @@ export function VideoEditorShell({
   const [timelineHeight, setTimelineHeight] = useState<number | null>(null);
   const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
   const [exportSummary, setExportSummary] = useState<string | null>(null);
+  /** Why an insert did not happen, in the operator's words rather than a throw. */
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [masterMuted, setMasterMuted] = useState(false);
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
@@ -180,11 +197,9 @@ export function VideoEditorShell({
     restoredRef.current = true;
     const stored = loadProject(episode.project.id);
     if (!stored) return;
-    dispatch({
-      type: "replaceProject",
-      project: stored.project,
-      label: "Restore autosave",
-    });
+    // Loaded as the starting point, not recorded as an edit: an undo step
+    // called "Restore autosave" was one Ctrl+Z from discarding the work.
+    dispatch({ type: "loadProject", project: stored.project });
     setSavedAt(stored.savedAt);
     setRestoredNotice(
       `Restored your unsaved edit from ${new Date(stored.savedAt).toLocaleString()}`,
@@ -214,37 +229,18 @@ export function VideoEditorShell({
 
   /* ── Playback clock ───────────────────────────────────────────────────── */
   /**
-   * The loop reads the playhead from a ref so it does not re-subscribe on
-   * every frame. The ref is synced in its own effect rather than during
-   * render — writing a ref while rendering is a correctness bug React's lint
-   * rules flag as an error, and this repo keeps that rule at error on purpose.
+   * One clock for the life of the editor. Created lazily so the server render
+   * and the first client render agree (both see time 0, paused).
    */
-  const playheadRef = useRef(state.playheadMs);
+  const [clock] = useState(
+    () => new PlaybackClock({ durationMs: projectDurationMs(episode.project) }),
+  );
+  // An edit that lengthens or shortens the film tells the clock; it moves time
+  // only if the parked playhead is now past the end.
   useEffect(() => {
-    playheadRef.current = state.playheadMs;
-  }, [state.playheadMs]);
-
-  useEffect(() => {
-    if (!state.isPlaying) return;
-    let raf = 0;
-    let last = performance.now();
-
-    const tick = (now: number) => {
-      const delta = now - last;
-      last = now;
-      const next = playheadRef.current + delta;
-      if (next >= durationMs) {
-        dispatch({ type: "seek", ms: durationMs });
-        dispatch({ type: "setPlaying", playing: false });
-        return;
-      }
-      dispatch({ type: "seek", ms: next });
-      raf = requestAnimationFrame(tick);
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [state.isPlaying, durationMs, dispatch]);
+    clock.setDuration(durationMs);
+  }, [clock, durationMs]);
+  useEffect(() => () => clock.pause(), [clock]);
 
   /* ── Session capture ──────────────────────────────────────────────────── */
   useEffect(() => {
@@ -297,10 +293,9 @@ export function VideoEditorShell({
 
   /* ── Audio ────────────────────────────────────────────────────────────── */
   const audioEngine = useAudioEngine({
+    clock,
     project,
     sources: episode.audio,
-    playheadMs: state.playheadMs,
-    isPlaying: state.isPlaying,
     masterMuted,
   });
 
@@ -335,7 +330,7 @@ export function VideoEditorShell({
       }
       if (mod && event.key.toLowerCase() === "b") {
         event.preventDefault();
-        dispatch({ type: "splitSelected" });
+        dispatch({ type: "splitSelected", atMs: clock.getTime() });
         return;
       }
       if (mod && event.key.toLowerCase() === "c") {
@@ -343,7 +338,7 @@ export function VideoEditorShell({
         return;
       }
       if (mod && event.key.toLowerCase() === "v") {
-        dispatch({ type: "paste" });
+        dispatch({ type: "paste", atMs: clock.getTime() });
         return;
       }
       if (mod && event.key.toLowerCase() === "d") {
@@ -351,33 +346,58 @@ export function VideoEditorShell({
         dispatch({ type: "duplicateSelected" });
         return;
       }
+      // Any other modified key belongs to the browser (Ctrl+S, Ctrl+L…), and
+      // must not fall through to the single-letter editor shortcuts below.
+      if (mod || event.altKey) return;
 
       switch (event.key) {
         case " ":
           event.preventDefault();
-          dispatch({ type: "setPlaying", playing: !state.isPlaying });
+          clock.toggle();
           break;
         case "ArrowLeft":
           event.preventDefault();
-          dispatch({
-            type: "seek",
-            ms: playheadRef.current - (event.shiftKey ? 1000 : frameMs),
-          });
+          clock.step(-(event.shiftKey ? 1000 : frameMs));
           break;
         case "ArrowRight":
           event.preventDefault();
-          dispatch({
-            type: "seek",
-            ms: playheadRef.current + (event.shiftKey ? 1000 : frameMs),
-          });
+          clock.step(event.shiftKey ? 1000 : frameMs);
           break;
         case "Home":
           event.preventDefault();
-          dispatch({ type: "seek", ms: 0 });
+          clock.seek(0);
           break;
         case "End":
           event.preventDefault();
-          dispatch({ type: "seek", ms: durationMs });
+          clock.seek(clock.getDuration());
+          break;
+        case "s":
+        case "S":
+          event.preventDefault();
+          dispatch({ type: "splitSelected", atMs: clock.getTime() });
+          break;
+        // J / K / L, as in every editing application: K stops, L plays and
+        // each further press goes faster. J here jumps back five seconds
+        // rather than playing in reverse — narration cannot play backwards,
+        // and a silent reverse scrub would be a second, worse, scrubber.
+        case "k":
+        case "K":
+          clock.pause();
+          break;
+        case "l":
+        case "L": {
+          if (!clock.isPlaying()) {
+            clock.setRate(1);
+            clock.play();
+          } else {
+            const faster = PLAYBACK_RATES.find((r) => r > clock.getRate());
+            if (faster !== undefined) clock.setRate(faster);
+          }
+          break;
+        }
+        case "j":
+        case "J":
+          clock.seek(clock.getTime() - 5000);
           break;
         case "Delete":
         case "Backspace":
@@ -398,7 +418,7 @@ export function VideoEditorShell({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dispatch, durationMs, project.fps, state.isPlaying]);
+  }, [clock, dispatch, project.fps]);
 
   /* ── Timeline resize ──────────────────────────────────────────────────── */
   const shellRef = useRef<HTMLDivElement>(null);
@@ -504,42 +524,98 @@ export function VideoEditorShell({
    * would put the single most valuable learning event outside the one channel
    * that records them.
    */
+  const portrait = project.height > project.width;
+
   const handleApplyAsset = useCallback(
     (assetId: string) => {
-      if (assetTarget === null) return;
-      // A card becomes a photograph the moment it is given one. Leaving it
-      // typed `slide` would send the compiler looking for a rendered card frame
-      // that no longer describes the clip. A clip on the TEXT track keeps its
-      // kind, because that track accepts nothing else.
-      const becomesImage =
-        assetTarget.track.kind !== "text" && assetTarget.clip.kind !== "video";
-      handlePatch(
-        assetTarget.clip.id,
-        becomesImage ? { assetId, kind: "image" } : { assetId },
-        "Apply library asset",
+      if (assetTarget === null) {
+        setActionNotice(
+          "Select a visual clip first — a photograph has to land on a shot.",
+        );
+        return;
+      }
+      // Decided before anything is dispatched: the asset must exist and
+      // resolve to a picture, and the clip must be able to take it. A refusal
+      // is a sentence on screen, never a half-applied edit.
+      const resolved = resolveAsset(catalog?.assets ?? null, assetId, { portrait });
+      if (!resolved.ok) {
+        setActionNotice(resolved.reason);
+        return;
+      }
+      const applied = assetPatchFor(assetTarget.clip, assetTarget.track, assetId);
+      if (!applied.ok) {
+        setActionNotice(applied.reason);
+        return;
+      }
+      setActionNotice(null);
+      handlePatch(assetTarget.clip.id, applied.patch, "Apply library asset");
+    },
+    [assetTarget, catalog, handlePatch, portrait],
+  );
+
+  /**
+   * Add a photograph as a NEW clip, at the playhead, on the overlay track.
+   *
+   * Deliberately not on the video track: that would either overlap the shot
+   * already there or push every later cut away from the narration measured
+   * against it. On the overlay it covers the film for its own length and
+   * nothing else in the project moves.
+   */
+  const handleAddAssetAsClip = useCallback(
+    (assetId: string) => {
+      const resolved = resolveAsset(catalog?.assets ?? null, assetId, { portrait });
+      if (!resolved.ok) {
+        setActionNotice(resolved.reason);
+        return;
+      }
+      const asset = catalog?.assets.find((a) => a.assetId === assetId);
+      const at = Math.round(clock.getTime());
+      const placement = placeNewImageClip(project, {
+        assetId,
+        label: asset?.subject ?? assetId,
+        atMs: at,
+        id: `img-${assetId}-${String(at)}`,
+      });
+      if (!placement.ok) {
+        setActionNotice(placement.reason);
+        return;
+      }
+      dispatch({ type: "addClip", trackId: placement.trackId, clip: placement.clip });
+      setActionNotice(
+        `Added ${asset?.subject ?? assetId} on OVERLAY at ${formatTimecode(at)}.`,
       );
     },
-    [assetTarget, handlePatch],
+    [catalog, clock, dispatch, portrait, project],
+  );
+
+  /** Send the operator to the library with this clip selected. */
+  const handleRequestReplace = useCallback(
+    (clipId: string) => {
+      dispatch({ type: "select", clipId });
+      setTool("library");
+    },
+    [dispatch],
   );
 
 
   const handleInsertText = useCallback(() => {
     const textTrack = project.tracks.find((t) => t.kind === "text");
     if (!textTrack) return;
+    const at = Math.round(clock.getTime());
     dispatch({
       type: "addClip",
       trackId: textTrack.id,
       clip: {
-        id: `text-${state.revision}-${Math.round(state.playheadMs)}`,
+        id: `text-${state.revision}-${at}`,
         kind: "text",
         label: "New text",
-        startMs: state.playheadMs,
+        startMs: at,
         durationMs: 3000,
         text: { text: "New text", fontSize: 96, align: "center", color: "#fff" },
       },
     });
     setTool("text");
-  }, [dispatch, project.tracks, state.playheadMs, state.revision]);
+  }, [clock, dispatch, project.tracks, state.revision]);
 
   /**
    * Export COMPILES to the renderer's Timeline and downloads it alongside the
@@ -691,6 +767,7 @@ export function VideoEditorShell({
   );
 
   return (
+    <PlaybackClockProvider value={clock}>
     <div
       ref={shellRef}
       style={editorThemeVars}
@@ -740,7 +817,7 @@ export function VideoEditorShell({
           </div>
         ) : null}
 
-        {approvalNotice || restoredNotice || exportSummary ? (
+        {approvalNotice || restoredNotice || exportSummary || actionNotice ? (
           <div
             className="flex shrink-0 items-center gap-2 px-3 py-1 text-[11px]"
             style={{
@@ -749,13 +826,16 @@ export function VideoEditorShell({
               borderBottom: "1px solid var(--ve-line)",
             }}
           >
-            {approvalNotice ?? exportSummary ?? restoredNotice}
+            <span data-testid="ve-notice">
+              {approvalNotice ?? exportSummary ?? actionNotice ?? restoredNotice}
+            </span>
             <button
               type="button"
               onClick={() => {
                 setApprovalNotice(null);
                 setExportSummary(null);
                 setRestoredNotice(null);
+                setActionNotice(null);
               }}
               className="ml-auto underline"
             >
@@ -773,50 +853,47 @@ export function VideoEditorShell({
 
         <div className="flex min-h-0 flex-1">
           <ToolRail active={tool} onSelect={setTool} />
-          <AssetBrowser
-            tab={tool}
-            project={project}
-            frames={frames}
-            onInsertText={handleInsertText}
-            onSelectClip={(clipId) => handleSelect(clipId, false)}
-            onApplyAsset={handleApplyAsset}
-            selectedAssetId={assetTarget?.clip.assetId ?? null}
-            canApplyAsset={assetTarget !== null}
-          />
+          <PanelBoundary name="media browser">
+            <AssetBrowser
+              tab={tool}
+              project={project}
+              frames={frames}
+              onInsertText={handleInsertText}
+              onSelectClip={(clipId) => handleSelect(clipId, false)}
+              onApplyAsset={handleApplyAsset}
+              onAddAsset={handleAddAssetAsClip}
+              selectedAssetId={assetTarget?.clip.assetId ?? null}
+              canApplyAsset={assetTarget !== null}
+            />
+          </PanelBoundary>
 
           <main className="flex min-w-0 flex-1 flex-col">
-            <PreviewMonitor
-              project={project}
-              timeMs={state.playheadMs}
-              frames={frames}
-              selectedIds={state.selection.clipIds}
-              onSelectClip={(clipId) => handleSelect(clipId, false)}
-              onTransform={(clipId, transform, coalesceKey) =>
-                dispatch({
-                  type: "updateClip",
-                  clipId,
-                  patch: { transform },
-                  label: "Transform on canvas",
-                  coalesceKey,
-                })
-              }
-              onGestureEnd={() => dispatch({ type: "endGesture" })}
-            />
+            <PanelBoundary name="preview">
+              <PreviewMonitor
+                project={project}
+                frames={frames}
+                selectedIds={state.selection.clipIds}
+                onSelectClip={(clipId) => handleSelect(clipId, false)}
+                onTransform={(clipId, transform, coalesceKey) =>
+                  dispatch({
+                    type: "updateClip",
+                    clipId,
+                    patch: { transform },
+                    label: "Transform on canvas",
+                    coalesceKey,
+                  })
+                }
+                onGestureEnd={() => dispatch({ type: "endGesture" })}
+                onReplaceAsset={handleRequestReplace}
+                onRemoveClip={(clipId) => {
+                  dispatch({ type: "select", clipId });
+                  dispatch({ type: "deleteSelected" });
+                }}
+              />
+            </PanelBoundary>
             <PlaybackControls
-              playheadMs={state.playheadMs}
               durationMs={durationMs}
-              isPlaying={state.isPlaying}
               fps={project.fps}
-              onPlayPause={() =>
-                dispatch({ type: "setPlaying", playing: !state.isPlaying })
-              }
-              onSeek={(ms) => dispatch({ type: "seek", ms })}
-              onStepFrame={(direction) =>
-                dispatch({
-                  type: "seek",
-                  ms: state.playheadMs + (direction * 1000) / project.fps,
-                })
-              }
               muted={masterMuted}
               onToggleMute={() => setMasterMuted((v) => !v)}
               audioBlocked={audioEngine.blocked}
@@ -825,12 +902,21 @@ export function VideoEditorShell({
             />
           </main>
 
-          <Inspector
-            project={project}
-            selected={selected}
-            onPatch={handlePatch}
-            visuals={visuals ?? {}}
-          />
+          <PanelBoundary name="inspector">
+            <Inspector
+              project={project}
+              selected={selected}
+              onPatch={handlePatch}
+              visuals={visuals ?? {}}
+              frames={frames}
+              onReplaceAsset={handleRequestReplace}
+              onDelete={() => dispatch({ type: "deleteSelected" })}
+              onDuplicate={() => dispatch({ type: "duplicateSelected" })}
+              onSplit={() =>
+                dispatch({ type: "splitSelected", atMs: clock.getTime() })
+              }
+            />
+          </PanelBoundary>
         </div>
 
         {/* Resize grip */}
@@ -852,15 +938,15 @@ export function VideoEditorShell({
           }}
         >
           <div className="flex h-full flex-col">
+            <PanelBoundary name="timeline">
             <Timeline
               project={project}
               pxPerSec={state.pxPerSec}
-              playheadMs={state.playheadMs}
               selectedIds={state.selection.clipIds}
               peaks={episode.peaks}
               frames={frames}
               snapEnabled={snapEnabled}
-              onSeek={(ms) => dispatch({ type: "seek", ms })}
+              onSeek={(ms) => clock.seek(ms)}
               onSelect={handleSelect}
               onClearSelection={() => dispatch({ type: "clearSelection" })}
               onMoveClip={(clipId, startMs) =>
@@ -872,14 +958,27 @@ export function VideoEditorShell({
               onGestureEnd={() => dispatch({ type: "endGesture" })}
               onToggleTrack={toggleTrack}
               onZoom={(pxPerSec) => dispatch({ type: "setPxPerSec", pxPerSec })}
-              onSplit={() => dispatch({ type: "splitSelected" })}
+              onSplit={() => dispatch({ type: "splitSelected", atMs: clock.getTime() })}
               onDelete={() => dispatch({ type: "deleteSelected" })}
+              onDuplicate={() => dispatch({ type: "duplicateSelected" })}
+              onFit={(visibleWidthPx) =>
+                dispatch({
+                  type: "setPxPerSec",
+                  pxPerSec: clampPxPerSec(
+                    durationMs > 0
+                      ? (visibleWidthPx - 24) / (durationMs / 1000)
+                      : state.pxPerSec,
+                  ),
+                })
+              }
               onToggleSnap={() => setSnapEnabled((v) => !v)}
             />
+            </PanelBoundary>
           </div>
         </div>
       </div>
     </div>
+    </PlaybackClockProvider>
   );
 }
 

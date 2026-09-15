@@ -72,6 +72,10 @@ function TimelineClipImpl({
       // interaction tests to target a canvas-manipulable clip rather than a
       // caption, and useful in devtools for the same reason.
       data-track-kind={trackKind}
+      // The clip's identity in the DOM. Labels are not unique — splitting a
+      // clip produces two halves with the same one — so anything selecting a
+      // specific clip (a test, a link from the inspector) needs the id.
+      data-clip-id={clip.id}
       onPointerDown={(event) => onPointerDown(event, clip, "move")}
       className="absolute top-0 select-none overflow-hidden rounded-[2px]"
       style={{
@@ -86,7 +90,9 @@ function TimelineClipImpl({
           ? `inset 0 0 0 2px var(--ve-accent)`
           : `inset 0 0 0 1px ${colors.edge}`,
         cursor: dragging ? "grabbing" : "grab",
-        opacity: dragging ? 0.85 : 1,
+        // A hidden clip stays on the timeline, visibly excluded — deleting it
+        // would be a different decision, and one the operator did not make.
+        opacity: clip.hidden ? 0.32 : dragging ? 0.85 : 1,
         zIndex: selected ? 2 : 1,
       }}
     >

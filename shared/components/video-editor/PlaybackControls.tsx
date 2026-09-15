@@ -10,6 +10,8 @@ import {
   VolumeX,
 } from "lucide-react";
 import { formatTimecode } from "@/shared/types/video-editor";
+import { PLAYBACK_RATES } from "@/shared/lib/video-editor/playback-clock";
+import { LiveTimecode, usePlaybackClock, usePlaybackState } from "./playback";
 
 /**
  * Transport. Deliberately compact — this strip is a control surface, not a
@@ -18,28 +20,23 @@ import { formatTimecode } from "@/shared/types/video-editor";
  * The timecode is the LEFT-hand anchor because it is the number you read while
  * scrubbing; total duration sits beside it dimmed, so "where am I / how long is
  * it" is one glance rather than two.
+ *
+ * ==================== IT READS THE CLOCK, IT DOES NOT RECEIVE TIME ====================
+ * This used to take `playheadMs` as a prop, which meant the whole editor
+ * re-rendered to move one number. The timecode now subscribes to the clock
+ * directly and the strip re-renders only when play/pause or speed change.
  */
 export function PlaybackControls({
-  playheadMs,
   durationMs,
-  isPlaying,
   fps,
-  onPlayPause,
-  onSeek,
-  onStepFrame,
   muted,
   onToggleMute,
   audioBlocked,
   onUnlockAudio,
   audioClipCount,
 }: {
-  readonly playheadMs: number;
   readonly durationMs: number;
-  readonly isPlaying: boolean;
   readonly fps: number;
-  readonly onPlayPause: () => void;
-  readonly onSeek: (ms: number) => void;
-  readonly onStepFrame: (direction: -1 | 1) => void;
   readonly muted: boolean;
   readonly onToggleMute: () => void;
   /** True when the browser refused playback without a user gesture. */
@@ -47,6 +44,10 @@ export function PlaybackControls({
   readonly onUnlockAudio: () => void;
   readonly audioClipCount: number;
 }) {
+  const clock = usePlaybackClock();
+  const { playing, rate } = usePlaybackState();
+  const frameMs = 1000 / fps;
+
   return (
     <div
       className="flex h-10 shrink-0 items-center gap-2 px-3"
@@ -55,14 +56,13 @@ export function PlaybackControls({
         borderTop: "1px solid var(--ve-line)",
       }}
     >
-      <span
-        data-testid="ve-playhead-timecode"
-        className="tabular-nums text-[12px] font-medium"
+      <LiveTimecode
+        testId="ve-playhead-timecode"
+        className="w-[64px] tabular-nums text-[12px] font-medium"
         style={{ color: "var(--ve-text)" }}
-      >
-        {formatTimecode(playheadMs)}
-      </span>
+      />
       <span
+        data-testid="ve-duration-timecode"
         className="tabular-nums text-[11px]"
         style={{ color: "var(--ve-text-faint)" }}
       >
@@ -70,28 +70,30 @@ export function PlaybackControls({
       </span>
 
       <div className="mx-auto flex items-center gap-1">
-        <TransportButton title="Go to start (Home)" onClick={() => onSeek(0)}>
+        <TransportButton title="Go to start (Home)" onClick={() => clock.seek(0)}>
           <SkipBack className="size-3.5" />
         </TransportButton>
         <TransportButton
-          title={`Previous frame (←) · 1/${fps}s`}
-          onClick={() => onStepFrame(-1)}
+          title={`Previous frame (←) · 1/${fps}s — Shift+← for 1s`}
+          testId="ve-step-back"
+          onClick={() => clock.step(-frameMs)}
         >
           <ChevronFirst className="size-4" />
         </TransportButton>
 
         <button
           type="button"
-          onClick={onPlayPause}
-          title={isPlaying ? "Pause (Space)" : "Play (Space)"}
-          aria-label={isPlaying ? "Pause" : "Play"}
+          onClick={() => clock.toggle()}
+          title={playing ? "Pause (Space / K)" : "Play (Space / L)"}
+          aria-label={playing ? "Pause" : "Play"}
+          data-testid="ve-play"
           className="flex size-8 items-center justify-center rounded-full"
           style={{
             background: "var(--ve-accent)",
             color: "var(--ve-on-accent)",
           }}
         >
-          {isPlaying ? (
+          {playing ? (
             <Pause className="size-4" fill="currentColor" />
           ) : (
             <Play className="size-4 translate-x-[1px]" fill="currentColor" />
@@ -99,17 +101,43 @@ export function PlaybackControls({
         </button>
 
         <TransportButton
-          title={`Next frame (→) · 1/${fps}s`}
-          onClick={() => onStepFrame(1)}
+          title={`Next frame (→) · 1/${fps}s — Shift+→ for 1s`}
+          testId="ve-step-forward"
+          onClick={() => clock.step(frameMs)}
         >
           <ChevronLast className="size-4" />
         </TransportButton>
         <TransportButton
           title="Go to end (End)"
-          onClick={() => onSeek(durationMs)}
+          onClick={() => clock.seek(clock.getDuration())}
         >
           <SkipBack className="size-3.5 rotate-180" />
         </TransportButton>
+
+        <div
+          className="ml-2 flex items-center overflow-hidden rounded"
+          role="group"
+          aria-label="Playback speed"
+          style={{ border: "1px solid var(--ve-line-strong)" }}
+        >
+          {PLAYBACK_RATES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              aria-pressed={rate === r}
+              data-testid={`ve-rate-${r}`}
+              title={`Play at ${r}×`}
+              onClick={() => clock.setRate(r)}
+              className="h-6 px-1.5 text-[10px] tabular-nums"
+              style={{
+                background: rate === r ? "var(--ve-accent-wash)" : "transparent",
+                color: rate === r ? "var(--ve-accent)" : "var(--ve-text-faint)",
+              }}
+            >
+              {r}×
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -149,7 +177,7 @@ export function PlaybackControls({
         <span
           className="text-[10px]"
           style={{ color: "var(--ve-text-faint)" }}
-          title={`${audioClipCount} narration clips loaded. The production renderer crossfades every cut, so the exported master is slightly shorter than the timeline.`}
+          title={`${audioClipCount} narration clips loaded. J back 5s · K pause · L play (again for faster) · S split.`}
         >
           {fps} fps · preview
         </span>
@@ -162,16 +190,19 @@ function TransportButton({
   children,
   onClick,
   title,
+  testId,
 }: {
   readonly children: React.ReactNode;
   readonly onClick: () => void;
   readonly title: string;
+  readonly testId?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
+      data-testid={testId}
       className="flex size-7 items-center justify-center rounded hover:brightness-150"
       style={{ color: "var(--ve-text-dim)" }}
     >

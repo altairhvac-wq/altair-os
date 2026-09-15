@@ -9,10 +9,18 @@
  * it, the preview is a view of it, and the compiler reads it. Nothing else owns
  * timed state.
  *
- * `playheadMs`, `pxPerSec` and `selection` live here too but are NOT in the
- * project, because they are not the edit. Undo must not restore a scroll
- * position or move the playhead — an undo that also scrolls you somewhere else
- * makes it impossible to see what it just undid.
+ * `pxPerSec` and `selection` live here too but are NOT in the project, because
+ * they are not the edit. Undo must not restore a scroll position — an undo that
+ * also scrolls you somewhere else makes it impossible to see what it just undid.
+ *
+ * ==================== PLAYBACK IS NOT HERE ====================
+ * The playhead used to live in this state and was advanced by dispatching a
+ * `seek` sixty times a second. That made every frame a React commit of the
+ * whole editor and made the clock's correctness depend on React committing
+ * between animation frames — it did not, and time ran backwards. Playback now
+ * belongs to `PlaybackClock`. Edits that need "now" (split, paste, insert at
+ * playhead) are handed the time explicitly in the action, so the reducer stays
+ * pure and a test states the instant rather than simulating a seek.
  */
 
 import {
@@ -21,7 +29,6 @@ import {
   findClip,
   moveClipToTrack,
   normalizeClip,
-  projectDurationMs,
   replaceClip,
   splitClipAt,
   trimClip,
@@ -50,9 +57,7 @@ export type EditorSelection = {
 export type EditorState = {
   readonly history: History<EditorProject>;
   readonly selection: EditorSelection;
-  readonly playheadMs: number;
   readonly pxPerSec: number;
-  readonly isPlaying: boolean;
   /** Bumped on every project change so autosave can debounce off it. */
   readonly revision: number;
   /** Clipboard for copy/paste. Not persisted. */
@@ -63,8 +68,6 @@ export const EDITOR_ACTIONS = [
   "select",
   "toggleSelect",
   "clearSelection",
-  "seek",
-  "setPlaying",
   "setPxPerSec",
   "addClip",
   "moveClip",
@@ -81,20 +84,19 @@ export const EDITOR_ACTIONS = [
   "undo",
   "redo",
   "replaceProject",
+  "loadProject",
 ] as const;
 
 export type EditorAction =
   | { type: "select"; clipId: string | null }
   | { type: "toggleSelect"; clipId: string }
   | { type: "clearSelection" }
-  | { type: "seek"; ms: number }
-  | { type: "setPlaying"; playing: boolean }
   | { type: "setPxPerSec"; pxPerSec: number }
   | { type: "addClip"; trackId: string; clip: EditorClip }
   | { type: "moveClip"; clipId: string; startMs: number }
   | { type: "moveClipToTrack"; clipId: string; trackId: string }
   | { type: "trimClip"; clipId: string; edge: "start" | "end"; ms: number }
-  | { type: "splitSelected" }
+  | { type: "splitSelected"; atMs: number }
   | { type: "deleteSelected" }
   | { type: "duplicateSelected" }
   | {
@@ -106,11 +108,18 @@ export type EditorAction =
     }
   | { type: "updateTrack"; trackId: string; patch: Partial<EditorTrack> }
   | { type: "copySelected" }
-  | { type: "paste" }
+  | { type: "paste"; atMs: number }
   | { type: "endGesture" }
   | { type: "undo" }
   | { type: "redo" }
-  | { type: "replaceProject"; project: EditorProject; label: string };
+  | { type: "replaceProject"; project: EditorProject; label: string }
+  /**
+   * Open a stored project as the starting point: history is reset and nothing
+   * is marked unsaved. Restoring an autosave is not an edit — recording it as
+   * one put "Restore autosave" on the undo stack, one Ctrl+Z away from quietly
+   * throwing the operator's work back to the original snapshot.
+   */
+  | { type: "loadProject"; project: EditorProject };
 
 /**
  * Ids are generated here rather than with crypto.randomUUID at call sites so a
@@ -129,9 +138,7 @@ export function createEditorState(project: EditorProject): EditorState {
   return {
     history: createHistory(project),
     selection: { clipIds: [] },
-    playheadMs: 0,
     pxPerSec: EDITOR_DEFAULT_PX_PER_SEC,
-    isPlaying: false,
     revision: 0,
     clipboard: [],
   };
@@ -195,19 +202,6 @@ export function editorReducer(
     case "clearSelection":
       return { ...state, selection: { clipIds: [] } };
 
-    case "seek": {
-      // Clamped to the project, so scrubbing past the end cannot strand the
-      // playhead somewhere the preview has nothing to show.
-      const max = projectDurationMs(project);
-      const ms = Math.max(0, Math.min(Math.round(action.ms), max));
-      return ms === state.playheadMs ? state : { ...state, playheadMs: ms };
-    }
-
-    case "setPlaying":
-      return state.isPlaying === action.playing
-        ? state
-        : { ...state, isPlaying: action.playing };
-
     case "setPxPerSec": {
       const pxPerSec = clampPxPerSec(action.pxPerSec);
       return pxPerSec === state.pxPerSec ? state : { ...state, pxPerSec };
@@ -261,7 +255,8 @@ export function editorReducer(
     }
 
     case "splitSelected": {
-      const at = state.playheadMs;
+      if (!Number.isFinite(action.atMs)) return state;
+      const at = Math.round(action.atMs);
       let next = project;
       const newIds: string[] = [];
       let count = 0;
@@ -374,7 +369,8 @@ export function editorReducer(
     }
 
     case "paste": {
-      if (state.clipboard.length === 0) return state;
+      if (state.clipboard.length === 0 || !Number.isFinite(action.atMs)) return state;
+      const at = Math.max(0, Math.round(action.atMs));
       // Pasted at the playhead, preserving relative offsets within the copied
       // set, so copying two clips two seconds apart pastes them two apart.
       const base = Math.min(...state.clipboard.map((c) => c.startMs));
@@ -389,7 +385,7 @@ export function editorReducer(
         const copy: EditorClip = {
           ...clip,
           id: makeId(),
-          startMs: state.playheadMs + (clip.startMs - base),
+          startMs: at + (clip.startMs - base),
         };
         next = addClip(next, host.id, copy);
         newIds.push(copy.id);
@@ -430,6 +426,13 @@ export function editorReducer(
     case "replaceProject":
       return {
         ...withProject(state, action.project, action.label),
+        selection: { clipIds: [] },
+      };
+
+    case "loadProject":
+      return {
+        ...state,
+        history: createHistory(action.project),
         selection: { clipIds: [] },
       };
 

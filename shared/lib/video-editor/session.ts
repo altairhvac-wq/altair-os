@@ -44,12 +44,11 @@ const NON_EDIT_ACTIONS = new Set<EditorAction["type"]>([
   "select",
   "toggleSelect",
   "clearSelection",
-  "seek",
-  "setPlaying",
   "setPxPerSec",
   "copySelected",
   "endGesture",
   "replaceProject",
+  "loadProject",
 ]);
 
 const ACTION_TO_EDIT: Partial<Record<EditorAction["type"], HumanEditAction>> = {
