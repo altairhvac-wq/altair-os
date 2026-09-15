@@ -54,11 +54,18 @@ export type IntegrationAdapterLoader = () => Promise<IntegrationAdapter>;
 const ADAPTER_LOADERS: Readonly<
   Partial<Record<IntegrationProvider, IntegrationAdapterLoader>>
 > = {
-  // The first and, for now, only wired adapter. Every other provider
-  // resolves to ADAPTER_NOT_REGISTERED, which is the honest answer: the
-  // capability matrix describing a provider is not the same as this
-  // deployment being able to reach it.
+  // The first wired adapter. Every unlisted provider resolves to
+  // ADAPTER_NOT_REGISTERED, which is the honest answer: the capability
+  // matrix describing a provider is not the same as this deployment being
+  // able to reach it.
   youtube: () => import("./youtube/adapter").then((m) => m.youtubeAdapter),
+  // Both Meta surfaces live in one module because they share one connection:
+  // Instagram publishes through the linked Facebook Page's token. The module
+  // wraps the proven Reel transports in `./facebook/reels.ts` — it does not
+  // reimplement them.
+  facebook: () => import("./facebook/adapter").then((m) => m.facebookAdapter),
+  instagram: () =>
+    import("./facebook/adapter").then((m) => m.instagramAdapter),
   // The first-party surface. It reaches an internal database write rather
   // than a provider API — the dispatcher routes on the adapter's kind, and
   // this one exposes `publishFirstParty` instead of `publish`.

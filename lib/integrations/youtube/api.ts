@@ -284,4 +284,8 @@ export type YouTubeVideoStatus = {
   readonly uploadStatus: string | null;
   readonly channelId: string | null;
   readonly title: string | null;
+  /** Read back so metadata fidelity is verifiable — the canary-placeholder
+   *  incident shipped an internal string as the public description and no
+   *  readback field existed to catch it. */
+  readonly description: string | null;
 };

@@ -12,6 +12,7 @@ import {
   exchangeFacebookAuthorizationCode,
   exchangeFacebookShortLivedToken,
   fetchFacebookAssignedPages,
+  fetchFacebookGrantedPermissions,
   fetchFacebookPageInstagramBusinessAccount,
   fetchFacebookPages,
   fetchFacebookUserProfile,
@@ -89,11 +90,18 @@ export async function completeFacebookOAuthConnect(
 
   let profile: { id: string; name: string };
   let pages: Awaited<ReturnType<typeof fetchFacebookPages>>;
+  let grantedScopes: string[];
 
   try {
-    [profile, pages] = await Promise.all([
+    // The permissions readback rides the same failure path as the profile
+    // and Page list on purpose: a connect either records real evidence of
+    // what Meta granted, or fails visibly. Storing the requested constant
+    // as if it were granted is how a publish later fails with an opaque
+    // permission error nothing on the row can explain.
+    [profile, pages, grantedScopes] = await Promise.all([
       fetchFacebookUserProfile(userAccessToken),
       fetchFacebookPages(userAccessToken),
+      fetchFacebookGrantedPermissions(userAccessToken),
     ]);
   } catch (error) {
     console.error("[completeFacebookOAuthConnect] Graph fetch failed:", {
@@ -205,6 +213,7 @@ export async function completeFacebookOAuthConnect(
       providerResourceId: page.id,
       providerResourceName: page.name,
       scopes,
+      grantedScopes,
       // Page tokens from long-lived user tokens typically do not expire;
       // retain user-token expiry as a reconnect hint only.
       tokenExpiresAt,

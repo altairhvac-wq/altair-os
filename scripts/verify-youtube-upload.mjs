@@ -236,7 +236,14 @@ function happyRouter(options = {}) {
               privacyStatus: readbackPrivacy,
               uploadStatus: "uploaded",
             },
-            snippet: { channelId: options.readbackChannel ?? channelId },
+            snippet: {
+              channelId: options.readbackChannel ?? channelId,
+              // Real YouTube echoes the uploaded snippet; the adapter now
+              // verifies that echo, so the mock must behave like YouTube.
+              title: "readbackTitle" in options ? options.readbackTitle : "Altair dispatch in one place",
+              description:
+                "readbackDescription" in options ? options.readbackDescription : "A private canary upload.",
+            },
           },
         ],
       });
@@ -393,6 +400,53 @@ console.log("\nReadback verification");
   check(
     "a video on a channel this connection is not bound to is refused",
     threw !== null && threw.code === "channel_mismatch",
+    threw?.code,
+  );
+}
+
+{
+  // The placeholder-description incident, as a mocked regression: YouTube
+  // holding different copy than the publish carried is a FAILED publish.
+  reset(happyRouter({ readbackTitle: "Altair canary — private upload test" }));
+  let threw = null;
+  try {
+    await youtubeAdapter.publish(publishInput());
+  } catch (error) {
+    threw = error;
+  }
+  check(
+    "a readback whose title is not the title the publish carried is refused",
+    threw !== null && threw.code === "title_mismatch",
+    threw?.code,
+  );
+}
+
+{
+  reset(happyRouter({ readbackDescription: "Supervised private upload canary." }));
+  let threw = null;
+  try {
+    await youtubeAdapter.publish(publishInput());
+  } catch (error) {
+    threw = error;
+  }
+  check(
+    "a readback whose description is not the copy the publish carried is refused",
+    threw !== null && threw.code === "description_mismatch",
+    threw?.code,
+  );
+}
+
+{
+  reset(happyRouter({ readbackDescription: "" }));
+  let threw = null;
+  try {
+    await youtubeAdapter.publish(publishInput());
+  } catch (error) {
+    threw = error;
+  }
+  check(
+    "a readback with an EMPTY description is refused, not recorded as posted",
+    threw !== null && threw.code === "description_missing",
     threw?.code,
   );
 }
@@ -1146,6 +1200,53 @@ check(
 check(
   "it tells the operator to disarm afterwards",
   /MARKETING_PUBLISH_MODE=off/.test(canary),
+);
+
+/* ---- metadata fidelity (the placeholder-description incident) ---------- */
+// The canary once hardcoded "Supervised private upload canary." into BOTH the
+// post row and the dispatch body, and this suite passed. These checks pin the
+// fix: real copy is required, the placeholder exists only behind an explicit
+// connectivity-test flag, and the dispatch carries the resolved variables.
+
+console.log("\nThe canary carries real metadata, never a silent placeholder");
+
+check(
+  "the dispatch body is the resolved DESCRIPTION variable, not a literal",
+  canaryCode.includes("body: DESCRIPTION") &&
+    !/body:\s*"Supervised private upload canary\."/.test(canaryCode),
+);
+check(
+  "the post row's text is the same resolved DESCRIPTION",
+  canaryCode.includes("post_text: DESCRIPTION"),
+);
+check(
+  "placeholder copy exists only behind the explicit --allow-canary-copy flag",
+  canaryCode.includes("ALLOW_CANARY_COPY") &&
+    canaryCode.indexOf("CANARY_BODY") !== -1 &&
+    /if \(ALLOW_CANARY_COPY\) \{[\s\S]*?CANARY_TITLE/.test(canaryCode),
+);
+check(
+  "with no real copy and no flag, the run is refused before any write",
+  /No real title\/description for this upload/.test(canary),
+);
+check(
+  "it reads the render pipeline's publishing.json sidecar (auto-discovered beside the video)",
+  canaryCode.includes('"publishing.json"') && canaryCode.includes("youtubeTitle"),
+);
+check(
+  "production copy is scanned for internal canary language before upload",
+  canaryCode.includes("INTERNAL_MARKERS") &&
+    /INTERNAL_MARKERS\.find/.test(canaryCode),
+);
+check(
+  "after upload it verifies title AND description from the ledger readback",
+  canaryCode.includes("title mismatch") &&
+    canaryCode.includes("description mismatch") &&
+    canaryCode.includes("description missing on YouTube"),
+);
+check(
+  "a metadata mismatch fails the run's exit code",
+  /result\.ok && !failed \? 0 : 1/.test(canaryCode),
 );
 
 globalThis.fetch = realFetch;
