@@ -25,6 +25,7 @@ import {
   publishInstagramReel,
 } from "@/lib/integrations/facebook/reels";
 import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
+import { refuseDirectReelPublish } from "@/lib/publishing/hvac-guard";
 import { createMediaReadGrant } from "@/lib/media/marketing-media-storage";
 import {
   decideMediaRead,
@@ -45,6 +46,7 @@ import type {
 import { describeUnpublishableMarketingPostStatus } from "@/shared/types/marketing-post";
 import {
   claimDelivery,
+  listPostedProvidersForVideoAsset,
   recordDeliveryProviderMedia,
   settleDelivery,
 } from "@/lib/database/queries/marketing-channel-deliveries";
@@ -774,6 +776,54 @@ export async function publishMarketingPostToInstagramAction(
  * Publishes the video attached to a founder draft as a Facebook Page Reel.
  * Deliberate human click only — no scheduling and no auto-trigger.
  */
+/**
+ * The agent-managed guard, resolved from the rows and answered by the pure
+ * module in `lib/publishing/hvac-guard.ts` (its header carries the incident
+ * this exists for). Runs BEFORE anything is claimed, minted, or sent, in
+ * both Meta reel actions — an HVAC Short can never publish from a direct
+ * click, a bridge draft can never publish cross-platform, and an
+ * agent-managed video already live on the requested platform can never
+ * duplicate. A failed duplicate-check READ refuses too: "could not check"
+ * must never resolve to "go ahead".
+ */
+async function refuseAgentManagedDirectPublish(args: {
+  companyId: string;
+  post: {
+    sourceType: string;
+    channelTarget: string;
+    videoMediaAssetId?: string | null;
+  };
+  provider: "facebook" | "instagram";
+}): Promise<string | null> {
+  const assetId = args.post.videoMediaAssetId ?? null;
+  let videoSourceJobId: string | null = null;
+  let postedSiblingProviders: string[] = [];
+  if (assetId) {
+    const asset = await getMediaAssetById(args.companyId, assetId);
+    videoSourceJobId = asset?.sourceJobId ?? null;
+    try {
+      postedSiblingProviders = await listPostedProvidersForVideoAsset(
+        args.companyId,
+        assetId,
+      );
+    } catch {
+      return (
+        "Could not verify whether this video is already live on that platform, so " +
+        "publishing was refused rather than risking a duplicate. Try again."
+      );
+    }
+  }
+  return refuseDirectReelPublish({
+    requestedProvider: args.provider,
+    post: {
+      sourceType: args.post.sourceType,
+      channelTarget: args.post.channelTarget,
+    },
+    videoSourceJobId,
+    postedSiblingProviders,
+  });
+}
+
 export async function publishMarketingReelToFacebookAction(
   postId: string,
   connectedAccountId: string,
@@ -804,6 +854,15 @@ export async function publishMarketingReelToFacebookAction(
   });
   if (draft.error || !draft.post) {
     return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const managedRefusal = await refuseAgentManagedDirectPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+    provider: "facebook",
+  });
+  if (managedRefusal) {
+    return { error: managedRefusal };
   }
 
   const pageLoad = await loadConnectedFacebookPage({
@@ -985,6 +1044,15 @@ export async function publishMarketingReelToInstagramAction(
   });
   if (draft.error || !draft.post) {
     return { error: draft.error ?? "Marketing post not found." };
+  }
+
+  const managedRefusal = await refuseAgentManagedDirectPublish({
+    companyId: permission.context.company.id,
+    post: draft.post,
+    provider: "instagram",
+  });
+  if (managedRefusal) {
+    return { error: managedRefusal };
   }
 
   const pageLoad = await loadConnectedFacebookPage({
