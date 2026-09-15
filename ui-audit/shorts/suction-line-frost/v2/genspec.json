@@ -1,0 +1,60 @@
+{
+  "shortId": "suction-line-frost",
+  "specId": "alt-hvac-s009-suction-line-frost-v2",
+  "title": "Why your suction line is frosting over",
+  "topic": "Suction line frost diagnosis",
+  "hookType": "claim",
+  "takeaway": "Frost alone doesn't prove floodback - measure the superheat before condemning anything.",
+  "takeawayType": "diagnostic-cue",
+  "mechanism": "evaporator",
+  "gauges": false,
+  "hook": { "line1": "Why your suction line", "line2": "is frosting over", "size": 56 },
+  "payoff": { "line1": "Measure the superheat.", "line2": "The number tells you - not the ice." },
+  "shots": [
+    {
+      "id": "hook",
+      "enginePhase": "frostedLine",
+      "sentences": ["Here's why your suction line is frosting over."],
+      "eyebrow": null,
+      "captions": [],
+      "chips": [],
+      "visual": "the frosted suction line itself, ice already formed, coil out of focus left"
+    },
+    {
+      "id": "coil",
+      "enginePhase": "coil",
+      "sentences": ["When airflow is low or the system is overfed, refrigerant is still boiling as it leaves the coil, and the line runs colder than it should."],
+      "eyebrow": { "text": "AT THE EVAPORATOR", "tone": "cool" },
+      "captions": ["Low airflow — or an overfed coil", "Still boiling as it leaves the coil"],
+      "chips": [{ "text": "LOW SUPERHEAT", "tone": "cool" }],
+      "visual": "evaporator coil, two-phase refrigerant boiling along the passes, droplets surviving to the outlet"
+    },
+    {
+      "id": "freeze",
+      "enginePhase": "freezing",
+      "sentences": ["Below freezing, moisture in the air freezes onto the pipe — that's your frost."],
+      "eyebrow": { "text": "THE LINE DROPS BELOW 0°C", "tone": "cool" },
+      "captions": ["Moisture in the air freezes onto the pipe"],
+      "chips": [{ "text": "FROST FORMING", "tone": "cool" }],
+      "visual": "suction line chills toward icy pale; frost visibly accumulates on the pipe"
+    },
+    {
+      "id": "caution",
+      "enginePhase": "caution",
+      "sentences": ["But frost alone doesn't prove liquid floodback."],
+      "eyebrow": { "text": "BEFORE YOU CONDEMN ANYTHING", "tone": "hot" },
+      "captions": ["Frost alone doesn't prove liquid floodback"],
+      "chips": [],
+      "visual": "pull out: coil, frosted line and compressor context in one frame"
+    },
+    {
+      "id": "payoff",
+      "enginePhase": "wide",
+      "sentences": ["Measure the superheat.", "The number tells you — not the ice."],
+      "eyebrow": null,
+      "captions": [],
+      "chips": [],
+      "visual": "wide system view holding to the end"
+    }
+  ]
+}
