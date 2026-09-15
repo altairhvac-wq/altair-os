@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Altair Shorts — frame server</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #05090f;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1080" height="1920"></canvas>
+    <script type="module">
+      import { buildShort, renderCover } from "./engine/template.mjs";
+
+      const params = new URLSearchParams(location.search);
+      const which = params.get("short") ?? "recip-what-happens";
+      const mod = await import(`./shorts/${which}.mjs`);
+      const short = buildShort(mod.spec);
+      /** Draw the cover still (true) or report there is none (false). */
+      window.renderCover = () => renderCover(document.getElementById("c").getContext("2d", { alpha: false }), mod.spec);
+
+      const cv = document.getElementById("c");
+      const ctx = cv.getContext("2d", { alpha: false });
+
+      window.SHORT = {
+        frames: short.frames,
+        fps: short.fps,
+        totalMs: short.totalMs,
+        id: mod.spec.id,
+      };
+      window.renderFrame = (i) => {
+        short.renderFrame(ctx, Math.max(0, Math.min(short.frames - 1, i)));
+        return true;
+      };
+      window.frameData = (i) => {
+        window.renderFrame(i);
+        return cv.toDataURL("image/png");
+      };
+      /** Mechanical audit trail: what the model says at every frame. A
+       *  mechanism may add its own facts via state.auditExtra (the evaporator
+       *  records frost/chill/window so render.mjs can gate narrative-state
+       *  integrity the way it gates valve exclusivity). */
+      window.audit = () =>
+        short.table.map((r, i) => ({
+          i,
+          ms: Math.round(r.ms),
+          shot: r.shot.id,
+          theta: +r.st.theta.toFixed(4),
+          phase: r.st.phase,
+          piston: +r.st.pistonFrac.toFixed(4),
+          vol: +r.st.volumeFrac.toFixed(4),
+          psig: +r.st.psig.toFixed(1),
+          tempC: +r.st.tempC.toFixed(1),
+          sv: r.st.suctionOpen,
+          dv: r.st.dischargeOpen,
+          ...(r.st.auditExtra ?? {}),
+        }));
+      window.READY = true;
+      // Show something immediately so a human opening this page sees a frame.
+      window.renderFrame(0);
+    </script>
+  </body>
+</html>
