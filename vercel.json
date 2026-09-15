@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "preserve/video-editor-shorts-20260915": false
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/marketing-insights",
