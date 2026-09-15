@@ -23,7 +23,9 @@ import {
   EDITOR_TRACK_KINDS,
   clampPxPerSec,
   clipEndMs,
+  clipTransition,
   clipsOverlap,
+  normalizeClip,
   formatRulerLabel,
   formatTimecode,
   isAudioTrackKind,
@@ -54,6 +56,25 @@ import {
   currentProject,
   editorReducer,
 } from "@/shared/lib/video-editor/store";
+
+import { PlaybackClock } from "@/shared/lib/video-editor/playback-clock";
+
+import {
+  clampMotion,
+  easeAt,
+  motionAt,
+  presetMotion,
+  sampleClip,
+} from "@/shared/lib/video-editor/motion";
+
+import { compositionAt } from "@/shared/lib/video-editor/composition";
+
+import {
+  assetPatchFor,
+  placeNewImageClip,
+  resolveAsset,
+  timelineProblems,
+} from "@/shared/lib/video-editor/media-insert";
 
 import {
   RENDER_TRANSITION_MS,
@@ -374,19 +395,17 @@ section("Reducer");
 const run = (state, action, ids = idFactory()) =>
   editorReducer(state, action, ids);
 
-check("seek clamps to the project duration", () => {
-  let s = createEditorState(project());
-  s = run(s, { type: "seek", ms: 999_999 });
-  assert.equal(s.playheadMs, 5000, "clip ends at 5000ms");
-  s = run(s, { type: "seek", ms: -100 });
-  assert.equal(s.playheadMs, 0);
+check("playback state is not in the reducer", () => {
+  const s = createEditorState(project());
+  assert.equal("playheadMs" in s, false, "time belongs to PlaybackClock");
+  assert.equal("isPlaying" in s, false);
+  assert.equal(run(s, { type: "seek", ms: 1000 }), s, "a seek is not a reducer action");
 });
 
-check("split at the playhead produces two clips and selects both", () => {
+check("split at the given instant produces two clips and selects both", () => {
   let s = createEditorState(project());
   s = run(s, { type: "select", clipId: "c1" });
-  s = run(s, { type: "seek", ms: 3000 });
-  s = run(s, { type: "splitSelected" }, idFactory("half"));
+  s = run(s, { type: "splitSelected", atMs: 3000 }, idFactory("half"));
   const p = currentProject(s);
   assert.equal(p.tracks[0].clips.length, 2);
   assert.equal(s.selection.clipIds.length, 2);
@@ -445,15 +464,22 @@ check("dragging emits one undo step, then endGesture starts the next", () => {
   assert.equal(s.history.past.length, 2);
 });
 
-check("undo does not move the playhead or the zoom", () => {
+check("undo does not change the zoom", () => {
   let s = createEditorState(project());
-  s = run(s, { type: "seek", ms: 2000 });
   s = run(s, { type: "setPxPerSec", pxPerSec: 120 });
   s = run(s, { type: "select", clipId: "c1" });
   s = run(s, { type: "deleteSelected" });
   s = run(s, { type: "undo" });
-  assert.equal(s.playheadMs, 2000, "undo must not scroll you away from the edit");
-  assert.equal(s.pxPerSec, 120);
+  assert.equal(s.pxPerSec, 120, "undo must not scroll you away from the edit");
+});
+
+check("loading a stored project is not an undoable edit", () => {
+  let s = createEditorState(project());
+  const stored = { ...project(), title: "restored" };
+  s = run(s, { type: "loadProject", project: stored });
+  assert.equal(currentProject(s).title, "restored");
+  assert.equal(canUndo(s.history), false, "Ctrl+Z must not discard a restored autosave");
+  assert.equal(s.revision, 0, "a restore is not unsaved work");
 });
 
 check("duplicate lands immediately after the original", () => {
@@ -470,8 +496,7 @@ check("copy then paste places at the playhead", () => {
   let s = createEditorState(project());
   s = run(s, { type: "select", clipId: "c1" });
   s = run(s, { type: "copySelected" });
-  s = run(s, { type: "seek", ms: 4000 });
-  s = run(s, { type: "paste" }, idFactory("pasted"));
+  s = run(s, { type: "paste", atMs: 4000 }, idFactory("pasted"));
   const pasted = currentProject(s).tracks[0].clips.find((c) => c.id === "pasted-1");
   assert.equal(pasted.startMs, 4000);
 });
@@ -479,12 +504,177 @@ check("copy then paste places at the playhead", () => {
 check("revision advances only on project change", () => {
   let s = createEditorState(project());
   const r0 = s.revision;
-  s = run(s, { type: "seek", ms: 1000 });
   s = run(s, { type: "select", clipId: "c1" });
-  assert.equal(s.revision, r0, "seeking and selecting are not edits");
+  s = run(s, { type: "setPxPerSec", pxPerSec: 90 });
+  assert.equal(s.revision, r0, "selecting and zooming are not edits");
   s = run(s, { type: "deleteSelected" });
   assert.equal(s.revision, r0 + 1);
 });
+/* ═════════════════════════════ playback clock ══════════════════════════════ */
+
+section("Playback clock");
+
+/**
+ * A clock driven by a fake `now` and a manual frame scheduler, so the exact
+ * frame pattern that broke the old implementation can be replayed on demand:
+ * irregular deltas, long frames, and several frames with no React commit in
+ * between.
+ */
+function fakeClock(durationMs = 10_000) {
+  let now = 1000;
+  let pending = [];
+  const clock = new PlaybackClock({
+    durationMs,
+    now: () => now,
+    scheduler: {
+      request: (cb) => {
+        pending.push(cb);
+        return pending.length;
+      },
+      cancel: () => {
+        pending = [];
+      },
+    },
+  });
+  /** Advance wall time by `ms` and run the frame callbacks that were due. */
+  const frame = (ms) => {
+    now += ms;
+    const due = pending;
+    pending = [];
+    for (const cb of due) cb();
+  };
+  return { clock, frame };
+}
+
+check("playing advances at wall-clock speed", () => {
+  const { clock, frame } = fakeClock();
+  clock.play();
+  for (let i = 0; i < 10; i += 1) frame(16);
+  assert.equal(clock.getTime(), 160, "160ms of wall time is 160ms of film");
+});
+
+check("time never moves backwards under irregular and long frames", () => {
+  const { clock, frame } = fakeClock(60_000);
+  const seen = [];
+  clock.subscribeFrame((t) => seen.push(t));
+  clock.play();
+  // The measured pattern from the real failure: normal frames, a 450ms stall,
+  // then normal frames again.
+  for (const delta of [16, 17, 16, 450, 16, 4, 33, 16, 120, 16, 16, 8, 16]) {
+    frame(delta);
+  }
+  for (let i = 1; i < seen.length; i += 1) {
+    assert.ok(
+      seen[i] >= seen[i - 1],
+      `frame ${i} went backwards: ${seen[i - 1]} -> ${seen[i]}`,
+    );
+  }
+  assert.equal(seen[seen.length - 1], 744, "and it loses no time either");
+});
+
+check("two frames with no commit in between still advance", () => {
+  // The old clock added its delta to a value React had not yet written back,
+  // so the second of two closely-spaced frames stepped backwards. Time is now
+  // derived from the anchor, so nothing can be stale.
+  const { clock, frame } = fakeClock();
+  clock.play();
+  frame(16);
+  const first = clock.getTime();
+  frame(1);
+  assert.ok(clock.getTime() > first, "the second frame must still be later");
+});
+
+check("rate changes speed without moving the playhead", () => {
+  const { clock, frame } = fakeClock();
+  clock.play();
+  frame(100);
+  clock.setRate(2);
+  assert.equal(clock.getTime(), 100, "changing speed is not a jump");
+  frame(100);
+  assert.equal(clock.getTime(), 300, "2x covers 200ms of film in 100ms");
+});
+
+check("pause parks the playhead and play resumes from it", () => {
+  const { clock, frame } = fakeClock();
+  clock.play();
+  frame(500);
+  clock.pause();
+  const parked = clock.getTime();
+  frame(5000); // wall time passes while paused
+  assert.equal(clock.getTime(), parked, "a paused clock does not drift");
+  clock.play();
+  frame(100);
+  assert.equal(clock.getTime(), parked + 100);
+});
+
+check("seek clamps to the project", () => {
+  const { clock } = fakeClock(5000);
+  clock.seek(999_999);
+  assert.equal(clock.getTime(), 5000);
+  clock.seek(-100);
+  assert.equal(clock.getTime(), 0);
+  clock.seek(Number.NaN);
+  assert.equal(clock.getTime(), 0, "a NaN seek must not poison the clock");
+});
+
+check("reaching the end stops, and play starts again from the top", () => {
+  const { clock, frame } = fakeClock(1000);
+  clock.play();
+  frame(900);
+  frame(200);
+  assert.equal(clock.isPlaying(), false, "playback stops at the end");
+  assert.equal(clock.getTime(), 1000, "and parks exactly there");
+  clock.play();
+  assert.equal(clock.getTime(), 0, "pressing play at the end restarts");
+});
+
+check("shortening the project pulls a parked playhead back", () => {
+  const { clock } = fakeClock(10_000);
+  clock.seek(9000);
+  clock.setDuration(4000);
+  assert.equal(clock.getTime(), 4000);
+});
+
+check("a frame step pauses and moves exactly one frame", () => {
+  const { clock, frame } = fakeClock();
+  clock.play();
+  frame(100);
+  clock.step(1000 / 30);
+  assert.equal(clock.isPlaying(), false, "stepping stops playback");
+  assert.ok(Math.abs(clock.getTime() - (100 + 1000 / 30)) < 0.001);
+});
+
+check("transport state is published, but never per frame", () => {
+  const { clock, frame } = fakeClock();
+  let states = 0;
+  let frames = 0;
+  clock.subscribeState(() => {
+    states += 1;
+  });
+  clock.subscribeFrame(() => {
+    frames += 1;
+  });
+  clock.play();
+  for (let i = 0; i < 60; i += 1) frame(16);
+  assert.equal(states, 1, "play is one state change; 60 frames are none");
+  assert.equal(frames, 61, "the frame subscriber sees every frame");
+});
+
+check("one broken subscriber does not stop the clock", () => {
+  const { clock, frame } = fakeClock();
+  let good = 0;
+  clock.subscribeFrame(() => {
+    throw new Error("waveform exploded");
+  });
+  clock.subscribeFrame(() => {
+    good += 1;
+  });
+  clock.play();
+  frame(16);
+  assert.ok(good >= 1, "the narration must still be scheduled");
+  assert.equal(clock.isPlaying(), true);
+});
+
 /* ═══════════════════════════════ compiler ═════════════════════════════════ */
 
 section("Compiler (editor project -> renderer Timeline)");
@@ -530,9 +720,12 @@ check("entries are contiguous and indexed from zero", () => {
   });
 });
 
-check("output length accounts for the crossfade shrink", () => {
+check("output length equals the timeline, because transitions hold in place", () => {
+  // The old global crossfade overlapped neighbours, so the master came out
+  // (n-1) x 260ms shorter than the timeline and no editor clock could agree
+  // with it. A transition now holds the outgoing frame instead.
   const r = compileProjectToTimeline(compilable());
-  assert.equal(r.expectedOutputMs, 8000 - RENDER_TRANSITION_MS);
+  assert.equal(r.expectedOutputMs, 8000);
 });
 
 check("a gap at the head is a blocking error, not a silent desync", () => {
@@ -551,7 +744,7 @@ check("a gap at the head is a blocking error, not a silent desync", () => {
   );
 });
 
-check("an entry shorter than the crossfade is refused", () => {
+check("an entry shorter than its own transition is refused", () => {
   const p = compilable();
   const tiny = {
     ...p,
@@ -560,8 +753,14 @@ check("an entry shorter than the crossfade is refused", () => {
         ? {
             ...t,
             clips: [
-              { ...t.clips[0], durationMs: 150 },
-              { ...t.clips[1], startMs: 150 },
+              t.clips[0],
+              // A 300ms shot cannot carry a 600ms dissolve INTO it: the
+              // transition would still be running when the shot ended.
+              {
+                ...t.clips[1],
+                durationMs: 300,
+                transitionIn: { kind: "crossfade", durationMs: 600 },
+              },
             ],
           }
         : t,
@@ -569,9 +768,106 @@ check("an entry shorter than the crossfade is refused", () => {
   };
   const r = compileProjectToTimeline(tiny);
   assert.ok(
-    r.errors.some((e) => /crossfade/.test(e)),
-    `expected a crossfade-length error, got: ${r.errors.join("; ")}`,
+    r.errors.some((e) => /transition/.test(e)),
+    `expected a transition-length error, got: ${r.errors.join("; ")}`,
   );
+});
+
+check("a hard cut is allowed to be short", () => {
+  // The old floor was global: every entry had to outlast a 260ms crossfade it
+  // might not even have. A cut needs no room to dissolve into.
+  const p = compilable();
+  const short = {
+    ...p,
+    tracks: p.tracks.map((t) =>
+      t.id === "t-video"
+        ? {
+            ...t,
+            clips: [
+              { ...t.clips[0], durationMs: 200 },
+              { ...t.clips[1], startMs: 200 },
+            ],
+          }
+        : t,
+    ),
+  };
+  assert.deepEqual(compileProjectToTimeline(short).errors, []);
+});
+
+check("a camera move compiles to a per-entry spec", () => {
+  const p = compilable();
+  const moving = {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c, i) =>
+        i === 0 ? { ...c, motion: presetMotion("pushIn", 1) } : c,
+      ),
+    })),
+  };
+  const r = compileProjectToTimeline(moving);
+  const entry = r.timeline.entries[0];
+  assert.ok(entry.cameraMotion, "the move must reach the renderer");
+  assert.equal(entry.cameraMotion.startScale, 1);
+  assert.ok(entry.cameraMotion.endScale > 1.1);
+  assert.equal(entry.cameraMotion.progressStart, 0);
+  assert.equal(entry.cameraMotion.progressEnd, 1);
+  assert.ok(
+    r.nativeProperties.some((n) => n === "a:motion"),
+    "a move the graph renders is native, not dropped and not baked",
+  );
+  assert.equal(r.bakePlan.scenes.length, 0, "a move must not force a bake");
+});
+
+check("transitions compile per cut, and never onto the first shot", () => {
+  const p = compilable();
+  const withTransitions = {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c) => ({
+        ...c,
+        transitionIn: { kind: "crossfade", durationMs: 400 },
+      })),
+    })),
+  };
+  const r = compileProjectToTimeline(withTransitions);
+  assert.equal(r.timeline.entries[0].transitionIn, undefined, "nothing precedes the first shot");
+  assert.equal(r.timeline.entries[1].transitionIn.kind, "crossfade");
+  assert.equal(r.timeline.entries[1].transitionIn.durationMs, 400);
+  assert.ok(
+    r.drops.some((d) => d.property === "transitionIn"),
+    "a transition on the first shot is reported rather than silently ignored",
+  );
+  assert.equal(r.expectedOutputMs, 8000, "a transition does not shorten the film");
+});
+
+check("splitting a dissolved shot does not dissolve it into itself", () => {
+  const clip = {
+    id: "c",
+    kind: "image",
+    label: "Shot",
+    startMs: 0,
+    durationMs: 4000,
+    transitionIn: { kind: "crossfade", durationMs: 400 },
+  };
+  const [left, right] = splitClipAt(clip, 2000, () => "right");
+  assert.deepEqual(left.transitionIn, clip.transitionIn, "the head keeps its dissolve");
+  assert.equal(right.transitionIn, undefined, "the tail begins mid-shot: no dissolve");
+  assert.equal(right.transitionInMs, undefined);
+});
+
+check("an old project's dissolve length is read as a crossfade", () => {
+  const clip = normalizeClip({
+    id: "x",
+    kind: "image",
+    label: "X",
+    startMs: 0,
+    durationMs: 4000,
+    transitionInMs: 260,
+  });
+  assert.equal(clipTransition(clip).kind, "crossfade");
+  assert.equal(clipTransition(clip).durationMs, 260);
 });
 
 const overlaid = () =>
@@ -621,6 +917,31 @@ check("with baking disabled the overlap IS a drop", () => {
   assert.equal(r.bakePlan.scenes.length, 0);
 });
 
+check("a clip cut into several entries continues its move", () => {
+  // An overlay slices the shot underneath. Each piece must carry its own slice
+  // of the same move, or the camera restarts mid-shot.
+  const p = overlaid();
+  const moving = {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c) =>
+        c.id === "a" ? { ...c, motion: presetMotion("pushIn", 1) } : c,
+      ),
+    })),
+  };
+  const r = compileProjectToTimeline(moving);
+  const fromA = r.timeline.entries.filter((e) => e.startMs < 4000);
+  assert.ok(fromA.length >= 2, "the overlay should have split clip A");
+  assert.equal(fromA[0].cameraMotion.progressStart, 0);
+  assert.equal(fromA[0].cameraMotion.progressEnd, 0.25, "1000ms of a 4000ms clip");
+  // The slice that is composited with the overlay cannot move, and says so.
+  assert.ok(
+    r.drops.some((d) => d.property === "motion"),
+    "motion on a baked scene must be reported, not silently still",
+  );
+});
+
 const decorated = () => {
   const p = compilable();
   return {
@@ -640,9 +961,9 @@ const decorated = () => {
   };
 };
 
-check("bakeable properties are baked; audio properties still drop", () => {
+check("rotation and opacity are baked; audio properties still drop", () => {
   const r = compileProjectToTimeline(decorated());
-  for (const property of ["scale", "position", "rotation", "opacity"]) {
+  for (const property of ["rotation", "opacity"]) {
     assert.ok(
       r.bakedProperties.some((b) => b.endsWith(`:${property}`)),
       `${property} should be baked, not lost`,
@@ -658,12 +979,39 @@ check("bakeable properties are baked; audio properties still drop", () => {
   assert.ok(bakedPropertyCount(r) > 0);
 });
 
-check("no property vanishes from BOTH lists", () => {
-  // The invariant the whole honesty argument rests on: anything the renderer
-  // cannot express natively is either baked or reported, never neither.
+check("framing is rendered natively rather than baked", () => {
+  // Scale and position used to force a bake, which is why a "push in" arrived
+  // in the master as a static crop: a baked PNG is one picture.
+  const p = compilable();
+  const framed = {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c, i) =>
+        i === 0 ? { ...c, transform: { scale: 1.25, x: 40 } } : c,
+      ),
+    })),
+  };
+  const r = compileProjectToTimeline(framed);
+  assert.equal(r.bakePlan.scenes.length, 0, "framing alone must not bake");
+  assert.ok(r.nativeProperties.includes("a:scale"));
+  assert.ok(r.nativeProperties.includes("a:position"));
+  const entry = r.timeline.entries[0];
+  assert.equal(entry.cameraMotion.startScale, 1.25, "the framing is the camera");
+  assert.equal(entry.cameraMotion.endScale, 1.25, "and it does not move");
+  assert.ok(
+    Math.abs(entry.cameraMotion.startX - 40 / 1920) < 1e-9,
+    "position is carried as a fraction of the frame",
+  );
+});
+
+check("no property vanishes from EVERY list", () => {
+  // The invariant the whole honesty argument rests on: every non-default
+  // property is rendered natively, baked, or reported — never none of them.
   const r = compileProjectToTimeline(decorated());
   const accounted = new Set([
     ...r.bakedProperties.map((b) => b.split(":")[1]),
+    ...r.nativeProperties.map((n) => n.split(":")[1]),
     ...r.drops.map((d) => d.property.replace(/^transform[.]/, "")),
   ]);
   for (const property of ["scale", "position", "rotation", "opacity"]) {
@@ -722,6 +1070,293 @@ check("the real EP01 project compiles without blocking errors", () => {
 });
 
 
+
+/* ═════════════════════════ camera motion ═══════════════════════════════════ */
+
+section("Camera motion");
+
+check("easings are the formulas the renderer can also evaluate", () => {
+  for (const easing of ["linear", "easeIn", "easeOut", "easeInOut"]) {
+    assert.equal(easeAt(easing, 0), 0, `${easing} must start at 0`);
+    assert.equal(easeAt(easing, 1), 1, `${easing} must end at 1`);
+    // Monotonic, or a "smooth" move would go backwards mid-shot.
+    let previous = -1;
+    for (let p = 0; p <= 1.0001; p += 0.05) {
+      const v = easeAt(easing, p);
+      assert.ok(v >= previous - 1e-9, `${easing} is not monotonic at ${p}`);
+      previous = v;
+    }
+  }
+  assert.equal(easeAt("easeInOut", 0.5), 0.5);
+  assert.equal(easeAt("easeIn", 0.5), 0.25);
+});
+
+check("a move is clamped inside the frame, so no edge goes black", () => {
+  for (const preset of ["pushIn", "pullOut", "panLeft", "panRight", "panUp", "panDown", "slowZoom", "kenBurns"]) {
+    for (const intensity of [0.25, 1, 2, 3]) {
+      const m = presetMotion(preset, intensity);
+      for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+        const s = motionAt(m, p);
+        const limit = (s.scale - 1) / 2 + 1e-9;
+        assert.ok(s.scale >= 1, `${preset}@${intensity} scaled below the frame`);
+        assert.ok(
+          Math.abs(s.x) <= limit && Math.abs(s.y) <= limit,
+          `${preset}@${intensity} travels off the picture at p=${p}`,
+        );
+      }
+    }
+  }
+});
+
+check("an out-of-range move is pulled back rather than rendered black", () => {
+  const clamped = clampMotion({
+    preset: "panLeft",
+    startScale: 1,
+    endScale: 1,
+    startX: 0.4,
+    startY: 0,
+    endX: -0.4,
+    endY: 0,
+    easing: "linear",
+  });
+  assert.equal(clamped.startX, 0, "at scale 1 there is no overflow to pan into");
+});
+
+check("a preset moves the picture, and 'none' does not", () => {
+  const push = presetMotion("pushIn", 1);
+  assert.ok(motionAt(push, 1).scale > motionAt(push, 0).scale);
+  const pan = presetMotion("panLeft", 1);
+  assert.ok(motionAt(pan, 1).x < motionAt(pan, 0).x, "pan left drifts left");
+  const none = presetMotion("none", 1);
+  assert.deepEqual(motionAt(none, 0.5), { scale: 1, x: 0, y: 0 });
+});
+
+check("framing and motion compose into one sample", () => {
+  const clip = {
+    transform: { scale: 1.2 },
+    motion: presetMotion("pushIn", 1),
+  };
+  const start = sampleClip(clip, 0);
+  const end = sampleClip(clip, 1);
+  assert.ok(Math.abs(start.scale - 1.2) < 1e-9, "the framing is where it starts");
+  assert.ok(end.scale > start.scale, "and the move goes on from there");
+});
+
+/* ═════════════════════════ composition ═════════════════════════════════════ */
+
+section("Composition (what is on screen, transitions included)");
+
+function transitioned(kind, durationMs = 400) {
+  const p = compilable();
+  return {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c) => (c.id === "b" ? { ...c, transitionIn: { kind, durationMs } } : c)),
+    })),
+  };
+}
+
+check("outside a transition, one clip is on screen", () => {
+  const layers = compositionAt(transitioned("crossfade"), 2000);
+  assert.equal(layers.length, 1);
+  assert.equal(layers[0].clip.id, "a");
+  assert.equal(layers[0].opacity, 1);
+});
+
+check("a crossfade holds the outgoing shot and fades the incoming one in", () => {
+  const project = transitioned("crossfade");
+  const layers = compositionAt(project, 4200); // 200ms into a 400ms dissolve
+  assert.equal(layers.length, 2, "both shots must be on screen");
+  const [under, over] = layers;
+  assert.equal(under.clip.id, "a");
+  assert.equal(under.outgoing, true);
+  assert.equal(over.clip.id, "b");
+  assert.ok(Math.abs(over.opacity - 0.5) < 1e-9, "half way through, half opaque");
+  // And it is over by the time the window closes.
+  assert.equal(compositionAt(project, 4400).length, 1);
+});
+
+check("fade through black actually reaches black", () => {
+  const project = transitioned("fadeBlack", 400);
+  const middle = compositionAt(project, 4200);
+  assert.ok(
+    middle.some((l) => l.veil >= 0.99),
+    "the midpoint of a fade through black must be black",
+  );
+});
+
+check("a slide brings the incoming shot in from off-frame", () => {
+  const project = transitioned("slideLeft", 400);
+  const start = compositionAt(project, 4001).find((l) => l.clip.id === "b");
+  const end = compositionAt(project, 4399).find((l) => l.clip.id === "b");
+  assert.ok(start.slideX > 0.99, "slideLeft enters from the right edge");
+  assert.ok(end.slideX < 0.05, "and has arrived by the end of the window");
+});
+
+check("a hidden clip is not composited", () => {
+  const p = compilable();
+  const hidden = {
+    ...p,
+    tracks: p.tracks.map((t) => ({
+      ...t,
+      clips: t.clips.map((c) => (c.id === "a" ? { ...c, hidden: true } : c)),
+    })),
+  };
+  assert.equal(compositionAt(hidden, 2000).length, 0);
+});
+
+/* ═════════════════════════ media insertion ═════════════════════════════════ */
+
+section("Media insertion");
+
+const CATALOG = [
+  { assetId: "asset-a", thumbnailUrl: "/studio/library/asset-a.jpg", variants: [] },
+  {
+    assetId: "asset-v",
+    thumbnailUrl: "/studio/library/asset-v.jpg",
+    variants: [{ aspectRatio: "9:16", thumbnailUrl: "/studio/library-v/asset-v.jpg" }],
+  },
+];
+
+check("an asset that is not in the library is refused, not inserted", () => {
+  const r = resolveAsset(CATALOG, "asset-missing", { portrait: false });
+  assert.equal(r.ok, false);
+  assert.match(r.reason, /No asset/);
+  assert.equal(resolveAsset(null, "asset-a", { portrait: false }).ok, false, "nor before the catalog loads");
+});
+
+check("a portrait project resolves the portrait variant", () => {
+  assert.equal(
+    resolveAsset(CATALOG, "asset-v", { portrait: true }).url,
+    "/studio/library-v/asset-v.jpg",
+  );
+  assert.equal(
+    resolveAsset(CATALOG, "asset-v", { portrait: false }).url,
+    "/studio/library/asset-v.jpg",
+  );
+});
+
+check("replacing an asset changes the asset and NOTHING else", () => {
+  // The whole contract. The compressor episode's timings were measured from
+  // real narration; an insert that retimed a shot would desynchronise the film
+  // from the voice recorded for it.
+  const project = compilable();
+  const track = project.tracks[0];
+  const clip = track.clips[0];
+  const result = assetPatchFor(clip, track, "asset-a");
+  assert.equal(result.ok, true);
+  assert.deepEqual(Object.keys(result.patch).sort(), ["assetId", "kind"]);
+  assert.equal(result.patch.assetId, "asset-a");
+  assert.equal(result.patch.kind, "image", "a card becomes a photograph");
+  const after = { ...clip, ...result.patch };
+  assert.equal(after.startMs, clip.startMs);
+  assert.equal(after.durationMs, clip.durationMs);
+  assert.equal(after.transitionIn, clip.transitionIn);
+});
+
+check("a locked track and a narration track both refuse a photograph", () => {
+  const project = compilable();
+  const track = project.tracks[0];
+  const clip = track.clips[0];
+  assert.equal(assetPatchFor(clip, { ...track, locked: true }, "asset-a").ok, false);
+  assert.equal(
+    assetPatchFor(clip, { id: "t-voice", kind: "voice", name: "VOICEOVER", clips: [] }, "asset-a").ok,
+    false,
+  );
+});
+
+check("adding a photograph lands on the overlay and moves nothing", () => {
+  const project = compilable([
+    { id: "t-overlay", kind: "overlay", name: "OVERLAY", clips: [] },
+  ]);
+  const placed = placeNewImageClip(project, {
+    assetId: "asset-a",
+    label: "A photo",
+    atMs: 2000,
+    id: "new-1",
+  });
+  assert.equal(placed.ok, true);
+  assert.equal(placed.trackId, "t-overlay");
+  assert.equal(placed.clip.startMs, 2000);
+  assert.equal(placed.clip.kind, "image");
+  const next = {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.id === "t-overlay" ? { ...t, clips: [placed.clip] } : t,
+    ),
+  };
+  assert.deepEqual(timelineProblems(next), [], "the timeline must stay valid");
+  assert.deepEqual(
+    next.tracks[0].clips,
+    project.tracks[0].clips,
+    "the film underneath must be untouched",
+  );
+});
+
+check("adding onto an occupied spot is refused with a reason", () => {
+  const project = compilable([
+    {
+      id: "t-overlay",
+      kind: "overlay",
+      name: "OVERLAY",
+      clips: [
+        { id: "o", kind: "image", assetId: "x", label: "Already here", startMs: 1000, durationMs: 2000 },
+      ],
+    },
+  ]);
+  const placed = placeNewImageClip(project, {
+    assetId: "asset-a",
+    label: "A photo",
+    atMs: 1500,
+    id: "new-1",
+  });
+  assert.equal(placed.ok, false);
+  assert.match(placed.reason, /already has/);
+});
+
+check("a new clip is clipped to the room available, never overlapped", () => {
+  const project = compilable([
+    {
+      id: "t-overlay",
+      kind: "overlay",
+      name: "OVERLAY",
+      clips: [
+        { id: "o", kind: "image", assetId: "x", label: "Later", startMs: 3000, durationMs: 2000 },
+      ],
+    },
+  ]);
+  const placed = placeNewImageClip(project, {
+    assetId: "asset-a",
+    label: "A photo",
+    atMs: 2000,
+    id: "new-1",
+    durationMs: 4000,
+  });
+  assert.equal(placed.ok, true);
+  assert.equal(placed.clip.durationMs, 1000, "trimmed to the gap, not laid over it");
+});
+
+check("timelineProblems catches the corruptions an insert could cause", () => {
+  const broken = {
+    ...compilable(),
+    tracks: [
+      {
+        id: "t-video",
+        kind: "video",
+        name: "VIDEO 1",
+        clips: [
+          { id: "a", kind: "slide", label: "A", startMs: 0, durationMs: 4000 },
+          { id: "a", kind: "slide", label: "dup", startMs: 3000, durationMs: 1000 },
+        ],
+      },
+    ],
+  };
+  const problems = timelineProblems(broken);
+  assert.ok(problems.some((p) => /duplicate clip id/.test(p)));
+  assert.ok(problems.some((p) => /overlap/.test(p)));
+  assert.deepEqual(timelineProblems(compilable()), []);
+});
 
 /* ════════════════════════════════ result ═══════════════════════════════════ */
 

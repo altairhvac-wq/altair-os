@@ -70,7 +70,12 @@
     "verify:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/verify-agent-learning-loop.mjs",
     "proof:agent-loop": "node --import ./scripts/video-editor-register.mjs scripts/proof-agent-learning-loop.mjs",
     "verify:agent-loop-ui": "node scripts/verify-agent-loop-ui.mjs",
-    "verify:practice-episode": "node scripts/practice/verify-practice-episode-ui.mjs"
+    "verify:practice-episode": "node scripts/practice/verify-practice-episode-ui.mjs",
+    "verify:image-edit-playback": "node scripts/editor-qa/verify-image-edit-playback.mjs",
+    "verify:editor-playback-quality": "node scripts/editor-qa/verify-editor-playback-quality.mjs",
+    "verify:media-stress": "node scripts/editor-qa/verify-media-stress.mjs",
+    "trace:editor-playback": "node scripts/editor-qa/trace-playback.mjs",
+    "proof:motion-render": "node --import ./scripts/video-editor-register.mjs scripts/editor-qa/render-motion-proof.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.71.0",

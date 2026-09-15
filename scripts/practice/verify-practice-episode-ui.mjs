@@ -122,11 +122,19 @@ await check(`the timeline is fully assembled (${String(EXPECTED.visualClips)} vi
 
 await check("the canvas is showing a real photograph", async () => {
   const painted = await page.evaluate(() => {
-    const monitor = document.querySelector('[data-testid="ve-preview-monitor"]') ?? document.body;
-    const hit = [...monitor.querySelectorAll("*")]
-      .map((el) => window.getComputedStyle(el).backgroundImage)
-      .find((bg) => bg.includes("/studio/"));
-    return hit ?? null;
+    // Canvas layers are real <img> elements now, so that a picture which fails
+    // to load can say so. Backgrounds are still checked for anything else that
+    // paints that way.
+    const monitor = document.querySelector('[data-testid="ve-canvas"]') ?? document.body;
+    const img = [...monitor.querySelectorAll("img")]
+      .map((el) => el.getAttribute("src") ?? "")
+      .find((src) => src.includes("/studio/"));
+    if (img) return img;
+    return (
+      [...monitor.querySelectorAll("*")]
+        .map((el) => window.getComputedStyle(el).backgroundImage)
+        .find((bg) => bg.includes("/studio/")) ?? null
+    );
   });
   assert(painted !== null, "nothing on the canvas");
   assert(painted.includes(`/studio/${PROJECT}/`), `not a staged frame: ${painted}`);
@@ -180,7 +188,11 @@ await check("applying a library asset changes the clip and the picture", async (
   await first.click();
   await page.waitForTimeout(900);
   const painted = await page.evaluate(() => {
-    const monitor = document.querySelector('[data-testid="ve-preview-monitor"]') ?? document.body;
+    const monitor = document.querySelector('[data-testid="ve-canvas"]') ?? document.body;
+    const img = [...monitor.querySelectorAll("img")]
+      .map((el) => el.getAttribute("src") ?? "")
+      .find((src) => src.includes("/studio/"));
+    if (img) return img;
     return (
       [...monitor.querySelectorAll("*")]
         .map((el) => window.getComputedStyle(el).backgroundImage)

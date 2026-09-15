@@ -283,11 +283,12 @@ check("a trim through the reducer produces a trim event", () => {
   assert.equal(event.source, "human");
 });
 
-check("selection and seeking produce no events", () => {
+// Seeking is no longer a reducer action at all — the playback clock owns time
+// — so it cannot produce an event by construction.
+check("selection and zoom produce no events", () => {
   const previous = createEditorState(draft());
   for (const action of [
     { type: "select", clipId: "compressor-01" },
-    { type: "seek", ms: 4000 },
     { type: "setPxPerSec", pxPerSec: 90 },
     { type: "clearSelection" },
   ]) {
