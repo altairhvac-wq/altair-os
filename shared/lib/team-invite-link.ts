@@ -1,4 +1,13 @@
-export const TEAM_INVITE_ACCEPT_PATH = "/setup";
+/**
+ * Where an invite email sends people.
+ *
+ * `/setup` alone assumed an account already existed: a new hire landed on
+ * the login redirect, went to /signup on their own, and was made to invent a
+ * company name and a trade before being told they had an invite (launch
+ * audit M4). `/signup?next=/setup` tells the form it is a join, and the
+ * login redirect for anyone who already has an account still ends at /setup.
+ */
+export const TEAM_INVITE_ACCEPT_PATH = "/signup?next=/setup";
 
 /**
  * How long a pending team invite can be claimed (launch audit H4). Written to

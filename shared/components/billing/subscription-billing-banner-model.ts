@@ -64,8 +64,30 @@ export function getSubscriptionBillingBannerModel(
           title: "Trial ended",
           shortLabel: `Trial ended ${trialEnds}`,
           description: canManageBilling
-            ? `Your free trial ended ${trialEnds}. Contact support to set up billing and keep full access.`
-            : `Your company's free trial ended ${trialEnds}. An owner or admin can set up billing.`,
+            ? `Your free trial ended ${trialEnds}. Add a payment method in Settings → Billing to keep full access.`
+            : `Your company's free trial ended ${trialEnds}. An owner or admin can add a payment method.`,
+          showManageAction: canManageBilling,
+          role: "status",
+        };
+      }
+
+      // The card-free trial's payment prompt (day 10 onward, no card on
+      // file). `trialEndingSoon` is decided on the server for the same
+      // hydration reason as `trialHasEnded`.
+      if (access.trialEndingSoon && !access.hasStripeSubscription) {
+        return {
+          tone: "warning",
+          title: "Add a payment method",
+          shortLabel: trialEnds
+            ? `Trial ends ${trialEnds} · add a card`
+            : "Trial ending soon · add a card",
+          description: canManageBilling
+            ? trialEnds
+              ? `Your free trial ends ${trialEnds}. Add a payment method in Settings → Billing to keep access — you won't be charged until the trial ends.`
+              : "Your free trial ends soon. Add a payment method in Settings → Billing to keep access."
+            : trialEnds
+              ? `Your company's free trial ends ${trialEnds}. An owner or admin can add a payment method to keep access.`
+              : "Your company's free trial ends soon. An owner or admin can add a payment method.",
           showManageAction: canManageBilling,
           role: "status",
         };
@@ -77,8 +99,10 @@ export function getSubscriptionBillingBannerModel(
         shortLabel: trialEnds ? `Trial ends ${trialEnds}` : "Trial in progress",
         description: canManageBilling
           ? trialEnds
-            ? `Your company is on a free trial that ends ${trialEnds}. Contact support to update billing details.`
-            : "Your company is on a free trial. Contact support to update billing details."
+            ? access.hasStripeSubscription
+              ? `Your company is on a free trial that ends ${trialEnds}. Billing starts then on your chosen plan.`
+              : `Your company is on a free trial that ends ${trialEnds}. Add a payment method any time in Settings → Billing.`
+            : "Your company is on a free trial. Add a payment method any time in Settings → Billing."
           : trialEnds
             ? `Your company is on a trial period that ends ${trialEnds}.`
             : "Your company is currently on a trial period.",

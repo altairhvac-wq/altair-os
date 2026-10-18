@@ -103,8 +103,19 @@ If Supabase email confirmation is enabled:
 
 - [ ] Confirmation emails redirect to a URL on your deployed domain
 - [ ] `/auth/callback` is listed in Redirect URLs (wildcard `**` optional if you add `?next=` query params)
-- [ ] Password reset uses `redirectTo` = `https://<domain>/auth/callback` (recovery is detected via `type=recovery` on the email link)
-- [ ] Test signup → email confirm → login → `/setup` or dashboard
+- [ ] Password reset uses `redirectTo` = `https://<domain>/auth/callback`
+- [ ] Test signup → open the email link → lands signed in on `/setup` or the dashboard (the link signs the user in; they do not log in separately)
+
+Signup and password reset use the PKCE flow (`lib/supabase/server.ts`), so the
+email link arrives at `/auth/callback?code=…` with the DEFAULT Supabase
+templates (`{{ .ConfirmationURL }}`) — no template rewrite is required. A
+template rewritten to `?token_hash={{ .TokenHash }}&type=…` still works; the
+callback keeps that path as a fallback. Recovery is detected from the PKCE
+exchange itself (`redirectType === "recovery"`), with `type=recovery` on the
+link honoured when present. The one PKCE constraint: the link must be opened
+in the same browser that submitted the form (the code verifier is a cookie);
+opening it elsewhere lands on `/login?error=auth_callback`, logged as
+`verifierMissing: true`.
 
 ---
 
@@ -133,11 +144,25 @@ Migration: `supabase/migrations/021_job_attachments_foundation.sql`
 
 ## 5. `bootstrap_company_for_new_user` RPC
 
-Migration: `supabase/migrations/031_setup_profile_rls_recursion_fix.sql` (and original in `003_auth_bootstrap.sql`)
+Migration: `supabase/migrations/200_card_free_trial_bootstrap.sql` (history: `003`, `031`, `124`)
 
+Since migration 200 a new company is seeded `status='trialing'`,
+`trial_ends_at = now() + 14 days`, `plan_key='starter'`, `access_grant='none'`:
+the trial starts with NO card and the dashboard is the first screen. Checkout
+(Settings → Billing, or `/activate-subscription` once the trial has ended) is
+where the card is added; it keeps the local trial end date so the first charge
+lands on the day the customer was told. An expired card-free trial is derived
+in the application (`lib/saas-billing/trial-policy.ts`) — nothing in the
+database flips the row — and is gated like an `incomplete` row. The
+`billing-maintenance` cron sends the day-10 and day-13 "add a payment method"
+emails to owners (`saas_trial_reminders` keeps them idempotent); Resend must be
+configured for them to go out.
+
+- [ ] migration 200 applied (`bootstrap_company_for_new_user` comment mentions the card-free trial; `saas_trial_reminders` exists)
 - [ ] RPC exists in Supabase SQL editor / schema
 - [ ] System check passes **bootstrap_company_for_new_user RPC** (read-only probe)
-- [ ] Manual test: new user signup → company bootstrap → lands on dashboard or `/setup`
+- [ ] Manual test: new user signup → company bootstrap → lands on the dashboard with "Trial ends <date>" in the header, no Checkout
+- [ ] Manual test: set a test company's `trial_ends_at` to the past → next page load redirects to `/activate-subscription`
 
 ---
 

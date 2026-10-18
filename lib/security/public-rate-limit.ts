@@ -73,7 +73,18 @@ export const PUBLIC_RATE_LIMITS: Record<
     { dimension: "email", windowSeconds: 900, limit: 10 },
     { dimension: "ip", windowSeconds: 900, limit: 50 },
   ],
-  "auth.signup": [{ dimension: "ip", windowSeconds: 3600, limit: 5 }],
+  // The address limit is deliberately loose (launch audit M3): carrier NAT
+  // and campus networks put thousands of people behind one address, and a
+  // video spike is exactly when they all arrive within the hour. Five an hour
+  // would have refused real customers while a script simply rotated
+  // addresses. Thirty is still hostile to one client opening accounts in
+  // bulk. The email dimension is what the address dimension cannot see: each
+  // attempt sends a confirmation mail to the submitted address, so three an
+  // hour per inbox stops the form being used to flood someone else's.
+  "auth.signup": [
+    { dimension: "ip", windowSeconds: 3600, limit: 30 },
+    { dimension: "email", windowSeconds: 3600, limit: 3 },
+  ],
   "auth.password_reset_request": [
     // Mail is sent to the address, so the address dimension is the one that
     // stops someone else's inbox being used as a weapon.

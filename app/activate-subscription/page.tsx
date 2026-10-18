@@ -117,7 +117,7 @@ export default async function ActivateSubscriptionPage({
     notice = {
       tone: "warning",
       message:
-        "Checkout was canceled. Your workspace stays locked until a trial or paid subscription is started.",
+        "Checkout was canceled. Your workspace stays paused until a payment method is added.",
     };
   }
 

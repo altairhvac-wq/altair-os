@@ -6,6 +6,10 @@ import {
 import { runOverdueInvoiceSweep } from "@/lib/database/services/overdue-invoice-sweep";
 import { runRetentionSweeps } from "@/lib/database/services/retention-sweeps";
 import {
+  runTrialPaymentReminders,
+  type TrialReminderSweepResult,
+} from "@/lib/saas-billing/trial-reminders";
+import {
   recordPlatformAutomationRunFinished,
   recordPlatformAutomationRunStarted,
   sanitizeErrorSummary,
@@ -99,8 +103,33 @@ export async function GET(request: Request) {
         // counted and reported but never hides the invoice sweep's result.
         const retention = await runRetentionSweeps();
 
-        const hasErrors =
-          result.errors.length > 0 || retention.errors.length > 0;
+        // ==================== TRIAL PAYMENT REMINDERS ====================
+        // Card-free trials (migration 200) have no Stripe subscription, so
+        // Stripe's trial_will_end email never fires for them. This is the
+        // product's own reminder, on the same daily schedule. It is kept
+        // from failing the invoice sweep: a mail-provider outage must not
+        // stop invoices becoming overdue.
+        let reminders: TrialReminderSweepResult;
+        try {
+          reminders = await runTrialPaymentReminders();
+        } catch (reminderError) {
+          reminders = {
+            candidates: 0,
+            remindersSent: 0,
+            remindersSkipped: 0,
+            errors: [
+              reminderError instanceof Error
+                ? reminderError.message
+                : "trial reminder sweep threw",
+            ],
+          };
+        }
+
+        const errorCount =
+          result.errors.length +
+          retention.errors.length +
+          reminders.errors.length;
+        const hasErrors = errorCount > 0;
 
         await recordPlatformAutomationRunFinished(runId, {
           automationKey: AUTOMATION_KEY,
@@ -113,11 +142,13 @@ export async function GET(request: Request) {
           companyCount: result.attempted,
           totals: {
             updated: result.invoicesMarkedOverdue,
-            errorCount: result.errors.length + retention.errors.length,
+            errorCount,
             cycleComplete: result.cycleComplete,
             stoppedForTime: result.stoppedForTime,
             rateLimitRowsSwept: retention.rateLimitRowsDeleted,
             auditEventsSwept: retention.auditEventsDeleted,
+            trialReminderCandidates: reminders.candidates,
+            trialRemindersSent: reminders.remindersSent,
           },
           errorSummary: hasErrors
             ? sanitizeErrorSummary(
@@ -126,6 +157,9 @@ export async function GET(request: Request) {
                     ? `${result.errors.length} company sweep ${result.errors.length === 1 ? "error" : "errors"}`
                     : null,
                   ...retention.errors,
+                  reminders.errors.length > 0
+                    ? `${reminders.errors.length} trial reminder ${reminders.errors.length === 1 ? "error" : "errors"}`
+                    : null,
                 ]
                   .filter(Boolean)
                   .join("; "),
@@ -141,12 +175,15 @@ export async function GET(request: Request) {
           invoicesMarkedOverdue: result.invoicesMarkedOverdue,
           cycleComplete: result.cycleComplete,
           stoppedForTime: result.stoppedForTime,
-          errorCount: result.errors.length,
+          errorCount,
           retention: {
             rateLimitRowsSwept: retention.rateLimitRowsDeleted,
             auditEventsSwept: retention.auditEventsDeleted,
             errors: retention.errors,
           },
+          trialReminderCandidates: reminders.candidates,
+          trialRemindersSent: reminders.remindersSent,
+          trialRemindersSkipped: reminders.remindersSkipped,
         });
       } catch (error) {
         await recordPlatformAutomationRunFinished(runId, {

@@ -84,8 +84,8 @@ export function HomepagePricingSection() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-[#8e826f]">
-            Credit card required. Your selected plan begins after the trial unless
-            you cancel.
+            No credit card required to start. Add a card any time before your
+            trial ends.
           </p>
           <Link
             href="/pricing"

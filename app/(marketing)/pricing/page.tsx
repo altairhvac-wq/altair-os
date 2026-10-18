@@ -4,7 +4,7 @@ import { PricingPageView } from "@/shared/components/pricing/PricingPageView";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Altair OS pricing for field service businesses. Start a 14-day free trial with Starter, Growth, or Pro. Credit card required.",
+    "Altair OS pricing for field service businesses. Start a 14-day free trial with Starter, Growth, or Pro. No credit card required to start.",
 };
 
 export default function PricingPage() {

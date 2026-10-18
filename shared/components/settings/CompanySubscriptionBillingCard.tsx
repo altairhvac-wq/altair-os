@@ -168,6 +168,17 @@ export function CompanySubscriptionBillingCard({
 
   const isTrialing =
     effectiveSummary.status === "trialing" || effectiveSummary.state === "TRIAL";
+  // A card-free trial (no Stripe subscription) vs a Stripe trial with a card.
+  const isCardFreeTrial = isTrialing && !effectiveSummary.hasStripeSubscription;
+  // The resolver reports an ended card-free trial as `incomplete`; the end
+  // date tells it apart from a Checkout that was never finished.
+  const cardFreeTrialEnded =
+    effectiveSummary.status === "incomplete" &&
+    !effectiveSummary.hasStripeSubscription &&
+    Boolean(effectiveSummary.trialEndsAt);
+  // Stripe needs a trial_end at least 48h out; closer than that, Checkout
+  // starts billing on the spot (see resolveCheckoutTrialParams).
+  const checkoutStartsBillingNow = isCardFreeTrial && (daysLeft ?? 0) <= 2;
   const isActiveNoCancellation =
     effectiveSummary.status === "active" && !effectiveSummary.cancelAtPeriodEnd;
   const isActiveCanceling =
@@ -302,7 +313,9 @@ export function CompanySubscriptionBillingCard({
                   ({daysLeft} {daysLeft === 1 ? "day" : "days"} left)
                 </span>
               ) : null}
-              . Billing begins after the trial.
+              {isCardFreeTrial
+                ? ". No card on file yet — add a payment method before then to keep access."
+                : ". Billing begins after the trial."}
             </>
           ) : null}
         </p>
@@ -359,9 +372,11 @@ export function CompanySubscriptionBillingCard({
             {effectiveSummary.status === "past_due" ||
             effectiveSummary.status === "unpaid"
               ? "Update your payment method to keep your subscription in good standing."
-              : effectiveSummary.status === "incomplete"
-                ? "Your subscription setup was not completed. Update your payment method to activate."
-                : "Your subscription is paused. Update your payment method to resume access."}
+              : cardFreeTrialEnded
+                ? "Your free trial has ended. Choose a plan and add a payment method to pick up where you left off — everything in your workspace is still here."
+                : effectiveSummary.status === "incomplete"
+                  ? "Your subscription setup was not completed. Update your payment method to activate."
+                  : "Your subscription is paused. Update your payment method to resume access."}
           </p>
           {graceEndLabel && effectiveSummary.state === "GRACE" ? (
             <p
@@ -426,8 +441,15 @@ export function CompanySubscriptionBillingCard({
               </div>
               <p className={mutedClass}>
                 {selectedPlanLabel} · {selectedPriceLabel} ·{" "}
-                {SAAS_TRIAL_CONFIG.durationDays}-day trial, card required.
-                Converts to paid billing unless canceled.
+                {isCardFreeTrial
+                  ? checkoutStartsBillingNow
+                    ? "Billing starts when you add your card."
+                    : trialEndLabel
+                      ? `You won't be charged until your trial ends on ${trialEndLabel}.`
+                      : "You won't be charged until your trial ends."
+                  : effectiveSummary.trialEndsAt
+                    ? "Billing starts when you add your card."
+                    : `${SAAS_TRIAL_CONFIG.durationDays}-day trial, card required. Converts to paid billing unless canceled.`}
               </p>
               <button
                 type="button"
@@ -436,8 +458,10 @@ export function CompanySubscriptionBillingCard({
                 onClick={handleStartSubscription}
               >
                 {isPending
-                  ? "Starting…"
-                  : `Start ${SAAS_TRIAL_CONFIG.durationDays}-day trial`}
+                  ? "Opening checkout…"
+                  : isCardFreeTrial || effectiveSummary.trialEndsAt
+                    ? "Add payment method"
+                    : `Start ${SAAS_TRIAL_CONFIG.durationDays}-day trial`}
               </button>
             </>
           ) : null}

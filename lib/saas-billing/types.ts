@@ -20,10 +20,12 @@ export type SaasStripePriceEnvName =
   | "STRIPE_PRICE_PRO_MONTHLY"
   | "STRIPE_PRICE_PRO_ANNUAL";
 
-/** Trial policy for new public Checkout subscriptions (not applied to beta_comped). */
+/** Trial policy for new companies (not applied to beta_comped). */
 export type SaasTrialConfig = {
   durationDays: number;
+  /** Whether a payment method is needed to START the trial. */
   requiresPaymentMethod: boolean;
+  /** Whether a trial becomes a paid plan with no further action. */
   convertsToPaidUnlessCanceled: boolean;
 };
 
@@ -151,6 +153,19 @@ export type SubscriptionEventLedgerRow = {
   updated_at: Timestamp;
 };
 
+/** One sent "add a payment method" reminder per company (migration 200). */
+export type SaasTrialReminderRow = {
+  company_id: UUID;
+  reminder_key: string;
+  sent_at: Timestamp;
+};
+
+export type SaasTrialReminderInsert = {
+  company_id: UUID;
+  reminder_key: string;
+  sent_at?: Timestamp;
+};
+
 export type SubscriptionEventLedgerInsert = {
   id?: UUID;
   company_id?: UUID | null;
@@ -213,8 +228,21 @@ export type CompanyBillingAccess = {
    * hydration mismatch.
    */
   trialHasEnded: boolean;
+  /**
+   * A card-free trial inside its payment-prompt window (see
+   * TRIAL_PAYMENT_PROMPT_DAYS_BEFORE_END). Decided on the server for the same
+   * hydration reason as `trialHasEnded`.
+   */
+  trialEndingSoon: boolean;
+  /** Whether Stripe holds a subscription for this company (a card is on file). */
+  hasStripeSubscription: boolean;
   isComped: boolean;
   planKey: SaasPlanKey;
+  /**
+   * The EFFECTIVE status: a card-free trial past its end date reads as
+   * `incomplete` here even though the row still says `trialing`
+   * (lib/saas-billing/trial-policy.ts).
+   */
   status: SaasSubscriptionStatus | null;
 };
 

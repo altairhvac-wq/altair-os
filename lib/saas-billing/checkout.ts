@@ -15,6 +15,7 @@ import {
 } from "@/lib/saas-billing/constants";
 import { getOrCreateBillingCustomer, getPlatformStripeClient } from "@/lib/saas-billing/customer";
 import { getCompanySubscription } from "@/lib/saas-billing/resolver";
+import { resolveCheckoutTrialParams } from "@/lib/saas-billing/trial-policy";
 import type {
   SaasBillingInterval,
   SaasPublicPlanKey,
@@ -123,8 +124,9 @@ export async function createSubscriptionCheckout(input: {
   const companyId = context.company.id;
   const supabase = createServiceRoleClient();
 
+  let existingSubscription: Awaited<ReturnType<typeof getCompanySubscription>>;
   try {
-    const existingSubscription = await getCompanySubscription(companyId, supabase);
+    existingSubscription = await getCompanySubscription(companyId, supabase);
     if (
       existingSubscription?.stripe_subscription_id &&
       BLOCKED_CHECKOUT_STATUSES.has(existingSubscription.status)
@@ -167,6 +169,18 @@ export async function createSubscriptionCheckout(input: {
     billing_interval: billingInterval,
   };
 
+  // The trial started without a card (migration 200); Checkout is where the
+  // card is added. A running trial keeps its own end date so the first charge
+  // lands on the day the customer was told; an expired one gets no second
+  // trial. See resolveCheckoutTrialParams.
+  const trialParams = resolveCheckoutTrialParams(
+    existingSubscription
+      ? { trialEndsAt: existingSubscription.trial_ends_at }
+      : null,
+    Date.now(),
+    SAAS_TRIAL_CONFIG.durationDays,
+  );
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -175,13 +189,12 @@ export async function createSubscriptionCheckout(input: {
       success_url: urls.successUrl,
       cancel_url: urls.cancelUrl,
       client_reference_id: companyId,
-      // Card required up front so the trial converts to paid unless canceled.
-      payment_method_collection: SAAS_TRIAL_CONFIG.requiresPaymentMethod
-        ? "always"
-        : "if_required",
+      // Always: this session exists to put a card on file. (The catalog's
+      // requiresPaymentMethod describes the start of the trial, not Checkout.)
+      payment_method_collection: "always",
       metadata: sharedMetadata,
       subscription_data: {
-        trial_period_days: SAAS_TRIAL_CONFIG.durationDays,
+        ...trialParams,
         metadata: sharedMetadata,
       },
     });

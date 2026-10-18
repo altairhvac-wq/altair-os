@@ -73,7 +73,7 @@ export function MissionControlHomepage() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-[#8e826f]">
-              Credit card required. Live onboarding included. Cancel anytime.
+              No credit card required to start. Live onboarding included. Cancel anytime.
             </p>
           </div>
         </section>

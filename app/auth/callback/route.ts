@@ -23,6 +23,21 @@ function authCallbackErrorRedirect(origin: string) {
   return NextResponse.redirect(`${origin}/login?error=auth_callback`);
 }
 
+/**
+ * The flow a PKCE code was minted for.
+ *
+ * auth-js records "recovery" alongside the code verifier when the verifier
+ * was created by `resetPasswordForEmail`, and hands it back from the exchange
+ * as `redirectType` — but does not include it in the declared return type.
+ * It is the only reliable signal in the PKCE flow that this is a password
+ * reset: Supabase's redirect carries `?code=` and nothing else.
+ */
+function readPkceRedirectType(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const value = (data as { redirectType?: unknown }).redirectType;
+  return typeof value === "string" && value ? value : null;
+}
+
 function withSupabaseCookies(
   target: NextResponse,
   source: NextResponse,
@@ -80,13 +95,24 @@ export async function GET(request: NextRequest) {
     },
   });
 
+  let pkceRedirectType: string | null = null;
+
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
+      // The common cause: the link was opened in a different browser or
+      // device from the one that submitted the form, so the PKCE verifier
+      // cookie is not here. Named so the log says what to do about it.
+      console.error("[auth/callback] exchangeCodeForSession failed:", {
+        code: error.code,
+        message: error.message,
+        verifierMissing: error.code === "pkce_code_verifier_missing" || error.name === "AuthPKCECodeVerifierMissingError",
+      });
       return authCallbackErrorRedirect(origin);
     }
+
+    pkceRedirectType = readPkceRedirectType(data);
   } else if (tokenHash && isEmailOtpType(typeParam)) {
     const { error } = await supabase.auth.verifyOtp({
       type: typeParam,
@@ -114,7 +140,7 @@ export async function GET(request: NextRequest) {
   const destination = await resolveAuthCallbackDestination(
     nextParam,
     redirectToParam,
-    typeParam,
+    typeParam ?? pkceRedirectType,
   );
 
   return withSupabaseCookies(

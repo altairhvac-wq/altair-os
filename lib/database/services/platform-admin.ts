@@ -594,6 +594,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     estimatesCount,
     invoicesCount,
     stripeConnectedCompanyIds,
+    subscriptionsResult,
   ] = await Promise.all([
     authUsersPromise,
     supabase
@@ -616,6 +617,9 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     countAll("estimates"),
     countAll("invoices"),
     fetchStripeConnectedCompanyIds(diagnostics),
+    supabase
+      .from("company_subscriptions")
+      .select("company_id, access_grant, status"),
   ]);
 
   const { users: authUsers, error: authUsersError } = authUsersResult;
@@ -635,6 +639,27 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     console.error(`[platform-admin] ${message}`);
     pushDiagnostic(diagnostics, message);
   }
+
+  if (subscriptionsResult.error) {
+    const message = formatQueryError(
+      "company_subscriptions query failed",
+      subscriptionsResult.error,
+    );
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+  }
+
+  const subscriptionByCompany = new Map(
+    (subscriptionsResult.data ?? []).map((row) => [
+      row.company_id,
+      {
+        accessGrant: (row.access_grant === "beta_comped"
+          ? "beta_comped"
+          : "none") as "none" | "beta_comped",
+        status: row.status ?? null,
+      },
+    ]),
+  );
 
   for (const result of [
     companiesCount,
@@ -795,6 +820,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     invoiceCount: invoiceCounts.get(company.id) ?? 0,
     paymentCount: paymentCounts.get(company.id) ?? 0,
     lastActivityAt: lastActivityByCompany.get(company.id) ?? company.updated_at,
+    accessGrant: subscriptionByCompany.get(company.id)?.accessGrant ?? "none",
+    subscriptionStatus: subscriptionByCompany.get(company.id)?.status ?? null,
   }));
 
   const reliabilityData = await fetchPlatformReliabilitySnapshot({

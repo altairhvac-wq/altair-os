@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import { PlatformCompanyAccessGrantControl } from "@/shared/components/platform-admin/PlatformCompanyAccessGrantControl";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
 import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import {
@@ -457,6 +458,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
                   <th className={pt.tableHeadCell}>Estimates</th>
                   <th className={pt.tableHeadCell}>Invoices</th>
                   <th className={pt.tableHeadCell}>Last activity</th>
+                  <th className={pt.tableHeadCell}>Access</th>
                   <th className={pt.tableHeadCell}>ID</th>
                 </tr>
               </thead>
@@ -483,6 +485,9 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
                     </td>
                     <td className={`whitespace-nowrap ${pt.tableCellMuted}`}>
                       {formatOptionalDate(company.lastActivityAt)}
+                    </td>
+                    <td className={pt.tableCell}>
+                      <PlatformCompanyAccessGrantControl company={company} northStar />
                     </td>
                     <td className={pt.tableCell}>
                       <DebugId value={company.id} />

@@ -6,6 +6,7 @@ import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
 import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import { PlatformNorthStarView } from "@/shared/components/platform-admin/north-star-m13";
+import { PlatformCompanyAccessGrantControl } from "@/shared/components/platform-admin/PlatformCompanyAccessGrantControl";
 import {
   Building2,
   Briefcase,
@@ -347,6 +348,7 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
                 <th className="px-3 py-2">Estimates</th>
                 <th className="px-3 py-2">Invoices</th>
                 <th className="px-3 py-2">Last activity</th>
+                <th className="px-3 py-2">Access</th>
                 <th className="px-3 py-2">ID</th>
               </tr>
             </thead>
@@ -367,6 +369,9 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
                   <td className="px-3 py-2.5 tabular-nums">{company.invoiceCount}</td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-600">
                     {formatOptionalDate(company.lastActivityAt)}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <PlatformCompanyAccessGrantControl company={company} />
                   </td>
                   <td className="px-3 py-2.5">
                     <DebugId value={company.id} />
