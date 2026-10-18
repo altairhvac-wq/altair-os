@@ -6,9 +6,9 @@ file as it happens. A step with no result recorded has not been done.
 
 | Step | State | Evidence |
 |------|-------|----------|
-| 0. CI unblocked (PR 15) | PR open, CI green | https://github.com/altairhvac-wq/altair-os/pull/15 — all four checks green 2026-10-18 |
-| 1. Conflicts resolved, CI green on both PRs | pending | |
-| 2a. PR 13 merged | pending | |
+| 0. CI unblocked (PR 15) | **done** | squash-merged to main as `bf811843` (2026-10-18, owner: "merge 15 and 13") |
+| 1. Conflicts resolved, CI green on both PRs | resolved, CI running | PR 12 branch at `9374370a` (merge of main + migration-200 grant alignment); CI run 39175659876 |
+| 2a. PR 13 merged | **done** | merge commit `ddd131df` on main (2026-10-18); Vercel production deploy follows automatically |
 | 2b. PR 12 merged | pending | |
 | 3a. Migration 199 applied to production | pending | |
 | 3b. Migration 200 applied to production | pending | |
@@ -98,6 +98,20 @@ The resolution was verified on a scratch merge of 13 then 12: `tsc` clean,
 eslint 0 errors, production build passes, and (with PR 15's fixes) all 56
 verifiers pass.
 
+One more change was needed on PR 12 after the merge: PR 13's
+`verify-integration-migrations` holds every new table in the range to one
+shape (authenticated may SELECT behind a policy, writes service_role only).
+Migration 200's `saas_trial_reminders` was service-role-only with no policy,
+so it was aligned with `subscription_dunning_notices` (owners/admins can read
+their company's rows) and `bootstrap_company_for_new_user` was added to the
+reviewed-function list for 200. Migration 200 was not applied anywhere but
+the scratch project, so changing it before production is safe.
+
+**PR 14** (`claude/trial-abuse-controls`, migration 201: one trial per
+inbox) is open against PR 12's branch. It is not part of this deploy unless
+the owner says so; if it rides along it is retargeted to main after PR 12
+merges and 201 is applied after 200 with the same procedure.
+
 Procedure once PR 13 is merged:
 
 ```bash
@@ -125,7 +139,7 @@ After each merge, record the merge SHA and the Vercel deployment URL/ID here.
 
 Owner runs these in **Supabase → SQL editor** on project
 `acsmgzkbvstrbggsukyx`, or approves the agent pasting them in the browser.
-Paste the whole file each time; both are single transactions as written.
+Paste the whole file each time. 199 wraps itself in `begin; ... commit;`; 200 does not, but the SQL editor sends the paste as one request, which Postgres runs as one implicit transaction, so a failing statement rolls the whole file back either way.
 
 1. `supabase/migrations/199_launch_safety_hardening.sql` (319 lines).
    Expect `Success. No rows returned`. It also backfills
@@ -245,3 +259,8 @@ call; note what was done.
   eslint, build, 56/56 verifiers with PR 15). Read-only probe baseline
   against production: 4 passed, 6 failed (the six objects 199/200 create).
   PR 15 opened and green. Waiting on the owner's go for the first merge.
+- 2026-10-18 — Owner: "merge 15 and 13". PR 15 squash-merged (`bf811843`),
+  PR 13 merged (`ddd131df`). Main merged into PR 12's branch with the
+  five-file resolution; migration 200's grants aligned with the convention;
+  57/57 verifiers, tsc, eslint clean locally; pushed as `9374370a`, CI
+  running. Next: owner go for PR 12 (and a decision on PR 14).
