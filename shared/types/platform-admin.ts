@@ -52,6 +52,10 @@ export type PlatformAdminCompanyRow = {
   invoiceCount: number;
   paymentCount: number;
   lastActivityAt: string | null;
+  /** `company_subscriptions.access_grant`; "none" when the company has no row. */
+  accessGrant: "none" | "beta_comped";
+  /** `company_subscriptions.status`; null when the company has no row. */
+  subscriptionStatus: string | null;
 };
 
 export type PlatformOpenBugBrief = {

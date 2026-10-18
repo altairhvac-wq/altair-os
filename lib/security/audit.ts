@@ -57,6 +57,9 @@ export type SecurityAuditEventType =
   | "company_deletion.requested"
   | "company_deletion.request_refused"
   | "company_deletion.cancelled"
+  // Complimentary access set or removed from /platform: who comped whom.
+  | "platform.access_grant_set"
+  | "platform.access_grant_cleared"
   // ============================== A CONTROL THAT IS OFF, RECORDED ==============================
   // The rate limiter fails open on purpose: a database blip must not stop
   // everyone signing in. But "open" means every public surface is unlimited

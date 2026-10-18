@@ -64,6 +64,96 @@ const DEMO_SESSION_ROUTE = "/api/demo/session";
  */
 const MARKETING_MEDIA_INGEST_ROUTE = "/api/marketing/media/ingest";
 
+/**
+ * Files a browser or crawler fetches on its own initiative, before anyone has
+ * signed in: the crawl policy, the PWA manifest and service worker, the link
+ * preview image and the home-screen icon. Behind the login redirect each one
+ * fails in its own way — the service worker is refused outright ("the script
+ * resource is behind a redirect"), robots.txt is read as "no policy", and a
+ * link preview shows nothing (launch audit H6, M1). Exact paths only; nothing
+ * beneath them is implied.
+ */
+const PUBLIC_WEB_ASSET_ROUTES = [
+  "/robots.txt",
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/opengraph-image",
+  "/apple-touch-icon.png",
+  "/og.png",
+];
+
+/**
+ * Where a signed-out visitor is sent to log in, and where they are told the
+ * page does not exist.
+ *
+ * ============ WHY UNKNOWN PATHS 404 INSTEAD OF REDIRECTING ============
+ * Every path that is not public used to redirect to /login?next=<path>. For a
+ * real product route that is right: the visitor wanted the dashboard, they
+ * get it after signing in. For a typo in a video caption it is wrong: a
+ * stranger who mistyped the address is shown a sign-in form, with no sign
+ * that the page they wanted never existed (launch audit M6).
+ *
+ * So the redirect is kept for the prefixes that ARE the signed-in product,
+ * and anything else is rewritten to a path no route serves, which renders
+ * app/not-found.tsx with a 404. The rewrite — rather than letting the request
+ * through to the router — is what keeps this change from opening anything:
+ * a product route missing from this list 404s for a visitor; it is never
+ * served. (Each product layout re-checks the session regardless.)
+ *
+ * The list is the set of top-level route segments under app/(admin), plus the
+ * other authenticated roots. Keep it in step with the route tree; a new
+ * signed-in top-level segment that is not added here answers 404 to a
+ * signed-out visitor instead of sending them to log in, which is the safe
+ * failure.
+ */
+const AUTHENTICATED_ROUTE_PREFIXES = [
+  // app/(admin)
+  "/alpha-tracker",
+  "/altair-design-lab",
+  "/command-center-v1",
+  "/community",
+  "/customers",
+  "/dashboard-north-star-v1",
+  "/dashboard-north-star-v2",
+  "/dispatch",
+  "/estimates",
+  "/expenses",
+  "/invoices",
+  "/jobs",
+  "/leads",
+  "/marketing",
+  "/network",
+  "/payments",
+  "/payroll",
+  "/platform",
+  "/price-book",
+  "/reports",
+  "/sales",
+  "/schedule",
+  "/settings",
+  "/team",
+  "/technicians",
+  "/time",
+  "/time-clock",
+  "/work",
+  "/workspace-v1",
+  // app/(concept)
+  "/altair-shell-color-lab-v1",
+  "/altair-shell-north-star-v1",
+  "/altair-shell-north-star-v2",
+  "/altair-shell-north-star-v3",
+  // other authenticated roots
+  "/technician",
+  "/tech",
+  "/setup",
+  "/activate-subscription",
+  "/auth",
+  "/api",
+];
+
+/** A path no route serves; the rewrite target that renders app/not-found.tsx. */
+const NOT_FOUND_REWRITE_PATH = "/__not-found";
+
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
@@ -171,9 +261,20 @@ function isAgentBridgeRoute(pathname: string) {
   return pathname === "/api/agent" || pathname.startsWith("/api/agent/");
 }
 
+function isPublicWebAssetRoute(pathname: string) {
+  return PUBLIC_WEB_ASSET_ROUTES.includes(pathname);
+}
+
+function isAuthenticatedAppRoute(pathname: string) {
+  return AUTHENTICATED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
+    isPublicWebAssetRoute(pathname) ||
     isPricingRoute(pathname) ||
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
@@ -266,11 +367,23 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!user && !isPublicRoute(pathname)) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", pathname);
+    if (isAuthenticatedAppRoute(pathname)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("next", pathname);
+      return withSupabaseCookies(
+        NextResponse.redirect(redirectUrl),
+        supabaseResponse,
+      );
+    }
+
+    // Not public, not a product route: nothing lives here for anyone. Say so
+    // (404 via app/not-found.tsx) rather than asking a stranger to sign in.
+    const notFoundUrl = request.nextUrl.clone();
+    notFoundUrl.pathname = NOT_FOUND_REWRITE_PATH;
+    notFoundUrl.search = "";
     return withSupabaseCookies(
-      NextResponse.redirect(redirectUrl),
+      NextResponse.rewrite(notFoundUrl),
       supabaseResponse,
     );
   }

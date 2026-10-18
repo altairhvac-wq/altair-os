@@ -16,14 +16,16 @@ import {
   resolveAuthRedirectOrigin,
 } from "@/lib/auth/request-origin";
 import { validateSignupNetworkInviteEmail } from "@/lib/auth/network-invite-signup";
-import { userHasPendingTeamInvites } from "@/lib/auth/pending-team-invites";
+import {
+  emailHasPendingTeamInvite,
+  userHasPendingTeamInvites,
+} from "@/lib/auth/pending-team-invites";
 import { resolvePostLoginRedirect, sanitizeNextPath } from "@/lib/auth/redirects";
 import {
   clearSignupNetworkInviteCookie,
   readSignupNetworkInviteCookie,
   resolveSignupNetworkInviteToken,
 } from "@/lib/auth/signup-invite-cookie";
-import { createAuthEmailClient } from "@/lib/supabase/auth-email";
 import { createClient } from "@/lib/supabase/server";
 import {
   bootstrapCompanyForNewUser,
@@ -182,23 +184,6 @@ export async function signupAction(
   _prevState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  // Address only: there is no account yet, so there is no identity dimension
-  // to limit, and limiting by the submitted email would let an attacker pick a
-  // fresh one per attempt.
-  const signupAddress = await resolveRequestAddress();
-  const signupLimit = await enforcePublicRateLimit("auth.signup", {
-    ip: signupAddress,
-  });
-  if (!signupLimit.allowed) {
-    await recordSecurityAuditEvent({
-      event: "signup.rate_limited",
-      outcome: "refused",
-      address: signupAddress,
-      reason: "rate_limited",
-    });
-    return { error: rateLimitMessage(signupLimit) };
-  }
-
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -210,15 +195,53 @@ export async function signupAction(
   const setupInviteFlow = sanitizeNextPath(next) === "/setup";
   const trade = normalizeTradeKey(tradeRaw);
 
-  if (!fullName || !email || !password || (!companyName && !setupInviteFlow)) {
+  // ============================== BEFORE ANYTHING IS CREATED ==============================
+  // Two dimensions. The address stops one client opening accounts in bulk,
+  // and is generous on purpose: a carrier NAT puts thousands of people behind
+  // one address (see PUBLIC_RATE_LIMITS). The email stops one inbox being
+  // flooded with confirmation mail, which the address dimension cannot see.
+  // The refusal is the same message whichever dimension refused.
+  const signupAddress = await resolveRequestAddress();
+  const signupLimit = await enforcePublicRateLimit("auth.signup", {
+    ip: signupAddress,
+    email: email || null,
+  });
+  if (!signupLimit.allowed) {
+    await recordSecurityAuditEvent({
+      event: "signup.rate_limited",
+      outcome: "refused",
+      subject: email || null,
+      address: signupAddress,
+      reason: "rate_limited",
+    });
+    return { error: rateLimitMessage(signupLimit) };
+  }
+
+  if (!fullName || !email || !password) {
+    return { error: "Full name, email, and password are required." };
+  }
+
+  // ============================== THE COMPANY NAME IS FOR FOUNDERS ==============================
+  // Someone creating a workspace names it. Someone joining one has nothing
+  // to name: their company exists, and bootstrap is deferred to /setup where
+  // they accept the invite. The invite email points at /signup?next=/setup so
+  // the form knows which case it is in. But a person who typed /signup on
+  // their own with an invite waiting is in the second case too, and the only
+  // way to know is to ask (launch audit M4).
+  let joiningExistingCompany = setupInviteFlow;
+
+  if (!companyName && !joiningExistingCompany) {
+    joiningExistingCompany = await emailHasPendingTeamInvite(email);
+  }
+
+  if (!companyName && !joiningExistingCompany) {
     return {
-      error: setupInviteFlow
-        ? "Full name, email, and password are required."
-        : "All fields are required.",
+      error:
+        "Enter your company name. If you were invited to join a company, sign up with the email address the invitation was sent to and leave this blank.",
     };
   }
 
-  if (!setupInviteFlow && !trade) {
+  if (companyName && !setupInviteFlow && !trade) {
     return { error: "Please choose a trade." };
   }
 
@@ -272,7 +295,19 @@ export async function signupAction(
     };
   }
 
-  const supabase = createAuthEmailClient();
+  // ============================== PKCE, SO THE LINK ALWAYS CARRIES ?code= ==============================
+  // The cookie-backed server client runs the PKCE flow: it stores a code
+  // verifier in a cookie on this response, and whatever shape the Supabase
+  // confirmation template has, the link lands on /auth/callback?code=... which
+  // the callback exchanges. The implicit-flow client this replaced depended
+  // on the template having been rewritten to token_hash; with the default
+  // template it put the tokens in the URL fragment, which a server never
+  // sees (launch audit B3). The callback keeps token_hash as a fallback, so a
+  // rewritten template still works.
+  //
+  // The cost of PKCE is that the link must be opened in the browser that
+  // holds the verifier cookie. The callback names that failure in its log.
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -291,20 +326,17 @@ export async function signupAction(
     return { error: mapAuthError(error) };
   }
 
-  if (data.session) {
-    const ssrClient = await createClient();
-    await ssrClient.auth.setSession({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-    });
-  }
-
+  // With email confirmation off, the server client has already written the
+  // session cookies; with it on, there is no session until the link is
+  // opened. The copy says what the link does: it signs the person in and
+  // finishes setup. Telling them to "sign in" afterwards sent people to the
+  // login form before they had clicked it.
   if (!data.session) {
     await clearSignupNetworkInviteCookie();
 
     return {
       success:
-        "Account created. Check your email to confirm your address, then sign in.",
+        "Account created. Open the link we just emailed you: it finishes setup and signs you in.",
       needsEmailConfirmation: true,
     };
   }
@@ -490,7 +522,9 @@ export async function requestPasswordResetAction(
   let redirectTo: string;
 
   try {
-    // Match Supabase allowlist path exactly; recovery flow uses type=recovery on the link.
+    // Match the Supabase allowlist path exactly. Recovery is detected by the
+    // callback from the PKCE exchange (redirectType), with the link's
+    // type=recovery honoured when a token_hash template provides it.
     redirectTo = buildAuthCallbackUrl(origin);
   } catch (error) {
     console.error("[requestPasswordResetAction] invalid redirect URL:", {
@@ -511,7 +545,10 @@ export async function requestPasswordResetAction(
     });
   }
 
-  const supabase = createAuthEmailClient();
+  // PKCE (see signupAction). The verifier cookie set here is marked as a
+  // recovery, and the callback learns that from the exchange itself, so the
+  // reset no longer depends on `type=recovery` surviving the email template.
+  const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });

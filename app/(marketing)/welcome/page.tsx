@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/database/auth";
 import { MissionControlHomepage } from "@/shared/components/homepage/MissionControlHomepage";
+import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 export const metadata: Metadata = {
   // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
   },
   description:
     "Connect leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one field service operating system.",
+  // This page is served at `/` (middleware rewrite), so its canonical and
+  // og:url are the root, not /welcome.
+  ...buildPublicSocialMetadata({ path: "/" }),
 };
 
 /**

@@ -103,8 +103,19 @@ If Supabase email confirmation is enabled:
 
 - [ ] Confirmation emails redirect to a URL on your deployed domain
 - [ ] `/auth/callback` is listed in Redirect URLs (wildcard `**` optional if you add `?next=` query params)
-- [ ] Password reset uses `redirectTo` = `https://<domain>/auth/callback` (recovery is detected via `type=recovery` on the email link)
-- [ ] Test signup → email confirm → login → `/setup` or dashboard
+- [ ] Password reset uses `redirectTo` = `https://<domain>/auth/callback`
+- [ ] Test signup → open the email link → lands signed in on `/setup` or the dashboard (the link signs the user in; they do not log in separately)
+
+Signup and password reset use the PKCE flow (`lib/supabase/server.ts`), so the
+email link arrives at `/auth/callback?code=…` with the DEFAULT Supabase
+templates (`{{ .ConfirmationURL }}`) — no template rewrite is required. A
+template rewritten to `?token_hash={{ .TokenHash }}&type=…` still works; the
+callback keeps that path as a fallback. Recovery is detected from the PKCE
+exchange itself (`redirectType === "recovery"`), with `type=recovery` on the
+link honoured when present. The one PKCE constraint: the link must be opened
+in the same browser that submitted the form (the code verifier is a cookie);
+opening it elsewhere lands on `/login?error=auth_callback`, logged as
+`verifierMissing: true`.
 
 ---
 

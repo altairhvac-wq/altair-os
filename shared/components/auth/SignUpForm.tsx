@@ -52,17 +52,23 @@ export function SignUpForm({
       title={
         isValidInvite && invitePreview?.sourceCompanyName
           ? `Join Altair with ${invitePreview.sourceCompanyName}`
-          : "Create your account"
+          : setupInviteFlow
+            ? "Join your team on Altair"
+            : "Create your account"
       }
       description={
         isValidInvite
           ? "You were invited to join Altair and connect as a trusted network partner."
-          : "Get your trades business on Altair OS — set up in minutes, built for the field."
+          : setupInviteFlow
+            ? "Create your login with the email address your invitation was sent to. You'll accept the invite right after."
+            : "Get your trades business on Altair OS — set up in minutes, built for the field."
       }
       footer={
         <p>
           Already have an account?{" "}
-          <AuthLink href="/login">Sign in</AuthLink>
+          <AuthLink href={setupInviteFlow ? "/login?next=/setup" : "/login"}>
+            Sign in
+          </AuthLink>
         </p>
       }
     >
@@ -109,13 +115,21 @@ export function SignUpForm({
           />
         </AuthField>
 
+        {/*
+          Never `required` in the browser. A founder names their workspace; a
+          person joining one has nothing to name, and the server knows which
+          is which (an open invite for the email makes it optional). A
+          browser-level requirement would force every invitee who typed
+          /signup on their own to invent a company before being told they
+          already have one.
+        */}
         <AuthField
           label={setupInviteFlow ? "Company name (optional)" : "Company name"}
           id="companyName"
           hint={
             setupInviteFlow
-              ? "Skip this if you were invited by a company — use the same email from your invite and accept it after confirming your account."
-              : "This becomes your workspace name."
+              ? "Leave this blank. Sign up with the email your invitation was sent to and you'll accept it after confirming your account."
+              : "This becomes your workspace name. Invited to join an existing company? Leave this blank and use the email your invite was sent to."
           }
         >
           <AuthInput
@@ -125,11 +139,12 @@ export function SignUpForm({
             autoComplete="organization"
             placeholder="Smith HVAC & Plumbing"
             defaultValue={defaultCompanyName}
-            required={!setupInviteFlow}
           />
         </AuthField>
 
-        {!setupInviteFlow ? <TradeSelectField disabled={pending} /> : null}
+        {!setupInviteFlow ? (
+          <TradeSelectField disabled={pending} required={false} />
+        ) : null}
 
         <AuthField
           label="Work email"
@@ -172,6 +187,11 @@ export function SignUpForm({
           <AuthSubmitButton pending={pending}>
             {state.needsEmailConfirmation ? "Account created" : "Create account"}
           </AuthSubmitButton>
+          <p className="mt-3 text-center text-xs leading-relaxed text-stone-500">
+            By creating an account you agree to the{" "}
+            <AuthLink href="/terms">Terms of Service</AuthLink> and{" "}
+            <AuthLink href="/privacy">Privacy Policy</AuthLink>.
+          </p>
         </div>
       </form>
     </AuthShell>
