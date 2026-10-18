@@ -267,17 +267,41 @@ for (const file of files) {
 console.log(
   "\nNo new database functions (keeps verify-function-grants' contract simple)",
 );
+/**
+ * Migrations in this range that define functions ON PURPOSE.
+ *
+ * 199 is the launch-safety hardening from the 2026-10-18 audit: it has to
+ * redefine accept_network_help_offer (H1, the missing caller check) and
+ * can_access_platform_admin (M7), and adds the one helper both need. Those
+ * three are held to verify-function-grants' rules (pinned search_path with
+ * pg_temp last, explicit revoke/grant). Naming the file here keeps the
+ * invariant strict for everything else in the range.
+ */
+const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
+  [
+    "199_launch_safety_hardening.sql",
+    new Set([
+      "current_user_email_is_confirmed",
+      "accept_network_help_offer",
+      "can_access_platform_admin",
+    ]),
+  ],
+]);
+
 for (const file of files) {
   const sql = readSql(file);
+  const reviewed = MIGRATIONS_WITH_REVIEWED_FUNCTIONS.get(file) ?? new Set();
   const fns = [
     ...sql.matchAll(
       /create\s+(?:or\s+replace\s+)?function\s+public\.([a-z0-9_]+)/g,
     ),
-  ];
+  ]
+    .map((m) => m[1])
+    .filter((name) => !reviewed.has(name));
   check(
-    `${file} introduces no new public function`,
+    `${file} introduces no new public function${reviewed.size ? " beyond the reviewed set" : ""}`,
     fns.length === 0,
-    fns.map((m) => m[1]),
+    fns,
   );
 }
 

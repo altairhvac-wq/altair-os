@@ -14,6 +14,7 @@ import {
   SAAS_GRACE_PERIOD_DAYS,
 } from "@/lib/saas-billing/constants";
 import { getPlatformStripeClient } from "@/lib/saas-billing/customer";
+import { notifyOwnersOfSubscriptionPaymentFailure } from "@/lib/saas-billing/dunning";
 import type {
   SaasPlanKey,
   SaasSubscriptionStatus,
@@ -885,7 +886,7 @@ async function handleSubscriptionLifecycle(
 async function handleInvoiceEvent(
   supabase: SupabaseClient<Database>,
   event: Stripe.Event,
-  _kind: "paid" | "payment_failed",
+  kind: "paid" | "payment_failed",
 ): Promise<{ companyId: string | null; result: ProcessBillingWebhookResult }> {
   const invoice = event.data.object as Stripe.Invoice;
   const customerId = extractCustomerId(invoice.customer);
@@ -958,6 +959,26 @@ async function handleInvoiceEvent(
         new Error("Failed to mirror subscription from invoice event"),
       ),
     };
+  }
+
+  // Dunning (launch audit H8). Only when the LIVE subscription is still
+  // past_due: a delayed payment_failed arriving after the card was fixed
+  // would otherwise email the owner about a problem that no longer exists.
+  // Idempotent per event id inside; never fails the webhook.
+  if (kind === "payment_failed" && status === "past_due") {
+    const { data: mirrored } = await supabase
+      .from("company_subscriptions")
+      .select("grace_period_ends_at, plan_key")
+      .eq("company_id", resolved.companyId)
+      .maybeSingle();
+
+    await notifyOwnersOfSubscriptionPaymentFailure(supabase, {
+      companyId: resolved.companyId,
+      providerEventId: event.id,
+      invoice,
+      planKey: mirrored?.plan_key ?? null,
+      graceEndsAt: mirrored?.grace_period_ends_at ?? null,
+    });
   }
 
   return {

@@ -3,6 +3,7 @@
  * Safe to unit-test without Next.js / server-only imports.
  */
 
+import type { BillingPolicyDecision } from "@/lib/saas-billing/policy";
 import type {
   SaasAccessGrant,
   SaasSubscriptionStatus,
@@ -17,12 +18,13 @@ export type FullApplicationAccessInput = {
 };
 
 /**
- * Full application access is allowed only when:
- * - subscription status is "trialing", or
- * - subscription status is "active", or
- * - access_grant is "beta_comped"
+ * Status-only entitlement check.
  *
- * Null rows and every other status fail closed.
+ * Retained for callers that only have a status in hand (Checkout reconcile,
+ * the activation page). The app shells no longer gate on this: it has no
+ * notion of the grace window, so a single failed card payment moved a company
+ * from "active" to "past_due" and locked office and technicians out at once
+ * (launch audit H7). The shell gate is {@link billingPolicyAllowsAppShell}.
  */
 export function companyHasFullApplicationAccess(
   input: FullApplicationAccessInput,
@@ -32,6 +34,35 @@ export function companyHasFullApplicationAccess(
   }
 
   return input.status === "trialing" || input.status === "active";
+}
+
+export type AppShellBillingDecision = Pick<
+  BillingPolicyDecision,
+  "canUseOperationalFeatures" | "canMutateOperationalData"
+>;
+
+/**
+ * The one rule the authenticated app shells gate on, fed by
+ * `evaluateBillingPolicy` (via the resolver) rather than by a raw status.
+ *
+ * Allowed: ACTIVE, TRIAL and GRACE — a `past_due` subscription keeps full
+ * access until `grace_period_ends_at`, which the webhook writes on the first
+ * payment failure and the policy already honoured but nothing read.
+ *
+ * Still redirected to activation: LIMITED, READ_ONLY and BLOCKED. The policy
+ * describes LIMITED and READ_ONLY as "operational features, no mutations",
+ * but nothing below the layout enforces that today (Server Actions are not
+ * billing-gated — audit M16). Until they are, letting those states through the
+ * shell would hand a non-paying company unrestricted writes, so the shell
+ * requires BOTH flags and fails closed for them.
+ */
+export function billingPolicyAllowsAppShell(
+  decision: AppShellBillingDecision,
+): boolean {
+  return (
+    decision.canUseOperationalFeatures === true &&
+    decision.canMutateOperationalData === true
+  );
 }
 
 /**

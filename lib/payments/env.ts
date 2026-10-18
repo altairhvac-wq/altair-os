@@ -45,3 +45,16 @@ export function isStripeTestMode(): boolean {
   const key = getStripeSecretKey();
   return key?.startsWith("sk_test_") ?? false;
 }
+
+/**
+ * True when STRIPE_SECRET_KEY is a live-mode key.
+ *
+ * The Connect payment webhook compares `event.livemode` against this before
+ * recording anything (launch audit M17): a test-mode signing secret pasted
+ * into production would otherwise let test-mode payments be recorded as real
+ * money against real invoices. Mirrors `isSaasStripeLivemode` on the SaaS side.
+ */
+export function isStripeLivemode(): boolean {
+  const key = getStripeSecretKey();
+  return key?.startsWith("sk_live_") ?? false;
+}

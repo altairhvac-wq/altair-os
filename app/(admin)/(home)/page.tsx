@@ -6,6 +6,8 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
+import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
+import { BillingGraceBanner } from "@/shared/components/billing/BillingGraceBanner";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 
@@ -26,13 +28,16 @@ export default async function DashboardPage() {
 
   const companyId = companyContext.company.id;
 
-  const [data, onboardingSnapshot, demoDataStatus] = await Promise.all([
-    getDashboardData(companyContext),
-    getOnboardingSnapshot(companyId, companyContext),
-    canManageDemoData(companyContext)
-      ? getDemoDataStatus(companyId, companyContext)
-      : Promise.resolve(null),
-  ]);
+  const [data, onboardingSnapshot, demoDataStatus, billingAccess] =
+    await Promise.all([
+      getDashboardData(companyContext),
+      getOnboardingSnapshot(companyId, companyContext),
+      canManageDemoData(companyContext)
+        ? getDemoDataStatus(companyId, companyContext)
+        : Promise.resolve(null),
+      // Request-cached: the admin layout already resolved it for the gate.
+      getRequestCompanyBillingAccess(companyId),
+    ]);
 
   const onboardingChecklist = filterOnboardingChecklistForContext(
     buildOnboardingChecklist(onboardingSnapshot),
@@ -45,13 +50,21 @@ export default async function DashboardPage() {
     "User";
 
   return (
-    <OperationalDashboardView
-      data={data}
-      userDisplayName={userDisplayName}
-      onboardingChecklist={onboardingChecklist}
-      demoDataStatus={demoDataStatus}
-      companyTimeZone={companyContext.company.timezone}
-      companyContext={companyContext}
-    />
+    <>
+      {/* Renders only while a failed payment is inside its grace window. */}
+      <BillingGraceBanner
+        access={billingAccess}
+        timeZone={companyContext.company.timezone}
+        className="mx-4 mt-4 md:mx-6 md:mt-6"
+      />
+      <OperationalDashboardView
+        data={data}
+        userDisplayName={userDisplayName}
+        onboardingChecklist={onboardingChecklist}
+        demoDataStatus={demoDataStatus}
+        companyTimeZone={companyContext.company.timezone}
+        companyContext={companyContext}
+      />
+    </>
   );
 }

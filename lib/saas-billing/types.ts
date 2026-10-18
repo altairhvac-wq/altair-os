@@ -165,6 +165,34 @@ export type SubscriptionEventLedgerInsert = {
   updated_at?: Timestamp;
 };
 
+/**
+ * Idempotency record for the dunning email sent on invoice.payment_failed.
+ * One row per Stripe event (unique on provider + provider_event_id).
+ */
+export type SubscriptionDunningNoticeRow = {
+  id: UUID;
+  company_id: UUID;
+  provider: "stripe";
+  provider_event_id: string;
+  stripe_invoice_id: string | null;
+  grace_period_ends_at: Timestamp | null;
+  recipient_count: number;
+  sent_at: Timestamp | null;
+  created_at: Timestamp;
+};
+
+export type SubscriptionDunningNoticeInsert = {
+  id?: UUID;
+  company_id: UUID;
+  provider?: "stripe";
+  provider_event_id: string;
+  stripe_invoice_id?: string | null;
+  grace_period_ends_at?: Timestamp | null;
+  recipient_count?: number;
+  sent_at?: Timestamp | null;
+  created_at?: Timestamp;
+};
+
 export type CompanyBillingAccess = {
   state: SaasBillingAccessState;
   canUseOperationalFeatures: boolean;

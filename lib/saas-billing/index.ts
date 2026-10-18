@@ -53,9 +53,11 @@ export type {
 export {
   SUBSCRIPTION_ACTIVATION_PATH,
   assertCheckoutSessionOwnedByCompany,
+  billingPolicyAllowsAppShell,
   companyHasFullApplicationAccess,
 } from "@/lib/saas-billing/app-access-policy";
 export type {
+  AppShellBillingDecision,
   CheckoutSessionOwnershipInput,
   CheckoutSessionOwnershipResult,
   FullApplicationAccessInput,

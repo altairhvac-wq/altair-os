@@ -62,6 +62,21 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection heading="Cookies and analytics">
+        <p>
+          The signed-in application uses only the cookies it needs to keep you
+          logged in and to protect your session; it sets no advertising or
+          analytics cookies. Our public marketing pages (this site, not the
+          app) use the Meta Pixel so we can tell which of our videos and ads
+          bring people here. It records the marketing page you viewed and
+          standard browser information, and it is never loaded on the
+          application itself or on the estimate-approval and invoice-payment
+          links your customers receive. You can block it with a browser
+          tracking blocker or through your Meta ad settings. We do not sell or
+          share your data with Meta for any other purpose.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="Your customers' data">
         <p>
           You may store your own customers&apos; contact details and service

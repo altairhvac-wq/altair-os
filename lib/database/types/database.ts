@@ -61,6 +61,8 @@ import type {
   CompanySubscriptionRow,
   SubscriptionEventLedgerInsert,
   SubscriptionEventLedgerRow,
+  SubscriptionDunningNoticeInsert,
+  SubscriptionDunningNoticeRow,
   InvoicePaymentTokenInsert,
   InvoicePaymentTokenRow,
   InvoicePaymentTokenUpdate,
@@ -1233,6 +1235,22 @@ export type Database = {
             columns: ["billing_account_id"];
             isOneToOne: false;
             referencedRelation: "company_billing_accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // subscription_dunning_notices: migration 199. Per-event idempotency
+      // record for the payment-failed email (launch audit H8). service_role only.
+      subscription_dunning_notices: {
+        Row: SubscriptionDunningNoticeRow;
+        Insert: SubscriptionDunningNoticeInsert;
+        Update: Partial<SubscriptionDunningNoticeInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "subscription_dunning_notices_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];
