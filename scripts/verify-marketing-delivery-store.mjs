@@ -48,6 +48,9 @@ const REWRITES = [
   ['"@/shared/types/marketing-delivery"', '"./marketing-delivery.mjs"'],
   ['"@/lib/database/errors"', '"./db-errors.mjs"'],
   ['"@/lib/supabase/service"', '"./supabase-service.mjs"'],
+  // The sibling-provider lookup is chunked (verify-postgrest-in-limits). The
+  // helper is pure and depends only on a type import, so it is transpiled in.
+  ['"@/lib/database/queries/chunked-in"', '"./chunked-in.mjs"'],
 ];
 
 function transpileInto(dir, sourcePath, outName) {
@@ -120,6 +123,7 @@ export function createServiceRoleClient() {
 );
 
 transpileInto(dir, "shared/types/marketing-delivery.ts", "marketing-delivery.mjs");
+transpileInto(dir, "lib/database/queries/chunked-in.ts", "chunked-in.mjs");
 transpileInto(
   dir,
   "lib/database/queries/marketing-channel-deliveries.ts",
