@@ -13,9 +13,9 @@ file as it happens. A step with no result recorded has not been done.
 | 3a. Migration 199 applied to production | **done** | owner pasted it in the SQL editor, 2026-10-18 ~23:3xZ |
 | 3b. Migration 200 applied to production | **done** | owner pasted it in the SQL editor, 2026-10-18 ~23:5xZ (before the probe at 23:36Z) |
 | 3c. Read-only probes pass | **done** | `verify-launch-migrations-live.mjs` 10 passed / 0 failed at 23:36Z: both tables present (0 rows), `invite_expires_at` resolves, helper function exposed, bootstrap comment names the card-free trial, two text params |
-| 4a. Vercel production env | pending | |
-| 4b. Live Stripe webhook endpoint | pending | |
-| 4c. Supabase redirect allowlist | pending | |
+| 4a. Vercel production env | **done** | read from the owner's signed-in dashboard 2026-10-18: STRIPE_SECRET_KEY, STRIPE_BILLING_WEBHOOK_SECRET, STRIPE_WEBHOOK_SECRET, all six STRIPE_PRICE_*, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, Supabase URL/anon/service-role, RESEND_API_KEY/FROM, SENTRY_DSN, CRON_SECRET, PLATFORM_ADMIN_EMAILS present. All four crons listed enabled (billing-maintenance 11:15 UTC) despite the Hobby plan. Not verified: that STRIPE_SECRET_KEY starts `sk_live_` (values were not read) |
+| 4b. Live Stripe webhook endpoint | **done** | two Active destinations: `app.altair-op.com/api/webhooks/payments` and `app.altair-op.com/api/webhooks/billing` (host is `app.`, not `www.`; both serve the same deployment) |
+| 4c. Supabase redirect allowlist | **done** | contains `https://www.altair-op.com/auth/callback`, `https://app.altair-op.com/auth/callback`, `https://app.altair-op.com/**`, `https://altair-op.com/auth/callback`. Gaps noted: Auth CAPTCHA disabled; custom SMTP off (auth mail on Supabase's built-in sender, which is rate-limited) |
 | 5. Phone smoke | unauthenticated part done | robots 200, unknown path 404, /platform 307, og.png/apple-touch-icon/manifest 200 at 23:20Z; signup → dashboard is the owner's phone step |
 
 ## What is being landed
@@ -285,3 +285,9 @@ call; note what was done.
   described in 199; `saas_trial_reminders` present with the aligned grants.
   Remaining: owner's Vercel env confirmation (4a), Stripe live endpoint
   (4b), Supabase redirect allowlist (4c), phone signup (5).
+- 2026-10-18 — Owner-side checks 4a/4b/4c recorded (table above), read from the
+  owner's signed-in browser, read-only. Two gaps outside this deploy's scope,
+  for the owner's follow-up list: Supabase Auth CAPTCHA is disabled, and
+  custom SMTP is off so confirmation mail still goes out through Supabase's
+  built-in sender (low hourly limit; the first real signup wave would hit
+  it). Phone signup (step 5) still not reported.
