@@ -169,7 +169,7 @@ export async function createSubscriptionCheckout(input: {
     billing_interval: billingInterval,
   };
 
-  // The trial started without a card (migration 199); Checkout is where the
+  // The trial started without a card (migration 200); Checkout is where the
   // card is added. A running trial keeps its own end date so the first charge
   // lands on the day the customer was told; an expired one gets no second
   // trial. See resolveCheckoutTrialParams.

@@ -92,7 +92,7 @@ export async function GET(request: Request) {
         const result = await runOverdueInvoiceSweep();
 
         // ==================== TRIAL PAYMENT REMINDERS ====================
-        // Card-free trials (migration 199) have no Stripe subscription, so
+        // Card-free trials (migration 200) have no Stripe subscription, so
         // Stripe's trial_will_end email never fires for them. This is the
         // product's own reminder, on the same daily schedule. It is kept
         // from failing the invoice sweep: a mail-provider outage must not

@@ -9,7 +9,7 @@ import { sendViaResend, type ResendSendResult } from "@/lib/email/resend";
  * "Your trial ends soon — add a payment method."
  *
  * Sent to a company's owners by the billing-maintenance cron while a
- * card-free trial (migration 199) is inside its payment-prompt window. Plain
+ * card-free trial (migration 200) is inside its payment-prompt window. Plain
  * and short on purpose: one fact, one date, one link. The link goes to
  * Settings → Billing, where the existing Checkout action collects the card;
  * nothing about the plan or the price is decided in the email.

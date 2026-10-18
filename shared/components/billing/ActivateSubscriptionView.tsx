@@ -33,7 +33,7 @@ export function ActivateSubscriptionView({
   loadError = null,
   notice = null,
 }: ActivateSubscriptionViewProps) {
-  // Since the card-free trial (migration 199) this page is reached when a
+  // Since the card-free trial (migration 200) this page is reached when a
   // trial has ENDED without a card, not on first sign-in. Say so.
   const trialEnded =
     Boolean(summary?.trialEndsAt) && summary?.hasStripeSubscription === false;

@@ -144,9 +144,9 @@ Migration: `supabase/migrations/021_job_attachments_foundation.sql`
 
 ## 5. `bootstrap_company_for_new_user` RPC
 
-Migration: `supabase/migrations/199_card_free_trial_bootstrap.sql` (history: `003`, `031`, `124`)
+Migration: `supabase/migrations/200_card_free_trial_bootstrap.sql` (history: `003`, `031`, `124`)
 
-Since migration 199 a new company is seeded `status='trialing'`,
+Since migration 200 a new company is seeded `status='trialing'`,
 `trial_ends_at = now() + 14 days`, `plan_key='starter'`, `access_grant='none'`:
 the trial starts with NO card and the dashboard is the first screen. Checkout
 (Settings → Billing, or `/activate-subscription` once the trial has ended) is
@@ -158,7 +158,7 @@ database flips the row — and is gated like an `incomplete` row. The
 emails to owners (`saas_trial_reminders` keeps them idempotent); Resend must be
 configured for them to go out.
 
-- [ ] Migration 199 applied (`bootstrap_company_for_new_user` comment mentions the card-free trial; `saas_trial_reminders` exists)
+- [ ] migration 200 applied (`bootstrap_company_for_new_user` comment mentions the card-free trial; `saas_trial_reminders` exists)
 - [ ] RPC exists in Supabase SQL editor / schema
 - [ ] System check passes **bootstrap_company_for_new_user RPC** (read-only probe)
 - [ ] Manual test: new user signup → company bootstrap → lands on the dashboard with "Trial ends <date>" in the header, no Checkout

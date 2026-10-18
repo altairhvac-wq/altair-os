@@ -1,4 +1,4 @@
--- Migration 199: the trial starts without a card.
+-- Migration 200: the trial starts without a card.
 --
 -- ===================== WHY =====================
 -- Since migration 124 every new company was seeded `status='incomplete'` and

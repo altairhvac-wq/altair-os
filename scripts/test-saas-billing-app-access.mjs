@@ -293,7 +293,7 @@ test("billing and payments webhook routes remain distinct public endpoints", () 
   assert.match(paymentsWebhook, /payments$/);
 });
 
-test("bootstrap contract for new companies (migration 199): card-free trial", () => {
+test("bootstrap contract for new companies (migration 200): card-free trial", () => {
   const now = Date.parse("2026-10-18T12:00:00Z");
   const newCompanyBootstrap = {
     plan_key: "starter",
@@ -413,7 +413,7 @@ test("checkout keeps the local trial end date, and never grants a second trial",
     ),
     {},
   );
-  // Never trialed (pre-199 rows): the original card-required trial.
+  // Never trialed (pre-200 rows): the original card-required trial.
   assert.deepEqual(resolveCheckoutTrialParams({ trialEndsAt: null }, now, 14), {
     trial_period_days: 14,
   });

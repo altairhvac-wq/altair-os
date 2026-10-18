@@ -153,7 +153,7 @@ export type SubscriptionEventLedgerRow = {
   updated_at: Timestamp;
 };
 
-/** One sent "add a payment method" reminder per company (migration 199). */
+/** One sent "add a payment method" reminder per company (migration 200). */
 export type SaasTrialReminderRow = {
   company_id: UUID;
   reminder_key: string;

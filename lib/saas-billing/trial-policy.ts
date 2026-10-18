@@ -5,7 +5,7 @@
  * mirrors these functions and keeps them honest, so keep them dependency-free.
  *
  * ============ THE PROBLEM THESE SOLVE ============
- * A trial that starts without a card (migration 199) has no Stripe
+ * A trial that starts without a card (migration 200) has no Stripe
  * subscription behind it. Stripe therefore never tells us the trial ended —
  * the row says `trialing` until something local decides otherwise. These
  * functions are that decision, and they are the only place it is made.
@@ -76,7 +76,7 @@ export function resolveEffectiveSubscriptionStatus(
   const endMs = parseMs(input.trialEndsAt);
 
   // A card-free trial with no end date cannot expire on its own. That row
-  // shape is not produced by migration 199; it is left alone rather than
+  // shape is not produced by migration 200; it is left alone rather than
   // guessed at.
   if (endMs == null) {
     return input.status;
@@ -133,7 +133,7 @@ export type CheckoutTrialParams =
  * - A row that has ever had a trial end date gets no second trial, whatever
  *   its status: an expired card-free trial converts to a paying plan, it does
  *   not restart.
- * - A row with no trial history (companies bootstrapped before migration 199
+ * - A row with no trial history (companies bootstrapped before migration 200
  *   that never reached Checkout) keeps the original card-required trial, so
  *   nobody who was promised 14 days is charged on day one.
  */

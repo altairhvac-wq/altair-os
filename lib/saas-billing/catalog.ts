@@ -27,7 +27,7 @@ export const SAAS_BILLING_INTERVALS = [
 ] as const satisfies readonly SaasBillingInterval[];
 
 /**
- * Launch trial: 14 days, no card to start (migration 199 seeds it at
+ * Launch trial: 14 days, no card to start (migration 200 seeds it at
  * bootstrap). The card is collected by Checkout when the customer converts,
  * and a trial with no card simply ends — it does not convert to paid on its
  * own. `requiresPaymentMethod` describes the START of the trial; Checkout
