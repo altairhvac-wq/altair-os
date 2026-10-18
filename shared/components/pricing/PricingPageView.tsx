@@ -109,8 +109,8 @@ export function PricingPageView() {
                     Or ${plan.annualPriceUsd}/year and save ${plan.annualSavingsUsd}
                   </p>
                   <p className="mt-2 text-xs font-medium text-[#77591B]">
-                    {SAAS_TRIAL_CONFIG.durationDays}-day free trial · Credit card
-                    required
+                    {SAAS_TRIAL_CONFIG.durationDays}-day free trial · No credit
+                    card required to start
                   </p>
                 </div>
 
@@ -128,7 +128,7 @@ export function PricingPageView() {
                 </Link>
 
                 <p className="mt-4 text-center text-xs text-stone-500">
-                  Converts to your selected plan unless canceled
+                  Add a card any time before your trial ends
                 </p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export function PricingPageView() {
             onboarding included, then continue on the plan that fits your business.
           </p>
           <p className="mt-3 text-sm font-medium text-stone-600">
-            Credit card required. Cancel anytime.
+            No credit card required to start. Cancel anytime.
           </p>
           <Link
             href="/signup"

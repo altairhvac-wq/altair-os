@@ -72,6 +72,8 @@ import type {
   CompanyBillingAccountRow,
   CompanySubscriptionInsert,
   CompanySubscriptionRow,
+  SaasTrialReminderInsert,
+  SaasTrialReminderRow,
   SubscriptionEventLedgerInsert,
   SubscriptionEventLedgerRow,
 } from "@/lib/saas-billing/types";
@@ -117,6 +119,8 @@ export type {
   CompanySubscriptionInsert,
   SubscriptionEventLedgerRow,
   SubscriptionEventLedgerInsert,
+  SaasTrialReminderRow,
+  SaasTrialReminderInsert,
 };
 
 export type CompanyRow = {

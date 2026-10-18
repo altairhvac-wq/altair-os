@@ -83,6 +83,22 @@ export function getMissionControlUpgradeCardModel(
     // "ended" rather than promising a date already in the past.
     const trialElapsed = daysLine === null && trialEnds !== null;
 
+    // Card-free trial inside its payment-prompt window: this is the
+    // dashboard's "add a payment method" banner. It links to Settings →
+    // Billing, where the Checkout action lives.
+    if (access.trialEndingSoon && !access.hasStripeSubscription && !trialElapsed) {
+      return {
+        variant: "trial",
+        sectionTitle: "Trial",
+        headline: "Add a payment method",
+        description: daysLine
+          ? `${daysLine} in your free trial. Add a card to keep access — you won't be charged until the trial ends.`
+          : "Your free trial ends soon. Add a card to keep access.",
+        href: "/settings/billing",
+        emphasis: "cta",
+      };
+    }
+
     return {
       variant: "trial",
       sectionTitle: "Trial",
@@ -92,8 +108,12 @@ export function getMissionControlUpgradeCardModel(
           ? `Trial ends ${trialEnds}`
           : "Trial in progress",
       description: trialElapsed
-        ? "Set up billing to keep full access."
-        : (daysLine ?? "Billing begins after the trial period ends."),
+        ? "Add a payment method to keep full access."
+        : daysLine
+          ? access.hasStripeSubscription
+            ? `${daysLine}. Billing begins after the trial.`
+            : `${daysLine}. Add a payment method any time before it ends.`
+          : "Add a payment method any time before the trial ends.",
       href: "/settings/subscription",
       emphasis: "quiet",
     };

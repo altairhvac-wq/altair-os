@@ -61,6 +61,8 @@ import type {
   CompanySubscriptionRow,
   SubscriptionEventLedgerInsert,
   SubscriptionEventLedgerRow,
+  SaasTrialReminderInsert,
+  SaasTrialReminderRow,
   InvoicePaymentTokenInsert,
   InvoicePaymentTokenRow,
   InvoicePaymentTokenUpdate,
@@ -1244,6 +1246,20 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "subscription_event_ledger_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      saas_trial_reminders: {
+        Row: SaasTrialReminderRow;
+        Insert: SaasTrialReminderInsert;
+        Update: Partial<SaasTrialReminderInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "saas_trial_reminders_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";

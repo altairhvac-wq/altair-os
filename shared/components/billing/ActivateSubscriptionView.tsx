@@ -33,6 +33,11 @@ export function ActivateSubscriptionView({
   loadError = null,
   notice = null,
 }: ActivateSubscriptionViewProps) {
+  // Since the card-free trial (migration 199) this page is reached when a
+  // trial has ENDED without a card, not on first sign-in. Say so.
+  const trialEnded =
+    Boolean(summary?.trialEndsAt) && summary?.hasStripeSubscription === false;
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#F7F4EE_0%,#F3EFE6_45%,#EFE9DE_100%)]">
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-8 sm:px-6 sm:py-10">
@@ -53,12 +58,16 @@ export function ActivateSubscriptionView({
         <main className="mt-8 space-y-5">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-altair-ink sm:text-[1.75rem]">
-              Start your Altair subscription
+              {trialEnded
+                ? "Your free trial has ended"
+                : "Start your Altair subscription"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-altair-ink-secondary">
-              Choose a plan and enter a payment method to begin your 14-day trial.
-              Full application access unlocks after Stripe confirms an active or
-              trialing subscription.
+              {trialEnded
+                ? "Choose a plan and add a payment method to pick up where you left off. Everything in your workspace is still here."
+                : "Choose a plan and add a payment method to activate your workspace."}{" "}
+              Full application access unlocks as soon as Stripe confirms the
+              subscription.
             </p>
           </div>
 

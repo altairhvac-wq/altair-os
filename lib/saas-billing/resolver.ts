@@ -4,6 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database/types";
 import { SAAS_PLAN_LABELS, isSaasPlanKey } from "@/lib/saas-billing/catalog";
 import { evaluateBillingPolicy } from "@/lib/saas-billing/policy";
+import {
+  isTrialEndingSoon,
+  resolveEffectiveSubscriptionStatus,
+} from "@/lib/saas-billing/trial-policy";
 import type {
   CompanyBillingAccess,
   CompanySubscriptionBillingSummary,
@@ -87,14 +91,27 @@ export async function resolveCompanyBillingAccess(
 ): Promise<CompanyBillingAccess> {
   const subscription = await getCompanySubscription(companyId, supabase);
   // One clock read for the whole resolution: the policy decision and the
-  // derived trial flag below must describe the same instant, and this is the
-  // only place either is allowed to consult the clock (see
+  // derived trial flags below must describe the same instant, and this is the
+  // only place any of them is allowed to consult the clock (see
   // `CompanyBillingAccess.trialHasEnded`).
   const nowMs = Date.now();
+  // A card-free trial has no Stripe subscription to end it; the effective
+  // status is derived from trial_ends_at here, once, and used everywhere
+  // below. See lib/saas-billing/trial-policy.ts.
+  const effectiveStatus = subscription
+    ? resolveEffectiveSubscriptionStatus(
+        {
+          status: subscription.status,
+          trialEndsAt: subscription.trial_ends_at,
+          stripeSubscriptionId: subscription.stripe_subscription_id,
+        },
+        nowMs,
+      )
+    : null;
   const decision = evaluateBillingPolicy(
     subscription
       ? {
-          status: subscription.status,
+          status: effectiveStatus,
           accessGrant: subscription.access_grant,
           trialEndsAt: subscription.trial_ends_at,
           graceEndsAt: subscription.grace_period_ends_at,
@@ -116,9 +133,20 @@ export async function resolveCompanyBillingAccess(
     trialEndsAt,
     graceEndsAt: subscription?.grace_period_ends_at ?? null,
     trialHasEnded: Number.isFinite(trialEndsMs) && trialEndsMs <= nowMs,
+    trialEndingSoon: subscription
+      ? isTrialEndingSoon(
+          {
+            status: subscription.status,
+            trialEndsAt: subscription.trial_ends_at,
+            stripeSubscriptionId: subscription.stripe_subscription_id,
+          },
+          nowMs,
+        )
+      : false,
+    hasStripeSubscription: Boolean(subscription?.stripe_subscription_id),
     isComped: decision.isComped,
     planKey: subscription?.plan_key ?? "beta",
-    status: subscription?.status ?? null,
+    status: effectiveStatus,
   };
 }
 
@@ -130,23 +158,35 @@ export async function getCompanySubscriptionBillingSummary(
   supabase?: SupabaseClient<Database>,
 ): Promise<CompanySubscriptionBillingSummary> {
   const subscription = await getCompanySubscription(companyId, supabase);
+  const nowMs = Date.now();
+  const effectiveStatus = subscription
+    ? resolveEffectiveSubscriptionStatus(
+        {
+          status: subscription.status,
+          trialEndsAt: subscription.trial_ends_at,
+          stripeSubscriptionId: subscription.stripe_subscription_id,
+        },
+        nowMs,
+      )
+    : null;
   const decision = evaluateBillingPolicy(
     subscription
       ? {
-          status: subscription.status,
+          status: effectiveStatus,
           accessGrant: subscription.access_grant,
           trialEndsAt: subscription.trial_ends_at,
           graceEndsAt: subscription.grace_period_ends_at,
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
         }
       : null,
+    nowMs,
   );
   const planKey = subscription?.plan_key ?? "beta";
 
   return {
     planKey,
     planLabel: SAAS_PLAN_LABELS[planKey],
-    status: subscription?.status ?? null,
+    status: effectiveStatus,
     state: decision.state,
     isComped: decision.isComped,
     trialEndsAt: subscription?.trial_ends_at ?? null,

@@ -20,6 +20,9 @@ export type PlatformAutomationRunTotals = {
   /** Bounded-sweep progress (migration 152). */
   cycleComplete?: boolean;
   stoppedForTime?: boolean;
+  /** Card-free trial reminders folded into billing-maintenance (migration 199). */
+  trialReminderCandidates?: number;
+  trialRemindersSent?: number;
 };
 
 export type PlatformAutomationRunRow = {

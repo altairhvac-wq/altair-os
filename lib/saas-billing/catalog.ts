@@ -26,11 +26,17 @@ export const SAAS_BILLING_INTERVALS = [
   "annual",
 ] as const satisfies readonly SaasBillingInterval[];
 
-/** Launch trial: card required; converts to paid unless canceled. */
+/**
+ * Launch trial: 14 days, no card to start (migration 199 seeds it at
+ * bootstrap). The card is collected by Checkout when the customer converts,
+ * and a trial with no card simply ends — it does not convert to paid on its
+ * own. `requiresPaymentMethod` describes the START of the trial; Checkout
+ * always collects a payment method because Checkout IS the card step.
+ */
 export const SAAS_TRIAL_CONFIG = {
   durationDays: 14,
-  requiresPaymentMethod: true,
-  convertsToPaidUnlessCanceled: true,
+  requiresPaymentMethod: false,
+  convertsToPaidUnlessCanceled: false,
 } as const satisfies SaasTrialConfig;
 
 /**

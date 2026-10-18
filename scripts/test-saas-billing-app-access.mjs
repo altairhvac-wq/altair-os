@@ -2,7 +2,8 @@
  * Focused verification for SaaS app-access gating and Checkout ownership checks.
  * Run: node scripts/test-saas-billing-app-access.mjs
  *
- * Mirrors lib/saas-billing/app-access-policy.ts (kept in sync deliberately for a
+ * Mirrors lib/saas-billing/app-access-policy.ts and the card-free trial rules
+ * in lib/saas-billing/trial-policy.ts (kept in sync deliberately for a
  * dependency-free Node test runner).
  */
 
@@ -14,6 +15,60 @@ function companyHasFullApplicationAccess(input) {
     return true;
   }
   return input.status === "trialing" || input.status === "active";
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TRIAL_PAYMENT_PROMPT_DAYS_BEFORE_END = 4;
+const STRIPE_MIN_TRIAL_END_MS = 49 * 60 * 60 * 1000;
+
+// Mirror of resolveEffectiveSubscriptionStatus (trial-policy.ts).
+function resolveEffectiveSubscriptionStatus(input, nowMs) {
+  if (input.status !== "trialing" || input.stripeSubscriptionId) {
+    return input.status;
+  }
+  const endMs = input.trialEndsAt ? Date.parse(input.trialEndsAt) : NaN;
+  if (Number.isNaN(endMs)) {
+    return input.status;
+  }
+  return endMs <= nowMs ? "incomplete" : "trialing";
+}
+
+// Mirror of isTrialEndingSoon (trial-policy.ts).
+function isTrialEndingSoon(input, nowMs) {
+  if (resolveEffectiveSubscriptionStatus(input, nowMs) !== "trialing") return false;
+  if (input.stripeSubscriptionId) return false;
+  const endMs = input.trialEndsAt ? Date.parse(input.trialEndsAt) : NaN;
+  if (Number.isNaN(endMs)) return false;
+  return endMs - nowMs <= TRIAL_PAYMENT_PROMPT_DAYS_BEFORE_END * DAY_MS;
+}
+
+// Mirror of resolveCheckoutTrialParams (trial-policy.ts).
+function resolveCheckoutTrialParams(input, nowMs, defaultTrialDays) {
+  if (!input || !input.trialEndsAt) {
+    return { trial_period_days: defaultTrialDays };
+  }
+  const endMs = Date.parse(input.trialEndsAt);
+  if (Number.isNaN(endMs)) return {};
+  if (endMs - nowMs >= STRIPE_MIN_TRIAL_END_MS) {
+    return { trial_end: Math.floor(endMs / 1000) };
+  }
+  return {};
+}
+
+/** The app-shell gate as the resolver feeds it: effective status in, access out. */
+function cardFreeTrialHasAccess(row, nowMs) {
+  const status = resolveEffectiveSubscriptionStatus(
+    {
+      status: row.status,
+      trialEndsAt: row.trial_ends_at,
+      stripeSubscriptionId: row.stripe_subscription_id,
+    },
+    nowMs,
+  );
+  return companyHasFullApplicationAccess({
+    status,
+    accessGrant: row.access_grant,
+  });
 }
 
 function assertCheckoutSessionOwnedByCompany(input) {
@@ -238,19 +293,131 @@ test("billing and payments webhook routes remain distinct public endpoints", () 
   assert.match(paymentsWebhook, /payments$/);
 });
 
-test("bootstrap contract for new companies", () => {
+test("bootstrap contract for new companies (migration 199): card-free trial", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
   const newCompanyBootstrap = {
-    plan_key: "beta",
-    status: "incomplete",
+    plan_key: "starter",
+    status: "trialing",
     access_grant: "none",
+    stripe_subscription_id: null,
+    trial_ends_at: new Date(now + 14 * DAY_MS).toISOString(),
   };
-  assert.equal(newCompanyBootstrap.status, "incomplete");
+  assert.equal(newCompanyBootstrap.status, "trialing");
   assert.equal(newCompanyBootstrap.access_grant, "none");
+  // Lands on the dashboard with no card.
+  assert.equal(cardFreeTrialHasAccess(newCompanyBootstrap, now), true);
+  // Not yet inside the payment-prompt window.
   assert.equal(
-    companyHasFullApplicationAccess({
-      status: newCompanyBootstrap.status,
-      accessGrant: newCompanyBootstrap.access_grant,
-    }),
+    isTrialEndingSoon(
+      {
+        status: "trialing",
+        trialEndsAt: newCompanyBootstrap.trial_ends_at,
+        stripeSubscriptionId: null,
+      },
+      now,
+    ),
     false,
   );
+});
+
+test("card-free trial prompts for a card from day 10 (4 days before the end)", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const row = {
+    status: "trialing",
+    trialEndsAt: new Date(now + 4 * DAY_MS).toISOString(),
+    stripeSubscriptionId: null,
+  };
+  assert.equal(isTrialEndingSoon(row, now), true);
+  assert.equal(isTrialEndingSoon(row, now - DAY_MS), false, "day 9 is quiet");
+  // Once Stripe holds the subscription, Stripe's own trial-ending flow owns it.
+  assert.equal(
+    isTrialEndingSoon({ ...row, stripeSubscriptionId: "sub_123" }, now),
+    false,
+  );
+});
+
+test("an expired card-free trial is gated and sent to activation", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const expired = {
+    status: "trialing",
+    access_grant: "none",
+    stripe_subscription_id: null,
+    trial_ends_at: new Date(now - 60 * 1000).toISOString(),
+  };
+  assert.equal(
+    resolveEffectiveSubscriptionStatus(
+      {
+        status: expired.status,
+        trialEndsAt: expired.trial_ends_at,
+        stripeSubscriptionId: expired.stripe_subscription_id,
+      },
+      now,
+    ),
+    "incomplete",
+  );
+  assert.equal(cardFreeTrialHasAccess(expired, now), false);
+  // One minute earlier it was still a trial.
+  assert.equal(cardFreeTrialHasAccess(expired, now - 2 * 60 * 1000), true);
+});
+
+test("a Stripe-backed trial is never expired locally", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const stripeTrial = {
+    status: "trialing",
+    access_grant: "none",
+    stripe_subscription_id: "sub_123",
+    trial_ends_at: new Date(now - DAY_MS).toISOString(),
+  };
+  // Stripe's webhook moves the status; a stale local end date does not.
+  assert.equal(cardFreeTrialHasAccess(stripeTrial, now), true);
+});
+
+test("a comped company is unaffected by its trial dates", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  assert.equal(
+    cardFreeTrialHasAccess(
+      {
+        status: "trialing",
+        access_grant: "beta_comped",
+        stripe_subscription_id: null,
+        trial_ends_at: new Date(now - DAY_MS).toISOString(),
+      },
+      now,
+    ),
+    true,
+  );
+});
+
+test("checkout keeps the local trial end date, and never grants a second trial", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const inFourDays = new Date(now + 4 * DAY_MS).toISOString();
+  assert.deepEqual(
+    resolveCheckoutTrialParams({ trialEndsAt: inFourDays }, now, 14),
+    { trial_end: Math.floor(Date.parse(inFourDays) / 1000) },
+  );
+  // Inside Stripe's 48h minimum: billing starts at Checkout.
+  assert.deepEqual(
+    resolveCheckoutTrialParams(
+      { trialEndsAt: new Date(now + DAY_MS).toISOString() },
+      now,
+      14,
+    ),
+    {},
+  );
+  // Expired: no second trial.
+  assert.deepEqual(
+    resolveCheckoutTrialParams(
+      { trialEndsAt: new Date(now - DAY_MS).toISOString() },
+      now,
+      14,
+    ),
+    {},
+  );
+  // Never trialed (pre-199 rows): the original card-required trial.
+  assert.deepEqual(resolveCheckoutTrialParams({ trialEndsAt: null }, now, 14), {
+    trial_period_days: 14,
+  });
+  assert.deepEqual(resolveCheckoutTrialParams(null, now, 14), {
+    trial_period_days: 14,
+  });
 });
