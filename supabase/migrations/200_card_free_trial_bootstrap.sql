@@ -176,9 +176,27 @@ comment on table public.saas_trial_reminders is
 
 alter table public.saas_trial_reminders enable row level security;
 
--- No policies on purpose: nothing in the product reads this table through a
--- user session. The cron reaches it with the service role, which bypasses RLS.
+-- Grants follow the repository convention (verify-integration-migrations):
+-- authenticated may SELECT, narrowed by the policy below to the caller's own
+-- company and to owners/admins (so a company can see which reminders it was
+-- sent); every write is service_role only. The cron reaches it with the
+-- service role, which bypasses RLS.
 revoke all on table public.saas_trial_reminders from public;
 revoke all on table public.saas_trial_reminders from anon;
-revoke all on table public.saas_trial_reminders from authenticated;
-grant select, insert, delete on table public.saas_trial_reminders to service_role;
+grant select on table public.saas_trial_reminders to authenticated;
+revoke insert, update, delete on table public.saas_trial_reminders
+  from authenticated;
+grant all on table public.saas_trial_reminders to service_role;
+
+drop policy if exists "company owners and admins can read trial reminders"
+  on public.saas_trial_reminders;
+create policy "company owners and admins can read trial reminders"
+  on public.saas_trial_reminders
+  for select
+  to authenticated
+  using (
+    public.has_company_role(
+      company_id,
+      array['owner', 'admin']::public.company_role[]
+    )
+  );

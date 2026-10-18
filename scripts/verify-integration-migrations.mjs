@@ -286,6 +286,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
       "can_access_platform_admin",
     ]),
   ],
+  // 200 is the card-free trial: it redefines the bootstrap so a new company
+  // starts trialing, and is held to the same function-grant rules.
+  [
+    "200_card_free_trial_bootstrap.sql",
+    new Set(["bootstrap_company_for_new_user"]),
+  ],
 ]);
 
 for (const file of files) {
