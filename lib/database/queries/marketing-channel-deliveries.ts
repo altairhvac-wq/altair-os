@@ -1,6 +1,7 @@
 import "server-only";
 
 import { mapDatabaseError } from "@/lib/database/errors";
+import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   clampFailureDetail,
@@ -439,20 +440,21 @@ export async function listPostedProvidersForVideoAsset(
   }
 
   const postIds = (posts.data as { id: string }[]).map((row) => row.id);
-  const result = await deliveriesTable(client)
-    .select("provider")
-    .eq("company_id", companyId)
-    .eq("delivery_state", "posted")
-    .in("marketing_post_id", postIds);
+  // One video asset usually has a handful of sibling posts, but nothing bounds
+  // it: every re-queue of the same render adds a row. Chunked so the lookup
+  // cannot fall over PostgREST's URL limit — and silently say "no duplicates".
+  const result = await selectInChunks<{ provider: string }>(postIds, (chunk) =>
+    deliveriesTable(client)
+      .select("provider")
+      .eq("company_id", companyId)
+      .eq("delivery_state", "posted")
+      .in("marketing_post_id", chunk),
+  );
 
   if (result.error) {
     throw new Error("Could not read sibling deliveries for the duplicate check.");
   }
-  return [
-    ...new Set(
-      ((result.data ?? []) as { provider: string }[]).map((row) => row.provider),
-    ),
-  ];
+  return [...new Set(result.data.map((row) => row.provider))];
 }
 
 export async function listPostedDeliveries(
