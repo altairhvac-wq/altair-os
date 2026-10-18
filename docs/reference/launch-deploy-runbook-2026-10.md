@@ -9,7 +9,7 @@ file as it happens. A step with no result recorded has not been done.
 | 0. CI unblocked (PR 15) | **done** | squash-merged to main as `bf811843` (2026-10-18, owner: "merge 15 and 13") |
 | 1. Conflicts resolved, CI green on both PRs | **done** | PR 12 branch at `9374370a` (merge of main + migration-200 grant alignment); CI run 39175659876 green, merge state CLEAN |
 | 2a. PR 13 merged | **done** | merge commit `ddd131df` on main (2026-10-18); Vercel production deploy follows automatically |
-| 2b. PR 12 merged | pending | |
+| 2b. PR 12 merged | **done** | merge commit `da57f6a7` on main (2026-10-18, owner: "Merge PR 12 now. PR 14 follows later.") |
 | 3a. Migration 199 applied to production | pending | |
 | 3b. Migration 200 applied to production | pending | |
 | 3c. Read-only probes pass | pending | |
@@ -268,3 +268,11 @@ call; note what was done.
   7162182952). PR 12 CI green, mergeable CLEAN. Vercel dashboard is not
   signed in in the agent's browser pane; step 4a needs the owner signed in
   there (or the owner reads the env page). Waiting on the owner.
+- 2026-10-18 — Owner: "Merge PR 12 now. PR 14 follows later. I will paste
+  migrations 199 and 200 into the Supabase SQL editor myself and confirm the
+  Vercel env names myself." PR 12 merged (`da57f6a7`). PR 14 retargeted to
+  main; it now conflicts with main (the verifier's reviewed-function map and
+  migration 200's grants both moved) and is a follow-up outside this deploy.
+  Steps 3 and 4a are the owner's; the agent runs the read-only probe once
+  the owner reports the migrations applied, and the unauthenticated smoke
+  once the deploy of `da57f6a7` is live.
