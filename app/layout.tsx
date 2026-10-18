@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
-import { MetaPixel } from "@/shared/components/analytics/MetaPixel";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import { ToastViewport } from "@/shared/design-system/feedback";
 import "./globals.css";
@@ -108,7 +107,9 @@ export default function RootLayout({
         style={{ backgroundColor: APP_SHELL_BACKGROUND }}
       >
         <PwaServiceWorkerRegistration />
-        <MetaPixel />
+        {/* The Meta Pixel is mounted in app/(marketing)/layout.tsx only. It
+            must never load on authenticated routes or on the public
+            estimate-approval / invoice-payment token pages (audit H2). */}
         {children}
         {/* Root-level so admin, technician and public routes share one
             feedback surface, and so its live regions exist in the DOM before

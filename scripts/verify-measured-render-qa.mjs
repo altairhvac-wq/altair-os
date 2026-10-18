@@ -317,9 +317,12 @@ check(
     /formatQualityState\(qualityState\)/.test(view),
 );
 
+// The queue row was renamed `post` -> `lead` when the approval queue took
+// in the HVAC Shorts; what matters is that the verdict comes off the row
+// object itself, not that the row has one particular name.
 check(
   "passes the verdict down from the post row",
-  /renderQa=\{post\.renderQa\}/.test(view),
+  /renderQa=\{(?:post|lead)\.renderQa\}/.test(view),
 );
 
 console.log(

@@ -9,6 +9,32 @@
  */
 export const TEAM_INVITE_ACCEPT_PATH = "/signup?next=/setup";
 
+/**
+ * How long a pending team invite can be claimed (launch audit H4). Written to
+ * company_memberships.invite_expires_at when the invite is created and checked
+ * both by the RLS claim policies (migration 199) and by acceptPendingInvite.
+ */
+export const TEAM_INVITE_EXPIRY_DAYS = 14;
+
+export function computeTeamInviteExpiresAt(invitedAt: Date = new Date()): string {
+  const expires = new Date(invitedAt.getTime());
+  expires.setUTCDate(expires.getUTCDate() + TEAM_INVITE_EXPIRY_DAYS);
+  return expires.toISOString();
+}
+
+export function isTeamInviteExpired(
+  inviteExpiresAt: string | null | undefined,
+  nowMs: number = Date.now(),
+): boolean {
+  if (!inviteExpiresAt) {
+    // Legacy invite created before the column existed: migration 199
+    // backfills these, but a null must not read as "never expires" forever.
+    return false;
+  }
+  const ms = Date.parse(inviteExpiresAt);
+  return !Number.isNaN(ms) && ms <= nowMs;
+}
+
 export function buildTeamInviteAcceptUrl(appBaseUrl: string): string {
   const base = appBaseUrl.replace(/\/$/, "");
   return `${base}${TEAM_INVITE_ACCEPT_PATH}`;

@@ -20,6 +20,9 @@ export type PlatformAutomationRunTotals = {
   /** Bounded-sweep progress (migration 152). */
   cycleComplete?: boolean;
   stoppedForTime?: boolean;
+  /** Retention sweeps riding billing-maintenance (launch audit M10). */
+  rateLimitRowsSwept?: number;
+  auditEventsSwept?: number;
   /** Card-free trial reminders folded into billing-maintenance (migration 200). */
   trialReminderCandidates?: number;
   trialRemindersSent?: number;

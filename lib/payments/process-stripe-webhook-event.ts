@@ -35,6 +35,7 @@ import {
 } from "@/lib/payments/payment-attempts-service";
 import { recordPaymentReconciliationAtomic } from "@/lib/payments/payment-reconciliation-service";
 import { captureMonitoredEvent } from "@/lib/operations/monitoring";
+import { isStripeLivemode } from "@/lib/payments/env";
 import type { PaymentAttemptRecord } from "@/lib/payments/payment-attempts";
 import type { PaymentReconciliationReasonCode } from "@/lib/payments/payment-reconciliations";
 import {
@@ -1056,6 +1057,32 @@ export async function processStripeWebhookEvent(
   const providerEventId = event.id;
 
   try {
+    // ==================== LIVEMODE MUST MATCH THE KEY ====================
+    // The signature proves the event came from Stripe; it does not prove it
+    // came from the Stripe MODE this deployment is configured for. A test
+    // webhook secret in a live deployment (or the reverse) would pass the
+    // signature check and then record test payments against real invoices.
+    // The SaaS billing webhook already refuses this; the money path must too.
+    if (event.livemode !== isStripeLivemode()) {
+      const expected = isStripeLivemode() ? "live" : "test";
+      await markProviderEventIgnored(
+        supabase,
+        providerEventId,
+        `Stripe livemode does not match server STRIPE_SECRET_KEY mode (expected ${expected})`,
+      );
+      captureMonitoredEvent({
+        event: "payments.webhook_livemode_mismatch",
+        level: "error",
+        meta: {
+          eventId: providerEventId,
+          eventType: event.type,
+          eventLivemode: event.livemode,
+          expectedMode: expected,
+        },
+      });
+      return { processed: false, ignored: true };
+    }
+
     if (event.type === "account.updated") {
       const stripeAccount = extractStripeAccountFromEvent(event);
 

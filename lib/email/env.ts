@@ -122,8 +122,17 @@ export function formatMissingEmailEnvMessage(_missing: string[]): string {
   return "Email isn't set up yet. Ask your office admin to configure outbound email in Settings.";
 }
 
-/** Temporary diagnostics — logs presence only, never secret values. */
+/**
+ * Development-only diagnostics — logs env PRESENCE (booleans), never values.
+ *
+ * Was unconditional "temporary" logging on every invite send path; now a
+ * no-op outside NODE_ENV=development (launch audit M15).
+ */
 export function logInviteEmailEnvPresence(context: string): void {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
   console.info(`[team-invite-debug:${context}] env presence:`, {
     RESEND_API_KEY: Boolean(process.env.RESEND_API_KEY?.trim()),
     RESEND_FROM_EMAIL: Boolean(process.env.RESEND_FROM_EMAIL?.trim()),
@@ -137,31 +146,4 @@ export function logInviteEmailEnvPresence(context: string): void {
     RESEND_TEST_EMAIL: Boolean(process.env.RESEND_TEST_EMAIL?.trim()),
     EMAIL_OVERRIDE_TO: Boolean(process.env.EMAIL_OVERRIDE_TO?.trim()),
   });
-}
-
-/** Temporary diagnostics for billing/resend sends — never logs the API key. */
-export function logResendEnvDiagnostics(context: string): {
-  hasResendApiKey: boolean;
-  hasResendFromEmail: boolean;
-  resendFromEmail: string | null;
-  missing: string[];
-} {
-  const resendFromEmail = process.env[RESEND_FROM_EMAIL_ENV]?.trim() || null;
-  const diagnostics = {
-    hasResendApiKey: Boolean(process.env[RESEND_API_KEY_ENV]?.trim()),
-    hasResendFromEmail: Boolean(resendFromEmail),
-    resendFromEmail,
-    missing: getMissingResendEnvVars(),
-    nodeEnv: process.env.NODE_ENV ?? "unknown",
-    vercelEnv: process.env.VERCEL_ENV ?? null,
-  };
-
-  console.info(`[resend-env:${context}]`, diagnostics);
-
-  return {
-    hasResendApiKey: diagnostics.hasResendApiKey,
-    hasResendFromEmail: diagnostics.hasResendFromEmail,
-    resendFromEmail: diagnostics.resendFromEmail,
-    missing: diagnostics.missing,
-  };
 }

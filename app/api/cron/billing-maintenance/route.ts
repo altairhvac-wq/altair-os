@@ -4,6 +4,7 @@ import {
   isAuthorizedCronRequest,
 } from "@/lib/automation/env";
 import { runOverdueInvoiceSweep } from "@/lib/database/services/overdue-invoice-sweep";
+import { runRetentionSweeps } from "@/lib/database/services/retention-sweeps";
 import {
   runTrialPaymentReminders,
   type TrialReminderSweepResult,
@@ -18,6 +19,7 @@ import {
   requestIdFromHeaders,
   runOperation,
 } from "@/lib/operations";
+import { finishCronCheckIn, startCronCheckIn } from "@/lib/operations/cron-monitor";
 
 export const runtime = "nodejs";
 /**
@@ -79,6 +81,9 @@ export async function GET(request: Request) {
 
   const requestId = requestIdFromHeaders(request.headers) ?? createRequestId();
 
+  // Sentry cron check-in (audit H3): opened only for an authorized run.
+  const checkIn = startCronCheckIn(ROUTE_NAME);
+
   const opResult = await runOperation({
     operationName: OPERATION_NAME,
     context: { requestId, route: "/api/cron/billing-maintenance" },
@@ -90,6 +95,13 @@ export async function GET(request: Request) {
 
       try {
         const result = await runOverdueInvoiceSweep();
+
+        // ==================== RETENTION SWEEPS (audit M10) ====================
+        // The rate-limit counters (173) and the security audit log (174) had
+        // sweep functions and no caller, so both tables grew forever. They
+        // ride this daily run. Each is a single bounded DELETE; a failure is
+        // counted and reported but never hides the invoice sweep's result.
+        const retention = await runRetentionSweeps();
 
         // ==================== TRIAL PAYMENT REMINDERS ====================
         // Card-free trials (migration 200) have no Stripe subscription, so
@@ -113,7 +125,10 @@ export async function GET(request: Request) {
           };
         }
 
-        const errorCount = result.errors.length + reminders.errors.length;
+        const errorCount =
+          result.errors.length +
+          retention.errors.length +
+          reminders.errors.length;
         const hasErrors = errorCount > 0;
 
         await recordPlatformAutomationRunFinished(runId, {
@@ -130,12 +145,24 @@ export async function GET(request: Request) {
             errorCount,
             cycleComplete: result.cycleComplete,
             stoppedForTime: result.stoppedForTime,
+            rateLimitRowsSwept: retention.rateLimitRowsDeleted,
+            auditEventsSwept: retention.auditEventsDeleted,
             trialReminderCandidates: reminders.candidates,
             trialRemindersSent: reminders.remindersSent,
           },
           errorSummary: hasErrors
             ? sanitizeErrorSummary(
-                `${result.errors.length} company sweep ${result.errors.length === 1 ? "error" : "errors"}, ${reminders.errors.length} trial reminder ${reminders.errors.length === 1 ? "error" : "errors"}`,
+                [
+                  result.errors.length > 0
+                    ? `${result.errors.length} company sweep ${result.errors.length === 1 ? "error" : "errors"}`
+                    : null,
+                  ...retention.errors,
+                  reminders.errors.length > 0
+                    ? `${reminders.errors.length} trial reminder ${reminders.errors.length === 1 ? "error" : "errors"}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join("; "),
               )
             : null,
         });
@@ -148,10 +175,15 @@ export async function GET(request: Request) {
           invoicesMarkedOverdue: result.invoicesMarkedOverdue,
           cycleComplete: result.cycleComplete,
           stoppedForTime: result.stoppedForTime,
+          errorCount,
+          retention: {
+            rateLimitRowsSwept: retention.rateLimitRowsDeleted,
+            auditEventsSwept: retention.auditEventsDeleted,
+            errors: retention.errors,
+          },
           trialReminderCandidates: reminders.candidates,
           trialRemindersSent: reminders.remindersSent,
           trialRemindersSkipped: reminders.remindersSkipped,
-          errorCount,
         });
       } catch (error) {
         await recordPlatformAutomationRunFinished(runId, {
@@ -175,11 +207,14 @@ export async function GET(request: Request) {
   });
 
   if (opResult.success && opResult.value) {
-    return opResult.value;
+    return finishCronCheckIn(checkIn, opResult.value);
   }
 
-  return NextResponse.json(
-    { ok: false, route: ROUTE_NAME, processed: false, error: "Cron failed" },
-    { status: 500 },
+  return finishCronCheckIn(
+    checkIn,
+    NextResponse.json(
+      { ok: false, route: ROUTE_NAME, processed: false, error: "Cron failed" },
+      { status: 500 },
+    ),
   );
 }

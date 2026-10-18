@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -16,6 +17,10 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("[app-error-boundary]", error);
+    // React error boundaries swallow the throw, so the browser SDK's global
+    // handler never sees it; this is the only place a client render crash
+    // can be reported. No-op when NEXT_PUBLIC_SENTRY_DSN is unset.
+    Sentry.captureException(error, { tags: { boundary: "app" } });
   }, [error]);
 
   return (

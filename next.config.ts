@@ -46,6 +46,7 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: buildSecurityHeaders({
           supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
           isDevelopment: process.env.NODE_ENV !== "production",
         }),
       },

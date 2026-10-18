@@ -72,6 +72,8 @@ import type {
   CompanyBillingAccountRow,
   CompanySubscriptionInsert,
   CompanySubscriptionRow,
+  SubscriptionDunningNoticeInsert,
+  SubscriptionDunningNoticeRow,
   SaasTrialReminderInsert,
   SaasTrialReminderRow,
   SubscriptionEventLedgerInsert,
@@ -119,6 +121,8 @@ export type {
   CompanySubscriptionInsert,
   SubscriptionEventLedgerRow,
   SubscriptionEventLedgerInsert,
+  SubscriptionDunningNoticeRow,
+  SubscriptionDunningNoticeInsert,
   SaasTrialReminderRow,
   SaasTrialReminderInsert,
 };
@@ -165,6 +169,11 @@ export type CompanyMembershipRow = {
   invite_email: string | null;
   invited_by: UUID | null;
   invited_at: Timestamp | null;
+  /**
+   * When a pending invite stops being claimable (migration 199). Null on
+   * rows that are not invites, and on invites created before the column.
+   */
+  invite_expires_at?: Timestamp | null;
   joined_at: Timestamp | null;
   reports_to_member_id: UUID | null;
   technician_specialties: string[];

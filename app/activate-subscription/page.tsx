@@ -4,7 +4,7 @@ import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
-  companyHasFullApplicationAccess,
+  billingPolicyAllowsAppShell,
   getCompanySubscriptionBillingSummary,
   isSaasBillingCheckoutConfigured,
   reconcileCheckoutSessionForCompany,
@@ -72,12 +72,11 @@ export default async function ActivateSubscriptionPage({
 
   const access = await resolveCompanyBillingAccess(companyId);
 
-  if (
-    companyHasFullApplicationAccess({
-      status: access.status,
-      isComped: access.isComped,
-    })
-  ) {
+  // Same rule as the app shells, so the two pages can never disagree about
+  // whether a company belongs here or on the dashboard. A past_due company
+  // inside its grace window is sent back to work; it updates the card from
+  // Settings → Subscription.
+  if (billingPolicyAllowsAppShell(access)) {
     redirect(resolvePostLoginRedirect(companyContext, null));
   }
 

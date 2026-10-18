@@ -385,9 +385,19 @@ These are also outside the repository and are tracked in the launch handoff:
 - **Error monitoring project.** Create the Sentry project, set `SENTRY_DSN` and
   `SENTRY_ENVIRONMENT` in Vercel, and configure alert rules for:
   `payments.webhook_server_error`, `payments.webhook_unhandled_exception`,
-  `payments.reconciliation_required`, `sms.blocked_missing_stop_handling`, and
+  `payments.reconciliation_required`, `payments.webhook_livemode_mismatch`,
+  `billing.dunning_email_failed`, `sms.blocked_missing_stop_handling`, and
   any `Operation failed: cron.*`. Verify delivery with
   `POST /api/dev/monitoring-check` in development first.
+- **Browser monitoring.** Set `NEXT_PUBLIC_SENTRY_DSN` (normally the same
+  DSN) so `instrumentation-client.ts` initializes the browser SDK; the error
+  boundaries (`app/error.tsx`, `app/global-error.tsx`) report through it. The
+  CSP allows exactly that DSN's ingest origin and nothing else.
+- **Cron monitors.** With `SENTRY_DSN` set, each `/api/cron/*` route sends a
+  check-in (slug = route name) and the monitor is created on first run with
+  the schedule from `lib/operations/cron-monitor.ts`, which mirrors
+  `vercel.json`. Add an alert on *missed* check-ins: that is the only signal
+  that a cron was never scheduled (for example on a plan with a cron cap).
 - **Stripe webhook endpoints.** Confirm both are registered and pointed at the
   correct paths, with separate signing secrets:
   `/api/webhooks/payments` (Connect) and `/api/webhooks/billing` (subscriptions).

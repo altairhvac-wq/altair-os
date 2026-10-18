@@ -261,6 +261,75 @@ check(
   /throw\s+new\s+Error\(/.test(devCheck) && /runOperation\s*\(/.test(devCheck),
 );
 
+// ---------------------------------------------------------------- cron monitors
+console.log("\nCron monitors (audit H3)");
+
+const cronMonitor = loadTs("lib/operations/cron-monitor.ts");
+const vercelJson = JSON.parse(readFileSync("vercel.json", "utf8"));
+const cronRoutes = [
+  "billing-maintenance",
+  "marketing-ai",
+  "marketing-insights",
+  "workflow-reminders",
+];
+
+check(
+  "the cron monitor helper is a no-op without a DSN",
+  /isMonitoringConfigured\s*\(\)/.test(cronMonitor),
+);
+
+for (const route of cronRoutes) {
+  const source = loadTs(`app/api/cron/${route}/route.ts`);
+  check(
+    `${route} opens a check-in after the cron-secret gate`,
+    source.indexOf("isAuthorizedCronRequest") <
+      source.indexOf("startCronCheckIn(ROUTE_NAME)"),
+  );
+  check(
+    `${route} closes the check-in on every return path`,
+    (source.match(/finishCronCheckIn\(/g) ?? []).length >= 2 &&
+      !/return opResult\.value;/.test(source),
+  );
+  const scheduled = vercelJson.crons.find(
+    (c) => c.path === `/api/cron/${route}`,
+  );
+  const mirrored = new RegExp(`"${route}":\\s*"([^"]+)"`).exec(cronMonitor)?.[1];
+  check(
+    `${route} monitor schedule mirrors vercel.json (${scheduled?.schedule ?? "missing"})`,
+    Boolean(scheduled) && mirrored === scheduled.schedule,
+  );
+}
+
+// ---------------------------------------------------------------- browser SDK
+console.log("\nBrowser SDK (audit H3)");
+
+const clientInstrumentation = loadTs("instrumentation-client.ts");
+check(
+  "instrumentation-client.ts initializes from NEXT_PUBLIC_SENTRY_DSN only",
+  /NEXT_PUBLIC_SENTRY_DSN/.test(clientInstrumentation) &&
+    /if \(DSN\)/.test(clientInstrumentation),
+);
+check(
+  "instrumentation-client.ts scrubs estimate-approval and invoice-payment tokens",
+  /estimate-approval\|invoice-payment/.test(clientInstrumentation) &&
+    /beforeSend/.test(clientInstrumentation) &&
+    /beforeBreadcrumb/.test(clientInstrumentation),
+);
+check(
+  "instrumentation-client.ts sends no default PII",
+  /sendDefaultPii:\s*false/.test(clientInstrumentation),
+);
+check(
+  "NEXT_PUBLIC_SENTRY_DSN is documented in .env.example",
+  /NEXT_PUBLIC_SENTRY_DSN/.test(envExample),
+);
+check(
+  "the CSP allows the Sentry ingest origin only when a DSN is configured",
+  /sentryIngestOrigin \? \[sentryIngestOrigin\] : \[\]/.test(
+    loadTs("lib/security/response-headers.ts"),
+  ),
+);
+
 console.log(
   `\n${failures === 0 ? "All" : `${checks - failures}/${checks}`} observability checks passed (${checks} total).`,
 );
