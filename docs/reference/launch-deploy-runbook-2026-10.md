@@ -10,9 +10,9 @@ file as it happens. A step with no result recorded has not been done.
 | 1. Conflicts resolved, CI green on both PRs | **done** | PR 12 branch at `9374370a` (merge of main + migration-200 grant alignment); CI run 39175659876 green, merge state CLEAN |
 | 2a. PR 13 merged | **done** | merge commit `ddd131df` on main (2026-10-18); Vercel production deploy follows automatically |
 | 2b. PR 12 merged | **done** | merge commit `da57f6a7` on main (2026-10-18, owner: "Merge PR 12 now. PR 14 follows later.") |
-| 3a. Migration 199 applied to production | pending | |
-| 3b. Migration 200 applied to production | pending | |
-| 3c. Read-only probes pass | pending | |
+| 3a. Migration 199 applied to production | **done** | owner pasted it in the SQL editor, 2026-10-18 ~23:3xZ |
+| 3b. Migration 200 applied to production | **done** | owner pasted it in the SQL editor, 2026-10-18 ~23:5xZ (before the probe at 23:36Z) |
+| 3c. Read-only probes pass | **done** | `verify-launch-migrations-live.mjs` 10 passed / 0 failed at 23:36Z: both tables present (0 rows), `invite_expires_at` resolves, helper function exposed, bootstrap comment names the card-free trial, two text params |
 | 4a. Vercel production env | pending | |
 | 4b. Live Stripe webhook endpoint | pending | |
 | 4c. Supabase redirect allowlist | pending | |
@@ -280,3 +280,8 @@ call; note what was done.
   deployment 7162261748, 23:20:36Z). Unauthenticated smoke all as expected
   (table in step 5). Before the deploy, `/robots.txt` was a 307 to login;
   after it, 200.
+- 2026-10-18 23:36Z — Owner applied 199 then 200 in the SQL editor. Probe:
+  10 passed, 0 failed (was 4/6 at baseline). Dunning table columns as
+  described in 199; `saas_trial_reminders` present with the aligned grants.
+  Remaining: owner's Vercel env confirmation (4a), Stripe live endpoint
+  (4b), Supabase redirect allowlist (4c), phone signup (5).
