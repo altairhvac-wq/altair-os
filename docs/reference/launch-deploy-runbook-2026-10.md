@@ -16,7 +16,7 @@ file as it happens. A step with no result recorded has not been done.
 | 4a. Vercel production env | pending | |
 | 4b. Live Stripe webhook endpoint | pending | |
 | 4c. Supabase redirect allowlist | pending | |
-| 5. Phone smoke | pending | |
+| 5. Phone smoke | unauthenticated part done | robots 200, unknown path 404, /platform 307, og.png/apple-touch-icon/manifest 200 at 23:20Z; signup → dashboard is the owner's phone step |
 
 ## What is being landed
 
@@ -223,14 +223,14 @@ Use a fresh email address. Record each result with a timestamp.
 
 | Check | Expected | Result |
 |-------|----------|--------|
-| `https://www.altair-op.com/robots.txt` | 200, allow-list with `/$`, sitemap line | |
-| `https://www.altair-op.com/this-does-not-exist` | **404** (not a redirect to login) | |
-| `https://www.altair-op.com/platform` | **307** → `/login` | |
+| `https://www.altair-op.com/robots.txt` | 200, allow-list with `/$`, sitemap line | 200, `Allow: /$` … `Disallow: /` (2026-10-18 23:20Z, curl) |
+| `https://www.altair-op.com/this-does-not-exist` | **404** (not a redirect to login) | 404 (23:20Z, curl) |
+| `https://www.altair-op.com/platform` | **307** → `/login` | 307 → `/login?next=%2Fplatform` (23:20Z, curl) |
 | Sign up (company name, trade, email, password) | success copy says the link finishes setup and signs you in | |
 | Open the email link **in the same browser** | lands on the dashboard, signed in | |
 | Dashboard header | trial pill "Trial ends <date 14 days out>" | |
 | Settings → Billing | days left + "Add payment method" | |
-| Link preview (paste the homepage URL into iMessage/Slack) | title, description and OG image unfurl | |
+| Link preview (paste the homepage URL into iMessage/Slack) | title, description and OG image unfurl | `/` serves og:title, og:url, og:image=`/og.png` (200), twitter:card summary_large_image (23:20Z, curl); visual unfurl not checked |
 
 PKCE caveat: opening the link in a different browser than the one that
 signed up lands on `/login?error=auth_callback`. That is expected, not a
@@ -276,3 +276,7 @@ call; note what was done.
   Steps 3 and 4a are the owner's; the agent runs the read-only probe once
   the owner reports the migrations applied, and the unauthenticated smoke
   once the deploy of `da57f6a7` is live.
+- 2026-10-18 23:20Z — Production deploy of `da57f6a7` succeeded (GitHub
+  deployment 7162261748, 23:20:36Z). Unauthenticated smoke all as expected
+  (table in step 5). Before the deploy, `/robots.txt` was a 307 to login;
+  after it, 200.
