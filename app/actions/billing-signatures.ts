@@ -6,6 +6,8 @@ import {
   deleteBillingSignature,
   upsertBillingSignature,
 } from "@/lib/database/queries/billing-signatures";
+import { getEstimateById } from "@/lib/database/queries/estimates";
+import { getInvoiceById } from "@/lib/database/queries/invoices";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -45,9 +47,20 @@ function revalidateBillingSignaturePaths(
   }
 }
 
+/**
+ * ==================== THE JOB MUST BE THE DOCUMENT'S OWN JOB ====================
+ * A technician without manageBilling is allowed to capture a signature only
+ * on an estimate linked to a job assigned to them. Before, the permission was
+ * checked against whatever `options.jobId` the client sent, while the write
+ * went to whatever `entityId` the client sent — nothing tied the two together
+ * (launch audit M14a). Now the document is loaded first and the job it is
+ * actually linked to is the only job the permission is checked against; a
+ * caller-supplied jobId that disagrees is refused.
+ */
 async function assertCanCaptureBillingSignature(
   context: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
   entityType: BillingSignatureEntityType,
+  entityId: string,
   jobId?: string | null,
 ): Promise<{ error?: string }> {
   if (context.permissions.manageBilling) {
@@ -58,7 +71,23 @@ async function assertCanCaptureBillingSignature(
     return { error: "You do not have permission to capture signatures." };
   }
 
-  const job = await getJobById(context.company.id, jobId);
+  const document =
+    entityType === "estimate"
+      ? await getEstimateById(context.company.id, entityId)
+      : await getInvoiceById(context.company.id, entityId);
+
+  if (!document) {
+    return {
+      error:
+        entityType === "estimate" ? "Estimate not found." : "Invoice not found.",
+    };
+  }
+
+  if (!document.jobId || document.jobId !== jobId) {
+    return { error: "You do not have permission to capture signatures." };
+  }
+
+  const job = await getJobById(context.company.id, document.jobId);
 
   if (!job) {
     return { error: "Linked job not found." };
@@ -89,6 +118,7 @@ export async function saveBillingSignatureAction(
   const permissionError = await assertCanCaptureBillingSignature(
     context,
     entityType,
+    entityId,
     options?.jobId,
   );
 
@@ -135,6 +165,7 @@ export async function clearBillingSignatureAction(
   const permissionError = await assertCanCaptureBillingSignature(
     context,
     entityType,
+    entityId,
     options?.jobId,
   );
 

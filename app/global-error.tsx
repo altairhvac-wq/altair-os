@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 /**
@@ -27,9 +28,10 @@ import { useEffect } from "react";
  * page with the server-side record; the message and stack could contain query
  * fragments, ids, or customer data and are deliberately not rendered.
  *
- * Monitoring is unaffected: server exceptions still reach Sentry through
- * `onRequestError` in instrumentation.ts, which runs on the server before this
- * component is ever involved.
+ * Server exceptions still reach Sentry through `onRequestError` in
+ * instrumentation.ts. A CLIENT-side root failure is reported from the effect
+ * below through the browser SDK (instrumentation-client.ts), wrapped so that
+ * if the SDK itself is what failed to load, the recovery screen still renders.
  */
 export default function GlobalError({
   error,
@@ -39,10 +41,12 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // The one place a client-side root failure is recorded. Kept to
-    // console.error rather than a monitoring call because at this point the
-    // application bundle may be the thing that failed to evaluate.
     console.error("[global-error-boundary]", error);
+    try {
+      Sentry.captureException(error, { tags: { boundary: "global" } });
+    } catch {
+      // The SDK may be part of what failed to evaluate. The screen matters more.
+    }
   }, [error]);
 
   return (

@@ -1,6 +1,10 @@
 "use server";
 
-import { canCaptureBillingSignature, canViewBilling } from "@/lib/database/access-control";
+import {
+  canApproveEstimateOnSite,
+  canCaptureBillingSignature,
+  canViewBilling,
+} from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -73,32 +77,48 @@ export async function loadJobWorkflowEstimateDocumentAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
-  if (!canViewBilling(context) && !context.permissions.createFieldEstimates) {
+  const canViewBillingData = canViewBilling(context);
+
+  if (!canViewBillingData && !context.permissions.createFieldEstimates) {
     return { error: "You do not have permission to open estimates." };
   }
 
-  const [estimate, activities, linkedInvoice, signature] = await Promise.all([
-    getEstimateById(context.company.id, estimateId),
-    listEstimateActivitiesForEstimate(context.company.id, estimateId),
-    getInvoiceByEstimateId(context.company.id, estimateId),
-    getBillingSignatureForEntity(context.company.id, "estimate", estimateId),
-  ]);
+  const estimate = await getEstimateById(context.company.id, estimateId);
 
   if (!estimate) {
     return { error: "Estimate not found." };
   }
 
-  const canManageEstimates = context.permissions.manageBilling;
-  let canCaptureSignature = canManageEstimates;
+  // A createFieldEstimates-only caller (a technician) can open an estimate
+  // only when it is linked to a job assigned to them — the same rule the
+  // field-estimate create and on-site approval paths apply (launch audit
+  // M14b). Before this, any technician could open any company estimate.
+  const linkedJob = estimate.jobId
+    ? await getJobById(context.company.id, estimate.jobId)
+    : null;
 
-  if (!canCaptureSignature && estimate.jobId) {
-    const job = await getJobById(context.company.id, estimate.jobId);
-    canCaptureSignature = canCaptureBillingSignature(
-      context,
-      "estimate",
-      job,
-    );
+  if (!canViewBillingData) {
+    if (!linkedJob || !canApproveEstimateOnSite(context, linkedJob)) {
+      return { error: "You do not have permission to open this estimate." };
+    }
   }
+
+  const [activities, linkedInvoice, signature] = await Promise.all([
+    listEstimateActivitiesForEstimate(context.company.id, estimateId),
+    // Invoices are billing data; a field-only caller does not get the linked
+    // invoice (and the customer contact on it) alongside the estimate.
+    canViewBillingData
+      ? getInvoiceByEstimateId(context.company.id, estimateId)
+      : Promise.resolve(null),
+    getBillingSignatureForEntity(context.company.id, "estimate", estimateId),
+  ]);
+
+  const canManageEstimates = context.permissions.manageBilling;
+  const canCaptureSignature =
+    canManageEstimates ||
+    (linkedJob
+      ? canCaptureBillingSignature(context, "estimate", linkedJob)
+      : false);
 
   return {
     data: {

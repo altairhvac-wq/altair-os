@@ -27,6 +27,10 @@
  *   Stripe                  Checkout is a full-page REDIRECT, not an embed.
  *                           Nothing loads js.stripe.com and nothing frames
  *                           Stripe, so no allowance is required.
+ *   Sentry (browser)        instrumentation-client.ts posts error envelopes
+ *                           to the ingest host named in NEXT_PUBLIC_SENTRY_DSN.
+ *                           Only that origin is allowed, and only when the
+ *                           DSN is configured.
  *
  * ==================== THE KNOWN LIMITATION ====================
  * script-src includes 'unsafe-inline'. Next.js emits inline bootstrap and
@@ -75,9 +79,12 @@ function originOf(rawUrl: string | undefined): string | null {
  */
 export function buildContentSecurityPolicy(options: {
   supabaseUrl?: string;
+  /** NEXT_PUBLIC_SENTRY_DSN; only its origin is used. */
+  sentryDsn?: string;
   isDevelopment: boolean;
 }): string {
   const supabaseOrigin = originOf(options.supabaseUrl);
+  const sentryIngestOrigin = originOf(options.sentryDsn);
   const supabaseWs = supabaseOrigin
     ? supabaseOrigin.replace(/^https:/, "wss:").replace(/^http:/, "ws:")
     : null;
@@ -96,6 +103,7 @@ export function buildContentSecurityPolicy(options: {
     ...(supabaseWs ? [supabaseWs] : []),
     ...MAPBOX_HOSTS,
     META_PIXEL_IMAGE_HOST,
+    ...(sentryIngestOrigin ? [sentryIngestOrigin] : []),
     ...(options.isDevelopment ? ["ws:", "http://localhost:*"] : []),
   ];
 
@@ -147,6 +155,7 @@ export function buildContentSecurityPolicy(options: {
  */
 export function buildSecurityHeaders(options: {
   supabaseUrl?: string;
+  sentryDsn?: string;
   isDevelopment: boolean;
 }): SecurityHeader[] {
   const headers: SecurityHeader[] = [

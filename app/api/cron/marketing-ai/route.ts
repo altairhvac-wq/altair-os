@@ -14,6 +14,7 @@ import {
   requestIdFromHeaders,
   runOperation,
 } from "@/lib/operations";
+import { finishCronCheckIn, startCronCheckIn } from "@/lib/operations/cron-monitor";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,9 @@ export async function GET(request: Request) {
   }
 
   const requestId = requestIdFromHeaders(request.headers) ?? createRequestId();
+
+  // Sentry cron check-in (audit H3): opened only for an authorized run.
+  const checkIn = startCronCheckIn(ROUTE_NAME);
 
   const opResult = await runOperation({
     operationName: OPERATION_NAME,
@@ -106,16 +110,19 @@ export async function GET(request: Request) {
   });
 
   if (!opResult.success || !opResult.value) {
-    return NextResponse.json(
-      {
-        ok: false,
-        route: ROUTE_NAME,
-        processed: false,
-        error: "Marketing AI run failed",
-      },
-      { status: 500 },
+    return finishCronCheckIn(
+      checkIn,
+      NextResponse.json(
+        {
+          ok: false,
+          route: ROUTE_NAME,
+          processed: false,
+          error: "Marketing AI run failed",
+        },
+        { status: 500 },
+      ),
     );
   }
 
-  return opResult.value;
+  return finishCronCheckIn(checkIn, opResult.value);
 }

@@ -106,6 +106,12 @@ steps.push(
     script: "scripts/verify-payment-intent-failed-handler.mjs",
   },
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
+  {
+    name: "saas-app-shell-gate",
+    script: "scripts/verify-saas-app-access.mjs",
+    // Runs the SHIPPED policy + gate (grace window, H7), not a copy.
+    typescript: true,
+  },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
   { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
   {

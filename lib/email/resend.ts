@@ -2,11 +2,7 @@ import {
   classifyResendProviderError,
   type BillingEmailFailureCode,
 } from "@/lib/email/billing-failure";
-import {
-  getMissingResendEnvVars,
-  getResendEmailEnv,
-  logResendEnvDiagnostics,
-} from "@/lib/email/env";
+import { getMissingResendEnvVars, getResendEmailEnv } from "@/lib/email/env";
 import {
   resolveEmailRecipient,
   type ResolvedEmailRecipient,
@@ -88,18 +84,27 @@ function buildFromAddress(from: string, displayName?: string): string {
   return `${formatDisplayName(trimmedName)} <${email}>`;
 }
 
+function domainOf(address: string): string {
+  return address.trim().split("@")[1]?.toLowerCase() || "unknown";
+}
+
+/**
+ * ==================== WHAT THE LOGS MAY CARRY ====================
+ * Every line below logs the recipient's DOMAIN and the provider's verdict,
+ * never the address. A customer's email address written to the platform log
+ * stream on every invoice, estimate and invite send was the audit's M15; the
+ * repository rule is "do not log customer data" and this is where it is
+ * enforced for outbound mail. The returned result objects still carry the
+ * addresses for the caller's UI — that is not a log.
+ */
 export async function sendViaResend(
   input: SendViaResendInput,
 ): Promise<ResendSendResult> {
-  const envDiagnostics = logResendEnvDiagnostics(input.logContext);
-  const missingEnv = envDiagnostics.missing;
+  const missingEnv = getMissingResendEnvVars();
 
   if (missingEnv.length > 0) {
     console.info(`[${input.logContext}] resend env missing before provider call:`, {
       missingEnv,
-      hasResendApiKey: envDiagnostics.hasResendApiKey,
-      hasResendFromEmail: envDiagnostics.hasResendFromEmail,
-      resendFromEmail: envDiagnostics.resendFromEmail,
       reachedProvider: false,
     });
 
@@ -133,10 +138,8 @@ export async function sendViaResend(
   if (!resolved.ok) {
     console.error(`[${input.logContext}] recipient resolution failed before provider send:`, {
       reason: resolved.reason,
-      error: resolved.error,
       overrideEnv: resolved.overrideEnv ?? null,
-      intendedRecipient: input.to.trim() || null,
-      fromEmail,
+      intendedDomain: domainOf(input.to),
       reachedProvider: false,
     });
 
@@ -180,8 +183,8 @@ export async function sendViaResend(
     });
   }
 
-  const toDomain = recipient.to.split("@")[1] ?? "unknown";
-  const intendedDomain = recipient.intendedRecipient.split("@")[1] ?? "unknown";
+  const toDomain = domainOf(recipient.to);
+  const intendedDomain = domainOf(recipient.intendedRecipient);
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -212,9 +215,6 @@ export async function sendViaResend(
           `[${input.logContext}] resend API auth rejected (not missing env — key may be invalid or revoked):`,
           {
             status: response.status,
-            hasResendApiKey: envDiagnostics.hasResendApiKey,
-            hasResendFromEmail: envDiagnostics.hasResendFromEmail,
-            resendFromEmail: envDiagnostics.resendFromEmail,
             providerMessage: classified.providerMessage,
           },
         );
@@ -225,9 +225,6 @@ export async function sendViaResend(
         failureCode: classified.failureCode,
         reachedProvider: true,
         providerMessage: classified.providerMessage,
-        intendedRecipient: recipient.intendedRecipient,
-        actualRecipient: recipient.to,
-        fromEmail,
         toDomain,
         intendedDomain,
         redirected: recipient.redirected,
@@ -255,9 +252,6 @@ export async function sendViaResend(
         failureCode: "email_provider_failed",
         reachedProvider: true,
         providerMessage: payload?.message ?? payload?.name ?? "missing id",
-        intendedRecipient: recipient.intendedRecipient,
-        actualRecipient: recipient.to,
-        fromEmail,
         toDomain,
       });
 
@@ -282,9 +276,6 @@ export async function sendViaResend(
       intendedDomain,
       redirected: recipient.redirected,
       overrideEnv: recipient.overrideEnv ?? null,
-      intendedRecipient: recipient.intendedRecipient,
-      actualRecipient: recipient.to,
-      fromEmail,
     });
 
     return {
@@ -307,9 +298,6 @@ export async function sendViaResend(
       failureCode: "email_provider_failed",
       reachedProvider: true,
       providerMessage,
-      intendedRecipient: recipient.intendedRecipient,
-      actualRecipient: recipient.to,
-      fromEmail,
       toDomain,
     });
 

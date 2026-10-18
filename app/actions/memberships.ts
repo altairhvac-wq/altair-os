@@ -147,6 +147,17 @@ export async function acceptInviteAction(
     return { error: "You must be signed in to accept an invitation." };
   }
 
+  // An invite is claimed by email address, so the address has to be one this
+  // account has actually proven (launch audit H4). The RLS claim policies
+  // enforce the same rule in the database; this gives the person a reason
+  // instead of a generic failure.
+  if (!user.email_confirmed_at) {
+    return {
+      error:
+        "Confirm your email address first — check your inbox for the confirmation link, then try again.",
+    };
+  }
+
   const profile = await getCurrentProfile();
   const emailResolution = resolveUserEmailForInvite(
     profile?.email,

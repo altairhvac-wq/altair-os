@@ -23,6 +23,10 @@ import {
   normalizeEmail,
 } from "@/shared/lib/email-validation";
 import { generateUniqueMemberShareCode } from "@/shared/lib/member-share-code";
+import {
+  computeTeamInviteExpiresAt,
+  isTeamInviteExpired,
+} from "@/shared/lib/team-invite-link";
 
 type MembershipProfileRow = {
   id: string;
@@ -580,6 +584,9 @@ export async function listPendingInvitesForUserEmail(
     .eq("status", "invited")
     .is("user_id", null)
     .eq("invite_email", normalizedEmail)
+    // RLS (migration 199) already hides expired invites; the filter is
+    // repeated here so the list cannot show one even through a wider client.
+    .or(`invite_expires_at.is.null,invite_expires_at.gt.${new Date().toISOString()}`)
     .order("invited_at", { ascending: false });
 
   if (error) {
@@ -643,7 +650,7 @@ export async function acceptPendingInvite(
 
   const { data: membership, error: membershipError } = await supabase
     .from("company_memberships")
-    .select("id, company_id, role, status, user_id, invite_email")
+    .select("id, company_id, role, status, user_id, invite_email, invite_expires_at")
     .eq("id", membershipId)
     .maybeSingle();
 
@@ -663,7 +670,13 @@ export async function acceptPendingInvite(
 
   const row = membership as Pick<
     CompanyMembershipRow,
-    "id" | "company_id" | "role" | "status" | "user_id" | "invite_email"
+    | "id"
+    | "company_id"
+    | "role"
+    | "status"
+    | "user_id"
+    | "invite_email"
+    | "invite_expires_at"
   >;
 
   if (row.status === "suspended") {
@@ -681,6 +694,13 @@ export async function acceptPendingInvite(
 
   if (row.user_id) {
     return { error: "This invitation has already been claimed." };
+  }
+
+  if (isTeamInviteExpired(row.invite_expires_at)) {
+    return {
+      error:
+        "This invitation has expired. Ask the company owner or admin to send a new one.",
+    };
   }
 
   const inviteEmail = row.invite_email?.trim();
@@ -898,6 +918,7 @@ export async function createTeamInvite(
   }
 
   const supabase = await createClient();
+  const invitedAt = new Date();
 
   const { data, error } = await supabase
     .from("company_memberships")
@@ -908,7 +929,8 @@ export async function createTeamInvite(
       role,
       status: "invited",
       invited_by: actor.userId,
-      invited_at: new Date().toISOString(),
+      invited_at: invitedAt.toISOString(),
+      invite_expires_at: computeTeamInviteExpiresAt(invitedAt),
       joined_at: null,
       reports_to_member_id: null,
     })
