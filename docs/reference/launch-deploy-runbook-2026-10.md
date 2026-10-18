@@ -7,7 +7,7 @@ file as it happens. A step with no result recorded has not been done.
 | Step | State | Evidence |
 |------|-------|----------|
 | 0. CI unblocked (PR 15) | **done** | squash-merged to main as `bf811843` (2026-10-18, owner: "merge 15 and 13") |
-| 1. Conflicts resolved, CI green on both PRs | resolved, CI running | PR 12 branch at `9374370a` (merge of main + migration-200 grant alignment); CI run 39175659876 |
+| 1. Conflicts resolved, CI green on both PRs | **done** | PR 12 branch at `9374370a` (merge of main + migration-200 grant alignment); CI run 39175659876 green, merge state CLEAN |
 | 2a. PR 13 merged | **done** | merge commit `ddd131df` on main (2026-10-18); Vercel production deploy follows automatically |
 | 2b. PR 12 merged | pending | |
 | 3a. Migration 199 applied to production | pending | |
@@ -264,3 +264,7 @@ call; note what was done.
   five-file resolution; migration 200's grants aligned with the convention;
   57/57 verifiers, tsc, eslint clean locally; pushed as `9374370a`, CI
   running. Next: owner go for PR 12 (and a decision on PR 14).
+- 2026-10-18 23:13Z — PR 13's production deploy succeeded (GitHub deployment
+  7162182952). PR 12 CI green, mergeable CLEAN. Vercel dashboard is not
+  signed in in the agent's browser pane; step 4a needs the owner signed in
+  there (or the owner reads the env page). Waiting on the owner.
