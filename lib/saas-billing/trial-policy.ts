@@ -136,12 +136,37 @@ export type CheckoutTrialParams =
  * - A row with no trial history (companies bootstrapped before migration 200
  *   that never reached Checkout) keeps the original card-required trial, so
  *   nobody who was promised 14 days is charged on day one.
+ * - A row whose trial was WITHHELD at bootstrap (migration 201: the owner's
+ *   inbox already used one) is not "no trial history"; it gets no trial.
+ * - Whatever the row says, an email that already has a subscription in
+ *   Stripe gets no trial (options.emailAlreadySubscribedInStripe).
  */
 export function resolveCheckoutTrialParams(
-  input: { trialEndsAt: string | null } | null,
+  input: {
+    trialEndsAt: string | null;
+    /** Set when bootstrap withheld the trial (migration 201). */
+    trialWithheldReason?: string | null;
+  } | null,
   nowMs: number,
   defaultTrialDays: number,
+  options: {
+    /**
+     * Stripe already holds a subscription for another customer with this
+     * email (see emailHasPriorStripeSubscription). Wins over the local row:
+     * a person who has paid or trialed before gets no trial, whatever this
+     * company's row says.
+     */
+    emailAlreadySubscribedInStripe?: boolean;
+  } = {},
 ): CheckoutTrialParams {
+  if (options.emailAlreadySubscribedInStripe) {
+    return {};
+  }
+
+  if (input?.trialWithheldReason) {
+    return {};
+  }
+
   if (!input || !input.trialEndsAt) {
     return { trial_period_days: defaultTrialDays };
   }
@@ -156,4 +181,74 @@ export function resolveCheckoutTrialParams(
   }
 
   return {};
+}
+
+/**
+ * Collapses an email to the inbox it reaches: lowercase, trimmed, no `+tag`,
+ * and for Gmail (gmail.com / googlemail.com) no dots in the local part.
+ * `jane+2@gmail.com`, `j.ane@gmail.com` and `Jane@gmail.com` are one inbox.
+ *
+ * Mirror of public.normalize_trial_email (migration 201). Change both.
+ */
+export function normalizeTrialEmail(email: string | null | undefined): string | null {
+  if (email == null) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+
+  const at = trimmed.indexOf("@");
+  if (at < 0) return trimmed;
+
+  let local = trimmed.slice(0, at);
+  let domain = trimmed.slice(at + 1);
+
+  const plus = local.indexOf("+");
+  if (plus >= 0) {
+    local = local.slice(0, plus);
+  }
+
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    local = local.replace(/\./g, "");
+    domain = "gmail.com";
+  }
+
+  return `${local}@${domain}`;
+}
+
+export type StripeCustomerSubscriptionHistory = {
+  customerId: string;
+  email: string | null;
+  /** True when Stripe lists at least one subscription (any status) for the customer. */
+  hasSubscription: boolean;
+};
+
+/**
+ * The Stripe side of "one trial per person": does another Stripe customer
+ * reaching the same inbox already hold a subscription, in any status?
+ *
+ * `candidates` are the customers Stripe returned for the emails we asked
+ * about; the company's own customer is skipped so a Checkout retried after
+ * an abandoned session does not count against itself. A customer with no
+ * email, or whose email normalizes to a different inbox, is ignored: Stripe's
+ * email filter is exact, so this comparison is the one that catches a
+ * `+tag` or case difference between what Stripe stored and what we asked.
+ */
+export function emailHasPriorStripeSubscription(input: {
+  ownCustomerId: string;
+  emails: Array<string | null | undefined>;
+  candidates: StripeCustomerSubscriptionHistory[];
+}): boolean {
+  const inboxes = new Set(
+    input.emails
+      .map((email) => normalizeTrialEmail(email))
+      .filter((email): email is string => Boolean(email)),
+  );
+
+  if (inboxes.size === 0) return false;
+
+  return input.candidates.some((candidate) => {
+    if (candidate.customerId === input.ownCustomerId) return false;
+    if (!candidate.hasSubscription) return false;
+    const inbox = normalizeTrialEmail(candidate.email);
+    return inbox != null && inboxes.has(inbox);
+  });
 }

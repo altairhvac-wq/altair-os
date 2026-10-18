@@ -7,6 +7,7 @@ import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
 import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import { PlatformNorthStarView } from "@/shared/components/platform-admin/north-star-m13";
 import { PlatformCompanyAccessGrantControl } from "@/shared/components/platform-admin/PlatformCompanyAccessGrantControl";
+import { PlatformTrialSignalsCard } from "@/shared/components/platform-admin/PlatformTrialSignalsCard";
 import {
   Building2,
   Briefcase,
@@ -166,6 +167,7 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
         <SummaryCard label="Customers" value={summary.totalCustomers} icon={Users} />
         <SummaryCard label="Estimates" value={summary.totalEstimates} icon={FileText} />
         <SummaryCard label="Invoices" value={summary.totalInvoices} icon={Receipt} />
+        <PlatformTrialSignalsCard trials={summary.trials} variant="legacy" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2" id="platform-recent-companies">

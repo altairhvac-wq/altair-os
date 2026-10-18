@@ -43,7 +43,9 @@ function isTrialEndingSoon(input, nowMs) {
 }
 
 // Mirror of resolveCheckoutTrialParams (trial-policy.ts).
-function resolveCheckoutTrialParams(input, nowMs, defaultTrialDays) {
+function resolveCheckoutTrialParams(input, nowMs, defaultTrialDays, options = {}) {
+  if (options.emailAlreadySubscribedInStripe) return {};
+  if (input?.trialWithheldReason) return {};
   if (!input || !input.trialEndsAt) {
     return { trial_period_days: defaultTrialDays };
   }
@@ -53,6 +55,67 @@ function resolveCheckoutTrialParams(input, nowMs, defaultTrialDays) {
     return { trial_end: Math.floor(endMs / 1000) };
   }
   return {};
+}
+
+// Mirror of normalizeTrialEmail (trial-policy.ts) and public.normalize_trial_email (migration 201).
+function normalizeTrialEmail(email) {
+  if (email == null) return null;
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) return null;
+  const at = trimmed.indexOf("@");
+  if (at < 0) return trimmed;
+  let local = trimmed.slice(0, at);
+  let domain = trimmed.slice(at + 1);
+  const plus = local.indexOf("+");
+  if (plus >= 0) local = local.slice(0, plus);
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    local = local.replace(/\./g, "");
+    domain = "gmail.com";
+  }
+  return `${local}@${domain}`;
+}
+
+// Mirror of emailHasPriorStripeSubscription (trial-policy.ts).
+function emailHasPriorStripeSubscription(input) {
+  const inboxes = new Set(
+    input.emails.map((email) => normalizeTrialEmail(email)).filter(Boolean),
+  );
+  if (inboxes.size === 0) return false;
+  return input.candidates.some((candidate) => {
+    if (candidate.customerId === input.ownCustomerId) return false;
+    if (!candidate.hasSubscription) return false;
+    const inbox = normalizeTrialEmail(candidate.email);
+    return inbox != null && inboxes.has(inbox);
+  });
+}
+
+/**
+ * The bootstrap decision of migration 201, as the function makes it: given
+ * the normalized emails of every owner whose company has a trial_ends_at,
+ * does the new owner's email get a trial?
+ */
+function bootstrapSeedForNewCompany(ownerEmail, trialedOwnerEmails, now) {
+  const inbox = normalizeTrialEmail(ownerEmail);
+  const used = trialedOwnerEmails.some(
+    (email) => normalizeTrialEmail(email) === inbox,
+  );
+  return used
+    ? {
+        plan_key: "starter",
+        status: "incomplete",
+        access_grant: "none",
+        trial_starts_at: null,
+        trial_ends_at: null,
+        trial_withheld_reason: "email_already_trialed",
+      }
+    : {
+        plan_key: "starter",
+        status: "trialing",
+        access_grant: "none",
+        trial_starts_at: new Date(now).toISOString(),
+        trial_ends_at: new Date(now + 14 * DAY_MS).toISOString(),
+        trial_withheld_reason: null,
+      };
 }
 
 /** The app-shell gate as the resolver feeds it: effective status in, access out. */
@@ -420,4 +483,111 @@ test("checkout keeps the local trial end date, and never grants a second trial",
   assert.deepEqual(resolveCheckoutTrialParams(null, now, 14), {
     trial_period_days: 14,
   });
+});
+
+test("one inbox, many spellings: normalizeTrialEmail (migration 201 mirror)", () => {
+  assert.equal(normalizeTrialEmail("Jane@Gmail.com"), "jane@gmail.com");
+  assert.equal(normalizeTrialEmail("j.a.n.e+trial2@gmail.com"), "jane@gmail.com");
+  assert.equal(normalizeTrialEmail("jane@googlemail.com"), "jane@gmail.com");
+  // Dots are significant everywhere but Gmail; plus-tags are not.
+  assert.equal(normalizeTrialEmail("j.ane+x@example.com"), "j.ane@example.com");
+  assert.equal(normalizeTrialEmail("  OWNER@Example.COM "), "owner@example.com");
+  assert.equal(normalizeTrialEmail(""), null);
+  assert.equal(normalizeTrialEmail(null), null);
+  assert.equal(normalizeTrialEmail("not-an-email"), "not-an-email");
+});
+
+test("bootstrap withholds the trial when the inbox already had one (migration 201)", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const trialedOwners = ["jane@gmail.com", "bob@example.com"];
+
+  const repeat = bootstrapSeedForNewCompany("J.ane+again@gmail.com", trialedOwners, now);
+  assert.equal(repeat.status, "incomplete");
+  assert.equal(repeat.trial_ends_at, null);
+  assert.equal(repeat.trial_withheld_reason, "email_already_trialed");
+  // Lands on /activate-subscription, not the dashboard.
+  assert.equal(cardFreeTrialHasAccess({ ...repeat, stripe_subscription_id: null }, now), false);
+  // ...and Checkout offers it no trial, even though trial_ends_at is null.
+  assert.deepEqual(
+    resolveCheckoutTrialParams(
+      { trialEndsAt: repeat.trial_ends_at, trialWithheldReason: repeat.trial_withheld_reason },
+      now,
+      14,
+    ),
+    {},
+  );
+
+  // A different inbox (dots matter outside Gmail) still gets its trial.
+  const fresh = bootstrapSeedForNewCompany("b.ob@example.com", trialedOwners, now);
+  assert.equal(fresh.status, "trialing");
+  assert.equal(fresh.trial_withheld_reason, null);
+  assert.equal(cardFreeTrialHasAccess({ ...fresh, stripe_subscription_id: null }, now), true);
+
+  // The pre-200 shape (incomplete, no dates, no reason) is NOT a withheld trial.
+  assert.deepEqual(
+    resolveCheckoutTrialParams({ trialEndsAt: null, trialWithheldReason: null }, now, 14),
+    { trial_period_days: 14 },
+  );
+});
+
+test("checkout passes no trial when Stripe already knows the email as a subscriber", () => {
+  const now = Date.parse("2026-10-18T12:00:00Z");
+  const inFourDays = new Date(now + 4 * DAY_MS).toISOString();
+
+  const prior = emailHasPriorStripeSubscription({
+    ownCustomerId: "cus_new",
+    emails: ["Jane+altair@gmail.com", null],
+    candidates: [
+      { customerId: "cus_old", email: "jane@gmail.com", hasSubscription: true },
+    ],
+  });
+  assert.equal(prior, true);
+  // Wins over a running local trial.
+  assert.deepEqual(
+    resolveCheckoutTrialParams({ trialEndsAt: inFourDays }, now, 14, {
+      emailAlreadySubscribedInStripe: prior,
+    }),
+    {},
+  );
+  // ...and over a pre-200 row that would otherwise get 14 days.
+  assert.deepEqual(
+    resolveCheckoutTrialParams({ trialEndsAt: null }, now, 14, {
+      emailAlreadySubscribedInStripe: true,
+    }),
+    {},
+  );
+
+  // The company's own customer never counts against it (abandoned Checkout retried).
+  assert.equal(
+    emailHasPriorStripeSubscription({
+      ownCustomerId: "cus_new",
+      emails: ["jane@gmail.com"],
+      candidates: [{ customerId: "cus_new", email: "jane@gmail.com", hasSubscription: true }],
+    }),
+    false,
+  );
+  // A customer with no subscription, or a different inbox, does not count.
+  assert.equal(
+    emailHasPriorStripeSubscription({
+      ownCustomerId: "cus_new",
+      emails: ["jane@gmail.com"],
+      candidates: [
+        { customerId: "cus_a", email: "jane@gmail.com", hasSubscription: false },
+        { customerId: "cus_b", email: "janet@gmail.com", hasSubscription: true },
+      ],
+    }),
+    false,
+  );
+  // Nothing to compare against: no verdict.
+  assert.equal(
+    emailHasPriorStripeSubscription({ ownCustomerId: "cus_new", emails: [null, ""], candidates: [] }),
+    false,
+  );
+  // Without the Stripe signal the local rule still runs unchanged.
+  assert.deepEqual(
+    resolveCheckoutTrialParams({ trialEndsAt: inFourDays }, now, 14, {
+      emailAlreadySubscribedInStripe: false,
+    }),
+    { trial_end: Math.floor(Date.parse(inFourDays) / 1000) },
+  );
 });

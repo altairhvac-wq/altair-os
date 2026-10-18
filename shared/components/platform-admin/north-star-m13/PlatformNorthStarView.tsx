@@ -4,6 +4,7 @@ import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { PlatformCompanyAccessGrantControl } from "@/shared/components/platform-admin/PlatformCompanyAccessGrantControl";
+import { PlatformTrialSignalsCard } from "@/shared/components/platform-admin/PlatformTrialSignalsCard";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
 import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import {
@@ -244,6 +245,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
               value={summary.totalInvoices}
               icon={Receipt}
             />
+            <PlatformTrialSignalsCard trials={summary.trials} variant="north-star" />
           </div>
         </section>
 

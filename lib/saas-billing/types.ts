@@ -68,6 +68,12 @@ export type SaasSubscriptionStatus =
 
 export type SaasAccessGrant = "none" | "beta_comped";
 
+/**
+ * Why a company was seeded WITHOUT a free trial at bootstrap (migration 201).
+ * Null on every row that was offered one.
+ */
+export type SaasTrialWithheldReason = "email_already_trialed";
+
 export type SaasBillingAccessState =
   | "ACTIVE"
   | "TRIAL"
@@ -116,6 +122,7 @@ export type CompanySubscriptionRow = {
   canceled_at: Timestamp | null;
   access_grant: SaasAccessGrant;
   grace_period_ends_at: Timestamp | null;
+  trial_withheld_reason: SaasTrialWithheldReason | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -135,6 +142,7 @@ export type CompanySubscriptionInsert = {
   canceled_at?: Timestamp | null;
   access_grant?: SaasAccessGrant;
   grace_period_ends_at?: Timestamp | null;
+  trial_withheld_reason?: SaasTrialWithheldReason | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -258,4 +266,10 @@ export type CompanySubscriptionBillingSummary = {
   currentPeriodEndsAt: string | null;
   warnings: string[];
   hasStripeSubscription: boolean;
+  /**
+   * The company was never offered a free trial because its owner's email had
+   * already used one (migration 201). The activation page says so instead of
+   * promising 14 free days, and Checkout passes no trial.
+   */
+  trialWithheld: boolean;
 };

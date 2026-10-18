@@ -12,6 +12,23 @@ export type PlatformAdminSummary = {
   totalCustomers: number;
   totalEstimates: number;
   totalInvoices: number;
+  trials: PlatformTrialSignals;
+};
+
+/**
+ * Trial activity from company_subscriptions, for spotting a run on free
+ * trials. Windows are rolling (the last 24 h / 7 d / 30 d from the moment the
+ * page rendered), not calendar days.
+ */
+export type PlatformTrialSignals = {
+  /** Rows whose trial_starts_at falls in the window. */
+  startedLast24h: number;
+  startedLast7d: number;
+  startedLast30d: number;
+  /** Companies seeded without a trial because the inbox had one (last 30 d). */
+  withheldLast30d: number;
+  /** Rows with access_grant = beta_comped, all time. */
+  compedCompanies: number;
 };
 
 export type PlatformAdminRecentCompany = {
