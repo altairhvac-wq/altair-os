@@ -10,7 +10,7 @@ import {
   isAnalyticsRecordingEnabled,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
-import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
 import {
   enforcePublicRateLimit,
   resolveRequestAddress,

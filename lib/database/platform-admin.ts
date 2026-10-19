@@ -3,6 +3,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/lib/database/auth";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
 
 /**
  * Server-only allowlist for internal platform admin.
@@ -31,54 +32,11 @@ import { getCurrentUser } from "@/lib/database/auth";
  * Entries are trimmed and lowercased; anything that is not a plausible address
  * is dropped rather than silently matched.
  */
-const PLATFORM_ADMIN_EMAILS_ENV = "PLATFORM_ADMIN_EMAILS";
-
-/**
- * Deliberately minimal: this is a normalization filter for an operator-managed
- * allowlist, not user-input validation. It exists so a stray comma or a
- * trailing token cannot become a matchable entry.
- */
-function isPlausibleEmail(value: string): boolean {
-  if (!value || value.length > 320) return false;
-  const parts = value.split("@");
-  if (parts.length !== 2) return false;
-  const [local, domain] = parts;
-  if (!local || !domain) return false;
-  if (/\s/.test(value)) return false;
-  return domain.includes(".") && !domain.startsWith(".") && !domain.endsWith(".");
-}
-
-export function getPlatformAdminEmails(): Set<string> {
-  const raw = process.env[PLATFORM_ADMIN_EMAILS_ENV]?.trim();
-
-  if (!raw) {
-    return new Set();
-  }
-
-  const emails = raw
-    .split(",")
-    .map((entry) => entry.trim().toLowerCase())
-    .filter(isPlausibleEmail);
-
-  return new Set(emails);
-}
-
-/** True when at least one usable platform-admin address is configured. */
-export function isPlatformAdminConfigured(): boolean {
-  return getPlatformAdminEmails().size > 0;
-}
-
-export function canAccessPlatformAdmin(
-  user: Pick<User, "email"> | null | undefined,
-): boolean {
-  const email = user?.email?.trim().toLowerCase();
-
-  if (!email) {
-    return false;
-  }
-
-  return getPlatformAdminEmails().has(email);
-}
+export {
+  canAccessPlatformAdmin,
+  getPlatformAdminEmails,
+  isPlatformAdminConfigured,
+} from "@/lib/database/platform-admin-emails";
 
 /**
  * Ensures the current session belongs to a platform admin.

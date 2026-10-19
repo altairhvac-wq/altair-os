@@ -138,7 +138,12 @@ export function normalizeHost(value: string | null | undefined): string | null {
 
 function hostMatches(host: string, needle: string): boolean {
   const bare = host.replace(/^www\./, "").replace(/^m\./, "").replace(/^l\./, "").replace(/^lm\./, "");
-  if (needle.endsWith(".")) return bare.startsWith(needle) || bare.includes(`.${needle}`);
+  if (needle.endsWith(".")) {
+    // "google." means Google on any country domain (google.com, google.de,
+    // google.co.uk, google.com.au) — not any host that merely starts with it.
+    const name = needle.slice(0, -1).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|\\.)${name}\\.(?:com?\\.)?[a-z]{2,3}$`).test(bare);
+  }
   return bare === needle || bare.endsWith(`.${needle}`);
 }
 

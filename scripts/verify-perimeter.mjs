@@ -226,7 +226,17 @@ check(
 // ============================================================ P1-4 admin
 console.log("\nP1-4 — platform admin is configuration");
 
-const platformAdmin = loadTs("lib/database/platform-admin.ts");
+// The allowlist itself lives in platform-admin-emails.ts (split out so modules
+// that only need the list do not import next/navigation); platform-admin.ts
+// re-exports it and keeps requirePlatformAdmin. Both are checked.
+const platformAdmin = loadTs("lib/database/platform-admin-emails.ts");
+const platformAdminGate = loadTs("lib/database/platform-admin.ts");
+
+check(
+  "platform-admin.ts re-exports the allowlist instead of redefining it",
+  /from "@\/lib\/database\/platform-admin-emails"/.test(platformAdminGate) &&
+    !/process\.env\[/.test(platformAdminGate),
+);
 
 check(
   "the allowlist is read from PLATFORM_ADMIN_EMAILS",
@@ -256,7 +266,8 @@ check(
 
 check(
   "the module stays server-only so the allowlist never reaches a browser",
-  /^import "server-only";/m.test(readFileSync("lib/database/platform-admin.ts", "utf8")),
+  /^import "server-only";/m.test(readFileSync("lib/database/platform-admin.ts", "utf8")) &&
+    /^import "server-only";/m.test(readFileSync("lib/database/platform-admin-emails.ts", "utf8")),
 );
 
 // ============================================================ P1-3 surfaces

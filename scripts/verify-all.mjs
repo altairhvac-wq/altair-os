@@ -107,6 +107,12 @@ steps.push(
   },
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
   {
+    name: "platform-analytics",
+    script: "scripts/verify-platform-analytics.mjs",
+    // Executes the shipped attribution and metric rules.
+    typescript: true,
+  },
+  {
     name: "auth-captcha",
     script: "scripts/verify-auth-captcha.mjs",
     // Imports the shipped CSP builder and token helper.
