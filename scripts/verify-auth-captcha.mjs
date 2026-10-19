@@ -126,5 +126,19 @@ check(
   !captcha.isCaptchaError({ code: "invalid_credentials", message: "Invalid login credentials" }),
 );
 
+// ---------------------------------------------------------------- auth link host
+// PKCE verifier cookies are host-only, so the emailed link must come back to
+// the host the visitor signed up on (lib/auth/request-origin.ts).
+console.log("\nAuth links return to the host the visitor used");
+const origin = await import("@/lib/auth/request-origin");
+const ENV = "https://app.altair-op.com";
+check("www visitor keeps www", origin.shouldPreferRequestOrigin(ENV, "https://www.altair-op.com") === true);
+check("apex visitor keeps apex", origin.shouldPreferRequestOrigin(ENV, "https://altair-op.com") === true);
+check("app visitor uses app", origin.shouldPreferRequestOrigin(ENV, ENV) === false);
+check("unrelated host is never used", origin.shouldPreferRequestOrigin(ENV, "https://evil.example.com") === false);
+check("look-alike host is never used", origin.shouldPreferRequestOrigin(ENV, "https://altair-op.com.evil.io") === false);
+check("http downgrade is never used", origin.shouldPreferRequestOrigin(ENV, "http://www.altair-op.com") === false);
+check("Vercel preview keeps its own host", origin.shouldPreferRequestOrigin(ENV, "https://altair-os-git-x.vercel.app") === true);
+
 console.log(`\n${checks} checks, ${failures} failures`);
 process.exit(failures ? 1 : 0);
