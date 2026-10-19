@@ -11,6 +11,8 @@ export type AuthUserResult = AuthDataResult<User>;
 export type SignInWithPasswordInput = {
   email: string;
   password: string;
+  /** Turnstile token; required by Supabase once CAPTCHA protection is on. */
+  captchaToken?: string;
 };
 
 export type SignUpInput = {
@@ -18,6 +20,8 @@ export type SignUpInput = {
   password: string;
   fullName?: string;
   companyName?: string;
+  /** Turnstile token; required by Supabase once CAPTCHA protection is on. */
+  captchaToken?: string;
 };
 
 export type SignUpMetadata = {

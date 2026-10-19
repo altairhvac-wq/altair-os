@@ -413,10 +413,13 @@ export function AuthSelect(props: React.ComponentProps<"select">) {
 
 export function AuthSubmitButton({
   pending,
+  disabled = false,
   children,
   variant = "default",
 }: {
   pending?: boolean;
+  /** e.g. while the Turnstile security check has not produced a token yet. */
+  disabled?: boolean;
   children: ReactNode;
   variant?: "default" | "gold";
 }) {
@@ -434,7 +437,7 @@ export function AuthSubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={className}
     >
       {pending ? (

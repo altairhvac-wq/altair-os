@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { isCaptchaConfigured } from "@/shared/lib/auth/captcha";
+import { TurnstileField } from "./TurnstileField";
 import {
   requestPasswordResetAction,
   type AuthActionState,
@@ -21,6 +23,8 @@ export function ForgotPasswordForm() {
     requestPasswordResetAction,
     initialState,
   );
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaPending = isCaptchaConfigured && !captchaToken;
 
   return (
     <AuthShell
@@ -50,8 +54,16 @@ export function ForgotPasswordForm() {
           />
         </AuthField>
 
+        <TurnstileField
+          action="password_reset"
+          resetSignal={state}
+          onTokenChange={setCaptchaToken}
+        />
+
         <div className="pt-1">
-          <AuthSubmitButton pending={pending}>Send reset link</AuthSubmitButton>
+          <AuthSubmitButton pending={pending} disabled={captchaPending}>
+            Send reset link
+          </AuthSubmitButton>
         </div>
       </form>
     </AuthShell>

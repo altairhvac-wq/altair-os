@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useActionState } from "react";
+import { Suspense, useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { NextRedirectField } from "./NextRedirectField";
 import {
@@ -17,6 +17,8 @@ import {
   AuthLink,
 } from "./AuthShell";
 import { TradeSelectField } from "./TradeSelectField";
+import { TurnstileField } from "./TurnstileField";
+import { isCaptchaConfigured } from "@/shared/lib/auth/captcha";
 import type { PublicNetworkInvitePreview } from "@/shared/types/network-invite";
 
 const initialState: AuthActionState = {};
@@ -33,6 +35,8 @@ export function SignUpForm({
   const searchParams = useSearchParams();
   const setupInviteFlow = sanitizeNextPath(searchParams.get("next")) === "/setup";
   const [state, formAction, pending] = useActionState(signupAction, initialState);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaPending = isCaptchaConfigured && !captchaToken;
   const isValidInvite = invitePreview?.state === "valid";
   const defaultCompanyName =
     isValidInvite && invitePreview?.invitedCompanyName
@@ -183,8 +187,14 @@ export function SignUpForm({
           />
         </AuthField>
 
+        <TurnstileField
+          action="signup"
+          resetSignal={state}
+          onTokenChange={setCaptchaToken}
+        />
+
         <div className="pt-1">
-          <AuthSubmitButton pending={pending}>
+          <AuthSubmitButton pending={pending} disabled={captchaPending}>
             {state.needsEmailConfirmation ? "Account created" : "Create account"}
           </AuthSubmitButton>
           <p className="mt-3 text-center text-xs leading-relaxed text-stone-500">

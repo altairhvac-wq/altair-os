@@ -8,6 +8,7 @@ export async function signInWithPassword(
   const { data, error } = await supabase.auth.signInWithPassword({
     email: input.email,
     password: input.password,
+    ...(input.captchaToken ? { options: { captchaToken: input.captchaToken } } : {}),
   });
 
   return {

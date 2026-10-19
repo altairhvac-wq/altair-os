@@ -18,6 +18,7 @@ export async function signUp(input: SignUpInput): Promise<AuthSessionResult> {
     password: input.password,
     options: {
       data: Object.keys(metadata).length > 0 ? metadata : undefined,
+      ...(input.captchaToken ? { captchaToken: input.captchaToken } : {}),
     },
   });
 

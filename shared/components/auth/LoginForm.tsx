@@ -9,6 +9,8 @@ import {
   type AuthActionState,
 } from "@/app/actions/auth";
 import { AUTH_CALLBACK_ERROR_MESSAGE } from "@/shared/lib/operational-errors";
+import { isCaptchaConfigured } from "@/shared/lib/auth/captcha";
+import { TurnstileField } from "./TurnstileField";
 import {
   AuthField,
   AuthInput,
@@ -27,6 +29,8 @@ export function LoginFormFields() {
       : null;
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaPending = isCaptchaConfigured && !captchaToken;
   const displayError = state.error ?? callbackError;
 
   return (
@@ -95,8 +99,15 @@ export function LoginFormFields() {
         </div>
       </div>
 
+      <TurnstileField
+        action="login"
+        theme="dark"
+        resetSignal={state}
+        onTokenChange={setCaptchaToken}
+      />
+
       <div className="pt-2">
-        <AuthSubmitButton pending={pending} variant="gold">
+        <AuthSubmitButton pending={pending} disabled={captchaPending} variant="gold">
           <span>Sign in</span>
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </AuthSubmitButton>
