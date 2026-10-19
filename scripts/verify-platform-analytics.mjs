@@ -158,7 +158,8 @@ console.log("\nIngest route");
 const route = read("app/api/analytics/collect/route.ts");
 check("only pageview and signup_started accepted from browsers", /CLIENT_EVENTS = new Set\(\["pageview", "signup_started"\]\)/.test(route));
 check("signup_completed cannot be posted by a browser", !/CLIENT_EVENTS[^\n]*signup_completed/.test(route));
-check("cross-site origins refused", /origin && host && origin !== host/.test(route));
+check("cross-site origins refused", /if \(!isSameOriginBeacon\(request\)\) return NO_CONTENT\(\)/.test(route));
+check("origin check fails closed (exact host:port, no Host means refuse)", /originHost === hostHeader/.test(route) && /Boolean\(hostHeader\)/.test(route) && /catch \{\s*return false;/.test(route));
 check("bots refused", /isBotUserAgent\(userAgent\)/.test(route));
 check("recording gated to production (or an explicit test flag)", /isAnalyticsRecordingEnabled\(\)/.test(route));
 check("platform admins never recorded", /canAccessPlatformAdmin\(user\)\) return NO_CONTENT/.test(route));
@@ -192,6 +193,9 @@ check("analytics page re-checks platform admin", /await requirePlatformAdmin\(\)
 const service = read("lib/database/services/platform-analytics.ts");
 check("multi-row reads page past PostgREST's 1,000-row cap", /\.range\(from, to\)/.test(service) && /PAGE_SIZE = 1000/.test(service));
 check("internal and demo companies excluded", /internalCompanyIds/.test(service) && /parseCompanyDemoDataSettings/.test(service));
+check("expiring-trial list only includes trials with time left", /return left > 0 && left <= EXPIRING_WITHIN_DAYS \* DAY_MS;/.test(service));
+check("past-end Stripe trials surface as a sync warning", /label: "Trial status sync"/.test(service));
+check("active trials use the app's effective trial status", /resolveEffectiveSubscriptionStatus/.test(service));
 
 console.log(`\n${checks} checks, ${failures} failures`);
 process.exit(failures ? 1 : 0);

@@ -101,6 +101,12 @@ const ENTRY_POINTS = [
     scope: "public.token_view",
     why: "payment token enumeration",
   },
+  {
+    file: "app/api/analytics/collect/route.ts",
+    fn: "POST",
+    scope: "public.analytics_collect",
+    why: "anonymous analytics beacon: event flooding that would inflate traffic figures and table size",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */

@@ -689,7 +689,13 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
   });
   const trialConverted = trialEligible.filter((entry) => isPaying(entry.sub)).length;
   const expiringTrials: ExpiringTrialRow[] = trialing
-    .filter((entry) => entry.sub.trial_ends_at && Date.parse(entry.sub.trial_ends_at) - nowMs <= EXPIRING_WITHIN_DAYS * DAY_MS)
+    .filter((entry) => {
+      if (!entry.sub.trial_ends_at) return false;
+      const left = Date.parse(entry.sub.trial_ends_at) - nowMs;
+      // Only trials that still have time left. A Stripe-backed row past its
+      // end date but still "trialing" is a sync problem, reported in health.
+      return left > 0 && left <= EXPIRING_WITHIN_DAYS * DAY_MS;
+    })
     .map((entry) => ({
       companyId: entry.company.id,
       companyName: entry.company.name,
@@ -729,6 +735,21 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
             ? { label: "Billing maintenance cron", status: "warning", detail: `Last run ${run.startedAt.slice(0, 10)} — older than two days.` }
             : { label: "Billing maintenance cron", status: "healthy", detail: `Last run ${run.startedAt.slice(0, 10)} (${run.status}).` },
   );
+  // The app trusts Stripe's status for card-backed trials, so a row whose
+  // trial ended but is still "trialing" means a Stripe update never arrived.
+  const staleStripeTrials = trialing.filter(
+    (entry) =>
+      entry.sub.stripe_subscription_id &&
+      entry.sub.trial_ends_at &&
+      Date.parse(entry.sub.trial_ends_at) <= nowMs,
+  ).length;
+  if (staleStripeTrials > 0) {
+    health.push({
+      label: "Trial status sync",
+      status: "warning",
+      detail: `${staleStripeTrials} card-backed trial(s) are past their end date but still marked trialing. Check Stripe webhook delivery for those subscriptions.`,
+    });
+  }
   if (diagnostics.length) {
     health.push({ label: "Data reads", status: "warning", detail: `${diagnostics.length} source(s) could not be fully read.` });
   }

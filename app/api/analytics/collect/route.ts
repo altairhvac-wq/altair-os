@@ -46,6 +46,29 @@ const CHANNELS = new Set<AnalyticsChannel>([
 ]);
 const MAX_BODY = 4096;
 
+/**
+ * Browsers always send Origin on a POST fetch. When it is present it must
+ * name exactly the host (and port) this request was sent to; an unparseable
+ * Origin, or an Origin with no Host to compare against, is refused. A request
+ * with no Origin at all is not a browser beacon from another site (that is
+ * what this check exists to stop), so it falls through to the other checks.
+ */
+function isSameOriginBeacon(request: Request): boolean {
+  const originHeader = request.headers.get("origin");
+  if (!originHeader) return true;
+  let originHost: string;
+  try {
+    originHost = new URL(originHeader).host.toLowerCase();
+  } catch {
+    return false;
+  }
+  const hostHeader = (request.headers.get("x-forwarded-host") ?? request.headers.get("host"))
+    ?.split(",")[0]
+    ?.trim()
+    .toLowerCase();
+  return Boolean(hostHeader) && originHost === hostHeader;
+}
+
 function str(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -59,11 +82,7 @@ export async function POST(request: Request): Promise<Response> {
     const userAgent = request.headers.get("user-agent");
     if (isBotUserAgent(userAgent)) return NO_CONTENT();
 
-    const origin = normalizeHost(request.headers.get("origin"));
-    const host = normalizeHost(
-      request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
-    );
-    if (origin && host && origin !== host) return NO_CONTENT();
+    if (!isSameOriginBeacon(request)) return NO_CONTENT();
 
     const text = await request.text();
     if (!text || text.length > MAX_BODY) return NO_CONTENT();

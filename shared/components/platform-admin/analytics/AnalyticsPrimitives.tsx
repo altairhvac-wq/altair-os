@@ -134,6 +134,17 @@ type Series = { key: string; label: string; color: string; values: number[] };
  * Line chart over UTC days (or months). Responsive SVG; every point carries a
  * <title> so values are readable on hover and by screen readers.
  */
+/** A readable gridline step at or above `raw`: 1, 2, (2.5), 5 x 10^n. */
+function niceStep(raw: number, integers: boolean): number {
+  if (!(raw > 0)) return 1;
+  const exponent = Math.floor(Math.log10(raw));
+  const magnitude = 10 ** exponent;
+  const fraction = raw / magnitude;
+  const multipliers = integers ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  const step = (multipliers.find((m) => fraction <= m) ?? 10) * magnitude;
+  return integers ? Math.max(1, Math.round(step)) : step;
+}
+
 export function TrendChart({
   labels,
   series,
@@ -154,72 +165,24 @@ export function TrendChart({
   if (labels.length === 0 || max === 0) {
     return <EmptyState title={emptyTitle} />;
   }
-  const top = max * 1.1;
-  const width = 600;
-  const padL = 36;
-  const padR = 8;
-  const padT = 8;
-  const padB = 22;
-  const plotW = width - padL - padR;
-  const plotH = height - padT - padB;
-  const x = (i: number) => padL + (labels.length === 1 ? plotW / 2 : (i / (labels.length - 1)) * plotW);
-  const y = (v: number) => padT + plotH - (v / top) * plotH;
-  const tickEvery = Math.max(1, Math.ceil(labels.length / 6));
+  // Whole, evenly spaced gridlines: a step of 1/2/5 x 10^n (2.5 allowed for
+  // fractional series) so a count chart never shows "0, 1, 1".
+  const integers = all.every((v) => Number.isInteger(v));
+  const step = niceStep(max / 2, integers);
+  const top = Math.ceil(max / step) * step;
+  const gridValues = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
+  const geometry = { labels, series, top, gridValues, formatLabel, formatValue };
 
+  // Two drawings of the same data: a wide one, and a narrow one for phones so
+  // the axis text stays readable instead of being scaled down with the chart.
   return (
     <div className="min-w-0">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-auto w-full"
-        role="img"
-        aria-label={series.map((s) => s.label).join(", ")}
-      >
-        {[0, 0.5, 1].map((fraction) => (
-          <g key={fraction}>
-            <line
-              x1={padL}
-              x2={width - padR}
-              y1={padT + plotH - fraction * plotH}
-              y2={padT + plotH - fraction * plotH}
-              stroke="rgba(119,89,27,0.12)"
-              strokeWidth={1}
-            />
-            <text
-              x={padL - 6}
-              y={padT + plotH - fraction * plotH + 3}
-              textAnchor="end"
-              fontSize={10}
-              fill="#6B6255"
-            >
-              {formatValue(Math.round(top * fraction))}
-            </text>
-          </g>
-        ))}
-        {labels.map((label, i) =>
-          i % tickEvery === 0 || i === labels.length - 1 ? (
-            <text key={label} x={x(i)} y={height - 6} textAnchor="middle" fontSize={10} fill="#6B6255">
-              {formatLabel(label)}
-            </text>
-          ) : null,
-        )}
-        {series.map((s) => (
-          <g key={s.key}>
-            <polyline
-              fill="none"
-              stroke={s.color}
-              strokeWidth={2}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              points={s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
-            />
-            {s.values.map((v, i) => (
-              <circle key={i} cx={x(i)} cy={y(v)} r={labels.length > 45 ? 1.5 : 2.5} fill={s.color}>
-                <title>{`${formatLabel(labels[i] ?? "")} · ${s.label}: ${formatValue(v)}`}</title>
-              </circle>
-            ))}
-          </g>
-        ))}
-      </svg>
+      <div className="hidden sm:block">
+        <ChartSvg {...geometry} width={600} height={height} maxTicks={6} />
+      </div>
+      <div className="sm:hidden">
+        <ChartSvg {...geometry} width={320} height={Math.round(height * 0.85)} maxTicks={3} />
+      </div>
       {series.length > 1 ? (
         <div className="mt-1 flex flex-wrap gap-3">
           {series.map((s) => (
@@ -231,6 +194,97 @@ export function TrendChart({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ChartSvg({
+  labels,
+  series,
+  top,
+  gridValues,
+  formatLabel,
+  formatValue,
+  width,
+  height,
+  maxTicks,
+}: {
+  labels: string[];
+  series: Series[];
+  top: number;
+  gridValues: number[];
+  formatLabel: (label: string) => string;
+  formatValue: (value: number) => string;
+  width: number;
+  height: number;
+  maxTicks: number;
+}) {
+  // Left margin sized to the longest axis label (about 6 units per character
+  // at font size 10) so "$1,200" is never clipped.
+  const longest = Math.max(...gridValues.map((value) => formatValue(value).length));
+  const padL = Math.max(24, 10 + longest * 6);
+  const padR = 8;
+  const padT = 8;
+  const padB = 22;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+  const x = (i: number) => padL + (labels.length === 1 ? plotW / 2 : (i / (labels.length - 1)) * plotW);
+  const y = (v: number) => padT + plotH - (v / top) * plotH;
+  const tickEvery = Math.max(1, Math.ceil(labels.length / maxTicks));
+  const last = labels.length - 1;
+  // Regular ticks, plus the last point; a regular tick less than one full
+  // interval before the last one is dropped so the two labels never overlap.
+  const showLabel = (i: number) =>
+    i === last || (i % tickEvery === 0 && last - i >= tickEvery);
+  const anchorFor = (i: number) =>
+    labels.length === 1 ? "middle" : i === 0 ? "start" : i === last ? "end" : "middle";
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={series.map((s) => s.label).join(", ")}
+    >
+      {gridValues.map((value) => (
+        <g key={value}>
+          <line
+            x1={padL}
+            x2={width - padR}
+            y1={y(value)}
+            y2={y(value)}
+            stroke="rgba(119,89,27,0.12)"
+            strokeWidth={1}
+          />
+          <text x={padL - 6} y={y(value) + 3} textAnchor="end" fontSize={10} fill="#6B6255">
+            {formatValue(value)}
+          </text>
+        </g>
+      ))}
+      {labels.map((label, i) =>
+        showLabel(i) ? (
+          <text key={label} x={x(i)} y={height - 6} textAnchor={anchorFor(i)} fontSize={10} fill="#6B6255">
+            {formatLabel(label)}
+          </text>
+        ) : null,
+      )}
+      {series.map((s) => (
+        <g key={s.key}>
+          <polyline
+            fill="none"
+            stroke={s.color}
+            strokeWidth={2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            points={s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
+          />
+          {s.values.map((v, i) => (
+            <circle key={i} cx={x(i)} cy={y(v)} r={labels.length > 45 ? 1.5 : 2.5} fill={s.color}>
+              <title>{`${formatLabel(labels[i] ?? "")} · ${s.label}: ${formatValue(v)}`}</title>
+            </circle>
+          ))}
+        </g>
+      ))}
+    </svg>
   );
 }
 
