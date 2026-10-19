@@ -131,6 +131,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 - Electrical demo seed pack
 - Network workspace tab restructure and parity fixes
 - Altair Community Phase 1 orientation experience on `/network` (user-facing Community shell; Network backend retained; Help Requests and future content types not yet implemented; route/database rename deferred)
+- Platform analytics (`/platform/analytics`, platform admins only) — overview, website traffic, acquisition funnel, product usage, revenue (MRR kept separate from collected revenue) and marketing-by-source tabs; first-party cookieless tracking (`/api/analytics/collect`, GPC/DNT honoured, no IP or user agent stored) and first-touch signup attribution. Tracking needs migration `202` in production; see `docs/reference/platform-analytics.md`
 
 ---
 
