@@ -246,6 +246,12 @@ Stripe already holds a subscription for another customer with the same email
 `/platform` shows trials started in the last 24 h / 7 d / 30 d, repeat
 sign-ups turned away, and the comped-company count.
 
+Smoke tests: once 201 is live, every `altairhvac+…@gmail.com` (or re-dotted
+`altairhvac@gmail.com`) signup normalizes to the owner's inbox; once any of
+those spellings owns a company that had a trial (every test signup since 200
+does), the next one gets no trial. Test the trial path with an
+unrelated inbox; use a `+tag` spelling only to test the withheld path.
+
 - [ ] migration 201 applied (`to_regprocedure('public.normalize_trial_email(text)')` is not null; `trial_withheld_reason` column exists)
 - [ ] Manual test: sign up with a `+tag` or re-dotted spelling of an address that already trialed → `/activate-subscription` with "Your free trial has already been used", no 14-day promise in Checkout
 - [ ] `/platform` → the "Trials started" tile renders with the comped count beside it
