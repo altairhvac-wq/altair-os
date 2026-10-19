@@ -1,6 +1,10 @@
 "use client";
 
-import { Suspense, useActionState, useState } from "react";
+import { Suspense, useActionState, useEffect, useState } from "react";
+import {
+  signupAnalyticsFields,
+  trackSignupStarted,
+} from "@/shared/lib/analytics/client";
 import { useSearchParams } from "next/navigation";
 import { NextRedirectField } from "./NextRedirectField";
 import {
@@ -36,6 +40,14 @@ export function SignUpForm({
   const setupInviteFlow = sanitizeNextPath(searchParams.get("next")) === "/setup";
   const [state, formAction, pending] = useActionState(signupAction, initialState);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // First-party analytics: the visitor id and first-touch attribution travel
+  // with the signup so the server can credit the right campaign. Read after
+  // mount (they live in localStorage); empty when tracking is not allowed.
+  const [analytics, setAnalytics] = useState({ visitorId: "", sessionId: "", attribution: "" });
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser storage once after mount
+    setAnalytics(signupAnalyticsFields());
+  }, []);
   const captchaPending = isCaptchaConfigured && !captchaToken;
   const isValidInvite = invitePreview?.state === "valid";
   const defaultCompanyName =
@@ -76,7 +88,14 @@ export function SignUpForm({
         </p>
       }
     >
-      <form action={formAction} className="space-y-5">
+      <form
+        action={formAction}
+        className="space-y-5"
+        onFocusCapture={trackSignupStarted}
+      >
+        <input type="hidden" name="analyticsVisitorId" value={analytics.visitorId} />
+        <input type="hidden" name="analyticsSessionId" value={analytics.sessionId} />
+        <input type="hidden" name="analyticsAttribution" value={analytics.attribution} />
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>

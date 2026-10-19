@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
+import { FirstPartyAnalytics } from "@/shared/components/analytics/FirstPartyAnalytics";
 import { ToastViewport } from "@/shared/design-system/feedback";
 import "./globals.css";
 
@@ -107,6 +108,9 @@ export default function RootLayout({
         style={{ backgroundColor: APP_SHELL_BACKGROUND }}
       >
         <PwaServiceWorkerRegistration />
+        {/* First-party, cookieless analytics (migration 202). Root-level so
+            marketing, auth and product pages share one count. */}
+        <FirstPartyAnalytics />
         {/* The Meta Pixel is mounted in app/(marketing)/layout.tsx only. It
             must never load on authenticated routes or on the public
             estimate-approval / invoice-payment token pages (audit H2). */}

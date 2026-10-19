@@ -44,7 +44,8 @@ export type PublicRateLimitScope =
   | "auth.invite_accept"
   | "public.estimate_approval"
   | "public.invoice_checkout"
-  | "public.token_view";
+  | "public.token_view"
+  | "public.analytics_collect";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -104,6 +105,11 @@ export const PUBLIC_RATE_LIMITS: Record<
   // Enumeration guard on the token pages. High enough that a customer
   // refreshing, or a link opening in a preview fetcher, never notices.
   "public.token_view": [{ dimension: "ip", windowSeconds: 900, limit: 200 }],
+  // First-party analytics beacon (migration 202). One per pageview; a real
+  // visitor clicking through the site stays far below this, and a script
+  // inflating counts from one address is cut off. Fails open (analytics is
+  // not worth an outage), and a refusal is silent.
+  "public.analytics_collect": [{ dimension: "ip", windowSeconds: 900, limit: 300 }],
 };
 
 /**

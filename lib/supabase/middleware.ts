@@ -63,6 +63,13 @@ const DEMO_SESSION_ROUTE = "/api/demo/session";
  * ALTAIR_MEDIA_INGEST_SECRET bearer check, which is the real boundary.
  */
 const MARKETING_MEDIA_INGEST_ROUTE = "/api/marketing/media/ingest";
+/**
+ * First-party analytics beacon (migration 202). Anonymous visitors send it, so
+ * it must not redirect to /login. The handler refuses cross-site origins,
+ * bots and non-production deployments itself, and writes nothing but a
+ * sanitised event. Exact path only.
+ */
+const ANALYTICS_COLLECT_ROUTE = "/api/analytics/collect";
 
 /**
  * Files a browser or crawler fetches on its own initiative, before anyone has
@@ -289,6 +296,7 @@ function isPublicRoute(pathname: string) {
     isCronRoute(pathname) ||
     isAgentBridgeRoute(pathname) ||
     isMarketingMediaIngestRoute(pathname) ||
+    pathname === ANALYTICS_COLLECT_ROUTE ||
     isDemoFingerprintRoute(pathname)
   );
 }
