@@ -30,7 +30,7 @@ These documents are procedural. They do not override foundation, Canon, or produ
 | [`beta-launch-readiness.md`](./beta-launch-readiness.md) | Beta readiness |
 | [`stripe-payments-beta-qa.md`](./stripe-payments-beta-qa.md) | Stripe payments QA |
 | [`demo-account-audit.md`](./demo-account-audit.md) | Demo account audit |
-| [`platform-analytics.md`](./platform-analytics.md) | Platform analytics: tracking design, privacy, config, migration 202 |
+| [`platform-analytics.md`](./platform-analytics.md) | Platform analytics: tracking design, privacy, config, migrations 202 and 203, 25-month retention |
 
 ## Recommended reading order
 

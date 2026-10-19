@@ -23,6 +23,10 @@ export type PlatformAutomationRunTotals = {
   /** Retention sweeps riding billing-maintenance (launch audit M10). */
   rateLimitRowsSwept?: number;
   auditEventsSwept?: number;
+  /** web_analytics_events rows past 25 months, batched (migration 203). */
+  webAnalyticsEventsSwept?: number;
+  webAnalyticsSweepComplete?: boolean;
+  webAnalyticsSweepInstalled?: boolean;
   /** Card-free trial reminders folded into billing-maintenance (migration 200). */
   trialReminderCandidates?: number;
   trialRemindersSent?: number;

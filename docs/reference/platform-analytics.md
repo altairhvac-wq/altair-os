@@ -77,6 +77,9 @@ Stored: event name, sanitised path, referrer host, UTM values, channel, device
 class, HMAC of the random visitor and session ids, and the user id for
 signed-in product use.
 
+Kept: 25 months. Older rows are deleted daily by the billing maintenance
+cron (migration 203; see "Known limits and follow-ups").
+
 Not stored: IP addresses, user agents, full referrer URLs, query strings,
 emails, names, form contents. Token pages (`/estimate-approval`,
 `/invoice-payment`, `/auth/callback`, `/reset-password`) are reduced to their
@@ -98,7 +101,7 @@ Suggested privacy-policy paragraph, for owner review before publishing:
 > in your browser. We do not use cookies for this, we do not record your IP
 > address, and we do not share this data with advertising or analytics
 > companies. If your browser sends Global Privacy Control or Do Not Track, we
-> do not record your visit.
+> do not record your visit. We delete these records after 25 months.
 
 ## Configuration
 
@@ -138,6 +141,28 @@ Order: applying the migration before the deploy is safe (nothing writes yet).
 Deploying before the migration is also safe: the beacon fails quietly and the
 page shows tracking as not set up.
 
+## Migration 203
+
+`supabase/migrations/203_web_analytics_retention_sweep.sql` adds
+`public.sweep_web_analytics_events(p_retain_months, p_batch_size)`: it deletes
+one batch of the oldest rows past the retention period and returns the count.
+Service role only, security invoker. It changes no data when applied. Apply it
+with or after 202, the same way (paste into the SQL editor). Read-only probe:
+
+```sql
+select
+  to_regprocedure('public.sweep_web_analytics_events(integer, integer)') is not null as sweep_exists,
+  has_function_privilege('anon', 'public.sweep_web_analytics_events(integer, integer)', 'execute') as anon_can_call,
+  has_function_privilege('authenticated', 'public.sweep_web_analytics_events(integer, integer)', 'execute') as authed_can_call,
+  has_function_privilege('service_role', 'public.sweep_web_analytics_events(integer, integer)', 'execute') as service_can_call;
+```
+
+Expected: `true, false, false, true`.
+
+Order: deploying before 203 is applied is safe. The cron records
+`webAnalyticsSweepInstalled: false` and treats it as nothing to do, not as a
+failure.
+
 ## Tagging links
 
 Use UTM tags on every video description, post and ad link so the Marketing tab
@@ -167,8 +192,26 @@ https://altair-op.com/?utm_source=facebook&utm_medium=paid_social&utm_campaign=b
 
 ## Known limits and follow-ups
 
-- No retention sweep yet. Suggested: delete `web_analytics_events` rows older
-  than 25 months from the existing billing maintenance cron.
+- **Retention: 25 months.** `web_analytics_events` rows older than 25 months
+  are deleted by the existing daily billing maintenance cron
+  (`/api/cron/billing-maintenance`); there is no separate cron entry. The
+  page's longest range is the last 12 months, so 25 months keeps that window
+  and the year before it, plus a month of slack. The period is
+  `WEB_ANALYTICS_RETENTION_MONTHS` in
+  `lib/database/services/retention-sweeps.ts`.
+  - Deletion is batched: each call to `sweep_web_analytics_events` (migration
+    203) removes at most 2,000 of the oldest expired rows in its own short
+    transaction, so beacon inserts never wait behind one long delete. The cron
+    stops at the first short batch, after 50 batches, or after 5 seconds.
+  - The count is recorded on the `billing_maintenance` row in
+    `platform_automation_runs`: `totals.webAnalyticsEventsSwept`, with
+    `webAnalyticsSweepComplete` (false when a backlog is left for the next
+    day; the run is then `partial`) and `webAnalyticsSweepInstalled` (false
+    until migration 203 is applied).
+  - A failed batch is counted as a run error, keeps the rows deleted so far,
+    and never hides the invoice sweep's result.
+  - "Tracking since" on the page is the oldest row kept, so after the first
+    sweep it moves forward with the retention window.
 - Signups before the deploy have no source; they show as "Unknown / before
   tracking".
 - DAU / WAU / MAU fall back to sign-in times until tracking has data.

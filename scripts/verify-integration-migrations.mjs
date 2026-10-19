@@ -68,9 +68,36 @@ const DESTRUCTIVE = [
   /\bdrop\s+type\b/,
 ];
 
+/**
+ * Retention sweeps whose DELETE lives inside a function body. Applying the
+ * migration only defines the function; nothing is deleted until the cron
+ * calls it. The body is lifted out before the destructive check (so a
+ * top-level DELETE in the same file still fails), and the lifted DELETE must
+ * be scoped by a WHERE and bounded by a LIMIT.
+ */
+const REVIEWED_SWEEP_FUNCTIONS = new Map([
+  ["203_web_analytics_retention_sweep.sql", "sweep_web_analytics_events"],
+]);
+
 console.log("\nNo destructive statements");
 for (const file of files) {
-  const sql = readSql(file);
+  let sql = readSql(file);
+  const sweepFn = REVIEWED_SWEEP_FUNCTIONS.get(file);
+  if (sweepFn) {
+    const body = sql.match(
+      new RegExp(
+        `create\\s+or\\s+replace\\s+function\\s+public\\.${sweepFn}\\([\\s\\S]*?as\\s+\\$function\\$([\\s\\S]*?)\\$function\\$;`,
+      ),
+    );
+    const deletes = body ? [...body[1].matchAll(/\bdelete\s+from\b[\s\S]*?;/g)] : [];
+    check(
+      `${file}: the reviewed sweep's deletes are scoped and batched`,
+      deletes.length > 0 &&
+        /\blimit\s+p_batch_size\b/.test(body[1]) &&
+        deletes.every(([statement]) => /\bwhere\b/.test(statement)),
+    );
+    if (body) sql = sql.replace(body[0], "");
+  }
   const hit = DESTRUCTIVE.find((re) => re.test(sql));
   check(`${file} contains no destructive statement`, !hit, hit?.source);
 }
@@ -341,6 +368,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "202_first_party_web_analytics.sql",
     new Set(["platform_web_analytics_summary"]),
+  ],
+  // 203 is the analytics retention sweep: one batched delete over
+  // web_analytics_events, security invoker, executable by service_role only.
+  [
+    "203_web_analytics_retention_sweep.sql",
+    new Set(["sweep_web_analytics_events"]),
   ],
 ]);
 
