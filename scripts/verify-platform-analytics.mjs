@@ -13,7 +13,10 @@
  *     admins, and cannot be used to forge signup_completed;
  *   - the tracker honours Global Privacy Control / Do Not Track;
  *   - the middleware exempts exactly one path;
- *   - the analytics table is service-role only.
+ *   - the analytics table is service-role only;
+ *   - rows older than 25 months are swept in small batches by the daily
+ *     billing-maintenance cron and the count lands in the run record
+ *     (migration 203). The batching loop runs against a fake client.
  *
  * Offline and side-effect free.
  */
@@ -21,6 +24,7 @@ import { readFileSync } from "node:fs";
 
 const attribution = await import("@/shared/lib/analytics/attribution");
 const metrics = await import("@/shared/lib/analytics/platform-metrics");
+const retention = await import("@/lib/database/services/retention-sweeps");
 
 let checks = 0;
 let failures = 0;
@@ -196,6 +200,73 @@ check("internal and demo companies excluded", /internalCompanyIds/.test(service)
 check("expiring-trial list only includes trials with time left", /return left > 0 && left <= EXPIRING_WITHIN_DAYS \* DAY_MS;/.test(service));
 check("past-end Stripe trials surface as a sync warning", /label: "Trial status sync"/.test(service));
 check("active trials use the app's effective trial status", /resolveEffectiveSubscriptionStatus/.test(service));
+
+console.log("\nRetention: 25 months, swept in batches by billing-maintenance");
+check("retention period is 25 months", retention.WEB_ANALYTICS_RETENTION_MONTHS === 25);
+check(
+  "batches are small and the sweep is bounded",
+  retention.WEB_ANALYTICS_SWEEP_BATCH_SIZE > 0 &&
+    retention.WEB_ANALYTICS_SWEEP_BATCH_SIZE <= 10_000 &&
+    retention.WEB_ANALYTICS_SWEEP_MAX_BATCHES > 0 &&
+    retention.WEB_ANALYTICS_SWEEP_TIME_BUDGET_MS <= 10_000,
+);
+/** A fake service client holding `backlog` expired rows; each rpc deletes one batch. */
+function fakeSweepClient(backlog, { failOn = null, errorCode = null } = {}) {
+  const calls = [];
+  return {
+    calls,
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      if (errorCode && (failOn === null || calls.length === failOn)) {
+        return { data: null, error: { code: errorCode, message: "simulated" } };
+      }
+      const deleted = Math.min(backlog, args.p_batch_size);
+      backlog -= deleted;
+      return { data: deleted, error: null };
+    },
+  };
+}
+{
+  const client = fakeSweepClient(4_500);
+  const r = await retention.sweepWebAnalyticsEvents(client, { batchSize: 2_000 });
+  check("a backlog is deleted batch by batch until a short batch", r.deleted === 4_500 && r.batches === 3 && r.complete && r.installed && r.error === null, JSON.stringify(r));
+  check("every call asks for the 25-month cutoff and the batch size", client.calls.every((c) => c.name === "sweep_web_analytics_events" && c.args.p_retain_months === 25 && c.args.p_batch_size === 2_000));
+}
+{
+  const r = await retention.sweepWebAnalyticsEvents(fakeSweepClient(0));
+  check("nothing expired: one call, complete, zero deleted", r.deleted === 0 && r.batches === 1 && r.complete, JSON.stringify(r));
+}
+{
+  const r = await retention.sweepWebAnalyticsEvents(fakeSweepClient(1_000_000), { batchSize: 1_000, maxBatches: 3 });
+  check("a backlog larger than the cap stops and reports incomplete", r.deleted === 3_000 && r.batches === 3 && !r.complete && r.error === null, JSON.stringify(r));
+}
+{
+  const r = await retention.sweepWebAnalyticsEvents(fakeSweepClient(10_000, { failOn: 2, errorCode: "57014" }), { batchSize: 1_000 });
+  check("a failing batch stops the loop, keeps the count so far, and reports an error", r.deleted === 1_000 && !r.complete && r.error === "web analytics sweep failed", JSON.stringify(r));
+}
+{
+  const r = await retention.sweepWebAnalyticsEvents(fakeSweepClient(0, { errorCode: "PGRST202" }));
+  check("migration not applied yet is reported as not installed, not as a failure", !r.installed && r.complete && r.error === null && r.deleted === 0, JSON.stringify(r));
+}
+const sweepSql = read("supabase/migrations/203_web_analytics_retention_sweep.sql").replace(/--[^\n]*/g, "").toLowerCase();
+check("sweep deletes the oldest expired rows, one bounded batch per call", /make_interval\(months => p_retain_months\)/.test(sweepSql) && /order by e\.occurred_at\s+limit p_batch_size/.test(sweepSql));
+check("sweep refuses a missing retention or an oversized batch", /p_retain_months is null or p_retain_months < 1/.test(sweepSql) && /p_batch_size > 10000/.test(sweepSql));
+check("sweep is not security definer", !/security\s+definer/.test(sweepSql));
+const sweepFn = "public\\.sweep_web_analytics_events\\(integer, integer\\)";
+check(
+  "sweep is executable by service_role only",
+  ["public", "anon", "authenticated"].every((role) => new RegExp(`revoke all on function ${sweepFn} from ${role};`).test(sweepSql)) &&
+    new RegExp(`grant execute on function ${sweepFn} to service_role;`).test(sweepSql) &&
+    !/to (anon|authenticated)\b/.test(sweepSql),
+);
+const sweeps = read("lib/database/services/retention-sweeps.ts");
+check("runRetentionSweeps runs the analytics sweep", /await sweepWebAnalyticsEvents\(client\)/.test(sweeps));
+const cron = read("app/api/cron/billing-maintenance/route.ts");
+const runRecord = cron.split("recordPlatformAutomationRunFinished(runId")[1] ?? "";
+check("billing-maintenance records the deleted count in platform_automation_runs", /webAnalyticsEventsSwept: retention\.webAnalyticsEventsDeleted/.test(runRecord));
+check("an unfinished analytics backlog makes the run partial, not succeeded", /result\.cycleComplete && retention\.webAnalyticsSweepComplete/.test(cron));
+const vercel = JSON.parse(read("vercel.json"));
+check("no extra cron entry: the sweep rides billing-maintenance", vercel.crons.filter((c) => c.path === "/api/cron/billing-maintenance").length === 1 && !vercel.crons.some((c) => /analytics|retention/.test(c.path)));
 
 console.log(`\n${checks} checks, ${failures} failures`);
 process.exit(failures ? 1 : 0);

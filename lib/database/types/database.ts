@@ -1797,6 +1797,12 @@ export type Database = {
         Args: { p_from: string; p_to: string };
         Returns: unknown;
       };
+      // sweep_web_analytics_events: migration 203 — service_role only. Deletes
+      // one batch of expired rows, oldest first; returns the count.
+      sweep_web_analytics_events: {
+        Args: { p_retain_months: number; p_batch_size?: number };
+        Returns: number;
+      };
       // get_platform_company_rollups: migration 164 — wire into Database types
       // on next gen types run. Granted to service_role ONLY: it deliberately
       // crosses tenants, which nothing reachable from a user session may do.

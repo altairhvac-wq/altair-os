@@ -101,6 +101,9 @@ export async function GET(request: Request) {
         // sweep functions and no caller, so both tables grew forever. They
         // ride this daily run. Each is a single bounded DELETE; a failure is
         // counted and reported but never hides the invoice sweep's result.
+        // First-party analytics (202) is kept 25 months and deleted in small
+        // batches under its own short time budget (203); a backlog left for
+        // tomorrow makes the run "partial", not "failed".
         const retention = await runRetentionSweeps();
 
         // ==================== TRIAL PAYMENT REMINDERS ====================
@@ -136,7 +139,7 @@ export async function GET(request: Request) {
           startedAt,
           status: hasErrors
             ? "failed"
-            : result.cycleComplete
+            : result.cycleComplete && retention.webAnalyticsSweepComplete
               ? "succeeded"
               : "partial",
           companyCount: result.attempted,
@@ -147,6 +150,9 @@ export async function GET(request: Request) {
             stoppedForTime: result.stoppedForTime,
             rateLimitRowsSwept: retention.rateLimitRowsDeleted,
             auditEventsSwept: retention.auditEventsDeleted,
+            webAnalyticsEventsSwept: retention.webAnalyticsEventsDeleted,
+            webAnalyticsSweepComplete: retention.webAnalyticsSweepComplete,
+            webAnalyticsSweepInstalled: retention.webAnalyticsSweepInstalled,
             trialReminderCandidates: reminders.candidates,
             trialRemindersSent: reminders.remindersSent,
           },
@@ -179,6 +185,9 @@ export async function GET(request: Request) {
           retention: {
             rateLimitRowsSwept: retention.rateLimitRowsDeleted,
             auditEventsSwept: retention.auditEventsDeleted,
+            webAnalyticsEventsSwept: retention.webAnalyticsEventsDeleted,
+            webAnalyticsSweepComplete: retention.webAnalyticsSweepComplete,
+            webAnalyticsSweepInstalled: retention.webAnalyticsSweepInstalled,
             errors: retention.errors,
           },
           trialReminderCandidates: reminders.candidates,
