@@ -28,6 +28,15 @@ import {
 } from "@/lib/auth/signup-invite-cookie";
 import { createClient } from "@/lib/supabase/server";
 import {
+  isAnalyticsRecordingEnabled,
+  recordAnalyticsEvent,
+} from "@/lib/analytics/server-events";
+import {
+  classifyChannel,
+  isValidClientId,
+  parseAttributionJson,
+} from "@/shared/lib/analytics/attribution";
+import {
   bootstrapCompanyForNewUser,
   getActiveCompanyContext,
   getCompanyNameFromUserMetadata,
@@ -316,6 +325,16 @@ export async function signupAction(
   //
   // The cost of PKCE is that the link must be opened in the browser that
   // holds the verifier cookie. The callback names that failure in its log.
+  // First-party analytics (migration 202): the browser's first-touch
+  // attribution is kept on the user so the Platform page can credit the
+  // video or campaign that produced this signup. Best effort: malformed or
+  // missing values are dropped, never an error.
+  const signupAttribution = parseAttributionJson(
+    String(formData.get("analyticsAttribution") ?? ""),
+  );
+  const analyticsVisitorId = String(formData.get("analyticsVisitorId") ?? "").trim();
+  const analyticsSessionId = String(formData.get("analyticsSessionId") ?? "").trim();
+
   const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -327,6 +346,18 @@ export async function signupAction(
         ...(companyName ? { company_name: companyName } : {}),
         ...(trade ? { trade } : {}),
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
+        ...(signupAttribution
+          ? {
+              signup_attribution: {
+                ...signupAttribution,
+                channel: classifyChannel({
+                  referrerHost: signupAttribution.referrerHost,
+                  utmSource: signupAttribution.source,
+                  utmMedium: signupAttribution.medium,
+                }),
+              },
+            }
+          : {}),
       },
       emailRedirectTo,
       ...(captchaToken ? { captchaToken } : {}),
@@ -335,6 +366,26 @@ export async function signupAction(
 
   if (error) {
     return { error: mapAuthError(error) };
+  }
+
+  if (isAnalyticsRecordingEnabled() && isValidClientId(analyticsVisitorId)) {
+    await recordAnalyticsEvent({
+      event: "signup_completed",
+      path: "/signup",
+      visitorId: analyticsVisitorId,
+      sessionId: analyticsSessionId || null,
+      referrerHost: signupAttribution?.referrerHost ?? null,
+      utm: signupAttribution
+        ? {
+            source: signupAttribution.source,
+            medium: signupAttribution.medium,
+            campaign: signupAttribution.campaign,
+            content: signupAttribution.content,
+            term: signupAttribution.term,
+          }
+        : undefined,
+      userId: null,
+    });
   }
 
   // With email confirmation off, the server client has already written the

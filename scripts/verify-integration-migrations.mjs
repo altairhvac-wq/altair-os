@@ -159,6 +159,17 @@ for (const file of files) {
  */
 const ANON_READABLE_TABLES = new Set(["marketing_site_pages"]);
 
+/**
+ * ============ PLATFORM-ONLY TABLES ============
+ * Rows that belong to no company: anonymous website traffic has no tenant.
+ * The tenant shape (company_id + an authenticated SELECT narrowed by
+ * company) cannot apply, so these are held to a STRICTER shape instead:
+ * nothing at all for anon or authenticated, service_role only, RLS on with
+ * no policy. They are read only by Platform pages through the service role
+ * after the app has authorised a platform admin. Named, not inferred.
+ */
+const PLATFORM_ONLY_TABLES = new Set(["web_analytics_events"]);
+
 console.log("\nTenancy, RLS and grants on every new table");
 for (const file of files) {
   const sql = readSql(file);
@@ -172,6 +183,39 @@ for (const file of files) {
     const body =
       sql.split(`create table if not exists public.${table}`)[1] ?? "";
     const definition = body.slice(0, body.indexOf(");") + 2);
+    if (PLATFORM_ONLY_TABLES.has(table)) {
+      check(
+        `${table}: enables row level security`,
+        new RegExp(
+          `alter\\s+table\\s+public\\.${table}\\s+enable\\s+row\\s+level\\s+security`,
+        ).test(sql),
+      );
+      for (const role of ["public", "anon", "authenticated"]) {
+        check(
+          `${table}: revokes everything from ${role}`,
+          new RegExp(
+            `revoke\\s+all\\s+on\\s+table\\s+public\\.${table}\\s+from\\s+${role}`,
+          ).test(sql),
+        );
+      }
+      check(
+        `${table}: grants nothing to anon or authenticated`,
+        !new RegExp(
+          `grant\\s+[^;]*on\\s+table\\s+public\\.${table}\\s+to\\s+[^;]*(anon|authenticated)`,
+        ).test(sql),
+      );
+      check(
+        `${table}: grants all to service_role`,
+        new RegExp(
+          `grant\\s+all\\s+on\\s+table\\s+public\\.${table}\\s+to\\s+service_role`,
+        ).test(sql),
+      );
+      check(
+        `${table}: has no policy (service role only)`,
+        !new RegExp(`on\\s+public\\.${table}\\s+for\\s+`).test(sql),
+      );
+      continue;
+    }
 
     check(
       `${table}: is company-scoped with a cascading FK`,
@@ -291,6 +335,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "200_card_free_trial_bootstrap.sql",
     new Set(["bootstrap_company_for_new_user"]),
+  ],
+  // 202 is first-party web analytics: one read-only aggregation over
+  // web_analytics_events, security invoker, executable by service_role only.
+  [
+    "202_first_party_web_analytics.sql",
+    new Set(["platform_web_analytics_summary"]),
   ],
 ]);
 

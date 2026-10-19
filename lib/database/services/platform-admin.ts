@@ -2,6 +2,7 @@ import "server-only";
 
 import type { User } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { fetchAllAuthUsers } from "@/lib/database/services/auth-users";
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import { normalizeCompanyRole } from "@/lib/database/types/roles";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
@@ -472,38 +473,6 @@ function authUserFullName(user: User): string | null {
   return trimmed ? trimmed : null;
 }
 
-async function fetchAllAuthUsers(
-  diagnostics: string[],
-): Promise<{ users: User[]; error: string | null }> {
-  const supabase = createServiceRoleClient();
-  const users: User[] = [];
-  let page = 1;
-  const perPage = 200;
-
-  while (true) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
-
-    if (error) {
-      const message = formatQueryError("auth.admin.listUsers failed", error);
-      console.error(`[platform-admin] ${message}`);
-      return { users, error: message };
-    }
-
-    users.push(...data.users);
-
-    if (data.users.length < perPage) {
-      break;
-    }
-
-    page += 1;
-  }
-
-  if (users.length === 0) {
-    pushDiagnostic(diagnostics, "auth.admin.listUsers returned 0 accounts");
-  }
-
-  return { users, error: null };
-}
 
 async function countAll(
   table: "companies" | "profiles" | "company_memberships" | "jobs" | "customers" | "estimates" | "invoices",

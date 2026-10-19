@@ -1271,6 +1271,54 @@ export type Database = {
           },
         ];
       };
+      // web_analytics_events: migration 202 — first-party analytics. Service
+      // role only; written by /api/analytics/collect and the signup action,
+      // read through platform_web_analytics_summary.
+      web_analytics_events: {
+        Row: {
+          id: number;
+          occurred_at: string;
+          event_name: "pageview" | "signup_started" | "signup_completed";
+          path: string;
+          referrer_host: string | null;
+          channel: string;
+          utm_source: string | null;
+          utm_medium: string | null;
+          utm_campaign: string | null;
+          utm_content: string | null;
+          utm_term: string | null;
+          visitor_hash: string;
+          session_hash: string | null;
+          device: string;
+          is_returning: boolean | null;
+          user_id: string | null;
+          dedupe_key: string;
+        };
+        Insert: {
+          id?: never;
+          occurred_at?: string;
+          event_name: "pageview" | "signup_started" | "signup_completed";
+          path: string;
+          referrer_host?: string | null;
+          channel?: string;
+          utm_source?: string | null;
+          utm_medium?: string | null;
+          utm_campaign?: string | null;
+          utm_content?: string | null;
+          utm_term?: string | null;
+          visitor_hash: string;
+          session_hash?: string | null;
+          device?: string;
+          is_returning?: boolean | null;
+          user_id?: string | null;
+          dedupe_key: string;
+        };
+        Update: Partial<{
+          event_name: "pageview" | "signup_started" | "signup_completed";
+          path: string;
+        }>;
+        Relationships: [];
+      };
       saas_trial_reminders: {
         Row: SaasTrialReminderRow;
         Insert: SaasTrialReminderInsert;
@@ -1741,6 +1789,13 @@ export type Database = {
           expenses_missing_amount: number | string;
           open_labor_entry_count: number | string;
         }[];
+      };
+      // platform_web_analytics_summary: migration 202 — service_role only.
+      // Returns one jsonb document; shape parsed defensively by
+      // lib/database/services/platform-analytics.ts.
+      platform_web_analytics_summary: {
+        Args: { p_from: string; p_to: string };
+        Returns: unknown;
       };
       // get_platform_company_rollups: migration 164 — wire into Database types
       // on next gen types run. Granted to service_role ONLY: it deliberately
