@@ -44,7 +44,33 @@ async function getOriginFromRequestHeaders(): Promise<string | null> {
   return `${protocol}://${host.split(",")[0]?.trim() ?? host}`;
 }
 
-function shouldPreferRequestOrigin(
+/**
+ * True when `requestHost` is the configured host or a sibling of it under the
+ * same parent domain: with NEXT_PUBLIC_APP_URL = app.altair-op.com, both
+ * www.altair-op.com and altair-op.com qualify; an unrelated host never does.
+ */
+export function isSiblingHost(envHost: string, requestHost: string): boolean {
+  const env = envHost.toLowerCase();
+  const request = requestHost.toLowerCase();
+  if (env === request) return true;
+  const labels = env.split(".");
+  const parent = labels.length >= 3 ? labels.slice(1).join(".") : env;
+  return request === parent || request.endsWith(`.${parent}`);
+}
+
+/**
+ * ============ WHY THE LINK MUST RETURN TO THE HOST THE VISITOR USED ============
+ * Signup and password reset run the PKCE flow: the server action stores a
+ * code verifier in a host-only cookie on the host the visitor is on, and the
+ * emailed link is exchanged at /auth/callback on the host it points to. The
+ * marketing site and every "Start your trial" button live on
+ * www.altair-op.com while NEXT_PUBLIC_APP_URL is app.altair-op.com, so a link
+ * built from the env origin sent every homepage signup to a host without the
+ * verifier, and the confirmation failed with auth_callback. Both hosts serve
+ * the app and both callbacks are in the Supabase redirect allow-list, so the
+ * request's own host is used whenever it belongs to the same site.
+ */
+export function shouldPreferRequestOrigin(
   envOrigin: string,
   requestOrigin: string,
 ): boolean {
@@ -52,12 +78,21 @@ function shouldPreferRequestOrigin(
     return false;
   }
 
-  const requestHost = new URL(requestOrigin).host;
+  const requestUrl = new URL(requestOrigin);
+  const requestHost = requestUrl.host;
 
-  return (
+  if (
     requestHost.endsWith(".vercel.app") ||
     requestHost.startsWith("localhost") ||
     requestHost.startsWith("127.0.0.1")
+  ) {
+    return true;
+  }
+
+  const envUrl = new URL(envOrigin);
+  return (
+    requestUrl.protocol === envUrl.protocol &&
+    isSiblingHost(envUrl.host, requestHost)
   );
 }
 

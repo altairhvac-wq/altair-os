@@ -57,6 +57,13 @@ export type SecurityHeader = { key: string; value: string };
 const META_PIXEL_SCRIPT_HOST = "https://connect.facebook.net";
 const META_PIXEL_IMAGE_HOST = "https://www.facebook.com";
 
+/**
+ * Cloudflare Turnstile on the public auth forms: the widget script and the
+ * challenge iframe both load from this origin. Same value as
+ * TURNSTILE_ORIGIN in shared/lib/auth/captcha.ts.
+ */
+const TURNSTILE_HOST = "https://challenges.cloudflare.com";
+
 /** Mapbox GL JS tile, style, geocoding and telemetry hosts. */
 const MAPBOX_HOSTS = ["https://api.mapbox.com", "https://events.mapbox.com"];
 
@@ -94,6 +101,7 @@ export function buildContentSecurityPolicy(options: {
     // See "THE KNOWN LIMITATION" above.
     "'unsafe-inline'",
     META_PIXEL_SCRIPT_HOST,
+    TURNSTILE_HOST,
     ...(options.isDevelopment ? ["'unsafe-eval'"] : []),
   ];
 
@@ -136,7 +144,8 @@ export function buildContentSecurityPolicy(options: {
     // The clickjacking control. Nothing in this application is meant to be
     // embedded, least of all the public invoice payment page.
     ["frame-ancestors", ["'none'"]],
-    ["frame-src", ["'self'"]],
+    // Turnstile renders its challenge in an iframe.
+    ["frame-src", ["'self'", TURNSTILE_HOST]],
     ["manifest-src", ["'self'"]],
     ["upgrade-insecure-requests", []],
   ];

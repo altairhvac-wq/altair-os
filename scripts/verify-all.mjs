@@ -107,6 +107,12 @@ steps.push(
   },
   { name: "saas-app-access", script: "scripts/test-saas-billing-app-access.mjs" },
   {
+    name: "auth-captcha",
+    script: "scripts/verify-auth-captcha.mjs",
+    // Imports the shipped CSP builder and token helper.
+    typescript: true,
+  },
+  {
     name: "saas-app-shell-gate",
     script: "scripts/verify-saas-app-access.mjs",
     // Runs the SHIPPED policy + gate (grace window, H7), not a copy.

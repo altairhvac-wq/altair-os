@@ -36,6 +36,11 @@ import {
 import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/services/network-invite-acceptance";
 import { mapAuthError } from "@/lib/database/errors";
 import {
+  CAPTCHA_FAILED_MESSAGE,
+  isCaptchaError,
+  readCaptchaToken,
+} from "@/shared/lib/auth/captcha";
+import {
   normalizeTradeKey,
   type TradeKey,
 } from "@/shared/lib/trades/trade-options";
@@ -134,10 +139,14 @@ export async function loginAction(
     return { error: rateLimitMessage(loginLimit) };
   }
 
+  // Turnstile token, verified by Supabase when CAPTCHA protection is on
+  // (shared/lib/auth/captcha.ts). Ignored by Supabase while it is off.
+  const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    ...(captchaToken ? { options: { captchaToken } } : {}),
   });
 
   if (error) {
@@ -307,6 +316,7 @@ export async function signupAction(
   //
   // The cost of PKCE is that the link must be opened in the browser that
   // holds the verifier cookie. The callback names that failure in its log.
+  const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -319,6 +329,7 @@ export async function signupAction(
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
       },
       emailRedirectTo,
+      ...(captchaToken ? { captchaToken } : {}),
     },
   });
 
@@ -548,9 +559,11 @@ export async function requestPasswordResetAction(
   // PKCE (see signupAction). The verifier cookie set here is marked as a
   // recovery, and the callback learns that from the exchange itself, so the
   // reset no longer depends on `type=recovery` surviving the email template.
+  const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
+    ...(captchaToken ? { captchaToken } : {}),
   });
 
   if (error) {
@@ -565,6 +578,12 @@ export async function requestPasswordResetAction(
 
     if (error.code === "validation_failed") {
       return { error: "Enter a valid email address." };
+    }
+
+    // Before the generic success below: a refused security check must not be
+    // reported as "email sent". Saying so reveals nothing about the account.
+    if (isCaptchaError(error)) {
+      return { error: CAPTCHA_FAILED_MESSAGE };
     }
 
     if (isPasswordResetConfigError(error.message, error.code)) {

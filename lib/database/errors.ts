@@ -1,3 +1,5 @@
+import { CAPTCHA_FAILED_MESSAGE } from "@/shared/lib/auth/captcha";
+
 export const NO_ACTIVE_COMPANY_MESSAGE =
   "Your session expired or no company is selected. Sign in again.";
 
@@ -220,6 +222,27 @@ export function mapDemoDataError(
 
 export function mapAuthError(error: { message?: string; code?: string }): string {
   const message = error.message?.toLowerCase() ?? "";
+
+  // Supabase CAPTCHA protection refused the Turnstile token (missing,
+  // expired, already used, or failed). The form resets the widget.
+  if (error.code === "captcha_failed" || message.includes("captcha")) {
+    return CAPTCHA_FAILED_MESSAGE;
+  }
+
+  // Supabase's hourly auth-email cap (Authentication → Rate Limits).
+  if (
+    error.code === "over_email_send_rate_limit" ||
+    message.includes("email rate limit exceeded")
+  ) {
+    return "We're sending a lot of confirmation emails right now. Please try again in a few minutes.";
+  }
+
+  if (
+    error.code === "over_request_rate_limit" ||
+    message.includes("request rate limit reached")
+  ) {
+    return "Too many attempts right now. Please wait a minute and try again.";
+  }
 
   if (message.includes("invalid login credentials")) {
     return "Incorrect email or password.";

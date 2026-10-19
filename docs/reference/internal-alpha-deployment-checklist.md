@@ -119,6 +119,72 @@ opening it elsewhere lands on `/login?error=auth_callback`, logged as
 
 ---
 
+## 2b. Auth email delivery, auth rate limits, and CAPTCHA
+
+State on 2026-10-18 (read from the dashboards): Supabase sends auth email with
+its built-in sender, capped at **2 emails per hour**; CAPTCHA protection is off;
+Resend's `mail.altair-op.com` domain is verified (DKIM, SPF, bounce MX), with
+open and click tracking off (keep it off: click tracking rewrites auth links).
+
+### Custom SMTP through Resend (owner, Supabase dashboard)
+
+Authentication → Emails → SMTP Settings → Enable custom SMTP:
+
+| Field | Value |
+|---|---|
+| Sender email | an address on `mail.altair-op.com`, e.g. `hello@mail.altair-op.com` |
+| Sender name | `Altair OS` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | a Resend API key with **sending access only** (create a dedicated key named `supabase-auth-smtp`; do not reuse the app's key) |
+
+Then send one password reset to yourself and confirm it arrives and shows in
+Resend → Emails.
+
+### Auth rate limits (owner, after SMTP is on)
+
+Authentication → Rate Limits. The app calls Supabase Auth **from the server**,
+so the per-IP limits below are shared by every visitor reaching the same
+Vercel function IP; the app's own per-visitor limits
+(`lib/security/public-rate-limit.ts`) do the per-person work.
+
+| Limit | Default seen | Launch value |
+|---|---|---|
+| Emails per hour | 2 (built-in sender) | 100 (editable only once custom SMTP is on) |
+| Sign-ups and sign-ins per 5 min per IP | 30 | 150 |
+| Token verifications per 5 min per IP | 30 | 150 |
+| Minimum interval per user (seconds) | 60 | 60 (keep) |
+
+### Branded templates (owner pastes, or approves pasting)
+
+`docs/reference/auth-email-templates/confirm-signup.html` and
+`reset-password.html`, with the subjects in each file's header comment. Both keep
+`{{ .ConfirmationURL }}`, which the PKCE flow requires.
+
+### Cloudflare Turnstile CAPTCHA (order matters)
+
+1. Cloudflare → Turnstile → Add widget: hostnames `altair-op.com`,
+   `www.altair-op.com`, `app.altair-op.com`; widget mode **Managed**.
+2. Vercel → Production (and Preview) env: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` =
+   the site key. Redeploy. The signup, login and reset forms now render the
+   check and send a token; Supabase ignores the token while protection is off.
+3. Load `/signup` on a phone and a desktop and confirm the button enables.
+4. Only then: Supabase → Authentication → Attack Protection → Enable Captcha
+   protection → provider Turnstile → paste the **secret** key → Save.
+5. Sign up, sign in and request a reset once each.
+
+Reversing steps 2 and 4 refuses every signup, sign-in and reset until the
+deploy lands. To back out, switch protection off in Supabase first.
+`scripts/verify-auth-captcha.mjs` (in `verify:all`) fails CI if any
+CAPTCHA-enforced auth call stops forwarding the token.
+
+The PWA service worker (`public/sw.js`) must leave cross-origin requests
+alone: when it proxied them, the Turnstile script failed with
+`net::ERR_FAILED` for every returning visitor.
+
+---
+
 ## 3. Supabase Site URL
 
 The **Site URL** must match your primary deployed origin:
