@@ -93,15 +93,14 @@ Not added: session replay, heatmaps, fingerprinting, third-party analytics.
 The site already loads the Meta Pixel when `NEXT_PUBLIC_META_PIXEL_ID` is set;
 that is unchanged by this work.
 
-Suggested privacy-policy paragraph, for owner review before publishing:
-
-> We measure how visitors use altair-op.com with our own first-party
-> analytics. We record the pages you view, the site or campaign link that
-> brought you here, and your device type, linked to a random identifier stored
-> in your browser. We do not use cookies for this, we do not record your IP
-> address, and we do not share this data with advertising or analytics
-> companies. If your browser sends Global Privacy Control or Do Not Track, we
-> do not record your visit. We delete these records after 25 months.
+Privacy-policy disclosure: approved by the owner on 2026-10-19 and published
+in the "Cookies and analytics" section of `app/(marketing)/privacy/page.tsx`.
+The published text adds three points to the draft so it matches the code:
+signed-in app use is linked to the account, signup keeps the first-visit
+source with the account, and the no-IP and not-shared promises are limited
+to our analytics. That limit matters because the same page discloses
+security logs, which do record IP addresses, and the Meta Pixel on marketing
+pages. Keep that page in step with any change to what is collected.
 
 ## Configuration
 
