@@ -37,6 +37,9 @@ export function ActivateSubscriptionView({
   // trial has ENDED without a card, not on first sign-in. Say so.
   const trialEnded =
     Boolean(summary?.trialEndsAt) && summary?.hasStripeSubscription === false;
+  // Or never offered one: the owner's inbox already used its free trial
+  // (migration 201). Say that too, rather than promising 14 free days.
+  const trialWithheld = summary?.trialWithheld === true;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#F7F4EE_0%,#F3EFE6_45%,#EFE9DE_100%)]">
@@ -58,14 +61,18 @@ export function ActivateSubscriptionView({
         <main className="mt-8 space-y-5">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-altair-ink sm:text-[1.75rem]">
-              {trialEnded
-                ? "Your free trial has ended"
-                : "Start your Altair subscription"}
+              {trialWithheld
+                ? "Your free trial has already been used"
+                : trialEnded
+                  ? "Your free trial has ended"
+                  : "Start your Altair subscription"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-altair-ink-secondary">
-              {trialEnded
-                ? "Choose a plan and add a payment method to pick up where you left off. Everything in your workspace is still here."
-                : "Choose a plan and add a payment method to activate your workspace."}{" "}
+              {trialWithheld
+                ? "This email address has already had a free trial of Altair, so this workspace starts on a paid plan. Choose a plan and add a payment method to open it."
+                : trialEnded
+                  ? "Choose a plan and add a payment method to pick up where you left off. Everything in your workspace is still here."
+                  : "Choose a plan and add a payment method to activate your workspace."}{" "}
               Full application access unlocks as soon as Stripe confirms the
               subscription.
             </p>

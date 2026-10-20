@@ -143,6 +143,7 @@ export function CompanySubscriptionBillingCard({
     currentPeriodEndsAt: null,
     warnings: [],
     hasStripeSubscription: false,
+    trialWithheld: false,
   };
 
   const planLabel =
@@ -374,7 +375,9 @@ export function CompanySubscriptionBillingCard({
               ? "Update your payment method to keep your subscription in good standing."
               : cardFreeTrialEnded
                 ? "Your free trial has ended. Choose a plan and add a payment method to pick up where you left off — everything in your workspace is still here."
-                : effectiveSummary.status === "incomplete"
+                : effectiveSummary.trialWithheld
+                  ? "This email address has already had a free trial of Altair, so this workspace starts on a paid plan. Choose a plan and add a payment method to open it."
+                  : effectiveSummary.status === "incomplete"
                   ? "Your subscription setup was not completed. Update your payment method to activate."
                   : "Your subscription is paused. Update your payment method to resume access."}
           </p>
@@ -447,7 +450,7 @@ export function CompanySubscriptionBillingCard({
                     : trialEndLabel
                       ? `You won't be charged until your trial ends on ${trialEndLabel}.`
                       : "You won't be charged until your trial ends."
-                  : effectiveSummary.trialEndsAt
+                  : effectiveSummary.trialEndsAt || effectiveSummary.trialWithheld
                     ? "Billing starts when you add your card."
                     : `${SAAS_TRIAL_CONFIG.durationDays}-day trial, card required. Converts to paid billing unless canceled.`}
               </p>
@@ -459,7 +462,9 @@ export function CompanySubscriptionBillingCard({
               >
                 {isPending
                   ? "Opening checkout…"
-                  : isCardFreeTrial || effectiveSummary.trialEndsAt
+                  : isCardFreeTrial ||
+                      effectiveSummary.trialEndsAt ||
+                      effectiveSummary.trialWithheld
                     ? "Add payment method"
                     : `Start ${SAAS_TRIAL_CONFIG.durationDays}-day trial`}
               </button>

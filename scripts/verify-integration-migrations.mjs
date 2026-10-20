@@ -363,6 +363,13 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "200_card_free_trial_bootstrap.sql",
     new Set(["bootstrap_company_for_new_user"]),
   ],
+  // 201 is one trial per inbox: it redefines the bootstrap again so a second
+  // company for an already-used inbox starts without a trial, and adds the
+  // email normalizer that decision uses.
+  [
+    "201_one_trial_per_email.sql",
+    new Set(["normalize_trial_email", "bootstrap_company_for_new_user"]),
+  ],
   // 202 is first-party web analytics: one read-only aggregation over
   // web_analytics_events, security invoker, executable by service_role only.
   [

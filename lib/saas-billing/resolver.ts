@@ -15,6 +15,7 @@ import type {
   SaasAccessGrant,
   SaasPlanKey,
   SaasSubscriptionStatus,
+  SaasTrialWithheldReason,
 } from "@/lib/saas-billing/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -28,6 +29,12 @@ function asStatus(value: string): SaasSubscriptionStatus {
 
 function asAccessGrant(value: string): SaasAccessGrant {
   return value === "beta_comped" ? "beta_comped" : "none";
+}
+
+function asTrialWithheldReason(
+  value: string | null,
+): SaasTrialWithheldReason | null {
+  return value === "email_already_trialed" ? value : null;
 }
 
 function mapSubscriptionRow(
@@ -48,6 +55,7 @@ function mapSubscriptionRow(
     canceled_at: row.canceled_at,
     access_grant: asAccessGrant(row.access_grant),
     grace_period_ends_at: row.grace_period_ends_at,
+    trial_withheld_reason: asTrialWithheldReason(row.trial_withheld_reason),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -195,5 +203,6 @@ export async function getCompanySubscriptionBillingSummary(
     currentPeriodEndsAt: subscription?.current_period_ends_at ?? null,
     warnings: decision.warnings,
     hasStripeSubscription: Boolean(subscription?.stripe_subscription_id),
+    trialWithheld: subscription?.trial_withheld_reason != null,
   };
 }

@@ -230,6 +230,32 @@ configured for them to go out.
 - [ ] Manual test: new user signup → company bootstrap → lands on the dashboard with "Trial ends <date>" in the header, no Checkout
 - [ ] Manual test: set a test company's `trial_ends_at` to the past → next page load redirects to `/activate-subscription`
 
+### One trial per inbox (migration 201)
+
+`supabase/migrations/201_one_trial_per_email.sql` adds `normalize_trial_email`
+(lowercase, no `+tag`, no dots for Gmail) and
+`company_subscriptions.trial_withheld_reason`, and redefines the bootstrap RPC:
+when the new owner's normalized email already owned a company whose
+subscription has a `trial_ends_at`, the new company is seeded
+`status='incomplete'` with `trial_withheld_reason='email_already_trialed'` and
+lands on `/activate-subscription`, which says the free trial was already used.
+No backfill; comped rows are untouched; `/platform` can still comp such a
+company. Checkout (`lib/saas-billing/checkout.ts`) also passes no trial when
+Stripe already holds a subscription for another customer with the same email
+(the company email or the signed-in owner's); that lookup fails open and logs.
+`/platform` shows trials started in the last 24 h / 7 d / 30 d, repeat
+sign-ups turned away, and the comped-company count.
+
+Smoke tests: once 201 is live, every `altairhvac+…@gmail.com` (or re-dotted
+`altairhvac@gmail.com`) signup normalizes to the owner's inbox; once any of
+those spellings owns a company that had a trial (every test signup since 200
+does), the next one gets no trial. Test the trial path with an
+unrelated inbox; use a `+tag` spelling only to test the withheld path.
+
+- [ ] migration 201 applied (`to_regprocedure('public.normalize_trial_email(text)')` is not null; `trial_withheld_reason` column exists)
+- [ ] Manual test: sign up with a `+tag` or re-dotted spelling of an address that already trialed → `/activate-subscription` with "Your free trial has already been used", no 14-day promise in Checkout
+- [ ] `/platform` → the "Trials started" tile renders with the comped count beside it
+
 ---
 
 ## 6. Production migration status

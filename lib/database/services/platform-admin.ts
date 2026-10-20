@@ -16,6 +16,7 @@ import type {
   PlatformBugReport,
   PlatformBugReportsLoadResult,
   PlatformOpenBugBrief,
+  PlatformTrialSignals,
 } from "@/shared/types/platform-admin";
 import { buildPlatformBrainSnapshot } from "@/shared/lib/platform-priority-engine";
 import { fetchPlatformReliabilitySnapshot } from "@/lib/database/services/platform-reliability";
@@ -541,6 +542,52 @@ async function fetchMembershipRows(
   }));
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type TrialSignalRow = {
+  access_grant: string | null;
+  trial_starts_at: string | null;
+  trial_withheld_reason: string | null;
+  created_at: string;
+};
+
+function countSince(
+  rows: TrialSignalRow[],
+  pick: (row: TrialSignalRow) => string | null,
+  sinceMs: number,
+): number {
+  let count = 0;
+  for (const row of rows) {
+    const value = pick(row);
+    if (!value) continue;
+    const ms = Date.parse(value);
+    if (Number.isFinite(ms) && ms >= sinceMs) count += 1;
+  }
+  return count;
+}
+
+/**
+ * Trial activity from the rows the overview already loads. Rolling windows
+ * from `nowMs`; a trial that started 23 h ago is in all three, one from 20 d
+ * ago only in the last.
+ */
+export function summarizeTrialSignals(
+  rows: TrialSignalRow[],
+  nowMs: number,
+): PlatformTrialSignals {
+  const started = (row: TrialSignalRow) => row.trial_starts_at;
+  const withheld = (row: TrialSignalRow) =>
+    row.trial_withheld_reason ? row.created_at : null;
+
+  return {
+    startedLast24h: countSince(rows, started, nowMs - DAY_MS),
+    startedLast7d: countSince(rows, started, nowMs - 7 * DAY_MS),
+    startedLast30d: countSince(rows, started, nowMs - 30 * DAY_MS),
+    withheldLast30d: countSince(rows, withheld, nowMs - 30 * DAY_MS),
+    compedCompanies: rows.filter((row) => row.access_grant === "beta_comped").length,
+  };
+}
+
 export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview> {
   const diagnostics: string[] = [];
   const supabase = createServiceRoleClient();
@@ -588,7 +635,9 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     fetchStripeConnectedCompanyIds(diagnostics),
     supabase
       .from("company_subscriptions")
-      .select("company_id, access_grant, status"),
+      .select(
+        "company_id, access_grant, status, trial_starts_at, trial_withheld_reason, created_at",
+      ),
   ]);
 
   const { users: authUsers, error: authUsersError } = authUsersResult;
@@ -629,6 +678,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       },
     ]),
   );
+
+  const trials = summarizeTrialSignals(subscriptionsResult.data ?? [], Date.now());
 
   for (const result of [
     companiesCount,
@@ -844,6 +895,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       totalCustomers: customersCount.count,
       totalEstimates: estimatesCount.count,
       totalInvoices: invoicesCount.count,
+      trials,
     },
     recentCompanies,
     recentUsers,
