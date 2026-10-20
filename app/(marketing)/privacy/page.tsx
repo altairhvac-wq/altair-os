@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      effectiveDate="August 8, 2026"
+      effectiveDate="October 19, 2026"
       intro="Altair OS is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
     >
       <LegalSection heading="What we collect">
@@ -74,6 +74,19 @@ export default function PrivacyPolicyPage() {
           links your customers receive. You can block it with a browser
           tracking blocker or through your Meta ad settings. We do not sell or
           share your data with Meta for any other purpose.
+        </p>
+        <p>
+          We also measure how people use altair-op.com and the app with our
+          own first-party analytics. We record the pages you view, the site or
+          campaign link that brought you here, and your device type, linked to
+          a random identifier stored in your browser. When you are signed in,
+          the pages you use in the app are linked to your account so we can
+          see which features are used, and when you create an account we keep
+          the link that first brought you to us with it. Our analytics do not
+          use cookies, do not record your IP address, and are never shared
+          with advertising or analytics companies. If your browser sends
+          Global Privacy Control or Do Not Track, we do not record your visit.
+          We delete these records after 25 months.
         </p>
       </LegalSection>
 
