@@ -10,7 +10,7 @@ import type {
 
 export const ALTAIR_HQ_CONFIG_SEED: MarketingHqConfig = {
   mission:
-    "Altair OS — the operating system for field-service businesses. Built from real experience working in the trades to remove office work so owners can focus on customers, employees, and their families.",
+    "Altair Operating System — software for field-service businesses. Built from real experience working in the trades to remove office work so owners can focus on customers, employees, and their families.",
   audience:
     "Owners of small field-service businesses (1-15 techs): HVAC, plumbing, electrical, and other trades. Hardworking, busy, and rightly skeptical of software built by people who never worked a job site.",
   positioning:
@@ -65,7 +65,7 @@ export const ALTAIR_BRAND_KIT_SEED: MarketingBrandKit = {
     "Guarantees, savings percentages, or ROI promises",
   ],
   sampleHooks: [
-    "I just shipped another piece of Altair OS…",
+    "I just shipped another piece of Altair Operating System…",
     "Small contractors should not need five different tools to run one business.",
     "I run an HVAC company. I built the software I couldn't find.",
     "This week's build removed one more piece of office work.",

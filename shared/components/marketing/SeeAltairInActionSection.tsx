@@ -26,7 +26,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "See your day's jobs, crew assignments, and schedule changes in one place. Drag, assign, and adjust without jumping between tools — everything stays linked to the customer and job record.",
     badge: "Connected scheduling",
-    imageAlt: "Altair OS dispatch command center showing daily schedule and crew assignments",
+    imageAlt: "Altair Operating System dispatch command center showing daily schedule and crew assignments",
     imageLabel: "Dispatch Command Center",
     imageSrc: "/marketing/screenshots/social/dispatch-full-page.png",
     icon: CalendarClock,
@@ -37,7 +37,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Open any account and see contact details, service history, equipment, estimates, and invoices together. Your team gets the full picture before they pick up the phone or roll a truck.",
     badge: "Single customer view",
-    imageAlt: "Altair OS Customer 360 view with service history and account details",
+    imageAlt: "Altair Operating System Customer 360 view with service history and account details",
     imageLabel: "Customer 360",
     imageSrc: "/marketing/screenshots/social/customers-full-page.png",
     icon: Users,
@@ -48,7 +48,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Build estimates in the platform and send them for customer review without extra steps. Approved work flows directly into scheduling and invoicing so your pipeline stays connected.",
     badge: "Customer approvals built in",
-    imageAlt: "Altair OS estimates and customer approval workflow",
+    imageAlt: "Altair Operating System estimates and customer approval workflow",
     imageLabel: "Estimates & Approvals",
     imageSrc: "/marketing/screenshots/social/estimates-full-page.png",
     icon: FileCheck,
@@ -59,7 +59,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Turn completed jobs into invoices and collect payment through linked customer workflows. Less re-entry, fewer handoffs, and a clearer path from work done to cash collected.",
     badge: "End-to-end billing",
-    imageAlt: "Altair OS invoicing and payment collection interface",
+    imageAlt: "Altair Operating System invoicing and payment collection interface",
     imageLabel: "Invoicing & Payments",
     imageSrc: "/marketing/screenshots/social/invoices-full-page.png",
     icon: Receipt,
@@ -70,7 +70,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Track revenue, job activity, and team performance from dashboards designed for service businesses. See what matters without exporting spreadsheets or building reports from scratch.",
     badge: "Operations at a glance",
-    imageAlt: "Altair OS reporting dashboards and business insights",
+    imageAlt: "Altair Operating System reporting dashboards and business insights",
     imageLabel: "Reporting & Business Insights",
     imageSrc: "/marketing/screenshots/social/reports-full-page.png",
     icon: BarChart3,
@@ -182,7 +182,7 @@ export function SeeAltairInActionSection({
             isDark ? "text-white" : "text-[#0A0A0A]",
           ].join(" ")}
         >
-          See Altair OS in Action
+          See Altair Operating System in Action
         </h2>
         <p
           className={[

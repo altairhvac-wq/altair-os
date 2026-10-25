@@ -49,7 +49,7 @@ export function buildTeamInviteShareText(input: {
     ? ` ${input.companyName.trim()}`
     : "";
 
-  return `You've been invited to join${companySuffix} on Altair OS. Sign up or log in at ${input.acceptUrl} using ${input.inviteEmail} to accept your team invitation.`;
+  return `You've been invited to join${companySuffix} on Altair Operating System. Sign up or log in at ${input.acceptUrl} using ${input.inviteEmail} to accept your team invitation.`;
 }
 
 export function buildTeamInviteShareTextFromOrigin(

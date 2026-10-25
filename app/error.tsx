@@ -26,7 +26,7 @@ export default function GlobalError({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-altair-paper px-6 text-center">
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-altair-brass">
-        Altair OS
+        Altair Operating System
       </p>
       <h1 className="mt-4 text-3xl font-bold tracking-tight text-altair-ink">
         Something went wrong

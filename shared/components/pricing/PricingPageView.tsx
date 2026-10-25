@@ -142,7 +142,7 @@ export function PricingPageView() {
               One connected platform
             </h2>
             <p className="mt-2 text-sm text-stone-600">
-              Every plan includes the core Altair OS workflows and live onboarding.
+              Every plan includes the core Altair Operating System workflows and live onboarding.
             </p>
           </div>
 

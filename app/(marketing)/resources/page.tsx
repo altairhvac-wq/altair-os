@@ -141,7 +141,7 @@ export default function ResourcesHubPage() {
       </div>
 
       <p className="mt-10 text-center text-sm text-stone-600">
-        Altair OS is field service software for the same work these resources cover.{" "}
+        Altair Operating System is field service software for the same work these resources cover.{" "}
         <Link href="/#features" className={resourceLinkClass}>
           See what is in the product
         </Link>

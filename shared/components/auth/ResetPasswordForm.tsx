@@ -27,7 +27,7 @@ function ResetPasswordFormFields() {
   return (
     <AuthShell
       title="Choose a new password"
-      description="Set a new password for your Altair OS account."
+      description="Set a new password for your Altair Operating System account."
       footer={
         <p>
           <AuthLink href="/login">Back to sign in</AuthLink>

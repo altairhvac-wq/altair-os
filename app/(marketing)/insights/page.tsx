@@ -17,7 +17,7 @@ import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
  */
 
 const INSIGHTS_DESCRIPTION =
-  "Articles from Altair OS for field service businesses: running leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one connected system.";
+  "Articles from Altair Operating System for field service businesses: running leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one connected system.";
 
 export const metadata: Metadata = {
   title: "Insights",

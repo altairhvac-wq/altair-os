@@ -33,7 +33,7 @@ function escapeHtml(value: string): string {
 }
 
 function buildSubject(input: SendNetworkInviteEmailInput): string {
-  return `${input.sourceCompanyName} invited ${input.invitedCompanyName} to partner on Altair OS`;
+  return `${input.sourceCompanyName} invited ${input.invitedCompanyName} to partner on Altair Operating System`;
 }
 
 function buildText(input: SendNetworkInviteEmailInput): string {
@@ -44,7 +44,7 @@ function buildText(input: SendNetworkInviteEmailInput): string {
   const lines = [
     `Hi ${input.invitedContactName},`,
     "",
-    `${inviterLine} invited ${input.invitedCompanyName} to join their trusted partner network on Altair OS — so you can exchange referrals and job opportunities directly.`,
+    `${inviterLine} invited ${input.invitedCompanyName} to join their trusted partner network on Altair Operating System — so you can exchange referrals and job opportunities directly.`,
   ];
 
   if (input.personalMessage?.trim()) {
@@ -79,7 +79,7 @@ function buildHtml(input: SendNetworkInviteEmailInput): string {
 
   return `
     <p>Hi ${escapeHtml(input.invitedContactName)},</p>
-    <p>${inviterLine} invited <strong>${escapeHtml(input.invitedCompanyName)}</strong> to join their trusted partner network on <strong>Altair OS</strong> — so you can exchange referrals and job opportunities directly.</p>
+    <p>${inviterLine} invited <strong>${escapeHtml(input.invitedCompanyName)}</strong> to join their trusted partner network on <strong>Altair Operating System</strong> — so you can exchange referrals and job opportunities directly.</p>
     ${personalMessageBlock}
     <p style="margin:20px 0;">
       <a href="${escapeHtml(input.inviteUrl)}" style="display:inline-block;padding:10px 18px;background:#17130E;color:#F5F0E4;text-decoration:none;border-radius:8px;font-weight:600;">
@@ -101,6 +101,6 @@ export async function sendNetworkInviteEmail(
     text: buildText(input),
     html: buildHtml(input),
     logContext: "network-invite-email",
-    fromDisplayName: `${input.sourceCompanyName} via Altair OS`,
+    fromDisplayName: `${input.sourceCompanyName} via Altair Operating System`,
   });
 }

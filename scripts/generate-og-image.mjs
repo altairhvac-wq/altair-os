@@ -64,9 +64,10 @@ async function main() {
   <rect x="28" y="28" width="${WIDTH - 56}" height="${HEIGHT - 56}" rx="20" fill="none" stroke="#2a2a2a" stroke-width="2"/>
   <!-- gold rule under the wordmark -->
   <rect x="470" y="318" width="160" height="4" rx="2" fill="url(#gold)"/>
-  <text x="470" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="112" fill="url(#platinum)" letter-spacing="2">Altair OS</text>
-  <text x="470" y="382" font-family="Georgia, 'Times New Roman', serif" font-size="38" fill="${GOLD}" letter-spacing="1">The operating system</text>
-  <text x="470" y="432" font-family="Georgia, 'Times New Roman', serif" font-size="38" fill="${GOLD}" letter-spacing="1">for field service businesses</text>
+  <text x="470" y="222" font-family="Georgia, 'Times New Roman', serif" font-size="112" fill="url(#platinum)" letter-spacing="2">Altair</text>
+  <text x="470" y="294" font-family="Georgia, 'Times New Roman', serif" font-size="58" fill="url(#platinum)" letter-spacing="2">Operating System</text>
+  <text x="470" y="382" font-family="Georgia, 'Times New Roman', serif" font-size="38" fill="${GOLD}" letter-spacing="1">Software for field</text>
+  <text x="470" y="432" font-family="Georgia, 'Times New Roman', serif" font-size="38" fill="${GOLD}" letter-spacing="1">service businesses</text>
   <text x="470" y="522" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="${STEEL}" letter-spacing="2">LEADS · DISPATCH · ESTIMATES · INVOICES</text>
   <text x="${WIDTH - 60}" y="${HEIGHT - 52}" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="${STEEL}" letter-spacing="2">altair-op.com</text>
 </svg>`;

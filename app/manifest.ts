@@ -8,7 +8,7 @@ const APP_THEME_COLOR = "#1c211a";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Altair OS",
+    name: "Altair Operating System",
     short_name: "Altair",
     description: "Field service command center for trades companies",
     start_url: "/",

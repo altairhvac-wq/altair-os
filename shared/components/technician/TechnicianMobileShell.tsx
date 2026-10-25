@@ -73,7 +73,7 @@ export function TechnicianMobileShell({
               />
               <AltairLogo variant="gold" size="sm" showWordmark={false} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-slate-900">Altair OS</p>
+                <p className="text-sm font-semibold text-slate-900">Altair Operating System</p>
                 <CompanySwitcher
                   activeCompanyId={companyContext.company.id}
                   companies={userCompanies}

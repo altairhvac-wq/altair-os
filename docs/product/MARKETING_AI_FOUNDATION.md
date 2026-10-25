@@ -57,6 +57,10 @@ We never invent: customers, reviews, statistics, revenue numbers,
 integrations, testimonials, or case studies. If information cannot be
 verified, do not state it as fact. Always maintain trust.
 
+**Web address.** The only website is https://www.altair-op.com (also written
+altair-op.com). Links use exactly that address; no other domain is ever
+written for Altair. Added 2026-10-25 after drafts invented "altairos.com".
+
 ## Industry Architecture
 
 Altair is not an HVAC-only platform. Altair serves field-service companies

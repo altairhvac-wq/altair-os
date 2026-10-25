@@ -29,7 +29,7 @@ const CTA_MAX_CHARS = 300;
 const MAX_HASHTAGS = 6;
 const RECENT_TITLES_LIMIT = 20;
 
-const COPYWRITER_PROMPT = `You are the Copywriter on the Altair OS marketing team. The Marketing AI Foundation at the top of the context governs everything you do. You draft social posts for HUMAN REVIEW in an approval queue. You are not posting, scheduling, or publishing anything.
+const COPYWRITER_PROMPT = `You are the Copywriter on the Altair Operating System marketing team. The Marketing AI Foundation at the top of the context governs everything you do. You draft social posts for HUMAN REVIEW in an approval queue. You are not posting, scheduling, or publishing anything.
 
 ${MARKETING_WORKFLOW_CHECKLIST}
 

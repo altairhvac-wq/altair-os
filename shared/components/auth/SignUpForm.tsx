@@ -77,7 +77,7 @@ export function SignUpForm({
           ? "You were invited to join Altair and connect as a trusted network partner."
           : setupInviteFlow
             ? "Create your login with the email address your invitation was sent to. You'll accept the invite right after."
-            : "Get your trades business on Altair OS — set up in minutes, built for the field."
+            : "Get your trades business on Altair Operating System — set up in minutes, built for the field."
       }
       footer={
         <p>

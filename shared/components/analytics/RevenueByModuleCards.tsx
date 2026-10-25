@@ -33,7 +33,7 @@ export function RevenueByModuleCards({ modules }: RevenueByModuleCardsProps) {
           </h3>
         </div>
         <p className="text-xs text-slate-500">
-          Cross-module financial activity in Altair OS
+          Cross-module financial activity in Altair Operating System
         </p>
       </div>
 

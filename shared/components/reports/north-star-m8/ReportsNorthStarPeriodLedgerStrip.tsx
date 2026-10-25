@@ -119,7 +119,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
         />
         <p className={`mt-1 pl-[14px] text-xs ${altairCanvasInkMutedClass}`}>
           {periodLabel} operating snapshot — bookkeeping totals from records
-          entered in Altair OS.
+          entered in Altair Operating System.
         </p>
       </div>
 

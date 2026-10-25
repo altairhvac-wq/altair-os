@@ -535,7 +535,7 @@ export function InstallPageView() {
           <Link
             href="/login"
             className={`shrink-0 ${ctaFocusClass} rounded-sm`}
-            aria-label="Altair OS — Sign in"
+            aria-label="Altair Operating System — Sign in"
           >
             <AltairLogo variant="primary" size="sm" showWordmark />
           </Link>

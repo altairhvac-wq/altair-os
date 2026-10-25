@@ -64,10 +64,10 @@ export const metadata: Metadata = {
    * covers segments that set no title of their own.
    */
   title: {
-    template: "%s · Altair OS",
-    default: "Altair OS",
+    template: "%s · Altair Operating System",
+    default: "Altair Operating System",
   },
-  applicationName: "Altair OS",
+  applicationName: "Altair Operating System",
   description: "Field service command center for trades companies",
   appleWebApp: {
     capable: true,
