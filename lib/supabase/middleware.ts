@@ -35,6 +35,13 @@ const LEGAL_ROUTES = ["/privacy", "/terms"];
  * middleware decides who may KNOCK; the policy decides what they may see.
  */
 const SITE_PAGE_ROUTE_PREFIX = "/insights";
+/**
+ * The free Contractor Business Resource Center: hub, calculators, template
+ * downloads, guides and library. Constant content plus the same published
+ * Insights pages (RLS-filtered) and public YouTube feeds; no account is
+ * needed and nothing here reads or writes tenant data.
+ */
+const RESOURCES_ROUTE_PREFIX = "/resources";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
@@ -242,6 +249,13 @@ function isSitePageRoute(pathname: string) {
   );
 }
 
+function isResourcesRoute(pathname: string) {
+  return (
+    pathname === RESOURCES_ROUTE_PREFIX ||
+    pathname.startsWith(`${RESOURCES_ROUTE_PREFIX}/`)
+  );
+}
+
 function isSitemapRoute(pathname: string) {
   return pathname === SITEMAP_ROUTE;
 }
@@ -285,6 +299,7 @@ function isPublicRoute(pathname: string) {
     isPricingRoute(pathname) ||
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
+    isResourcesRoute(pathname) ||
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||

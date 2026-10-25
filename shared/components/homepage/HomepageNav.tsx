@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/#onboarding", label: "Onboarding", id: "onboarding" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
   { href: "/insights", label: "Insights", id: "insights" },
+  { href: "/resources", label: "Resources", id: "resources" },
   { href: "/#about", label: "About", id: "about" },
 ] as const;
 
@@ -31,6 +32,8 @@ export function HomepageNav() {
   const solid = scrolled || forceSolid;
   const pricingActive = pathname === "/pricing";
   const insightsActive = pathname.startsWith("/insights");
+  const resourcesActive =
+    pathname === "/resources" || pathname.startsWith("/resources/");
 
   useEffect(() => {
     const onScroll = () => {
@@ -85,7 +88,8 @@ export function HomepageNav() {
           {NAV_LINKS.map((link) => {
             const active =
               (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive);
+              (link.id === "insights" && insightsActive) ||
+              (link.id === "resources" && resourcesActive);
             return (
               <Link
                 key={link.href}
@@ -148,7 +152,8 @@ export function HomepageNav() {
             {NAV_LINKS.map((link) => {
               const active =
               (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive);
+              (link.id === "insights" && insightsActive) ||
+              (link.id === "resources" && resourcesActive);
               return (
                 <Link
                   key={link.href}

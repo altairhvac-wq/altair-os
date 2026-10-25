@@ -46,6 +46,14 @@ export function LegalPageShell({
             >
               Insights
             </Link>
+            {/* Hidden on the narrowest phones so the header never wraps; the
+                footer below carries the same link at every width. */}
+            <Link
+              href="/resources"
+              className={`hidden rounded-sm font-medium text-[#c9bfae] transition-colors hover:text-[#f3ebdd] sm:inline ${focusRing}`}
+            >
+              Resources
+            </Link>
             <Link
               href="/login"
               className={`rounded-sm font-medium text-[#c2a05a] transition-colors hover:text-[#e8d9ac] ${focusRing}`}
