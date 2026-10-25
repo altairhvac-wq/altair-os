@@ -13,7 +13,9 @@ import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
  *
  * `/$` allows exactly the homepage without also allowing every path under it
  * (the longest-match rule used by Google and Bing). `/insights` covers the
- * index and every published article beneath it.
+ * index and every published article beneath it; `/resources` covers the
+ * Resource Center hub, calculators, templates (downloads included), guides
+ * and library.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -27,6 +29,10 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/install",
           "/insights",
+          "/resources",
+          // The sitemap itself: with `disallow: "/"` below, an unlisted
+          // /sitemap.xml is blocked and Search Console reports "Couldn't fetch".
+          "/sitemap.xml",
           "/og.png",
           "/icons/",
           "/favicon.svg",

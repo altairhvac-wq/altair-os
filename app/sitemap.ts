@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
+import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
 
 /**
  * The sitemap — the only place a published page announces itself.
@@ -46,6 +47,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    // The Resource Center: hub first, then its tools and indexes. Template
+    // downloads are files, not pages, and are not listed.
+    ...RESOURCE_STATIC_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: path === RESOURCES_PATH ? 0.7 : 0.6,
+    })),
     { url: `${origin}/install`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${origin}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${origin}/terms`, changeFrequency: "yearly", priority: 0.2 },
