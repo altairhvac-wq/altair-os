@@ -784,6 +784,8 @@ function RequestWork({
 
 /* --------------------------------------------------------- recent activity */
 
+const RECENT_ACTIVITY_VISIBLE = 3;
+
 function RecentActivity({
   entries,
 }: {
@@ -793,6 +795,10 @@ function RecentActivity({
   // renders UTC, client re-renders device TZ) and the wrong clock for an
   // operations log. The company timezone is the one the operator plans in.
   const timeZone = useCompanyTimezone();
+  // Owner, 2026-10-25: older, finished items stay folded until asked for.
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? entries : entries.slice(0, RECENT_ACTIVITY_VISIBLE);
+  const hidden = entries.length - visible.length;
   return (
     <section
       className={`${altairMcCardClass} ${altairMcCardPadClass}`}
@@ -805,7 +811,7 @@ function RecentActivity({
         </p>
       ) : (
         <ol className="mt-2 space-y-2">
-          {entries.map((entry, index) => (
+          {visible.map((entry, index) => (
             <li key={`${entry.at}-${index}`} className="min-w-0">
               <span className="block text-xs font-medium text-altair-ink">
                 {entry.label}
@@ -825,6 +831,15 @@ function RecentActivity({
           ))}
         </ol>
       )}
+      {hidden > 0 || showAll ? (
+        <button
+          type="button"
+          onClick={() => setShowAll((value) => !value)}
+          className="mt-2 text-xs font-medium text-altair-ink underline underline-offset-4"
+        >
+          {showAll ? "Show less" : `Show ${String(hidden)} older`}
+        </button>
+      ) : null}
     </section>
   );
 }

@@ -19,6 +19,9 @@ import {
 } from "@/shared/types/marketing-workspace-state";
 import type { MarketingItem } from "@/shared/types/marketing-ai-hq";
 import type { MarketingPost } from "@/shared/types/marketing-post";
+import { nextPublishSlot } from "@/lib/publishing/auto-approve";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 
 /**
  * The rest of the one approval queue: everything that is not a video.
@@ -43,6 +46,9 @@ type MarketingQueueExtrasProps = {
   hqIdeas: readonly MarketingItem[];
   onChanged: () => void;
 };
+
+/** Newest ideas shown before "Show older"; the rest stay folded. */
+const IDEAS_VISIBLE = 5;
 
 const CARD =
   "rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6 space-y-4";
@@ -120,7 +126,15 @@ export function MarketingQueueExtras({
     [hqIdeas],
   );
   const [busy, setBusy] = useState<string | null>(null);
+  const timeZone = useCompanyTimezone();
+  const nextRunLabel = formatDateTimeInTimeZone(
+    nextPublishSlot(new Date().toISOString()),
+    timeZone,
+    { weekday: "short", hour: "numeric", minute: "2-digit" },
+  );
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [openIdea, setOpenIdea] = useState<string | null>(null);
+  const [showAllIdeas, setShowAllIdeas] = useState(false);
   const [error, setError] = useState<{ id: string; message: string } | null>(null);
 
   async function run(id: string, work: () => Promise<string | null>) {
@@ -140,8 +154,12 @@ export function MarketingQueueExtras({
 
   const approve = (post: MarketingPost) =>
     run(post.id, async () => {
+      // Approve books the NEXT daily publishing run. An approval with no
+      // slot records the job as "approved" but never "scheduled", and the
+      // publisher only leases scheduled jobs — found 2026-10-25 when the
+      // first article approved here would never have gone out.
       const result = await approveMarketingPostForDistributionAction(post.id, {
-        scheduledAt: null,
+        scheduledAt: nextPublishSlot(new Date().toISOString()),
         connectedAccountId: null,
       });
       return result?.error ?? null;
@@ -209,7 +227,7 @@ export function MarketingQueueExtras({
           </div>
           <p className="rounded-md border border-altair-warning/40 bg-[var(--surface-tile)] p-3 text-[12px] text-altair-warning">
             Approving publishes this page on www.altair-op.com at the next
-            scheduled run.
+            daily publishing run ({nextRunLabel}).
           </p>
           <div className="flex flex-wrap items-center gap-3 border-t border-[var(--north-star-plate-border)] pt-4">
             <Button size="sm" loading={busy === post.id} onClick={() => void approve(post)}>
@@ -239,6 +257,7 @@ export function MarketingQueueExtras({
           ) : null}
           <p className="text-[11px] text-altair-ink-muted">
             Edit the wording under Library before approving if it needs changes.
+            Approving publishes it at the next daily run ({nextRunLabel}), and
             Facebook posts are public the moment they publish.
           </p>
           <div className="flex flex-wrap items-center gap-3 border-t border-[var(--north-star-plate-border)] pt-4">
@@ -262,33 +281,60 @@ export function MarketingQueueExtras({
               edit it and then approve it here. Dismiss removes it from this list.
             </p>
           </header>
-          <ul className="space-y-3">
-            {ideas.map((item) => (
-              <li
-                key={item.id}
-                className="space-y-2 rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3"
-              >
-                <p className="text-sm font-medium text-altair-ink">{item.title}</p>
-                <p className="whitespace-pre-line text-sm text-altair-ink-muted">
-                  {item.bodyText}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" loading={busy === item.id} onClick={() => void keepIdea(item)}>
-                    Keep
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={busy === item.id}
-                    onClick={() => void dismissIdea(item)}
+          {/* Owner, 2026-10-25: one line per idea, opened on a click, and
+              only the newest few until asked — 54 open ideas made Today
+              eight screens long. */}
+          <ul className="space-y-2">
+            {(showAllIdeas ? ideas : ideas.slice(0, IDEAS_VISIBLE)).map((item) => {
+              const open = openIdea === item.id;
+              return (
+                <li
+                  key={item.id}
+                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)]"
+                >
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => setOpenIdea((current) => (current === item.id ? null : item.id))}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
                   >
-                    Dismiss
-                  </Button>
-                </div>
-                {errorFor(item.id)}
-              </li>
-            ))}
+                    <span className="min-w-0 truncate text-sm font-medium text-altair-ink">
+                      {item.title}
+                    </span>
+                    <span className="shrink-0 text-[11px] text-altair-ink-muted">
+                      {item.createdAt.slice(0, 10)} {open ? "▴" : "▾"}
+                    </span>
+                  </button>
+                  {open ? (
+                    <div className="space-y-2 border-t border-[var(--north-star-plate-border)] px-3 py-3">
+                      <p className="whitespace-pre-line text-sm text-altair-ink-muted">
+                        {item.bodyText}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" loading={busy === item.id} onClick={() => void keepIdea(item)}>
+                          Keep
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={busy === item.id}
+                          onClick={() => void dismissIdea(item)}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                      {errorFor(item.id)}
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
+          {ideas.length > IDEAS_VISIBLE ? (
+            <Button size="sm" variant="quiet" onClick={() => setShowAllIdeas((value) => !value)}>
+              {showAllIdeas ? "Show fewer" : `Show ${String(ideas.length - IDEAS_VISIBLE)} older ideas`}
+            </Button>
+          ) : null}
         </section>
       ) : null}
     </div>

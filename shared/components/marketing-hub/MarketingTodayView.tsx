@@ -372,6 +372,9 @@ function channelLabel(channel: string): string {
  */
 type TodayGroup = { key: string; posts: MarketingPost[] };
 
+/** Newest approved items shown before "Show older". */
+const APPROVED_VISIBLE = 3;
+
 const CHANNEL_ORDER: Record<string, number> = {
   youtube: 0,
   facebook: 1,
@@ -439,15 +442,24 @@ export function MarketingTodayView({
   const approvedGroups = useMemo(
     () =>
       groupByVideo(
-        posts.filter(
-          (post) =>
-            post.sourceType === "agent_daily_reel" &&
-            Boolean(post.videoMediaAssetId) &&
-            (post.status === "ready" || post.status === "scheduled"),
-        ),
+        posts
+          .filter(
+            // Every approved-but-unpublished post since 2026-10-25, not only
+            // agent videos: an approved website article or Facebook post
+            // vanished from Today the moment it was approved.
+            (post) => post.status === "ready" || post.status === "scheduled",
+          )
+          .sort((a, b) =>
+            (b.scheduledAt ?? b.createdAt ?? "").localeCompare(
+              a.scheduledAt ?? a.createdAt ?? "",
+            ),
+          ),
       ),
     [posts],
   );
+  /** Owner, 2026-10-25: finished items fold to one line and open on click. */
+  const [openApproved, setOpenApproved] = useState<string | null>(null);
+  const [showAllApproved, setShowAllApproved] = useState(false);
 
   const todayState = useMemo(
     () => deriveMarketingTodayState({ posts, renders, nowIso }),
@@ -853,8 +865,9 @@ export function MarketingTodayView({
             and Instagram go PUBLIC at that moment.
           </p>
           <ul className="mt-3 space-y-2">
-            {approvedGroups.map((group) => {
+            {(showAllApproved ? approvedGroups : approvedGroups.slice(0, APPROVED_VISIBLE)).map((group) => {
               const lead = group.posts[0];
+              const open = openApproved === group.key;
               const slotIso =
                 group.posts
                   .map((post) => post.scheduledAt)
@@ -862,34 +875,65 @@ export function MarketingTodayView({
               return (
                 <li
                   key={group.key}
-                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3"
+                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)]"
                 >
-                  <p className="text-sm font-medium text-altair-ink">
-                    {lead.title}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-altair-ink-muted">
-                    {group.posts
-                      .map(
-                        (post) =>
-                          `${channelLabel(post.channelTarget)}: ${post.status}`,
-                      )
-                      .join(" · ")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-altair-ink-secondary">
-                    {slotIso
-                      ? `Release slot: ${formatDateTimeInTimeZone(slotIso, timeZone, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}`
-                      : "Release slot: pending assignment"}
-                  </p>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setOpenApproved((current) => (current === group.key ? null : group.key))
+                    }
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                  >
+                    <span className="min-w-0 truncate text-sm font-medium text-altair-ink">
+                      {lead.title}
+                    </span>
+                    <span className="shrink-0 text-[11px] text-altair-ink-muted">
+                      {group.posts.map((post) => channelLabel(post.channelTarget)).join(" · ")}{" "}
+                      {open ? "▴" : "▾"}
+                    </span>
+                  </button>
+                  {open ? (
+                    <div className="space-y-1 border-t border-[var(--north-star-plate-border)] px-3 py-3">
+                      <p className="text-[11px] text-altair-ink-muted">
+                        {group.posts
+                          .map(
+                            (post) =>
+                              `${channelLabel(post.channelTarget)}: ${post.status}`,
+                          )
+                          .join(" · ")}
+                      </p>
+                      <p className="text-[11px] text-altair-ink-secondary">
+                        {slotIso
+                          ? `Release slot: ${formatDateTimeInTimeZone(slotIso, timeZone, {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}`
+                          : "No release time set, so this will not publish until one is set."}
+                      </p>
+                      <p className="line-clamp-6 whitespace-pre-line text-sm text-altair-ink-muted">
+                        {lead.postText}
+                      </p>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
+          {approvedGroups.length > APPROVED_VISIBLE ? (
+            <Button
+              size="sm"
+              variant="quiet"
+              onClick={() => setShowAllApproved((value) => !value)}
+            >
+              {showAllApproved
+                ? "Show fewer"
+                : `Show ${String(approvedGroups.length - APPROVED_VISIBLE)} older`}
+            </Button>
+          ) : null}
         </section>
       ) : null}
     </div>
