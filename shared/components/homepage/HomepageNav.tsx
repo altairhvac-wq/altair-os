@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/#features", label: "Product", id: "features" },
   { href: "/#onboarding", label: "Onboarding", id: "onboarding" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
+  { href: "/insights", label: "Insights", id: "insights" },
   { href: "/#about", label: "About", id: "about" },
 ] as const;
 
@@ -29,6 +30,7 @@ export function HomepageNav() {
   const forceSolid = !onHomepage;
   const solid = scrolled || forceSolid;
   const pricingActive = pathname === "/pricing";
+  const insightsActive = pathname.startsWith("/insights");
 
   useEffect(() => {
     const onScroll = () => {
@@ -81,7 +83,9 @@ export function HomepageNav() {
           className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex xl:gap-10"
         >
           {NAV_LINKS.map((link) => {
-            const active = link.id === "pricing" && pricingActive;
+            const active =
+              (link.id === "pricing" && pricingActive) ||
+              (link.id === "insights" && insightsActive);
             return (
               <Link
                 key={link.href}
@@ -142,7 +146,9 @@ export function HomepageNav() {
             className="mx-auto flex max-w-[90rem] flex-col gap-1 px-5 py-4"
           >
             {NAV_LINKS.map((link) => {
-              const active = link.id === "pricing" && pricingActive;
+              const active =
+              (link.id === "pricing" && pricingActive) ||
+              (link.id === "insights" && insightsActive);
               return (
                 <Link
                   key={link.href}

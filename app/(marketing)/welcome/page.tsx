@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/database/auth";
 import { MissionControlHomepage } from "@/shared/components/homepage/MissionControlHomepage";
+import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import {
+  buildOrganizationStructuredData,
+  buildSoftwareApplicationStructuredData,
+} from "@/shared/lib/site/structured-data";
 
 export const metadata: Metadata = {
   // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
@@ -28,5 +33,13 @@ export default async function WelcomePage() {
     redirect("/");
   }
 
-  return <MissionControlHomepage />;
+  return (
+    <>
+      {/* Organization + SoftwareApplication/Offer, read from the same plan
+          catalog and site constants the visible page renders. */}
+      <JsonLdScript data={buildOrganizationStructuredData()} />
+      <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
+      <MissionControlHomepage />
+    </>
+  );
 }
