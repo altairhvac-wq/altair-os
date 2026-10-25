@@ -24,6 +24,7 @@ import {
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { listMarketingItems } from "@/lib/marketing/store";
 import { loadMarketingHqContext } from "@/lib/marketing/brand";
+import { listPostedDeliveriesSince } from "@/lib/database/queries/marketing-channel-deliveries";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { MarketingWorkspace } from "@/shared/components/marketing-hub/MarketingWorkspace";
 import { deriveMarketingAutomationHealth } from "@/shared/types/marketing-workspace-state";
@@ -100,6 +101,22 @@ export default async function MarketingPage({
       .then((context) => ({ config: context.config, brandKit: context.brandKit }))
       .catch(() => null),
   ]);
+  // The end-of-day review: everything that went live in the last day
+  // (owner decision 2026-10-25 — publish on its own, check after).
+  const recentDeliveries = await listPostedDeliveriesSince(
+    companyContext.company.id,
+    new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toISOString(),
+  );
+  const postTitleById = new Map(posts.map((post) => [post.id, post.title]));
+  const publishedRecently = recentDeliveries.map((delivery) => ({
+    deliveryId: delivery.id,
+    provider: delivery.provider,
+    title: postTitleById.get(delivery.marketingPostId) ?? "Untitled post",
+    permalink: delivery.providerPermalink,
+    publishedAt: delivery.settledAt ?? delivery.createdAt,
+    sitePageId: delivery.provider === "altair_site" ? delivery.providerPostId : null,
+  }));
+
   // Marketing HQ's weekly social ideas join the one queue on Today.
   const hqIdeas = queueItems.filter(
     (item) => item.kind === "social_post" && item.status === "draft",
@@ -247,6 +264,7 @@ export default async function MarketingPage({
       rationaleByPostId={rationaleByPostId}
       decisions={agentDecisions}
       hqIdeas={hqIdeas}
+      publishedRecently={publishedRecently}
       brandGoals={brandGoals}
       nowIso={renderedAt}
       canManageConnectedAccounts={canManageConnectedAccounts}

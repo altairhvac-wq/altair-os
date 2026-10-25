@@ -88,11 +88,12 @@ export type YouTubeUploadInput = {
   readonly description: string;
   readonly tags: readonly string[];
   /**
-   * Narrowed to the literal at the type level. The canary is private-only,
-   * and a parameter typed `YouTubePrivacyStatus` would make "unlisted" a
-   * value a caller could pass without changing this file.
+   * Narrowed at the type level to the two values this build may send:
+   * private (every channel) or public (only a channel named in
+   * YOUTUBE_PUBLIC_CHANNEL_IDS — see publish-guard.ts). "unlisted" is still
+   * not a value any caller can pass.
    */
-  readonly privacyStatus: Extract<YouTubePrivacyStatus, "private">;
+  readonly privacyStatus: Extract<YouTubePrivacyStatus, "private" | "public">;
   /** A short-lived signed URL for the rendered video. Never an object key. */
   readonly mediaUrl: string;
   readonly contentType: string;

@@ -187,6 +187,31 @@ one source, `MARKETING_AUTO_APPROVE_SOURCES=agent_daily_reel` with
 `MARKETING_AUTO_APPROVE_CHANNELS=website` auto-approves articles while every
 video still waits for a person.
 
+## Full autonomy (owner decision 2026-10-25)
+
+The owner chose to have marketing publish on its own and review what went out
+at the end of the day. Settings on the deployment:
+
+| Setting | Value | Effect |
+|---|---|---|
+| `MARKETING_AUTO_APPROVE_SOURCES` | `agent_daily_reel,product_update` | agent videos and articles, plus Marketing HQ social ideas |
+| `MARKETING_AUTO_APPROVE_CHANNELS` | `youtube,facebook,instagram,website` | every product channel |
+| `MARKETING_AUTO_APPROVE_TIMING` | `same_run` | promoted and published in the same daily run (18:00 UTC) |
+| `MARKETING_AUTO_APPROVE_DESTINATIONS` | `youtube:UCXdZpFi6MNVU1w4kSs1Tcww` | product YouTube channel only; never the School channel |
+| `YOUTUBE_PUBLIC_CHANNEL_IDS` | `UCXdZpFi6MNVU1w4kSs1Tcww` | product channel uploads public; every other channel private |
+
+Still held for a person: posts naming any web address other than altair-op.com,
+jurisdiction-specific advice, School (`hvac-`) videos, videos without a
+measured render QA of PASS, and drafts older than 14 days. At most one post per
+channel per run (`MARKETING_AUTO_APPROVE_PER_CHANNEL_PER_RUN`). Each run turns
+the freshest Marketing HQ social idea into a Facebook draft.
+
+**End-of-day review:** Today opens with "Published in the last day": every live
+delivery with a link. Website pages have a Take down button (the page is
+archived and leaves /insights and the sitemap). YouTube and Facebook items are
+removed on those platforms; the app's YouTube connection can upload but not
+delete.
+
 ## How to stop everything
 
 1. Set `MARKETING_PUBLISH_MODE=off` (or remove it) on the deployment. The cron

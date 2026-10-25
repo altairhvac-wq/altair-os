@@ -1069,19 +1069,24 @@ export async function listAutoApproveCandidatePosts(input: {
   sourceTypes: readonly MarketingPostSource[];
   channels: readonly MarketingChannel[];
   limit: number;
+  /** Only drafts created at or after this instant (no backlog dumping). */
+  createdSinceIso?: string;
 }): Promise<MarketingPost[]> {
   if (input.sourceTypes.length === 0 || input.channels.length === 0) return [];
   const client = createServiceRoleClient();
-  const { data, error } = await marketingPostsServiceTable(client)
+  let query = marketingPostsServiceTable(client)
     .select("*")
     .eq("status", "draft")
     .in("source_type", [...input.sourceTypes])
     .in("channel_target", [...input.channels])
     .is("deleted_at", null)
     .or(
-      "and(video_media_asset_id.not.is.null,render_qa_state.eq.PASS),channel_target.eq.website",
-    )
-    .order("created_at", { ascending: true })
+      "and(video_media_asset_id.not.is.null,render_qa_state.eq.PASS),channel_target.eq.website,and(channel_target.eq.facebook,video_media_asset_id.is.null)",
+    );
+  if (input.createdSinceIso) query = query.gte("created_at", input.createdSinceIso);
+  const { data, error } = await query
+    // Newest first: with a per-channel cap, the freshest piece goes out.
+    .order("created_at", { ascending: false })
     .limit(Math.max(1, Math.min(100, Math.trunc(input.limit))));
 
   if (error) {
@@ -1092,6 +1097,47 @@ export async function listAutoApproveCandidatePosts(input: {
     return [];
   }
   return ((data ?? []) as MarketingPostRow[]).map(mapMarketingPostRow);
+}
+
+/**
+ * A text-only Facebook DRAFT made from a Marketing HQ social idea, for the
+ * auto-approval policy (owner decision 2026-10-25: publish on its own, review
+ * at the end of the day). The same fields `convertMarketingItemToPostAction`
+ * writes, with no person as creator. Always Facebook: Instagram needs media.
+ */
+export async function createHqSocialDraftPostAdmin(input: {
+  companyId: string;
+  itemId: string;
+  title: string;
+  postText: string;
+  hashtags: string[];
+  callToAction: string | null;
+}): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const client = createServiceRoleClient();
+  const insert: Omit<MarketingPostInsert, "created_by"> & { created_by: null } = {
+    company_id: input.companyId,
+    created_by: null,
+    title: input.title,
+    channel_target: "facebook",
+    post_text: input.postText,
+    suggested_hashtags: input.hashtags,
+    call_to_action: input.callToAction,
+    status: "draft",
+    source_type: "product_update",
+    source_id: input.itemId,
+  } as Omit<MarketingPostInsert, "created_by"> & { created_by: null };
+  const { data, error } = await marketingPostsServiceTable(client)
+    .insert(insert)
+    .select("*")
+    .single();
+  if (error || !data) {
+    console.error("[createHqSocialDraftPostAdmin] insert failed:", {
+      code: error?.code,
+      message: error?.message,
+    });
+    return { post: null, error: mapDatabaseError(error) ?? "Could not create the draft." };
+  }
+  return { post: mapMarketingPostRow(data as MarketingPostRow), error: null };
 }
 
 /**

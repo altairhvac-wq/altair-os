@@ -228,6 +228,51 @@ check("isAutoApproveEnabled is false by default", policy.isAutoApproveEnabled({}
   );
   check("an article still needs its source enabled", policy.decideAutoApprove(article, [], ["website"]).eligible === false);
 }
+{
+  // Owner decision 2026-10-25: full autonomy with an end-of-day review.
+  const on = ["agent_daily_reel", "product_update"];
+  const fbText = {
+    status: "draft",
+    sourceType: "product_update",
+    channelTarget: "facebook",
+    postText: "Invoicing the day the job is done keeps cash moving.",
+    videoMediaAssetId: null,
+  };
+  check("a Facebook text post qualifies when facebook is enabled", policy.decideAutoApprove(fbText, on, ["facebook"]).eligible === true);
+  check("an empty Facebook text post is refused", policy.decideAutoApprove({ ...fbText, postText: "  " }, on, ["facebook"]).eligible === false);
+  check(
+    "a post naming a domain other than altair-op.com is held",
+    policy.decideAutoApprove({ ...fbText, postText: "Learn more at https://altairos.com" }, on, ["facebook"]).eligible === false,
+  );
+  check(
+    "a post linking altair-op.com is fine",
+    policy.decideAutoApprove({ ...fbText, postText: "Learn more at https://www.altair-op.com/pricing" }, on, ["facebook"]).eligible === true,
+  );
+  check("findForeignLink names the wrong host", policy.findForeignLink("see altairos.com now") === "altairos.com");
+  check("timing defaults to next_run", policy.parseAutoApproveTiming({}) === "next_run");
+  check("timing same_run is read exactly", policy.parseAutoApproveTiming({ MARKETING_AUTO_APPROVE_TIMING: "same_run" }) === "same_run");
+  const pins = policy.parseAutoApproveDestinations({ MARKETING_AUTO_APPROVE_DESTINATIONS: "youtube:UCXdZpFi6MNVU1w4kSs1Tcww, facebook:123" });
+  check("destinations pin one id per provider", pins.get("youtube") === "UCXdZpFi6MNVU1w4kSs1Tcww" && pins.get("facebook") === "123");
+  check("per-channel cap defaults to 1", policy.parsePerChannelLimit({}) === 1);
+  check("per-channel cap rejects nonsense", policy.parsePerChannelLimit({ MARKETING_AUTO_APPROVE_PER_CHANNEL_PER_RUN: "500" }) === 1);
+}
+{
+  const guard = await loadPureModule("lib/integrations/youtube/publish-guard.ts", "ytguard");
+  const ids = guard.parsePublicChannelIds("UCXdZpFi6MNVU1w4kSs1Tcww, not-a-channel");
+  check("only well-formed channel ids are allowed public", ids.length === 1 && ids[0] === "UCXdZpFi6MNVU1w4kSs1Tcww");
+  check("the product channel uploads public when named", guard.resolveUploadPrivacy("UCXdZpFi6MNVU1w4kSs1Tcww", ids) === "public");
+  check("the School channel stays private", guard.resolveUploadPrivacy("UCdSTEVXGmwaFg2lm8wHmBtg", ids) === "private");
+  check("an empty list keeps every channel private", guard.resolveUploadPrivacy("UCXdZpFi6MNVU1w4kSs1Tcww", []) === "private");
+  const video = { videoId: "v1", privacyStatus: "public", uploadStatus: "uploaded", channelId: "UCXdZpFi6MNVU1w4kSs1Tcww" };
+  check(
+    "a public upload must read back public",
+    guard.verifyUploadReadback({ video, expectedVideoId: "v1", expectedChannelId: video.channelId, expectedPrivacyStatus: "public" }).ok === true,
+  );
+  check(
+    "without an expectation, public still fails (private is the default rule)",
+    guard.verifyUploadReadback({ video, expectedVideoId: "v1", expectedChannelId: video.channelId }).ok === false,
+  );
+}
 check("the policy literal is namespaced", policy.AUTO_APPROVE_POLICY === "policy:auto-approve");
 check(
   "the next slot before today's run is today's run",

@@ -496,3 +496,23 @@ export async function listUnsettledDeliveries(
   }
   return (result.data as DeliveryRow[]).map(toRecord);
 }
+
+/** Deliveries that went live at or after `sinceIso`, newest first (end-of-day review). */
+export async function listPostedDeliveriesSince(
+  companyId: string,
+  sinceIso: string,
+): Promise<MarketingDeliveryRecord[]> {
+  const client = createServiceRoleClient();
+  const result = await deliveriesTable(client)
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("delivery_state", "posted")
+    .gte("settled_at", sinceIso)
+    .order("settled_at", { ascending: false })
+    .limit(50);
+  if (result.error || !result.data) {
+    console.error("[listPostedDeliveriesSince] lookup failed:", result.error);
+    return [];
+  }
+  return (result.data as DeliveryRow[]).map(toRecord);
+}
