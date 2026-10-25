@@ -575,11 +575,7 @@ export function TechnicianJobCommandCenter({
             >
               {statusDisabledReason}
             </p>
-          ) : (
-            <p className={`mt-1.5 ${technicianFieldWorkflowHintClass}`}>
-              Changes use the same authorized field steps as the buttons below.
-            </p>
-          )}
+          ) : null}
         </div>
 
         {recommended ? (

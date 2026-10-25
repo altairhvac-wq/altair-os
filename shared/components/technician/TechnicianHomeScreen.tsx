@@ -1,66 +1,32 @@
 import Link from "next/link";
-import {
-  Bell,
-  CalendarDays,
-  Clock,
-  Receipt,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight, Clock, MapPin } from "lucide-react";
+import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
+import type { DispatchJobStatus } from "@/shared/types/dispatch";
+import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 /**
- * Technician home — iOS-homescreen-style launcher.
- * Two glass widgets (Today / Time clock) over a dark graphite wallpaper,
- * then an app-icon grid of the technician tools. Every number shown is
- * real data passed from the server page — no fabricated stats.
- */
-
-type TechnicianHomeTile = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  chipClass: string;
-};
-
-/**
- * PRESTIGE: these four chips were authored as arbitrary hex gradients
- * (`#d4af37` metallic gold, `#22d3ee` cyan, `#34d399`, `#f59e0b`), so they
- * bypassed the palette entirely and stayed candy-bright while the rest of the
- * product moved. Four saturated gradients side by side is the "rainbow
- * gradients" failure, and `#d4af37` is the cheap gold this campaign exists to
- * remove.
+ * Technician home — today at a glance over the dark graphite wallpaper.
  *
- * They stay four DIFFERENT colours — these are categorical navigation targets
- * and a technician picks them by colour at a glance — but they now walk the
- * canonical ramps. The mid stop of each was also darkened deliberately: the
- * white glyph sat at ~1.9:1 on the old gold, which was a legibility bug on a
- * one-handed field surface, and now clears 3:1 on every chip.
+ * Two glass widgets (Today / Time clock), then the next job as a tappable
+ * card when one exists. Every number and name shown is real data passed from
+ * the server page — no fabricated stats.
+ *
+ * Phone audit 2026-10-24: the four-icon app grid that used to sit under the
+ * widgets was removed. The bottom tab bar now lists exactly those
+ * destinations (Schedule was added to it), so the grid was a third copy of
+ * the same menu. The space went to the next job instead, which is what a
+ * technician opens the app to find.
  */
-const HOME_TILES: TechnicianHomeTile[] = [
-  {
-    href: "/technician/schedule",
-    label: "Schedule",
-    icon: CalendarDays,
-    chipClass: "bg-gradient-to-br from-[#c2a05a] via-[#987836] to-[#5f4715]",
-  },
-  {
-    href: "/tech/time",
-    label: "Time",
-    icon: Clock,
-    chipClass: "bg-gradient-to-br from-[#78939a] via-[#465c64] to-[#2f3b40]",
-  },
-  {
-    href: "/tech/receipts",
-    label: "Receipts",
-    icon: Receipt,
-    chipClass: "bg-gradient-to-br from-[#5fa07d] via-[#35755a] to-[#1f4733]",
-  },
-  {
-    href: "/tech/notifications",
-    label: "Alerts",
-    icon: Bell,
-    chipClass: "bg-gradient-to-br from-[#cc6a5e] via-[#a64f2d] to-[#6f3520]",
-  },
-];
+
+export type TechnicianHomeNextJob = {
+  id: string;
+  customerName: string;
+  jobType: string;
+  timeLabel: string;
+  /** Formatted street address, or null when the job has no usable address. */
+  addressLine: string | null;
+  status: DispatchJobStatus;
+};
 
 type TechnicianHomeScreenProps = {
   greeting: string;
@@ -69,8 +35,7 @@ type TechnicianHomeScreenProps = {
   dayOfMonth: number;
   openJobCount: number;
   completedTodayCount: number;
-  nextJobTimeLabel: string | null;
-  nextJobCustomerName: string | null;
+  nextJob: TechnicianHomeNextJob | null;
   timeStateLabel: string;
   timeStateDotClass: string;
   clockedSinceLabel: string | null;
@@ -83,8 +48,7 @@ export function TechnicianHomeScreen({
   dayOfMonth,
   openJobCount,
   completedTodayCount,
-  nextJobTimeLabel,
-  nextJobCustomerName,
+  nextJob,
   timeStateLabel,
   timeStateDotClass,
   clockedSinceLabel,
@@ -110,6 +74,9 @@ export function TechnicianHomeScreen({
         </h1>
       </header>
 
+      {/* Install nudge (client-only; hides itself once installed/dismissed) */}
+      <PwaInstallBanner />
+
       {/* Widgets */}
       <div className="mt-5 grid grid-cols-2 gap-3">
         <Link
@@ -126,12 +93,9 @@ export function TechnicianHomeScreen({
             <p className="text-[13px] font-semibold text-[#e9e8e4]">
               {openJobsLine}
             </p>
-            {nextJobTimeLabel ? (
-              <p className="truncate text-xs text-[#9b9fa6]">
-                Next · {nextJobTimeLabel}
-                {nextJobCustomerName ? ` · ${nextJobCustomerName}` : ""}
-              </p>
-            ) : null}
+            <p className="text-xs text-[#9b9fa6]">
+              {openJobCount > 0 ? "Open schedule" : "Tap to see the week"}
+            </p>
           </div>
         </Link>
 
@@ -161,31 +125,52 @@ export function TechnicianHomeScreen({
         </Link>
       </div>
 
-      {/* App grid */}
-      <nav aria-label="Technician tools" className="mt-8">
-        <ul className="grid grid-cols-4 gap-x-2 gap-y-6">
-          {HOME_TILES.map((tile) => {
-            const Icon = tile.icon;
-            return (
-              <li key={tile.href} className="min-w-0">
-                <Link
-                  href={tile.href}
-                  className="group flex touch-manipulation flex-col items-center gap-1.5 outline-none"
-                >
-                  <span
-                    className={`flex h-16 w-16 items-center justify-center rounded-[1.35rem] ${tile.chipClass} shadow-[0_8px_20px_-8px_rgb(0_0_0_/_0.6)] ring-1 ring-inset ring-white/20 transition-transform group-active:scale-95`}
-                  >
-                    <Icon className="h-7 w-7 text-white drop-shadow-sm" aria-hidden />
-                  </span>
-                  <span className="w-full truncate text-center text-[11px] font-medium text-[#d7d3cc]">
-                    {tile.label}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      {/* Next job */}
+      {nextJob ? (
+        <section className="mt-6" aria-label="Next job">
+          <p className="px-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
+            Next up
+          </p>
+          <Link
+            href={`/technician/schedule?jobId=${encodeURIComponent(nextJob.id)}`}
+            className="mt-2 flex touch-manipulation items-center gap-3 rounded-[1.5rem] bg-white p-4 shadow-[0_12px_32px_-12px_rgb(0_0_0_/_0.6)] ring-1 ring-inset ring-white/60 transition-transform active:scale-[0.99]"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-lg font-bold leading-tight text-slate-900">
+                  {nextJob.customerName}
+                </p>
+                <TechnicianJobStatusBadge
+                  status={nextJob.status}
+                  className="shrink-0 text-[10px]"
+                />
+              </div>
+              <p className="mt-0.5 truncate text-sm font-medium text-slate-600">
+                {nextJob.jobType}
+              </p>
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-700">
+                <Clock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                <span className="font-semibold tabular-nums">
+                  {nextJob.timeLabel}
+                </span>
+              </p>
+              <p className="mt-1 flex items-start gap-1.5 text-sm text-slate-600">
+                <MapPin
+                  className="mt-0.5 h-4 w-4 shrink-0 text-slate-400"
+                  aria-hidden
+                />
+                <span className="min-w-0 break-words">
+                  {nextJob.addressLine ?? "No address — contact dispatch"}
+                </span>
+              </p>
+            </div>
+            <ChevronRight
+              className="h-6 w-6 shrink-0 text-slate-300"
+              aria-hidden
+            />
+          </Link>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -145,9 +145,9 @@ export function AdminShell({
           showPlatformAdminNav={showPlatformAdminNav}
         />
       ) : null}
-      {isBetaBugReportEnabled() &&
-      !(isMobile && pathname.startsWith("/settings")) &&
-      !isMobileDashboard ? (
+      {/* Phones reach feedback from the account sheet in the header instead;
+          the floating bubble covered list rows and sticky footers at 375px. */}
+      {isBetaBugReportEnabled() && !isMobile && !isMobileDashboard ? (
         <BetaBugReportButton />
       ) : null}
     </CompanyTimezoneProvider>

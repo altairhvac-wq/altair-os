@@ -14,6 +14,8 @@ type CompactTimeClockBarProps = {
   toggleAction: CompactTimeClockToggleAction | null;
   isPending: boolean;
   error?: string | null;
+  /** "hero" is the technician phone size: a taller, larger-type button. */
+  size?: "default" | "hero";
   onToggle?: () => void;
 };
 
@@ -23,9 +25,14 @@ export function CompactTimeClockBar({
   toggleAction,
   isPending,
   error,
+  size = "default",
   onToggle,
 }: CompactTimeClockBarProps) {
   const isClockOut = toggleAction === "clock_out";
+  const buttonSizeClass =
+    size === "hero"
+      ? "min-h-14 rounded-xl px-5 py-3 text-base"
+      : "min-h-11 rounded-lg px-4 py-2.5 text-sm";
 
   return (
     <section
@@ -49,7 +56,7 @@ export function CompactTimeClockBar({
             type="button"
             onClick={onToggle}
             disabled={isPending}
-            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
+            className={`inline-flex w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${buttonSizeClass} ${
               isClockOut
                 ? "bg-altair-ink-on-paper hover:bg-altair-ink"
                 : "bg-altair-success hover:bg-altair-success/90"

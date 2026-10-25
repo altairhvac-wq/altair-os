@@ -112,8 +112,10 @@ export function CompanySwitcher({
 
   if (!canSwitch) {
     if (variant === "technician") {
+      // Technician header: the company name IS the header title, so it takes
+      // title weight (it was 12px muted text under a redundant "Altair OS").
       return (
-        <p className={`truncate text-xs text-altair-ink-on-paper-muted ${className}`}>
+        <p className={`truncate text-sm font-semibold text-slate-900 ${className}`}>
           {activeMembership.company.name}
         </p>
       );
@@ -141,7 +143,7 @@ export function CompanySwitcher({
 
   const triggerClasses =
     variant === "technician"
-      ? "flex w-full min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-slate-100 disabled:opacity-60"
+      ? "-mx-1 flex min-h-11 w-full min-w-0 touch-manipulation items-center gap-1 rounded-lg px-1 py-0.5 text-left transition-colors hover:bg-slate-100 active:bg-slate-100 disabled:opacity-60"
       : tone === "dark"
         ? "flex max-w-[12rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-white/10 disabled:opacity-60 sm:max-w-[14rem]"
         : "flex max-w-[12rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-slate-100 disabled:opacity-60 sm:max-w-[14rem]";
@@ -171,7 +173,7 @@ export function CompanySwitcher({
           <span
             className={`block truncate font-semibold ${
               variant === "technician"
-                ? "text-xs"
+                ? "text-sm text-slate-900"
                 : tone === "dark"
                   ? "text-sm text-slate-100"
                   : "text-sm text-slate-900"

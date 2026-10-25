@@ -1,17 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import {
   canAccessOperationalJobsArea,
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import {
+  COMPANY_ROLE_LABELS,
+  normalizeCompanyRole,
+} from "@/lib/database/types/roles";
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { logoutAction } from "@/app/actions/auth";
+import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderScheduleCalendar";
 import { AvatarUploadControl } from "@/shared/components/profile/AvatarUploadControl";
 import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
+import { MobileAccountSheet } from "@/shared/components/mobile/MobileAccountSheet";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
@@ -92,6 +100,13 @@ export function Header({
   onQuickNavOpenChange,
   billingAccess = null,
 }: HeaderProps) {
+  const pathname = usePathname();
+  const [accountOpen, setAccountOpen] = useState(false);
+
+  useEffect(() => {
+    setAccountOpen(false);
+  }, [pathname]);
+
   const displayName =
     companyContext.profile.full_name ??
     companyContext.user.email ??
@@ -114,6 +129,10 @@ export function Header({
   const chromeTone = "dark" as const;
   const showMobileQuickNav =
     showQuickNav && typeof onQuickNavOpenChange === "function";
+  /* The phone home ("/") is the launcher, whose own top row already carries a
+   * menu button. Phone audit 2026-10-24: with both, the owner saw two
+   * hamburgers on one screen (header and launcher), opening the same drawer. */
+  const showPhoneQuickNav = showMobileQuickNav && pathname !== "/";
   const showScheduleCalendar = canAccessOperationalJobsArea(companyContext);
   const timeZone = useCompanyTimezone();
   const greetingName = getGreetingName(
@@ -126,18 +145,38 @@ export function Header({
     month: "long",
     day: "numeric",
   });
+  const role = normalizeCompanyRole(companyContext.role);
+  const roleLabel = role ? COMPANY_ROLE_LABELS[role] : "Member";
+  const isOwnerPreview = showViewSwitcher && viewMode !== "owner_admin";
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         {showMobileQuickNav ? (
-          <div className="md:hidden">
+          <div className={showPhoneQuickNav ? "md:hidden" : "hidden"}>
             <QuickNavToggle
               open={quickNavOpen}
               onOpenChange={(open) => onQuickNavOpenChange?.(open)}
             />
           </div>
         ) : null}
+
+        {/* Phone identity: company and role, where the greeting has no room.
+          * Phone audit 2026-10-24: this slot used to be empty below `lg`, so
+          * the right-hand cluster slid left and the bell landed on top of the
+          * menu button. A real left block keeps the two sides apart. */}
+        <div className="min-w-0 md:hidden">
+          <p className="truncate text-sm font-semibold leading-tight text-slate-100">
+            {companyContext.company.name}
+          </p>
+          <p className="truncate text-[11px] leading-tight text-altair-ink-on-graphite-muted">
+            {isOwnerPreview ? `Viewing as ${viewMode === "technician" ? "technician" : "dispatch"}` : roleLabel}
+          </p>
+          <p className="sr-only">
+            {title}
+            {description ? `. ${description}` : ""}
+          </p>
+        </div>
 
         {/* Hidden below `lg`: with the tablet rail in place the top bar's
           * functional controls take the width they need, and the greeting was
@@ -175,23 +214,10 @@ export function Header({
               />
             ) : null}
           </div>
-          {/* Keep mobile page title available to screen readers for orientation */}
-          <p className="sr-only md:hidden">
-            {title}
-            {description ? `. ${description}` : ""}
-          </p>
         </div>
       </div>
 
-      {/* `min-w-0`, not `shrink-0`.
-       *
-       * At 390px this cluster measured 407px inside a 390px header and pushed
-       * every admin route 37px sideways — the page itself panned, not a table
-       * inside it. The trial pill already declares `min-w-0 shrink
-       * max-w-[9.5rem]`, but a `shrink-0` parent blocks a child from ever
-       * shrinking, so that intent never applied. Letting the cluster compress
-       * lets the pill truncate as it was written to. */}
-      <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         {/*
          * No global Search control here. A Search button used to ship in this
          * slot with no onClick, no form, and no dialog — it was announced to
@@ -212,13 +238,34 @@ export function Header({
             northStarChrome ? "north-star-header-bell-badge" : undefined
           }
         />
-        {/* `min-w-0` so this can compress too. At 390px its children — view
-         * switcher 120px, trial pill 133px, avatar 36px, sign out 36px, plus
-         * gaps — reached x=427 on a 390px screen. `html` and `body` are
-         * `overflow-x-clip`, so the page did not pan; the Sign out button was
-         * simply cut off and unreachable on a phone. */}
+
+        {/* Phone: one 44px avatar button opens the account sheet (view-as,
+          * subscription, install, feedback, sign out). The desktop cluster
+          * below is hidden on phones, so nothing here can overlap. */}
+        <button
+          type="button"
+          onClick={() => setAccountOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={accountOpen}
+          aria-label={`Account, ${displayName}`}
+          data-testid="admin-account-button"
+          className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl transition-colors active:bg-white/10 md:hidden"
+        >
+          <AvatarUploadControl
+            name={displayName}
+            avatarUrl={companyContext.profile.avatar_url}
+            target={{ kind: "self" }}
+            canEdit={false}
+            className={
+              northStarChrome
+                ? "north-star-header-avatar flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-2"
+                : "flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white ring-2 ring-white/25"
+            }
+          />
+        </button>
+
         <div
-          className={`flex min-w-0 items-center gap-2 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 ${
+          className={`hidden min-w-0 items-center gap-3 pl-4 md:flex ${
             northStarChrome
               ? "north-star-header-divider border-l"
               : "border-l border-slate-200 md:border-white/10"
@@ -229,9 +276,7 @@ export function Header({
             companies={userCompanies}
             variant="admin"
             tone={chromeTone}
-            className={`${
-              userCompanies.length > 1 ? "block" : "hidden md:block"
-            } ${northStarChrome ? "north-star-company-switcher" : ""}`}
+            className={northStarChrome ? "north-star-company-switcher" : ""}
           />
           {showViewSwitcher && onViewModeChange ? (
             <OwnerViewSwitcher
@@ -245,7 +290,7 @@ export function Header({
             <SubscriptionBillingBanner
               access={billingAccess}
               canManageBilling={billingAccess.canManageBilling}
-              className="max-w-[9.5rem] sm:max-w-[14rem]"
+              className="max-w-[14rem]"
             />
           ) : null}
           <AvatarUploadControl
@@ -257,14 +302,14 @@ export function Header({
             className={
               northStarChrome
                 ? "north-star-header-avatar flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-2"
-                : "hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
+                : "flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white md:ring-white/25"
             }
           />
           <form action={logoutAction}>
             <button
               type="submit"
               aria-label="Sign out"
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold transition-colors sm:h-auto sm:w-auto sm:px-2 sm:py-1 ${
+              className={`inline-flex h-auto items-center justify-center rounded-lg px-2 py-1 text-xs font-semibold transition-colors ${
                 northStarChrome
                   ? "north-star-header-signout"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 md:text-slate-300 md:hover:bg-white/10 md:hover:text-white"
@@ -276,6 +321,18 @@ export function Header({
           </form>
         </div>
       </div>
+
+      <MobileAccountSheet
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        companyContext={companyContext}
+        userCompanies={userCompanies}
+        isOwner={showViewSwitcher && typeof onViewModeChange === "function"}
+        viewMode={viewMode}
+        onViewModeChange={(mode) => onViewModeChange?.(mode)}
+        showFeedback={isBetaBugReportEnabled()}
+        billingAccess={billingAccess}
+      />
     </header>
   );
 }

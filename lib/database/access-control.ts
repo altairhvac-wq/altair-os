@@ -615,6 +615,7 @@ export function getAccessibleAdminNavHrefs(
 
 export type TechnicianNavId =
   | "today"
+  | "schedule"
   | "jobs"
   | "time"
   | "receipts"
@@ -631,6 +632,7 @@ export function canAccessTechnicianNavItem(
     case "receipts":
     case "notifications":
       return true;
+    case "schedule":
     case "jobs":
       return context.permissions.viewAssignedJobs;
     case "profile":

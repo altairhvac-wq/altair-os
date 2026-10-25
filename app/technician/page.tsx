@@ -5,8 +5,12 @@ import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician
 import {
   getCurrentTimeState,
 } from "@/lib/database/services/time-tracking";
-import { TechnicianHomeScreen } from "@/shared/components/technician/TechnicianHomeScreen";
+import {
+  TechnicianHomeScreen,
+  type TechnicianHomeNextJob,
+} from "@/shared/components/technician/TechnicianHomeScreen";
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import { hasCompleteServiceAddress } from "@/shared/lib/maps";
 import {
   filterJobsForTechnicianScheduleDay,
   getTechnicianTodayDateOnly,
@@ -16,12 +20,14 @@ import {
   getTechnicianJobDeckOrder,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
-import { formatTechnicianJobTime } from "@/shared/types/technician";
+import {
+  formatTechnicianJobAddress,
+  formatTechnicianJobTime,
+} from "@/shared/types/technician";
 import {
   formatTechnicianTimeState,
   formatTime,
 } from "@/shared/types/time-entry";
-import { TechnicianScheduleContent } from "./schedule-content";
 
 type TechnicianPageProps = {
   searchParams: Promise<{ jobId?: string }>;
@@ -43,9 +49,12 @@ export default async function TechnicianPage({
 }: TechnicianPageProps) {
   const { jobId: initialJobId } = await searchParams;
 
-  // Job deep links (?jobId=) keep the full schedule + detail experience.
+  // Job deep links (?jobId=) belong to the schedule screen so the Schedule tab
+  // is the one highlighted while the job is open. Older links still land here.
   if (initialJobId?.trim()) {
-    return <TechnicianScheduleContent initialJobId={initialJobId} />;
+    redirect(
+      `/technician/schedule?jobId=${encodeURIComponent(initialJobId.trim())}`,
+    );
   }
 
   const context = await getActiveCompanyContext();
@@ -78,7 +87,24 @@ export default async function TechnicianPage({
   const completedTodayCount = sortCompletedTodayTechnicianJobs(jobs, {
     timeZone,
   }).length;
-  const nextJob = deckJobs[0] ?? null;
+  const nextJobRecord = deckJobs[0] ?? null;
+  const nextJob: TechnicianHomeNextJob | null = nextJobRecord
+    ? {
+        id: nextJobRecord.id,
+        customerName: nextJobRecord.customerName,
+        jobType: nextJobRecord.jobType,
+        timeLabel: formatTechnicianJobTime(nextJobRecord.scheduledDate, timeZone),
+        addressLine: hasCompleteServiceAddress({
+          serviceAddress: nextJobRecord.serviceAddress,
+          city: nextJobRecord.city,
+          state: nextJobRecord.state,
+          zip: nextJobRecord.zip,
+        })
+          ? formatTechnicianJobAddress(nextJobRecord)
+          : null,
+        status: nextJobRecord.status,
+      }
+    : null;
 
   const noonUtc = new Date(
     `${scheduleContext.todayDateOnly}T12:00:00.000Z`,
@@ -116,12 +142,7 @@ export default async function TechnicianPage({
       dayOfMonth={dayOfMonth}
       openJobCount={deckJobs.length}
       completedTodayCount={completedTodayCount}
-      nextJobTimeLabel={
-        nextJob
-          ? formatTechnicianJobTime(nextJob.scheduledDate, timeZone)
-          : null
-      }
-      nextJobCustomerName={nextJob ? nextJob.customerName : null}
+      nextJob={nextJob}
       timeStateLabel={formatTechnicianTimeState(timeState.state)}
       timeStateDotClass={
         TIME_STATE_DOT_CLASSES[timeState.state] ?? "bg-slate-400"

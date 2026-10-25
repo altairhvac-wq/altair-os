@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Calculator, Clock, Mail, MapPin } from "lucide-react";
 import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
-import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { hasCompleteServiceAddress } from "@/shared/lib/maps";
 import {
   selectActiveEstimate,
@@ -37,11 +36,8 @@ import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import {
   technicianFieldContactSecondaryClass,
   technicianFieldContextBlockClass,
-  technicianFieldJobDetailsClass,
-  technicianFieldJobDetailsSummaryClass,
   technicianFieldReferenceSectionClass,
   technicianFieldSectionLabelClass,
-  technicianFieldWorkflowSurfaceClass,
 } from "./technician-field-styles";
 
 type TechnicianJobFieldDetailProps = {
@@ -277,57 +273,6 @@ export function TechnicianJobFieldDetail({
           </section>
         ) : null}
 
-        <details className={technicianFieldJobDetailsClass}>
-          <summary className={technicianFieldJobDetailsSummaryClass}>
-            Additional job controls
-          </summary>
-          <div className={`${technicianFieldWorkflowSurfaceClass} m-3 mt-0`}>
-            <p className="mb-3 text-xs leading-relaxed text-slate-500">
-              Fallback controls if you need the previous next-step layout.
-              Prefer the command center above when possible.
-            </p>
-            <JobWorkflowControls
-              jobId={job.id}
-              customerId={job.customerId}
-              initialStatus={status}
-              status={status}
-              serviceAddress={job.serviceAddress}
-              city={job.city}
-              state={job.state}
-              zip={job.zip}
-              canUpdateStatus
-              aiFeaturesEnabled={aiFeaturesEnabled}
-              layout="stack"
-              fieldActionFirst
-              showMobileHint
-              competingSheetActive={activeSheet !== null || completeSheetOpen}
-              businessContext={billingContext}
-              businessActionOptions={{
-                canCreateEstimate: showCreateEstimate,
-                canViewBilling,
-                canApproveOnSite:
-                  canApproveOnSite && Boolean(sentEstimateForApproval),
-              }}
-              onFieldEstimateClick={
-                showCreateEstimate
-                  ? () => openEstimateSheet(null)
-                  : undefined
-              }
-              onFieldFinishEstimateClick={
-                showCreateEstimate
-                  ? (estimateId) => openEstimateSheet(estimateId)
-                  : undefined
-              }
-              onFieldApproveClick={
-                canApproveOnSite && sentEstimateForApproval
-                  ? () => setActiveSheet("approve_estimate")
-                  : undefined
-              }
-              onCompleteSheetOpenChange={setCompleteSheetOpen}
-              onStatusUpdated={handleStatusUpdated}
-            />
-          </div>
-        </details>
 
         {isActive && (showLegacyEstimateButton || hasEmail) ? (
           <section className="space-y-3">

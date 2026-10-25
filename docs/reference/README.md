@@ -30,6 +30,7 @@ These documents are procedural. They do not override foundation, Canon, or produ
 | [`beta-launch-readiness.md`](./beta-launch-readiness.md) | Beta readiness |
 | [`stripe-payments-beta-qa.md`](./stripe-payments-beta-qa.md) | Stripe payments QA |
 | [`demo-account-audit.md`](./demo-account-audit.md) | Demo account audit |
+| [`phone-audit-2026-10-24.md`](./phone-audit-2026-10-24.md) | Phone (375px) audit of the technician and admin shells, with the fixes shipped and how to re-run it |
 
 ## Recommended reading order
 

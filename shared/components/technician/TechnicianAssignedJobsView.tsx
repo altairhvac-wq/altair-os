@@ -240,7 +240,7 @@ export function TechnicianAssignedJobsView({
   function handleCloseJobDetail() {
     setSelectedJobId(null);
     if (deepLinkedJobId) {
-      router.replace("/technician");
+      router.replace("/technician/schedule");
     }
   }
 

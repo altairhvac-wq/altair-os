@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
-  ArrowLeft,
   Coffee,
   PlayCircle,
 } from "lucide-react";
@@ -255,25 +253,10 @@ export function TechnicianTimeView({
 
   return (
     <div className="space-y-4">
-      <Link
-        href="/technician"
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to Today
-      </Link>
-
-      <div className="space-y-1">
-        <h1 className="text-lg font-bold text-slate-900">Time review</h1>
-        <p className="text-sm text-slate-600">
-          Starting and completing assigned jobs normally manages your shift
-          automatically. Use this page to clock in or out manually, take a
-          break, or correct time. Job labor remains tied to{" "}
-          <span className="font-semibold text-slate-800">Start work</span> and{" "}
-          <span className="font-semibold text-slate-800">Complete work</span> on
-          assigned jobs.
-        </p>
-      </div>
+      {/* Phone audit 2026-10-24: the "Back to Today" link went (Home is one
+          tap away in the tab bar) and the four-line intro moved below the
+          clock control, so Clock In / Clock Out is the first thing on screen. */}
+      <h1 className="text-lg font-bold text-slate-900">Time clock</h1>
 
       <CompactTimeClockBar
         statusLabel={statusLabel}
@@ -281,8 +264,15 @@ export function TechnicianTimeView({
         toggleAction={clockToggleAction}
         isPending={isPending}
         error={error}
+        size="hero"
         onToggle={clockToggleAction ? handleClockToggle : undefined}
       />
+
+      <p className="px-0.5 text-xs leading-relaxed text-altair-ink-on-paper-muted">
+        Starting and completing jobs manages your shift automatically. Use this
+        page to clock in or out by hand, take a break, or fix a missed
+        clock-out.
+      </p>
 
       {staleShift ? (
         <section className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
@@ -414,21 +404,21 @@ export function TechnicianTimeView({
           Today
         </p>
         <div className="mt-2 grid grid-cols-3 gap-2">
-          <div className="rounded-lg bg-white px-2.5 py-2">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
             <p className="text-[11px] text-slate-500">Clock</p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
+            <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.clockMinutes)}
             </p>
           </div>
-          <div className="rounded-lg bg-white px-2.5 py-2">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
             <p className="text-[11px] text-slate-500">Break</p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
+            <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.breakMinutes)}
             </p>
           </div>
-          <div className="rounded-lg bg-white px-2.5 py-2">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
             <p className="text-[11px] text-slate-500">Labor</p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
+            <p className="mt-0.5 text-base font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.jobLaborMinutes)}
             </p>
           </div>
@@ -448,7 +438,7 @@ export function TechnicianTimeView({
             {entries.map((entry) => (
               <li
                 key={entry.id}
-                className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2"
+                className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2.5"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">

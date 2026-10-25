@@ -92,7 +92,7 @@ export function TechnicianNotificationsView({
             type="button"
             onClick={handleMarkAllRead}
             disabled={isPending}
-            className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-cyan-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            className="min-h-11 shrink-0 touch-manipulation rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-cyan-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:opacity-50"
           >
             Mark all read
           </button>

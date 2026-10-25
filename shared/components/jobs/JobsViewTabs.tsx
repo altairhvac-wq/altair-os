@@ -46,7 +46,8 @@ export function JobsViewTabs({
                attribute and is not supported on this role. */
             aria-selected={isActive}
             onClick={() => onTabChange(tab.id)}
-            className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
+            /* Phone audit 2026-10-24: 36px tall at 375px; finger-sized below `sm`. */
+            className={`${adminSegmentedItemClass} max-sm:min-h-11 sm:px-3 sm:py-1.5 ${
               isActive ? adminSegmentedItemActiveClass : ""
             }`}
           >

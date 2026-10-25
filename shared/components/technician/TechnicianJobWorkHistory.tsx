@@ -127,7 +127,7 @@ export function TechnicianJobWorkHistory({
               setError(null);
               setLoadAttempt((current) => current + 1);
             }}
-            className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="-mx-2 inline-flex min-h-11 touch-manipulation items-center rounded-lg px-2 text-sm font-semibold text-cyan-700 hover:bg-slate-50 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Retry
           </button>

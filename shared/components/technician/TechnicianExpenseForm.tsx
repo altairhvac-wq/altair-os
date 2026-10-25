@@ -183,7 +183,9 @@ export function TechnicianExpenseForm({
       <fieldset>
         <legend className={labelClass}>Category</legend>
         <input type="hidden" name="category" value={category} />
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {/* Wraps instead of scrolling sideways: at 375px the fifth chip
+            ("Vehicle") was cut off at the sheet edge with no scroll hint. */}
+        <div className="flex flex-wrap gap-2">
           {FIELD_CATEGORY_OPTIONS.map((value) => {
             const label =
               categoryOptions.find((option) => option.value === value)?.label ??

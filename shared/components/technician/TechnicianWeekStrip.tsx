@@ -80,7 +80,7 @@ export function TechnicianWeekStrip({
           <button
             type="button"
             onClick={() => onSelectDateOnly(scheduleContext.todayDateOnly)}
-            className="flex min-h-10 shrink-0 touch-manipulation items-center rounded-md bg-slate-100 px-2 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200/80 active:bg-slate-200"
+            className="flex min-h-11 shrink-0 touch-manipulation items-center rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200/80 active:bg-slate-200"
           >
             Today
           </button>
@@ -102,7 +102,7 @@ export function TechnicianWeekStrip({
                 onClick={() => onSelectDateOnly(day.dateOnly)}
                 aria-pressed={isSelected}
                 aria-label={`${day.stripLabel} ${day.dayOfMonth}, ${jobCount} job${jobCount === 1 ? "" : "s"}${day.isToday ? ", today" : ""}`}
-                className={`relative flex min-h-10 touch-manipulation flex-col items-center justify-center gap-0 rounded-md px-0.5 py-1 transition-colors ${
+                className={`relative flex min-h-11 touch-manipulation flex-col items-center justify-center gap-0 rounded-lg px-0.5 py-1 transition-colors ${
                   isSelected
                     ? "bg-slate-900 text-white"
                     : day.isToday
