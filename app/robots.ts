@@ -30,6 +30,9 @@ export default function robots(): MetadataRoute.Robots {
           "/install",
           "/insights",
           "/resources",
+          // The sitemap itself: with `disallow: "/"` below, an unlisted
+          // /sitemap.xml is blocked and Search Console reports "Couldn't fetch".
+          "/sitemap.xml",
           "/og.png",
           "/icons/",
           "/favicon.svg",
