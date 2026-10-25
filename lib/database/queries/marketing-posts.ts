@@ -1058,23 +1058,29 @@ export async function markMarketingPostPostedAdmin(
 
 /**
  * Drafts the auto-approval policy may consider (safety spine, item 7): status
- * `draft`, one of the named sources, a stored video, and a MEASURED render QA
- * of PASS. Everything else is a human's to approve. Cross-company by design —
- * the cron runs once for the deployment — and each row carries its company.
+ * `draft`, one of the named sources, on one of the enabled channels, and
+ * either a stored video with a MEASURED render QA of PASS or a website
+ * article. `decideAutoApprove` makes the final call on each row; this query
+ * only keeps rows that could never qualify from crowding out ones that can.
+ * Cross-company by design — the cron runs once for the deployment — and each
+ * row carries its company.
  */
 export async function listAutoApproveCandidatePosts(input: {
   sourceTypes: readonly MarketingPostSource[];
+  channels: readonly MarketingChannel[];
   limit: number;
 }): Promise<MarketingPost[]> {
-  if (input.sourceTypes.length === 0) return [];
+  if (input.sourceTypes.length === 0 || input.channels.length === 0) return [];
   const client = createServiceRoleClient();
   const { data, error } = await marketingPostsServiceTable(client)
     .select("*")
     .eq("status", "draft")
     .in("source_type", [...input.sourceTypes])
+    .in("channel_target", [...input.channels])
     .is("deleted_at", null)
-    .not("video_media_asset_id", "is", null)
-    .eq("render_qa_state", "PASS")
+    .or(
+      "and(video_media_asset_id.not.is.null,render_qa_state.eq.PASS),channel_target.eq.website",
+    )
     .order("created_at", { ascending: true })
     .limit(Math.max(1, Math.min(100, Math.trunc(input.limit))));
 

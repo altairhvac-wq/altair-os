@@ -193,6 +193,41 @@ check("isAutoApproveEnabled is false by default", policy.isAutoApproveEnabled({}
   check("QA FAIL => refused", policy.decideAutoApprove({ ...ok, renderQa: { state: "FAIL" } }, on).eligible === false);
   check("QA never measured => refused", policy.decideAutoApprove({ ...ok, renderQa: undefined }, on).eligible === false);
 }
+{
+  check(
+    "channels unset => the video channels only (pre-article behaviour)",
+    policy.parseAutoApproveChannels({}).channels.join(",") === "youtube,facebook,instagram",
+  );
+  const parsed = policy.parseAutoApproveChannels({ MARKETING_AUTO_APPROVE_CHANNELS: "website, website,tiktok" });
+  check("named channels are accepted once", parsed.channels.join(",") === "website", parsed.channels.join(","));
+  check("unknown channels are rejected, not dropped silently", parsed.rejected.join(",") === "tiktok");
+
+  const on = ["agent_daily_reel"];
+  const body = "Plain guidance for a small HVAC shop. ".repeat(30);
+  const article = {
+    status: "draft",
+    sourceType: "agent_daily_reel",
+    channelTarget: "website",
+    postText: body,
+    contentPackageId: "pkg-1",
+    videoMediaAssetId: null,
+  };
+  const reel = { status: "draft", sourceType: "agent_daily_reel", channelTarget: "youtube", videoMediaAssetId: "m1", renderQa: { state: "PASS" } };
+  check("an article is NOT eligible under the default channels", policy.decideAutoApprove(article, on).eligible === false);
+  check("an article with website enabled, a brief and a full body is eligible", policy.decideAutoApprove(article, on, ["website"]).eligible === true);
+  check("website-only leaves videos to a person", policy.decideAutoApprove(reel, on, ["website"]).eligible === false);
+  check("an article with no brief is refused", policy.decideAutoApprove({ ...article, contentPackageId: null }, on, ["website"]).eligible === false);
+  check("a thin article is refused", policy.decideAutoApprove({ ...article, postText: "Too short." }, on, ["website"]).eligible === false);
+  check(
+    "a script tag is refused",
+    policy.decideAutoApprove({ ...article, postText: `${body}<script>x</script>` }, on, ["website"]).eligible === false,
+  );
+  check(
+    "jurisdiction-specific advice is held for a person",
+    policy.decideAutoApprove({ ...article, postText: `${body} Verify this with a licensed professional in your state.` }, on, ["website"]).eligible === false,
+  );
+  check("an article still needs its source enabled", policy.decideAutoApprove(article, [], ["website"]).eligible === false);
+}
 check("the policy literal is namespaced", policy.AUTO_APPROVE_POLICY === "policy:auto-approve");
 check(
   "the next slot before today's run is today's run",

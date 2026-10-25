@@ -5,7 +5,9 @@
  * When `MARKETING_AUTO_APPROVE_SOURCES` names one or more post sources, the
  * publisher cron promotes DRAFT posts of those sources into scheduled publish
  * jobs for the next release slot — provided the post carries a stored video
- * and a MEASURED render QA of PASS. The job is recorded with
+ * and a MEASURED render QA of PASS, or, for a website article on a channel
+ * `MARKETING_AUTO_APPROVE_CHANNELS` names, a brief, a body long enough for
+ * the site gate, and no jurisdiction-specific advice. The job is recorded with
  * `approved_by_policy = 'policy:auto-approve'` and NO `approved_by`, so the
  * ledger never shows a person approving something no person looked at.
  *
@@ -19,10 +21,40 @@
  * verifier without a Supabase project. The cron owns the side effects.
  */
 
-import type { MarketingPostSource } from "../../shared/types/marketing-post";
+import type { MarketingChannel, MarketingPostSource } from "../../shared/types/marketing-post";
+import { BODY_MIN_LENGTH_FOR_PUBLISH } from "../../shared/types/site-page";
 import type { PublishModeEnv } from "./gate";
 
 export const MARKETING_AUTO_APPROVE_SOURCES_ENV = "MARKETING_AUTO_APPROVE_SOURCES";
+
+/**
+ * Which channels the policy may approve for. Unset means the video channels
+ * only — exactly the behaviour before website articles could qualify, so
+ * adding `website` is a deliberate, separate decision from naming a source
+ * (the agent platform's videos and articles share one source).
+ */
+export const MARKETING_AUTO_APPROVE_CHANNELS_ENV = "MARKETING_AUTO_APPROVE_CHANNELS";
+
+export const AUTO_APPROVABLE_CHANNELS: readonly MarketingChannel[] = [
+  "youtube",
+  "facebook",
+  "instagram",
+  "website",
+];
+
+/** The default when the channel variable is unset: video channels only. */
+export const DEFAULT_AUTO_APPROVE_CHANNELS: readonly MarketingChannel[] = [
+  "youtube",
+  "facebook",
+  "instagram",
+];
+
+/**
+ * The sentence the SEO drafter adds to state- or jurisdiction-specific
+ * advice (legal, tax, licensing). The operating brief holds that content for
+ * a human, so an article carrying it is never auto-approved.
+ */
+export const JURISDICTION_HOLD_PHRASE = "verify this with a licensed professional";
 
 /** The literal written to `marketing_publish_jobs.approved_by_policy`. */
 export const AUTO_APPROVE_POLICY = "policy:auto-approve" as const;
@@ -77,6 +109,35 @@ export function parseAutoApproveSources(
   return { sources, rejected };
 }
 
+export type AutoApproveChannelsResult = {
+  /** Enabled channels, deduplicated. Unset = the video channels. */
+  readonly channels: readonly MarketingChannel[];
+  readonly rejected: readonly string[];
+};
+
+/** Comma-separated, trimmed, exact-case. Unknown names are rejected. */
+export function parseAutoApproveChannels(
+  env: PublishModeEnv = process.env,
+): AutoApproveChannelsResult {
+  const raw = env[MARKETING_AUTO_APPROVE_CHANNELS_ENV];
+  if (raw === undefined || raw.trim() === "") {
+    return { channels: DEFAULT_AUTO_APPROVE_CHANNELS, rejected: [] };
+  }
+  const channels: MarketingChannel[] = [];
+  const rejected: string[] = [];
+  for (const token of raw.split(",")) {
+    const name = token.trim();
+    if (!name) continue;
+    if ((AUTO_APPROVABLE_CHANNELS as readonly string[]).includes(name)) {
+      const channel = name as MarketingChannel;
+      if (!channels.includes(channel)) channels.push(channel);
+    } else {
+      rejected.push(name);
+    }
+  }
+  return { channels, rejected };
+}
+
 export function isAutoApproveEnabled(env: PublishModeEnv = process.env): boolean {
   return parseAutoApproveSources(env).sources.length > 0;
 }
@@ -84,6 +145,12 @@ export function isAutoApproveEnabled(env: PublishModeEnv = process.env): boolean
 export type AutoApproveCandidate = {
   readonly status: string;
   readonly sourceType: MarketingPostSource;
+  /** Absent on callers that predate website articles: treated as a video post. */
+  readonly channelTarget?: MarketingChannel;
+  /** A website post's article body. */
+  readonly postText?: string | null;
+  /** A website post's brief; an article without one cannot be built. */
+  readonly contentPackageId?: string | null;
   readonly videoMediaAssetId?: string | null;
   readonly renderQa?: { readonly state: string } | null;
 };
@@ -99,6 +166,7 @@ export type AutoApproveVerdict =
 export function decideAutoApprove(
   post: AutoApproveCandidate,
   enabledSources: readonly MarketingPostSource[],
+  enabledChannels: readonly MarketingChannel[] = DEFAULT_AUTO_APPROVE_CHANNELS,
 ): AutoApproveVerdict {
   if (enabledSources.length === 0) {
     return { eligible: false, reason: "auto-approval is off" };
@@ -112,6 +180,16 @@ export function decideAutoApprove(
   if (post.status !== "draft") {
     return { eligible: false, reason: `status is ${post.status}, not draft` };
   }
+  const channel = post.channelTarget;
+  if (channel !== undefined && !enabledChannels.includes(channel)) {
+    return {
+      eligible: false,
+      reason: `channel ${channel} is not in ${MARKETING_AUTO_APPROVE_CHANNELS_ENV}`,
+    };
+  }
+  if (channel === "website") {
+    return decideWebsiteArticle(post);
+  }
   if (!post.videoMediaAssetId?.trim()) {
     return { eligible: false, reason: "no stored video" };
   }
@@ -121,6 +199,35 @@ export function decideAutoApprove(
       reason: post.renderQa
         ? `render QA is ${post.renderQa.state}, not PASS`
         : "render QA was never measured",
+    };
+  }
+  return { eligible: true };
+}
+
+/**
+ * A website article has no render to measure, so its checks are the page's
+ * own: a brief to build from, a body long enough for the site gate, no
+ * script, and no jurisdiction-specific advice (held for a human).
+ */
+function decideWebsiteArticle(post: AutoApproveCandidate): AutoApproveVerdict {
+  if (!post.contentPackageId?.trim()) {
+    return { eligible: false, reason: "website post has no article brief" };
+  }
+  const body = post.postText?.trim() ?? "";
+  if (body.length < BODY_MIN_LENGTH_FOR_PUBLISH) {
+    return {
+      eligible: false,
+      reason: `article body is under ${String(BODY_MIN_LENGTH_FOR_PUBLISH)} characters`,
+    };
+  }
+  const lower = body.toLowerCase();
+  if (lower.includes("<script")) {
+    return { eligible: false, reason: "article body contains a script tag" };
+  }
+  if (lower.includes(JURISDICTION_HOLD_PHRASE)) {
+    return {
+      eligible: false,
+      reason: "article gives jurisdiction-specific advice, held for a human",
     };
   }
   return { eligible: true };
