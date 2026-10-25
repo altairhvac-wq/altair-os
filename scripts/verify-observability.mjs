@@ -270,6 +270,7 @@ const cronRoutes = [
   "billing-maintenance",
   "marketing-ai",
   "marketing-insights",
+  "marketing-publish",
   "workflow-reminders",
 ];
 
