@@ -8,10 +8,12 @@ import { MarketingMediaPreview } from "./MarketingMediaPreview";
 import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
 import { MarketingYouTubePublishControls } from "./MarketingYouTubePublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
+import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
+import { approveMarketingPostForDistributionAction } from "@/app/actions/marketing-publish-approval";
 import {
-  archiveMarketingPostAction,
-  updateMarketingPostAction,
-} from "@/app/actions/marketing-posts";
+  listDestinationCandidates,
+  providerForChannelTarget,
+} from "@/shared/lib/marketing-publish-destination";
 import {
   REJECT_REASON_LABELS,
   REJECT_REASONS,
@@ -418,6 +420,9 @@ export function MarketingTodayView({
    * (datetime-local text, empty = approve without a slot). */
   const [approving, setApproving] = useState<string | null>(null);
   const [slotByGroup, setSlotByGroup] = useState<Record<string, string>>({});
+  /** Destination per (group, channel) — only asked for when the company has
+   * more than one eligible account for that channel. Key: `${group}:${channel}`. */
+  const [destinationByKey, setDestinationByKey] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const timeZone = useCompanyTimezone();
 
@@ -511,10 +516,11 @@ export function MarketingTodayView({
   /**
    * APPROVED FOR SCHEDULED DISTRIBUTION — deliberately not a publish.
    *
-   * Uses the EXISTING update action and its existing schedule/status
-   * coupling: a slot sets `scheduledAt` (the action derives `scheduled`),
-   * no slot sets `ready` (approved, slot pending). Nothing goes live from
-   * this button: distribution is the separate, operator-armed run, which is
+   * Calls the approval action, which keeps the existing schedule/status
+   * coupling (a slot sets `scheduledAt` and derives `scheduled`; no slot
+   * sets `ready`) and ALSO writes the `marketing_publish_jobs` row with the
+   * explicit destination account and the approver. Nothing goes live from
+   * this button: distribution is the separate, operator-armed cron, which is
    * the entire point for Meta — Facebook and Instagram are PUBLIC the
    * moment they publish, so "approve" must never be the same click.
    */
@@ -525,12 +531,14 @@ export function MarketingTodayView({
       const slot = (slotByGroup[group.key] ?? "").trim();
       const scheduledAtIso = slot ? new Date(slot).toISOString() : null;
       for (const post of group.posts) {
-        const result = await updateMarketingPostAction(
-          post.id,
-          scheduledAtIso
-            ? { scheduledAt: scheduledAtIso }
-            : { status: "ready" },
-        );
+        // The approval now CARRIES its destination: the server resolves a
+        // single eligible account itself and refuses to guess between
+        // several, so the id is only sent when the human picked one here.
+        const result = await approveMarketingPostForDistributionAction(post.id, {
+          scheduledAt: scheduledAtIso,
+          connectedAccountId:
+            destinationByKey[`${group.key}:${post.channelTarget}`] ?? null,
+        });
         if (result?.error) {
           setError(`${channelLabel(post.channelTarget)}: ${result.error}`);
           return;
@@ -540,6 +548,21 @@ export function MarketingTodayView({
     } finally {
       setApproving(null);
     }
+  }
+
+  /** Channels in this group with MORE THAN ONE eligible destination. */
+  function ambiguousDestinations(group: TodayGroup) {
+    const seen = new Set<string>();
+    const out: { channel: string; candidates: MarketingConnectedAccount[] }[] = [];
+    for (const post of group.posts) {
+      if (seen.has(post.channelTarget)) continue;
+      seen.add(post.channelTarget);
+      const provider = providerForChannelTarget(post.channelTarget);
+      if (!provider) continue;
+      const candidates = listDestinationCandidates(connectedAccounts, provider);
+      if (candidates.length > 1) out.push({ channel: post.channelTarget, candidates });
+    }
+    return out;
   }
 
   return (
@@ -739,10 +762,13 @@ export function MarketingTodayView({
 
               <div className="flex flex-wrap items-center gap-3 border-t border-[var(--north-star-plate-border)] pt-4">
                 {/* Approval here means APPROVED FOR SCHEDULED DISTRIBUTION —
-                    the existing update action moves every channel's draft to
-                    scheduled (slot given) or ready (slot pending). Nothing
-                    publishes from this button; the per-channel controls above
-                    remain the immediate path when a human wants one. */}
+                    the approval action moves every channel's draft to
+                    scheduled (slot given) or ready (slot pending) AND writes
+                    the publish-queue row with its destination and approver.
+                    Nothing publishes from this button; the publisher cron
+                    runs scheduled jobs, and only when the deployment is
+                    armed. The per-channel controls above remain the
+                    immediate path when a human wants one. */}
                 <label className="flex items-center gap-2 text-[11px] text-altair-ink-muted">
                   Release slot
                   <input
@@ -757,6 +783,33 @@ export function MarketingTodayView({
                     }
                   />
                 </label>
+                {ambiguousDestinations(group).map(({ channel, candidates }) => (
+                  <label
+                    key={`${group.key}:${channel}`}
+                    className="flex items-center gap-2 text-[11px] text-altair-ink-muted"
+                  >
+                    {channelLabel(channel)} destination
+                    <select
+                      className="rounded border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] px-2 py-1 text-xs text-altair-ink"
+                      value={destinationByKey[`${group.key}:${channel}`] ?? ""}
+                      onChange={(event) =>
+                        setDestinationByKey((current) => ({
+                          ...current,
+                          [`${group.key}:${channel}`]: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Choose an account…</option>
+                      {candidates.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.providerResourceName?.trim() ||
+                            account.providerAccountName?.trim() ||
+                            account.id}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
                 <Button
                   size="sm"
                   loading={approving === group.key}
