@@ -44,14 +44,17 @@ export const DEFAULT_FACEBOOK_GRAPH_API_VERSION = "v22.0";
  * When Meta's data access for the connected Page expires.
  *
  * Read off the live token via `GET /debug_token` on 2026-09-13
- * (`data_access_expires_at` = 2026-11-30). This is a property of the GRANT,
+ * (`data_access_expires_at` = 2026-11-30). The owner reconnected the Page on
+ * 2026-10-25 (~09:57 UTC); Meta grants 90 days of data access from a fresh
+ * login, so this is now 2027-01-23 (computed from that rule, not yet read off
+ * debug_token: confirm on the next token read). This is a property of the GRANT,
  * not of the token: the Page token itself never expires, so nothing in
  * `token_expires_at` or the channel state machine will ever warn about it —
  * publishing and insights both go dark on this date with every stored
  * credential still "valid". The only fix is a human re-consenting
  * (reconnect Facebook), which resets the window and this constant.
  */
-export const META_DATA_ACCESS_EXPIRES_ON = "2026-11-30";
+export const META_DATA_ACCESS_EXPIRES_ON = "2027-01-23";
 
 /** How far ahead the expiry starts being reported as a warning. */
 export const META_DATA_ACCESS_WARN_DAYS = 45;
