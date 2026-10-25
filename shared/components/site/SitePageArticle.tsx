@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { serializeJsonLd } from "@/shared/lib/site/structured-data";
 
 /**
  * Renders one published site page.
@@ -75,17 +76,6 @@ export function parseArticleBlocks(markdown: string): Block[] {
   flushParagraph();
   flushList();
   return blocks;
-}
-
-/**
- * JSON-LD, escaped for the one sequence that can break out of a script tag.
- *
- * `JSON.stringify` does not escape `</script>`, and a body or title
- * containing it would end the block and let whatever followed be parsed as
- * markup. Replacing `<` inside the serialised string closes that.
- */
-function serializeJsonLd(data: Record<string, unknown>): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 export function SitePageArticle({

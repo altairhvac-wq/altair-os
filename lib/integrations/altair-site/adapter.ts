@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   getSitePageById,
+  getSitePageBySlugForCompany,
   listPublishedSlugsForCompany,
   publishSitePage,
 } from "@/lib/database/queries/marketing-site-pages";
@@ -152,11 +153,20 @@ export const altairSiteAdapter: FirstPartyAdapter = {
     }
 
     // ------------------------------------------------------- 4. the write
+    // A revision keeps the ORIGINAL publication date. The row already does
+    // (`publishSitePage` preserves `published_at`), but the JSON-LD used to
+    // say `datePublished = now` on every revision, so a page edited three
+    // times told search engines it was first published three times.
+    const existing = await getSitePageBySlugForCompany({
+      companyId: input.post.companyId,
+      slug,
+    });
+
     const structuredData = buildArticleStructuredData({
       title: draft.title,
       metaDescription,
       canonicalUrl,
-      publishedAt: input.nowIso,
+      publishedAt: existing?.publishedAt ?? input.nowIso,
       updatedAt: input.nowIso,
       publisherName: config.publisherName,
     });

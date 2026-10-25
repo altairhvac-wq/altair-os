@@ -695,12 +695,12 @@ export function MarketingHubPageView({
                                 },
                               )}
                               {" · "}
-                              {/* A website post goes out through the
-                                  altair_site publisher, so telling someone
-                                  to copy and paste it describes a workflow
-                                  that is not the one that runs. */}
+                              {/* A website post is a draft for the
+                                  altair_site publisher: nothing publishes it
+                                  until it is approved, so neither "copy and
+                                  paste" nor "publishes" describes it. */}
                               {post.channelTarget === "website"
-                                ? "Publishes to the Altair website"
+                                ? "Website draft · publishes to the Altair website after approval"
                                 : "Copy and post manually"}
                             </p>
                           ) : null}
@@ -748,14 +748,15 @@ export function MarketingHubPageView({
             {/* ============ NOT ALL OF THESE ARE MANUAL ============
                 This list was called "Manual posts" and described as copy-ready
                 drafts posted by hand, which was true of every channel it had
-                when that copy was written. Website posts now publish through
-                the altair_site publisher and arrive here with a live URL, so
-                a heading calling them manual describes the wrong workflow to
-                whoever opens one. Social channels are unchanged and still say
-                so. */}
+                when that copy was written. Website posts are different, but
+                not automatic: the agent bridge and your team create them as
+                DRAFTS, and nothing in the product publishes one until it has
+                been approved — the publish step is still being built. Copy
+                that said they "publish to the website" promised a workflow
+                that does not run yet. Social channels are unchanged. */}
             Drafts your team writes. Social channels are copied and posted by
-            hand; website posts publish to the Altair website. Separate from
-            the daily video.
+            hand; website posts are created as drafts and go live on the
+            Altair website only after approval. Separate from the daily video.
           </p>
         </div>
         {newPostButton}

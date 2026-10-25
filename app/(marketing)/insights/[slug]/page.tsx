@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPublishedSitePageBySlug } from "@/lib/database/queries/marketing-site-pages";
 import { SITE_PAGE_PATH_PREFIX, isValidSlug } from "@/shared/types/site-page";
 import { SitePageArticle } from "@/shared/components/site/SitePageArticle";
+import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 /**
  * A published Altair site page.
@@ -35,21 +36,31 @@ export async function generateMetadata({
   const page = await getPublishedSitePageBySlug(slug);
   if (!page) return {};
 
+  const title = page.metaTitle ?? page.title;
+  const description = page.metaDescription ?? undefined;
+
+  // Composed with the shared helper rather than written by hand: Next merges
+  // `openGraph` shallowly, so a page-level block without `images` silently
+  // drops the layout's og.png from every article preview (SEO audit bug 1).
+  //
+  // The canonical is stored, verified against this page's own address before
+  // publish, and emitted verbatim as both canonical and og:url. A canonical
+  // derived here instead could disagree with the one the publish recorded.
+  const social = buildPublicSocialMetadata({
+    title,
+    description,
+    path: page.canonicalUrl ?? "./",
+  });
+
   return {
-    title: page.metaTitle ?? page.title,
-    description: page.metaDescription ?? undefined,
-    // The canonical is stored, verified against this page's own address
-    // before publish, and emitted verbatim. A canonical derived here instead
-    // could disagree with the one the publish recorded.
-    ...(page.canonicalUrl
-      ? { alternates: { canonical: page.canonicalUrl } }
-      : {}),
+    title,
+    description,
+    ...social,
     openGraph: {
-      title: page.metaTitle ?? page.title,
-      ...(page.metaDescription ? { description: page.metaDescription } : {}),
-      ...(page.canonicalUrl ? { url: page.canonicalUrl } : {}),
+      ...social.openGraph,
       type: "article",
       ...(page.publishedAt ? { publishedTime: page.publishedAt } : {}),
+      modifiedTime: page.updatedAt,
     },
   };
 }
