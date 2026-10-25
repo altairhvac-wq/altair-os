@@ -626,6 +626,10 @@ export const HVAC_DEMO_INVOICES: InvoiceSeed[] = [
     // without hand-creating a draft before every take (pack v6).
     key: "draftJamesRepair",
     customerKey: "james",
+    // Billed from the job it closes (JOB-DEMO-1037, completed today), so the
+    // invoice shows the job context a real send has — and the demo video's
+    // "built from the job" beat is literally true on screen.
+    jobKey: "completedTodayJames",
     invoiceNumber: "INV-DEMO-3011",
     status: "draft",
     subtotal: 318,
