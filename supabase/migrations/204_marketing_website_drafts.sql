@@ -63,10 +63,17 @@ create unique index if not exists marketing_content_packages_source_job_key
   on public.marketing_content_packages (company_id, source_job_id)
   where source_job_id is not null;
 
+-- Scoped to agent-bridge rows (source_type 'agent_daily_reel'): production
+-- already holds two hand-run site-canary posts (source_type 'other') for one
+-- package and channel, the publish and the revision of the September test
+-- article, each with its own delivery and publish job. That history stays;
+-- the key only has to make the BRIDGE converge, and every bridge insert uses
+-- the agent source type.
 create unique index if not exists marketing_posts_content_package_channel_key
   on public.marketing_posts (company_id, content_package_id, channel_target)
   where content_package_id is not null
-    and deleted_at is null;
+    and deleted_at is null
+    and source_type = 'agent_daily_reel';
 
 comment on column public.marketing_content_packages.source_job_id is
   'The agent-platform job this package was drafted from, when the bridge wrote it. Unique per company where not null, so a repeated cycle converges on one package (the route inserts and reads 23505 as ALREADY_EXISTS). Null for hand-authored packages. Distinct from source_id, which is the artifact uuid.';
