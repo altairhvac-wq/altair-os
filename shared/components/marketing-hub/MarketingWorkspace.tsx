@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { MarketingTodayView } from "./MarketingTodayView";
+import { MarketingQueueExtras } from "./MarketingQueueExtras";
 import { MarketingSettingsView } from "./MarketingSettingsView";
-import { MarketingAutomationSection } from "./MarketingAutomationSection";
-import { MarketingHubPageView } from "./MarketingHubPageView";
 import { MarketingCommandView } from "./MarketingCommandView";
+import { MarketingLibraryView, type SitePageRow } from "./MarketingLibraryView";
 import type {
   ActivityEntry,
   AttentionItem,
@@ -13,9 +14,7 @@ import type {
   CommandLane,
 } from "@/shared/types/marketing-command";
 import type { WorkRequest } from "@/shared/types/agent-work-request";
-import { MarketingWebsiteView, type SitePageRow } from "./MarketingWebsiteView";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
-import type { StoredAgentSnapshot } from "@/lib/database/queries/agent-snapshots";
 import type { AgentDecisionRecord } from "@/lib/database/queries/agent-decisions";
 import type {
   MarketingAutomationHealth,
@@ -25,39 +24,40 @@ import type { MarketingConnectedAccount } from "@/shared/types/marketing-connect
 import type { MarketingPost } from "@/shared/types/marketing-post";
 import type { ReelVideoOption } from "@/shared/types/marketing-reel";
 import type { AgentPlatformStatusReport } from "@/shared/types/agent-heartbeat";
+import type {
+  MarketingBrandKit,
+  MarketingHqConfig,
+  MarketingItem,
+} from "@/shared/types/marketing-ai-hq";
+
+export type { SitePageRow };
 
 /**
- * `/marketing` — the one canonical founder-facing Marketing workspace.
+ * `/marketing` — operate the marketing agents and the publishing workflow.
  *
- * ==================== THREE TABS, IN THE ORDER THE FOUNDER NEEDS THEM ====================
- * Today is first and is the default, because the daily job is a decision
- * about one video and everything else is support for it. Settings is the
- * short list of things a founder actually sets. Advanced is where the
- * control room went.
+ * ==================== THREE TABS (2026-10-25) ====================
+ * The page had grown into seven tabs over four generations of marketing
+ * tooling: a hand-posting editor, a separate Marketing AI HQ page, the agent
+ * platform's dashboards and the publishing queue. Four lists called
+ * themselves approval queues, five buttons could publish, and connections
+ * lived in three places. The owner asked for one place to run the agents.
  *
- * ==================== WHAT MOVED, AND WHY NOTHING WAS DELETED ====================
- * Every section that used to be on this page is still reachable. What changed
- * is which of them the page opens on. Runs, schedules, agent permissions,
- * artifact and job ids, codecs, byte sizes, attempt counts, contract-drift
- * notices, campaign telemetry, the empty AI-recommendations list, the video
- * production ledger and historical render ids are diagnostics: real, worth
- * keeping, and incapable of changing a marketing decision. They are one click
- * away under Advanced instead of ahead of the video.
+ *   Today     — the one approval queue (videos, website articles, Facebook
+ *               posts, the weekly marketing AI's ideas) above the Chief of
+ *               Staff, what needs attention, and recent activity.
+ *   Library   — everything made, one list with Drafts / Approved / Published /
+ *               Archived filters, live website pages included, and a small
+ *               editor for fixing wording before approval.
+ *   Settings  — automation status, every connection, brand & goals.
  *
- * ==================== ONE HOME PER CAPABILITY ====================
- * Connected accounts and the Marketing HQ entry point each used to render
- * TWICE inside this page — once from Settings and again from the manual-posts
- * view below. Both now live in Settings only. `MarketingHubPageView` also
- * stopped declaring a page title, subtitle and canvas of its own: `/marketing`
- * is the route, and a route does not need a second one nested in a tab.
- *
- * ==================== PERFORMANCE IS ABSENT ON PURPOSE ====================
- * There is no post or Reel analytics anywhere in any of the three repos — no
- * Page-post insights read, no Instagram media insights, and no table linking
- * a published post to a number. A Performance tab built today could only show
- * paid ad-campaign figures that have nothing to do with the Reel that was
- * posted, which is worse than an honest absence. The tab arrives when the
- * data does.
+ * ==================== WHAT WAS REMOVED ====================
+ * Every direct publish button (YouTube upload, Facebook/Instagram Reel and feed
+ * publish, HQ publish-to-Facebook): Approve is the only way out, so every
+ * publish passes the destination-bound job, the kill switch and the
+ * scheduled run. The Performance tab (paid-ad telemetry unrelated to posts),
+ * the History tab (duplicate health readouts and activity), the manual post
+ * tools (templates, recurring copies, mark-posted-manually, founder
+ * screenshots) and the Marketing HQ page. No data was deleted.
  */
 
 type MarketingWorkspaceProps = {
@@ -75,17 +75,7 @@ type MarketingWorkspaceProps = {
     /** The platform's own liveness signal — see shared/types/agent-heartbeat.ts. */
     platformStatus: AgentPlatformStatusReport;
   };
-  /**
-   * The company's site pages, projected from the same operating state the
-   * Command surface reads. Read-only here: a page is written by the publish
-   * path, and its SEO details are edited on the post under Content.
-   */
   sitePages: readonly SitePageRow[];
-  /**
-   * Publishing details per website post id, projected server-side from rows
-   * that already exist. Absent for every non-website post, which is why the
-   * SEO panel cannot appear on one.
-   */
   sitePublishingDetails?: Record<string, SitePublishingDetails>;
   connectedAccounts: MarketingConnectedAccount[];
   videoOptions: ReelVideoOption[];
@@ -94,61 +84,34 @@ type MarketingWorkspaceProps = {
   automationHealth: MarketingAutomationHealth;
   /** The platform's video-render section, or null when it never reported. */
   renders: TodayStateInput["renders"];
-  snapshot: StoredAgentSnapshot | null;
   decisions: AgentDecisionRecord[];
-  bridgeConfigured: boolean;
-  storedMediaJobIds: string[];
+  /** Marketing HQ's weekly ideas still waiting for a decision. */
+  hqIdeas: MarketingItem[];
+  brandGoals: { config: MarketingHqConfig; brandKit: MarketingBrandKit } | null;
   nowIso: string;
-  companyName: string;
-  showFounderMarketing: boolean;
-  showFounderScreenshotCapture: boolean;
-  aiFeaturesEnabled: boolean;
-  aiDraftingConfigured: boolean;
   canManageConnectedAccounts: boolean;
   connectedAccountsFlash: { tone: "success" | "error"; message: string } | null;
 };
 
-/**
- * Marketing, named by what you are trying to do.
- *
- * ============ WHY THIS REPLACED "TODAY / SETTINGS / ADVANCED" ============
- * "Advanced" had become the place everything went that was not the daily
- * decision — runs, schedules, agent status, campaign telemetry, render
- * diagnostics and the whole post editor, in one scroll. A tab named after how
- * hard it is rather than what it holds cannot tell you whether what you want
- * is in it. Each destination below is named after the question it answers.
- *
- * NOTHING WAS REBUILT TO DO THIS. Every screen is the one that already
- * existed: Content is the post editor and its Website/SEO panel unchanged,
- * Publishing is the daily go-out view, and Performance and History ask the
- * same automation dashboard for the sections they are about. Integrations
- * stay in Settings, where they were.
- *
- * Command is first and default: the Chief of Staff is the way in, and the
- * other tabs are where you go when you already know what you want.
- */
 const TABS = [
-  { id: "command", label: "Command" },
-  { id: "content", label: "Content" },
-  { id: "publishing", label: "Publishing" },
-  { id: "performance", label: "Performance" },
-  { id: "website", label: "Website" },
-  { id: "history", label: "History" },
+  { id: "today", label: "Today" },
+  { id: "library", label: "Library" },
   { id: "settings", label: "Settings" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
 
 export function MarketingWorkspace(props: MarketingWorkspaceProps) {
-  const [tab, setTab] = useState<TabId>("command");
+  const router = useRouter();
+  const [tab, setTab] = useState<TabId>("today");
   const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = () => {
+    setRefreshKey((value) => value + 1);
+    router.refresh();
+  };
 
   return (
     <div className="space-y-6">
-      {/* The shell's <main> clips horizontal overflow, so without its own
-          scroller this bar CLIPS on a phone and the trailing tabs become
-          unreachable. `overflow-x-auto` + `shrink-0` keeps all seven tabs
-          one swipe away; `min-h-11` keeps each a real thumb target. */}
       <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--north-star-plate-border)]">
         {TABS.map((entry) => (
           <button
@@ -166,37 +129,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
         ))}
       </div>
 
-      {tab === "command" ? (
-        <MarketingCommandView
-          lanes={props.command.lanes}
-          attention={props.command.attention}
-          activity={props.command.activity}
-          messages={props.command.messages}
-          awaitingReply={props.command.awaitingReply}
-          platformUnavailableReason={props.command.platformUnavailableReason}
-          canAsk={props.command.canAsk}
-          // The same decision records Performance reads. One queue.
-          decisions={props.decisions}
-          workRequests={props.command.workRequests}
-          platformStatus={props.command.platformStatus}
-        />
-      ) : null}
-
-      {tab === "content" ? (
-        <MarketingHubPageView
-          initialPosts={props.posts}
-          sitePublishingDetails={props.sitePublishingDetails}
-          connectedAccounts={props.connectedAccounts}
-          videoOptions={props.videoOptions}
-          companyName={props.companyName}
-          showFounderMarketing={props.showFounderMarketing}
-          showFounderScreenshotCapture={props.showFounderScreenshotCapture}
-          aiFeaturesEnabled={props.aiFeaturesEnabled}
-          aiDraftingConfigured={props.aiDraftingConfigured}
-        />
-      ) : null}
-
-      {tab === "publishing" ? (
+      {tab === "today" ? (
         <div className="space-y-6">
           <MarketingTodayView
             key={refreshKey}
@@ -207,45 +140,34 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
             automationHealth={props.automationHealth}
             renders={props.renders}
             nowIso={props.nowIso}
-            onChanged={() => setRefreshKey((value) => value + 1)}
+            onChanged={refresh}
           />
-          {/* The same dashboard, asked only for what going-out work looks
-              like. Decision controls, support levels and empty states are
-              unchanged — this is a subset, not a second component. */}
-          <MarketingAutomationSection
-            stored={props.snapshot}
-            only={["approvals", "videoRenders"]}
+          <MarketingQueueExtras
+            posts={props.posts}
+            hqIdeas={props.hqIdeas}
+            onChanged={refresh}
+          />
+          <MarketingCommandView
+            lanes={props.command.lanes}
+            attention={props.command.attention}
+            activity={props.command.activity}
+            messages={props.command.messages}
+            awaitingReply={props.command.awaitingReply}
+            platformUnavailableReason={props.command.platformUnavailableReason}
+            canAsk={props.command.canAsk}
             decisions={props.decisions}
-            bridgeConfigured={props.bridgeConfigured}
-            storedMediaJobIds={props.storedMediaJobIds}
-            nowIso={props.nowIso}
+            workRequests={props.command.workRequests}
+            platformStatus={props.command.platformStatus}
           />
         </div>
       ) : null}
 
-      {tab === "performance" ? (
-        <MarketingAutomationSection
-          stored={props.snapshot}
-          only={["campaign", "recommendations", "agentStatus"]}
-          decisions={props.decisions}
-          bridgeConfigured={props.bridgeConfigured}
-          storedMediaJobIds={props.storedMediaJobIds}
-          nowIso={props.nowIso}
-        />
-      ) : null}
-
-      {tab === "website" ? (
-        <MarketingWebsiteView pages={props.sitePages} />
-      ) : null}
-
-      {tab === "history" ? (
-        <MarketingAutomationSection
-          stored={props.snapshot}
-          only={["summary", "recentActivity", "upcomingWork"]}
-          decisions={props.decisions}
-          bridgeConfigured={props.bridgeConfigured}
-          storedMediaJobIds={props.storedMediaJobIds}
-          nowIso={props.nowIso}
+      {tab === "library" ? (
+        <MarketingLibraryView
+          posts={props.posts}
+          sitePages={props.sitePages}
+          sitePublishingDetails={props.sitePublishingDetails}
+          onChanged={refresh}
         />
       ) : null}
 
@@ -255,7 +177,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
           connectedAccounts={props.connectedAccounts}
           canManageConnectedAccounts={props.canManageConnectedAccounts}
           connectedAccountsFlash={props.connectedAccountsFlash}
-          canOpenMarketingHq={props.showFounderMarketing}
+          brandGoals={props.brandGoals}
         />
       ) : null}
     </div>

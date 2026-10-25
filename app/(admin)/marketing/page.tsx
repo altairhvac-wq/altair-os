@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
-import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
-import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { hasCompanyRole } from "@/lib/database/types/roles";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
@@ -26,7 +23,7 @@ import {
 } from "@/shared/types/agent-heartbeat";
 import { listStoredMediaAssets } from "@/lib/database/queries/marketing-media-assets";
 import { listMarketingItems } from "@/lib/marketing/store";
-import { isAgentBridgeConfigured } from "@/lib/agent-bridge/env";
+import { loadMarketingHqContext } from "@/lib/marketing/brand";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { MarketingWorkspace } from "@/shared/components/marketing-hub/MarketingWorkspace";
 import { deriveMarketingAutomationHealth } from "@/shared/types/marketing-workspace-state";
@@ -47,9 +44,8 @@ export const metadata: Metadata = {
 export default async function MarketingPage({
   searchParams,
 }: MarketingPageProps) {
-  const [companyContext, user, params] = await Promise.all([
+  const [companyContext, params] = await Promise.all([
     getActiveCompanyContext(),
-    getCurrentUser(),
     searchParams,
   ]);
 
@@ -95,7 +91,19 @@ export default async function MarketingPage({
   // `convertedPostId` on the item and `sourceId` on the post, in the same
   // write. Anything a post cannot be traced back to has no rationale, and the
   // card says so rather than filling the space.
-  const queueItems = await listMarketingItems(companyContext.company.id);
+  const [queueItems, brandGoals] = await Promise.all([
+    listMarketingItems(companyContext.company.id),
+    // Brand & goals moved here from the retired Marketing HQ page. A failed
+    // read shows an honest "could not be loaded" card, never a blank form
+    // that would overwrite the saved values on submit.
+    loadMarketingHqContext(companyContext.company.id)
+      .then((context) => ({ config: context.config, brandKit: context.brandKit }))
+      .catch(() => null),
+  ]);
+  // Marketing HQ's weekly social ideas join the one queue on Today.
+  const hqIdeas = queueItems.filter(
+    (item) => item.kind === "social_post" && item.status === "draft",
+  );
   const rationaleByPostId: Record<string, string> = {};
   for (const item of queueItems) {
     const rationale = item.content?.["rationale"];
@@ -121,10 +129,6 @@ export default async function MarketingPage({
   // Request time is resolved once, here, and threaded down as a prop so the
   // presentation component stays a pure function of its inputs.
   const renderedAt = new Date().toISOString();
-
-  const isPlatformAdmin = canAccessPlatformAdmin(user);
-  const showFounderScreenshotCapture =
-    process.env.NODE_ENV === "development" && isPlatformAdmin;
 
   // ============ THE THREE CLAIMS THE FRONT PAGE MAY MAKE ============
   // Reduced HERE, on the server, from the projection that was already
@@ -212,12 +216,12 @@ export default async function MarketingPage({
     <MarketingWorkspace
       posts={posts}
       command={command}
-      // Already loaded for the Command surface's lanes; the Website tab is a
-      // second reading of the same rows, not a second query.
+      // Already loaded for the Command surface's lanes; Library's live pages
+      // are a second reading of the same rows, not a second query.
       sitePages={operatingState.sitePages}
       sitePublishingDetails={sitePublishingDetails}
       automationHealth={automationHealth}
-      // The same section Advanced renders in full. Today reads it only to
+      // Today reads the platform's render section only to
       // tell "being prepared" from "could not be prepared" from "nothing
       // was started", which used to be one indistinguishable empty state.
       renders={
@@ -241,16 +245,10 @@ export default async function MarketingPage({
         storedAt: asset.storedAt,
       }))}
       rationaleByPostId={rationaleByPostId}
-      snapshot={agentSnapshot}
       decisions={agentDecisions}
-      bridgeConfigured={isAgentBridgeConfigured()}
-      storedMediaJobIds={storedMedia.map((asset) => asset.sourceJobId)}
+      hqIdeas={hqIdeas}
+      brandGoals={brandGoals}
       nowIso={renderedAt}
-      companyName={companyContext.company.name}
-      showFounderMarketing={isPlatformAdmin}
-      showFounderScreenshotCapture={showFounderScreenshotCapture}
-      aiFeaturesEnabled={isAiFeaturesEnabled()}
-      aiDraftingConfigured={isAiDraftingConfigured()}
       canManageConnectedAccounts={canManageConnectedAccounts}
       connectedAccountsFlash={connectedAccountsFlash}
     />

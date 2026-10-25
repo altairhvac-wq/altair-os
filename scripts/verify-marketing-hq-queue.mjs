@@ -254,85 +254,38 @@ check("an empty queue partitions cleanly", (() => {
 })());
 
 // ---------------------------------------------------------------------------
-console.log("\nThe view renders buttons on the actionable list only");
+console.log("\nThe HQ page is retired; its ideas reach the one queue on /marketing");
 // ---------------------------------------------------------------------------
+// 2026-10-25: the Marketing HQ page was folded into /marketing. Its social
+// ideas now appear in the Today queue (MarketingQueueExtras), brand & goals
+// in Settings (MarketingBrandGoalsCard), and /marketing/hq redirects.
 
-const view = readFileSync(
-  "shared/components/marketing-hq/MarketingAiHqPageView.tsx",
+const extras = readFileSync(
+  "shared/components/marketing-hub/MarketingQueueExtras.tsx",
   "utf8",
 );
-
-/**
- * Source with comments removed.
- *
- * The removal checks below ask "is this symbol still in the file", and this
- * file's comments NAME the things that were removed in order to explain why.
- * Asserting against the prose would fail on a correct file, which is a test
- * that punishes the documentation.
- */
-function codeOnly(source) {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-}
-const viewCode = codeOnly(view);
-
 check(
-  "the queue is partitioned rather than filtered by status",
-  view.includes("partitionMarketingQueue") &&
-    !/items\.filter\(\(item\) => item\.status === "draft"\)/.test(view),
+  "the queue offers only social_post ideas, the one kind the server can convert",
+  extras.includes('item.kind === "social_post" && item.status === "draft"'),
 );
 check(
-  "QueueItemCard — the component that owns Approve — is fed only actionable items",
-  view.split("<QueueItemCard").length === 2 &&
-    view.indexOf("actionableItems.map") < view.indexOf("<QueueItemCard"),
+  "Keep reviews and then converts, through the existing server actions",
+  extras.includes('reviewMarketingItemAction(item.id, "approved")') &&
+    extras.includes("convertMarketingItemToPostAction(item.id)"),
 );
 check(
-  "the informational list renders no Approve and no Reject",
-  (() => {
-    const start = view.indexOf("informationalItems.map");
-    const end = view.indexOf("reviewedItems.length > 0");
-    if (start === -1 || end === -1 || end < start) return false;
-    const block = view.slice(start, end);
-    return !block.includes("onApprove") && !block.includes("onReject");
-  })(),
+  "Dismiss records a rejection rather than deleting the idea",
+  extras.includes('reviewMarketingItemAction(item.id, "rejected")'),
 );
 check(
-  "the queue badge counts decisions waiting, not drafts existing",
-  view.includes('entry.id === "queue" ? actionable.length : null'),
+  "no HQ idea can be published directly from the queue",
+  !extras.includes("publishMarketingItemToFacebookAction"),
 );
 check(
-  "the dead onConvert wiring on the card is gone",
-  !/onConvert=\{\(\) => onConvert\(item\)\}/.test(view),
+  "the old HQ address redirects instead of rendering a second surface",
+  readFileSync("app/(admin)/marketing/hq/page.tsx", "utf8").includes('redirect("/marketing")'),
 );
 
-// ---------------------------------------------------------------------------
-console.log("\nConnectedChannels is gone, not re-fed from a second source");
-// ---------------------------------------------------------------------------
-
-check("the component is removed", !viewCode.includes("function ConnectedChannels"));
-check(
-  "its never-populated prop type is removed",
-  !viewCode.includes("MarketingChannelSummary"),
-);
-check(
-  "its two styling tables are removed with it",
-  !viewCode.includes("channelChipClass") && !viewCode.includes("CHANNEL_STATE_LABEL"),
-);
-check(
-  "the channel-state helpers it alone imported are no longer imported",
-  !viewCode.includes("MARKETING_CHANNEL_DESCRIPTORS") &&
-    !viewCode.includes("canAcceptContent") &&
-    !viewCode.includes("publishesImmediately"),
-);
-check(
-  "no replacement data path was invented for it",
-  !viewCode.includes("deriveMarketingChannelState"),
-);
-check(
-  "the page no longer builds a channels field",
-  !readFileSync("app/(admin)/marketing/hq/page.tsx", "utf8").includes("channels:"),
-);
 
 // ---------------------------------------------------------------------------
 console.log("\nThe mirrored server guards still exist");
@@ -353,45 +306,6 @@ check(
 check(
   "the convert action still refuses an item with no text",
   /This item has no post text/.test(actions),
-);
-
-// ---------------------------------------------------------------------------
-// Exporting a video brief: TWO exports, deliberately, for two consumers.
-//
-// `downloadVideoBriefJson` rewrites a brief into a rawScript for the older
-// demo-script path — folding each beat's route into prose ("Navigate to /work.")
-// and dropping captions. That file cannot be turned back into a brief, so the
-// Reel variation path needs the untransformed record beside it. If the two ever
-// collapse into one, one of the two consumers breaks silently.
-const hqView = readFileSync(
-  "shared/components/marketing-hq/MarketingAiHqPageView.tsx",
-  "utf8",
-);
-
-check(
-  "the demo-script export still exists for the older path",
-  /function downloadVideoBriefJson/.test(hqView),
-);
-check(
-  "a raw video_brief export exists for the Reel variation path",
-  /function downloadRawVideoBriefJson/.test(hqView),
-);
-check(
-  "the raw export writes the item content VERBATIM — no route folding, no transformation",
-  /function downloadRawVideoBriefJson\(item: MarketingItem\) \{\s*downloadJson\(item\.content,/.test(hqView),
-);
-check(
-  "the raw export is named so its file cannot be confused with the demo script",
-  /video-brief-\$\{item\.id/.test(hqView) && /demo-script-\$\{item\.id/.test(hqView),
-);
-check(
-  "both exports are offered on video_brief items and nothing else",
-  (hqView.match(/downloadRawVideoBriefJson\(item\)/g) ?? []).length ===
-    (hqView.match(/downloadVideoBriefJson\(item\)/g) ?? []).length,
-);
-check(
-  "the raw export decides nothing — it is a download, not a state change",
-  !/downloadRawVideoBriefJson[\s\S]{0,400}(startTransition|fetch\(|Action\()/.test(hqView),
 );
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

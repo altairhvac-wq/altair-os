@@ -568,10 +568,12 @@ console.log("\nNothing is invented when data is absent");
 
 console.log("\nThe panel is website-only and stores nothing");
 
-const hubView = read("shared/components/marketing-hub/MarketingHubPageView.tsx");
+// The post editor that used to host the panel was retired on 2026-10-25;
+// Library now shows it, and only for a website post.
+const libraryView = read("shared/components/marketing-hub/MarketingLibraryView.tsx");
 check(
   "the panel renders only for website posts",
-  hubView.includes('selectedPost.channelTarget === "website"'),
+  libraryView.includes('post.channelTarget === "website" && sitePublishingDetails[post.id]'),
 );
 const panelSource = read("shared/components/marketing-hub/WebsitePublishingPanel.tsx");
 check(

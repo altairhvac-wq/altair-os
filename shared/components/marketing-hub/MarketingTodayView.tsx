@@ -5,8 +5,6 @@ import { Button } from "@/shared/design-system/components";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { MarketingMediaPreview } from "./MarketingMediaPreview";
-import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
-import { MarketingYouTubePublishControls } from "./MarketingYouTubePublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
 import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
 import { approveMarketingPostForDistributionAction } from "@/app/actions/marketing-publish-approval";
@@ -47,7 +45,8 @@ import {
  * sections of runtime telemetry. Schedule counts, task types, run states,
  * artifact ids, codecs, byte sizes, attempt numbers and contract-drift
  * warnings are all real and all worth keeping; none of them changes a
- * marketing decision, so none of them is here. They live under Advanced.
+ * marketing decision, so none of them is here. (The diagnostics tabs that
+ * held them were retired with the three-tab page on 2026-10-25.)
  *
  * ==================== ONE QUEUE, AND IT IS THIS ONE ====================
  * Three things called themselves an approval queue: the snapshot's
@@ -373,6 +372,9 @@ function channelLabel(channel: string): string {
  */
 type TodayGroup = { key: string; posts: MarketingPost[] };
 
+/** Newest approved items shown before "Show older". */
+const APPROVED_VISIBLE = 3;
+
 const CHANNEL_ORDER: Record<string, number> = {
   youtube: 0,
   facebook: 1,
@@ -440,15 +442,24 @@ export function MarketingTodayView({
   const approvedGroups = useMemo(
     () =>
       groupByVideo(
-        posts.filter(
-          (post) =>
-            post.sourceType === "agent_daily_reel" &&
-            Boolean(post.videoMediaAssetId) &&
-            (post.status === "ready" || post.status === "scheduled"),
-        ),
+        posts
+          .filter(
+            // Every approved-but-unpublished post since 2026-10-25, not only
+            // agent videos: an approved website article or Facebook post
+            // vanished from Today the moment it was approved.
+            (post) => post.status === "ready" || post.status === "scheduled",
+          )
+          .sort((a, b) =>
+            (b.scheduledAt ?? b.createdAt ?? "").localeCompare(
+              a.scheduledAt ?? a.createdAt ?? "",
+            ),
+          ),
       ),
     [posts],
   );
+  /** Owner, 2026-10-25: finished items fold to one line and open on click. */
+  const [openApproved, setOpenApproved] = useState<string | null>(null);
+  const [showAllApproved, setShowAllApproved] = useState(false);
 
   const todayState = useMemo(
     () => deriveMarketingTodayState({ posts, renders, nowIso }),
@@ -605,15 +616,6 @@ export function MarketingTodayView({
               post.channelTarget === "facebook" ||
               post.channelTarget === "instagram",
           );
-          // HVAC Shorts have exactly one publish path: approval here, then
-          // the scheduled distribution run (hvac:distribute → dispatchPublish
-          // → adapter readback). Their cards render NO direct publish
-          // buttons, and the server actions refuse the click anyway
-          // (`lib/publishing/hvac-guard.ts`) — the missing button is
-          // courtesy, the refusal is the guarantee.
-          const isHvacManaged = Boolean(
-            video?.sourceJobId.startsWith("hvac-short-"),
-          );
           // Sibling drafts of the SAME video that already went out. The
           // delivery claim is per (post, provider), so a second sibling can
           // still reach the same platform — a real duplicate, live on a real
@@ -693,9 +695,10 @@ export function MarketingTodayView({
 
               {/* Every channel's copy, side by side — the founder reads what
                   each platform will actually carry before one decision covers
-                  them all. Each block keeps its own existing publish-now
-                  control: those actions are unchanged, and for YouTube the
-                  strongest thing that button can do remains a PRIVATE upload. */}
+                  them all. There is no publish-now button on any channel
+                  (2026-10-25 simplification): Approve below is the one way
+                  out, so every publish goes through the destination-bound
+                  job, the kill switch and the scheduled run. */}
               {group.posts.map((post) => (
                 <div key={post.id}>
                   <h3 className="text-sm font-medium text-altair-ink">
@@ -709,33 +712,6 @@ export function MarketingTodayView({
                       {post.suggestedHashtags.map((tag) => `#${tag}`).join(" ")}
                     </p>
                   ) : null}
-                  <div className="mt-2">
-                    {isHvacManaged ? (
-                      <p className="text-[11px] text-altair-ink-muted">
-                        Publishes through the scheduled distribution run after
-                        approval — direct publish is disabled for HVAC Shorts
-                        (and refused server-side).
-                      </p>
-                    ) : post.channelTarget === "youtube" ? (
-                      // The controls agree with the post's declared
-                      // destination — a YouTube-targeted post never renders
-                      // Meta buttons, and vice versa. The server action
-                      // re-checks the same fact.
-                      <MarketingYouTubePublishControls
-                        post={post}
-                        connectedAccounts={connectedAccounts}
-                        videoOptions={videoOptions}
-                        onPublished={onChanged}
-                      />
-                    ) : (
-                      <MarketingReelPublishControls
-                        post={post}
-                        connectedAccounts={connectedAccounts}
-                        videoOptions={videoOptions}
-                        onPublished={onChanged}
-                      />
-                    )}
-                  </div>
                 </div>
               ))}
 
@@ -745,9 +721,8 @@ export function MarketingTodayView({
                   {postedSiblings
                     .map((post) => channelLabel(post.channelTarget))
                     .join(", ")}
-                  . Publishing the same platform again from here would post a
-                  DUPLICATE on the real account — check History before using
-                  the publish buttons above.
+                  . Approving the same platform again would post a DUPLICATE on
+                  the real account — reject this card unless that is intended.
                 </p>
               ) : null}
 
@@ -767,8 +742,7 @@ export function MarketingTodayView({
                     the publish-queue row with its destination and approver.
                     Nothing publishes from this button; the publisher cron
                     runs scheduled jobs, and only when the deployment is
-                    armed. The per-channel controls above remain the
-                    immediate path when a human wants one. */}
+                    armed. */}
                 <label className="flex items-center gap-2 text-[11px] text-altair-ink-muted">
                   Release slot
                   <input
@@ -891,8 +865,9 @@ export function MarketingTodayView({
             and Instagram go PUBLIC at that moment.
           </p>
           <ul className="mt-3 space-y-2">
-            {approvedGroups.map((group) => {
+            {(showAllApproved ? approvedGroups : approvedGroups.slice(0, APPROVED_VISIBLE)).map((group) => {
               const lead = group.posts[0];
+              const open = openApproved === group.key;
               const slotIso =
                 group.posts
                   .map((post) => post.scheduledAt)
@@ -900,34 +875,65 @@ export function MarketingTodayView({
               return (
                 <li
                   key={group.key}
-                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] p-3"
+                  className="rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)]"
                 >
-                  <p className="text-sm font-medium text-altair-ink">
-                    {lead.title}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-altair-ink-muted">
-                    {group.posts
-                      .map(
-                        (post) =>
-                          `${channelLabel(post.channelTarget)}: ${post.status}`,
-                      )
-                      .join(" · ")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-altair-ink-secondary">
-                    {slotIso
-                      ? `Release slot: ${formatDateTimeInTimeZone(slotIso, timeZone, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}`
-                      : "Release slot: pending assignment"}
-                  </p>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setOpenApproved((current) => (current === group.key ? null : group.key))
+                    }
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                  >
+                    <span className="min-w-0 truncate text-sm font-medium text-altair-ink">
+                      {lead.title}
+                    </span>
+                    <span className="shrink-0 text-[11px] text-altair-ink-muted">
+                      {group.posts.map((post) => channelLabel(post.channelTarget)).join(" · ")}{" "}
+                      {open ? "▴" : "▾"}
+                    </span>
+                  </button>
+                  {open ? (
+                    <div className="space-y-1 border-t border-[var(--north-star-plate-border)] px-3 py-3">
+                      <p className="text-[11px] text-altair-ink-muted">
+                        {group.posts
+                          .map(
+                            (post) =>
+                              `${channelLabel(post.channelTarget)}: ${post.status}`,
+                          )
+                          .join(" · ")}
+                      </p>
+                      <p className="text-[11px] text-altair-ink-secondary">
+                        {slotIso
+                          ? `Release slot: ${formatDateTimeInTimeZone(slotIso, timeZone, {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}`
+                          : "No release time set, so this will not publish until one is set."}
+                      </p>
+                      <p className="line-clamp-6 whitespace-pre-line text-sm text-altair-ink-muted">
+                        {lead.postText}
+                      </p>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
+          {approvedGroups.length > APPROVED_VISIBLE ? (
+            <Button
+              size="sm"
+              variant="quiet"
+              onClick={() => setShowAllApproved((value) => !value)}
+            >
+              {showAllApproved
+                ? "Show fewer"
+                : `Show ${String(approvedGroups.length - APPROVED_VISIBLE)} older`}
+            </Button>
+          ) : null}
         </section>
       ) : null}
     </div>

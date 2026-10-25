@@ -55,9 +55,8 @@ export const SNAPSHOT_UPCOMING_WORK_LIMIT = 25;
 
 /**
  * How old a snapshot may be before its age is itself worth mentioning.
- * Matches `STALE_AFTER_HOURS` in `MarketingAutomationSection`, so the
- * founder-facing summary and the diagnostic view cannot disagree about
- * whether the automation has gone quiet.
+ * (The diagnostic view that shared this threshold was retired with the
+ * three-tab Marketing page on 2026-10-25; this is now the only reader.)
  */
 export const AUTOMATION_STALE_AFTER_HOURS = 36;
 
@@ -327,6 +326,48 @@ export function selectTodayCandidates(
 ): MarketingPost[] {
   return posts
     .filter((post) => post.status === "draft" && Boolean(post.videoMediaAssetId))
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+}
+
+/**
+ * Website articles waiting for a decision: drafts filed under `website` that
+ * carry their brief (content package). Without the brief the site publisher
+ * has nothing to build a page from, so such a draft is not decidable here.
+ *
+ * These were invisible on the Marketing page until 2026-10-25: the agent
+ * platform's SEO hand-off opened them as drafts, but the only queue filtered
+ * on a video, so an article could not be approved anywhere.
+ */
+export function selectArticleCandidates(
+  posts: readonly MarketingPost[],
+): MarketingPost[] {
+  return posts
+    .filter(
+      (post) =>
+        post.status === "draft" &&
+        post.channelTarget === "website" &&
+        Boolean(post.contentPackageId?.trim()),
+    )
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+}
+
+/**
+ * Text-only Facebook drafts (no video): what a Marketing HQ social idea
+ * becomes once it is turned into a post. Facebook publishes text without
+ * media; Instagram requires media, so an Instagram draft with no video is
+ * never offered for approval here.
+ */
+export function selectTextPostCandidates(
+  posts: readonly MarketingPost[],
+): MarketingPost[] {
+  return posts
+    .filter(
+      (post) =>
+        post.status === "draft" &&
+        post.channelTarget === "facebook" &&
+        !post.videoMediaAssetId &&
+        post.postText.trim().length > 0,
+    )
     .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 }
 
