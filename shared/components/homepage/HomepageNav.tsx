@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/#onboarding", label: "Onboarding", id: "onboarding" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
   { href: "/insights", label: "Insights", id: "insights" },
+  { href: "/resources", label: "Resources", id: "resources" },
   { href: "/#about", label: "About", id: "about" },
 ] as const;
 
@@ -31,6 +32,8 @@ export function HomepageNav() {
   const solid = scrolled || forceSolid;
   const pricingActive = pathname === "/pricing";
   const insightsActive = pathname.startsWith("/insights");
+  const resourcesActive =
+    pathname === "/resources" || pathname.startsWith("/resources/");
 
   useEffect(() => {
     const onScroll = () => {
@@ -78,14 +81,18 @@ export function HomepageNav() {
           />
         </Link>
 
+        {/* Six links fit beside the logo and the two calls to action only from
+            xl up; below that the menu button carries them (Resources made the
+            lg row collide with "Sign In" at 1024px). */}
         <nav
           aria-label="Primary"
-          className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex xl:gap-10"
+          className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 xl:flex 2xl:gap-10"
         >
           {NAV_LINKS.map((link) => {
             const active =
               (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive);
+              (link.id === "insights" && insightsActive) ||
+              (link.id === "resources" && resourcesActive);
             return (
               <Link
                 key={link.href}
@@ -122,7 +129,7 @@ export function HomepageNav() {
 
         <button
           type="button"
-          className={`relative z-10 inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(251,247,239,0.14)] bg-[rgba(8,9,7,0.35)] p-2 text-[#fbf7ef] lg:hidden ${focusRing}`}
+          className={`relative z-10 inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(251,247,239,0.14)] bg-[rgba(8,9,7,0.35)] p-2 text-[#fbf7ef] xl:hidden ${focusRing}`}
           aria-expanded={menuOpen}
           aria-controls={menuId}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -139,7 +146,7 @@ export function HomepageNav() {
       {menuOpen ? (
         <div
           id={menuId}
-          className="border-t border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.94)] backdrop-blur-xl lg:hidden"
+          className="border-t border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.94)] backdrop-blur-xl xl:hidden"
         >
           <nav
             aria-label="Mobile"
@@ -148,7 +155,8 @@ export function HomepageNav() {
             {NAV_LINKS.map((link) => {
               const active =
               (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive);
+              (link.id === "insights" && insightsActive) ||
+              (link.id === "resources" && resourcesActive);
               return (
                 <Link
                   key={link.href}
