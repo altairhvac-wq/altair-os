@@ -228,7 +228,12 @@ export function CustomerDetailTabs({
                   aria-controls={`customer-tab-${tab.id}`}
                   id={`customer-tab-trigger-${tab.id}`}
                   onClick={() => selectTab(tab.id)}
-                  className={`${adminSegmentedItemClass} shrink-0 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${
+                  /* `.admin-segmented-item-natural`: the segmented item token is
+                     `flex: 1 1 0%`, so eight tabs in a 375px strip got ~30px
+                     each and their labels printed over one another (phone
+                     audit 2026-10-24). On phones each tab keeps its natural
+                     width and the strip scrolls sideways. */
+                  className={`${adminSegmentedItemClass} admin-segmented-item-natural shrink-0 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${
                     isActive ? adminSegmentedItemActiveClass : ""
                   }`}
                 >

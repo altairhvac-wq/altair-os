@@ -71,7 +71,7 @@ export function JobDetailSideRailCustomerCard({
           {email ? (
             <a
               href={`mailto:${email}`}
-              className="flex min-w-0 items-center gap-2 break-all text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+              className="flex min-w-0 items-center gap-2 break-all text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper max-md:min-h-11"
             >
               <Mail className="h-3.5 w-3.5 shrink-0 text-altair-ink-on-paper-muted" />
               <span>{email}</span>
@@ -80,7 +80,7 @@ export function JobDetailSideRailCustomerCard({
           {phone ? (
             <a
               href={`tel:${phone}`}
-              className="flex items-center gap-2 text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+              className="flex items-center gap-2 text-xs text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper max-md:min-h-11"
             >
               <Phone className="h-3.5 w-3.5 shrink-0 text-altair-ink-on-paper-muted" />
               <span>{formatPhoneForDisplay(phone)}</span>
@@ -108,7 +108,7 @@ export function JobDetailSideRailCustomerCard({
         {canManageCustomers ? (
           <Link
             href={`/customers/${customerId}`}
-            className={`mt-3 inline-flex text-xs font-semibold ${altairCanvasInkLinkClass}`}
+            className={`mt-3 inline-flex items-center text-xs font-semibold max-md:min-h-11 ${altairCanvasInkLinkClass}`}
           >
             Open customer profile
           </Link>

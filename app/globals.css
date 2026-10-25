@@ -4647,6 +4647,24 @@ a[href] {
     box-shadow 0.15s ease;
 }
 
+/* Phone audit 2026-10-24: every segmented control on a phone (Today / All
+   Jobs, customer profile sections, job detail sections) measured 36px tall.
+   Finger-sized below the tablet breakpoint; desktop keeps 36px. */
+@media (max-width: 767px) {
+  .admin-segmented-item {
+    min-height: 2.75rem;
+  }
+
+  /* Natural-width items for strips with many tabs (customer profile sections).
+     The base token's `flex: 1 1 0%` is unlayered CSS, so Tailwind's layered
+     `flex-none` cannot override it; eight tabs at 375px were squeezed to
+     ~30px each and their labels overlapped. The strip scrolls instead. */
+  .admin-segmented-item-natural {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
 .admin-segmented-item:hover {
   color: #151913;
 }

@@ -43,9 +43,19 @@ export function CommunityMyBusinessProfileControl({
       if (!rect) {
         return;
       }
+      // Right-align to the trigger, but never let the panel leave the
+      // viewport: on a phone the trigger sits at the left of the header and
+      // a right-aligned 296px panel opened 103px off the left edge (phone
+      // audit 2026-10-24). Clamp so the panel keeps a 12px gutter each side.
+      const gutter = 12;
+      const panelWidth = Math.min(296, window.innerWidth - gutter * 2);
+      const rightAligned = window.innerWidth - rect.right;
       setMenuPosition({
         top: rect.bottom + 6,
-        right: window.innerWidth - rect.right,
+        right: Math.max(
+          gutter,
+          Math.min(rightAligned, window.innerWidth - gutter - panelWidth),
+        ),
       });
     }
 

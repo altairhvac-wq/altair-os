@@ -177,7 +177,10 @@ export function JobDetailNorthStarHeader({
         <JobWorkflowControls {...sharedWorkflowProps} section="banners" />
 
         <div className="flex flex-wrap items-start justify-between gap-2.5">
-          <div className="min-w-0 flex-1">
+          {/* `max-sm:basis-full`: at 375px the job number was squeezed to
+              "JOB-" / "1111" beside Edit job + Open dispatch. On phones the
+              title takes the full row and the buttons wrap underneath. */}
+          <div className="min-w-0 flex-1 max-sm:basis-full">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-bold tracking-tight text-altair-ink-on-paper sm:text-xl">
                 {job.jobNumber}
@@ -195,7 +198,7 @@ export function JobDetailNorthStarHeader({
               <button
                 type="button"
                 onClick={handleEditClick}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone max-md:min-h-11 max-md:px-3 max-md:text-sm"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 Edit job
@@ -203,7 +206,7 @@ export function JobDetailNorthStarHeader({
             ) : null}
             <Link
               href="/dispatch"
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-altair-border bg-[var(--surface-tile)] px-2.5 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-stone max-md:min-h-11 max-md:px-3 max-md:text-sm"
             >
               <Truck className="h-3.5 w-3.5" />
               Open dispatch

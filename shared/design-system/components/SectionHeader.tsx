@@ -38,13 +38,13 @@ export function SectionHeader({
           action.href ? (
             <Link
               href={action.href}
-              className={`shrink-0 text-xs font-medium underline-offset-2 transition hover:underline sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
+              className={`shrink-0 text-xs font-medium underline-offset-2 transition hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
             >
               {action.label}
             </Link>
           ) : (
             <span
-              className={`shrink-0 text-xs font-medium sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
+              className={`shrink-0 text-xs font-medium max-md:inline-flex max-md:min-h-11 max-md:items-center sm:text-[0.8125rem] ${altairCanvasInkLinkClass}`}
             >
               {action.label}
             </span>

@@ -295,7 +295,9 @@ export const northStarListTokens: NorthStarListPageTokens = {
   viewTabsControl:
     "job-north-star-view-tabs flex w-full gap-0.5 rounded-lg border border-[rgba(176,168,143,0.24)] bg-[#E3DFD6] p-0.5 sm:w-auto",
   viewTabsItem:
-    "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#5A5444] transition-colors hover:text-[#151914] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.35)] sm:flex-none sm:px-3",
+    /* `max-md:min-h-11`: phone audit 2026-10-24 measured these view tabs
+       (Community, Sales, Work…) at 36px on a phone. Desktop keeps 36px. */
+    "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#5A5444] transition-colors hover:text-[#151914] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(194,160,90,0.35)] max-md:min-h-11 sm:flex-none sm:px-3",
   viewTabsItemActive:
     "bg-[#FFFFFF] text-[#151914] shadow-[0_1px_4px_rgba(21,25,20,0.10)] ring-1 ring-[rgba(176,168,143,0.24)]",
   viewTabsCount: "ml-1.5 text-xs font-medium text-[#777164]",

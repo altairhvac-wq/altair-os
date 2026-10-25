@@ -131,12 +131,12 @@ export function ExpenseSearchFilterBar({
     : "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50";
 
   const filtersToggleClass = northStar
-    ? `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+    ? `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors max-md:min-h-11 ${
         filtersExpanded || hasActiveSecondaryFilters
           ? "border-[#C2A05A] bg-[#FFF9EA] text-[#4F4638]"
           : "border-[rgba(119,89,27,0.22)] bg-white text-[#4F4638] hover:border-[#C2A05A] hover:bg-[#FFF9EA]"
       }`
-    : `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+    : `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors max-md:min-h-11 ${
         filtersExpanded || hasActiveSecondaryFilters
           ? "border-cyan-300 bg-cyan-50 text-cyan-800"
           : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"

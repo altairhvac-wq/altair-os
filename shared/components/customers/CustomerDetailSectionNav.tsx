@@ -77,7 +77,11 @@ export function CustomerDetailSectionNav({
             role="tab"
             aria-selected={isActive}
             onClick={() => onTabChange(tab)}
-            className={`${adminSegmentedItemClass} shrink-0 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${
+            /* `.admin-segmented-item-natural`: the segmented item token is `flex: 1 1 0%`,
+               so eight tabs in a 375px strip each got ~30px and their labels
+               printed on top of each other (phone audit 2026-10-24). On
+               phones each tab keeps its natural width and the strip scrolls. */
+            className={`${adminSegmentedItemClass} admin-segmented-item-natural shrink-0 px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-sm ${
               isActive ? adminSegmentedItemActiveClass : ""
             }`}
             data-anchor={CUSTOMER_DETAIL_TAB_ANCHORS[tab]}

@@ -53,7 +53,7 @@ export function JobDetailSectionNav({
             aria-controls={`job-detail-panel-${item.id}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onTabChange(item.id)}
-            className={`inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-1 ${
+            className={`inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-colors max-md:min-h-11 max-md:px-3 max-md:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-1 ${
               isActive
                 ? "bg-altair-stone text-altair-ink-on-paper shadow-[inset_0_-2px_0_0_var(--altair-brass)]"
                 : "text-altair-ink-on-paper-secondary hover:bg-altair-stone/70 hover:text-altair-ink-on-paper"

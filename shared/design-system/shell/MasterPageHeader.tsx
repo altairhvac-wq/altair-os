@@ -37,8 +37,11 @@ export function MasterPageHeader({
   const hasActions = Boolean(primaryAction || secondaryAction);
   const hasMobileContent = Boolean(subtitle || eyebrow || hasActions);
   const responsiveTitleClass = "sr-only md:not-sr-only";
+  /* Compact actions carry `max-sm:ml-auto` so that when the phone header
+     wraps (title on one line, actions on the next) the buttons stay
+     right-aligned instead of jumping to the left edge. */
   const actionRowClass = isCompact
-    ? "flex shrink-0 items-center gap-2"
+    ? "flex shrink-0 items-center gap-2 max-sm:ml-auto"
     : "flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center";
 
   const surfaceClass =
@@ -48,8 +51,8 @@ export function MasterPageHeader({
     surfaceVariant === "northStar"
       ? isCompact
         ? center
-          ? "items-center gap-3"
-          : "items-start sm:items-center"
+          ? "items-center gap-3 max-sm:flex-wrap"
+          : "items-start max-sm:flex-wrap sm:items-center"
         : "flex-wrap items-start gap-3"
       : isCompact
         ? center
@@ -61,8 +64,12 @@ export function MasterPageHeader({
              * labels break over two lines and clip. Below `lg` there is no
              * centre slot and the row fits, so wrapping there would only add
              * height for nothing. */
-            "items-center gap-3 px-3 py-2 sm:px-3.5 lg:flex-wrap"
-          : "items-start px-3 py-2 sm:items-center sm:px-3.5"
+            /* `max-sm:flex-wrap`: at 375px "Customers" + Import + New
+             * Customer do not fit on one line; the title was pressed
+             * against the first button. Phones wrap the actions under the
+             * title when (and only when) the row overflows. */
+            "items-center gap-3 px-3 py-2 max-sm:flex-wrap sm:px-3.5 lg:flex-wrap"
+          : "items-start px-3 py-2 max-sm:flex-wrap sm:items-center sm:px-3.5"
         : "flex-wrap items-start gap-3";
 
   return (
@@ -90,20 +97,29 @@ export function MasterPageHeader({
               and truncated first. A page title yielding before its subtitle is
               never the right outcome, so the rule belongs to the component.
             */}
+            {/* Phone audit 2026-10-24: compact headers showed only a truncated
+                subtitle stub beside the action buttons, leaving the left side
+                of the strip visually empty. The title now shows at every
+                width in compact mode; the subtitle yields below `md`. */}
             <h1
               className={`sm:shrink-0 ${
                 titleClassName ||
                 "min-w-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg"
-              } ${responsiveTitleClass}`}
+              }`}
             >
               {title}
             </h1>
             {subtitle ? (
+              /* Phone audit 2026-10-24: beside two action buttons at 375px the
+                 subtitle truncated to a stub ("See what is hap…", "Find who
+                 y…") on every list page. With actions present it is hidden
+                 below `md`; without actions it is the header's only content
+                 and stays. */
               <p
-                className={
+                className={`${
                   subtitleClassName ||
                   "min-w-0 text-xs leading-snug text-slate-500 sm:truncate"
-                }
+                } ${hasActions ? "max-md:hidden" : ""}`}
               >
                 {subtitle}
               </p>

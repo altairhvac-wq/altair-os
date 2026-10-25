@@ -127,7 +127,7 @@ export function TechniciansPageView({
                       <div className="min-w-0">
                         <Link
                           href={`/team/${technician.id}`}
-                          className="block truncate text-sm font-semibold text-altair-ink-on-paper underline-offset-2 hover:underline"
+                          className="block truncate text-sm font-semibold text-altair-ink-on-paper underline-offset-2 hover:underline max-md:py-3"
                         >
                           {technician.name}
                         </Link>

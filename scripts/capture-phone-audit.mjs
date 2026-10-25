@@ -17,8 +17,11 @@
  * Options:
  *   --mode technician|owner_admin|dispatch   owner view-mode to preload (default technician)
  *   --routes a,b,c                           routes to visit
- *   --extra account,job                      interactions: open the account sheet on the
- *                                            home routes, open the first job on schedule routes
+ *   --extra account,job,detail,clickall      interactions: open the account sheet on the
+ *                                            home routes, open the first job on schedule routes,
+ *                                            open the first list item on list pages;
+ *                                            clickall presses every safe button and reports
+ *                                            what opened and whether it fits the viewport
  *   --out <dir>                              output folder (default ui-audit/phone-audit/<timestamp>)
  *
  * Output per route: <name>.png (viewport), <name>-full.png (full page) and
@@ -203,6 +206,105 @@ const HIT_TEST = `(() => {
     controls: boxes.map(b => ({ label: b.label, tag: b.el.tagName.toLowerCase(), box: box(b.r) })) };
 })()`;
 
+
+// Runs in the page: every visible popover / menu / dialog / sheet and whether
+// it leaves the viewport.
+const OVERLAY_CHECK = `(() => {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const sel = '[role="dialog"], [role="menu"], [role="listbox"], [data-popover-panel], [data-mobile-sheet-panel], .overlay-form-root, [data-radix-popper-content-wrapper], [data-state="open"]';
+  const seen = new Set();
+  const out = [];
+  for (const el of document.querySelectorAll(sel)) {
+    if (seen.has(el)) continue;
+    seen.add(el);
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    if (r.width === 0 || r.height === 0 || cs.visibility === 'hidden' || cs.display === 'none') continue;
+    const label = (el.getAttribute('aria-label') || el.id || el.className?.toString().split(' ').slice(0,3).join('.') || el.tagName).toString().slice(0,50);
+    const issues = [];
+    if (r.left < -1) issues.push('left:' + Math.round(r.left));
+    if (r.right > vw + 1) issues.push('right:' + Math.round(r.right - vw) + 'px past edge');
+    if (r.top < -1) issues.push('top:' + Math.round(r.top));
+    out.push({ label, box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], issues, role: el.getAttribute('role') || el.tagName.toLowerCase() });
+  }
+  const scrollW = document.scrollingElement.scrollWidth;
+  return { overlays: out, hOverflow: scrollW > vw ? scrollW - vw : 0 };
+})()`;
+
+const DANGEROUS = /sign out|log out|trash|delete|remove|archive|void|cancel|submit|save|send|pay|charge|approve|decline|complete|start|stop|clock|mark |reopen|assign|dispatch|invite|resend|refund|generate|export|import|upload|copy|retry|install|apply|confirm|switch|select all|open camera|take|snap|run|publish|post|connect|disconnect|reset|clear|close|dismiss|back|done|previous|next|collapse|expand all/i;
+
+/**
+ * Click every safe <button>/<summary> on the page one at a time and report
+ * what opened and whether it fits the viewport. Anchors are skipped (they
+ * navigate), as are labels that would mutate data.
+ */
+async function clickEverything(page, route, name, baseUrl, prepare = null) {
+  const reset = async () => {
+    await page.goto(`${baseUrl}${route}`, { waitUntil: "load", timeout: 120_000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    if (prepare) await prepare();
+  };
+  const results = [];
+  const controls = (await page.evaluate(HIT_TEST)).controls.filter(
+    (c) => ["button", "summary", "select"].includes(c.tag) && !DANGEROUS.test(c.label),
+  );
+  const cap = Math.min(controls.length, 30);
+  console.log(`\n-- ${name}: clicking ${cap} of ${controls.length} controls`);
+  for (let i = 0; i < cap; i++) {
+    const c = controls[i];
+    const [x, y, w, h] = c.box;
+    const cx = x + w / 2, cy = y + h / 2;
+    if (cx < 0 || cy < 0 || cx > 375 || cy > 812) continue;
+    // Re-locate: is the same control still at that point?
+    const stillThere = await page.evaluate(([px, py, label]) => {
+      const el = document.elementFromPoint(px, py);
+      const ctl = el && el.closest('button, summary, select');
+      if (!ctl) return false;
+      const l = (ctl.getAttribute('aria-label') || ctl.innerText || ctl.tagName).trim().replace(/\s+/g, ' ').slice(0, 40);
+      return l === label;
+    }, [cx, cy, c.label]).catch(() => false);
+    if (!stillThere) { results.push({ control: c.label, skipped: 'moved' }); continue; }
+    const urlBefore = page.url();
+    try {
+      if (c.tag === "select") {
+        results.push({ control: c.label, opened: "native select (OS picker)" });
+        continue;
+      }
+      await page.mouse.click(cx, cy);
+      await page.waitForTimeout(600);
+    } catch (error) {
+      results.push({ control: c.label, error: String(error).slice(0, 100) });
+      continue;
+    }
+    let check = { overlays: [], hOverflow: 0 };
+    try { check = await page.evaluate(OVERLAY_CHECK); } catch {}
+    const navigated = page.url() !== urlBefore;
+    const entry = {
+      control: c.label,
+      navigatedTo: navigated ? page.url().replace(baseUrl, "") : undefined,
+      opened: check.overlays.map((o) => `${o.role}:${o.label} ${o.box.join(",")}${o.issues.length ? " !! " + o.issues.join(" ") : ""}`),
+      hOverflow: check.hOverflow || undefined,
+      offscreen: check.overlays.some((o) => o.issues.length > 0) || check.hOverflow > 0,
+    };
+    results.push(entry);
+    if (entry.offscreen) {
+      await page.screenshot({ path: path.join(OUT_DIR, `${name}-click-${i}-${c.label.replace(/[^a-z0-9]+/gi, "_").slice(0, 24)}.png`) });
+    }
+    // Reset to a clean page after every click so each control is pressed
+    // from the same starting state (a click that changes the page would
+    // otherwise move or remove the controls still to be tested).
+    await page.keyboard.press("Escape").catch(() => {});
+    await reset();
+  }
+  fs.writeFileSync(path.join(OUT_DIR, `${name}-clicks.json`), JSON.stringify(results, null, 2));
+  for (const r of results) {
+    if (r.skipped) continue;
+    const flag = r.offscreen ? "!!" : "  ";
+    console.log(`${flag} [${r.control}] ${r.navigatedTo ? "-> " + r.navigatedTo + " " : ""}${(Array.isArray(r.opened) ? r.opened.join(" | ") : r.opened) || (r.error ? "ERR " + r.error : "(nothing opened)")}${r.hOverflow ? " hOverflow=" + r.hOverflow : ""}`);
+  }
+  return results;
+}
+
 async function audit(page, name) {
   await page.waitForTimeout(600);
   const result = await page.evaluate(HIT_TEST);
@@ -252,8 +354,17 @@ async function main() {
       console.log("Redirected to login at", route);
       continue;
     }
-    await audit(page, name);
+    try {
+      await audit(page, name);
+    } catch (error) {
+      // A late redirect can destroy the page context mid-evaluate; record it
+      // and keep going rather than losing the rest of the run.
+      const reason = error instanceof Error ? error.message : String(error);
+      console.log(`!! ${route}: ${reason.slice(0, 160)}`);
+      continue;
+    }
 
+    try {
     if (EXTRA.includes("account") && ["/technician", "/", "/work"].includes(route)) {
       const t = page.locator(
         '[data-testid="tech-account-button"], [data-testid="admin-account-button"]',
@@ -280,6 +391,37 @@ async function main() {
         await audit(page, `${name}-jobdetail-bottom`);
         await page.keyboard.press("Escape");
         await page.waitForTimeout(300);
+        if (EXTRA.includes("clickall")) {
+          const openHero = async () => {
+            const h = page.locator('article button[type="button"]').first();
+            if (await h.count()) { await h.click(); await page.waitForTimeout(1200); }
+          };
+          await openHero();
+          await clickEverything(page, route, `${name}-jobdetail`, BASE_URL, openHero);
+        }
+      }
+    }
+    if (EXTRA.includes("detail")) {
+      // Open the first list item on a list page and audit what it opens
+      // (a detail route or an overlay).
+      // Prefer the page's own entity link (an estimate row also carries a
+      // customer link, which would otherwise win by DOM order).
+      const own = ["estimates", "invoices", "work", "customers", "leads", "team"].find((k) => route.includes(k));
+      const first = page.locator(
+        own
+          ? `main a[href^="/${own}/"]`
+          : 'main a[href^="/work/"], main a[href^="/customers/"], main a[href^="/estimates/"], main a[href^="/invoices/"], main a[href^="/leads/"], main a[href^="/team/"], main button[aria-label^="Open "]',
+      );
+      if (await first.count()) {
+        await first.first().click();
+        await page.waitForTimeout(2500);
+        await audit(page, `${name}-detail`);
+        await page.evaluate(() => {
+          const b = document.querySelector(".overlay-scroll-body") || document.scrollingElement;
+          if (b) b.scrollTop = b.scrollHeight;
+        });
+        await page.waitForTimeout(400);
+        await audit(page, `${name}-detail-bottom`);
       }
     }
     if (route === "/tech/receipts") {
@@ -290,6 +432,15 @@ async function main() {
         await audit(page, `${name}-addsheet`);
         await page.keyboard.press("Escape");
       }
+    }
+    if (EXTRA.includes("clickall")) {
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: "load", timeout: 120_000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+      await clickEverything(page, route, name, BASE_URL);
+    }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.log(`!! ${route} (interaction): ${reason.slice(0, 160)}`);
     }
   }
   fs.writeFileSync(

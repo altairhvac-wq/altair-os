@@ -38,7 +38,7 @@ export function CopyMemberShareCodeButton({
       type="button"
       onClick={handleCopy}
       aria-label={copied ? "Share code copied" : `Copy share code ${code}`}
-      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md border border-altair-border bg-[var(--surface-tile)] px-2 py-1 text-xs font-semibold text-altair-ink-on-paper transition hover:bg-[rgb(241_245_249_/_0.7)] ${className}`}
+      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md border max-md:min-h-11 border-altair-border bg-[var(--surface-tile)] px-2 py-1 text-xs font-semibold text-altair-ink-on-paper transition hover:bg-[rgb(241_245_249_/_0.7)] ${className}`}
     >
       <span className="font-mono tracking-wide">{code}</span>
       {copied ? (

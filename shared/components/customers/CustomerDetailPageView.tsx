@@ -98,7 +98,7 @@ export function CustomerDetailPageView({
           backLink={
             <Link
               href="/customers"
-              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper max-md:min-h-11"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Customers

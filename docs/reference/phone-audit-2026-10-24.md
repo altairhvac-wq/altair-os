@@ -115,6 +115,90 @@ Shared
   overlap; remaining "offscreen-x" items are the intentional scrolling rails
   (destination rail, settings sub-nav).
 
+## Second pass — every admin screen on a phone (same day)
+
+Audited as the owner at 375×812: `/`, `/work`, `/work/[id]`, `/dispatch`,
+`/customers`, `/customers/[id]`, `/customers/import`, leads, `/sales`
+(estimates, invoices, payments), `/expenses`, `/price-book`, `/team`,
+time clock, `/payroll`, `/reports`, `/settings` (+ billing, company, team),
+`/community`, `/schedule`, `/marketing`, `/alpha-tracker`.
+
+What was wrong
+
+1. **Every compact list header hid its title on phones** and showed only a
+   truncated subtitle stub beside the buttons ("See what is hap…", "Find who
+   y…"), so Work, Customers, Sales, Team, Expenses, Price Book all opened
+   with an empty-looking strip.
+2. **Customer profile section tabs printed on top of each other.** The
+   segmented-item token is `flex: 1 1 0%` in unlayered CSS, so eight tabs
+   were squeezed to ~30px each and Tailwind's `shrink-0` could not override
+   it. Unreadable and unusable.
+3. **Sub-44px targets everywhere the same primitives are used:** segmented
+   controls (36px) on Work, customer profile, job workflow strip, Community;
+   stat-strip filter chips (24px) on Customers, Estimates, Invoices, Leads;
+   job detail "Edit job / Open dispatch" and section tabs (36px); customer
+   profile action bar (36px); team roster name links (20px) and share-code
+   copy buttons (36px); expense "Filters" toggle (30px); schedule week
+   arrows (36px); "Back to Work" / "Customers" back links (20px); customer
+   card email/phone/profile links (16px).
+4. **Job detail title squeezed** to "JOB-" / "1111" beside its two header
+   buttons.
+5. At 375px "Customers" + Import + New Customer overflowed the header row
+   and the title was pressed against the first button.
+
+What changed
+
+- `MasterPageHeader` (compact): the title now shows at every width, the
+  subtitle yields below `md` when actions are present, and the row wraps on
+  phones so actions drop under the title only when they do not fit (they
+  stay right-aligned).
+- `app/globals.css`: `.admin-segmented-item` is 44px below 768px, and a new
+  `.admin-segmented-item-natural` modifier (natural width, no wrap) is used
+  by the customer profile tab strip so it scrolls instead of overlapping.
+- North Star `viewTabsItem` token: 44px on phones (Community and every other
+  consumer).
+- Stat strips (Customers, Estimates, Invoices, Leads): 44px chips on phones.
+- Job detail: title takes the full row on phones with buttons underneath;
+  header buttons, section tabs, back link and customer-card links are 44px.
+- Customer profile: action bar buttons and back link 44px; section tabs
+  scroll at natural width.
+- Team roster: member name links and share-code buttons 44px; expense filter
+  toggle and schedule week arrows 44px.
+- `scripts/capture-phone-audit.mjs`: `--extra detail` opens the first row of a
+  list page; interactions and late redirects no longer abort the run.
+
+Checked and left alone: the destination rail, settings sub-nav, marketing
+tabs, stat strips and the dispatch timeline scroll sideways by design
+(flagged as "offscreen-x" by the script, which is expected); the 16px list
+checkboxes sit inside 44px labels; Mapbox's own zoom/attribution controls
+are third-party.
+
+## Third pass — press every button (owner feedback, same day)
+
+The owner reported a menu whose options opened off the screen, and that the
+technician home still showed the destination icons twice.
+
+- **Technician nav is now the icon chips.** The colour chips from the old
+  home grid are the bottom tab bar (Home, Schedule, Time, Receipts, Alerts);
+  they appear exactly once in the app. The home screen keeps the Today and
+  Time clock widgets and the next-job card.
+- **`scripts/capture-phone-audit.mjs --extra clickall`** presses every safe
+  `<button>` and `<summary>` on a route (skipping anything that would mutate
+  data: save, send, sign out, delete, clock in…), records what opened, and
+  flags any dialog, menu, listbox or sheet whose box leaves the 375px viewport
+  or causes horizontal overflow. The page reloads after each press so every
+  control is tested from the same state. It also runs inside the technician
+  job detail overlay.
+- Run over the technician screens (home, schedule, job detail, time,
+  receipts, alerts) and the admin screens (`/`, Work, Dispatch, Customers,
+  Sales, Team, Expenses, Reports, Settings, Community, Price Book, Payroll,
+  Schedule, a job detail, a customer profile). Every create sheet, edit
+  dialog, drawer, notification panel and account sheet fit the viewport.
+- **One real offender:** the Community **My Profile** menu. It right-aligned
+  a 296px panel to a trigger that sits at the left of the header on phones,
+  so it opened 103px off the left edge. It is now clamped to a 12px gutter
+  on both sides.
+
 ## Not changed (judgement calls, for the owner)
 
 - The schedule hero and the job command center both offer the field step

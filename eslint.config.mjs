@@ -65,6 +65,10 @@ const eslintConfig = defineConfig([
     ".vercel/**",
     ".tmp/**",
     ".playwright/**",
+    // Claude Code session worktrees (gitignored). Each carries its own
+    // node_modules and .next output; without this, `npm run lint` crawled
+    // seven of them and ran out of memory (2026-10-24).
+    ".claude/worktrees/**",
     // Local scratch captures and transfer archives. These are already ignored
     // by .gitignore; listing them here keeps a stray local file from failing
     // the lint gate for someone mid-debug.

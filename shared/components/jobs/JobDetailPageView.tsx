@@ -515,7 +515,7 @@ export function JobDetailPageView({
       href="/work"
       className={
         northStar
-          ? "inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
+          ? "inline-flex shrink-0 items-center gap-1 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper max-md:min-h-11"
           : "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper"
       }
     >

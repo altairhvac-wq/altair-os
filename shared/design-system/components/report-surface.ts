@@ -55,7 +55,7 @@ export const altairReportRangeTrackClass =
   "grid w-full grid-cols-4 gap-0.5 rounded-md bg-white/[0.04] p-0.5 sm:flex sm:w-auto";
 
 export const altairReportRangeItemClass =
-  "min-h-9 min-w-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:min-w-[3.25rem] sm:px-3";
+  "min-h-9 min-w-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] max-md:min-h-11 sm:min-w-[3.25rem] sm:px-3";
 
 /** Inactive range pill — muted ink on dark Graphite. */
 export const altairReportRangeItemIdleClass =
