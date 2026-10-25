@@ -75,6 +75,26 @@ check(
   "a FAILED delivery may be retried — nothing was created externally",
   d.decideDelivery(row({ deliveryState: "failed", failureDetail: "429" }), NOW) === "PROCEED",
 );
+check(
+  "a FAILED delivery that already holds a provider MEDIA id needs reconciliation — the upload may be live",
+  d.decideDelivery(
+    row({ deliveryState: "failed", failureDetail: "readback did not verify", providerMediaId: "1784200123" }),
+    NOW,
+  ) === "NEEDS_RECONCILIATION",
+);
+check(
+  "a FAILED delivery that already holds a provider POST id needs reconciliation — never a second copy",
+  d.decideDelivery(
+    row({ deliveryState: "failed", failureDetail: "settle crashed", providerPostId: "fb_1" }),
+    NOW,
+  ) === "NEEDS_RECONCILIATION",
+);
+check(
+  "a failed delivery with a provider id may NOT publish",
+  !d.mayPublish(
+    d.decideDelivery(row({ deliveryState: "failed", providerMediaId: "1784200123" }), NOW),
+  ),
+);
 
 console.log("\nThe in-flight branch — the crash-mid-publish case");
 
