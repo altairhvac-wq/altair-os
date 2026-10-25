@@ -87,6 +87,7 @@ import {
   MARKETING_CHANNEL_DESCRIPTORS,
   canAcceptContent,
   describeMarketingChannelState,
+  describePublishingPause,
 } from "../../shared/types/marketing-channel-connection";
 import type {
   MarketingChannelAccountFacts,
@@ -190,6 +191,20 @@ export function isLivePublishingArmed(
   return resolvePublishMode(env) === "live";
 }
 
+/**
+ * The kill-switch refusal on its own, for a path that does not run the full
+ * gate — the legacy Meta Server Actions, which publish through their own
+ * Graph calls rather than `dispatchPublish`. Same resolver, same literal, same
+ * copy as `assertPublishPreconditions`, so the switch cannot read differently
+ * on two paths. Null means publishing is armed.
+ */
+export function assertPublishModeLive(
+  label: string,
+  env: PublishModeEnv = process.env,
+): string | null {
+  return refuseOnMode(resolvePublishMode(env), label);
+}
+
 /* ========================================================================== *
  *                                 THE GATE
  * ========================================================================== */
@@ -213,7 +228,13 @@ export type PublishGateInput = {
    * that either exists in the record or does not.
    */
   readonly jobApprovedAt: string | null;
-  /** Optional, and only used to quote the provider's own words in a refusal. */
+  /**
+   * Optional. Used to quote the provider's own words in a refusal, and — when
+   * the caller built it with `toMarketingChannelAccountFacts(account,
+   * provider)` — to honour the per-channel pause (`publishingPaused`).
+   * `dispatchPublish` always supplies it; a caller that omits it skips the
+   * pause check and is relying on the deployment-wide switch alone.
+   */
   readonly account?: MarketingChannelAccountFacts | null;
   /** Injected for tests. Production callers leave it alone. */
   readonly env?: PublishModeEnv;
@@ -361,6 +382,22 @@ export function assertConnectionReady(
   if (unknown) return unknown;
 
   const capability = capabilityFor(input.provider);
+
+  // ============ THE PER-CHANNEL PAUSE (migration 204) ============
+  // Judged here, on current facts, because a pause is an operator's current
+  // instruction about THIS destination — the deployment-wide switch stays
+  // `MARKETING_PUBLISH_MODE`. It is checked before the state machine so a
+  // paused-but-healthy channel refuses for the reason the operator gave,
+  // not for a token state they did not touch.
+  if (input.account?.publishingPaused === true) {
+    return describePublishingPause(
+      {
+        paused: true,
+        reason: input.account.publishingPausedReason ?? null,
+      },
+      capability.label,
+    );
+  }
 
   if (!canAcceptContent(input.channelState)) {
     // ============ WHY THIS LOOKUP NEEDS A FALLBACK ============

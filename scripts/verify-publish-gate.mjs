@@ -870,6 +870,72 @@ check(
   ) === null,
 );
 
+console.log("\nThe per-channel pause (migration 204)");
+
+const readyFacts = {
+  status: "connected",
+  publishCapability: "direct",
+  tokenExpiresAt: null,
+  hasRefreshToken: true,
+  lastError: null,
+  capabilityDetail: null,
+  accountName: "Altair",
+  resourceName: "Altair HVAC",
+};
+check(
+  "a healthy, unpaused connection passes",
+  gate.assertConnectionReady(
+    expiredInput({ channelState: "DIRECT_PUBLISH_READY", account: readyFacts }),
+  ) === null,
+);
+{
+  const refusal = gate.assertConnectionReady(
+    expiredInput({
+      channelState: "DIRECT_PUBLISH_READY",
+      account: { ...readyFacts, publishingPaused: true, publishingPausedReason: "token rotation" },
+    }),
+  );
+  check("a PAUSED connection is refused even when otherwise ready", refused(refusal));
+  check(
+    "the pause refusal names the operator's reason and says nothing was sent",
+    typeof refusal === "string" && refusal.includes("token rotation") && /nothing was sent/i.test(refusal),
+    refusal,
+  );
+}
+check(
+  "a pause with no reason still refuses",
+  refused(
+    gate.assertConnectionReady(
+      expiredInput({
+        channelState: "DIRECT_PUBLISH_READY",
+        account: { ...readyFacts, publishingPaused: true, publishingPausedReason: null },
+      }),
+    ),
+  ),
+);
+check(
+  "a pause is judged by the health half, not the local half (so the mode switch stays separate)",
+  gate.assertPublishPreconditions(
+    expiredInput({ account: { ...readyFacts, publishingPaused: true } }),
+  ) === null,
+);
+check(
+  "assertPublishModeLive refuses when the switch is off",
+  refused(gate.assertPublishModeLive("Facebook", { MARKETING_PUBLISH_MODE: "off" })),
+);
+check(
+  "assertPublishModeLive refuses dry_run",
+  refused(gate.assertPublishModeLive("Facebook", { MARKETING_PUBLISH_MODE: "dry_run" })),
+);
+check(
+  "assertPublishModeLive refuses an unset switch",
+  refused(gate.assertPublishModeLive("Facebook", {})),
+);
+check(
+  "assertPublishModeLive passes the exact literal live",
+  gate.assertPublishModeLive("Facebook", LIVE_ENV) === null,
+);
+
 // The local half must still refuse everything that was never about health.
 check(
   "the local half still refuses a disarmed deployment",

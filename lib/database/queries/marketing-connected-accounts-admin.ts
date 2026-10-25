@@ -8,7 +8,11 @@ import type {
   MarketingConnectedAccountStatus,
   MarketingConnectedProvider,
 } from "@/shared/types/marketing-connected-account";
-import type { MarketingPublishCapability } from "@/shared/types/marketing-channel-connection";
+import {
+  PUBLISHING_PAUSED_PROVIDERS_METADATA_KEY,
+  readPublishingPausedProviders,
+  type MarketingPublishCapability,
+} from "@/shared/types/marketing-channel-connection";
 import type { IntegrationKind } from "@/shared/types/integration-provider";
 
 /**
@@ -40,6 +44,8 @@ type MarketingConnectedAccountRow = {
   connected_at: string | null;
   disconnected_at: string | null;
   last_error: string | null;
+  publishing_paused: boolean | null;
+  publishing_paused_reason: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
@@ -53,7 +59,7 @@ type MarketingConnectedAccountsClient = ReturnType<
 // capability columns (migration 143) were omitted from both and therefore
 // unreachable by the state machine that exists to read them.
 const ACCOUNT_SELECT =
-  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at";
+  "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, publishing_paused, publishing_paused_reason, metadata, created_at, updated_at";
 
 function marketingConnectedAccountsTable(
   client: MarketingConnectedAccountsClient,
@@ -94,6 +100,12 @@ function mapMarketingConnectedAccountRow(
     connectedAt: row.connected_at ?? undefined,
     disconnectedAt: row.disconnected_at ?? undefined,
     lastError: row.last_error ?? undefined,
+    // Null-safe like the 181 columns above: a row read before 204 is applied
+    // surfaces null, and the conservative reading of "unknown" is NOT paused
+    // only because the column's own default is false. The pause is an
+    // operator's explicit instruction; absence of the column is not one.
+    publishingPaused: row.publishing_paused === true,
+    publishingPausedReason: row.publishing_paused_reason ?? undefined,
     metadata: row.metadata ?? {},
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -798,6 +810,91 @@ export async function setConnectionMetadata(input: {
  * `connected_account_id` and needs the token expiry and integration kind to
  * drive the credential seam — RLS has no user to scope by there.
  */
+/**
+ * Pause or resume publishing through one connection — for one provider or
+ * the whole row. See migration 204 for the two mechanisms.
+ *
+ *   provider omitted, or equal to the row's own provider  -> the row's
+ *     `publishing_paused` column (pauses everything through this row)
+ *   provider different from the row's (Instagram on a Facebook Page row) ->
+ *     `metadata.publishingPausedProviders[provider]`
+ *
+ * The `reason` is operator text; it is clamped to the column's CHECK rather
+ * than refused, because a pause must never fail for being too wordy.
+ */
+export async function setConnectionPublishingPause(input: {
+  connectedAccountId: string;
+  /** The provider to pause, or null for the whole row. */
+  provider: string | null;
+  paused: boolean;
+  reason: string | null;
+}): Promise<{ account?: MarketingConnectedAccount; error?: string }> {
+  const connectedAccountId = input.connectedAccountId.trim();
+  if (!connectedAccountId) {
+    return { error: "Connected account id is required." };
+  }
+
+  const current = await getMarketingConnectedAccountByIdAdmin(connectedAccountId);
+  if (!current) {
+    return { error: "Connected account not found." };
+  }
+
+  const reason = input.reason?.trim().replace(/\s+/g, " ").slice(0, 500) || null;
+  const provider = input.provider?.trim() || null;
+  const rowLevel = provider === null || provider === current.provider;
+
+  const supabase = createServiceRoleClient();
+
+  let payload: Record<string, unknown>;
+  if (rowLevel) {
+    payload = {
+      publishing_paused: input.paused,
+      publishing_paused_reason: input.paused ? reason : null,
+    };
+  } else {
+    const flags: Record<string, string> = {
+      ...readPublishingPausedProviders(current.metadata),
+    };
+    if (input.paused) {
+      flags[provider] = reason ?? "";
+    } else {
+      delete flags[provider];
+    }
+    const metadata: Record<string, unknown> = { ...current.metadata };
+    if (Object.keys(flags).length > 0) {
+      metadata[PUBLISHING_PAUSED_PROVIDERS_METADATA_KEY] = flags;
+    } else {
+      delete metadata[PUBLISHING_PAUSED_PROVIDERS_METADATA_KEY];
+    }
+    payload = { metadata };
+  }
+
+  const { data, error } = await marketingConnectedAccountsTable(supabase)
+    .update(payload)
+    .eq("id", connectedAccountId)
+    .select(ACCOUNT_SELECT)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("[setConnectionPublishingPause] update failed:", {
+      connectedAccountId,
+      provider,
+      paused: input.paused,
+      code: error?.code,
+      message: error?.message,
+    });
+    return {
+      error:
+        mapDatabaseError(error) ??
+        "Failed to update the publishing pause on this connection.",
+    };
+  }
+
+  return {
+    account: mapMarketingConnectedAccountRow(data as MarketingConnectedAccountRow),
+  };
+}
+
 export async function getMarketingConnectedAccountByIdAdmin(
   connectedAccountId: string,
 ): Promise<MarketingConnectedAccount | null> {
@@ -821,6 +918,38 @@ export async function getMarketingConnectedAccountByIdAdmin(
 
   if (!data) return null;
   return mapMarketingConnectedAccountRow(data as MarketingConnectedAccountRow);
+}
+
+/**
+ * Every `connected` row for the given companies, any kind, any expiry — the
+ * destination candidates the publisher cron's auto-approval step resolves
+ * against. Service role, because the cron has no session; scoped by the
+ * company ids the caller already holds from the posts it is judging.
+ */
+export async function listConnectedAccountsForCompaniesAdmin(
+  companyIds: readonly string[],
+): Promise<MarketingConnectedAccount[]> {
+  const ids = [...new Set(companyIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) return [];
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await selectInChunks<MarketingConnectedAccountRow>(
+    ids,
+    (chunk) =>
+      marketingConnectedAccountsTable(supabase)
+        .select(ACCOUNT_SELECT)
+        .in("company_id", chunk)
+        .eq("status", "connected"),
+  );
+
+  if (error) {
+    console.error("[listConnectedAccountsForCompaniesAdmin] query failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+  return (data ?? []).map(mapMarketingConnectedAccountRow);
 }
 
 export async function listRefreshableConnectedAccounts(): Promise<

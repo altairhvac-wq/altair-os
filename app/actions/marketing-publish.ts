@@ -25,6 +25,7 @@ import {
   publishInstagramReel,
 } from "@/lib/integrations/facebook/reels";
 import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
+import { assertPublishModeLive } from "@/lib/publishing/gate";
 import { refuseDirectReelPublish } from "@/lib/publishing/hvac-guard";
 import { createMediaReadGrant } from "@/lib/media/marketing-media-storage";
 import {
@@ -38,6 +39,10 @@ import {
 } from "@/shared/types/marketing-reel";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { getFacebookPageInstagramBusinessAccountId } from "@/shared/lib/marketing-facebook-metadata";
+import {
+  decidePublishingPause,
+  describePublishingPause,
+} from "@/shared/types/marketing-channel-connection";
 import { buildMarketingPostBodyFromPost } from "@/shared/lib/marketing-post-body";
 import type {
   MarketingPost,
@@ -181,7 +186,18 @@ async function settlePublishedDelivery(
   };
 }
 
-function assertPublishPrerequisites(): string | null {
+/**
+ * The kill switch, FIRST. These actions publish through their own Graph calls
+ * rather than `dispatchPublish`, so the gate never saw them; this is the same
+ * resolver and the same refusal the gate uses, so `MARKETING_PUBLISH_MODE`
+ * cannot read "off" on one path and "live" on another.
+ */
+function assertPublishPrerequisites(providerLabel: string): string | null {
+  const modeRefusal = assertPublishModeLive(providerLabel);
+  if (modeRefusal) {
+    return modeRefusal;
+  }
+
   if (!isIntegrationEncryptionConfigured()) {
     return "Integration encryption is not configured. Set INTEGRATIONS_ENCRYPTION_KEY, then reconnect Facebook.";
   }
@@ -308,6 +324,8 @@ async function resolveReelMediaForPublish(input: {
 async function loadConnectedFacebookPage(input: {
   companyId: string;
   connectedAccountId: string;
+  /** Which provider is about to publish THROUGH this Page row. */
+  publishingAs: "facebook" | "instagram";
 }): Promise<{
   account?: Awaited<ReturnType<typeof getMarketingConnectedAccountById>>;
   error?: string;
@@ -339,6 +357,18 @@ async function loadConnectedFacebookPage(input: {
     };
   }
 
+  // The per-channel pause (migration 204): the row pauses both Meta surfaces,
+  // a metadata flag pauses Instagram alone. Same reader the gate uses.
+  const pause = decidePublishingPause(account, input.publishingAs);
+  if (pause.paused) {
+    return {
+      error: describePublishingPause(
+        pause,
+        input.publishingAs === "instagram" ? "Instagram" : "Facebook",
+      ),
+    };
+  }
+
   return { account };
 }
 
@@ -356,7 +386,7 @@ export async function publishMarketingPostToFacebookAction(
     return { error: permission.error };
   }
 
-  const configError = assertPublishPrerequisites();
+  const configError = assertPublishPrerequisites("Facebook");
   if (configError) {
     return { error: configError };
   }
@@ -387,6 +417,7 @@ export async function publishMarketingPostToFacebookAction(
   const pageLoad = await loadConnectedFacebookPage({
     companyId: permission.context.company.id,
     connectedAccountId: normalizedAccountId,
+    publishingAs: "facebook",
   });
   if (pageLoad.error || !pageLoad.account) {
     return { error: pageLoad.error ?? "Connected Facebook Page not found." };
@@ -569,7 +600,7 @@ export async function publishMarketingPostToInstagramAction(
     return { error: permission.error };
   }
 
-  const configError = assertPublishPrerequisites();
+  const configError = assertPublishPrerequisites("Instagram");
   if (configError) {
     return { error: configError };
   }
@@ -613,6 +644,7 @@ export async function publishMarketingPostToInstagramAction(
   const pageLoad = await loadConnectedFacebookPage({
     companyId: permission.context.company.id,
     connectedAccountId: normalizedAccountId,
+    publishingAs: "instagram",
   });
   if (pageLoad.error || !pageLoad.account) {
     return { error: pageLoad.error ?? "Connected Facebook Page not found." };
@@ -833,7 +865,7 @@ export async function publishMarketingReelToFacebookAction(
     return { error: permission.error };
   }
 
-  const configError = assertPublishPrerequisites();
+  const configError = assertPublishPrerequisites("Facebook");
   if (configError) {
     return { error: configError };
   }
@@ -868,6 +900,7 @@ export async function publishMarketingReelToFacebookAction(
   const pageLoad = await loadConnectedFacebookPage({
     companyId: permission.context.company.id,
     connectedAccountId: normalizedAccountId,
+    publishingAs: "facebook",
   });
   if (pageLoad.error || !pageLoad.account) {
     return { error: pageLoad.error ?? "Connected Facebook Page not found." };
@@ -1023,7 +1056,7 @@ export async function publishMarketingReelToInstagramAction(
     return { error: permission.error };
   }
 
-  const configError = assertPublishPrerequisites();
+  const configError = assertPublishPrerequisites("Instagram");
   if (configError) {
     return { error: configError };
   }
@@ -1058,6 +1091,7 @@ export async function publishMarketingReelToInstagramAction(
   const pageLoad = await loadConnectedFacebookPage({
     companyId: permission.context.company.id,
     connectedAccountId: normalizedAccountId,
+    publishingAs: "instagram",
   });
   if (pageLoad.error || !pageLoad.account) {
     return { error: pageLoad.error ?? "Connected Facebook Page not found." };
