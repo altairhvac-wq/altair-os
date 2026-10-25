@@ -41,6 +41,7 @@ import {
   AUTO_APPROVE_POLICY,
   decideAutoApprove,
   nextPublishSlot,
+  parseAutoApproveChannels,
   parseAutoApproveSources,
 } from "@/lib/publishing/auto-approve";
 import { dispatchPublish, type DispatchInput } from "@/lib/publishing/dispatch";
@@ -365,6 +366,8 @@ type AutoApproveSummary = {
   enabled: boolean;
   sources: readonly string[];
   rejectedSources: readonly string[];
+  channels: readonly string[];
+  rejectedChannels: readonly string[];
   considered: number;
   promoted: number;
   skipped: { postId: string; reason: string }[];
@@ -372,10 +375,13 @@ type AutoApproveSummary = {
 
 async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary> {
   const parsed = parseAutoApproveSources();
+  const channels = parseAutoApproveChannels();
   const summary: AutoApproveSummary = {
-    enabled: parsed.sources.length > 0,
+    enabled: parsed.sources.length > 0 && channels.channels.length > 0,
     sources: parsed.sources,
     rejectedSources: parsed.rejected,
+    channels: channels.channels,
+    rejectedChannels: channels.rejected,
     considered: 0,
     promoted: 0,
     skipped: [],
@@ -384,6 +390,7 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
 
   const candidates = await listAutoApproveCandidatePosts({
     sourceTypes: parsed.sources,
+    channels: channels.channels,
     limit: MAX_AUTO_APPROVALS_PER_RUN,
   });
   if (candidates.length === 0) return summary;
@@ -404,7 +411,7 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
 
   for (const post of candidates) {
     summary.considered += 1;
-    const verdict = decideAutoApprove(post, parsed.sources);
+    const verdict = decideAutoApprove(post, parsed.sources, channels.channels);
     if (!verdict.eligible) {
       summary.skipped.push({ postId: post.id, reason: verdict.reason });
       continue;

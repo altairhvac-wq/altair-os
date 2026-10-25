@@ -175,11 +175,24 @@ an `APPROVED` decision with no user. Unknown source names are reported in the
 run response, not silently dropped. The policy never arms publishing and never
 chooses between destinations.
 
+`MARKETING_AUTO_APPROVE_CHANNELS` narrows or widens which channels qualify:
+a comma-separated list of `youtube`, `facebook`, `instagram`, `website`.
+Unset means the video channels only, which is the behaviour above. Naming
+`website` lets agent-drafted Insights articles qualify without a video. An
+article needs its brief (content package), a body of at least the site's
+minimum length, no script tag, and no jurisdiction-specific advice: a body
+carrying the drafter's "Verify this with a licensed professional" sentence
+is held for a person. Because the agent platform's videos and articles share
+one source, `MARKETING_AUTO_APPROVE_SOURCES=agent_daily_reel` with
+`MARKETING_AUTO_APPROVE_CHANNELS=website` auto-approves articles while every
+video still waits for a person.
+
 ## How to stop everything
 
 1. Set `MARKETING_PUBLISH_MODE=off` (or remove it) on the deployment. The cron
    then leases nothing; every action refuses; nothing reaches a provider.
-2. Unset `MARKETING_AUTO_APPROVE_SOURCES` if it was set.
+2. Unset `MARKETING_AUTO_APPROVE_SOURCES` if it was set (this alone turns
+   the policy off for every channel).
 3. For one channel only: pause it with the action above (or set
    `publishing_paused = true` on the row). The queue keeps its jobs.
 4. To drop a job for good: set its `job_state` to `cancelled` (terminal). To
