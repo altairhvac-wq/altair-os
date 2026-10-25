@@ -32,6 +32,10 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(PUBLIC_SITE_ORIGIN),
   ...buildPublicSocialMetadata(),
+  // Google Search Console ownership of the URL-prefix property
+  // https://www.altair-op.com/ (HTML-tag method, added 2026-10-25). The token
+  // is public by design; removing it un-verifies the property.
+  verification: { google: "I1Z1sEGwfJZGATbVOMsWTHY3RVmkdi0H7a1tzUIFEz4" },
 };
 
 export default function MarketingLayout({
