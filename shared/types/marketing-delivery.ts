@@ -66,7 +66,7 @@ export type MarketingDeliveryRecord = {
 };
 
 export const DELIVERY_DECISIONS = [
-  /** No prior attempt, or a clean failure. Claim and publish. */
+  /** No prior attempt, or a clean failure (no provider id). Claim and publish. */
   "PROCEED",
   /** Already published. Never publish again. */
   "ALREADY_POSTED",
@@ -103,7 +103,18 @@ export function decideDelivery(
     case "draft":
       return "ALREADY_DRAFTED";
     case "failed":
-      // A recorded failure means the external write did NOT create anything.
+      // A recorded failure means the external write did NOT create anything
+      // — UNLESS the row carries a provider id. A media id is written the
+      // moment the provider accepts an upload (`onMediaCreated`), and a post
+      // id is written only by a successful publish; a `failed` settle after
+      // either (a readback that did not verify, a crash between upload and
+      // settle) describes a publish that MAY have gone out. Retrying it would
+      // post twice, which is the one thing this module exists to prevent, so
+      // that row needs a human, not a retry.
+      if (existing.providerMediaId || existing.providerPostId) {
+        return "NEEDS_RECONCILIATION";
+      }
+      // A clean failure — no provider object was ever named — may be retried.
       // Retrying is the entire reason we distinguish `failed` from
       // `in_flight`.
       return "PROCEED";

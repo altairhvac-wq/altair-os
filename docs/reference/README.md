@@ -31,6 +31,7 @@ These documents are procedural. They do not override foundation, Canon, or produ
 | [`stripe-payments-beta-qa.md`](./stripe-payments-beta-qa.md) | Stripe payments QA |
 | [`demo-account-audit.md`](./demo-account-audit.md) | Demo account audit |
 | [`platform-analytics.md`](./platform-analytics.md) | Platform analytics: tracking design, privacy, config, migrations 202 and 203, 25-month retention |
+| [`marketing-publishing-automation.md`](./marketing-publishing-automation.md) | Scheduled publishing safety spine: queue/ledger state machine, the `marketing-publish` cron, global and per-channel pause, the approval contract, auto-approval policy, how to stop everything (migration 205) |
 
 ## Recommended reading order
 

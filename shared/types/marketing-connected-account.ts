@@ -63,6 +63,14 @@ export type MarketingConnectedAccount = {
   connectedAt?: string;
   disconnectedAt?: string;
   lastError?: string;
+  /**
+   * Per-channel pause (migration 205). `publishingPaused` pauses the whole
+   * row; a provider served through a shared row (Instagram via a Facebook
+   * Page) is paused by `metadata.publishingPausedProviders[provider]`. Read
+   * both through `decidePublishingPause`, never one alone.
+   */
+  publishingPaused: boolean;
+  publishingPausedReason?: string;
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;

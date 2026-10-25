@@ -37,6 +37,7 @@ export const CRON_MONITOR_SCHEDULES = {
   "billing-maintenance": "15 11 * * *",
   "marketing-ai": "30 12 * * *",
   "marketing-insights": "45 11 * * *",
+  "marketing-publish": "0 18 * * *",
   "workflow-reminders": "0 12 * * *",
 } as const;
 

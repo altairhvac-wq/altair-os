@@ -110,7 +110,90 @@ export type MarketingChannelAccountFacts = {
   readonly capabilityDetail: string | null;
   readonly accountName: string | null;
   readonly resourceName: string | null;
+  /**
+   * Per-channel pause (migration 205). True when an operator has paused
+   * publishing through this connection for the provider being judged, or the
+   * whole row. Optional so every existing caller that builds facts by hand
+   * keeps compiling; absent reads as "not paused", which is also the column's
+   * default.
+   */
+  readonly publishingPaused?: boolean;
+  readonly publishingPausedReason?: string | null;
 };
+
+/* ----------------------------------------------- the per-channel pause --- */
+
+/**
+ * Where a pause for ONE provider served by a SHARED row lives.
+ *
+ * A Facebook Page row also serves Instagram (the Business account id sits in
+ * its metadata), so pausing Instagram alone cannot be a column on the row —
+ * the column `publishing_paused` pauses the ROW, meaning every provider that
+ * publishes through it. A provider-specific pause is a metadata entry:
+ *
+ *   metadata.publishingPausedProviders = { instagram: "<reason or empty>" }
+ *
+ * Keys are provider names; values are the operator's reason (may be ""). A
+ * provider is paused when the row is paused OR its key is present here.
+ */
+export const PUBLISHING_PAUSED_PROVIDERS_METADATA_KEY = "publishingPausedProviders";
+
+export type PublishingPauseVerdict = {
+  readonly paused: boolean;
+  readonly reason: string | null;
+};
+
+export function readPublishingPausedProviders(
+  metadata: Readonly<Record<string, unknown>> | null | undefined,
+): Readonly<Record<string, string>> {
+  const raw = metadata?.[PUBLISHING_PAUSED_PROVIDERS_METADATA_KEY];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [provider, reason] of Object.entries(raw as Record<string, unknown>)) {
+    if (!provider.trim()) continue;
+    out[provider] = typeof reason === "string" ? reason : "";
+  }
+  return out;
+}
+
+/**
+ * Is publishing through this row paused for `provider`?
+ *
+ * Pure, so the gate's verifier can exercise it. Row-level pause wins; then the
+ * provider-specific metadata flag. Everything else is "not paused".
+ */
+export function decidePublishingPause(
+  account: {
+    readonly publishingPaused?: boolean | null;
+    readonly publishingPausedReason?: string | null;
+    readonly metadata?: Readonly<Record<string, unknown>> | null;
+  },
+  /** Null = judge the row-level pause only. */
+  provider: string | null,
+): PublishingPauseVerdict {
+  if (account.publishingPaused === true) {
+    const reason = account.publishingPausedReason?.trim() || null;
+    return { paused: true, reason };
+  }
+  if (provider === null) return { paused: false, reason: null };
+  const perProvider = readPublishingPausedProviders(account.metadata);
+  if (Object.prototype.hasOwnProperty.call(perProvider, provider)) {
+    const reason = perProvider[provider]?.trim() || null;
+    return { paused: true, reason };
+  }
+  return { paused: false, reason: null };
+}
+
+export function describePublishingPause(
+  verdict: PublishingPauseVerdict,
+  label: string,
+): string {
+  const reason = verdict.reason ? ` Reason: ${verdict.reason}` : "";
+  return (
+    `Publishing to ${label} is paused on this connection, so nothing was sent.${reason} ` +
+    `Resume it from Settings → Integrations before publishing again.`
+  );
+}
 
 /**
  * Whether a refresh token is stored for this connection, read from the
@@ -154,17 +237,30 @@ export function hasStoredRefreshToken(
  * domain type, and anything shaped like a connected account (the domain
  * mapper's output) satisfies it.
  */
-export function toMarketingChannelAccountFacts(account: {
-  readonly status: MarketingChannelAccountFacts["status"];
-  readonly publishCapability?: MarketingPublishCapability | null;
-  readonly tokenExpiresAt?: string | null;
-  readonly metadata?: Readonly<Record<string, unknown>> | null;
-  readonly lastError?: string | null;
-  readonly capabilityDetail?: string | null;
-  readonly providerAccountName?: string | null;
-  readonly providerResourceName?: string | null;
-}): MarketingChannelAccountFacts {
+export function toMarketingChannelAccountFacts(
+  account: {
+    readonly status: MarketingChannelAccountFacts["status"];
+    readonly publishCapability?: MarketingPublishCapability | null;
+    readonly tokenExpiresAt?: string | null;
+    readonly metadata?: Readonly<Record<string, unknown>> | null;
+    readonly lastError?: string | null;
+    readonly capabilityDetail?: string | null;
+    readonly providerAccountName?: string | null;
+    readonly providerResourceName?: string | null;
+    readonly publishingPaused?: boolean | null;
+    readonly publishingPausedReason?: string | null;
+  },
+  /**
+   * The provider being published THROUGH this row. Needed because a Facebook
+   * Page row also serves Instagram and the two can be paused independently.
+   * Omitted = judge the row-level pause only.
+   */
+  forProvider?: string,
+): MarketingChannelAccountFacts {
+  const pause = decidePublishingPause(account, forProvider ?? null);
   return {
+    publishingPaused: pause.paused,
+    publishingPausedReason: pause.reason,
     status: account.status,
     // 'none' is the honest reading of "never established", exactly as the
     // domain mapper defaults it.

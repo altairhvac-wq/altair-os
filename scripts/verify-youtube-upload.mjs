@@ -237,7 +237,10 @@ function happyRouter(options = {}) {
               uploadStatus: "uploaded",
             },
             snippet: {
-              channelId: options.readbackChannel ?? channelId,
+              // Same `in` distinction as privacy: an EXPLICIT null channel is
+              // the "YouTube named no channel" case the fail-closed check is for.
+              channelId:
+                "readbackChannel" in options ? options.readbackChannel : channelId,
               // Real YouTube echoes the uploaded snippet; the adapter now
               // verifies that echo, so the mock must behave like YouTube.
               title: "readbackTitle" in options ? options.readbackTitle : "Altair dispatch in one place",
@@ -400,6 +403,23 @@ console.log("\nReadback verification");
   check(
     "a video on a channel this connection is not bound to is refused",
     threw !== null && threw.code === "channel_mismatch",
+    threw?.code,
+  );
+}
+
+{
+  // Fail closed: a readback that names NO channel is not evidence the video
+  // landed on ours. This used to pass silently (`channelId && ...`).
+  reset(happyRouter({ readbackChannel: null }));
+  let threw = null;
+  try {
+    await youtubeAdapter.publish(publishInput());
+  } catch (error) {
+    threw = error;
+  }
+  check(
+    "a readback that reports no channel id is refused, not attributed to this connection",
+    threw !== null && threw.code === "channel_unverified",
     threw?.code,
   );
 }

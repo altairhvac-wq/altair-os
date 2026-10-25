@@ -991,3 +991,128 @@ export async function createAgentDraftMarketingPost(
 
   return { post: null, outcome: null, error: mapDatabaseError(error) };
 }
+
+/* ====================================================================== *
+ *        SERVICE-ROLE READS/WRITES FOR THE PUBLISHER CRON (no session)
+ * ====================================================================== */
+
+/**
+ * The cron has no user session, so it reads through the service role. Every
+ * call is still scoped by `companyId`: the job row names the company, and a
+ * post that is not that company's is "not found", never "someone else's".
+ */
+export async function getMarketingPostByIdAdmin(
+  companyId: string,
+  postId: string,
+): Promise<MarketingPost | null> {
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("id", postId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getMarketingPostByIdAdmin] query failed:", {
+      companyId,
+      postId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+  return data ? mapMarketingPostRow(data as MarketingPostRow) : null;
+}
+
+/** `markMarketingPostPosted` for the publisher cron. Same rules, no session. */
+export async function markMarketingPostPostedAdmin(
+  companyId: string,
+  postId: string,
+): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostByIdAdmin(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+  if (existing.status === "archived") {
+    return { post: null, error: "Archived posts cannot be marked posted." };
+  }
+  if (existing.status === "posted") {
+    return { post: existing, error: null };
+  }
+
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .update({ status: "posted", posted_at: new Date().toISOString() })
+    .eq("company_id", companyId)
+    .eq("id", postId)
+    .is("deleted_at", null)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    return { post: null, error: mapDatabaseError(error) };
+  }
+  return { post: mapMarketingPostRow(data as MarketingPostRow), error: null };
+}
+
+/**
+ * Drafts the auto-approval policy may consider (safety spine, item 7): status
+ * `draft`, one of the named sources, a stored video, and a MEASURED render QA
+ * of PASS. Everything else is a human's to approve. Cross-company by design —
+ * the cron runs once for the deployment — and each row carries its company.
+ */
+export async function listAutoApproveCandidatePosts(input: {
+  sourceTypes: readonly MarketingPostSource[];
+  limit: number;
+}): Promise<MarketingPost[]> {
+  if (input.sourceTypes.length === 0) return [];
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .select("*")
+    .eq("status", "draft")
+    .in("source_type", [...input.sourceTypes])
+    .is("deleted_at", null)
+    .not("video_media_asset_id", "is", null)
+    .eq("render_qa_state", "PASS")
+    .order("created_at", { ascending: true })
+    .limit(Math.max(1, Math.min(100, Math.trunc(input.limit))));
+
+  if (error) {
+    console.error("[listAutoApproveCandidatePosts] query failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+  return ((data ?? []) as MarketingPostRow[]).map(mapMarketingPostRow);
+}
+
+/**
+ * Move a DRAFT to `scheduled` with a slot, for the auto-approval policy. The
+ * `status = 'draft'` guard means a post a human touched meanwhile (approved,
+ * archived, rescheduled) is left exactly as they left it.
+ */
+export async function scheduleDraftMarketingPostAdmin(
+  companyId: string,
+  postId: string,
+  scheduledAtIso: string,
+): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .update({ status: "scheduled", scheduled_at: scheduledAtIso })
+    .eq("company_id", companyId)
+    .eq("id", postId)
+    .eq("status", "draft")
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { post: null, error: mapDatabaseError(error) };
+  }
+  if (!data) {
+    return { post: null, error: "The post is no longer a draft, so it was left alone." };
+  }
+  return { post: mapMarketingPostRow(data as MarketingPostRow), error: null };
+}

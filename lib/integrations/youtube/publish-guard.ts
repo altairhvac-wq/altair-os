@@ -188,7 +188,20 @@ export function verifyUploadReadback(input: ReadbackInput): ReadbackVerdict {
   // this connection is not bound to — a Brand Account picked at consent, for
   // instance — and recording it against this connection would attribute a
   // video to the wrong destination forever.
-  if (input.video.channelId && input.video.channelId !== input.expectedChannelId) {
+  //
+  // Absence fails too, for the same reason a missing privacyStatus does: a
+  // readback that names no channel is not evidence the video landed on OURS,
+  // and the alternative — skipping the check — attributed the upload to this
+  // connection on no evidence at all.
+  if (!input.video.channelId) {
+    return {
+      ok: false,
+      code: "channel_unverified",
+      detail:
+        "YouTube did not report which channel the uploaded video is on, so the publish cannot be attributed to this connection and is recorded as incomplete. Check the channel before retrying.",
+    };
+  }
+  if (input.video.channelId !== input.expectedChannelId) {
     return {
       ok: false,
       code: "channel_mismatch",

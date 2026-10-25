@@ -398,6 +398,66 @@ export async function publishSitePage(
  * reached even by passing its package id, because the package id is only
  * ever taken from a post this company owns.
  */
+/** What the publisher cron needs from a content package to publish a page. */
+export type ContentPackagePublishBrief = {
+  seo: {
+    slug: string | null;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    canonicalUrl: string | null;
+    keywords: string[];
+  };
+  internalLinks: string[];
+  ctaUrl: string | null;
+};
+
+/**
+ * Read `brief.seo` (a `PackageSeo`, per migration 182's comment) plus the
+ * optional internal links and CTA url, tolerating any shape: a field that is
+ * not the expected type reads as absent, never as a crash in the cron.
+ */
+export async function getContentPackageBriefForPublish(
+  companyId: string,
+  contentPackageId: string,
+): Promise<ContentPackagePublishBrief | null> {
+  const supabase = createServiceRoleClient();
+  const read = await contentPackagesForSite(supabase)
+    .select("brief")
+    .eq("company_id", companyId)
+    .eq("id", contentPackageId)
+    .maybeSingle();
+
+  if (read.error || !read.data) return null;
+  const brief = (read.data as { brief?: unknown }).brief;
+  if (!brief || typeof brief !== "object") return null;
+  const record = brief as Record<string, unknown>;
+
+  const asString = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const asStrings = (v: unknown) =>
+    Array.isArray(v) ? v.filter((item): item is string => typeof item === "string") : [];
+
+  const seo =
+    record.seo && typeof record.seo === "object"
+      ? (record.seo as Record<string, unknown>)
+      : {};
+  const cta =
+    record.cta && typeof record.cta === "object"
+      ? (record.cta as Record<string, unknown>)
+      : {};
+
+  return {
+    seo: {
+      slug: asString(seo.slug),
+      metaTitle: asString(seo.metaTitle),
+      metaDescription: asString(seo.metaDescription),
+      canonicalUrl: asString(seo.canonicalUrl),
+      keywords: asStrings(seo.keywords),
+    },
+    internalLinks: asStrings(record.internalLinks),
+    ctaUrl: asString(cta.url),
+  };
+}
+
 export async function getSitePublishingDetailsForPost(input: {
   companyId: string;
   marketingPostId: string;

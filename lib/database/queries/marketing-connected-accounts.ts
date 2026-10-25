@@ -30,6 +30,8 @@ type MarketingConnectedAccountRow = {
   connected_at: string | null;
   disconnected_at: string | null;
   last_error: string | null;
+  publishing_paused: boolean | null;
+  publishing_paused_reason: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
@@ -78,6 +80,12 @@ function mapMarketingConnectedAccountRow(
     connectedAt: row.connected_at ?? undefined,
     disconnectedAt: row.disconnected_at ?? undefined,
     lastError: row.last_error ?? undefined,
+    // Null-safe like the 181 columns above: a row read before 204 is applied
+    // surfaces null, and the conservative reading of "unknown" is NOT paused
+    // only because the column's own default is false. The pause is an
+    // operator's explicit instruction; absence of the column is not one.
+    publishingPaused: row.publishing_paused === true,
+    publishingPausedReason: row.publishing_paused_reason ?? undefined,
     metadata: row.metadata ?? {},
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -96,7 +104,7 @@ export async function listMarketingConnectedAccounts(
       // value could not reach `deriveMarketingChannelState` — the state
       // machine written to consume it. Explicit lists are the house style;
       // this is the omission being corrected, not a widening.
-      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
+      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, publishing_paused, publishing_paused_reason, metadata, created_at, updated_at",
     )
     .eq("company_id", companyId)
     .order("provider", { ascending: true })
@@ -135,7 +143,7 @@ export async function getMarketingConnectedAccountById(
       // value could not reach `deriveMarketingChannelState` — the state
       // machine written to consume it. Explicit lists are the house style;
       // this is the omission being corrected, not a widening.
-      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, metadata, created_at, updated_at",
+      "id, company_id, provider, provider_account_id, provider_account_name, provider_resource_id, provider_resource_name, status, integration_kind, scopes, granted_scopes, publish_capability, capability_detail, capability_checked_at, capability_probe_error, last_success_at, last_attempt_at, token_expires_at, connected_by, connected_at, disconnected_at, last_error, publishing_paused, publishing_paused_reason, metadata, created_at, updated_at",
     )
     .eq("company_id", companyId)
     .eq("id", normalizedId)

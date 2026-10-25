@@ -11,6 +11,7 @@ import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { createMarketingPost } from "@/lib/database/queries/marketing-posts";
 import { publishMarketingPostToFacebookAction } from "@/app/actions/marketing-publish";
+import { assertPublishModeLive } from "@/lib/publishing/gate";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
 import {
   runMarketingCopywriterBatch,
@@ -496,6 +497,13 @@ export async function publishMarketingItemToFacebookAction(
 
   if (item.status !== "approved") {
     return { error: "Approve the post before publishing." };
+  }
+
+  // The kill switch, before the item is CONVERTED into a post: the delegate
+  // action refuses too, but a refusal there would leave a staged post behind.
+  const modeRefusal = assertPublishModeLive("Facebook");
+  if (modeRefusal) {
+    return { error: modeRefusal };
   }
 
   const accounts = await listMarketingConnectedAccounts(
