@@ -4,11 +4,22 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { StatusPill } from "@/shared/design-system/components";
 import { MarketingConnectedAccountsCard } from "./MarketingConnectedAccountsCard";
+import { MarketingBrandGoalsCard } from "./MarketingBrandGoalsCard";
+import type {
+  MarketingBrandKit,
+  MarketingHqConfig,
+} from "@/shared/types/marketing-ai-hq";
 import type { MarketingAutomationHealth } from "@/shared/types/marketing-workspace-state";
 import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 
 /**
- * The five things a founder sets, and nothing else.
+ * Settings: automation status, every connection, and brand & goals.
+ *
+ * 2026-10-25: brand & goals moved in from the retired Marketing HQ page, and
+ * the connections list now names every provider (YouTube, the website, Meta)
+ * with one link to where each is connected, instead of Facebook only.
+ *
+ * (Earlier notes, still true:) the five things a founder sets, and nothing else.
  *
  * ==================== THE LIST IS THE POINT ====================
  * Daily automation on or off. What time it generates. The Facebook
@@ -41,9 +52,24 @@ type MarketingSettingsViewProps = {
   connectedAccounts: MarketingConnectedAccount[];
   canManageConnectedAccounts: boolean;
   connectedAccountsFlash: { tone: "success" | "error"; message: string } | null;
-  /** Brand & goals lives behind platform-admin. Do not offer a 403. */
-  canOpenMarketingHq: boolean;
+  brandGoals: { config: MarketingHqConfig; brandKit: MarketingBrandKit } | null;
 };
+
+const PROVIDER_LABEL: Record<string, string> = {
+  youtube: "YouTube",
+  facebook: "Facebook",
+  instagram: "Instagram",
+  altair_site: "Website",
+};
+
+function accountName(account: MarketingConnectedAccount): string {
+  return (
+    account.providerResourceName?.trim() ||
+    account.providerAccountName?.trim() ||
+    PROVIDER_LABEL[account.provider] ||
+    account.provider
+  );
+}
 
 const CARD =
   "rounded-lg border border-[var(--north-star-plate-border)] bg-[var(--north-star-plate)] p-6";
@@ -53,7 +79,7 @@ export function MarketingSettingsView({
   connectedAccounts,
   canManageConnectedAccounts,
   connectedAccountsFlash,
-  canOpenMarketingHq,
+  brandGoals,
 }: MarketingSettingsViewProps) {
   const timeZone = useCompanyTimezone();
   const nextRun = automationHealth.nextRunAtIso
@@ -135,26 +161,58 @@ export function MarketingSettingsView({
       />
 
       <section className={CARD}>
-        <h2 className="text-lg font-semibold text-altair-ink">Brand &amp; goals</h2>
+        <h2 className="text-lg font-semibold text-altair-ink">All connections</h2>
         <p className="mt-1 text-sm text-altair-ink-muted">
-          Mission, audience, positioning, current goals, voice and tone,
-          banned claims and the industry profile the AI writes from.
+          Every account the publisher can send to. YouTube and the other
+          providers connect from Integrations; Facebook and Instagram also
+          connect from the card above.
         </p>
-        {canOpenMarketingHq ? (
-          <a
-            className="mt-3 inline-block text-sm font-medium text-altair-ink underline"
-            href="/marketing/hq"
-          >
-            Edit in Marketing HQ →
-          </a>
+        {connectedAccounts.length === 0 ? (
+          <p className="mt-3 text-sm text-altair-ink-muted">Nothing is connected yet.</p>
         ) : (
-          // The route is platform-admin only. Linking everyone to a page that
-          // rejects them is worse than saying who can open it.
-          <p className="mt-3 text-sm text-altair-ink-muted italic">
-            Editing brand and goals is limited to platform administrators.
-          </p>
+          <ul className="mt-3 space-y-2">
+            {connectedAccounts.map((account) => (
+              <li
+                key={account.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--north-star-plate-border)] bg-[var(--surface-tile)] px-3 py-2"
+              >
+                <span className="text-sm text-altair-ink">
+                  {PROVIDER_LABEL[account.provider] ?? account.provider} · {accountName(account)}
+                </span>
+                <StatusPill
+                  tone={
+                    account.publishingPaused
+                      ? "warning"
+                      : account.status === "connected"
+                        ? "success"
+                        : "danger"
+                  }
+                  size="sm"
+                >
+                  {account.publishingPaused ? "paused" : account.status}
+                </StatusPill>
+              </li>
+            ))}
+          </ul>
         )}
+        <a
+          className="mt-3 inline-block text-sm font-medium text-altair-ink underline"
+          href="/settings/integrations"
+        >
+          Open Integrations →
+        </a>
       </section>
+
+      {brandGoals ? (
+        <MarketingBrandGoalsCard config={brandGoals.config} brandKit={brandGoals.brandKit} />
+      ) : (
+        <section className={CARD}>
+          <h2 className="text-lg font-semibold text-altair-ink">Brand &amp; goals</h2>
+          <p className="mt-1 text-sm text-altair-ink-muted">
+            Brand and goals could not be loaded right now.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

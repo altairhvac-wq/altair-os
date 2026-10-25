@@ -1,6 +1,10 @@
 # Marketing AI HQ — Architecture
 
-Status: V1 foundation (founder-only). This document is the source of truth for
+Status: V1 foundation (founder-only). **UI retired 2026-10-25:** the separate
+`/marketing/hq` page now redirects to `/marketing`. Social ideas from the HQ
+roles appear in the Today queue there (Keep converts, Dismiss rejects), and
+brand & goals are edited under Settings. The roles, store, cron and server
+actions described below are unchanged. This document is the source of truth for
 the Marketing AI HQ module: what it is, how it is shaped, and the rules every
 future role addition must follow.
 

@@ -5,8 +5,6 @@ import { Button } from "@/shared/design-system/components";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { MarketingMediaPreview } from "./MarketingMediaPreview";
-import { MarketingReelPublishControls } from "./MarketingReelPublishControls";
-import { MarketingYouTubePublishControls } from "./MarketingYouTubePublishControls";
 import { MarketingAutomationStatusStrip } from "./MarketingAutomationStatusStrip";
 import { archiveMarketingPostAction } from "@/app/actions/marketing-posts";
 import { approveMarketingPostForDistributionAction } from "@/app/actions/marketing-publish-approval";
@@ -47,7 +45,8 @@ import {
  * sections of runtime telemetry. Schedule counts, task types, run states,
  * artifact ids, codecs, byte sizes, attempt numbers and contract-drift
  * warnings are all real and all worth keeping; none of them changes a
- * marketing decision, so none of them is here. They live under Advanced.
+ * marketing decision, so none of them is here. (The diagnostics tabs that
+ * held them were retired with the three-tab page on 2026-10-25.)
  *
  * ==================== ONE QUEUE, AND IT IS THIS ONE ====================
  * Three things called themselves an approval queue: the snapshot's
@@ -605,15 +604,6 @@ export function MarketingTodayView({
               post.channelTarget === "facebook" ||
               post.channelTarget === "instagram",
           );
-          // HVAC Shorts have exactly one publish path: approval here, then
-          // the scheduled distribution run (hvac:distribute → dispatchPublish
-          // → adapter readback). Their cards render NO direct publish
-          // buttons, and the server actions refuse the click anyway
-          // (`lib/publishing/hvac-guard.ts`) — the missing button is
-          // courtesy, the refusal is the guarantee.
-          const isHvacManaged = Boolean(
-            video?.sourceJobId.startsWith("hvac-short-"),
-          );
           // Sibling drafts of the SAME video that already went out. The
           // delivery claim is per (post, provider), so a second sibling can
           // still reach the same platform — a real duplicate, live on a real
@@ -693,9 +683,10 @@ export function MarketingTodayView({
 
               {/* Every channel's copy, side by side — the founder reads what
                   each platform will actually carry before one decision covers
-                  them all. Each block keeps its own existing publish-now
-                  control: those actions are unchanged, and for YouTube the
-                  strongest thing that button can do remains a PRIVATE upload. */}
+                  them all. There is no publish-now button on any channel
+                  (2026-10-25 simplification): Approve below is the one way
+                  out, so every publish goes through the destination-bound
+                  job, the kill switch and the scheduled run. */}
               {group.posts.map((post) => (
                 <div key={post.id}>
                   <h3 className="text-sm font-medium text-altair-ink">
@@ -709,33 +700,6 @@ export function MarketingTodayView({
                       {post.suggestedHashtags.map((tag) => `#${tag}`).join(" ")}
                     </p>
                   ) : null}
-                  <div className="mt-2">
-                    {isHvacManaged ? (
-                      <p className="text-[11px] text-altair-ink-muted">
-                        Publishes through the scheduled distribution run after
-                        approval — direct publish is disabled for HVAC Shorts
-                        (and refused server-side).
-                      </p>
-                    ) : post.channelTarget === "youtube" ? (
-                      // The controls agree with the post's declared
-                      // destination — a YouTube-targeted post never renders
-                      // Meta buttons, and vice versa. The server action
-                      // re-checks the same fact.
-                      <MarketingYouTubePublishControls
-                        post={post}
-                        connectedAccounts={connectedAccounts}
-                        videoOptions={videoOptions}
-                        onPublished={onChanged}
-                      />
-                    ) : (
-                      <MarketingReelPublishControls
-                        post={post}
-                        connectedAccounts={connectedAccounts}
-                        videoOptions={videoOptions}
-                        onPublished={onChanged}
-                      />
-                    )}
-                  </div>
                 </div>
               ))}
 
@@ -745,9 +709,8 @@ export function MarketingTodayView({
                   {postedSiblings
                     .map((post) => channelLabel(post.channelTarget))
                     .join(", ")}
-                  . Publishing the same platform again from here would post a
-                  DUPLICATE on the real account — check History before using
-                  the publish buttons above.
+                  . Approving the same platform again would post a DUPLICATE on
+                  the real account — reject this card unless that is intended.
                 </p>
               ) : null}
 
@@ -767,8 +730,7 @@ export function MarketingTodayView({
                     the publish-queue row with its destination and approver.
                     Nothing publishes from this button; the publisher cron
                     runs scheduled jobs, and only when the deployment is
-                    armed. The per-channel controls above remain the
-                    immediate path when a human wants one. */}
+                    armed. */}
                 <label className="flex items-center gap-2 text-[11px] text-altair-ink-muted">
                   Release slot
                   <input

@@ -95,7 +95,7 @@ LABEL=after ROUTES=/,/customers BASE_URL=<preview-or-prod-url> npm run capture:c
 
 Output lands in `public/marketing/screenshots/comparison/<page>-<label>.png`. Refresh auth for the target host when needed: `BASE_URL=<url> npm run capture:founder-auth`.
 
-In local development (`NODE_ENV=development`), platform admins also get a Marketing Hub control that spawns the founder marketing capture script (optional `BASE_URL` for localhost or a preview host). For non-localhost targets, refresh auth for that host first: `BASE_URL=<url> npm run capture:founder-auth`. The control is never shown in production builds.
+The Marketing page no longer has an in-app capture control (removed 2026-10-25 with the three-tab simplification); run the capture scripts above from a terminal. For non-localhost targets, refresh auth for that host first: `BASE_URL=<url> npm run capture:founder-auth`.
 
 ## Checks and tests
 

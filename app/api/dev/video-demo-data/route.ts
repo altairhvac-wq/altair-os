@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * video's "click Send" beat has fuel on every take — a recorded run
  * consumes the draft; this endpoint re-arms it.
  *
- * Security posture mirrors /api/dev/founder-screenshot-capture:
+ * Security posture mirrors the retired /api/dev/founder-screenshot-capture route:
  *   - 404 outside NODE_ENV=development (never exists in production);
  *   - requires a signed-in session (the demo tool reuses the same
  *     Playwright storage state its captures authenticate with);

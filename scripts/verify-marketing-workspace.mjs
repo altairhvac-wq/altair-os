@@ -185,7 +185,7 @@ check(
   state.SNAPSHOT_UPCOMING_WORK_LIMIT,
 );
 check(
-  "staleness threshold matches MarketingAutomationSection's STALE_AFTER_HOURS",
+  "staleness threshold is 36 hours",
   state.AUTOMATION_STALE_AFTER_HOURS === 36,
   state.AUTOMATION_STALE_AFTER_HOURS,
 );
@@ -414,6 +414,35 @@ check(
     .join(",") === "new,old",
 );
 
+check(
+  "a website draft with its brief is an article candidate",
+  state.selectArticleCandidates([
+    post({ channelTarget: "website", videoMediaAssetId: undefined, contentPackageId: "pkg" }),
+  ]).length === 1,
+);
+check(
+  "a website draft with NO brief is not an article candidate",
+  state.selectArticleCandidates([
+    post({ channelTarget: "website", videoMediaAssetId: undefined, contentPackageId: undefined }),
+  ]).length === 0,
+);
+check(
+  "a text-only Facebook draft is a text-post candidate",
+  state.selectTextPostCandidates([
+    post({ channelTarget: "facebook", videoMediaAssetId: undefined, postText: "Hello" }),
+  ]).length === 1,
+);
+check(
+  "a text-only Instagram draft is never offered (Instagram needs media)",
+  state.selectTextPostCandidates([
+    post({ channelTarget: "instagram", videoMediaAssetId: undefined, postText: "Hello" }),
+  ]).length === 0,
+);
+check(
+  "a video draft is never a text-post candidate",
+  state.selectTextPostCandidates([post({ channelTarget: "facebook" })]).length === 0,
+);
+
 // SEO work reaches marketing_posts only through
 // `convertMarketingItemToPostAction`, which refuses any kind but
 // `social_post` — and an SEO page has no rendered Reel, so even if that guard
@@ -631,15 +660,32 @@ const workspace = src("shared/components/marketing-hub/MarketingWorkspace.tsx");
 const settings = src(
   "shared/components/marketing-hub/MarketingSettingsView.tsx",
 );
-const hub = src("shared/components/marketing-hub/MarketingHubPageView.tsx");
+const library = src("shared/components/marketing-hub/MarketingLibraryView.tsx");
+const extras = src("shared/components/marketing-hub/MarketingQueueExtras.tsx");
+const exists = (path) => {
+  try {
+    readFileSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
+// 2026-10-25: three tabs — Today, Library, Settings. See MarketingWorkspace.tsx.
 check(
-  "the primary view does not render the diagnostics section",
-  !today_.includes("MarketingAutomationSection"),
+  "the workspace offers exactly Today, Library and Settings, in that order",
+  [...workspace.matchAll(/\{ id: "([a-z]+)", label:/g)].map((m) => m[1]).join(",") ===
+    "today,library,settings",
 );
 check(
-  "the primary view does not render the manual-posts view",
-  !today_.includes("MarketingHubPageView"),
+  "Today is the default tab",
+  workspace.includes('useState<TabId>("today")'),
+);
+check(
+  "Today holds the one queue (videos, then articles, posts and ideas) above the Chief",
+  workspace.indexOf('tab === "today"') < workspace.indexOf("<MarketingTodayView") &&
+    workspace.indexOf("<MarketingTodayView") < workspace.indexOf("<MarketingQueueExtras") &&
+    workspace.indexOf("<MarketingQueueExtras") < workspace.indexOf("<MarketingCommandView"),
 );
 check(
   "the primary view does not render connected accounts",
@@ -651,97 +697,43 @@ check(
     today_.includes("selectTodayCandidates"),
 );
 check(
-  // Was "Today is the default tab", then "Command is offered before Today".
-  // Today has since become Publishing, so the sibling it was compared against
-  // no longer exists. The invariant worth keeping is unchanged: SOME tab is
-  // the default and it is the FIRST one offered.
-  "Command is the workspace's default tab, and is offered first",
-  /useState<TabId>\("command"\)/.test(workspace) &&
-    workspace.indexOf('{ id: "command"') < workspace.indexOf('{ id: "content"'),
-);
-check(
-  // Was "Today is still reachable as its own tab". The daily go-out view was
-  // not deleted in the reorganisation — it is what Publishing renders — and
-  // that, not the label it used to carry, is what must stay true.
-  "the daily go-out view is still reachable, now under Publishing",
-  workspace.includes('{ id: "publishing"') &&
-    workspace.indexOf('tab === "publishing"') <
-      workspace.indexOf("<MarketingTodayView"),
-);
-check(
-  "every destination in the hierarchy is offered",
-  [
-    "command",
-    "content",
-    "publishing",
-    "performance",
-    "website",
-    "history",
-    "settings",
-  ].every(
-    (id) =>
-      workspace.includes(`{ id: "${id}"`) &&
-      workspace.includes(`tab === "${id}"`),
+  "no direct publish control is rendered anywhere in the workspace",
+  [today_, extras, library, workspace, settings].every(
+    (text) =>
+      !text.includes("PublishControls") &&
+      !text.includes("publishMarketingItemToFacebookAction"),
   ),
 );
 check(
-  // Was "mounted exactly once, under Advanced". The dashboard is now mounted
-  // three times ON PURPOSE, each asking for a different slice — so counting
-  // mounts is the wrong invariant. What must hold is that the slices are
-  // DISJOINT, or a section would render twice in one workspace.
-  "NO AUTOMATION SECTION IS RENDERED BY TWO TABS",
-  (() => {
-    const asked = [...workspace.matchAll(/only=\{\[([^\]]*)\]\}/g)].flatMap(
-      (m) => [...m[1].matchAll(/"([a-zA-Z]+)"/g)].map((k) => k[1]),
-    );
-    return asked.length > 0 && new Set(asked).size === asked.length;
-  })(),
+  "every Approve in the queue goes through the destination-bound approval action",
+  extras.includes("approveMarketingPostForDistributionAction(") &&
+    today_.includes("approveMarketingPostForDistributionAction("),
 );
 check(
-  // The other half of splitting a dashboard: nothing may be lost in the move.
-  "AND NO SECTION WAS LOST IN THE REORGANISATION",
-  (() => {
-    const automation = src(
-      "shared/components/marketing-hub/MarketingAutomationSection.tsx",
-    );
-    const declared = [
-      ...((automation.match(
-        /AUTOMATION_SECTION_KEYS = \[([\s\S]*?)\] as const/,
-      ) ?? [])[1]?.matchAll(/"([a-zA-Z]+)"/g) ?? []),
-    ].map((m) => m[1]);
-    const asked = new Set(
-      [...workspace.matchAll(/only=\{\[([^\]]*)\]\}/g)].flatMap((m) =>
-        [...m[1].matchAll(/"([a-zA-Z]+)"/g)].map((k) => k[1]),
-      ),
-    );
-    return declared.length > 0 && declared.every((key) => asked.has(key));
-  })(),
+  "the retired screens are gone",
+  [
+    "shared/components/marketing-hub/MarketingHubPageView.tsx",
+    "shared/components/marketing-hub/MarketingPostDraftForm.tsx",
+    "shared/components/marketing-hub/MarketingAutomationSection.tsx",
+    "shared/components/marketing-hub/MarketingWebsiteView.tsx",
+    "shared/components/marketing-hq/MarketingAiHqPageView.tsx",
+  ].every((path) => !exists(path)),
 );
 check(
-  "every automation mount asks for an explicit slice",
-  workspace.split("<MarketingAutomationSection").length - 1 ===
-    workspace.split("only={[").length - 1,
+  "the old Marketing HQ address redirects to the workspace",
+  src("app/(admin)/marketing/hq/page.tsx").includes('redirect("/marketing")'),
 );
 check(
-  // Was "under Advanced". The post editor moved to Content and must still be
-  // mounted exactly once — two mounts would be two editors over one store.
-  "the manual-posts view is mounted exactly once, under Content",
-  workspace.split("<MarketingHubPageView").length === 2 &&
-    workspace.indexOf('tab === "content"') <
-      workspace.indexOf("<MarketingHubPageView"),
+  "Library reads live website pages and edits only non-website posts",
+  library.includes("/insights/") &&
+    library.includes('post.channelTarget !== "website"') &&
+    library.includes("updateMarketingPostAction("),
 );
 check(
-  "the Website tab reads pages and cannot edit them",
-  (() => {
-    const site = src(
-      "shared/components/marketing-hub/MarketingWebsiteView.tsx",
-    );
-    return (
-      workspace.includes("<MarketingWebsiteView") &&
-      !/use client/.test(site) &&
-      !/Action\(|<form|<input|<textarea/.test(site)
-    );
-  })(),
+  "Library offers no way to create or publish a post",
+  !library.includes("createMarketingPostAction") &&
+    !library.includes("markMarketingPostPostedAction") &&
+    !library.includes("createRecurringMarketingPostsAction"),
 );
 check(
   "settings owns the only connected-accounts card in the workspace",
@@ -749,53 +741,15 @@ check(
     !workspace.includes("MarketingConnectedAccountsCard"),
 );
 check(
-  "the manual-posts view no longer renders its own connected-accounts card",
-  !hub.includes("<MarketingConnectedAccountsCard"),
+  "settings lists every connection and points at Integrations",
+  settings.includes('href="/settings/integrations"'),
 );
 check(
-  "the manual-posts view no longer renders its own Marketing HQ banner",
-  !hub.includes('href="/marketing/hq"'),
-);
-check(
-  "the Marketing HQ link has exactly one home in the workspace",
-  settings.split('href="/marketing/hq"').length === 2 &&
-    !workspace.includes("/marketing/hq") &&
-    !today_.includes("/marketing/hq"),
-);
-check(
-  "the manual-posts view declares no page shell of its own",
-  !hub.includes("MasterListPageLayout") && !hub.includes('title="Marketing"'),
-);
-check(
-  "the manual-posts view still owns New post draft and the status tabs",
-  hub.includes("New post draft") && hub.includes("LIST_TABS"),
-);
-
-// ---------------------------------------------------------------------------
-console.log("\nConsolidation — no control that is wired to nothing");
-// ---------------------------------------------------------------------------
-
-// This milestone is a UI consolidation. A settings view that imported a
-// server action would mean new behaviour had been added under cover of a
-// layout change; a <form> or a mutating handler would mean a switch had been
-// drawn for a schedule this repository cannot reach.
-check(
-  "settings imports no server action",
-  !/from "@\/app\/actions/.test(settings),
-);
-check("settings renders no form", !settings.includes("<form"), "form found");
-check(
-  "settings renders no button",
-  !settings.includes("<button"),
-  "button found",
-);
-check(
-  "settings says where the schedule is actually changed",
-  settings.includes("it does not set it"),
-);
-check(
-  "settings offers the brand link only to those who can open it",
-  settings.includes("canOpenMarketingHq ?"),
+  "brand & goals lives in Settings, and nothing links to the retired HQ page",
+  settings.includes("<MarketingBrandGoalsCard") &&
+    ![today_, workspace, settings, library, extras].some((text) =>
+      text.includes('href="/marketing/hq"'),
+    ),
 );
 
 // ---------------------------------------------------------------------------

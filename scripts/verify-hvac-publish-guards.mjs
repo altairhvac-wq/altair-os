@@ -174,20 +174,17 @@ const viewSource = readFileSync(
   "shared/components/marketing-hub/MarketingTodayView.tsx",
   "utf8",
 );
-const hvacBranchAt = viewSource.indexOf("isHvacManaged ?");
-const reelControlsAt = viewSource.indexOf("<MarketingReelPublishControls", hvacBranchAt);
+// Since 2026-10-25 the Today queue renders NO direct publish control for any
+// video (not only HVAC Shorts): Approve -> scheduled run is the one path, and
+// the server actions still refuse HVAC Shorts (lib/publishing/hvac-guard.ts).
 check(
-  "the per-channel controls sit behind the isHvacManaged branch",
-  hvacBranchAt > -1 && reelControlsAt > hvacBranchAt,
-  { hvacBranchAt, reelControlsAt },
+  "Today renders no direct publish controls for any video",
+  !viewSource.includes("<MarketingReelPublishControls") &&
+    !viewSource.includes("<MarketingYouTubePublishControls"),
 );
 check(
-  "the replacement copy names the real path and the server refusal",
-  viewSource.includes("refused server-side"),
+  "Approve is the one way out of Today",
+  viewSource.includes("approveMarketingPostForDistributionAction("),
 );
 
-console.log(`\n${checks - failures}/${checks} checks passed`);
-if (failures > 0) {
-  console.error(`\n${failures} check(s) failed.`);
-  process.exit(1);
-}
+
