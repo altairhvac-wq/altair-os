@@ -78,7 +78,7 @@ export default function GlobalError({
             color: "#8a6d3b",
           }}
         >
-          Altair OS
+          Altair Operating System
         </p>
 
         <h1

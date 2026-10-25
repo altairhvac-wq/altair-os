@@ -174,7 +174,7 @@ export function TaxSummaryReportDocument({
           }
         >
           For bookkeeping review only. This report only includes records entered
-          in Altair OS and is not a complete tax return.
+          in Altair Operating System and is not a complete tax return.
         </p>
       </header>
 
@@ -207,7 +207,7 @@ export function TaxSummaryReportDocument({
               northStar={northStar}
             />
             <SummaryRow
-              label="Expenses entered in Altair OS"
+              label="Expenses entered in Altair Operating System"
               value={formatCurrency(summary.expensesRecorded)}
               northStar={northStar}
             />

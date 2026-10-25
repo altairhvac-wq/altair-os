@@ -31,7 +31,7 @@ export function MissionControlSidebar() {
             A
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight text-white">Altair OS</p>
+            <p className="truncate text-sm font-semibold tracking-tight text-white">Altair Operating System</p>
             <p className="truncate text-[10px] uppercase tracking-[0.16em] text-slate-500">
               Mission Control
             </p>

@@ -45,7 +45,7 @@ export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
 
             <section
               id="sign-in-form"
-              aria-label="Sign in to Altair OS"
+              aria-label="Sign in to Altair Operating System"
               className="mt-7 scroll-mt-6 rounded-[1.35rem] border border-white/[0.1] bg-white/[0.045] p-5 shadow-[0_28px_70px_-32px_rgba(0,0,0,0.85),0_0_0_1px_rgba(194,160,90,0.04)_inset] backdrop-blur-xl sm:p-6"
             >
               {children}
@@ -56,7 +56,7 @@ export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
             </Suspense>
 
             <p className="mt-10 text-center text-[9px] uppercase tracking-[0.12em] text-slate-400">
-              © {new Date().getFullYear()} Altair OS. All rights reserved.
+              © {new Date().getFullYear()} Altair Operating System. All rights reserved.
             </p>
           </div>
         </div>

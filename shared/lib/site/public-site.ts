@@ -14,10 +14,10 @@ import type { Metadata } from "next";
  */
 export const PUBLIC_SITE_ORIGIN = "https://www.altair-op.com";
 
-export const PUBLIC_SITE_NAME = "Altair OS";
+export const PUBLIC_SITE_NAME = "Altair Operating System";
 
 export const PUBLIC_SITE_TITLE =
-  "Altair OS · The Operating System for Field Service Businesses";
+  "Altair Operating System · Software for Field Service Businesses";
 
 export const PUBLIC_SITE_DESCRIPTION =
   "Connect leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one field service operating system.";
@@ -29,7 +29,7 @@ export const PUBLIC_OG_IMAGE = {
   url: PUBLIC_OG_IMAGE_PATH,
   width: 1200,
   height: 630,
-  alt: "Altair OS — the operating system for field service businesses",
+  alt: "Altair Operating System — software for field service businesses",
 } as const;
 
 /**

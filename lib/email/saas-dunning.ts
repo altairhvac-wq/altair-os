@@ -91,8 +91,8 @@ export function buildSaasDunningEmail(
   const subject = `Action needed: ${input.companyName} subscription payment failed`;
 
   const whatHappened = amount
-    ? `The ${amount} payment for ${input.companyName}'s Altair OS ${input.planLabel} subscription did not go through.`
-    : `The payment for ${input.companyName}'s Altair OS ${input.planLabel} subscription did not go through.`;
+    ? `The ${amount} payment for ${input.companyName}'s Altair Operating System ${input.planLabel} subscription did not go through.`
+    : `The payment for ${input.companyName}'s Altair Operating System ${input.planLabel} subscription did not go through.`;
 
   const whatItMeans = graceDate
     ? `Nothing has stopped working. Your team keeps full access until ${graceDate}. If the payment is still outstanding after that date, the workspace is locked until billing is updated.`
@@ -115,7 +115,7 @@ export function buildSaasDunningEmail(
     "",
     "If you believe this is a mistake, reply to this email.",
     "",
-    "— Altair OS",
+    "— Altair Operating System",
   ];
 
   const htmlBody = `
@@ -146,7 +146,7 @@ export function buildSaasDunningEmail(
       Stripe will also retry the card on its own over the next few days. Once a payment succeeds, access continues without interruption and no further action is needed.
     </p>
     <p style="margin:0;font-size:14px;line-height:1.5;color:#3f3f46;">
-      If you believe this is a mistake, reply to this email.<br />&mdash; Altair OS
+      If you believe this is a mistake, reply to this email.<br />&mdash; Altair Operating System
     </p>
   `.trim();
 
@@ -172,6 +172,6 @@ export async function sendSaasDunningEmail(
     text: content.text,
     html: content.html,
     logContext: "saas-dunning",
-    fromDisplayName: "Altair OS Billing",
+    fromDisplayName: "Altair Operating System Billing",
   });
 }

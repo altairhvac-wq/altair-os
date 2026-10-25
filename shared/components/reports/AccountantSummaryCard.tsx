@@ -32,7 +32,7 @@ export function AccountantSummaryCard({
           <div className="min-w-0">
             <p className="text-sm leading-relaxed text-altair-ink-on-graphite-secondary">
               Export a printable bookkeeping summary based on records entered in
-              Altair OS.
+              Altair Operating System.
             </p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-altair-ink-on-graphite-muted">
               For bookkeeping review only. This does not replace tax or
@@ -61,7 +61,7 @@ export function AccountantSummaryCard({
           </h3>
           <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
             Export a printable bookkeeping summary based on records entered in
-            Altair OS.
+            Altair Operating System.
           </p>
           <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
             For bookkeeping review only. This does not replace tax or accounting

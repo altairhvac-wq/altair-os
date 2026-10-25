@@ -173,7 +173,7 @@ export function getSubscriptionBillingBannerModel(
           shortLabel: "Closed beta access",
           description: canManageBilling
             ? "This company has complimentary access during the closed beta. No paid subscription is required right now."
-            : "Your company is using Altair OS with complimentary closed beta access.",
+            : "Your company is using Altair Operating System with complimentary closed beta access.",
           showManageAction: false,
           role: "status",
         };

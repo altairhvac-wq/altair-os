@@ -24,7 +24,7 @@ export function MarketingFooter() {
           <Link
             href="/"
             className={`inline-flex rounded-sm ${focusRing}`}
-            aria-label="Altair OS home"
+            aria-label="Altair Operating System home"
           >
             <AltairLogo variant="white" size="sm" showWordmark />
           </Link>

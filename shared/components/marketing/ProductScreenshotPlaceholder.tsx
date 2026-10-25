@@ -145,7 +145,7 @@ export function ProductScreenshotPlaceholder({
           <span className="h-2 w-2 rounded-full bg-[#C2A05A]/22" aria-hidden="true" />
           <span className="h-2 w-2 rounded-full bg-[#C2A05A]/14" aria-hidden="true" />
           <span className="ml-2 truncate text-[10px] font-medium tracking-wide text-neutral-500">
-            Altair OS
+            Altair Operating System
           </span>
         </div>
 

@@ -45,9 +45,9 @@ export function buildTrialPaymentReminderSubject(input: {
   daysRemaining: number;
 }): string {
   if (input.daysRemaining <= 1) {
-    return "Your Altair OS trial ends tomorrow — add a payment method";
+    return "Your Altair Operating System trial ends tomorrow — add a payment method";
   }
-  return `Your Altair OS trial ends in ${input.daysRemaining} days — add a payment method`;
+  return `Your Altair Operating System trial ends in ${input.daysRemaining} days — add a payment method`;
 }
 
 export function buildTrialPaymentReminderBodies(
@@ -64,24 +64,24 @@ export function buildTrialPaymentReminderBodies(
   const text = [
     greeting,
     "",
-    `The free trial for ${input.companyName} on Altair OS ends ${when}.`,
+    `The free trial for ${input.companyName} on Altair Operating System ends ${when}.`,
     "",
     "To keep your workspace running without interruption, add a payment method before then:",
     input.billingUrl,
     "",
     "You choose the plan when you add the card, and you will not be charged until the trial ends. If you do nothing, the workspace pauses when the trial ends — your data stays put and you can pick up any time by adding a card.",
     "",
-    "— The Altair OS team",
+    "— The Altair Operating System team",
   ].join("\n");
 
   const html = wrapBillingEmailHtml(`
     <p>${escapeBillingEmailHtml(greeting)}</p>
-    <p>The free trial for <strong>${escapeBillingEmailHtml(input.companyName)}</strong> on Altair OS ends <strong>${escapeBillingEmailHtml(when)}</strong>.</p>
+    <p>The free trial for <strong>${escapeBillingEmailHtml(input.companyName)}</strong> on Altair Operating System ends <strong>${escapeBillingEmailHtml(when)}</strong>.</p>
     <p>To keep your workspace running without interruption, add a payment method before then:</p>
     <p><a href="${escapeBillingEmailHtml(input.billingUrl)}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-weight:600;">Add a payment method</a></p>
     <p style="font-size:13px;color:#555;">${escapeBillingEmailHtml(input.billingUrl)}</p>
     <p>You choose the plan when you add the card, and you will not be charged until the trial ends. If you do nothing, the workspace pauses when the trial ends — your data stays put and you can pick up any time by adding a card.</p>
-    <p>— The Altair OS team</p>
+    <p>— The Altair Operating System team</p>
   `);
 
   return { text, html };
@@ -115,6 +115,6 @@ export async function sendTrialPaymentReminderEmail(
     text: bodies.text,
     html: bodies.html,
     logContext: "trial-payment-reminder",
-    fromDisplayName: "Altair OS",
+    fromDisplayName: "Altair Operating System",
   });
 }

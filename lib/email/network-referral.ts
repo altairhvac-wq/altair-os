@@ -54,7 +54,7 @@ function buildText(input: SendNetworkReferralNotificationInput): string {
   const lines = [
     `Hi ${greetingName},`,
     "",
-    `${input.sourceCompanyName} just sent ${input.targetCompanyName} a referral on Altair OS.`,
+    `${input.sourceCompanyName} just sent ${input.targetCompanyName} a referral on Altair Operating System.`,
     "",
     `Service: ${input.requestedService}`,
     `Urgency: ${URGENCY_LABELS[input.urgency]}`,
@@ -99,7 +99,7 @@ function buildHtml(input: SendNetworkReferralNotificationInput): string {
 
   return `
     <p>Hi ${greetingName},</p>
-    <p><strong>${escapeHtml(input.sourceCompanyName)}</strong> just sent <strong>${escapeHtml(input.targetCompanyName)}</strong> a referral on <strong>Altair OS</strong>.</p>
+    <p><strong>${escapeHtml(input.sourceCompanyName)}</strong> just sent <strong>${escapeHtml(input.targetCompanyName)}</strong> a referral on <strong>Altair Operating System</strong>.</p>
     <table style="margin:12px 0;border-collapse:collapse;font-size:14px;">
       <tr><td style="padding:4px 12px 4px 0;color:#6B6255;">Service</td><td style="padding:4px 0;color:#17130E;">${escapeHtml(input.requestedService)}</td></tr>
       <tr><td style="padding:4px 12px 4px 0;color:#6B6255;">Urgency</td><td style="padding:4px 0;color:#17130E;">${escapeHtml(URGENCY_LABELS[input.urgency])}</td></tr>
@@ -120,7 +120,7 @@ export async function sendNetworkReferralNotificationEmail(
     text: buildText(input),
     html: buildHtml(input),
     logContext: "network-referral-email",
-    fromDisplayName: "Altair OS Community",
+    fromDisplayName: "Altair Operating System Community",
   });
 }
 
@@ -188,6 +188,6 @@ export async function sendReferralJobCompletedEmail(
     text: textLines.join("\n"),
     html,
     logContext: "network-referral-completed-email",
-    fromDisplayName: "Altair OS Community",
+    fromDisplayName: "Altair Operating System Community",
   });
 }

@@ -10,7 +10,7 @@ export function PublicDocumentBrandFooter() {
         className="opacity-70"
       />
       <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">
-        Powered by Altair OS
+        Powered by Altair Operating System
       </p>
     </footer>
   );

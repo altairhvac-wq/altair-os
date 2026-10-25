@@ -24,7 +24,7 @@ import { resolveAppBaseUrl } from "@/lib/email/env";
 const SITE_ORIGIN_ENV = "ALTAIR_SITE_ORIGIN";
 const PUBLISHER_NAME_ENV = "ALTAIR_SITE_PUBLISHER_NAME";
 
-const DEFAULT_PUBLISHER_NAME = "Altair OS";
+const DEFAULT_PUBLISHER_NAME = "Altair Operating System";
 
 export type AltairSiteConfig = {
   /** https origin with no trailing slash. */

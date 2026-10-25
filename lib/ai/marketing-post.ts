@@ -461,7 +461,7 @@ export function parseMarketingCompletedJobDraftResponse(
   };
 }
 
-const MARKETING_FOUNDER_DRAFT_PROMPT = `You write founder-led marketing post drafts for Altair OS — field-service software built for HVAC and trades contractors.
+const MARKETING_FOUNDER_DRAFT_PROMPT = `You write founder-led marketing post drafts for Altair Operating System — field-service software built for HVAC and trades contractors.
 
 Your job is to generate an initial draft post from structured founder inputs. The user will review and edit before saving. You are not posting, scheduling, or publishing anything.
 
@@ -478,7 +478,7 @@ Voice and style:
 - Honest, founder-led, practical — not hypey or salesy
 - Readable for small HVAC and trades business owners
 - Translate technical progress into business-owner benefits
-- Good angles include: "I just shipped another piece of Altair OS…", "Small contractors should not need five different tools…", "This week's build moved Altair closer to helping businesses market themselves…", "I'm looking for a few business owners willing to test this…"
+- Good angles include: "I just shipped another piece of Altair Operating System…", "Small contractors should not need five different tools…", "This week's build moved Altair closer to helping businesses market themselves…", "I'm looking for a few business owners willing to test this…"
 - Include a clear CTA in call_to_action
 
 Rules:

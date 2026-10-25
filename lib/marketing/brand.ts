@@ -128,7 +128,7 @@ export function buildMarketingHqContextBlock(
   }
 
   sections.push(
-    `Mission (what we are marketing):\n${config.mission || "Altair OS — field-service software built by a working HVAC founder."}`,
+    `Mission (what we are marketing):\n${config.mission || "Altair Operating System — field-service software built by a working HVAC founder."}`,
   );
   sections.push(
     `Audience:\n${config.audience || "Owners of small HVAC, plumbing, and electrical businesses (1-15 techs)."}`,

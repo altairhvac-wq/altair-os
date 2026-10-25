@@ -20,14 +20,14 @@ export function AltairFeatureNote({
 
   return (
     <aside
-      aria-label={`In Altair OS: ${feature.label}`}
+      aria-label={`In Altair Operating System: ${feature.label}`}
       className={[
         "rounded-xl border border-[#C2A05A]/30 bg-[#FBF7EF]",
         compact ? "mt-4 px-4 py-3" : "mt-8 px-5 py-4",
       ].join(" ")}
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">
-        In Altair OS
+        In Altair Operating System
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-stone-700">
         {feature.note}{" "}

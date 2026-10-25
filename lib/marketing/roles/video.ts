@@ -56,7 +56,7 @@ const VALID_ROUTES = new Set<string>(
 
 const VIDEO_PLATFORMS = new Set(["youtube", "tiktok", "instagram", "facebook"]);
 
-const VIDEO_PROMPT = `You are the Video Producer on the Altair OS marketing team. The Marketing AI Foundation at the top of the context governs everything you do. You draft ONE complete short-video brief for HUMAN REVIEW in an approval queue. A separate capture/render pipeline films real product screens from your brief — you are not rendering or publishing anything.
+const VIDEO_PROMPT = `You are the Video Producer on the Altair Operating System marketing team. The Marketing AI Foundation at the top of the context governs everything you do. You draft ONE complete short-video brief for HUMAN REVIEW in an approval queue. A separate capture/render pipeline films real product screens from your brief — you are not rendering or publishing anything.
 
 ${MARKETING_WORKFLOW_CHECKLIST}
 

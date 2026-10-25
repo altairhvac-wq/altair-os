@@ -29,7 +29,7 @@ type SendTeamInviteEmailInput = {
 };
 
 function buildInviteEmailSubject(companyName: string): string {
-  return `You're invited to ${companyName} on Altair OS`;
+  return `You're invited to ${companyName} on Altair Operating System`;
 }
 
 function buildInviteEmailHtml(input: {
