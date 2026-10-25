@@ -111,7 +111,7 @@ export type MarketingChannelAccountFacts = {
   readonly accountName: string | null;
   readonly resourceName: string | null;
   /**
-   * Per-channel pause (migration 204). True when an operator has paused
+   * Per-channel pause (migration 205). True when an operator has paused
    * publishing through this connection for the provider being judged, or the
    * whole row. Optional so every existing caller that builds facts by hand
    * keeps compiling; absent reads as "not paused", which is also the column's

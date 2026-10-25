@@ -11,7 +11,7 @@ Source of truth for the design decisions: `docs/marketing/AUTONOMOUS_OPERATIONS_
 | Piece | Where |
 | --- | --- |
 | Kill switch | `MARKETING_PUBLISH_MODE` read by `lib/publishing/gate.ts` (`resolvePublishMode`) |
-| Per-channel pause | `marketing_connected_accounts.publishing_paused` (+ metadata flag for Instagram), migration 204 |
+| Per-channel pause | `marketing_connected_accounts.publishing_paused` (+ metadata flag for Instagram), migration 205 |
 | Approval that carries a destination | `app/actions/marketing-publish-approval.ts` |
 | The queue | `marketing_publish_jobs` (migrations 184, 204), state machine in `shared/types/publish-job.ts` |
 | The ledger (duplicate guard) | `marketing_channel_deliveries`, decisions in `shared/types/marketing-delivery.ts` |
@@ -41,7 +41,7 @@ draft -> ready_for_approval -> approved -> scheduled -> publishing -> published
   (60 s, doubling); after `max_attempts` (3 for most providers) the job is
   `failed`. `published` means the queue is done — the ledger's
   `delivery_state` says what the provider actually has.
-- `approved_by` is a profile id. `approved_by_policy` (migration 204) names a
+- `approved_by` is a profile id. `approved_by_policy` (migration 205) names a
   non-human approver (`policy:auto-approve`). Exactly one is set on an
   approved job; `approved_at` is set iff one of them is.
 
@@ -190,7 +190,7 @@ chooses between destinations.
 
 - The cron runs daily, so a job's backoff (1, 2, 4 minutes) is effectively
   "next day"; three attempts is three days.
-- Migration 204 must be applied before the connected-account queries will
+- Migration 205 must be applied before the connected-account queries will
   read (they select the new columns). Copy it to the Desktop migrations
   folder per the owner's convention once merged.
 - Nothing here lifts `MARKETING_PUBLISH_MODE`; arming remains a deliberate

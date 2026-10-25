@@ -383,7 +383,7 @@ export function assertConnectionReady(
 
   const capability = capabilityFor(input.provider);
 
-  // ============ THE PER-CHANNEL PAUSE (migration 204) ============
+  // ============ THE PER-CHANNEL PAUSE (migration 205) ============
   // Judged here, on current facts, because a pause is an operator's current
   // instruction about THIS destination — the deployment-wide switch stays
   // `MARKETING_PUBLISH_MODE`. It is checked before the state machine so a

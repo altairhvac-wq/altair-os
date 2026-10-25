@@ -812,7 +812,7 @@ export async function setConnectionMetadata(input: {
  */
 /**
  * Pause or resume publishing through one connection — for one provider or
- * the whole row. See migration 204 for the two mechanisms.
+ * the whole row. See migration 205 for the two mechanisms.
  *
  *   provider omitted, or equal to the row's own provider  -> the row's
  *     `publishing_paused` column (pauses everything through this row)

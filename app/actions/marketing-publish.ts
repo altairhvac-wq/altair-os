@@ -357,7 +357,7 @@ async function loadConnectedFacebookPage(input: {
     };
   }
 
-  // The per-channel pause (migration 204): the row pauses both Meta surfaces,
+  // The per-channel pause (migration 205): the row pauses both Meta surfaces,
   // a metadata flag pauses Instagram alone. Same reader the gate uses.
   const pause = decidePublishingPause(account, input.publishingAs);
   if (pause.paused) {

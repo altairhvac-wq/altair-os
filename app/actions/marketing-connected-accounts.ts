@@ -110,7 +110,7 @@ export type SetPublishingPauseActionResult = {
 };
 
 /**
- * Pause or resume publishing through one connected account (migration 204).
+ * Pause or resume publishing through one connected account (migration 205).
  *
  * `provider` is the channel to pause: omitted or equal to the row's own
  * provider pauses the whole row; "instagram" on a Facebook Page row pauses

@@ -870,7 +870,7 @@ check(
   ) === null,
 );
 
-console.log("\nThe per-channel pause (migration 204)");
+console.log("\nThe per-channel pause (migration 205)");
 
 const readyFacts = {
   status: "connected",

@@ -205,7 +205,7 @@ export type PublishJobRecord = PublishJobLeaseFacts & {
   /** The PERSON who approved (a profile id), or null. */
   readonly approvedBy: string | null;
   /**
-   * The POLICY that approved (migration 204, e.g. `policy:auto-approve`), or
+   * The POLICY that approved (migration 205, e.g. `policy:auto-approve`), or
    * null. Exactly one of `approvedBy` / `approvedByPolicy` is set on an
    * approved job; a policy approval is explicitly non-human and is recorded
    * as such rather than disguised as a profile.
