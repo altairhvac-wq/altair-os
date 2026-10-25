@@ -27,6 +27,12 @@ function getLocalDevOrigins(): string[] {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: getLocalDevOrigins(),
+  // Dev-only capture affordance for the Altair Demo Tool: the development
+  // indicator badge ("Compiling…", the N overlay) would otherwise be filmed
+  // into product videos. Off only when the capture server asks for it.
+  ...(process.env.DEMO_TOOL_HIDE_DEV_INDICATOR?.trim() === "1"
+    ? { devIndicators: false as const }
+    : {}),
   // Nothing gains from announcing the framework and version to a scanner.
   poweredByHeader: false,
   images: {
