@@ -199,6 +199,33 @@ export async function getSitePageForPackage(input: {
   return data ? toPage(data as SitePageRow) : null;
 }
 
+/**
+ * The page a company already holds at a slug, in ANY state, or null.
+ *
+ * Read by the publisher before a revision so the JSON-LD `datePublished`
+ * keeps the row's original `published_at` (the row itself already does —
+ * see `publishSitePage`), while `dateModified` moves to now.
+ */
+export async function getSitePageBySlugForCompany(input: {
+  companyId: string;
+  slug: string;
+}): Promise<SitePage | null> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await sitePagesTable(supabase)
+    .select(PAGE_SELECT)
+    .eq("company_id", input.companyId)
+    .eq("slug", input.slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getSitePageBySlugForCompany] read failed:", {
+      code: error.code,
+    });
+    return null;
+  }
+  return data ? toPage(data as SitePageRow) : null;
+}
+
 export async function getSitePageById(id: string): Promise<SitePage | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await sitePagesTable(supabase)

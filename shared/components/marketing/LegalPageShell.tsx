@@ -41,6 +41,12 @@ export function LegalPageShell({
               Pricing
             </Link>
             <Link
+              href="/insights"
+              className={`rounded-sm font-medium text-[#c9bfae] transition-colors hover:text-[#f3ebdd] ${focusRing}`}
+            >
+              Insights
+            </Link>
+            <Link
               href="/login"
               className={`rounded-sm font-medium text-[#c2a05a] transition-colors hover:text-[#e8d9ac] ${focusRing}`}
             >

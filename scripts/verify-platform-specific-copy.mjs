@@ -97,9 +97,12 @@ check(
   !/title[^\n]*\.slice\(/.test(route) && !/\.substring\([\s\S]{0,40}title/.test(route),
 );
 
+// A website draft's title is the page's H1, so it takes the bare base; every
+// other channel keeps the suffixed fallback. Either way the authored title
+// is the left operand of `??` and wins.
 check(
   "an authored title WINS over the assembled fallback",
-  /title:\s*post\.title\s*\?\?\s*`\$\{titleBase\}\s*—\s*\$\{channelLabel\(post\.channel\)\}`/.test(
+  /const title =\s*post\.title\s*\?\?\s*\(post\.channel === "website"\s*\?\s*titleBase\s*:\s*`\$\{titleBase\}\s*—\s*\$\{channelLabel\(post\.channel\)\}`\)/.test(
     route,
   ),
 );
@@ -114,10 +117,12 @@ check(
   /\.\.\.\(title\s*\?\s*\{\s*title\s*\}\s*:\s*\{\}\)/.test(route),
 );
 
+// A website entry's text is its article body (`seo.bodyMarkdown`); every
+// other entry still reads its own `text`. Both are per-entry.
 check(
   "per-channel body text was already supported and is still per-entry",
   /for\s*\(const entry of body\.posts as IncomingPost\[\]\)/.test(route) &&
-    /const text = typeof entry\.text === "string"/.test(route),
+    /const text =\s*seo\?\.bodyMarkdown \?\?\s*\(typeof entry\.text === "string"/.test(route),
 );
 
 console.log("\nupload — the truncation this makes unreachable is still bounded");

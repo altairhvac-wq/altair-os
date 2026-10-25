@@ -6,6 +6,10 @@ import {
   isAgentBridgeConfigured,
   isAuthorizedAgentRequest,
 } from "@/lib/agent-bridge/env";
+import {
+  createAgentWebsiteContentPackage,
+  type AgentWebsiteBrief,
+} from "@/lib/database/queries/marketing-content-packages";
 import { getMediaAssetByJob } from "@/lib/database/queries/marketing-media-assets";
 import {
   createAgentDraftMarketingPost,
@@ -14,6 +18,13 @@ import {
 import { isSafeSourceJobId } from "@/shared/types/marketing-media";
 import { boundRenderQaSummary } from "@/shared/lib/render-qa-summary";
 import type { MarketingChannel } from "@/shared/types/marketing-post";
+import {
+  BODY_MIN_LENGTH_FOR_PUBLISH,
+  META_DESCRIPTION_MAX,
+  META_TITLE_MAX,
+  TITLE_MAX as SITE_PAGE_TITLE_MAX,
+  isValidSlug,
+} from "@/shared/types/site-page";
 
 /**
  * Draft approval records for the Agent Platform's daily reel.
@@ -33,6 +44,19 @@ import type { MarketingChannel } from "@/shared/types/marketing-post";
  * behind the founder's own click in Today. A bridge that could publish would
  * make the approval gate advisory, so this one is built unable to.
  *
+ * ========================= THE WEBSITE CHANNEL =========================
+ * A `website` post is an SEO article, not a caption for a video. Its entry
+ * carries `seo` (slug?, metaTitle, metaDescription, keywords?, bodyMarkdown)
+ * and no video is required for it. The route writes the brief as ONE
+ * `marketing_content_packages` row (migration 182; `source_job_id` from 204)
+ * and ONE `marketing_posts` draft with `channel_target = 'website'` pointing
+ * at it. Both rows are 'draft'. Nothing here imports the altair_site
+ * publisher, and the page itself is only ever written by that publisher
+ * behind a recorded human approval. The limits applied at the door are the
+ * publish gate's own (`assertPublishableSitePage`), so a draft that lands
+ * here is one the gate can later accept rather than one it will refuse after
+ * a human has read and approved it.
+ *
  * =================== THE PAYLOAD NAMES A JOB, NOT AN ASSET ===================
  * The platform holds an object key and a render job id; it has never held this
  * database's asset uuid and is not given one here. It sends `sourceJobId` and
@@ -41,10 +65,12 @@ import type { MarketingChannel } from "@/shared/types/marketing-post";
  * accepting them.
  *
  * ============================ IDEMPOTENT ============================
- * Migration 147's partial unique index is the arbiter. A repeated integration
- * cycle re-sends the same payload and gets ALREADY_EXISTS with the original
- * post id. Nothing is updated: by then the founder may have rewritten the copy,
- * and an unattended pilot must not be able to undo that.
+ * Migration 147's partial unique index is the arbiter for video drafts, and
+ * migration 204's two keys (package by job id, post by package + channel) for
+ * website drafts. A repeated integration cycle re-sends the same payload and
+ * gets ALREADY_EXISTS with the original ids. Nothing is updated: by then the
+ * founder may have rewritten the copy, and an unattended pilot must not be
+ * able to undo that.
  */
 
 export const runtime = "nodejs";
@@ -53,18 +79,20 @@ const ROUTE_NAME = "agent-draft-posts";
 const MAX_BODY_BYTES = 32_000;
 
 /**
- * The channels the daily reel pipeline may target. Not the full channel
- * enum: `website` is first-party with its own path, and a channel appears
- * here only once its whole publish lane exists — connect flow, adapter,
+ * The channels the bridge may draft for. Not the full channel enum: a channel
+ * appears here only once its whole lane exists — connect flow, adapter,
  * founder control, private/approval gates. YouTube joined once all of that
  * shipped (PR #5/#6): drafts land in Today beside the Meta pair, and the
  * only publish action they can reach uploads PRIVATE after a founder click.
+ * `website` is first-party: its adapter and publish gate exist (migration
+ * 187), the bridge writes the draft + brief, and the publish action that
+ * reads them is still a human-approval step being built separately.
  *
  * The agent platform mirrors this list in `draft-post-transport.ts`
  * (DRAFT_POST_CHANNELS); the two literals are kept in step by hand across
  * the repo boundary, so widen BOTH or the new channel is simply never sent.
  */
-const ALLOWED_CHANNELS = ["facebook", "instagram", "youtube"] as const;
+const ALLOWED_CHANNELS = ["facebook", "instagram", "youtube", "website"] as const;
 type AllowedChannel = (typeof ALLOWED_CHANNELS)[number];
 
 const MAX_TITLE_CHARS = 200;
@@ -107,7 +135,104 @@ const CHANNEL_TITLE_LIMITS: Record<AllowedChannel, number> = {
   // labelling only, so the generic bound is the right one.
   facebook: MAX_TITLE_CHARS,
   instagram: MAX_TITLE_CHARS,
+  // The page's own `TITLE_MAX` (migration 187's CHECK), which happens to
+  // equal the generic bound. Named so a change to either shows up here.
+  website: SITE_PAGE_TITLE_MAX,
 };
+
+/**
+ * ==================== THE WEBSITE BRIEF, AT THE GATE'S LIMITS ====================
+ * Mirrors `assertPublishableSitePage` field for field where a draft can be
+ * judged without a database: slug shape, meta title and description lengths,
+ * the anti-thin-content body floor, no script tag. Canonical and internal
+ * links are NOT accepted from the payload — the publisher derives the
+ * canonical and validates links against published slugs at publish time, and
+ * accepting either here would be a second place those are decided.
+ */
+const MAX_WEBSITE_BODY_CHARS = 30_000;
+const MAX_KEYWORDS = 20;
+const MAX_KEYWORD_CHARS = 64;
+
+type WebsiteSeo = {
+  slug: string | null;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string[];
+  bodyMarkdown: string;
+};
+
+function readWebsiteSeo(
+  value: unknown,
+): { seo: WebsiteSeo; error?: undefined } | { seo?: undefined; error: string } {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return { error: "Post for 'website' needs a seo object" };
+  }
+  const raw = value as {
+    slug?: unknown;
+    metaTitle?: unknown;
+    metaDescription?: unknown;
+    keywords?: unknown;
+    bodyMarkdown?: unknown;
+  };
+
+  const slug = typeof raw.slug === "string" ? raw.slug.trim() : "";
+  if (slug && !isValidSlug(slug)) {
+    return {
+      error:
+        "Post for 'website' has a seo.slug that is not a usable URL segment (lowercase words joined by single hyphens)",
+    };
+  }
+
+  const metaTitle =
+    typeof raw.metaTitle === "string" ? raw.metaTitle.trim() : "";
+  if (!metaTitle || metaTitle.length > META_TITLE_MAX) {
+    return {
+      error: `Post for 'website' needs seo.metaTitle of 1 to ${META_TITLE_MAX} characters`,
+    };
+  }
+
+  const metaDescription =
+    typeof raw.metaDescription === "string" ? raw.metaDescription.trim() : "";
+  if (!metaDescription || metaDescription.length > META_DESCRIPTION_MAX) {
+    return {
+      error: `Post for 'website' needs seo.metaDescription of 1 to ${META_DESCRIPTION_MAX} characters`,
+    };
+  }
+
+  const bodyMarkdown =
+    typeof raw.bodyMarkdown === "string" ? raw.bodyMarkdown.trim() : "";
+  if (bodyMarkdown.length < BODY_MIN_LENGTH_FOR_PUBLISH) {
+    return {
+      error: `Post for 'website' needs seo.bodyMarkdown of at least ${BODY_MIN_LENGTH_FOR_PUBLISH} characters. Thin pages are not drafted`,
+    };
+  }
+  if (bodyMarkdown.length > MAX_WEBSITE_BODY_CHARS) {
+    return { error: "Post for 'website' has an oversized seo.bodyMarkdown" };
+  }
+  if (/<\s*script/i.test(bodyMarkdown)) {
+    return {
+      error: "Post for 'website' has a seo.bodyMarkdown containing a script tag",
+    };
+  }
+
+  const keywords: string[] = [];
+  if (Array.isArray(raw.keywords)) {
+    for (const entry of raw.keywords) {
+      if (keywords.length >= MAX_KEYWORDS) break;
+      if (
+        typeof entry === "string" &&
+        entry.trim() &&
+        entry.trim().length <= MAX_KEYWORD_CHARS
+      ) {
+        keywords.push(entry.trim());
+      }
+    }
+  }
+
+  return {
+    seo: { slug: slug || null, metaTitle, metaDescription, keywords, bodyMarkdown },
+  };
+}
 
 /**
  * ==================== THE MEASURED VERDICT, WHICH IS NOT qualityState ====================
@@ -155,6 +280,8 @@ type IncomingPost = {
    * title exists to stop.
    */
   title?: unknown;
+  /** Website channel only: the SEO brief. See `readWebsiteSeo`. */
+  seo?: unknown;
 };
 
 type Body = {
@@ -209,6 +336,8 @@ function channelLabel(channel: AllowedChannel): string {
       return "Instagram Reel";
     case "youtube":
       return "YouTube Short";
+    case "website":
+      return "Website article";
   }
 }
 
@@ -387,6 +516,7 @@ export async function POST(request: Request) {
     callToAction: string | null;
     hashtags: string[];
     title?: string;
+    seo?: WebsiteSeo;
   }[] = [];
 
   for (const entry of body.posts as IncomingPost[]) {
@@ -403,8 +533,20 @@ export async function POST(request: Request) {
     }
     seen.add(entry.channel);
 
-    const text = typeof entry.text === "string" ? entry.text.trim() : "";
-    if (!text || text.length > MAX_TEXT_CHARS) {
+    // A website post's text IS its article body, carried in `seo` and
+    // bounded by the publish gate's limits; the social `text` field is not
+    // read for it.
+    let seo: WebsiteSeo | undefined;
+    if (entry.channel === "website") {
+      const read = readWebsiteSeo(entry.seo);
+      if (read.error) return reject(400, read.error);
+      seo = read.seo;
+    }
+
+    const text =
+      seo?.bodyMarkdown ??
+      (typeof entry.text === "string" ? entry.text.trim() : "");
+    if (!text || (!seo && text.length > MAX_TEXT_CHARS)) {
       return reject(400, `Post for '${entry.channel}' has missing or oversized text`);
     }
 
@@ -438,6 +580,7 @@ export async function POST(request: Request) {
       callToAction: cta || null,
       hashtags,
       ...(title ? { title } : {}),
+      ...(seo ? { seo } : {}),
     });
   }
 
@@ -445,15 +588,24 @@ export async function POST(request: Request) {
   // pointing at a reservation that never completed would show on Today with a
   // Preview that cannot play, and the composite foreign key would refuse the
   // write anyway. 409 so the next cycle simply retries.
-  const asset = await getMediaAssetByJob(companyId, sourceJobId);
-  if (!asset) {
-    return reject(409, "MEDIA_NOT_FOUND: no media asset for that sourceJobId");
-  }
-  if (asset.uploadState !== "stored") {
-    return reject(
-      409,
-      `MEDIA_NOT_STORED: media asset for that sourceJobId is '${asset.uploadState}'`,
-    );
+  //
+  // A website-only payload has no video and is not asked for one: an article
+  // is text, and demanding a stored MP4 for it would make the SEO lane depend
+  // on the render lane for no reason.
+  const needsVideo = requested.some((post) => post.channel !== "website");
+  const asset = needsVideo
+    ? await getMediaAssetByJob(companyId, sourceJobId)
+    : null;
+  if (needsVideo) {
+    if (!asset) {
+      return reject(409, "MEDIA_NOT_FOUND: no media asset for that sourceJobId");
+    }
+    if (asset.uploadState !== "stored") {
+      return reject(
+        409,
+        `MEDIA_NOT_STORED: media asset for that sourceJobId is '${asset.uploadState}'`,
+      );
+    }
   }
 
   const sourceId = candidateUuid(body.candidateArtifactId);
@@ -465,24 +617,74 @@ export async function POST(request: Request) {
   const results: {
     channel: AllowedChannel;
     postId: string | null;
+    contentPackageId?: string | null;
     outcome: AgentDraftPostOutcome | null;
     error?: string;
   }[] = [];
 
   for (const post of requested) {
+    // Director-authored when the plan carried one; otherwise the shared
+    // base plus a channel suffix. The fallback is this route ASSEMBLING a
+    // title, which for YouTube is the published video's name — so a
+    // plan-time title always wins over it. For a website draft the title is
+    // the page's H1, so the bare base is used rather than a suffixed one.
+    const title =
+      post.title ??
+      (post.channel === "website"
+        ? titleBase
+        : `${titleBase} — ${channelLabel(post.channel)}`);
+
+    // ============ THE WEBSITE DRAFT'S PARENT ============
+    // The brief goes into a package FIRST, so the post can point at it and
+    // migration 204's (package, channel) key can arbitrate the post's
+    // idempotency. A package that cannot be written means no post: a website
+    // draft with no brief is a page the publisher could never build.
+    let contentPackageId: string | undefined;
+    if (post.seo) {
+      const brief: AgentWebsiteBrief = {
+        kind: "website_article",
+        sourceJobId,
+        primaryKeyword: post.seo.keywords[0] ?? null,
+        seo: {
+          slug: post.seo.slug,
+          metaTitle: post.seo.metaTitle,
+          metaDescription: post.seo.metaDescription,
+          keywords: post.seo.keywords,
+        },
+        bodyMarkdown: post.seo.bodyMarkdown,
+      };
+      const pkg = await createAgentWebsiteContentPackage({
+        companyId,
+        title,
+        sourceJobId,
+        sourceId,
+        brief,
+      });
+      if (!pkg.packageId) {
+        results.push({
+          channel: post.channel,
+          postId: null,
+          contentPackageId: null,
+          outcome: null,
+          ...(pkg.error ? { error: pkg.error } : {}),
+        });
+        continue;
+      }
+      contentPackageId = pkg.packageId;
+    }
+
     const created = await createAgentDraftMarketingPost({
       companyId,
-      // Director-authored when the plan carried one; otherwise the shared
-      // base plus a channel suffix. The fallback is this route ASSEMBLING a
-      // title, which for YouTube is the published video's name — so a
-      // plan-time title always wins over it.
-      title: post.title ?? `${titleBase} — ${channelLabel(post.channel)}`,
+      title,
       channelTarget: post.channel as MarketingChannel,
       postText: post.text,
       callToAction: post.callToAction,
       suggestedHashtags: post.hashtags,
       sourceId,
-      videoMediaAssetId: asset.id,
+      // An article carries no video (see AgentDraftPostInput); a reel's draft
+      // carries the stored asset the whole payload was checked against.
+      videoMediaAssetId: post.channel === "website" ? null : (asset?.id ?? null),
+      ...(contentPackageId ? { contentPackageId } : {}),
       ...(costUsd !== undefined ? { costUsd } : {}),
       ...(qualityState !== undefined ? { qualityState } : {}),
       ...(renderQa !== undefined ? { renderQa } : {}),
@@ -492,6 +694,7 @@ export async function POST(request: Request) {
     results.push({
       channel: post.channel,
       postId: created.post?.id ?? null,
+      ...(contentPackageId ? { contentPackageId } : {}),
       outcome: created.outcome,
       ...(created.error ? { error: created.error } : {}),
     });
@@ -503,7 +706,7 @@ export async function POST(request: Request) {
     route: ROUTE_NAME,
     companyId,
     sourceJobId,
-    videoMediaAssetId: asset.id,
+    videoMediaAssetId: asset?.id ?? null,
     posts: results,
   };
 

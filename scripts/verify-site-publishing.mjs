@@ -41,11 +41,15 @@ const ADAPTER = "lib/integrations/altair-site/adapter.ts";
 const QUERIES = "lib/database/queries/marketing-site-pages.ts";
 const ROUTE = "app/(marketing)/insights/[slug]/page.tsx";
 const ARTICLE = "shared/components/site/SitePageArticle.tsx";
+/** The one JSON-LD serializer, shared by the article, homepage and pricing. */
+const STRUCTURED_DATA = "shared/lib/site/structured-data.ts";
+/** The shared Open Graph / canonical helper the article route composes with. */
+const PUBLIC_SITE = "shared/lib/site/public-site.ts";
 const SITEMAP = "app/sitemap.ts";
 const DISPATCH = "lib/publishing/dispatch.ts";
 const GATE = "lib/publishing/gate.ts";
 
-for (const path of [MIGRATION, ADAPTER, QUERIES, ROUTE, ARTICLE, SITEMAP]) {
+for (const path of [MIGRATION, ADAPTER, QUERIES, ROUTE, ARTICLE, SITEMAP, STRUCTURED_DATA, PUBLIC_SITE]) {
   check(`${path} exists`, existsSync(path));
 }
 if (failures > 0) {
@@ -66,6 +70,8 @@ const adapter = strip(read(ADAPTER));
 const queries = strip(read(QUERIES));
 const route = strip(read(ROUTE));
 const article = read(ARTICLE);
+const structuredData = read(STRUCTURED_DATA);
+const publicSite = strip(read(PUBLIC_SITE));
 const sitemap = strip(read(SITEMAP));
 const dispatch = strip(read(DISPATCH));
 const gate = strip(read(GATE));
@@ -208,7 +214,8 @@ check(
 check(
   "the only raw HTML is the JSON-LD block, and it is escaped first",
   article.includes("serializeJsonLd(structuredData)") &&
-    article.includes('replace(/</g, "\\\\u003c")'),
+    article.includes('from "@/shared/lib/site/structured-data"') &&
+    structuredData.includes('replace(/</g, "\\\\u003c")'),
 );
 check(
   "the migration stores markdown and has no body_html column",
@@ -367,7 +374,19 @@ check(
   "a page without a canonical is skipped rather than guessed at",
   sitemap.includes("filter((page) => Boolean(page.canonicalUrl))"),
 );
-check("the route emits the canonical as alternates", route.includes("alternates: { canonical"));
+// The route composes with the shared social helper (so og.png survives) and
+// hands it the STORED canonical, which the helper emits as both
+// alternates.canonical and og:url.
+check(
+  "the route emits the canonical as alternates",
+  route.includes("buildPublicSocialMetadata({") &&
+    route.includes("path: page.canonicalUrl") &&
+    publicSite.includes("alternates: { canonical: path }"),
+);
+check(
+  "the route keeps the shared Open Graph image when it sets article fields",
+  route.includes("...social.openGraph") && !/openGraph:\s*\{\s*title:/.test(route),
+);
 
 /* ============================ the middleware ============================ */
 
@@ -410,7 +429,7 @@ check(
   "being public at the middleware does not expose drafts — RLS still decides",
   migration.includes("using (page_state = 'published')"),
 );
-check("the route emits a meta description", route.includes("description: page.metaDescription"));
+check("the route emits a meta description", route.includes("page.metaDescription ?? undefined"));
 
 /* ===================== the Marketing editor panel ===================== */
 

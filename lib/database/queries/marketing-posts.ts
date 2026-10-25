@@ -778,7 +778,19 @@ export type AgentDraftPostInput = {
   callToAction: string | null;
   suggestedHashtags: string[];
   sourceId: string | null;
-  videoMediaAssetId: string;
+  /**
+   * The rendered video, or null for a WEBSITE draft: an article has no video,
+   * and attaching one would put it in Today's video-grouped automation strip.
+   * Null only together with `contentPackageId`, which then carries the
+   * idempotency key (migration 204) that the video would otherwise carry
+   * (migration 147).
+   */
+  videoMediaAssetId: string | null;
+  /**
+   * Migration 182's parent package, set ONLY for website drafts. The brief the
+   * draft was created from lives there; the post is the destination row.
+   */
+  contentPackageId?: string;
   /**
    * Migration 195 enrichment. Each is independently optional and written
    * ONLY here, at creation — there is no update path for any of the three,
@@ -820,6 +832,29 @@ export async function findAgentDraftPost(
     .select("*")
     .eq("company_id", companyId)
     .eq("video_media_asset_id", videoMediaAssetId)
+    .eq("channel_target", channelTarget)
+    .eq("source_type", AGENT_DAILY_REEL_SOURCE)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapMarketingPostRow(data as MarketingPostRow);
+}
+
+/**
+ * The agent-proposed draft for one (company, package, channel), if any —
+ * migration 204's key, the website draft's counterpart to `findAgentDraftPost`.
+ */
+export async function findAgentDraftPostByPackage(
+  companyId: string,
+  contentPackageId: string,
+  channelTarget: MarketingChannel,
+): Promise<MarketingPost | null> {
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("content_package_id", contentPackageId)
     .eq("channel_target", channelTarget)
     .eq("source_type", AGENT_DAILY_REEL_SOURCE)
     .is("deleted_at", null)
@@ -872,6 +907,7 @@ export async function createAgentDraftMarketingPost(
   // written.
   const insert: Omit<MarketingPostInsert, "created_by"> & {
     created_by: null;
+    content_package_id?: string;
     cost_usd?: number | null;
     quality_state?: string | null;
     director_rationale?: string | null;
@@ -891,6 +927,9 @@ export async function createAgentDraftMarketingPost(
     source_type: AGENT_DAILY_REEL_SOURCE,
     source_id: input.sourceId,
     video_media_asset_id: input.videoMediaAssetId,
+    ...(input.contentPackageId !== undefined
+      ? { content_package_id: input.contentPackageId }
+      : {}),
     ...(input.costUsd !== undefined ? { cost_usd: input.costUsd } : {}),
     ...(input.qualityState !== undefined
       ? { quality_state: input.qualityState }
@@ -922,11 +961,21 @@ export async function createAgentDraftMarketingPost(
   }
 
   if (error?.code === UNIQUE_VIOLATION) {
-    const existing = await findAgentDraftPost(
-      input.companyId,
-      input.videoMediaAssetId,
-      input.channelTarget,
-    );
+    // Which key fired is decided by what the row carries: a package (204's
+    // key, website drafts) or a video (147's key, reel drafts). Never both.
+    const existing = input.contentPackageId
+      ? await findAgentDraftPostByPackage(
+          input.companyId,
+          input.contentPackageId,
+          input.channelTarget,
+        )
+      : input.videoMediaAssetId
+        ? await findAgentDraftPost(
+            input.companyId,
+            input.videoMediaAssetId,
+            input.channelTarget,
+          )
+        : null;
     if (existing) {
       return { post: existing, outcome: "ALREADY_EXISTS", error: null };
     }
@@ -936,7 +985,7 @@ export async function createAgentDraftMarketingPost(
       post: null,
       outcome: null,
       error:
-        "A draft for this video and channel already exists but could not be read back.",
+        "A draft for this content and channel already exists but could not be read back.",
     };
   }
 
