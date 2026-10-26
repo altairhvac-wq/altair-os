@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MarketingTodayView } from "./MarketingTodayView";
 import { MarketingQueueExtras } from "./MarketingQueueExtras";
+import { MarketingPublishedReview, type PublishedItem } from "./MarketingPublishedReview";
 import { MarketingSettingsView } from "./MarketingSettingsView";
 import { MarketingCommandView } from "./MarketingCommandView";
 import { MarketingLibraryView, type SitePageRow } from "./MarketingLibraryView";
@@ -87,6 +88,8 @@ type MarketingWorkspaceProps = {
   decisions: AgentDecisionRecord[];
   /** Marketing HQ's weekly ideas still waiting for a decision. */
   hqIdeas: MarketingItem[];
+  /** Everything that went live in the last day, for the end-of-day check. */
+  publishedRecently: readonly PublishedItem[];
   brandGoals: { config: MarketingHqConfig; brandKit: MarketingBrandKit } | null;
   nowIso: string;
   canManageConnectedAccounts: boolean;
@@ -131,6 +134,7 @@ export function MarketingWorkspace(props: MarketingWorkspaceProps) {
 
       {tab === "today" ? (
         <div className="space-y-6">
+          <MarketingPublishedReview items={props.publishedRecently} />
           <MarketingTodayView
             key={refreshKey}
             posts={props.posts}

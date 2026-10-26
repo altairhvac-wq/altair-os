@@ -10,6 +10,7 @@ import { listDeliveriesForPost } from "@/lib/database/queries/marketing-channel-
 import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
 import {
   getMarketingPostByIdAdmin,
+  createHqSocialDraftPostAdmin,
   listAutoApproveCandidatePosts,
   markMarketingPostPostedAdmin,
   scheduleDraftMarketingPostAdmin,
@@ -39,11 +40,21 @@ import {
 import { finishCronCheckIn, startCronCheckIn } from "@/lib/operations/cron-monitor";
 import {
   AUTO_APPROVE_POLICY,
+  AUTO_APPROVE_MAX_AGE_DAYS,
   decideAutoApprove,
   nextPublishSlot,
   parseAutoApproveChannels,
+  parseAutoApproveDestinations,
   parseAutoApproveSources,
+  parseAutoApproveTiming,
+  parsePerChannelLimit,
 } from "@/lib/publishing/auto-approve";
+import {
+  listCompaniesWithActiveMarketingHq,
+  listMarketingItems,
+  markMarketingItemConverted,
+  reviewMarketingItem,
+} from "@/lib/marketing/store";
 import { dispatchPublish, type DispatchInput } from "@/lib/publishing/dispatch";
 import { resolvePublishMode, MARKETING_PUBLISH_MODE_ENV } from "@/lib/publishing/gate";
 import {
@@ -370,8 +381,49 @@ type AutoApproveSummary = {
   rejectedChannels: readonly string[];
   considered: number;
   promoted: number;
+  /** Marketing HQ social ideas turned into Facebook drafts this run. */
+  hqConverted: number;
+  timing: string;
   skipped: { postId: string; reason: string }[];
 };
+
+/**
+ * Turn the freshest Marketing HQ social idea per company into a Facebook
+ * draft, so it can flow through the policy below (owner decision
+ * 2026-10-25). One per company per run, never older than the freshness
+ * window, and only when the policy covers both that source and Facebook.
+ */
+async function convertFreshHqIdeas(sinceIso: string): Promise<number> {
+  let converted = 0;
+  for (const companyId of await listCompaniesWithActiveMarketingHq()) {
+    const items = await listMarketingItems(companyId, { statuses: ["draft"], limit: 50 });
+    const idea = items.find(
+      (item) => item.kind === "social_post" && item.createdAt >= sinceIso,
+    );
+    if (!idea) continue;
+    const content = idea.content as { postText?: unknown; hashtags?: unknown; callToAction?: unknown };
+    const postText =
+      typeof content.postText === "string" && content.postText.trim() ? content.postText : idea.bodyText;
+    if (!postText.trim()) continue;
+    const reviewed = await reviewMarketingItem(companyId, idea.id, "approved", AUTO_APPROVE_POLICY);
+    if (reviewed.error) continue;
+    const created = await createHqSocialDraftPostAdmin({
+      companyId,
+      itemId: idea.id,
+      title: idea.title,
+      postText,
+      hashtags: Array.isArray(content.hashtags)
+        ? content.hashtags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
+        : [],
+      callToAction:
+        typeof content.callToAction === "string" && content.callToAction.trim() ? content.callToAction : null,
+    });
+    if (!created.post) continue;
+    await markMarketingItemConverted(companyId, idea.id, created.post.id);
+    converted += 1;
+  }
+  return converted;
+}
 
 async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary> {
   const parsed = parseAutoApproveSources();
@@ -384,14 +436,24 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
     rejectedChannels: channels.rejected,
     considered: 0,
     promoted: 0,
+    hqConverted: 0,
+    timing: parseAutoApproveTiming(),
     skipped: [],
   };
   if (!summary.enabled) return summary;
+
+  const sinceIso = new Date(
+    Date.parse(nowIso) - AUTO_APPROVE_MAX_AGE_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  if (parsed.sources.includes("product_update") && channels.channels.includes("facebook")) {
+    summary.hqConverted = await convertFreshHqIdeas(sinceIso);
+  }
 
   const candidates = await listAutoApproveCandidatePosts({
     sourceTypes: parsed.sources,
     channels: channels.channels,
     limit: MAX_AUTO_APPROVALS_PER_RUN,
+    createdSinceIso: sinceIso,
   });
   if (candidates.length === 0) return summary;
 
@@ -407,7 +469,12 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
     else accountsByCompany.set(account.companyId, [account]);
   }
 
-  const slot = nextPublishSlot(nowIso);
+  // same_run: the publish step below leases it in THIS run (owner decision
+  // 2026-10-25); next_run keeps the original one-day hold.
+  const slot = summary.timing === "same_run" ? nowIso : nextPublishSlot(nowIso);
+  const destinations = parseAutoApproveDestinations();
+  const perChannelLimit = parsePerChannelLimit();
+  const promotedPerChannel = new Map<string, number>();
 
   for (const post of candidates) {
     summary.considered += 1;
@@ -416,15 +483,48 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
       summary.skipped.push({ postId: post.id, reason: verdict.reason });
       continue;
     }
+    const channelKey = `${post.companyId}:${post.channelTarget}`;
+    if ((promotedPerChannel.get(channelKey) ?? 0) >= perChannelLimit) {
+      summary.skipped.push({ postId: post.id, reason: `daily cap of ${String(perChannelLimit)} for ${post.channelTarget} reached` });
+      continue;
+    }
+    // HVAC School Shorts share the agent source but belong to the School
+    // channel and its own distribution path. Never auto-publish them here.
+    if (post.videoMediaAssetId) {
+      const asset = await getMediaAssetById(post.companyId, post.videoMediaAssetId);
+      if (!asset || asset.sourceJobId.startsWith("hvac-")) {
+        summary.skipped.push({
+          postId: post.id,
+          reason: asset ? "HVAC School content is never auto-published" : "video not found",
+        });
+        continue;
+      }
+    }
     const provider = providerForChannelTarget(post.channelTarget);
     if (!provider) {
       summary.skipped.push({ postId: post.id, reason: "post names no channel" });
       continue;
     }
+    const providerCandidates = listDestinationCandidates(
+      accountsByCompany.get(post.companyId) ?? [],
+      provider,
+    );
+    // An exact destination from MARKETING_AUTO_APPROVE_DESTINATIONS (e.g. the
+    // product YouTube channel). Named but not connected => skip, never guess.
+    const pinned = destinations.get(provider);
+    const pinnedAccount = pinned
+      ? providerCandidates.find(
+          (account) => account.providerResourceId === pinned || account.providerAccountId === pinned,
+        )
+      : undefined;
+    if (pinned && !pinnedAccount) {
+      summary.skipped.push({ postId: post.id, reason: `pinned ${provider} destination ${pinned} is not connected` });
+      continue;
+    }
     const destination = decideDestination({
       provider,
-      candidates: listDestinationCandidates(accountsByCompany.get(post.companyId) ?? [], provider),
-      explicitAccountId: null,
+      candidates: providerCandidates,
+      explicitAccountId: pinnedAccount?.id ?? null,
     });
     if (!destination.ok) {
       summary.skipped.push({ postId: post.id, reason: destination.error });
@@ -468,6 +568,7 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
       });
     }
     summary.promoted += 1;
+    promotedPerChannel.set(channelKey, (promotedPerChannel.get(channelKey) ?? 0) + 1);
   }
 
   return summary;

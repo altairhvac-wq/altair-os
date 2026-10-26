@@ -412,6 +412,37 @@ export type ContentPackagePublishBrief = {
 };
 
 /**
+ * Take a published page down (owner's end-of-day review, 2026-10-25). Sets the
+ * page to `archived`, which migration 187's public read policy no longer
+ * exposes, so /insights/<slug> stops serving it and the sitemap drops it.
+ * Scoped to the company and to a currently published row; returns the slug so
+ * the caller can revalidate the exact page.
+ */
+export async function archivePublishedSitePageForCompany(input: {
+  companyId: string;
+  pageId: string;
+}): Promise<{ slug: string | null; error: string | null }> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await sitePagesTable(supabase)
+    .update({ page_state: "archived" })
+    .eq("company_id", input.companyId)
+    .eq("id", input.pageId)
+    .eq("page_state", "published")
+    .select("slug")
+    .maybeSingle();
+  if (error) {
+    console.error("[archivePublishedSitePageForCompany] update failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return { slug: null, error: mapDatabaseError(error) ?? "Could not take the page down." };
+  }
+  if (!data) return { slug: null, error: "That page is not live, so there is nothing to take down." };
+  return { slug: (data as { slug: string }).slug, error: null };
+}
+
+
+/**
  * Read `brief.seo` (a `PackageSeo`, per migration 182's comment) plus the
  * optional internal links and CTA url, tolerating any shape: a field that is
  * not the expected type reads as absent, never as a crash in the cron.
@@ -594,3 +625,4 @@ function contentPackagesForSite(client: AnyClient) {
     }
   ).from("marketing_content_packages");
 }
+

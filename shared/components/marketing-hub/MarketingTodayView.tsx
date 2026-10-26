@@ -859,10 +859,10 @@ export function MarketingTodayView({
             Approved for scheduled distribution
           </h2>
           <p className="mt-1 text-[12px] text-altair-ink-muted">
-            Nothing publishes from this page automatically: the operator-armed
-            distribution run picks these up, publishes each platform
-            independently, and verifies every publish by readback. Facebook
-            and Instagram go PUBLIC at that moment.
+            These go out at their release time through the daily publishing
+            run, which publishes each platform independently and verifies every
+            publish by readback. Facebook and Instagram are public the moment
+            they publish.
           </p>
           <ul className="mt-3 space-y-2">
             {(showAllApproved ? approvedGroups : approvedGroups.slice(0, APPROVED_VISIBLE)).map((group) => {

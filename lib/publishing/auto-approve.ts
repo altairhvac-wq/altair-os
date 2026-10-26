@@ -56,6 +56,65 @@ export const DEFAULT_AUTO_APPROVE_CHANNELS: readonly MarketingChannel[] = [
  */
 export const JURISDICTION_HOLD_PHRASE = "verify this with a licensed professional";
 
+/**
+ * The only web address an automatically approved post may contain. Added
+ * 2026-10-25 after AI drafts invented "altairos.com": a post naming any other
+ * domain is held for a person rather than published.
+ */
+export const ALLOWED_LINK_HOSTS: readonly string[] = ["altair-op.com", "www.altair-op.com"];
+
+const LINK_PATTERN =
+  /\b(?:https?:\/\/)?((?:[a-z0-9-]+\.)+(?:com|net|org|io|co|app|ai|us|biz|info))\b/gi;
+
+/** The first web address in `text` whose host is not allowed, or null. */
+export function findForeignLink(text: string): string | null {
+  for (const match of text.matchAll(LINK_PATTERN)) {
+    const host = (match[1] ?? "").toLowerCase();
+    if (!ALLOWED_LINK_HOSTS.includes(host)) return host;
+  }
+  return null;
+}
+
+/**
+ * Owner decision 2026-10-25: "I want it to publish on its own and I can look
+ * at what has been published ... at the end of the day." `same_run` promotes
+ * a draft and publishes it in the SAME daily run; `next_run` (the default)
+ * keeps the original one-day hold.
+ */
+export const MARKETING_AUTO_APPROVE_TIMING_ENV = "MARKETING_AUTO_APPROVE_TIMING";
+export type AutoApproveTiming = "same_run" | "next_run";
+export function parseAutoApproveTiming(env: PublishModeEnv = process.env): AutoApproveTiming {
+  return env[MARKETING_AUTO_APPROVE_TIMING_ENV]?.trim() === "same_run" ? "same_run" : "next_run";
+}
+
+/**
+ * Exact destinations for providers with more than one connected account, as
+ * `provider:accountOrResourceId` pairs (e.g. the product YouTube channel id).
+ * The policy never chooses between accounts by itself: with two YouTube
+ * channels connected and no entry here, every video is skipped.
+ */
+export const MARKETING_AUTO_APPROVE_DESTINATIONS_ENV = "MARKETING_AUTO_APPROVE_DESTINATIONS";
+export function parseAutoApproveDestinations(
+  env: PublishModeEnv = process.env,
+): ReadonlyMap<string, string> {
+  const out = new Map<string, string>();
+  for (const token of (env[MARKETING_AUTO_APPROVE_DESTINATIONS_ENV] ?? "").split(",")) {
+    const [provider, id] = token.split(":").map((part) => part?.trim() ?? "");
+    if (provider && id && !out.has(provider)) out.set(provider, id);
+  }
+  return out;
+}
+
+/** How many posts per channel one daily run may promote. Default 1. */
+export const MARKETING_AUTO_APPROVE_PER_CHANNEL_ENV = "MARKETING_AUTO_APPROVE_PER_CHANNEL_PER_RUN";
+export function parsePerChannelLimit(env: PublishModeEnv = process.env): number {
+  const value = Number(env[MARKETING_AUTO_APPROVE_PER_CHANNEL_ENV]);
+  return Number.isInteger(value) && value >= 1 && value <= 10 ? value : 1;
+}
+
+/** Drafts older than this are never auto-approved, so no backlog is dumped. */
+export const AUTO_APPROVE_MAX_AGE_DAYS = 14;
+
 /** The literal written to `marketing_publish_jobs.approved_by_policy`. */
 export const AUTO_APPROVE_POLICY = "policy:auto-approve" as const;
 
@@ -187,8 +246,18 @@ export function decideAutoApprove(
       reason: `channel ${channel} is not in ${MARKETING_AUTO_APPROVE_CHANNELS_ENV}`,
     };
   }
+  const foreign = findForeignLink(post.postText ?? "");
+  if (foreign) {
+    return {
+      eligible: false,
+      reason: `names the web address ${foreign}, not altair-op.com; held for a human`,
+    };
+  }
   if (channel === "website") {
     return decideWebsiteArticle(post);
+  }
+  if (channel === "facebook" && !post.videoMediaAssetId?.trim()) {
+    return decideFacebookText(post);
   }
   if (!post.videoMediaAssetId?.trim()) {
     return { eligible: false, reason: "no stored video" };
@@ -199,6 +268,28 @@ export function decideAutoApprove(
       reason: post.renderQa
         ? `render QA is ${post.renderQa.state}, not PASS`
         : "render QA was never measured",
+    };
+  }
+  return { eligible: true };
+}
+
+/**
+ * A text-only Facebook post (what a Marketing HQ social idea becomes): it
+ * needs words, no script, and no jurisdiction-specific advice.
+ */
+function decideFacebookText(post: AutoApproveCandidate): AutoApproveVerdict {
+  const body = post.postText?.trim() ?? "";
+  if (body.length === 0) {
+    return { eligible: false, reason: "Facebook post has no text" };
+  }
+  const lower = body.toLowerCase();
+  if (lower.includes("<script")) {
+    return { eligible: false, reason: "post contains a script tag" };
+  }
+  if (lower.includes(JURISDICTION_HOLD_PHRASE)) {
+    return {
+      eligible: false,
+      reason: "post gives jurisdiction-specific advice, held for a human",
     };
   }
   return { eligible: true };

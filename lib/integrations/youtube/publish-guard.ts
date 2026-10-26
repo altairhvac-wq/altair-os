@@ -14,8 +14,41 @@
  * rather than inside the connect flow.
  */
 
-/** The only privacy this build will upload with. Not a default — the rule. */
+/** The default privacy, and the only one any channel gets unless named below. */
 export const REQUIRED_PRIVACY_STATUS = "private";
+
+/** What an upload may be sent as. "unlisted" is never produced by this build. */
+export type YouTubeUploadPrivacy = "private" | "public";
+
+/**
+ * The deployment setting naming the YouTube channels allowed to upload PUBLIC.
+ *
+ * Owner decision 2026-10-25: marketing publishes on its own and the owner
+ * reviews what went out at the end of the day, so the PRODUCT channel must be
+ * able to go public. Every channel not named here stays private, which keeps
+ * the HVAC School channel (and any channel connected later) on the old rule.
+ * A comma-separated list of channel ids (UC + 22 characters).
+ */
+export const YOUTUBE_PUBLIC_CHANNEL_IDS_ENV = "YOUTUBE_PUBLIC_CHANNEL_IDS";
+
+const CHANNEL_ID_PATTERN = /^UC[A-Za-z0-9_-]{22}$/;
+
+/** Parsed strictly: anything that is not a well-formed channel id is dropped. */
+export function parsePublicChannelIds(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => CHANNEL_ID_PATTERN.test(value));
+}
+
+/** Public only for an exactly-named channel; private for everything else. */
+export function resolveUploadPrivacy(
+  channelId: string | null,
+  publicChannelIds: readonly string[],
+): YouTubeUploadPrivacy {
+  if (!channelId) return "private";
+  return publicChannelIds.includes(channelId.trim()) ? "public" : "private";
+}
 
 /**
  * The scope Google must have granted before an upload is attempted.
@@ -118,6 +151,8 @@ export type ReadbackInput = {
   } | null;
   readonly expectedVideoId: string;
   readonly expectedChannelId: string;
+  /** What the upload asked for. Absent means private, the old rule. */
+  readonly expectedPrivacyStatus?: YouTubeUploadPrivacy;
   /**
    * Metadata fidelity (optional; the adapter supplies them from the package
    * it just sent): the readback must echo the title and description the
@@ -172,14 +207,17 @@ export function verifyUploadReadback(input: ReadbackInput): ReadbackVerdict {
     };
   }
 
-  // Absence fails. A missing privacyStatus is not evidence of privacy, and
-  // this is the single check the canary exists to make.
-  if (input.video.privacyStatus !== REQUIRED_PRIVACY_STATUS) {
+  // Absence fails. A missing privacyStatus is not evidence of anything, and
+  // the readback must match exactly what the upload asked for.
+  const expectedPrivacy = input.expectedPrivacyStatus ?? REQUIRED_PRIVACY_STATUS;
+  if (input.video.privacyStatus !== expectedPrivacy) {
     return {
       ok: false,
-      code: "privacy_not_private",
+      code: expectedPrivacy === "private" ? "privacy_not_private" : "privacy_mismatch",
       detail:
-        "The uploaded video did not read back as private. It is recorded as an incomplete publish — open the video on YouTube and set it to private or delete it before retrying.",
+        expectedPrivacy === "private"
+          ? "The uploaded video did not read back as private. It is recorded as an incomplete publish — open the video on YouTube and set it to private or delete it before retrying."
+          : `The uploaded video read back as ${input.video.privacyStatus ?? "unknown"}, not ${expectedPrivacy}. It is recorded as an incomplete publish — check its visibility on YouTube before retrying.`,
     };
   }
 

@@ -15,7 +15,9 @@ import {
   assertUploadAllowed,
   verifyUploadReadback,
   youTubeWatchUrl,
-  REQUIRED_PRIVACY_STATUS,
+  parsePublicChannelIds,
+  resolveUploadPrivacy,
+  YOUTUBE_PUBLIC_CHANNEL_IDS_ENV,
 } from "./publish-guard";
 import { fetchYouTubeVideoById, uploadYouTubeVideo } from "./upload";
 
@@ -235,6 +237,14 @@ export const youtubeAdapter: PublisherAdapter = {
     // Non-null after the preflight, which refuses a null channel outright.
     const channelId = (expectedChannelId as string).trim();
 
+    // Private unless this exact channel is named in YOUTUBE_PUBLIC_CHANNEL_IDS
+    // (owner decision 2026-10-25: the product channel publishes public on its
+    // own; every other channel, the School channel included, stays private).
+    const privacyStatus = resolveUploadPrivacy(
+      channelId,
+      parsePublicChannelIds(process.env[YOUTUBE_PUBLIC_CHANNEL_IDS_ENV]),
+    );
+
     // ------------------------------------------------------- 2. the media
     const video = input.package.media.find((asset) =>
       asset.contentType.startsWith("video/"),
@@ -256,8 +266,8 @@ export const youtubeAdapter: PublisherAdapter = {
       title: input.package.title ?? "",
       description: input.package.body,
       tags: input.package.hashtags,
-      // The literal, not a variable. Nothing computes this.
-      privacyStatus: REQUIRED_PRIVACY_STATUS,
+      // Resolved above from an exact channel-id allow-list; private otherwise.
+      privacyStatus,
       mediaUrl: video.url,
       contentType: video.contentType,
       byteSize: video.byteSize,
@@ -297,6 +307,7 @@ export const youtubeAdapter: PublisherAdapter = {
       video: readback,
       expectedVideoId: uploaded.videoId,
       expectedChannelId: channelId,
+      expectedPrivacyStatus: privacyStatus,
       // The adapter knows exactly what it sent; the readback must echo it.
       // A publish whose metadata did not survive the trip is not a success.
       // (Empty copy is not asserted: YouTube substitutes its own defaults
