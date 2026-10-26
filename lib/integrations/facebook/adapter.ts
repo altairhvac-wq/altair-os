@@ -50,6 +50,7 @@ import { getFacebookOAuthConfig } from "./env";
 import { graphBaseUrl, readFacebookJson } from "./graph";
 import { fetchReelInsights } from "./reel-insights";
 import { publishFacebookPageReel, publishInstagramReel } from "./reels";
+import { publishFacebookPageFeedPost } from "./publish";
 
 /**
  * The one scope each publish is impossible without. `grantedScopes` is the
@@ -255,10 +256,79 @@ async function readBack<T>(objectId: string, fields: string, accessToken: string
 
 /* ------------------------------------------------------------- facebook */
 
+type FacebookFeedReadback = {
+  id?: string;
+  message?: string;
+  permalink_url?: string;
+  from?: { id?: string };
+};
+
+/**
+ * A text-only Page post (POST /{page-id}/feed), for a Facebook post that
+ * carries no video — what a Marketing HQ social idea becomes (owner decision
+ * 2026-10-25: publish on its own). Added 2026-10-26 after the first such post
+ * failed: this adapter was Reel-only. Same discipline as the Reel path: the
+ * post is read back and its id, Page and wording verified before it is
+ * recorded as posted.
+ */
+async function publishFacebookText(
+  input: PublishInput,
+  pageId: string,
+): Promise<PublishOutcome> {
+  const message = input.package.body;
+  if (!message.trim()) throw new Error("A Facebook text post needs text; none was provided.");
+  const published = await publishFacebookPageFeedPost({
+    pageId,
+    accessToken: input.accessToken,
+    message,
+  });
+  const readback = await readBack<FacebookFeedReadback>(
+    published.providerPostId,
+    "id,message,permalink_url,from",
+    input.accessToken,
+    "Facebook post readback",
+  );
+  if (readback.id !== published.providerPostId) {
+    throw new Error(
+      `Facebook post readback returned ${String(readback.id)} for ${published.providerPostId} — ` +
+        "the publish is recorded as incomplete.",
+    );
+  }
+  if (readback.from?.id !== undefined && readback.from.id !== pageId) {
+    throw new Error(
+      `The published post belongs to Page ${readback.from.id}, not the intended ${pageId}. ` +
+        "Recorded as incomplete; reconcile before retrying.",
+    );
+  }
+  if (!captionsMatch(message, readback.message ?? "")) {
+    throw new Error(
+      "The Facebook post's text read back different from the text the publish carried. " +
+        "The intended copy did not reach Meta; recorded as incomplete.",
+    );
+  }
+  const permalink = readback.permalink_url ?? published.permalinkUrl;
+  return {
+    outcome: "posted",
+    providerPostId: published.providerPostId,
+    ...(permalink ? { providerPermalink: permalink } : {}),
+    providerResult: {
+      pageId,
+      kind: "feed_text",
+      captionVerified: true,
+      permalinkVerified: Boolean(readback.permalink_url),
+      visibilityVerified: false,
+    },
+  };
+}
+
 async function publishFacebook(input: PublishInput): Promise<PublishOutcome> {
   assertPublishScope(input.grantedScopes, REQUIRED_FACEBOOK_PUBLISH_SCOPE, "Facebook");
   const pageId = input.post.providerResourceId?.trim();
   if (!pageId) throw new Error("This Facebook connection names no Page id.");
+  // No video attached: a text Page post rather than a Reel.
+  if (!input.package.media.some((asset) => asset.contentType.startsWith("video/"))) {
+    return publishFacebookText(input, pageId);
+  }
   const description = input.package.body;
   const videoUrl = requireVideoGrantUrl(input, "Facebook");
 
