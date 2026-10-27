@@ -93,6 +93,26 @@ const EMAIL_HOSTS = [
   "mail.proton.me",
 ] as const;
 
+/**
+ * Sign-in, consent and payment hosts. A visit "from" one of these is someone
+ * returning from logging in with Google/Microsoft/Apple, connecting an
+ * integration, or finishing a Stripe checkout: it is internal navigation, not
+ * a search or a referral (accounts.google.com would otherwise read as Google
+ * search).
+ */
+const AUTH_RETURN_HOSTS = [
+  "accounts.google.com",
+  "accounts.youtube.com",
+  "myaccount.google.com",
+  "login.microsoftonline.com",
+  "login.live.com",
+  "appleid.apple.com",
+  "checkout.stripe.com",
+  "billing.stripe.com",
+  "connect.stripe.com",
+  "hooks.stripe.com",
+] as const;
+
 const SOCIAL_SOURCES = new Set([
   "youtube",
   "yt",
@@ -152,6 +172,13 @@ export function isOwnHost(host: string | null): boolean {
   return ANALYTICS_OWN_HOSTS.some((own) => host === own || host.endsWith(`.${own}`));
 }
 
+/** A sign-in, consent or payment host (see AUTH_RETURN_HOSTS). */
+export function isAuthReturnHost(host: string | null): boolean {
+  if (!host) return false;
+  const bare = host.toLowerCase().replace(/^www\./, "");
+  return AUTH_RETURN_HOSTS.some((needle) => bare === needle);
+}
+
 /**
  * The channel a visit came from. UTM tags win over the referrer because a
  * tagged link is the owner telling us what the link was for; the referrer is
@@ -175,6 +202,7 @@ export function classifyChannel(input: {
   const host = input.referrerHost;
   if (!host) return source ? "referral" : "direct";
   if (isOwnHost(host)) return source ? "referral" : "internal";
+  if (isAuthReturnHost(host)) return "internal";
   if (EMAIL_HOSTS.some((needle) => hostMatches(host, needle))) return "email";
   if (SOCIAL_HOSTS.some((needle) => hostMatches(host, needle))) return "social";
   if (SEARCH_HOSTS.some((needle) => hostMatches(host, needle))) return "search";
@@ -215,12 +243,22 @@ export function deviceFromUserAgent(userAgent: string | null | undefined): Analy
   return "unknown";
 }
 
-/** Crawlers, link unfurlers, monitors and headless browsers. */
+/**
+ * Crawlers, link unfurlers, monitors, page-speed and SEO tools, AI fetchers,
+ * automation frameworks and headless or embedded browsers.
+ *
+ * Google's own tools do not all say "bot": the Search Console URL inspection
+ * renderer is "Google-InspectionTool" (and it runs the page's JavaScript, so it
+ * reaches this beacon), and there are Google-Site-Verification, GoogleOther,
+ * Google-Read-Aloud and friends. Electron covers desktop apps' built-in
+ * browser panes (including the tooling we drive the site with).
+ */
+const BOT_USER_AGENT =
+  /bot|crawl|spider|slurp|facebookexternalhit|facebot|meta-externalagent|embedly|preview|unfurl|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|monitor|curl|wget|python-requests|python-urllib|aiohttp|scrapy|axios|node-fetch|undici|go-http-client|okhttp|httpclient|java\/|libwww|postman|insomnia|vercel-screenshot|playwright|puppeteer|selenium|webdriver|phantomjs|cypress|electron\/|google-|googleother|apis-google|mediapartners-google|feedfetcher|google-read-aloud|bytespider|ccbot|gptbot|chatgpt-user|oai-searchbot|claude|anthropic|perplexity|cohere-ai|ahrefs|semrush|mj12|dotbot|petalbot|yandex|baiduspider|sogou|seznam|duckassist/i;
+
 export function isBotUserAgent(userAgent: string | null | undefined): boolean {
   if (!userAgent) return true;
-  return /bot|crawl|spider|slurp|facebookexternalhit|facebot|embedly|preview|unfurl|headless|lighthouse|pingdom|uptime|monitor|curl|wget|python-requests|axios|node-fetch|go-http-client|postman|vercel-screenshot|playwright|puppeteer/i.test(
-    userAgent,
-  );
+  return BOT_USER_AGENT.test(userAgent);
 }
 
 const UTM_LIMITS = { source: 100, medium: 100, campaign: 150, content: 150, term: 150 } as const;

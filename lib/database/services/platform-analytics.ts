@@ -4,7 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { fetchAllAuthUsers } from "@/lib/database/services/auth-users";
 import { fetchLatestPlatformAutomationRun } from "@/lib/database/services/platform-automation-runs";
-import { getPlatformAdminEmails } from "@/lib/database/platform-admin-emails";
+import { isInternalAnalyticsEmail } from "@/lib/analytics/internal";
 import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
 import { resolveEffectiveSubscriptionStatus } from "@/lib/saas-billing/trial-policy";
 import { SAAS_SUBSCRIPTION_CATALOG, isSaasPlanKey } from "@/lib/saas-billing/catalog";
@@ -52,8 +52,10 @@ import type {
  *        MRR and collected revenue are different numbers and shown apart.
  *
  * ============ INTERNAL ACTIVITY ============
- * Demo-flagged companies and companies owned by a platform admin are left out
- * of every business figure; the count left out is shown on the page.
+ * Demo-flagged companies and companies owned by a platform admin (or a
+ * plus-alias of one: the owner's test signups) are left out of every business
+ * figure; the count left out is shown on the page. Website figures leave out
+ * every browser marked internal (migration 206).
  *
  * PostgREST returns at most 1,000 rows, so every multi-row read pages with
  * .range() to completion (capped at MAX_PAGES, reported if hit).
@@ -118,7 +120,7 @@ type SummaryJson = {
   last_event_at?: string | null;
   totals?: { pageviews?: number; visitors?: number; sessions?: number };
   windows?: { today?: number; last_7_days?: number; last_30_days?: number };
-  daily?: { day: string; pageviews: number; visitors: number }[];
+  daily?: { day: string; pageviews: number; visitors: number; sessions?: number }[];
   top_pages?: { path: string; pageviews: number; visitors: number }[];
   referrers?: { host: string; visitors: number }[];
   channels?: { channel: string; visitors: number }[];
@@ -133,6 +135,31 @@ type SummaryJson = {
     signup_completed_visitors?: number;
   };
   channel_signups?: { channel: string; visitors: number; signups: number }[];
+  excluded?: { visitors?: number; pageviews?: number; marked_browsers?: number };
+  engagement?: {
+    sessions?: number;
+    bounced_sessions?: number;
+    avg_pages?: number | string | null;
+    median_seconds?: number | string | null;
+  };
+  landing_pages?: { path: string; sessions: number; bounces: number; signup_starts: number; signups: number }[];
+  exit_pages?: { path: string; sessions: number }[];
+  hourly?: { hour: number; visitors: number }[];
+  recent_sessions?: {
+    started_at: string;
+    channel: string;
+    referrer_host: string | null;
+    utm_source: string | null;
+    utm_medium: string | null;
+    utm_campaign: string | null;
+    device: string;
+    is_returning: boolean | null;
+    pages: number;
+    seconds: number | string | null;
+    paths: string[] | null;
+    signup_started: boolean;
+    signup_completed: boolean;
+  }[];
   app?: {
     dau?: number;
     wau?: number;
@@ -147,6 +174,28 @@ const num = (value: unknown): number => {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
 };
+
+/** Hour-of-day panel and visit times are shown in the owner's zone. */
+const ANALYTICS_TIME_ZONE = process.env.ANALYTICS_TIME_ZONE?.trim() || "America/Denver";
+
+/**
+ * The 206 summary (owner's browsers excluded, session detail, p_tz). Before
+ * 206 is applied the 3-argument call is unknown to PostgREST (PGRST202) and
+ * the 202 two-argument summary is read instead.
+ */
+async function readTrafficSummary(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  fromIso: string,
+  toIso: string,
+) {
+  const withZone = await supabase.rpc("platform_web_analytics_summary", {
+    p_from: fromIso,
+    p_to: toIso,
+    p_tz: ANALYTICS_TIME_ZONE,
+  });
+  if (withZone.error?.code !== "PGRST202") return withZone;
+  return supabase.rpc("platform_web_analytics_summary", { p_from: fromIso, p_to: toIso });
+}
 
 const TRACKING_MISSING_REASON =
   "Website tracking starts once migration 202 is applied and the site redeployed.";
@@ -211,7 +260,7 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
     billingRun,
     rollupResult,
   ] = await Promise.all([
-    supabase.rpc("platform_web_analytics_summary", { p_from: range.fromIso, p_to: range.toIso }),
+    readTrafficSummary(supabase, range.fromIso, range.toIso),
     readAllPages<CompanyRow>(
       "companies",
       (from, to) =>
@@ -357,7 +406,6 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
   }
 
   // ---------------------------------------------------------------- internal exclusion
-  const adminEmails = getPlatformAdminEmails();
   const authUsers: User[] = authUsersResult.users;
   const userById = new Map(authUsers.map((user) => [user.id, user]));
   const ownerByCompany = new Map<string, string>();
@@ -374,13 +422,13 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
   for (const company of companies) {
     const demo = parseCompanyDemoDataSettings(company.settings as never) !== null;
     const ownerEmail = userById.get(ownerByCompany.get(company.id) ?? "")?.email?.toLowerCase();
-    if (demo || (ownerEmail && adminEmails.has(ownerEmail))) internalCompanyIds.add(company.id);
+    if (demo || isInternalAnalyticsEmail(ownerEmail)) internalCompanyIds.add(company.id);
   }
   const realCompanies = companies.filter((company) => !internalCompanyIds.has(company.id));
   const isReal = (companyId: string | null | undefined) => Boolean(companyId) && !internalCompanyIds.has(companyId as string);
   const internalUserIds = new Set<string>();
   for (const user of authUsers) {
-    if (user.email && adminEmails.has(user.email.toLowerCase())) internalUserIds.add(user.id);
+    if (isInternalAnalyticsEmail(user.email)) internalUserIds.add(user.id);
   }
   for (const companyId of internalCompanyIds) {
     for (const userId of userIdsByCompany.get(companyId) ?? []) internalUserIds.add(userId);
@@ -452,7 +500,7 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
   const returningCompanies = [...activePrevious].filter((id) => activeNow.has(id)).length;
 
   // ---------------------------------------------------------------- signups + attribution
-  const realUsers = authUsers.filter((user) => !internalUserIds.has(user.id) && !(user.email && adminEmails.has(user.email.toLowerCase())));
+  const realUsers = authUsers.filter((user) => !internalUserIds.has(user.id) && !isInternalAnalyticsEmail(user.email));
   const signupsInRange = realUsers.filter((user) => user.created_at && inRange(user.created_at));
   const signupsPrevious = realUsers.filter((user) => user.created_at && inPrevious(user.created_at));
 
@@ -557,7 +605,12 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
       visitors: metricValue(num(summary.totals?.visitors)),
       pageviews: metricValue(num(summary.totals?.pageviews)),
       sessions: metricValue(num(summary.totals?.sessions)),
-      daily: (summary.daily ?? []).map((point) => ({ day: point.day, visitors: num(point.visitors), pageviews: num(point.pageviews) })),
+      daily: (summary.daily ?? []).map((point) => ({
+        day: point.day,
+        visitors: num(point.visitors),
+        pageviews: num(point.pageviews),
+        sessions: point.sessions == null ? null : num(point.sessions),
+      })),
       topPages: toNamed(summary.top_pages, (row) => row.path, (row) => num(row.pageviews), (row) => num(row.visitors)),
       referrers: toNamed(summary.referrers, (row) => row.host, (row) => num(row.visitors)),
       channels: toNamed(summary.channels, (row) => row.channel, (row) => num(row.visitors)),
@@ -569,6 +622,47 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
             unknownVisitors: num(summary.returning.unknown_visitors),
           }
         : null,
+      excluded: summary.excluded
+        ? {
+            visitors: num(summary.excluded.visitors),
+            pageviews: num(summary.excluded.pageviews),
+            markedBrowsers: num(summary.excluded.marked_browsers),
+          }
+        : null,
+      engagement:
+        summary.engagement && num(summary.engagement.sessions) > 0
+          ? {
+              sessions: num(summary.engagement.sessions),
+              bouncedSessions: num(summary.engagement.bounced_sessions),
+              avgPages: summary.engagement.avg_pages == null ? null : num(summary.engagement.avg_pages),
+              medianSeconds: summary.engagement.median_seconds == null ? null : num(summary.engagement.median_seconds),
+            }
+          : null,
+      landingPages: (summary.landing_pages ?? []).map((row) => ({
+        path: row.path,
+        sessions: num(row.sessions),
+        bounces: num(row.bounces),
+        signupStarts: num(row.signup_starts),
+        signups: num(row.signups),
+      })),
+      exitPages: toNamed(summary.exit_pages, (row) => row.path, (row) => num(row.sessions)),
+      hourly: (summary.hourly ?? []).map((row) => ({ hour: num(row.hour), visitors: num(row.visitors) })),
+      timeZone: ANALYTICS_TIME_ZONE,
+      recentSessions: (summary.recent_sessions ?? []).map((row) => ({
+        startedAt: row.started_at,
+        channel: row.channel,
+        referrerHost: row.referrer_host,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        device: row.device,
+        isReturning: row.is_returning,
+        pages: num(row.pages),
+        seconds: num(row.seconds),
+        paths: row.paths ?? [],
+        signupStarted: Boolean(row.signup_started),
+        signupCompleted: Boolean(row.signup_completed),
+      })),
     };
   }
 

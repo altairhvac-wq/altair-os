@@ -29,8 +29,10 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import {
   isAnalyticsRecordingEnabled,
+  markInternalVisitor,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
+import { isInternalAnalyticsEmail } from "@/lib/analytics/internal";
 import {
   classifyChannel,
   isValidClientId,
@@ -368,7 +370,11 @@ export async function signupAction(
     return { error: mapAuthError(error) };
   }
 
-  if (isAnalyticsRecordingEnabled() && isValidClientId(analyticsVisitorId)) {
+  if (isAnalyticsRecordingEnabled() && isValidClientId(analyticsVisitorId) && isInternalAnalyticsEmail(email)) {
+    // The owner's own test signup (a platform admin address or a plus-alias of
+    // one): not a customer. Mark the browser internal instead of counting it.
+    await markInternalVisitor(analyticsVisitorId, "internal_account");
+  } else if (isAnalyticsRecordingEnabled() && isValidClientId(analyticsVisitorId)) {
     await recordAnalyticsEvent({
       event: "signup_completed",
       path: "/signup",

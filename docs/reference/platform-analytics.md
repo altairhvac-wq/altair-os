@@ -16,7 +16,7 @@ Six tabs, each with a date range (7, 30, 90 days or 12 months):
 | Tab | Figures | Source |
 |-----|---------|--------|
 | Overview | new and active companies, active trials, paying subscribers, MRR, signups, retention, biggest funnel drop-off, insights, data-health | all sources below |
-| Website traffic | visitors today / 7 / 30 days, unique visitors, pageviews, sessions, daily trend, top pages, referring sites, channels, devices, new vs returning | `web_analytics_events` |
+| Website traffic | visitors today / 7 / 30 days, unique visitors, pageviews, sessions, daily trend, top pages, referring sites, channels, devices, new vs returning; after migration 206 also: how many of the owner's own views were left out, visits, bounce rate, pages per visit, median time on site, landing pages (with bounce, signup starts and signups per entry page), exit pages, visitors by hour of day (owner's time zone), and the latest 100 visits one by one (source, device, pages in order, time on site, outcome) | `web_analytics_events` |
 | Acquisition | funnel Visit → Viewed pricing → Started signup → Completed signup → Trial activated → First job/estimate/invoice → Paid, signups per day, UTM campaigns | tracking for the first three steps; accounts, companies and subscriptions for the rest |
 | Product usage | DAU / WAU / MAU, active and returning companies, jobs / estimates / invoices / customers created, feature usage (most and least used), onboarding completion, inactive trials | records plus tracked signed-in pageviews |
 | Revenue | MRR, run rate, paying companies, active trials, trial → paid, collected subscription revenue (kept separate from MRR), cancellations, churn, failed payments, monthly collected trend, trials ending within 4 days | `company_subscriptions` and the Stripe webhook ledger |
@@ -30,8 +30,11 @@ Rules the page follows:
   reason. Funnel steps that need tracking are blank for ranges that start
   before tracking began, and a notice says the range is partial.
 - **Internal companies are excluded** from every figure: demo-flagged
-  companies and companies owned by a platform admin email. The count of
-  excluded companies is shown.
+  companies and companies owned by a platform admin email or a plus-alias of
+  one (`owner+test@…`, the owner's test signups). The count of excluded
+  companies is shown.
+- **The owner's own browsers are excluded** from every website figure, past
+  and future (migration 206, see "Owner and bot exclusion").
 - **Collected revenue is not MRR.** MRR comes from the latest subscription
   object's prices, normalised to a month. Collected revenue is the sum of paid
   Altair subscription invoices. Customers' own invoice payments through Altair
@@ -69,7 +72,43 @@ Events: `pageview`, `signup_started` (first focus in the signup form),
 Channels: direct, search, social, email, paid, referral, internal, unknown.
 UTM medium and source win over the referrer. YouTube, Facebook, Instagram,
 TikTok, X, LinkedIn, Reddit and others are recognised as social; Google, Bing,
-DuckDuckGo and others as search.
+DuckDuckGo and others as search. Sign-in, consent and payment returns
+(`accounts.google.com`, Microsoft and Apple sign-in, Stripe checkout and
+billing) are internal: before 206 a return from "Sign in with Google" or a
+YouTube connect read as Google search.
+
+### Owner and bot exclusion
+
+Added after 2026-10-25, when most of that day's "11 visitors" turned out to be
+the owner's own integration-setup session plus Search Console's renderer.
+
+Bots never reach the table. The collect route refuses any user agent that
+matches the bot list in `shared/lib/analytics/attribution.ts`: crawlers and
+link unfurlers, Google's tools that do not say "bot" (`Google-InspectionTool`,
+the Search Console URL-inspection renderer, which runs JavaScript;
+`GoogleOther`, `Google-Site-Verification` and the other `Google-` agents),
+page-speed and SEO tools, AI fetchers, HTTP libraries, automation frameworks
+(Selenium, WebDriver, Playwright, Puppeteer, Cypress), headless browsers and
+Electron app browser panes. The browser itself does not send when
+`navigator.webdriver` is true, and a page Chrome prerenders is counted only if
+the person actually opens it.
+
+The owner's browsers are marked once and then left out of every figure,
+including their earlier visits (`web_analytics_internal_visitors`, migration
+206; nothing is deleted):
+
+- **Automatically** when a platform admin, or a plus-alias of one, is signed
+  in: the collect route records nothing, marks that browser, and answers
+  `x-altair-analytics: internal`. The browser then stops sending beacons for
+  good, signed in or not.
+- **Owner test signups** (a platform-admin address or a plus-alias) are not
+  counted as signups; the signup action marks the browser instead.
+- **By hand** for a phone or laptop the owner never signs in on: open any page
+  once with `?altair_analytics=off`. That sends one `exclude_device` beacon
+  (marks the browser, records no visit) and opts the device out.
+
+The Website traffic tab shows how many views were left out and how many
+browsers are marked.
 
 ### Privacy
 
@@ -110,6 +149,8 @@ pages. Keep that page in step with any change to what is collected.
 | `PUBLIC_RATE_LIMIT_HASH_SECRET` | server | Key for the visitor/session HMAC and the rate-limit subject. Optional but should be set in production. Changing it splits unique-visitor counts at the change. |
 | `ANALYTICS_COLLECTION` | server | Set to `off` to stop all recording immediately (kill switch). Unset means on. |
 | `ANALYTICS_RECORD_NON_PRODUCTION` | server | Set to `1` only on a test deployment pointed at a test database, to record outside `VERCEL_ENV=production`. Never set it on a preview that shares the production database. |
+
+| `ANALYTICS_TIME_ZONE` | server | IANA zone for the hour-of-day panel and visit times. Default `America/Denver`. Day buckets stay UTC. |
 
 No new public (`NEXT_PUBLIC_`) variables.
 
@@ -161,6 +202,39 @@ Expected: `true, false, false, true`.
 Order: deploying before 203 is applied is safe. The cron records
 `webAnalyticsSweepInstalled: false` and treats it as nothing to do, not as a
 failure.
+
+## Migration 206
+
+`supabase/migrations/206_web_analytics_internal_visitors.sql` adds
+`public.web_analytics_internal_visitors` (service role only, RLS on) and
+replaces `platform_web_analytics_summary` with a version that takes an
+optional third argument `p_tz` and leaves out every marked browser. The new
+result keys are `excluded`, `engagement`, `landing_pages`, `exit_pages`,
+`hourly`, `recent_sessions`, and `sessions` per day. It deletes nothing and
+changes no rows when applied. Apply it in the SQL editor after 202/203.
+
+Order: deploying before 206 is applied is safe. The page calls the
+three-argument function, gets PGRST202, falls back to the 202 summary and
+hides the new panels. Marking a browser before 206 fails quietly (logged once);
+the browser opts itself out locally either way. Apply 206 soon after the
+deploy so the marks land.
+
+Read-only probe:
+
+```sql
+select
+  to_regclass('public.web_analytics_internal_visitors') is not null as table_exists,
+  to_regprocedure('public.platform_web_analytics_summary(timestamptz, timestamptz, text)') is not null as summary_v206,
+  to_regprocedure('public.platform_web_analytics_summary(timestamptz, timestamptz)') is null as old_summary_gone,
+  has_table_privilege('anon', 'public.web_analytics_internal_visitors', 'select') as anon_can_read,
+  has_function_privilege('anon', 'public.platform_web_analytics_summary(timestamptz, timestamptz, text)', 'execute') as anon_can_call;
+```
+
+Expected: `true, true, true, false, false`.
+
+Tested on the scratch project inside a rolled-back transaction: a marked
+browser's views move to `excluded`, and sessions, bounce, time on site,
+landing and exit pages and journeys come out as expected.
 
 ## Tagging links
 

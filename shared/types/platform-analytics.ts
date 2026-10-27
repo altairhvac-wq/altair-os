@@ -30,12 +30,44 @@ export type PlatformAnalyticsTraffic = {
   visitors: MetricValue;
   pageviews: MetricValue;
   sessions: MetricValue;
-  daily: { day: string; visitors: number; pageviews: number }[];
+  daily: { day: string; visitors: number; pageviews: number; sessions: number | null }[];
   topPages: NamedCount[];
   referrers: NamedCount[];
   channels: NamedCount[];
   devices: NamedCount[];
   returning: { newVisitors: number; returningVisitors: number; unknownVisitors: number } | null;
+  /** The owner's own browsers left out of every figure above (migration 206); null before 206. */
+  excluded: { visitors: number; pageviews: number; markedBrowsers: number } | null;
+  /** Per-visit engagement (migration 206); null before 206 or with no visits. */
+  engagement: {
+    sessions: number;
+    bouncedSessions: number;
+    avgPages: number | null;
+    medianSeconds: number | null;
+  } | null;
+  landingPages: { path: string; sessions: number; bounces: number; signupStarts: number; signups: number }[];
+  exitPages: NamedCount[];
+  /** Visitors by hour of day in `timeZone`. Empty before 206. */
+  hourly: { hour: number; visitors: number }[];
+  timeZone: string;
+  /** The latest visits, one row each, newest first (at most 100). */
+  recentSessions: TrafficSession[];
+};
+
+export type TrafficSession = {
+  startedAt: string;
+  channel: string;
+  referrerHost: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  device: string;
+  isReturning: boolean | null;
+  pages: number;
+  seconds: number;
+  paths: string[];
+  signupStarted: boolean;
+  signupCompleted: boolean;
 };
 
 export type CampaignRow = {

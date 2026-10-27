@@ -7,7 +7,7 @@ import {
 } from "@/shared/design-system/shell";
 import { pt } from "@/shared/components/platform-admin/north-star-m13/platform-north-star-styles";
 import { ANALYTICS_RANGES } from "@/shared/lib/analytics/platform-metrics";
-import type { PlatformAnalytics } from "@/shared/types/platform-analytics";
+import type { PlatformAnalytics, TrafficSession } from "@/shared/types/platform-analytics";
 import {
   AnalyticsPanel,
   BarList,
@@ -271,6 +271,140 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
           ) : null}
         </AnalyticsPanel>
       </div>
+
+      <VisitDetail traffic={t} />
+    </>
+  );
+}
+
+function formatDuration(seconds: number | null | undefined): string {
+  if (seconds == null || !Number.isFinite(seconds)) return DASH;
+  const s = Math.round(seconds);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return `${m}m ${String(s % 60).padStart(2, "0")}s`;
+}
+
+function formatHour(hour: string): string {
+  const h = Number(hour);
+  if (h === 0) return "12 AM";
+  if (h === 12) return "Noon";
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
+}
+
+function visitSource(visit: TrafficSession): string {
+  const tagged = [visit.utmSource, visit.utmMedium, visit.utmCampaign].filter(Boolean).join(" / ");
+  const where = tagged || visit.referrerHost;
+  return where ? `${channelLabel(visit.channel)} · ${where}` : channelLabel(visit.channel);
+}
+
+/**
+ * Visit-level detail (migration 206): engagement, entry and exit pages, time
+ * of day and the latest visits one by one, with the owner's own browsers
+ * already left out. Hidden until 206 is applied.
+ */
+function VisitDetail({ traffic: t }: { traffic: NonNullable<PlatformAnalytics["traffic"]> }) {
+  const e = t.engagement;
+  const visitTime = new Intl.DateTimeFormat("en-US", {
+    timeZone: t.timeZone,
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return (
+    <>
+      {t.excluded ? (
+        <Notice title="Your own visits are left out">
+          {t.excluded.pageviews > 0
+            ? `${formatCount(t.excluded.pageviews)} pageviews from ${formatCount(t.excluded.visitors)} of your own browsers were left out of this period. `
+            : "None of your own browsers visited in this period. "}
+          {formatCount(t.excluded.markedBrowsers)} browser{t.excluded.markedBrowsers === 1 ? " is" : "s are"} marked as yours: any browser where
+          you sign in as a platform admin is marked automatically. For a phone or laptop you never sign in on, open any page once
+          with <code>?altair_analytics=off</code> at the end of the address. Bots, crawlers, Google&apos;s inspection tools and
+          automated browsers are never recorded.
+        </Notice>
+      ) : null}
+
+      {e ? (
+        <KpiGrid columns={4}>
+          <Kpi label="Visits" value={formatCount(e.sessions)} hint="one per browser tab session" />
+          <Kpi label="Bounce rate" value={formatPercent(e.sessions ? e.bouncedSessions / e.sessions : null)} hint="left after one page" />
+          <Kpi label="Pages per visit" value={e.avgPages == null ? DASH : e.avgPages.toFixed(1)} />
+          <Kpi label="Time on site" value={formatDuration(e.medianSeconds)} hint="median, visits of 2+ pages" />
+        </KpiGrid>
+      ) : null}
+
+      {t.landingPages.length > 0 || t.exitPages.length > 0 ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <AnalyticsPanel title="Landing pages" description="The first page of each visit, and what those visits did next.">
+            <DataTable
+              headers={[
+                { label: "Page" },
+                { label: "Visits", align: "right" },
+                { label: "Bounce", align: "right" },
+                { label: "Started signup", align: "right" },
+                { label: "Signed up", align: "right" },
+              ]}
+              rows={t.landingPages.map((row) => ({
+                key: row.path,
+                cells: [
+                  row.path,
+                  formatCount(row.sessions),
+                  formatPercent(row.sessions ? row.bounces / row.sessions : null),
+                  formatCount(row.signupStarts),
+                  formatCount(row.signups),
+                ],
+              }))}
+              emptyTitle="No visits in this period."
+            />
+          </AnalyticsPanel>
+          <AnalyticsPanel title="Exit pages" description="The last page of visits that saw more than one page: where people stop.">
+            <BarList rows={t.exitPages} valueLabel="Visits" emptyTitle="No multi-page visits yet." />
+          </AnalyticsPanel>
+        </div>
+      ) : null}
+
+      {t.hourly.some((h) => h.visitors > 0) ? (
+        <AnalyticsPanel title="When visitors arrive" description={`Visitors by hour of day, ${t.timeZone.replace("_", " ")} time.`}>
+          <TrendChart
+            labels={t.hourly.map((h) => String(h.hour))}
+            series={[{ key: "visitors", label: "Visitors", color: SERIES.primary, values: t.hourly.map((h) => h.visitors) }]}
+            formatLabel={formatHour}
+          />
+        </AnalyticsPanel>
+      ) : null}
+
+      {t.recentSessions.length > 0 ? (
+        <AnalyticsPanel
+          eyebrow="Visits"
+          title="Recent visits, one by one"
+          description={`Newest first (up to 100), times in ${t.timeZone.replace("_", " ")}. Anonymous: no names, addresses or IPs are stored.`}
+        >
+          <DataTable
+            headers={[
+              { label: "When" },
+              { label: "Came from" },
+              { label: "Device" },
+              { label: "Pages in order" },
+              { label: "Time", align: "right" },
+              { label: "Outcome" },
+            ]}
+            rows={t.recentSessions.map((visit, index) => ({
+              key: `${visit.startedAt}-${index}`,
+              cells: [
+                visitTime.format(new Date(visit.startedAt)),
+                visitSource(visit),
+                `${deviceLabel(visit.device)}${visit.isReturning ? " · returning" : visit.isReturning === false ? " · new" : ""}`,
+                visit.paths.join(" → ") + (visit.pages > visit.paths.length ? " → …" : ""),
+                visit.pages > 1 ? formatDuration(visit.seconds) : DASH,
+                visit.signupCompleted ? "Signed up" : visit.signupStarted ? "Started signup" : visit.pages <= 1 ? "Bounced" : DASH,
+              ],
+            }))}
+            emptyTitle="No visits in this period."
+          />
+        </AnalyticsPanel>
+      ) : null}
     </>
   );
 }
