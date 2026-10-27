@@ -55,6 +55,7 @@ const SPECIFIER_REWRITES = [
   ['"./graph"', '"./graph.mjs"'],
   ['"./reels"', '"./reels.mjs"'],
   ['"./reel-insights"', '"./reel-insights.mjs"'],
+  ['"./publish"', '"./publish.mjs"'],
 ];
 
 function transpileInto(dir, sourcePath, outName) {
@@ -75,7 +76,7 @@ const dir = mkdtempSync(join(tmpdir(), "meta-adapter-"));
 writeFileSync(join(dir, "server-only.mjs"), "export {};\n");
 writeFileSync(
   join(dir, "email-env.mjs"),
-  "export function resolveAppBaseUrl() { return { ok: false }; }\n",
+  "export function resolveAppBaseUrl() { return { ok: false }; }\nexport function getAppBaseUrl() { return null; }\n",
 );
 // The port is types-only; its transpiled output is empty either way.
 writeFileSync(join(dir, "port.mjs"), "export {};\n");
@@ -86,6 +87,7 @@ transpileInto(dir, "lib/integrations/facebook/env.ts", "env.mjs");
 transpileInto(dir, "lib/integrations/facebook/graph.ts", "graph.mjs");
 transpileInto(dir, "lib/integrations/facebook/reels.ts", "reels.mjs");
 transpileInto(dir, "lib/integrations/facebook/reel-insights.ts", "reel-insights.mjs");
+transpileInto(dir, "lib/integrations/facebook/publish.ts", "publish.mjs");
 transpileInto(dir, "lib/integrations/facebook/adapter.ts", "adapter.mjs");
 
 process.env.FACEBOOK_APP_ID = "test-app-id";
@@ -316,22 +318,84 @@ for (const [label, adapter, goodScopes, required] of [
     noTarget?.message,
   );
 
-  calls = [];
-  const noVideo = await expectThrow(() =>
-    adapter.publish(
-      publishInput({
-        grantedScopes: goodScopes,
-        post: { providerResourceId: label === "facebook" ? PAGE : IGU },
-        package: { media: [] },
-      }),
-    ),
-  );
-  check(
-    `${label}: no video attachment refuses before any traffic`,
-    noVideo !== null && calls.length === 0,
-    noVideo?.message,
-  );
+  // Instagram has no text-only post, so no video still refuses. Facebook
+  // publishes a text Page post instead (2026-10-26) — checked below.
+  if (label !== "facebook") {
+    calls = [];
+    const noVideo = await expectThrow(() =>
+      adapter.publish(
+        publishInput({
+          grantedScopes: goodScopes,
+          post: { providerResourceId: IGU },
+          package: { media: [] },
+        }),
+      ),
+    );
+    check(
+      `${label}: no video attachment refuses before any traffic`,
+      noVideo !== null && calls.length === 0,
+      noVideo?.message,
+    );
+  }
 }
+
+/* ------------------------------------------------ facebook text-only post */
+
+console.log("\nFacebook text post: /feed + strict readback");
+
+const TEXT_POST_ID = `${PAGE}_555`;
+function feedRouter({ message = DESC, fromId = PAGE } = {}) {
+  return (req) => {
+    const u = new URL(req.url);
+    if (req.method === "POST" && u.pathname === `/v22.0/${PAGE}/feed`) {
+      return { body: { id: TEXT_POST_ID } };
+    }
+    if (req.method === "GET" && u.pathname === `/v22.0/${TEXT_POST_ID}`) {
+      return {
+        body: {
+          id: TEXT_POST_ID,
+          message,
+          permalink_url: `https://www.facebook.com/${TEXT_POST_ID}`,
+          from: { id: fromId },
+        },
+      };
+    }
+    return null;
+  };
+}
+
+calls = [];
+router = feedRouter();
+const textOutcome = await facebookAdapter.publish(publishInput({ package: { media: [] } }));
+check(
+  "a Facebook post with no video publishes to the Page feed and reads back",
+  textOutcome.outcome === "posted" &&
+    textOutcome.providerPostId === TEXT_POST_ID &&
+    calls.some((c) => c.method === "POST" && c.url.includes(`/${PAGE}/feed`)) &&
+    !calls.some((c) => c.url.includes("video_reels")),
+);
+
+calls = [];
+router = feedRouter({ message: "something else entirely" });
+const textMismatch = await expectThrow(() =>
+  facebookAdapter.publish(publishInput({ package: { media: [] } })),
+);
+check(
+  "a text post whose wording reads back different is recorded as incomplete",
+  textMismatch !== null && /read back different/.test(textMismatch.message),
+  textMismatch?.message,
+);
+
+calls = [];
+router = feedRouter({ fromId: "999" });
+const textWrongPage = await expectThrow(() =>
+  facebookAdapter.publish(publishInput({ package: { media: [] } })),
+);
+check(
+  "a text post that lands on another Page is recorded as incomplete",
+  textWrongPage !== null && /belongs to Page/.test(textWrongPage.message),
+  textWrongPage?.message,
+);
 
 /* --------------------------------------------------- facebook happy path */
 
