@@ -6,7 +6,12 @@
  * server stores only an HMAC of it. Visitors sending Global Privacy Control
  * or Do Not Track are not tracked at all, and anyone can opt a device out by
  * visiting any page with `?altair_analytics=off` (`=on` reverses it) — the
- * owner uses that on their own phones and laptops.
+ * owner uses that on their own phones and laptops. Opting out also sends one
+ * `exclude_device` beacon so that browser's EARLIER visits leave the figures
+ * too. A browser the owner signs in on is marked the same way automatically:
+ * the collect route answers `x-altair-analytics: internal` and the browser
+ * stops sending. Automated browsers (navigator.webdriver) never send, and a
+ * page Chrome prerenders is only counted if the person actually opens it.
  *
  * Attribution:
  *   - session attribution (referrer + utm of the page that started this tab
@@ -67,13 +72,17 @@ function applyOptOutParam(): void {
   const value = new URLSearchParams(window.location.search).get("altair_analytics");
   const local = storage("local");
   if (!local || !value) return;
-  if (value === "off") local.setItem(OPT_OUT_KEY, "1");
+  if (value === "off" && local.getItem(OPT_OUT_KEY) !== "1") {
+    post("exclude_device", window.location.pathname);
+    local.setItem(OPT_OUT_KEY, "1");
+  }
   if (value === "on") local.removeItem(OPT_OUT_KEY);
 }
 
 export function isAnalyticsAllowed(): boolean {
   if (typeof window === "undefined") return false;
   applyOptOutParam();
+  if (navigator.webdriver === true) return false;
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
   if (nav.globalPrivacyControl === true) return false;
   if (nav.doNotTrack === "1" || (window as unknown as { doNotTrack?: string }).doNotTrack === "1") return false;
@@ -154,7 +163,13 @@ function firstTouch(): AnalyticsAttribution | null {
 let lastPageviewKey: string | null = null;
 let lastPageviewAt = 0;
 
+type ClientEvent = "pageview" | "signup_started" | "exclude_device";
+
 function send(event: "pageview" | "signup_started", path: string): void {
+  post(event, path);
+}
+
+function post(event: ClientEvent, path: string): void {
   const { visitorId, isReturning } = visitor();
   const attribution = sessionAttribution();
   const body = JSON.stringify({
@@ -183,7 +198,14 @@ function send(event: "pageview" | "signup_started", path: string): void {
       body,
       keepalive: true,
       credentials: "same-origin",
-    }).catch(() => undefined);
+    })
+      .then((response) => {
+        // The server recognised this browser as the owner's: stop for good.
+        if (response.headers.get("x-altair-analytics") === "internal") {
+          storage("local")?.setItem(OPT_OUT_KEY, "1");
+        }
+      })
+      .catch(() => undefined);
   } catch {
     // Analytics must never affect the page.
   }
@@ -191,6 +213,11 @@ function send(event: "pageview" | "signup_started", path: string): void {
 
 /** Records a pageview. Repeated calls for the same URL within 2s are ignored. */
 export function trackPageview(pathname: string, search: string): void {
+  const doc = document as Document & { prerendering?: boolean };
+  if (doc.prerendering) {
+    doc.addEventListener("prerenderingchange", () => trackPageview(pathname, search), { once: true });
+    return;
+  }
   if (!isAnalyticsAllowed()) return;
   firstTouch();
   const key = `${pathname}?${search}`;

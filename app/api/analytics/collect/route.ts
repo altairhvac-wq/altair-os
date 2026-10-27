@@ -8,8 +8,10 @@ import {
 } from "@/shared/lib/analytics/attribution";
 import {
   isAnalyticsRecordingEnabled,
+  markInternalVisitor,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
+import { isInternalAnalyticsUser } from "@/lib/analytics/internal";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
 import {
   enforcePublicRateLimit,
@@ -34,13 +36,20 @@ export const runtime = "nodejs";
  *   - bots and headless browsers;
  *   - oversized or malformed bodies, unknown event names, bad ids;
  *   - more than the per-address allowance (public.analytics_collect);
- *   - platform admins: the owner's own browsing never counts.
+ *   - the owner: a signed-in platform admin (or a plus-alias of one) is never
+ *     recorded, and the browser is marked internal (migration 206) so all of
+ *     its visits - past and future, signed in or not - drop out of the
+ *     figures. The response then carries `x-altair-analytics: internal`, which
+ *     tells that browser to stop sending beacons at all;
+ *   - `exclude_device` (sent once by `?altair_analytics=off`): marks the
+ *     browser internal the same way, for devices the owner never signs in on.
  *
  * signup_completed is NOT accepted here: only the signup action records it.
  */
 
 const NO_CONTENT = () => new Response(null, { status: 204 });
-const CLIENT_EVENTS = new Set(["pageview", "signup_started"]);
+const INTERNAL = () => new Response(null, { status: 204, headers: { "x-altair-analytics": "internal" } });
+const CLIENT_EVENTS = new Set(["pageview", "signup_started", "exclude_device"]);
 const CHANNELS = new Set<AnalyticsChannel>([
   "direct", "search", "social", "email", "paid", "referral", "internal", "unknown",
 ]);
@@ -113,11 +122,22 @@ export async function POST(request: Request): Promise<Response> {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        if (canAccessPlatformAdmin(user)) return NO_CONTENT();
+        if (isInternalAnalyticsUser(user)) {
+          await markInternalVisitor(
+            body.visitorId as string,
+            canAccessPlatformAdmin(user) ? "platform_admin" : "internal_account",
+          );
+          return INTERNAL();
+        }
         userId = user.id;
       }
     } catch {
       // No session readable: treat as anonymous.
+    }
+
+    if (event === "exclude_device") {
+      await markInternalVisitor(body.visitorId as string, "manual");
+      return INTERNAL();
     }
 
     const referrerHost = normalizeHost(str(body.referrerHost, 255));

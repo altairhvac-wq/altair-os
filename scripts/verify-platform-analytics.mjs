@@ -70,6 +70,9 @@ check("utm_medium=email → email", ch(null, "newsletter", "email") === "email")
 check("look-alike google.evil.io is not search", ch("google.evil.io") === "referral");
 check("notgoogle.com is not search", ch("notgoogle.com") === "referral");
 check("google.com.au is search", ch("www.google.com.au") === "search");
+check("Google sign-in return is internal, not search", ch("accounts.google.com") === "internal");
+check("Microsoft / Apple sign-in returns are internal", ch("login.microsoftonline.com") === "internal" && ch("appleid.apple.com") === "internal");
+check("Stripe checkout return is internal", ch("checkout.stripe.com") === "internal");
 
 // ------------------------------------------------------------------ devices + bots
 console.log("\nDevices and bots");
@@ -82,6 +85,16 @@ check("facebookexternalhit is a bot", attribution.isBotUserAgent("facebookextern
 check("HeadlessChrome is a bot", attribution.isBotUserAgent("Mozilla/5.0 HeadlessChrome/130"));
 check("missing user agent is treated as a bot", attribution.isBotUserAgent(null));
 check("real Chrome is not a bot", !attribution.isBotUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"));
+check("Search Console inspection renderer is a bot", attribution.isBotUserAgent("Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36 (compatible; Google-InspectionTool/1.0;)"));
+check("GoogleOther is a bot", attribution.isBotUserAgent("Mozilla/5.0 (compatible; GoogleOther)"));
+check("Google-Site-Verification is a bot", attribution.isBotUserAgent("Mozilla/5.0 (compatible; Google-Site-Verification/1.0)"));
+check("Electron app browser panes are not visitors", attribution.isBotUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Electron/33.0.0 Safari/537.36"));
+check("AI fetchers are bots", attribution.isBotUserAgent("Mozilla/5.0 (compatible; GPTBot/1.2)") && attribution.isBotUserAgent("Claude-User/1.0") && attribution.isBotUserAgent("Mozilla/5.0 PerplexityBot/1.0"));
+check("Selenium / webdriver are bots", attribution.isBotUserAgent("Mozilla/5.0 Selenium WebDriver"));
+check("real iPhone Safari is not a bot", !attribution.isBotUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1"));
+check("Facebook in-app browser is not a bot", !attribution.isBotUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 [FBAN/FBIOS;FBAV/480.0;FBBV/1;FBDV/iPhone16,2;FBMD/iPhone;FBSN/iOS;FBSV/18.0]"));
+check("Instagram in-app browser is not a bot", !attribution.isBotUserAgent("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36 Instagram 350.0.0"));
+check("LinkedIn in-app browser is not a bot", !attribution.isBotUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 [LinkedInApp]/9.30"));
 
 // ------------------------------------------------------------------ attribution
 console.log("\nAttribution from the browser is validated");
@@ -160,13 +173,25 @@ check(
 // ------------------------------------------------------------------ static guarantees
 console.log("\nIngest route");
 const route = read("app/api/analytics/collect/route.ts");
-check("only pageview and signup_started accepted from browsers", /CLIENT_EVENTS = new Set\(\["pageview", "signup_started"\]\)/.test(route));
+check("only pageview, signup_started and exclude_device accepted from browsers", /CLIENT_EVENTS = new Set\(\["pageview", "signup_started", "exclude_device"\]\)/.test(route));
 check("signup_completed cannot be posted by a browser", !/CLIENT_EVENTS[^\n]*signup_completed/.test(route));
 check("cross-site origins refused", /if \(!isSameOriginBeacon\(request\)\) return NO_CONTENT\(\)/.test(route));
 check("origin check fails closed (exact host:port, no Host means refuse)", /originHost === hostHeader/.test(route) && /Boolean\(hostHeader\)/.test(route) && /catch \{\s*return false;/.test(route));
 check("bots refused", /isBotUserAgent\(userAgent\)/.test(route));
 check("recording gated to production (or an explicit test flag)", /isAnalyticsRecordingEnabled\(\)/.test(route));
-check("platform admins never recorded", /canAccessPlatformAdmin\(user\)\) return NO_CONTENT/.test(route));
+check(
+  "the owner (platform admin or plus-alias) is never recorded and the browser is marked internal",
+  /if \(isInternalAnalyticsUser\(user\)\) \{\s*await markInternalVisitor\(/.test(route) && /return INTERNAL\(\);/.test(route),
+);
+check(
+  "exclude_device only marks the browser, never records a visit",
+  /if \(event === "exclude_device"\) \{\s*await markInternalVisitor\(body\.visitorId as string, "manual"\);\s*return INTERNAL\(\);/.test(route),
+);
+const authActions = read("app/actions/auth.ts");
+check(
+  "owner test signups are marked internal instead of counted",
+  /isInternalAnalyticsEmail\(email\)\) \{[\s\S]{0,300}?await markInternalVisitor\(analyticsVisitorId, "internal_account"\);\s*\} else if/.test(authActions),
+);
 check("rate limited per address", /enforcePublicRateLimit\("public\.analytics_collect"/.test(route));
 check("body size capped", /text\.length > MAX_BODY/.test(route));
 const events = read("lib/analytics/server-events.ts");
@@ -181,6 +206,9 @@ check("Global Privacy Control honoured", /globalPrivacyControl === true\) return
 check("Do Not Track honoured", /doNotTrack === "1"/.test(client));
 check("device opt-out supported", /altair_analytics/.test(client) && /OPT_OUT_KEY/.test(client));
 check("no cookies are set by the tracker", !/document\.cookie/.test(client));
+check("automated browsers never send", /navigator\.webdriver === true\) return false/.test(client));
+check("prerendered pages count only once opened", /prerenderingchange/.test(client));
+check("a browser the server marks internal stops sending", /x-altair-analytics"\) === "internal"/.test(client));
 const layout = read("app/layout.tsx");
 check("tracker mounted once in the root layout", (layout.match(/<FirstPartyAnalytics \/>/g) ?? []).length === 1);
 
@@ -192,6 +220,19 @@ const migration = read("supabase/migrations/202_first_party_web_analytics.sql").
 check("no IP or user-agent column", !/\b(ip_address|ip|user_agent)\s+(text|inet)/.test(migration));
 check("anon and authenticated get nothing", /revoke all on table public\.web_analytics_events from anon/.test(migration) && /revoke all on table public\.web_analytics_events from authenticated/.test(migration));
 check("summary function executable by service_role only", /grant execute on function public\.platform_web_analytics_summary\(timestamptz, timestamptz\) to service_role/.test(migration) && !/to authenticated/.test(migration.split("platform_web_analytics_summary").slice(-1)[0]));
+const m206 = read("supabase/migrations/206_web_analytics_internal_visitors.sql").replace(/--[^\n]*/g, "").toLowerCase();
+check(
+  "206: internal-browser table is service-role only",
+  /revoke all on table public\.web_analytics_internal_visitors from anon/.test(m206) &&
+    /revoke all on table public\.web_analytics_internal_visitors from authenticated/.test(m206) &&
+    /enable row level security/.test(m206),
+);
+check("206: every summary read leaves out internal browsers", (m206.match(/not exists \(select 1 from internal i/g) ?? []).length >= 4);
+check(
+  "206: summary executable by service_role only",
+  /grant execute on function public\.platform_web_analytics_summary\(timestamptz, timestamptz, text\) to service_role/.test(m206) && !/to authenticated/.test(m206),
+);
+check("206: nothing is deleted", !/\bdelete from\b|\btruncate\b/.test(m206));
 const page = read("app/(admin)/platform/analytics/page.tsx");
 check("analytics page re-checks platform admin", /await requirePlatformAdmin\(\)/.test(page));
 const service = read("lib/database/services/platform-analytics.ts");

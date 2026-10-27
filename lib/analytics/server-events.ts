@@ -107,3 +107,39 @@ export async function recordAnalyticsEvent(input: ServerAnalyticsEvent): Promise
     return false;
   }
 }
+
+export type InternalVisitorReason = "platform_admin" | "internal_account" | "manual";
+
+let warnedMissingInternalTable = false;
+
+/**
+ * Marks a browser as the owner's own (migration 206). Every event that browser
+ * ever sent - before and after - is left out of the website figures, so the
+ * owner's phone and laptop browsing, test signups and "did the deploy work"
+ * checks never read as visitors. Only the HMAC of the browser id is stored.
+ */
+export async function markInternalVisitor(visitorId: string, reason: InternalVisitorReason): Promise<boolean> {
+  if (!isValidClientId(visitorId)) return false;
+  try {
+    const supabase = createServiceRoleClient();
+    const { error } = await supabase.from("web_analytics_internal_visitors").upsert(
+      {
+        visitor_hash: hashAuditSubject("analytics_visitor", visitorId),
+        reason,
+        last_marked_at: new Date().toISOString(),
+      },
+      { onConflict: "visitor_hash" },
+    );
+    if (error) {
+      if (!warnedMissingInternalTable) {
+        console.error("[analytics] internal mark failed:", { code: error.code });
+      }
+      if (error.code === "PGRST205" || error.code === "42P01") warnedMissingInternalTable = true;
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("[analytics] internal mark threw:", { error: error instanceof Error ? error.message : "unknown" });
+    return false;
+  }
+}

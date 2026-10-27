@@ -1319,6 +1319,28 @@ export type Database = {
         }>;
         Relationships: [];
       };
+      // web_analytics_internal_visitors: migration 206 — the owner's own
+      // browsers (HMAC of the analytics browser id), left out of every website
+      // figure. Service role only.
+      web_analytics_internal_visitors: {
+        Row: {
+          visitor_hash: string;
+          reason: "platform_admin" | "internal_account" | "manual";
+          first_marked_at: string;
+          last_marked_at: string;
+        };
+        Insert: {
+          visitor_hash: string;
+          reason?: "platform_admin" | "internal_account" | "manual";
+          first_marked_at?: string;
+          last_marked_at?: string;
+        };
+        Update: Partial<{
+          reason: "platform_admin" | "internal_account" | "manual";
+          last_marked_at: string;
+        }>;
+        Relationships: [];
+      };
       saas_trial_reminders: {
         Row: SaasTrialReminderRow;
         Insert: SaasTrialReminderInsert;
@@ -1790,11 +1812,12 @@ export type Database = {
           open_labor_entry_count: number | string;
         }[];
       };
-      // platform_web_analytics_summary: migration 202 — service_role only.
+      // platform_web_analytics_summary: migration 202, replaced by 206 (owner's
+      // browsers excluded, session detail, optional p_tz) — service_role only.
       // Returns one jsonb document; shape parsed defensively by
       // lib/database/services/platform-analytics.ts.
       platform_web_analytics_summary: {
-        Args: { p_from: string; p_to: string };
+        Args: { p_from: string; p_to: string; p_tz?: string };
         Returns: unknown;
       };
       // sweep_web_analytics_events: migration 203 — service_role only. Deletes
