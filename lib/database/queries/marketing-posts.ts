@@ -1100,6 +1100,41 @@ export async function listAutoApproveCandidatePosts(input: {
 }
 
 /**
+ * Agent videos that already went out on YouTube, newest first: the source
+ * for Instagram Reel drafts (owner decision 2026-10-27: Instagram posts on
+ * its own too). Only rows that carry a stored video with a MEASURED render
+ * QA of PASS, so every copy made from them would pass the policy's own video
+ * checks. Cross-company like the candidate query above; each row carries its
+ * company.
+ */
+export async function listRecentlyPostedAgentVideoPostsAdmin(input: {
+  postedSinceIso: string;
+  limit: number;
+}): Promise<MarketingPost[]> {
+  const client = createServiceRoleClient();
+  const { data, error } = await marketingPostsServiceTable(client)
+    .select("*")
+    .eq("status", "posted")
+    .eq("channel_target", "youtube")
+    .eq("source_type", AGENT_DAILY_REEL_SOURCE)
+    .eq("render_qa_state", "PASS")
+    .not("video_media_asset_id", "is", null)
+    .is("deleted_at", null)
+    .gte("posted_at", input.postedSinceIso)
+    .order("posted_at", { ascending: false })
+    .limit(Math.max(1, Math.min(100, Math.trunc(input.limit))));
+
+  if (error) {
+    console.error("[listRecentlyPostedAgentVideoPostsAdmin] query failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+  return ((data ?? []) as MarketingPostRow[]).map(mapMarketingPostRow);
+}
+
+/**
  * A text-only Facebook DRAFT made from a Marketing HQ social idea, for the
  * auto-approval policy (owner decision 2026-10-25: publish on its own, review
  * at the end of the day). The same fields `convertMarketingItemToPostAction`
