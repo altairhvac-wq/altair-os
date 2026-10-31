@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { HomepageProductFrame } from "@/shared/components/homepage/HomepageProductFrame";
 import { HOMEPAGE_SCREENSHOTS } from "@/shared/components/homepage/homepage-tokens";
+import { listPublicSaasCatalogPlans } from "@/lib/saas-billing/catalog";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
@@ -16,7 +17,16 @@ const TRUST_ITEMS = [
  * Homepage hero — centered product-forward composition.
  * Mission-led copy; the Mission Control screenshot carries the proof.
  */
+/** The cheapest public plan, from the same catalog the pricing page renders. */
+function lowestMonthlyPrice(): number | null {
+  const prices = listPublicSaasCatalogPlans()
+    .map((plan) => plan.monthlyPriceUsd)
+    .filter((price): price is number => typeof price === "number");
+  return prices.length ? Math.min(...prices) : null;
+}
+
 export function HomepageHero() {
+  const fromPrice = lowestMonthlyPrice();
   return (
     <section
       aria-labelledby="ah-hero-heading"
@@ -63,6 +73,21 @@ export function HomepageHero() {
               See Altair in Action
             </Link>
           </div>
+
+          {/* Six of ninety-three visitors reached the pricing page in the
+              first month; the price is not a secret, so it is said here, with
+              the way to the full page one tap away. */}
+          {fromPrice !== null ? (
+            <p className="ah-hero-fade ah-hero-fade-5 mt-5 text-[13px] text-[#8e826f] sm:text-sm">
+              Plans from ${fromPrice}/month after the trial.{" "}
+              <Link
+                href="/pricing"
+                className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+              >
+                See pricing
+              </Link>
+            </p>
+          ) : null}
 
           <ul className="ah-hero-fade ah-hero-fade-5 mx-auto mt-7 flex max-w-lg flex-row flex-wrap items-center justify-center gap-x-7 gap-y-2.5 sm:mt-8 sm:max-w-none sm:gap-x-10">
             {TRUST_ITEMS.map((item) => (

@@ -29,6 +29,7 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/install",
           "/contact",
+          "/hvac-software",
           "/insights",
           "/resources",
           // The sitemap itself: with `disallow: "/"` below, an unlisted

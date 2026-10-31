@@ -42,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${origin}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${origin}/pricing`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${origin}/hvac-software`, changeFrequency: "monthly", priority: 0.8 },
     {
       url: `${origin}${SITE_PAGE_PATH_PREFIX}`,
       changeFrequency: "weekly",
