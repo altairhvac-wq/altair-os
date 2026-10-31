@@ -387,6 +387,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "203_web_analytics_retention_sweep.sql",
     new Set(["sweep_web_analytics_events"]),
   ],
+  // 206 is the owner-browser exclusion: it redefines the 202 summary so the
+  // marked browsers leave every figure, and is held to the same grant rules.
+  [
+    "206_web_analytics_internal_visitors.sql",
+    new Set(["platform_web_analytics_summary"]),
+  ],
 ]);
 
 for (const file of files) {
