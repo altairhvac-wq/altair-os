@@ -110,8 +110,8 @@ function loadSentryWhenIdle(): void {
   else window.addEventListener("load", schedule, { once: true });
 }
 
-if (DSN && typeof window !== "undefined") {
-  loadSentryWhenIdle();
+if (DSN) {
+  if (typeof window !== "undefined") loadSentryWhenIdle();
 }
 
 /**
