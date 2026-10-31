@@ -9,6 +9,8 @@ type SignUpPageProps = {
 
 export const metadata: Metadata = {
   title: "Create your account",
+  description:
+    "Start your free 14-day trial of Altair Operating System. No credit card needed. Run customers, jobs, dispatch, estimates, invoices and payments in one place.",
 };
 
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {

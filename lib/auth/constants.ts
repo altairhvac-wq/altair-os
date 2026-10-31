@@ -1,4 +1,4 @@
-export const MIN_PASSWORD_LENGTH = 6;
+export const MIN_PASSWORD_LENGTH = 10;
 
 export const AUTH_CALLBACK_PATH = "/auth/callback";
 
