@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { sanitizeNextPath } from "@/lib/auth/redirects";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
@@ -10,12 +11,34 @@ import { AuthLink } from "./AuthShell";
 type LoginPageShellProps = {
   children: ReactNode;
   heroPanel: ReactNode;
+  /**
+   * `login` is /login as it has always been. `landing` is the same screen
+   * serving as the logged-out homepage: it sits under the fixed site nav
+   * (so the panels start 4.25rem down and the panel's own logo header is
+   * not needed), greets a stranger rather than a returning user, and puts
+   * the free-trial button right under the form.
+   */
+  variant?: "login" | "landing";
 };
 
-export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
+// 4.25rem below is HomepageNav's height; Tailwind needs the literal classes.
+export function LoginPageShell({ children, heroPanel, variant = "login" }: LoginPageShellProps) {
+  const landing = variant === "landing";
   return (
-    <div className="flex min-h-dvh flex-col bg-[#0a0b09] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(390px,35vw)] lg:items-start">
-      <main className="login-access-panel relative flex min-h-dvh min-w-0 flex-col overflow-x-clip border-l border-white/[0.06] bg-[#0e100d] text-white lg:fixed lg:right-0 lg:top-0 lg:z-20 lg:h-dvh lg:w-[35vw] lg:min-w-[390px] lg:overflow-x-hidden lg:overflow-y-auto">
+    <div
+      className={[
+        "flex min-h-dvh flex-col bg-[#0a0b09] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(390px,35vw)] lg:items-start",
+        landing ? "pt-[4.25rem]" : "",
+      ].join(" ")}
+    >
+      <main
+        className={[
+          "login-access-panel relative flex min-w-0 flex-col overflow-x-clip border-l border-white/[0.06] bg-[#0e100d] text-white lg:fixed lg:right-0 lg:z-20 lg:w-[35vw] lg:min-w-[390px] lg:overflow-x-hidden lg:overflow-y-auto",
+          landing
+            ? "min-h-[calc(100dvh-4.25rem)] lg:top-[4.25rem] lg:h-[calc(100dvh-4.25rem)]"
+            : "min-h-dvh lg:top-0 lg:h-dvh",
+        ].join(" ")}
+      >
         <div className="auth-grid pointer-events-none absolute inset-0 opacity-35" />
         <div className="auth-noise pointer-events-none absolute inset-0 opacity-20" />
         <div className="auth-gear-motif pointer-events-none absolute -bottom-40 -right-40 h-[26rem] w-[26rem] opacity-[0.06]" />
@@ -23,24 +46,30 @@ export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
         <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(116,106,81,0.07)_0%,transparent_72%)]" />
 
         <div className="relative flex min-h-full flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-8 lg:justify-center lg:px-8 lg:py-8 xl:px-12">
-          <header className="flex items-center justify-between border-b border-white/[0.07] pb-4 lg:hidden">
-            <AltairLogo variant="white" size="md" showWordmark />
-            <span className="inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#c2a05a]" />
-              Workspace access
-            </span>
-          </header>
+          {landing ? null : (
+            <header className="flex items-center justify-between border-b border-white/[0.07] pb-4 lg:hidden">
+              <AltairLogo variant="white" size="md" showWordmark />
+              <span className="inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#c2a05a]" />
+                Workspace access
+              </span>
+            </header>
+          )}
 
           <div className="auth-panel-enter mx-auto mt-7 w-full min-w-0 max-w-[440px] lg:mt-0">
-            <div className="mb-8 hidden flex-col items-center text-center lg:flex">
-              <AltairLogo variant="white" size="lg" showWordmark />
-            </div>
+            {landing ? null : (
+              <div className="mb-8 hidden flex-col items-center text-center lg:flex">
+                <AltairLogo variant="white" size="lg" showWordmark />
+              </div>
+            )}
 
             <h1 className="text-[2rem] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[2.25rem]">
-              Welcome back.
+              {landing ? "Welcome." : "Welcome back."}
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              Sign in to access your operating center.
+              {landing
+                ? "Sign in, or start a free 14-day trial. No credit card."
+                : "Sign in to access your operating center."}
             </p>
 
             <section
@@ -50,6 +79,15 @@ export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
             >
               {children}
             </section>
+
+            {landing ? (
+              <Link
+                href="/signup"
+                className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#a4823a] px-5 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0e100d]"
+              >
+                Start Your 14-Day Free Trial
+              </Link>
+            ) : null}
 
             <Suspense fallback={null}>
               <LoginPageFooter />

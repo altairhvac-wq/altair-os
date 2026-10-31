@@ -5,12 +5,10 @@ const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
 
 const FOOTER_LINKS = [
-  { href: "/#features", label: "Features" },
+  { href: "/hvac-software", label: "Product" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/hvac-software", label: "HVAC software" },
   { href: "/insights", label: "Insights" },
   { href: "/resources", label: "Resources" },
-  { href: "/#about", label: "About" },
   { href: "/contact", label: "Contact" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
