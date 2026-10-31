@@ -1,5 +1,6 @@
 import {
   SAAS_TRIAL_CONFIG,
+  describePlanAccounts,
   listPublicSaasCatalogPlans,
 } from "@/lib/saas-billing/catalog";
 import { SAAS_PLAN_DESCRIPTIONS } from "@/shared/components/pricing/plan-descriptions";
@@ -74,6 +75,7 @@ export function buildSoftwareApplicationStructuredData(): Record<string, unknown
       name: `${PUBLIC_SITE_NAME} ${plan.label}`,
       description: [
         SAAS_PLAN_DESCRIPTIONS[plan.planKey],
+        describePlanAccounts(plan) ? `${describePlanAccounts(plan)}.` : "",
         `$${plan.monthlyPriceUsd}/month or $${plan.annualPriceUsd}/year.`,
         trialNote,
       ]
