@@ -3,6 +3,7 @@ import { MissionControlHomepage } from "@/shared/components/homepage/MissionCont
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import {
+  buildFaqStructuredData,
   buildOrganizationStructuredData,
   buildSoftwareApplicationStructuredData,
 } from "@/shared/lib/site/structured-data";
@@ -33,6 +34,8 @@ export default function WelcomePage() {
           catalog and site constants the visible page renders. */}
       <JsonLdScript data={buildOrganizationStructuredData()} />
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
+      {/* The FAQ the page renders (MarketingFaqSection), from the same list. */}
+      <JsonLdScript data={buildFaqStructuredData()} />
       <MissionControlHomepage />
     </>
   );

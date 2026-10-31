@@ -8,6 +8,7 @@ import {
   PUBLIC_SITE_NAME,
   PUBLIC_SITE_ORIGIN,
 } from "@/shared/lib/site/public-site";
+import { SITE_FAQ } from "@/shared/lib/site/faq";
 
 /**
  * Structured data (JSON-LD) for the public marketing pages.
@@ -83,6 +84,23 @@ export function buildSoftwareApplicationStructuredData(): Record<string, unknown
       url: `${PUBLIC_SITE_ORIGIN}/pricing`,
       availability: "https://schema.org/InStock",
       category: "subscription",
+    })),
+  };
+}
+
+/**
+ * The FAQ block, for the pages that RENDER it (homepage and pricing). The
+ * same list the visible section reads, so the structured data can never say
+ * more than the page does.
+ */
+export function buildFaqStructuredData(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: SITE_FAQ.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
   };
 }

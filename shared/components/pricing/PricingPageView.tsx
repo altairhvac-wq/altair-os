@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
+import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 import {
@@ -178,6 +179,8 @@ export function PricingPageView() {
             Modern workflows. Real-world operations. One continuous system.
           </p>
         </section>
+
+        <MarketingFaqSection variant="light" className="auth-panel-enter mt-4 !py-8" />
 
         <section className="auth-panel-enter mx-auto mt-12 max-w-2xl rounded-2xl border border-[#C2A05A]/22 bg-gradient-to-b from-[#FDF9F0] via-[#FAF7F0] to-[#F4EFE4] p-6 text-center shadow-[0_14px_44px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">

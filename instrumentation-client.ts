@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import type * as SentryModule from "@sentry/nextjs";
 
 /**
  * Browser instrumentation entry point (Next.js `instrumentation-client.ts`).
@@ -19,8 +19,16 @@ import * as Sentry from "@sentry/nextjs";
  * exists to make failures visible, not to profile users.
  *
  * ==================== NO DSN, NO SDK ====================
- * `NEXT_PUBLIC_SENTRY_DSN` is inlined at build time. Without it `init` is not
- * called and every SDK call in the app (the error boundaries) is a no-op.
+ * `NEXT_PUBLIC_SENTRY_DSN` is inlined at build time. Without it the SDK is
+ * never imported and every SDK call in the app (the error boundaries) is a
+ * no-op.
+ *
+ * ==================== LOADED AFTER THE PAGE, NOT BEFORE IT ====================
+ * A static import here put the whole browser SDK (about 470 KB of the
+ * homepage's 509 KB of JavaScript) in front of every first paint, including a
+ * stranger's first visit from a video link. The SDK is now imported once the
+ * page has loaded and the browser is idle. Errors in that first second or two
+ * are the trade: they are not reported, and the page is on screen sooner.
  */
 
 const DSN = process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() || "";
@@ -43,7 +51,12 @@ function resolveEnvironment(): string {
   );
 }
 
-if (DSN) {
+type Sentry = typeof SentryModule;
+
+let sentry: Sentry | null = null;
+
+function initSentry(Sentry: Sentry): void {
+  sentry = Sentry;
   Sentry.init({
     dsn: DSN,
     environment: resolveEnvironment(),
@@ -76,8 +89,35 @@ if (DSN) {
   });
 }
 
+function loadSentryWhenIdle(): void {
+  const load = () => {
+    void import("@sentry/nextjs")
+      .then(initSentry)
+      .catch(() => {
+        // Monitoring is optional; the page is not.
+      });
+  };
+  const idle = (
+    window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }
+  ).requestIdleCallback;
+  const schedule = () => {
+    if (idle) idle(load, { timeout: 4000 });
+    else window.setTimeout(load, 1500);
+  };
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+}
+
+if (DSN && typeof window !== "undefined") {
+  loadSentryWhenIdle();
+}
+
 /**
  * Lets the SDK attribute a client-side error to the App Router navigation in
- * flight. Harmless when the SDK was not initialized.
+ * flight. Harmless when the SDK was not initialized (or not loaded yet).
  */
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+export function onRouterTransitionStart(href: string, navigationType: string): void {
+  sentry?.captureRouterTransitionStart(href, navigationType);
+}

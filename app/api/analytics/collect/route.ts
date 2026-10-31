@@ -113,6 +113,14 @@ export async function POST(request: Request): Promise<Response> {
     const limit = await enforcePublicRateLimit("public.analytics_collect", { ip: address });
     if (!limit.allowed) return NO_CONTENT();
 
+    // Too many never-seen browsers from one address in ten minutes is a tool
+    // opening the site in fresh profiles (a link checker, a crawler), not a
+    // crowd. Their first pageview is dropped, so they never enter the figures.
+    if (event === "pageview" && body.isReturning === false) {
+      const burst = await enforcePublicRateLimit("public.analytics_new_visitor", { ip: address });
+      if (!burst.allowed) return NO_CONTENT();
+    }
+
     // Signed-in visitors: product usage is attributed to the user; the owner's
     // own sessions are not recorded at all.
     let userId: string | null = null;
