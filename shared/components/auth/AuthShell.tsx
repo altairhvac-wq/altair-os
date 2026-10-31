@@ -17,10 +17,19 @@ import {
 import type { ReactNode } from "react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
-const OPERATIONAL_SNAPSHOT = [
-  { label: "Active jobs", value: "24", status: "live" },
-  { label: "Crews deployed", value: "8", status: "live" },
-  { label: "On-time rate", value: "94%", status: "steady" },
+/**
+ * What actually happens after the form, in order. This replaced a card of
+ * made-up "live operations" numbers (24 jobs, 8 crews, 94% on time): the
+ * site shows nothing it did not measure.
+ */
+const NEXT_STEPS = [
+  { step: "1", title: "Create your account", detail: "Name, company, email, password. No card." },
+  { step: "2", title: "Confirm your email", detail: "One link in your inbox opens your workspace." },
+  {
+    step: "3",
+    title: "Start with sample data or your own",
+    detail: "Load sample jobs to look around, or add your first customer.",
+  },
 ] as const;
 
 const PLATFORM_TIERS = [
@@ -136,33 +145,30 @@ function AuthHeroPanel() {
         </div>
 
         <div className="auth-hero-enter mt-6 shrink-0 rounded-2xl border border-[#C2A05A]/34 bg-gradient-to-b from-[#242019] via-[#1C1A17] to-[#12100D] p-4 shadow-[0_16px_52px_rgba(0,0,0,0.58),0_6px_18px_rgba(0,0,0,0.38),0_0_0_1px_rgba(194,160,90,0.06),inset_0_1px_0_rgba(245,230,163,0.2)] xl:mt-8">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Radio className="h-3.5 w-3.5 text-[#C2A05A]" aria-hidden="true" />
-              <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
-                Live operations
-              </span>
-            </div>
-            <span className="auth-metric-pulse flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-emerald-400/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Systems nominal
+          <div className="flex items-center gap-2">
+            <Radio className="h-3.5 w-3.5 text-[#C2A05A]" aria-hidden="true" />
+            <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+              What happens next
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {OPERATIONAL_SNAPSHOT.map((metric) => (
-              <div
-                key={metric.label}
-                className="rounded-lg border border-[#C2A05A]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
+          <ol className="mt-3 space-y-2.5">
+            {NEXT_STEPS.map((item) => (
+              <li
+                key={item.step}
+                className="flex items-start gap-3 rounded-lg border border-[#C2A05A]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
               >
-                <p className="text-[10px] font-medium uppercase tracking-wider text-stone-600">
-                  {metric.label}
-                </p>
-                <p className="mt-1 font-mono text-lg font-semibold tabular-nums tracking-tight text-[#0A0A0A]">
-                  {metric.value}
-                </p>
-              </div>
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0A0A0A] font-mono text-[11px] font-semibold text-[#F5E6A3]">
+                  {item.step}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-semibold text-[#0A0A0A]">{item.title}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-stone-600">
+                    {item.detail}
+                  </span>
+                </span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
 
         <div className="mt-6 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pb-1 xl:mt-7">

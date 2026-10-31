@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { PricingPageView } from "@/shared/components/pricing/PricingPageView";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
-import { buildSoftwareApplicationStructuredData } from "@/shared/lib/site/structured-data";
+import {
+  buildFaqStructuredData,
+  buildSoftwareApplicationStructuredData,
+} from "@/shared/lib/site/structured-data";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -15,9 +18,11 @@ export default function PricingPage() {
   return (
     <>
       {/* The same SoftwareApplication/Offer block as the homepage, from the
-          catalog this page renders. No FAQPage: the pricing page carries no
-          FAQ copy, and structured data may only describe what is on the page. */}
+          catalog this page renders, and the FAQ the page shows (same list as
+          MarketingFaqSection): structured data only describes what is on
+          the page. */}
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
+      <JsonLdScript data={buildFaqStructuredData()} />
       <PricingPageView />
     </>
   );

@@ -28,6 +28,7 @@ export default function robots(): MetadataRoute.Robots {
           "/privacy",
           "/terms",
           "/install",
+          "/contact",
           "/insights",
           "/resources",
           // The sitemap itself: with `disallow: "/"` below, an unlisted

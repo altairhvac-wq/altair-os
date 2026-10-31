@@ -7,6 +7,7 @@ import { HomepageOperatingSystemSection } from "@/shared/components/homepage/Hom
 import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
 import { HomepageProductProofSection } from "@/shared/components/homepage/HomepageProductProofSection";
 import { HomepageRealitySection } from "@/shared/components/homepage/HomepageRealitySection";
+import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 
 const focusRing =
@@ -41,6 +42,7 @@ export function MissionControlHomepage() {
         <HomepageFoundingSection />
         <HomepageOnboardingSection />
         <HomepagePricingSection />
+        <MarketingFaqSection variant="dark" />
 
         <section
           aria-labelledby="mc-final-cta-heading"

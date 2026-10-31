@@ -45,7 +45,8 @@ export type PublicRateLimitScope =
   | "public.estimate_approval"
   | "public.invoice_checkout"
   | "public.token_view"
-  | "public.analytics_collect";
+  | "public.analytics_collect"
+  | "public.analytics_new_visitor";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -110,6 +111,12 @@ export const PUBLIC_RATE_LIMITS: Record<
   // inflating counts from one address is cut off. Fails open (analytics is
   // not worth an outage), and a refusal is silent.
   "public.analytics_collect": [{ dimension: "ip", windowSeconds: 900, limit: 300 }],
+  // First pageview of a browser that has never been seen. A link checker or
+  // crawler that opens the site in a fresh profile per URL registered 52
+  // "new visitors" in three minutes on 2026-10-27; people behind one
+  // carrier address do not arrive at that rate. Over the cap, the pageview
+  // is dropped (silently, like the limit above).
+  "public.analytics_new_visitor": [{ dimension: "ip", windowSeconds: 600, limit: 30 }],
 };
 
 /**

@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 /**
@@ -42,11 +41,11 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("[global-error-boundary]", error);
-    try {
-      Sentry.captureException(error, { tags: { boundary: "global" } });
-    } catch {
-      // The SDK may be part of what failed to evaluate. The screen matters more.
-    }
+    // Imported on demand (see app/error.tsx). The SDK may be part of what
+    // failed to evaluate; the screen matters more, so a failed import is ignored.
+    void import("@sentry/nextjs")
+      .then((Sentry) => Sentry.captureException(error, { tags: { boundary: "global" } }))
+      .catch(() => {});
   }, [error]);
 
   return (

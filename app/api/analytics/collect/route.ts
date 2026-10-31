@@ -11,6 +11,7 @@ import {
   markInternalVisitor,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
+import { enforceNewVisitorBurstLimit } from "@/lib/analytics/new-visitor-burst";
 import { isInternalAnalyticsUser } from "@/lib/analytics/internal";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
 import {
@@ -112,6 +113,12 @@ export async function POST(request: Request): Promise<Response> {
     const address = await resolveRequestAddress();
     const limit = await enforcePublicRateLimit("public.analytics_collect", { ip: address });
     if (!limit.allowed) return NO_CONTENT();
+
+    // A burst of never-seen browsers from one address is a tool, not a crowd
+    // (lib/analytics/new-visitor-burst.ts). Their first pageview is dropped.
+    if (event === "pageview" && body.isReturning === false) {
+      if (!(await enforceNewVisitorBurstLimit(address))) return NO_CONTENT();
+    }
 
     // Signed-in visitors: product usage is attributed to the user; the owner's
     // own sessions are not recorded at all.

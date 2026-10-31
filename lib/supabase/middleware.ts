@@ -45,6 +45,7 @@ const SITE_PAGE_ROUTE_PREFIX = "/insights";
 const RESOURCES_ROUTE_PREFIX = "/resources";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
+const CONTACT_ROUTE = "/contact";
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
 const MARKETING_HOMEPAGE_ROUTE = "/welcome";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
@@ -265,6 +266,10 @@ function isInstallRoute(pathname: string) {
   return pathname === INSTALL_ROUTE;
 }
 
+function isContactRoute(pathname: string) {
+  return pathname === CONTACT_ROUTE;
+}
+
 function isMarketingHomepageRoute(pathname: string) {
   return (
     pathname === "/" ||
@@ -301,7 +306,8 @@ function isMarketingRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
-    isInstallRoute(pathname)
+    isInstallRoute(pathname) ||
+    isContactRoute(pathname)
   );
 }
 
@@ -315,6 +321,7 @@ function isPublicRoute(pathname: string) {
     isResourcesRoute(pathname) ||
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
+    isContactRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
