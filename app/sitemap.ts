@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
+import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
 
@@ -42,6 +43,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${origin}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${origin}/pricing`, changeFrequency: "weekly", priority: 0.8 },
+    ...LANDING_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${origin}${SITE_PAGE_PATH_PREFIX}`,
       changeFrequency: "weekly",

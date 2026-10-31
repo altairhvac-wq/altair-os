@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 
 /**
@@ -29,6 +30,7 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/install",
           "/contact",
+          ...LANDING_PAGE_PATHS,
           "/insights",
           "/resources",
           // The sitemap itself: with `disallow: "/"` below, an unlisted

@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/redirects";
 import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invite-cookie";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { getSupabaseEnv } from "./env";
 
@@ -46,6 +47,8 @@ const RESOURCES_ROUTE_PREFIX = "/resources";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 const CONTACT_ROUTE = "/contact";
+/** Search landing pages: static marketing, one per way an owner searches. */
+const LANDING_ROUTES: readonly string[] = LANDING_PAGE_PATHS;
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
 const MARKETING_HOMEPAGE_ROUTE = "/welcome";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
@@ -270,6 +273,10 @@ function isContactRoute(pathname: string) {
   return pathname === CONTACT_ROUTE;
 }
 
+function isLandingRoute(pathname: string) {
+  return LANDING_ROUTES.includes(pathname);
+}
+
 function isMarketingHomepageRoute(pathname: string) {
   return (
     pathname === "/" ||
@@ -307,7 +314,8 @@ function isMarketingRoute(pathname: string) {
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
     isInstallRoute(pathname) ||
-    isContactRoute(pathname)
+    isContactRoute(pathname) ||
+    isLandingRoute(pathname)
   );
 }
 
@@ -322,6 +330,7 @@ function isPublicRoute(pathname: string) {
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
+    isLandingRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
