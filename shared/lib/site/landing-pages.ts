@@ -218,6 +218,62 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     closingText:
       "If the approval comes back faster, you have your answer. The trial is free and needs no card.",
   },
+  {
+    path: "/hvac-invoicing-software",
+    navLabel: "Invoicing software",
+    title: "HVAC Invoicing Software",
+    description:
+      "Invoicing software for HVAC and service companies: the finished job becomes the invoice, the customer pays from a link with Stripe connected, payments taken on site are recorded against the invoice, and overdue invoices surface on their own. 14-day free trial, no credit card.",
+    eyebrow: "Invoicing and payments",
+    headline: "The finished job becomes the invoice. The customer pays from a link.",
+    intro:
+      "Invoices lag because the office has to rebuild the job from notes before it can bill. In Altair the invoice is made from the job, with the customer, the estimate and the work already on it, so billing is a step, not a project.",
+    modulesHeading: "From job done to money in.",
+    modules: [
+      {
+        title: "Invoice from the job",
+        text: "When the work is done, the job becomes the invoice with the customer, the address and the job already attached.",
+      },
+      {
+        title: "Invoice from the approved estimate",
+        text: "An approved estimate converts straight into its invoice, so the number the customer agreed to is the number they are billed.",
+      },
+      {
+        title: "Send by email, one or many",
+        text: "Send an invoice when it is ready, or send the day's batch at once. Resend when a customer asks.",
+      },
+      {
+        title: "A pay-by-link page for the customer",
+        text: "With Stripe connected, the customer opens a link and pays by card. No account, no app, no reading numbers over the phone.",
+      },
+      {
+        title: "Payments taken on site",
+        text: "Cash, check or card taken at the door is recorded against the invoice, in full or in part, so the balance is always right.",
+      },
+      {
+        title: "Overdue, without a spreadsheet",
+        text: "Sent and partly paid invoices turn overdue when their due date passes, and the dashboard shows what is outstanding and what is past due.",
+      },
+    ],
+    modulesNote:
+      "Card payments run through your own Stripe account; Altair never stores card numbers. There are no automatic payment-reminder emails yet; the overdue list is the prompt, and the resend is one click.",
+    stepsHeading: "days to bill your real jobs from it.",
+    steps: [
+      { title: "Create your account", text: "Name, company, email, password. No card." },
+      {
+        title: "Connect Stripe when you want pay-by-link",
+        text: "Settings has the Stripe connection. Without it you still invoice and record payments; with it customers pay from the link.",
+      },
+      {
+        title: "Bill one finished job",
+        text: "Make the invoice from a real job, send it, and record the payment when it lands. If that took less time than today, you have your answer.",
+      },
+      ...TRIAL_STEPS_TAIL,
+    ],
+    closingHeading: "Bill your next finished job from it.",
+    closingText:
+      "Invoice from the job, link to the customer, payment recorded. The trial is free and needs no card.",
+  },
 ];
 
 export const LANDING_PAGE_PATHS: readonly string[] = LANDING_PAGES.map((page) => page.path);
