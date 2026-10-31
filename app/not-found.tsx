@@ -15,14 +15,28 @@ export default function NotFound() {
       </h1>
       <p className="mt-3 max-w-md text-sm text-altair-ink-secondary">
         This page doesn&apos;t exist or may have moved. Check the address, or
-        head back to your dashboard.
+        start from one of these.
       </p>
-      <Link
-        href="/"
-        className="mt-8 inline-flex items-center rounded-full bg-altair-ink px-6 py-2.5 text-sm font-semibold text-altair-paper transition-opacity hover:opacity-85"
-      >
-        Back to dashboard
-      </Link>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/"
+          className="inline-flex items-center rounded-full bg-altair-ink px-6 py-2.5 text-sm font-semibold text-altair-paper transition-opacity hover:opacity-85"
+        >
+          Home
+        </Link>
+        <Link
+          href="/pricing"
+          className="inline-flex items-center rounded-full border border-altair-ink/20 px-6 py-2.5 text-sm font-semibold text-altair-ink transition-colors hover:bg-altair-ink/5"
+        >
+          Pricing
+        </Link>
+        <Link
+          href="/resources"
+          className="inline-flex items-center rounded-full border border-altair-ink/20 px-6 py-2.5 text-sm font-semibold text-altair-ink transition-colors hover:bg-altair-ink/5"
+        >
+          Resources
+        </Link>
+      </div>
     </main>
   );
 }

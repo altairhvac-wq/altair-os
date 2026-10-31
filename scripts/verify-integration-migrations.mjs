@@ -195,7 +195,12 @@ const ANON_READABLE_TABLES = new Set(["marketing_site_pages"]);
  * no policy. They are read only by Platform pages through the service role
  * after the app has authorised a platform admin. Named, not inferred.
  */
-const PLATFORM_ONLY_TABLES = new Set(["web_analytics_events"]);
+const PLATFORM_ONLY_TABLES = new Set([
+  "web_analytics_events",
+  // Migration 206: hashed browser ids the owner marked as internal. Same
+  // shape as the events they filter: no tenant, service role only.
+  "web_analytics_internal_visitors",
+]);
 
 console.log("\nTenancy, RLS and grants on every new table");
 for (const file of files) {
@@ -381,6 +386,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "203_web_analytics_retention_sweep.sql",
     new Set(["sweep_web_analytics_events"]),
+  ],
+  // 206 is the owner-browser exclusion: it redefines the 202 summary so the
+  // marked browsers leave every figure, and is held to the same grant rules.
+  [
+    "206_web_analytics_internal_visitors.sql",
+    new Set(["platform_web_analytics_summary"]),
   ],
 ]);
 

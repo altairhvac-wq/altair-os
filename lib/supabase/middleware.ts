@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/redirects";
 import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invite-cookie";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = [
@@ -292,6 +293,18 @@ function isAuthenticatedAppRoute(pathname: string) {
   );
 }
 
+/** The public marketing site: what the canonical host alone should serve. */
+function isMarketingRoute(pathname: string) {
+  return (
+    isMarketingHomepageRoute(pathname) ||
+    isPricingRoute(pathname) ||
+    isLegalRoute(pathname) ||
+    isSitePageRoute(pathname) ||
+    isResourcesRoute(pathname) ||
+    isInstallRoute(pathname)
+  );
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
@@ -378,6 +391,30 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // The marketing pages have one public address. The app host serves the
+  // same routes (it has to: /login and the auth callback live there), so a
+  // logged-out visitor who lands on app.<domain>/pricing is sent to the
+  // canonical host rather than seeing a second copy of the site.
+  if (!user && isMarketingRoute(pathname)) {
+    const canonicalHost = new URL(PUBLIC_SITE_ORIGIN).host;
+    const requestHost = request.nextUrl.host;
+    const apex = canonicalHost.replace(/^www\./, "");
+    if (
+      requestHost !== canonicalHost &&
+      requestHost !== apex &&
+      requestHost.endsWith(`.${apex}`)
+    ) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.host = canonicalHost;
+      // `/welcome` is an internal rewrite target; its public address is `/`.
+      if (isMarketingHomepageRoute(pathname)) redirectUrl.pathname = "/";
+      return withSupabaseCookies(
+        NextResponse.redirect(redirectUrl, 308),
+        supabaseResponse,
+      );
+    }
+  }
+
   // Logged-out visitors see the Mission Control homepage at `/`.
   // Authenticated users keep the existing dashboard at `/`.
   if (!user && pathname === "/") {
@@ -385,6 +422,18 @@ export async function updateSession(request: NextRequest) {
     rewriteUrl.pathname = MARKETING_HOMEPAGE_ROUTE;
     return withSupabaseCookies(
       NextResponse.rewrite(rewriteUrl),
+      supabaseResponse,
+    );
+  }
+
+  // The homepage route reads no session of its own (so it can be served as
+  // static HTML); a signed-in user who types /welcome belongs on the dashboard.
+  if (user && pathname !== "/" && isMarketingHomepageRoute(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return withSupabaseCookies(
+      NextResponse.redirect(redirectUrl),
       supabaseResponse,
     );
   }

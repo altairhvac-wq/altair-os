@@ -123,7 +123,7 @@ function AuthHeroPanel() {
 
           <div className="mt-8 max-w-lg xl:mt-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]/90">
-              Operational command center
+              Software for field service businesses
             </p>
             <h2 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-white xl:text-[2rem]">
               Run field operations with precision.
@@ -216,7 +216,7 @@ function AuthMobileBrand() {
     <div className="flex items-center justify-between gap-3 border-b border-stone-200/80 pb-5 lg:hidden">
       <AltairLogo variant="primary" size="sm" showWordmark />
       <p className="text-right text-[10px] font-medium uppercase tracking-[0.12em] text-stone-400">
-        Command center
+        Field service software
       </p>
     </div>
   );

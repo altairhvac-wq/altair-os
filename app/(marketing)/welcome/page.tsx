@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/database/auth";
 import { MissionControlHomepage } from "@/shared/components/homepage/MissionControlHomepage";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -24,15 +22,11 @@ export const metadata: Metadata = {
 
 /**
  * Internal route rendered for logged-out visitors at `/` via middleware rewrite.
- * Authenticated users are sent to the dashboard.
+ * Signed-in users who reach /welcome directly are sent to the dashboard by the
+ * middleware, so this page reads no cookies and prerenders as static HTML:
+ * one request to Supabase fewer per visit, and a cacheable response.
  */
-export default async function WelcomePage() {
-  const user = await getCurrentUser();
-
-  if (user) {
-    redirect("/");
-  }
-
+export default function WelcomePage() {
   return (
     <>
       {/* Organization + SoftwareApplication/Offer, read from the same plan

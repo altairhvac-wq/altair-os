@@ -11,6 +11,7 @@ import {
   signupAction,
   type AuthActionState,
 } from "@/app/actions/auth";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
 import { sanitizeNextPath } from "@/lib/auth/redirects";
 import {
   AuthField,
@@ -77,7 +78,7 @@ export function SignUpForm({
           ? "You were invited to join Altair and connect as a trusted network partner."
           : setupInviteFlow
             ? "Create your login with the email address your invitation was sent to. You'll accept the invite right after."
-            : "Get your trades business on Altair Operating System — set up in minutes, built for the field."
+            : "Free for 14 days, no credit card needed, cancel anytime. Set up your service business in minutes."
       }
       footer={
         <p>
@@ -152,7 +153,7 @@ export function SignUpForm({
           hint={
             setupInviteFlow
               ? "Leave this blank. Sign up with the email your invitation was sent to and you'll accept it after confirming your account."
-              : "This becomes your workspace name. Invited to join an existing company? Leave this blank and use the email your invite was sent to."
+              : "This becomes your workspace name. Joining a company that invited you? Leave it blank."
           }
         >
           <AuthInput
@@ -193,7 +194,7 @@ export function SignUpForm({
         <AuthField
           label="Password"
           id="password"
-          hint="At least 6 characters."
+          hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
         >
           <AuthInput
             id="password"
@@ -201,7 +202,7 @@ export function SignUpForm({
             type="password"
             autoComplete="new-password"
             placeholder="Create a secure password"
-            minLength={6}
+            minLength={MIN_PASSWORD_LENGTH}
             required
           />
         </AuthField>

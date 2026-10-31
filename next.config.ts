@@ -37,6 +37,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     qualities: [70, 75, 90],
+    // Marketing screenshots change a few times a year, not a few times a
+    // day: keep optimized variants for a day instead of the 4-hour default.
+    minimumCacheTTL: 86400,
   },
   /**
    * Security headers on every response.
@@ -47,15 +50,25 @@ const nextConfig: NextConfig = {
    * see lib/security/response-headers.ts for each directive's justification.
    */
   async headers() {
+    const securityHeaders = buildSecurityHeaders({
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+      isDevelopment: process.env.NODE_ENV !== "production",
+    });
+    // Files under /public ship with `max-age=0, must-revalidate`, so every
+    // repeat visit re-checks each screenshot, icon and the link-preview
+    // image. A day in the browser (a week stale-while-revalidate) is safe:
+    // a recaptured screenshot keeps its name and shows within a day.
+    const marketingAssetCache = {
+      key: "Cache-Control",
+      value: "public, max-age=86400, stale-while-revalidate=604800",
+    };
     return [
-      {
-        source: "/:path*",
-        headers: buildSecurityHeaders({
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-          isDevelopment: process.env.NODE_ENV !== "production",
-        }),
-      },
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/marketing/:path*", headers: [marketingAssetCache] },
+      { source: "/icons/:path*", headers: [marketingAssetCache] },
+      { source: "/og.png", headers: [marketingAssetCache] },
+      { source: "/favicon.svg", headers: [marketingAssetCache] },
     ];
   },
 
