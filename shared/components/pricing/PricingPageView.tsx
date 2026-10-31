@@ -6,6 +6,7 @@ import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 import {
   SAAS_TRIAL_CONFIG,
+  describePlanAccounts,
   listPublicSaasCatalogPlans,
 } from "@/lib/saas-billing/catalog";
 import { SAAS_PLAN_DESCRIPTIONS } from "@/shared/components/pricing/plan-descriptions";
@@ -109,6 +110,9 @@ export function PricingPageView() {
                   <p className="mt-2 text-sm text-stone-600">
                     Or ${plan.annualPriceUsd}/year and save ${plan.annualSavingsUsd}
                   </p>
+                  <p className="mt-3 text-sm font-semibold text-[#0A0A0A]">
+                    {describePlanAccounts(plan)}
+                  </p>
                   <p className="mt-2 text-xs font-medium text-[#77591B]">
                     {SAAS_TRIAL_CONFIG.durationDays}-day free trial · No credit
                     card required to start
@@ -144,6 +148,7 @@ export function PricingPageView() {
             </h2>
             <p className="mt-2 text-sm text-stone-600">
               Every plan includes the core Altair Operating System workflows and live onboarding.
+              Plans differ by the number of accounts: an account is any user, owner, office or technician.
             </p>
           </div>
 

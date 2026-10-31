@@ -50,6 +50,16 @@ export type SaasCatalogPlan = {
   annualSavingsUsd: number | null;
   /** Equivalent free months when paying annually (e.g. 2). */
   annualSavingsMonths: number | null;
+  /**
+   * User accounts (owner, office and technicians alike) the plan includes.
+   * null when the plan is not sold.
+   */
+  includedAccounts: number | null;
+  /**
+   * Monthly USD price per account beyond `includedAccounts`; null when the
+   * plan does not sell extra accounts (the cap is hard).
+   */
+  additionalAccountPriceUsd: number | null;
   stripePriceEnv: {
     monthly: SaasStripePriceEnvName;
     annual: SaasStripePriceEnvName;

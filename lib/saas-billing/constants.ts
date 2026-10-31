@@ -181,3 +181,26 @@ export function isSaasBillingCheckoutConfigured(): boolean {
 
   return false;
 }
+
+/**
+ * Stripe Prices for accounts beyond a plan's included count (Pro only
+ * today). Two prices because a subscription's items must share one
+ * interval: a monthly Pro subscription adds a monthly $15 item, an annual
+ * one adds the annual equivalent. Created by the owner in the Stripe
+ * dashboard; until both are set, no company can go past its included
+ * accounts (the invite is refused with a plain message).
+ */
+const ADDITIONAL_ACCOUNT_PRICE_ENV: Record<SaasBillingInterval, string> = {
+  monthly: "STRIPE_PRICE_ADDITIONAL_ACCOUNT_MONTHLY",
+  annual: "STRIPE_PRICE_ADDITIONAL_ACCOUNT_ANNUAL",
+};
+
+export function getStripeAdditionalAccountPriceId(interval: SaasBillingInterval): string | null {
+  return readEnvPriceId(ADDITIONAL_ACCOUNT_PRICE_ENV[interval]);
+}
+
+export function isAdditionalAccountBillingConfigured(): boolean {
+  return Boolean(
+    getStripeAdditionalAccountPriceId("monthly") && getStripeAdditionalAccountPriceId("annual"),
+  );
+}

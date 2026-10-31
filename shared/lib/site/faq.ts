@@ -49,7 +49,7 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     id: "team",
     question: "Can my technicians use it too?",
     answer:
-      "Yes. Invite your office and field team from Settings. Technicians get their own mobile view with the day's jobs, and the office keeps the full picture.",
+      "Yes. Invite your office and field team from Settings; technicians get their own mobile view with the day's jobs. Plans differ by accounts: Starter includes 1, Growth up to 5, Pro 10 and then $15/month for each additional account. An account is any user, owner, office or technician.",
   },
   {
     id: "sample-data",

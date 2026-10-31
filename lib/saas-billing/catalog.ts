@@ -56,6 +56,8 @@ function paidPlan(input: {
   displayOrder: number;
   monthlyPriceUsd: number;
   annualPriceUsd: number;
+  includedAccounts: number;
+  additionalAccountPriceUsd?: number;
   stripePriceEnv: {
     monthly: SaasStripePriceEnvName;
     annual: SaasStripePriceEnvName;
@@ -78,6 +80,8 @@ function paidPlan(input: {
     annualPriceUsd: input.annualPriceUsd,
     annualSavingsUsd,
     annualSavingsMonths,
+    includedAccounts: input.includedAccounts,
+    additionalAccountPriceUsd: input.additionalAccountPriceUsd ?? null,
     stripePriceEnv: input.stripePriceEnv,
   };
 }
@@ -99,6 +103,8 @@ export const SAAS_SUBSCRIPTION_CATALOG = {
     annualPriceUsd: null,
     annualSavingsUsd: null,
     annualSavingsMonths: null,
+    includedAccounts: null,
+    additionalAccountPriceUsd: null,
     stripePriceEnv: null,
   },
   starter: paidPlan({
@@ -107,6 +113,7 @@ export const SAAS_SUBSCRIPTION_CATALOG = {
     displayOrder: 1,
     monthlyPriceUsd: 39,
     annualPriceUsd: 390,
+    includedAccounts: 1,
     stripePriceEnv: {
       monthly: "STRIPE_PRICE_STARTER_MONTHLY",
       annual: "STRIPE_PRICE_STARTER_ANNUAL",
@@ -118,6 +125,7 @@ export const SAAS_SUBSCRIPTION_CATALOG = {
     displayOrder: 2,
     monthlyPriceUsd: 79,
     annualPriceUsd: 790,
+    includedAccounts: 5,
     stripePriceEnv: {
       monthly: "STRIPE_PRICE_GROWTH_MONTHLY",
       annual: "STRIPE_PRICE_GROWTH_ANNUAL",
@@ -129,6 +137,8 @@ export const SAAS_SUBSCRIPTION_CATALOG = {
     displayOrder: 3,
     monthlyPriceUsd: 149,
     annualPriceUsd: 1490,
+    includedAccounts: 10,
+    additionalAccountPriceUsd: 15,
     stripePriceEnv: {
       monthly: "STRIPE_PRICE_PRO_MONTHLY",
       annual: "STRIPE_PRICE_PRO_ANNUAL",
@@ -209,4 +219,41 @@ export function getSaasPlanListPriceUsd(
 ): number | null {
   const plan = SAAS_SUBSCRIPTION_CATALOG[planKey];
   return interval === "monthly" ? plan.monthlyPriceUsd : plan.annualPriceUsd;
+}
+
+/**
+ * ============ ACCOUNTS PER PLAN (owner decision, 2026-10-31) ============
+ * Starter: 1 account. Growth: up to 5. Pro: 10, then $15/month for each
+ * additional account. An "account" is any user in the company: the owner,
+ * office staff and technicians alike. Pending invitations hold an account
+ * until they are accepted or cancelled.
+ *
+ * A company that has not chosen a paid plan yet (trial, beta, complimentary)
+ * gets the Pro allowance, so a trial can test the whole team; the cap
+ * applies once a plan is chosen.
+ */
+export const SAAS_TRIAL_ACCOUNT_ALLOWANCE = SAAS_SUBSCRIPTION_CATALOG.pro.includedAccounts as number;
+
+export type SaasPlanAccountAllowance = {
+  includedAccounts: number;
+  additionalAccountPriceUsd: number | null;
+};
+
+export function getPlanAccountAllowance(planKey: SaasPlanKey): SaasPlanAccountAllowance {
+  const plan = SAAS_SUBSCRIPTION_CATALOG[planKey];
+  if (plan.includedAccounts === null) {
+    return { includedAccounts: SAAS_TRIAL_ACCOUNT_ALLOWANCE, additionalAccountPriceUsd: null };
+  }
+  return {
+    includedAccounts: plan.includedAccounts,
+    additionalAccountPriceUsd: plan.additionalAccountPriceUsd,
+  };
+}
+
+/** The one sentence every pricing surface uses for a plan's accounts. */
+export function describePlanAccounts(plan: Pick<SaasCatalogPlan, "includedAccounts" | "additionalAccountPriceUsd">): string | null {
+  if (plan.includedAccounts === null) return null;
+  const base = plan.includedAccounts === 1 ? "1 account" : `Up to ${plan.includedAccounts} accounts`;
+  if (plan.additionalAccountPriceUsd === null) return base;
+  return `${plan.includedAccounts} accounts, then $${plan.additionalAccountPriceUsd}/month each`;
 }

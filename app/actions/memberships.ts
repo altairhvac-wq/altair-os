@@ -1,6 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  assertCompanyCanAddAccount,
+  syncAdditionalAccountBilling,
+} from "@/lib/saas-billing/accounts";
 import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
   enforcePublicRateLimit,
@@ -247,6 +251,13 @@ export async function inviteTeamMemberAction(
     return { error: "Enter a valid email address." };
   }
 
+  // The plan's account count (pricing page: Starter 1, Growth 5, Pro 10 +
+  // $15 each) is enforced here, not only shown there.
+  const seat = await assertCompanyCanAddAccount(context.company.id);
+  if (!seat.ok) {
+    return { error: seat.message };
+  }
+
   const result = await createTeamInvite(
     context.company.id,
     trimmedEmail,
@@ -260,6 +271,10 @@ export async function inviteTeamMemberAction(
   if (result.error || !result.member) {
     return { error: result.error ?? "We couldn't create this invitation. Try again." };
   }
+
+  // A pending invitation holds an account; a Pro company past its included
+  // ten is billed for it from now.
+  await syncAdditionalAccountBilling(context.company.id);
 
   const appBaseUrl = getAppBaseUrl();
   const inviteAcceptUrl = appBaseUrl
@@ -392,6 +407,7 @@ export async function cancelTeamInviteAction(
     return { error: result.error ?? "Failed to cancel invitation." };
   }
 
+  await syncAdditionalAccountBilling(context.company.id);
   revalidatePath("/settings");
 
   return {
@@ -466,6 +482,13 @@ async function runMemberStatusAction(
 
   const { context } = access;
 
+  if (targetStatus === "active") {
+    const seat = await assertCompanyCanAddAccount(context.company.id);
+    if (!seat.ok) {
+      return { error: seat.message };
+    }
+  }
+
   const result = await updateMemberStatus(
     context.company.id,
     normalizedMembershipId,
@@ -485,6 +508,8 @@ async function runMemberStatusAction(
           : "Failed to reactivate team member."),
     };
   }
+
+  await syncAdditionalAccountBilling(context.company.id);
 
   if (result.audit?.changed) {
     const emitPayload = {
