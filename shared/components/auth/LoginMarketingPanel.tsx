@@ -247,7 +247,7 @@ function TrustBar() {
   );
 }
 
-export function LoginMarketingPanel() {
+export function LoginMarketingPanel({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   return (
     <section className="relative min-h-full overflow-hidden bg-[#0a0b09] text-white">
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-30" />
@@ -256,15 +256,17 @@ export function LoginMarketingPanel() {
       <div className="pointer-events-none absolute -left-56 top-24 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle,rgba(116,106,81,0.1)_0%,transparent_68%)]" />
 
       <div className="relative mx-auto max-w-[1160px] px-5 py-7 sm:px-8 sm:py-9 lg:px-8 xl:px-10">
-        <header className="flex items-center justify-between gap-4">
-          <AltairLogo variant="white" size="lg" showWordmark className="drop-shadow-[0_3px_18px_rgba(194,160,90,0.2)]" />
-          <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-300 backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#c2a05a] shadow-[0_0_10px_rgba(194,160,90,0.7)]" />
-            Operations connected
-          </span>
-        </header>
+        {hideHeader ? null : (
+          <header className="flex items-center justify-between gap-4">
+            <AltairLogo variant="white" size="lg" showWordmark className="drop-shadow-[0_3px_18px_rgba(194,160,90,0.2)]" />
+            <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-300 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#c2a05a] shadow-[0_0_10px_rgba(194,160,90,0.7)]" />
+              Operations connected
+            </span>
+          </header>
+        )}
 
-        <div className="mt-8 grid items-center gap-7 xl:grid-cols-[0.88fr_1.12fr]">
+        <div className={`grid items-center gap-7 xl:grid-cols-[0.88fr_1.12fr] ${hideHeader ? "mt-2" : "mt-8"}`}>
           <div className="auth-hero-enter">
             <p className="text-[10px] font-semibold uppercase tracking-[0.19em] text-[#c2a05a]">Operating system for field service</p>
             <h2 className="mt-4 text-[clamp(2.4rem,4.5vw,4.5rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-[#fafaf8]">{LOGIN_HERO_TITLE}</h2>

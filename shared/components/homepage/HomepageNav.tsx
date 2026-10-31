@@ -7,12 +7,12 @@ import { Menu, X } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
 const NAV_LINKS = [
-  { href: "/#features", label: "Product", id: "features" },
-  { href: "/#onboarding", label: "Onboarding", id: "onboarding" },
+  { href: "/hvac-software", label: "Product", id: "product" },
+  { href: "/hvac-software#onboarding", label: "Onboarding", id: "onboarding" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
   { href: "/insights", label: "Insights", id: "insights" },
   { href: "/resources", label: "Resources", id: "resources" },
-  { href: "/#about", label: "About", id: "about" },
+  { href: "/contact", label: "Contact", id: "contact" },
 ] as const;
 
 const focusRing =
@@ -34,6 +34,8 @@ export function HomepageNav() {
   const insightsActive = pathname.startsWith("/insights");
   const resourcesActive =
     pathname === "/resources" || pathname.startsWith("/resources/");
+  const productActive = pathname === "/hvac-software";
+  const contactActive = pathname === "/contact";
 
   useEffect(() => {
     const onScroll = () => {
@@ -92,7 +94,9 @@ export function HomepageNav() {
             const active =
               (link.id === "pricing" && pricingActive) ||
               (link.id === "insights" && insightsActive) ||
-              (link.id === "resources" && resourcesActive);
+              (link.id === "resources" && resourcesActive) ||
+              (link.id === "product" && productActive) ||
+              (link.id === "contact" && contactActive);
             return (
               <Link
                 key={link.href}
