@@ -107,6 +107,12 @@ const ENTRY_POINTS = [
     scope: "public.analytics_collect",
     why: "anonymous analytics beacon: event flooding that would inflate traffic figures and table size",
   },
+  {
+    file: "lib/analytics/new-visitor-burst.ts",
+    fn: "enforceNewVisitorBurstLimit",
+    scope: "public.analytics_new_visitor",
+    why: "a tool opening the site in fresh browser profiles counted as a crowd of new visitors",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */
