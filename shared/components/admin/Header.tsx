@@ -130,7 +130,7 @@ export function Header({
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
-      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3 md:flex-1">
         {showMobileQuickNav ? (
           <div className="md:hidden">
             <QuickNavToggle
@@ -184,6 +184,23 @@ export function Header({
         </div>
       </div>
 
+      {/* The bell lives between the two clusters. On a phone the left cluster
+       * is only the menu button, so the bell sits beside it (owner request
+       * 2026-11-01); from md up the left cluster grows and the bell lands
+       * next to the account controls as before. */}
+      <NotificationBell
+        initialNotifications={notifications}
+        initialUnreadCount={unreadNotificationCount}
+        notificationAccess={notificationAccess}
+        tone={chromeTone}
+        triggerClassName={
+          northStarChrome ? "north-star-header-bell" : undefined
+        }
+        badgeClassName={
+          northStarChrome ? "north-star-header-bell-badge" : undefined
+        }
+      />
+
       {/* `min-w-0`, not `shrink-0`.
        *
        * At 390px this cluster measured 407px inside a 390px header and pushed
@@ -192,7 +209,7 @@ export function Header({
        * max-w-[9.5rem]`, but a `shrink-0` parent blocks a child from ever
        * shrinking, so that intent never applied. Letting the cluster compress
        * lets the pill truncate as it was written to. */}
-      <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
         {/*
          * No global Search control here. A Search button used to ship in this
          * slot with no onClick, no form, and no dialog — it was announced to
@@ -201,18 +218,6 @@ export function Header({
          * page owns its own search field); restore this only alongside a real
          * command palette or search route.
          */}
-        <NotificationBell
-          initialNotifications={notifications}
-          initialUnreadCount={unreadNotificationCount}
-          notificationAccess={notificationAccess}
-          tone={chromeTone}
-          triggerClassName={
-            northStarChrome ? "north-star-header-bell" : undefined
-          }
-          badgeClassName={
-            northStarChrome ? "north-star-header-bell-badge" : undefined
-          }
-        />
         {/* `min-w-0` so this can compress too. At 390px its children — view
          * switcher 120px, trial pill 133px, avatar 36px, sign out 36px, plus
          * gaps — reached x=427 on a 390px screen. `html` and `body` are
