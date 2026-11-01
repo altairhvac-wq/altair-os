@@ -92,7 +92,6 @@ export function Header({
   showQuickNav = false,
   quickNavOpen = false,
   onQuickNavOpenChange,
-  billingAccess = null,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
