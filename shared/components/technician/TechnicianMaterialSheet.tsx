@@ -50,6 +50,7 @@ export function TechnicianMaterialSheet({
 
   return (
     <MobileSheet
+      zIndex={60}
       onClose={onClose}
       closeDisabled={closeDisabled}
       ariaLabelledBy={TITLE_ID}

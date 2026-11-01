@@ -883,22 +883,28 @@ export async function seedCompanyDemoData(
             )
           : start;
 
-        await insertTimeEntry(
-          "seed_time_entries",
-          companyId,
-          {
-            company_id: companyId,
-            technician_id: seedContext.technicianId,
-            job_id: jobId,
-            entry_type: "job_labor",
-            started_at: workStarted.toISOString(),
-            ended_at: null,
-            duration_minutes: null,
-            notes: `${jobSeed.jobType} — active labor.`,
-            is_demo: true,
-          },
-          { allowSkipOpenSegment: true },
+        // Seed this labor as a closed segment. Demo data must never put a
+        // real person on a running clock: an open segment kept counting for
+        // hours after the owner loaded the demo, nagged the technician to
+        // "fix a missed clock-out", and blocked them from starting their own
+        // first job until the demo job was "completed".
+        const laborEnded = new Date(
+          Math.max(workStarted.getTime(), seedContext.now.getTime()),
         );
+
+        await insertTimeEntry("seed_time_entries", companyId, {
+          company_id: companyId,
+          technician_id: seedContext.technicianId,
+          job_id: jobId,
+          entry_type: "job_labor",
+          started_at: workStarted.toISOString(),
+          ended_at: laborEnded.toISOString(),
+          duration_minutes: Math.round(
+            (laborEnded.getTime() - workStarted.getTime()) / 60_000,
+          ),
+          notes: `${jobSeed.jobType} labor (demo).`,
+          is_demo: true,
+        });
       } else if (
         jobSeed.status === "completed" &&
         jobSeed.workStartedMinutesAfterStart &&
@@ -929,21 +935,25 @@ export async function seedCompanyDemoData(
       }
     }
 
-    await insertTimeEntry(
-      "seed_time_entries_clock",
-      companyId,
-      {
-        company_id: companyId,
-        technician_id: seedContext.technicianId,
-        entry_type: "clock",
-        started_at: atTime(seedContext.now, 7, 45).toISOString(),
-        ended_at: null,
-        duration_minutes: null,
-        notes: "Demo shift clock-in for labor hour reporting.",
-        is_demo: true,
-      },
-      { allowSkipOpenSegment: true },
+    // Today's demo shift is seeded closed for the same reason as the labor
+    // above: nobody should find themselves clocked in by demo data.
+    const demoShiftStart = atTime(seedContext.now, 7, 45);
+    const demoShiftEnd = new Date(
+      Math.max(demoShiftStart.getTime(), seedContext.now.getTime()),
     );
+
+    await insertTimeEntry("seed_time_entries_clock", companyId, {
+      company_id: companyId,
+      technician_id: seedContext.technicianId,
+      entry_type: "clock",
+      started_at: demoShiftStart.toISOString(),
+      ended_at: demoShiftEnd.toISOString(),
+      duration_minutes: Math.round(
+        (demoShiftEnd.getTime() - demoShiftStart.getTime()) / 60_000,
+      ),
+      notes: "Demo shift for labor hour reporting.",
+      is_demo: true,
+    });
 
     await insertTimeEntry("seed_time_entries_clock", companyId, {
       company_id: companyId,

@@ -33,6 +33,7 @@ export function TechnicianPhotoSheet({
 
   return (
     <MobileSheet
+      zIndex={60}
       onClose={onClose}
       closeDisabled={isUploading}
       ariaLabelledBy={TITLE_ID}

@@ -21,7 +21,12 @@ export function TechnicianJobLaborStatus({
   timeState,
   compact = false,
 }: TechnicianJobLaborStatusProps) {
-  const [now, setNow] = useState(() => Date.now());
+  // Elapsed time depends on the clock, so it is rendered only after mount:
+  // the server (and the hydration pass) render the placeholder, and the
+  // client fills the minutes in. Rendering Date.now() during server render
+  // produced a hydration mismatch whenever a minute boundary passed between
+  // the server and client renders.
+  const [now, setNow] = useState<number | null>(null);
   const laborEntry =
     timeState.openJobLaborEntry?.jobId === jobId
       ? timeState.openJobLaborEntry
@@ -32,12 +37,15 @@ export function TechnicianJobLaborStatus({
       return;
     }
 
+    // Deliberate: this first tick is what makes the label hydration-safe.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(interval);
   }, [laborEntry?.id]);
 
   const elapsedLabel = useMemo(() => {
-    if (!laborEntry) {
+    if (!laborEntry || now === null) {
       return null;
     }
 
@@ -47,7 +55,7 @@ export function TechnicianJobLaborStatus({
   }, [laborEntry, now]);
 
   const shiftElapsedLabel = useMemo(() => {
-    if (!timeState.openClockEntry) {
+    if (!timeState.openClockEntry || now === null) {
       return null;
     }
 

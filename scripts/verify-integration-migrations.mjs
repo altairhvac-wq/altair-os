@@ -400,6 +400,12 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "207_record_payment_on_draft_invoice.sql",
     new Set(["record_invoice_payment_atomic"]),
   ],
+  // 208 tolerates caller clock skew when closing a time entry: it redefines
+  // the 123 closer to clamp a slightly-future end to now(); grants unchanged.
+  [
+    "208_time_entry_close_clock_skew.sql",
+    new Set(["close_time_entry"]),
+  ],
 ]);
 
 for (const file of files) {
