@@ -12,7 +12,7 @@ import {
 } from "@/shared/lib/job-next-business-action";
 import { resolveJobWorkflow } from "@/shared/lib/workflow";
 import { InvoicePaymentCollectionCard } from "@/shared/components/invoices/InvoicePaymentCollectionCard";
-import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
+import { canCollectInvoicePaymentOnline } from "@/shared/types/invoice-payment";
 import { isActiveInvoice } from "@/shared/types/invoice";
 import type { JobStatus } from "@/shared/types/job";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
@@ -73,7 +73,7 @@ function selectPayableInvoiceForCollection(
     invoices
       .filter(
         (invoice) =>
-          isActiveInvoice(invoice) && canRecordInvoicePayment(invoice),
+          isActiveInvoice(invoice) && canCollectInvoicePaymentOnline(invoice),
       )
       .sort(
         (left, right) =>

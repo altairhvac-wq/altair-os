@@ -83,7 +83,31 @@ export function isInvoicePayable(status: string): status is PayableInvoiceStatus
   return (PAYABLE_INVOICE_STATUSES as readonly string[]).includes(status);
 }
 
+/**
+ * Statuses on which the office can record a payment by hand. Drafts are
+ * included: cash or a check collected on site must be recordable even when
+ * the invoice was never emailed (missing or bouncing customer email).
+ * Online collection (payment links, Stripe Checkout) still requires a sent
+ * invoice; see canCollectInvoicePaymentOnline.
+ */
+export const MANUALLY_PAYABLE_INVOICE_STATUSES = [
+  "draft",
+  ...PAYABLE_INVOICE_STATUSES,
+] as const;
+
+export function isInvoiceManuallyPayable(status: string): boolean {
+  return (MANUALLY_PAYABLE_INVOICE_STATUSES as readonly string[]).includes(status);
+}
+
 export function canRecordInvoicePayment(invoice: {
+  status: string;
+  balanceDue: number;
+}): boolean {
+  return isInvoiceManuallyPayable(invoice.status) && invoice.balanceDue > 0;
+}
+
+/** Payment links and hosted checkout: the customer-facing page only accepts sent invoices. */
+export function canCollectInvoicePaymentOnline(invoice: {
   status: string;
   balanceDue: number;
 }): boolean {
@@ -98,11 +122,7 @@ export function getRecordPaymentBlockReason(invoice: {
     return "This invoice has no balance due.";
   }
 
-  if (!isInvoicePayable(invoice.status)) {
-    if (invoice.status === "draft") {
-      return "Send this invoice before recording payments.";
-    }
-
+  if (!isInvoiceManuallyPayable(invoice.status)) {
     if (invoice.status === "paid") {
       return "This invoice is fully paid.";
     }

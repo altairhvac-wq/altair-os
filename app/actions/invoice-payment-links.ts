@@ -35,7 +35,7 @@ import { sendSmsMessage } from "@/lib/sms/send";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { buildInvoicePaymentUrl } from "@/shared/lib/invoice-payment-link";
 import { isValidEmail } from "@/shared/lib/email-validation";
-import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
+import { canCollectInvoicePaymentOnline } from "@/shared/types/invoice-payment";
 
 export type CreateInvoicePaymentLinkActionResult = {
   error?: string;
@@ -166,8 +166,13 @@ async function validateInvoicePaymentLinkRequest(
     return { error: accessError };
   }
 
-  if (!canRecordInvoicePayment(invoice)) {
-    return { error: "This invoice has no balance due." };
+  if (!canCollectInvoicePaymentOnline(invoice)) {
+    return {
+      error:
+        invoice.status === "draft"
+          ? "Send this invoice before sharing a payment link. To record cash or a check collected on site, use Record payment instead."
+          : "This invoice has no balance due.",
+    };
   }
 
   const customerEmail = invoice.customerEmail?.trim();
@@ -238,8 +243,13 @@ async function validateInvoicePaymentLinkSmsRequest(
     return { error: accessError };
   }
 
-  if (!canRecordInvoicePayment(invoice)) {
-    return { error: "This invoice has no balance due." };
+  if (!canCollectInvoicePaymentOnline(invoice)) {
+    return {
+      error:
+        invoice.status === "draft"
+          ? "Send this invoice before sharing a payment link. To record cash or a check collected on site, use Record payment instead."
+          : "This invoice has no balance due.",
+    };
   }
 
   const customerPhoneE164 = normalizePhoneNumber(
