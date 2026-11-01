@@ -6,6 +6,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
+import { getDashboardOverviewExtras } from "@/lib/database/services/dashboard-overview";
 import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 import { BillingGraceBanner } from "@/shared/components/billing/BillingGraceBanner";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
@@ -28,9 +29,10 @@ export default async function DashboardPage() {
 
   const companyId = companyContext.company.id;
 
-  const [data, onboardingSnapshot, demoDataStatus, billingAccess] =
+  const [data, extras, onboardingSnapshot, demoDataStatus, billingAccess] =
     await Promise.all([
       getDashboardData(companyContext),
+      getDashboardOverviewExtras(companyContext),
       getOnboardingSnapshot(companyId, companyContext),
       canManageDemoData(companyContext)
         ? getDemoDataStatus(companyId, companyContext)
@@ -59,6 +61,8 @@ export default async function DashboardPage() {
       />
       <OperationalDashboardView
         data={data}
+        extras={extras}
+        billingAccess={billingAccess}
         userDisplayName={userDisplayName}
         onboardingChecklist={onboardingChecklist}
         demoDataStatus={demoDataStatus}

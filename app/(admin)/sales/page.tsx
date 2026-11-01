@@ -321,13 +321,16 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       aiFeaturesEnabled={isAiFeaturesEnabled()}
       estimatesCreateInitialData={estimatesCreateInitialData}
       invoicesCreateInitialData={invoicesCreateInitialData}
+      // `create=1` opens the form even without a customer deep link: both
+      // forms have their own customer picker, and the dashboard's "New
+      // estimate" / "New invoice" land here.
       estimatesInitialPanelMode={
-        create === "1" && preselectedCustomer && activeTab === "estimates"
-          ? "create"
-          : "empty"
+        create === "1" && activeTab === "estimates" ? "create" : "empty"
       }
       invoicesInitialPanelMode={
-        shouldOpenInvoiceCreate && activeTab === "invoices" ? "create" : "empty"
+        (shouldOpenInvoiceCreate || create === "1") && activeTab === "invoices"
+          ? "create"
+          : "empty"
       }
       initialLeadId={leadId}
       initialJobId={validJob?.id}
