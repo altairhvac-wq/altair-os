@@ -5737,7 +5737,10 @@ a[href] {
   .admin-north-star-shell .admin-premium-header .north-star-header-signout,
   .admin-north-star-shell .admin-premium-header .north-star-header-bell,
   .admin-north-star-shell .admin-premium-header [data-testid="quick-nav-toggle"] {
-    color: var(--north-star-topbar-icon);
+    /* Heading white rather than the muted icon tan: on a phone these are
+       the only three controls in the bar and the owner still read the tan
+       as "blending in". */
+    color: var(--north-star-topbar-heading);
   }
 
   .admin-north-star-shell .admin-premium-header .north-star-header-signout:hover,
