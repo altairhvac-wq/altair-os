@@ -206,6 +206,20 @@ measured render QA of PASS, and drafts older than 14 days. At most one post per
 channel per run (`MARKETING_AUTO_APPROVE_PER_CHANNEL_PER_RUN`). Each run turns
 the freshest Marketing HQ social idea into a Facebook draft.
 
+**Instagram Reels (owner decision 2026-10-27).** Instagram needs media, and
+nothing used to write an Instagram row, so the channel never posted. Each run
+now copies the newest agent video that already went out on YouTube (within the
+14-day window, measured render QA of PASS, never a School `hvac-` video) into
+an Instagram draft with the same video, copy and QA verdict, one per company
+per run. The draft then meets the same policy as every other post and goes out
+as a Reel in that run. A video that already has an Instagram row is never
+copied again (migration 147's company/video/channel key).
+
+**Website cadence.** Articles come from the agent platform: `seo:daily`
+(gateway runner, `RUN_SEO_DAILY=1`) drafts one Insights article every Tuesday
+and Friday on a product topic that never had one, and `seo:submit` carries it
+here as a website draft for the policy above.
+
 **End-of-day review:** Today opens with "Published in the last day": every live
 delivery with a link. Website pages have a Take down button (the page is
 archived and leaves /insights and the sitemap). YouTube and Facebook items are
