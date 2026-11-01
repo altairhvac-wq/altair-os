@@ -16,7 +16,7 @@ import {
 import { getInvoiceById } from "@/lib/database/queries/invoices";
 import { expireStaleCheckoutSessionsForInvoice } from "@/lib/payments/payment-attempts-service";
 import {
-  isInvoicePayable,
+  isInvoiceManuallyPayable,
   type InvoicePayment,
   type RecordPaymentFormData,
 } from "@/shared/types/invoice-payment";
@@ -649,7 +649,7 @@ export async function recordInvoicePayment(
     };
   }
 
-  if (!isInvoicePayable(invoice.status)) {
+  if (!isInvoiceManuallyPayable(invoice.status)) {
     return {
       payment: null,
       invoice: null,
