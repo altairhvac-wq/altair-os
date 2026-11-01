@@ -133,7 +133,9 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
       technicians={technicians}
       canDispatchJobs={canDispatchJobs}
       canManageCustomers={companyContext.permissions.manageCustomers}
-      initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
+      // `create=1` opens the form even without a customer deep link: the form
+      // has its own customer picker, and the dashboard's "New job" lands here.
+      initialPanelMode={create === "1" ? "create" : "empty"}
       createInitialData={createInitialData}
       initialViewTab={pageFilters.viewTab}
       initialStatusFilter={pageFilters.statusFilter}
