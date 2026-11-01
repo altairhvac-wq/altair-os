@@ -65,14 +65,17 @@ export function OverviewJobsTable({
     .slice()
     .sort((left, right) => left.scheduledDate.localeCompare(right.scheduledDate));
   const visible = jobs.slice(0, PREVIEW_LIMIT);
-  const hidden = jobs.length - visible.length;
+  // `todayJobs` is a capped preview; the summary carries the true total, so
+  // the header and the stat card never disagree (12 vs 8 in the trial walk).
+  const total = Math.max(data.operations.totalJobsToday, jobs.length);
+  const hidden = total - visible.length;
   const toSchedule = data.acceptedEstimatesNeedingScheduling.count;
 
   return (
     <section className={OVERVIEW_CARD_CLASS} aria-labelledby="overview-jobs-heading">
       <OverviewCardHeader
         title="Today's jobs"
-        count={jobs.length}
+        count={total}
         href={DISPATCH_PAGE_TODAY_HREF}
         hrefLabel="View schedule"
       />

@@ -23,6 +23,12 @@ type TeamInviteFormProps = {
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   northStar?: boolean;
+  /**
+   * Shown above the Send button when the next invite will be billed, e.g.
+   * "This seat adds $15/month to your subscription." Nobody should add a
+   * paid seat without being told first.
+   */
+  seatNotice?: string | null;
 };
 
 type FeedbackTone = "success" | "warning" | "error";
@@ -39,6 +45,7 @@ export function TeamInviteForm({
   expanded = true,
   onExpandedChange,
   northStar = false,
+  seatNotice = null,
 }: TeamInviteFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<CompanyRole>(() => {
@@ -155,6 +162,14 @@ export function TeamInviteForm({
   const roleDescription = getTeamRoleDescription(role);
   const inviteActions = (
     <>
+      {seatNotice ? (
+        <p
+          role="note"
+          className="w-full rounded-md border border-altair-warning/30 bg-altair-warning-surface px-3 py-2 text-xs font-medium text-altair-warning-foreground"
+        >
+          {seatNotice}
+        </p>
+      ) : null}
       <button
         type="submit"
         disabled={isPending || email.trim().length === 0}

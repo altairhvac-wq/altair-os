@@ -10,6 +10,26 @@ import {
 } from "@/lib/database/queries/memberships";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { TeamSettingsView } from "@/shared/components/settings/TeamSettingsView";
+import { resolveCompanyAccountAllowance } from "@/lib/saas-billing/accounts";
+
+/**
+ * One sentence for the invite form when the next seat will be billed. Null
+ * while seats are included, on the trial, or when extra seats cannot be
+ * sold (then the action itself refuses with its own message).
+ */
+async function resolveInviteSeatNotice(companyId: string): Promise<string | null> {
+  try {
+    const allowance = await resolveCompanyAccountAllowance(companyId);
+    if (!allowance.onPaidPlan) return null;
+    if (allowance.usedAccounts < allowance.includedAccounts) return null;
+    if (allowance.additionalAccountPriceUsd === null || !allowance.additionalAccountsSellable) {
+      return null;
+    }
+    return `Your plan includes ${allowance.includedAccounts} accounts and all are in use. This seat adds $${allowance.additionalAccountPriceUsd}/month to your subscription.`;
+  } catch {
+    return null;
+  }
+}
 
 async function loadPendingInvitesSafely(
   email: string | null | undefined,
@@ -78,6 +98,11 @@ export default async function UsersSettingsPage() {
         canManageTeam={canManageTeamMembers(companyContext)}
         pendingInvites={pendingInvites}
         membersLoadError={membersError}
+        inviteSeatNotice={
+          canManageTeamMembers(companyContext)
+            ? await resolveInviteSeatNotice(companyContext.company.id)
+            : null
+        }
       />
     </div>
   );

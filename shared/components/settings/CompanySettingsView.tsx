@@ -181,6 +181,7 @@ export function CompanySettingsView({
 
       {demoDataStatus || demoDataLoadError ? (
         <SettingsWorkspaceSection
+          id="workspace-data"
           title="Workspace data"
           description="Load or remove sample records used to evaluate Altair workflows."
         >

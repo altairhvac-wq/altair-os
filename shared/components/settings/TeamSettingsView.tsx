@@ -29,6 +29,8 @@ type TeamSettingsViewProps = {
   canManageTeam: boolean;
   pendingInvites?: PendingTeamInvite[];
   membersLoadError?: string;
+  /** Billing note for the invite form when the next seat costs money. */
+  inviteSeatNotice?: string | null;
   /** @deprecated MC v2 is the settings surface; kept for call-site compatibility. */
   northStar?: boolean;
 };
@@ -45,6 +47,7 @@ export function TeamSettingsView({
   canManageTeam,
   pendingInvites = [],
   membersLoadError,
+  inviteSeatNotice = null,
 }: TeamSettingsViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -150,6 +153,7 @@ export function TeamSettingsView({
           <TeamInviteForm
             currentUserRole={currentUserRole}
             onMemberInvited={handleMemberInvited}
+            seatNotice={inviteSeatNotice}
             collapsible
             expanded={inviteExpanded}
             onExpandedChange={setInviteExpanded}

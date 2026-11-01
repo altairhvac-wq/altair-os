@@ -89,6 +89,14 @@ async function loadCompanyForCustomer(
 export async function getOrCreateBillingCustomer(
   companyId: string,
   supabase: SupabaseClient<Database> = createServiceRoleClient(),
+  options?: {
+    /**
+     * Used when the company has no email of its own (a fresh signup never
+     * fills it in), so Stripe Checkout can prefill the contact email instead
+     * of asking for it again.
+     */
+    fallbackEmail?: string | null;
+  },
 ): Promise<CompanyBillingAccountRow> {
   const expectedLivemode = isSaasStripeLivemode();
   const existing = await findBillingAccountByCompanyId(companyId, supabase);
@@ -108,7 +116,7 @@ export async function getOrCreateBillingCustomer(
 
   const customer = await stripe.customers.create({
     name: company.name,
-    email: company.email ?? undefined,
+    email: company.email ?? options?.fallbackEmail ?? undefined,
     metadata: {
       purpose: "saas_subscription",
       company_id: companyId,

@@ -182,13 +182,21 @@ export function OverviewStatCards({
         <StatCard
           icon={Receipt}
           tone="warning"
-          label="Unpaid invoices"
+          /* The aggregate counts every non-void, non-paid invoice with a
+             balance, drafts included, so "unpaid" overstated what customers
+             actually owe. Say "open" and name the drafts instead. */
+          label="Open invoices"
           value={String(money.unpaidCount)}
-          detail={
+          detail={[
             money.overdueCount > 0
-              ? `${formatCurrency(money.unpaidTotal)} outstanding · ${formatCurrency(money.overdueTotal)} overdue`
-              : `${formatCurrency(money.unpaidTotal)} outstanding`
-          }
+              ? `${formatCurrency(money.overdueTotal)} overdue`
+              : `${formatCurrency(money.unpaidTotal)} open`,
+            money.unsentInvoiceCount > 0
+              ? `${money.unsentInvoiceCount} draft${money.unsentInvoiceCount === 1 ? "" : "s"} not sent`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
           detailTone={money.overdueCount > 0 ? "danger" : "neutral"}
           href="/sales?tab=invoices"
         />

@@ -40,6 +40,14 @@ export function SignUpForm({
   const searchParams = useSearchParams();
   const setupInviteFlow = sanitizeNextPath(searchParams.get("next")) === "/setup";
   const [state, formAction, pending] = useActionState(signupAction, initialState);
+  // Controlled on purpose: React resets an uncontrolled form after every
+  // action, including one that returned an error, which emptied all five
+  // fields the moment anything went wrong. State keeps what was typed.
+  const [fullName, setFullName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [trade, setTrade] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   // First-party analytics: the visitor id and first-touch attribution travel
   // with the signup so the server can credit the right campaign. Read after
@@ -134,7 +142,8 @@ export function SignUpForm({
             type="text"
             autoComplete="name"
             placeholder="Jordan Smith"
-            defaultValue={defaultFullName}
+            value={fullName || defaultFullName || ""}
+            onChange={(event) => setFullName(event.target.value)}
             required
           />
         </AuthField>
@@ -162,12 +171,18 @@ export function SignUpForm({
             type="text"
             autoComplete="organization"
             placeholder="Smith HVAC & Plumbing"
-            defaultValue={defaultCompanyName}
+            value={companyName || defaultCompanyName || ""}
+            onChange={(event) => setCompanyName(event.target.value)}
           />
         </AuthField>
 
         {!setupInviteFlow ? (
-          <TradeSelectField disabled={pending} required={false} />
+          <TradeSelectField
+            disabled={pending}
+            required={false}
+            value={trade}
+            onChange={setTrade}
+          />
         ) : null}
 
         <AuthField
@@ -185,7 +200,8 @@ export function SignUpForm({
             type="email"
             autoComplete="email"
             placeholder="you@company.com"
-            defaultValue={defaultEmail}
+            value={defaultEmail || email}
+            onChange={(event) => setEmail(event.target.value)}
             readOnly={Boolean(defaultEmail)}
             required
           />
@@ -202,6 +218,8 @@ export function SignUpForm({
             type="password"
             autoComplete="new-password"
             placeholder="Create a secure password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             minLength={MIN_PASSWORD_LENGTH}
             required
           />

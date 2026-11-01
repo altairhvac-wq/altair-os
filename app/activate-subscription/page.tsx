@@ -100,6 +100,17 @@ export default async function ActivateSubscriptionPage({
         redirect(resolvePostLoginRedirect(companyContext, null));
       }
 
+      // The reconcile can activate the row without reporting `unlocked`
+      // (observed in the trial walk: the subscription was already active
+      // while this page still said "waiting"). Re-read access once; if the
+      // app shell is allowed now, go there instead of asking for a refresh.
+      if (reconcile.ok) {
+        const refreshed = await resolveCompanyBillingAccess(companyId);
+        if (billingPolicyAllowsAppShell(refreshed)) {
+          redirect(resolvePostLoginRedirect(companyContext, null));
+        }
+      }
+
       if (reconcile.ok) {
         notice = {
           tone: "info",

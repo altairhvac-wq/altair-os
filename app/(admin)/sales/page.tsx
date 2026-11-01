@@ -307,6 +307,10 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
       invoices={invoicesPage.rows}
       estimatesPage={estimatesPage}
       invoicesPage={invoicesPage}
+      // The strips must read the database counts. Without this prop the
+      // view fell back to counting the one page of rows on screen, so a
+      // company with seven approved estimates saw "Approved 0".
+      queueMetrics={queueMetrics}
       estimatePipelineMetrics={estimatePipelineMetrics}
       paymentsPage={paymentsPage}
       paymentsAllTime={paymentsAllTime}
