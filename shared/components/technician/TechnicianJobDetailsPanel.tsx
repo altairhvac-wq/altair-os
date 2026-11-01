@@ -41,7 +41,7 @@ export function TechnicianJobDetailsPanel({
   const hasNotes = Boolean(job.notes?.trim());
 
   return (
-    <MobileSheet onClose={onClose} ariaLabelledBy={TITLE_ID}>
+    <MobileSheet onClose={onClose} ariaLabelledBy={TITLE_ID} zIndex={60}>
       <MobileSheetPanel maxWidth="md">
         <div className="overlay-header-safe sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-3 pb-2">
           <div className="min-w-0">

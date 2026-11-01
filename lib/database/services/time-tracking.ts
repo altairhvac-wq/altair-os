@@ -537,10 +537,35 @@ export async function ensureTimeTrackingForStartWork(input: {
       return { state, entry: entries.jobLabor };
     }
 
-    const otherJob = entries.jobLabor.jobNumber ?? "another job";
-    return {
-      error: `You are still working ${otherJob}. Complete that job or stop job work before starting this one.`,
-    };
+    // A labor entry can outlive its job when the auto-close at completion
+    // failed (for example, a rejected end time). A job that is already
+    // completed or cancelled cannot be "still worked", so close that stale
+    // entry here instead of trapping the technician on every other job.
+    const staleJob = entries.jobLabor.jobId
+      ? await getJobById(input.companyId, entries.jobLabor.jobId)
+      : null;
+
+    if (
+      staleJob &&
+      (staleJob.status === "completed" || staleJob.status === "cancelled")
+    ) {
+      const { error: staleCloseError } =
+        await finalizeOpenJobLaborForTerminalJob({
+          companyId: input.companyId,
+          jobId: staleJob.id,
+          terminalReason: staleJob.status,
+          actorId: input.actorId,
+        });
+
+      if (staleCloseError) {
+        return { error: staleCloseError };
+      }
+    } else {
+      const otherJob = entries.jobLabor.jobNumber ?? "another job";
+      return {
+        error: `You are still working ${otherJob}. Complete that job or stop job work before starting this one.`,
+      };
+    }
   }
 
   const { error: clockError } = await ensureOpenClockEntry({
