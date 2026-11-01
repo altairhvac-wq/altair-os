@@ -21,6 +21,8 @@ type SettingsWorkspaceSectionProps = {
   className?: string;
   /** When false, children render without an MC card shell (for nested cards). */
   card?: boolean;
+  /** Anchor target, so a deep link can land on this section. */
+  id?: string;
 };
 
 export function SettingsWorkspacePage({
@@ -51,6 +53,7 @@ export function SettingsWorkspaceSection({
   children,
   className,
   card = true,
+  id,
 }: SettingsWorkspaceSectionProps) {
   const body = (
     <>
@@ -69,11 +72,16 @@ export function SettingsWorkspaceSection({
   );
 
   if (!card) {
-    return <section className={className}>{body}</section>;
+    return (
+      <section id={id} className={className}>
+        {body}
+      </section>
+    );
   }
 
   return (
     <section
+      id={id}
       className={`${altairMcCardClass} ${altairMcCardPadClass} ${className ?? ""}`.trim()}
     >
       {body}

@@ -10,6 +10,9 @@ type TradeSelectFieldProps = {
   required?: boolean;
   disabled?: boolean;
   defaultValue?: string;
+  /** Controlled mode (used by forms that must keep their values across a failed submit). */
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
 export function TradeSelectField({
@@ -18,7 +21,13 @@ export function TradeSelectField({
   required = true,
   disabled = false,
   defaultValue,
+  value,
+  onChange,
 }: TradeSelectFieldProps) {
+  const controlled =
+    value !== undefined
+      ? { value, onChange: (event: React.ChangeEvent<HTMLSelectElement>) => onChange?.(event.target.value) }
+      : { defaultValue: defaultValue ?? "" };
   return (
     <AuthField
       label="What trade do you run?"
@@ -30,7 +39,7 @@ export function TradeSelectField({
         name={name}
         required={required}
         disabled={disabled}
-        defaultValue={defaultValue ?? ""}
+        {...controlled}
       >
         <option value="" disabled>
           Choose a trade

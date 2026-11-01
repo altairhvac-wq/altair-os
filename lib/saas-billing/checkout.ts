@@ -221,7 +221,9 @@ export async function createSubscriptionCheckout(input: {
 
   let billingAccount;
   try {
-    billingAccount = await getOrCreateBillingCustomer(companyId, supabase);
+    billingAccount = await getOrCreateBillingCustomer(companyId, supabase, {
+      fallbackEmail: context.user.email ?? null,
+    });
   } catch (error) {
     console.error("[saas-billing] getOrCreateBillingCustomer failed:", {
       companyId,

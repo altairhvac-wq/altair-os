@@ -87,10 +87,10 @@ export function DashboardOverviewView({
           <p className="rounded-[var(--radius-control)] border border-altair-border/40 bg-altair-paper px-4 py-2.5 text-sm text-altair-ink-on-paper-secondary">
             Need example data?{" "}
             <Link
-              href="/settings/company"
+              href="/settings/company#workspace-data"
               className="font-semibold text-[var(--brand-metal-text)] underline-offset-2 hover:underline"
             >
-              Load it from Settings
+              Load sample data
             </Link>
             .
           </p>
@@ -122,6 +122,16 @@ export function DashboardOverviewView({
             ))}
           </nav>
         </header>
+
+        {/* A company still in setup sees what to do next before a row of
+            zeros. Once the checklist is complete this block moves to the
+            bottom of the page. */}
+        {showNextRecommended ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <MissionControlV2NextRecommendedCard checklist={onboardingChecklist} />
+            {billingAccess ? <OverviewPlanCard access={billingAccess} /> : null}
+          </div>
+        ) : null}
 
         <OverviewStatCards
           data={data}
@@ -161,16 +171,19 @@ export function DashboardOverviewView({
           ) : null}
         </div>
 
-        {showPerformance && extras.performance ? (
+        {/* An empty chart under an unfinished setup is noise; it appears once
+            there is a payment or a completed job to plot. */}
+        {showPerformance &&
+        extras.performance &&
+        (!showNextRecommended ||
+          extras.performance.collectedTotal > 0 ||
+          extras.performance.jobsCompletedTotal > 0) ? (
           <OverviewPerformanceCard performance={extras.performance} />
         ) : null}
 
-        {showNextRecommended || billingAccess ? (
+        {!showNextRecommended && billingAccess ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {showNextRecommended ? (
-              <MissionControlV2NextRecommendedCard checklist={onboardingChecklist} />
-            ) : null}
-            {billingAccess ? <OverviewPlanCard access={billingAccess} /> : null}
+            <OverviewPlanCard access={billingAccess} />
           </div>
         ) : null}
       </div>
