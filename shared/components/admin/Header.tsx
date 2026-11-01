@@ -11,7 +11,6 @@ import { logoutAction } from "@/app/actions/auth";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderScheduleCalendar";
 import { AvatarUploadControl } from "@/shared/components/profile/AvatarUploadControl";
-import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
@@ -35,7 +34,10 @@ type HeaderProps = {
   showQuickNav?: boolean;
   quickNavOpen?: boolean;
   onQuickNavOpenChange?: (open: boolean) => void;
-  /** Compact trial / billing badge near the account chrome. */
+  /**
+   * Accepted for call-site compatibility; the top bar no longer renders a
+   * billing pill (see the comment in the account cluster below).
+   */
   billingAccess?: CompanyBillingAccess | null;
 };
 
@@ -90,7 +92,6 @@ export function Header({
   showQuickNav = false,
   quickNavOpen = false,
   onQuickNavOpenChange,
-  billingAccess = null,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -241,13 +242,11 @@ export function Header({
               className={northStarChrome ? "north-star-view-switcher" : ""}
             />
           ) : null}
-          {billingAccess ? (
-            <SubscriptionBillingBanner
-              access={billingAccess}
-              canManageBilling={billingAccess.canManageBilling}
-              className="max-w-[9.5rem] sm:max-w-[14rem]"
-            />
-          ) : null}
+          {/* No billing pill in the top bar. On a phone it pushed the bell,
+            * menu, view switcher and sign-out into each other, and it kept
+            * announcing a trial date on accounts that were past it. Trial and
+            * billing state lives on the dashboard plan card and in Settings,
+            * Billing, which is where the owner acts on it. */}
           <AvatarUploadControl
             name={displayName}
             avatarUrl={companyContext.profile.avatar_url}

@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database/types";
 import { SAAS_PLAN_LABELS, isSaasPlanKey } from "@/lib/saas-billing/catalog";
+import { isSaasStripeLivemode } from "@/lib/saas-billing/constants";
 import { evaluateBillingPolicy } from "@/lib/saas-billing/policy";
 import {
   isTrialEndingSoon,
@@ -91,13 +92,71 @@ export async function getCompanySubscription(
 }
 
 /**
+ * The Stripe subscription id this company's row may be trusted with.
+ *
+ * A trial row that carries a Stripe subscription id is left to Stripe to end
+ * (the webhook moves it to active or canceled). That only holds when the id
+ * lives in the same Stripe mode the server runs in: three companies created
+ * during test-mode checkouts before launch kept `status = 'trialing'` and a
+ * test-mode id forever, because live webhooks never mention a test
+ * subscription. Those rows must fall back to the card-free trial rule
+ * (ended at `trial_ends_at`) instead of holding full access indefinitely.
+ *
+ * Unknown (no billing account row, or Stripe not configured) keeps the
+ * previous behaviour and trusts the id.
+ */
+async function resolveTrustedStripeSubscriptionId(
+  companyId: string,
+  subscription: CompanySubscriptionRow | null,
+  client: SupabaseClient<Database>,
+): Promise<string | null> {
+  const stripeSubscriptionId = subscription?.stripe_subscription_id ?? null;
+  if (!stripeSubscriptionId) {
+    return null;
+  }
+
+  let serverLivemode: boolean;
+  try {
+    serverLivemode = isSaasStripeLivemode();
+  } catch {
+    return stripeSubscriptionId;
+  }
+
+  const { data, error } = await client
+    .from("company_billing_accounts")
+    .select("livemode")
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[saas-billing] billing account livemode lookup failed:", {
+      companyId,
+      code: error.code,
+    });
+    return stripeSubscriptionId;
+  }
+
+  if (!data) {
+    return stripeSubscriptionId;
+  }
+
+  return data.livemode === serverLivemode ? stripeSubscriptionId : null;
+}
+
+/**
  * Canonical billing access resolver. Postgres only — never calls Stripe.
  */
 export async function resolveCompanyBillingAccess(
   companyId: string,
   supabase?: SupabaseClient<Database>,
 ): Promise<CompanyBillingAccess> {
-  const subscription = await getCompanySubscription(companyId, supabase);
+  const client = supabase ?? createServiceRoleClient();
+  const subscription = await getCompanySubscription(companyId, client);
+  const stripeSubscriptionId = await resolveTrustedStripeSubscriptionId(
+    companyId,
+    subscription,
+    client,
+  );
   // One clock read for the whole resolution: the policy decision and the
   // derived trial flags below must describe the same instant, and this is the
   // only place any of them is allowed to consult the clock (see
@@ -111,7 +170,7 @@ export async function resolveCompanyBillingAccess(
         {
           status: subscription.status,
           trialEndsAt: subscription.trial_ends_at,
-          stripeSubscriptionId: subscription.stripe_subscription_id,
+          stripeSubscriptionId,
         },
         nowMs,
       )
@@ -146,12 +205,12 @@ export async function resolveCompanyBillingAccess(
           {
             status: subscription.status,
             trialEndsAt: subscription.trial_ends_at,
-            stripeSubscriptionId: subscription.stripe_subscription_id,
+            stripeSubscriptionId,
           },
           nowMs,
         )
       : false,
-    hasStripeSubscription: Boolean(subscription?.stripe_subscription_id),
+    hasStripeSubscription: Boolean(stripeSubscriptionId),
     isComped: decision.isComped,
     planKey: subscription?.plan_key ?? "beta",
     status: effectiveStatus,
@@ -165,14 +224,20 @@ export async function getCompanySubscriptionBillingSummary(
   companyId: string,
   supabase?: SupabaseClient<Database>,
 ): Promise<CompanySubscriptionBillingSummary> {
-  const subscription = await getCompanySubscription(companyId, supabase);
+  const client = supabase ?? createServiceRoleClient();
+  const subscription = await getCompanySubscription(companyId, client);
+  const stripeSubscriptionId = await resolveTrustedStripeSubscriptionId(
+    companyId,
+    subscription,
+    client,
+  );
   const nowMs = Date.now();
   const effectiveStatus = subscription
     ? resolveEffectiveSubscriptionStatus(
         {
           status: subscription.status,
           trialEndsAt: subscription.trial_ends_at,
-          stripeSubscriptionId: subscription.stripe_subscription_id,
+          stripeSubscriptionId,
         },
         nowMs,
       )
@@ -202,7 +267,7 @@ export async function getCompanySubscriptionBillingSummary(
     cancelAtPeriodEnd: subscription?.cancel_at_period_end ?? false,
     currentPeriodEndsAt: subscription?.current_period_ends_at ?? null,
     warnings: decision.warnings,
-    hasStripeSubscription: Boolean(subscription?.stripe_subscription_id),
+    hasStripeSubscription: Boolean(stripeSubscriptionId),
     trialWithheld: subscription?.trial_withheld_reason != null,
   };
 }
