@@ -5723,3 +5723,32 @@ a[href] {
     border-color: #d9d4c8 !important;
   }
 }
+
+/*
+ * Phone top bar icons.
+ *
+ * The bell, sign-out and quick-navigation controls only received their
+ * on-chrome colour inside the `min-width: 768px` block above, so on a phone
+ * they inherited the page's dark ink and vanished against the graphite bar
+ * (owner report 2026-11-01: "the logout and the bell blend into the
+ * background"). Give them the same topbar icon colour at every width.
+ */
+@media (max-width: 767.98px) {
+  .admin-north-star-shell .admin-premium-header .north-star-header-signout,
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell,
+  .admin-north-star-shell .admin-premium-header [data-testid="quick-nav-toggle"] {
+    color: var(--north-star-topbar-icon);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-signout:hover,
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell:hover,
+  .admin-north-star-shell .admin-premium-header [data-testid="quick-nav-toggle"]:hover {
+    background-color: rgb(194 160 90 / 0.1);
+    color: var(--north-star-champagne);
+  }
+
+  .admin-north-star-shell .admin-premium-header [data-testid="quick-nav-toggle"][aria-expanded="true"] {
+    background-color: rgb(194 160 90 / 0.14);
+    color: var(--north-star-champagne);
+  }
+}

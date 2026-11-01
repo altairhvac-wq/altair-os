@@ -68,6 +68,11 @@ export function HomepageNav() {
           ? "border-b border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.92)] shadow-[0_1px_0_rgba(251,247,239,0.04)] backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
+      /* Installed on an iPhone (standalone, viewport-fit=cover) the page runs
+         under the status bar, so a bar fixed at top:0 sat behind the clock
+         and signal icons and its first row could not be tapped. Pad it by
+         the safe-area inset; in a normal browser tab the inset is 0. */
+      style={{ paddingTop: "var(--safe-area-top)" }}
     >
       <div className="relative mx-auto flex h-16 max-w-[90rem] items-center justify-between gap-4 px-5 sm:h-[4.25rem] sm:px-8 lg:px-12 xl:px-16">
         <Link
