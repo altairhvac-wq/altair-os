@@ -393,6 +393,13 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "206_web_analytics_internal_visitors.sql",
     new Set(["platform_web_analytics_summary"]),
   ],
+  // 207 lets the office record a payment collected on site on a draft
+  // invoice: it redefines the 101 recorder so only the manual path accepts a
+  // draft; the Stripe path and every grant are unchanged.
+  [
+    "207_record_payment_on_draft_invoice.sql",
+    new Set(["record_invoice_payment_atomic"]),
+  ],
 ]);
 
 for (const file of files) {
