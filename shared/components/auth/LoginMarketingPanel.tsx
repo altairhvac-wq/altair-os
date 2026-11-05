@@ -17,6 +17,7 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { LoginProductPreviews } from "./LoginProductPreviews";
 
@@ -86,8 +87,8 @@ const TRUST_ITEMS = [
     icon: MonitorSmartphone,
   },
   {
-    title: "3 months free",
-    detail: "No credit card required",
+    title: `${SAAS_TRIAL_CONFIG.durationDays}-day free trial`,
+    detail: "No credit card required to start",
     icon: LockKeyhole,
   },
 ] as const;
