@@ -21,6 +21,17 @@ import { GOOGLE_AUTHORIZE_URL, getYouTubeOAuthConfig } from "./env";
  * A thumbnail set (`youtube.thumbnails.set`) is covered by `youtube.upload`
  * for videos the app itself uploaded, so it needs no additional scope.
  *
+ *   youtube.force-ssl (added 2026-11-04, owner request) MANAGE the videos
+ *                     this account uploaded: set or change a scheduled
+ *                     publish time, fix a title or description, change the
+ *                     visibility of a video that is already up
+ *                     (`videos.update`). The owner schedules Shorts days
+ *                     ahead and wants the schedule editable by tooling
+ *                     without re-uploading; `youtube.upload` alone can set a
+ *                     publish time only at insert. This is the narrowest
+ *                     scope Google offers for `videos.update`; the broad
+ *                     `.../auth/youtube` scope is still NOT requested.
+ *
  * ============ ADDING A SCOPE LATER IS NOT ENOUGH ============
  * A token already minted carries the scopes granted at the time. Widening
  * this list changes nothing for an existing connection until the customer
@@ -33,6 +44,7 @@ import { GOOGLE_AUTHORIZE_URL, getYouTubeOAuthConfig } from "./env";
 export const YOUTUBE_CONNECT_SCOPES = [
   "https://www.googleapis.com/auth/youtube.readonly",
   "https://www.googleapis.com/auth/youtube.upload",
+  "https://www.googleapis.com/auth/youtube.force-ssl",
 ] as const;
 
 export type YouTubeConnectScope = (typeof YOUTUBE_CONNECT_SCOPES)[number];

@@ -80,11 +80,15 @@ check(
 );
 check(
   "does NOT request the broad account-management scope",
-  !/auth\/youtube["'\s,]/.test(oauthUrlSource.replace(/youtube\.(upload|readonly)/g, "")),
+  !/auth\/youtube["'\s,]/.test(oauthUrlSource.replace(/youtube\.(upload|readonly|force-ssl)/g, "")),
 );
 check(
-  "does not request force-ssl, partner, or analytics scopes",
-  !/youtube\.force-ssl|youtubepartner|yt-analytics/.test(oauthUrlSource),
+  "requests youtube.force-ssl — manage the videos this account uploaded (scheduled publish times; owner-approved 2026-11-04)",
+  oauthUrlSource.includes("youtube.force-ssl"),
+);
+check(
+  "does not request partner or analytics scopes",
+  !/youtubepartner|yt-analytics/.test(oauthUrlSource),
 );
 check(
   "an unregistered scope is refused rather than forwarded to the consent screen",
