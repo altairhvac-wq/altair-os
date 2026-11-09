@@ -18,12 +18,12 @@ import {
  */
 
 /**
- * The embedded video, and the one id to change when v2 is uploaded. Update the
- * upload date with it: the page's VideoObject structured data reports that date.
+ * The embedded video. To swap it, change the id and the upload date together:
+ * the page's VideoObject structured data reports that date.
  */
-export const TOOL_BAG_VIDEO_ID = "aWug3xyxkPQ";
-export const TOOL_BAG_VIDEO_UPLOAD_DATE = "2026-11-09";
-export const TOOL_BAG_VIDEO_TITLE = "Three HVAC Tool Bags for Black Friday";
+export const TOOL_BAG_VIDEO_ID = "4jq0QatBtG4";
+export const TOOL_BAG_VIDEO_UPLOAD_DATE = "2026-11-08T23:45:49-08:00";
+export const TOOL_BAG_VIDEO_TITLE = "Best HVAC Tools for Black Friday 2026";
 
 export const TOOL_BAG_VIDEO_EMBED_URL = `https://www.youtube-nocookie.com/embed/${TOOL_BAG_VIDEO_ID}?rel=0`;
 export const TOOL_BAG_VIDEO_WATCH_URL = `https://www.youtube.com/watch?v=${TOOL_BAG_VIDEO_ID}`;
