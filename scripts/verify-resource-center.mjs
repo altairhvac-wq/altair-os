@@ -220,7 +220,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 3 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 8, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 3 calculators, templates, guides, library, tool-bag guide", catalog.RESOURCE_STATIC_PATHS.length === 9, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
@@ -250,8 +250,11 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   const sources = roots.flatMap(walk).filter((p) => /\.(ts|tsx)$/.test(p));
   const offenders = sources.filter((p) => read(p).includes("dangerouslySetInnerHTML"));
   check("no dangerouslySetInnerHTML in Resource Center sources", offenders.length === 0, offenders);
-  const iframes = sources.filter((p) => /<iframe/i.test(read(p)));
-  check("no iframes (videos are links to YouTube)", iframes.length === 0, iframes);
+  // The tool-bag guide is the one deliberate embed, and its frame host is the
+  // privacy-enhanced YouTube player the CSP allows.
+  const EMBED_PAGE = join("app/(marketing)/resources/best-hvac-tool-bag-black-friday-2026", "page.tsx");
+  const iframes = sources.filter((p) => /<iframe/i.test(read(p)) && join(p) !== EMBED_PAGE);
+  check("no iframes outside the tool-bag guide (videos are links to YouTube)", iframes.length === 0, iframes);
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

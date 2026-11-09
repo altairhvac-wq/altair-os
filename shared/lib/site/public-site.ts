@@ -49,8 +49,11 @@ export function buildPublicSocialMetadata(input: {
   title?: string;
   description?: string;
   path?: string;
+  /** A page's own 1200×630 preview, in place of the site card. */
+  image?: { url: string; width: number; height: number; alt: string };
 } = {}): Pick<Metadata, "openGraph" | "twitter" | "alternates"> {
   const path = input.path ?? "./";
+  const image = input.image ?? PUBLIC_OG_IMAGE;
 
   return {
     alternates: { canonical: path },
@@ -61,13 +64,13 @@ export function buildPublicSocialMetadata(input: {
       url: path,
       ...(input.title ? { title: input.title } : {}),
       ...(input.description ? { description: input.description } : {}),
-      images: [PUBLIC_OG_IMAGE],
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       ...(input.title ? { title: input.title } : {}),
       ...(input.description ? { description: input.description } : {}),
-      images: [PUBLIC_OG_IMAGE_PATH],
+      images: [image.url],
     },
   };
 }

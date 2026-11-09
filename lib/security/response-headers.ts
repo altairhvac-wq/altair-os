@@ -64,6 +64,9 @@ const META_PIXEL_IMAGE_HOST = "https://www.facebook.com";
  */
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
+/** YouTube's privacy-enhanced player, framed by the tool-bag resource page. */
+const YOUTUBE_EMBED_HOST = "https://www.youtube-nocookie.com";
+
 /** Mapbox GL JS tile, style, geocoding and telemetry hosts. */
 const MAPBOX_HOSTS = ["https://api.mapbox.com", "https://events.mapbox.com"];
 
@@ -144,8 +147,9 @@ export function buildContentSecurityPolicy(options: {
     // The clickjacking control. Nothing in this application is meant to be
     // embedded, least of all the public invoice payment page.
     ["frame-ancestors", ["'none'"]],
-    // Turnstile renders its challenge in an iframe.
-    ["frame-src", ["'self'", TURNSTILE_HOST]],
+    // Turnstile renders its challenge in an iframe; one resource page embeds
+    // a YouTube video.
+    ["frame-src", ["'self'", TURNSTILE_HOST, YOUTUBE_EMBED_HOST]],
     ["manifest-src", ["'self'"]],
     ["upgrade-insecure-requests", []],
   ];
