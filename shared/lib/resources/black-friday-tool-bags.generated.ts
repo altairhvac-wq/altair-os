@@ -1122,14 +1122,14 @@ export const TOOL_BAG_ROUNDS: readonly ToolBagRound[] = [
         "key": "knipex_3",
         "name": "Knipex 3-pc Cobra set 00-19-55-S9",
         "brand": "Knipex",
-        "price": 106.07,
+        "price": 134.99,
         "wasPrice": null,
         "store": "Home Depot",
         "tag": "EVERYDAY PRICE",
         "tiers": [
           "top"
         ],
-        "recheckedOn": null,
+        "recheckedOn": "2026-11-09",
         "parts": [],
         "offerNote": null,
         "links": [
