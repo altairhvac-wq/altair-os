@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { sanitizeNextPath } from "@/lib/auth/redirects";
+import { listPublicSaasCatalogPlans } from "@/lib/saas-billing/catalog";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { AuthLink } from "./AuthShell";
 
@@ -24,6 +25,8 @@ type LoginPageShellProps = {
 // 4.25rem below is HomepageNav's height; Tailwind needs the literal classes.
 export function LoginPageShell({ children, heroPanel, variant = "login" }: LoginPageShellProps) {
   const landing = variant === "landing";
+  // On the homepage the product statement in the hero panel is the h1.
+  const WelcomeHeading = landing ? "h2" : "h1";
   return (
     <div
       className={[
@@ -63,9 +66,11 @@ export function LoginPageShell({ children, heroPanel, variant = "login" }: Login
               </div>
             )}
 
-            <h1 className="text-[2rem] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[2.25rem]">
+            {landing ? <PhoneIntro /> : null}
+
+            <WelcomeHeading className="text-[2rem] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[2.25rem]">
               {landing ? "Welcome." : "Welcome back."}
-            </h1>
+            </WelcomeHeading>
             <p className="mt-3 text-sm leading-6 text-slate-400">
               {landing
                 ? "Sign in, or start a free 14-day trial. No credit card."
@@ -101,6 +106,51 @@ export function LoginPageShell({ children, heroPanel, variant = "login" }: Login
       </main>
 
       <div className="min-w-0 lg:col-start-1 lg:row-start-1">{heroPanel}</div>
+    </div>
+  );
+}
+
+/**
+ * Phones only. On a phone the homepage's first screen is the sign-in form
+ * and the product explanation sits below it, so a first-time visitor from a
+ * video link saw a login box and nothing about what Altair is (2026-11-10
+ * audit: 81% of homepage visits left without a second click). This says
+ * what it is, the trial terms and where to read more, above the form.
+ * Desktop already shows the hero panel beside the form.
+ */
+function PhoneIntro() {
+  const prices = listPublicSaasCatalogPlans()
+    .map((plan) => plan.monthlyPriceUsd)
+    .filter((price): price is number => typeof price === "number");
+  const fromPrice = prices.length ? Math.min(...prices) : null;
+  return (
+    <div className="mb-8 border-b border-white/[0.08] pb-7 lg:hidden">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.19em] text-[#c2a05a]">
+        HVAC and field service software
+      </p>
+      <p className="mt-3 text-[1.65rem] font-semibold leading-[1.1] tracking-[-0.035em] text-white">
+        Run jobs, dispatch, estimates and invoices from one place.
+      </p>
+      <p className="mt-3 text-sm leading-6 text-slate-300">
+        Built for HVAC and service companies. The office and the technicians see the same job, and
+        the finished job becomes the invoice.
+      </p>
+      <Link
+        href="/signup"
+        className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#a4823a] px-5 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0e100d]"
+      >
+        Start Your 14-Day Free Trial
+      </Link>
+      <p className="mt-2 text-center text-xs text-slate-400">
+        No credit card.{fromPrice !== null ? ` Plans from $${fromPrice}/month after the trial.` : ""}
+      </p>
+      <Link
+        href="/hvac-software"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-[#c2a05a]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55"
+      >
+        See what it does
+      </Link>
+      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Already a customer? Sign in below.</p>
     </div>
   );
 }

@@ -50,7 +50,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     navLabel: "HVAC software",
     title: "HVAC Business Software",
     description:
-      "HVAC software for the whole company: leads, customers and equipment, jobs and dispatch, a technician view for the field, estimates customers approve from their phone, invoices with payment links, time clock, expenses, payroll and reports. 14-day free trial, no credit card.",
+      "HVAC software for the whole company: leads, jobs, dispatch, estimates, invoices, payroll and reports in one place. 14-day free trial, no credit card.",
     eyebrow: "HVAC software",
     headline: "Software for running an HVAC company, from the first call to the paid invoice.",
     intro:
@@ -111,7 +111,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     navLabel: "Dispatch software",
     title: "HVAC Dispatch Software",
     description:
-      "Dispatch software for HVAC and service companies: one board for the day's jobs, assignment by technician, a map of where the work is, and a phone view for the field that shows the same job the office sees. 14-day free trial, no credit card.",
+      "HVAC dispatch software: one board for the day's jobs, a map of the work, and the same job on the technician's phone. 14-day free trial, no card.",
     eyebrow: "Dispatch software",
     headline: "One board for the day. The field sees the same job the office does.",
     intro:
@@ -167,7 +167,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     navLabel: "Estimating software",
     title: "HVAC Estimating Software",
     description:
-      "Estimating software for HVAC and service companies: build estimates from your own price book, send a link the customer approves and signs on their phone, and have the approved estimate become the job and then the invoice. 14-day free trial, no credit card.",
+      "HVAC estimating software: build estimates from your price book, the customer approves and signs on their phone, and it becomes the job. Free trial.",
     eyebrow: "Estimating software",
     headline: "Send the estimate. The customer approves it on their phone. It becomes the job.",
     intro:
@@ -223,7 +223,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     navLabel: "Invoicing software",
     title: "HVAC Invoicing Software",
     description:
-      "Invoicing software for HVAC and service companies: the finished job becomes the invoice, the customer pays from a link with Stripe connected, payments taken on site are recorded against the invoice, and overdue invoices surface on their own. 14-day free trial, no credit card.",
+      "HVAC invoicing software: the finished job becomes the invoice, customers can pay from a link, and overdue invoices surface on their own. Free trial.",
     eyebrow: "Invoicing and payments",
     headline: "The finished job becomes the invoice. The customer pays from a link.",
     intro:

@@ -23,7 +23,7 @@ export function LoginLandingPage() {
         variant="landing"
         heroPanel={
           <>
-            <LoginMarketingPanel hideHeader />
+            <LoginMarketingPanel hideHeader heroHeading="h1" />
             <MarketingFooter />
           </>
         }

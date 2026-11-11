@@ -21,10 +21,10 @@ import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { LoginProductPreviews } from "./LoginProductPreviews";
 
 export const LOGIN_HERO_TITLE =
-  "Run your entire field service business from one operating system.";
+  "Run your HVAC or field service business from one system.";
 
 export const LOGIN_HERO_SUBCOPY =
-  "Altair connects your office, technicians, customers, dispatch, estimates, invoices, payments, reports, and AI into one intelligent workflow—so your company runs faster with less chaos.";
+  "Calls, customers, jobs, dispatch, estimates, invoices and payments live on one record. The office and the field see the same day, and nothing gets typed twice.";
 
 type WorkflowStage = {
   label: string;
@@ -51,7 +51,7 @@ const BENEFITS = [
   },
   {
     title: "Dispatch with confidence",
-    description: "Live scheduling, technician visibility, and intelligent job management.",
+    description: "One board for the day, which technicians are on a job, and a map of the work.",
     outcome: "Efficient operations",
     icon: Radio,
   },
@@ -86,7 +86,7 @@ const TRUST_ITEMS = [
     icon: MonitorSmartphone,
   },
   {
-    title: "3 months free",
+    title: "14 days free",
     detail: "No credit card required",
     icon: LockKeyhole,
   },
@@ -247,7 +247,18 @@ function TrustBar() {
   );
 }
 
-export function LoginMarketingPanel({ hideHeader = false }: { hideHeader?: boolean } = {}) {
+type LoginMarketingPanelProps = {
+  hideHeader?: boolean;
+  /**
+   * The hero line is the page's main heading on the logged-out homepage,
+   * where the form's own "Welcome." is secondary. On /login the form stays
+   * the h1 and this stays an h2.
+   */
+  heroHeading?: "h1" | "h2";
+};
+
+export function LoginMarketingPanel({ hideHeader = false, heroHeading = "h2" }: LoginMarketingPanelProps = {}) {
+  const HeroHeading = heroHeading;
   return (
     <section className="relative min-h-full overflow-hidden bg-[#0a0b09] text-white">
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-30" />
@@ -268,8 +279,8 @@ export function LoginMarketingPanel({ hideHeader = false }: { hideHeader?: boole
 
         <div className={`grid items-center gap-7 xl:grid-cols-[0.88fr_1.12fr] ${hideHeader ? "mt-2" : "mt-8"}`}>
           <div className="auth-hero-enter">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.19em] text-[#c2a05a]">Operating system for field service</p>
-            <h2 className="mt-4 text-[clamp(2.4rem,4.5vw,4.5rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-[#fafaf8]">{LOGIN_HERO_TITLE}</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.19em] text-[#c2a05a]">HVAC and field service software</p>
+            <HeroHeading className="mt-4 text-[clamp(2.4rem,4.5vw,4.5rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-[#fafaf8]">{LOGIN_HERO_TITLE}</HeroHeading>
             <p className="mt-5 max-w-xl text-sm leading-6 text-slate-300 sm:text-[15px] sm:leading-7">{LOGIN_HERO_SUBCOPY}</p>
           </div>
           <FieldServiceHero />
