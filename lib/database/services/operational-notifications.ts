@@ -2,6 +2,7 @@ import {
   dispatchNotification,
   dispatchNotificationsForPermission,
 } from "@/lib/database/services/notifications";
+import type { DbClient } from "@/lib/database/db-client";
 import type { Json } from "@/lib/database/types/enums";
 import {
   isNonEmptyId,
@@ -268,6 +269,8 @@ export function notifyEstimateApproved(input: {
   customerId?: string;
   jobId?: string;
   approvalSource?: "public_link" | "technician_device" | "admin_manual";
+  /** Public-link only: service-role client created after the token was verified. */
+  serviceRoleDb?: DbClient;
 }): void {
   if (!isNonEmptyId(input.companyId) || !isNonEmptyId(input.estimateId)) {
     return;
@@ -318,5 +321,7 @@ export function notifyEstimateApproved(input: {
       job_id: input.jobId,
       approval_source: input.approvalSource,
     }),
+    serviceRoleDb:
+      input.approvalSource === "public_link" ? input.serviceRoleDb : undefined,
   });
 }

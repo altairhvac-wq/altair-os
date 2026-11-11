@@ -107,6 +107,7 @@ function runOperationalAutomation(event: OperationalAutomationEvent): void {
         customerId: event.customerId,
         jobId: event.jobId,
         approvalSource: event.approvalSource,
+        serviceRoleDb: event.serviceRoleDb,
       });
       return;
 

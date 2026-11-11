@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import type {
   NotificationInsert,
@@ -27,32 +28,39 @@ function mapNotificationRow(row: NotificationRow): Notification {
   };
 }
 
+/**
+ * Insert a notification for a member. No RETURNING: the notifications SELECT
+ * policy only shows users their own rows, so `.select()` after the insert made
+ * PostgREST reject every notification addressed to someone else (for example
+ * an owner assigning a technician) as a row-level security violation.
+ */
 export async function insertNotification(
   input: NotificationInsert,
-): Promise<{ data: Notification | null; error: string | null }> {
+): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("notifications")
-    .insert(input)
-    .select("*")
-    .single();
+  const { error } = await supabase.from("notifications").insert(input);
 
-  if (error || !data) {
-    return { data: null, error: error?.message ?? "Failed to create notification." };
+  if (error) {
+    return { error: error.message ?? "Failed to create notification." };
   }
 
-  return { data: mapNotificationRow(data as NotificationRow), error: null };
+  return { error: null };
 }
 
+/**
+ * Bulk insert. `db` is only for a service-role client in a flow that was
+ * already authorized in application code (see notification-role-targeting).
+ */
 export async function insertNotifications(
   inputs: NotificationInsert[],
+  db?: DbClient,
 ): Promise<{ error: string | null }> {
   if (inputs.length === 0) {
     return { error: null };
   }
 
-  const supabase = await createClient();
+  const supabase = db ?? (await createClient());
 
   const { error } = await supabase.from("notifications").insert(inputs);
 
