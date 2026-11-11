@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LoginLandingPage } from "@/shared/components/homepage/LoginLandingPage";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
-import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import {
+  buildPublicSocialMetadata,
+  PUBLIC_SITE_DESCRIPTION,
+  PUBLIC_SITE_TITLE,
+} from "@/shared/lib/site/public-site";
 import {
   buildOrganizationStructuredData,
   buildSoftwareApplicationStructuredData,
@@ -11,10 +15,9 @@ export const metadata: Metadata = {
   // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
   // template — this title already leads with the product name.
   title: {
-    absolute: "Altair Operating System · Software for Field Service Businesses",
+    absolute: PUBLIC_SITE_TITLE,
   },
-  description:
-    "Connect leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one field service operating system.",
+  description: PUBLIC_SITE_DESCRIPTION,
   // This page is served at `/` (middleware rewrite), so its canonical and
   // og:url are the root, not /welcome.
   ...buildPublicSocialMetadata({ path: "/" }),

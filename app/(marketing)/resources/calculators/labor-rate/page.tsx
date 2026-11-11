@@ -4,9 +4,9 @@ import { LaborRateCalculator } from "@/shared/components/resources/LaborRateCalc
 import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
-const TITLE = "Labor rate calculator";
+const TITLE = "HVAC labor rate calculator";
 const DESCRIPTION =
-  "Calculate the hourly rate a technician needs to bill to cover wage, labor burden, unbillable hours, overhead and your target net margin. Free, with the formula shown.";
+  "Free HVAC labor rate calculator: the hourly rate a technician needs to bill to cover wage, burden, unbillable hours, overhead and margin. Formula shown.";
 
 export const metadata: Metadata = {
   title: TITLE,

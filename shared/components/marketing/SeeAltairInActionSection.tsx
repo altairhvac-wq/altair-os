@@ -24,7 +24,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     id: "dispatch",
     headline: "Dispatch Command Center",
     description:
-      "See your day's jobs, crew assignments, and schedule changes in one place. Drag, assign, and adjust without jumping between tools — everything stays linked to the customer and job record.",
+      "See your day's jobs, crew assignments, and schedule changes in one place. Assign, reassign, and adjust without jumping between tools — everything stays linked to the customer and job record.",
     badge: "Connected scheduling",
     imageAlt: "Altair Operating System dispatch command center showing daily schedule and crew assignments",
     imageLabel: "Dispatch Command Center",
