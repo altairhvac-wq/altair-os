@@ -3,6 +3,7 @@ import "./status-page.css";
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 
 /**
  * Root error boundary. Catches unexpected render/runtime errors and shows a
@@ -38,7 +39,8 @@ export default function GlobalError({
       </h1>
       <p className="status-page__text">
         An unexpected error interrupted this page. Your data is safe — try
-        again, and if it keeps happening use the Feedback button to tell us.
+        again, and if it keeps happening email{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
       </p>
       {error.digest ? (
         <p className="status-page__note">
@@ -57,7 +59,10 @@ export default function GlobalError({
           href="/"
           className="status-page__button status-page__button--outline-strong"
         >
-          Back to dashboard
+          {/* "/" is the dashboard when signed in and the home page when not;
+              this boundary also catches public pages, so the label says
+              neither. */}
+          Go to home page
         </Link>
       </div>
     </main>

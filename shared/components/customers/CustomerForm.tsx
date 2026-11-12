@@ -47,7 +47,6 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const defaults = { ...emptyForm, ...initialData };
   const isEdit = variant === "edit";
-  const requireContact = !isEdit;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -78,7 +77,13 @@ export function CustomerForm({
           />
         </Field>
 
-        <Field label="Email" required={requireContact}>
+        {/* Phone OR email is enough to save (validateCustomerRecord). Neither
+            field is individually required: a homeowner without email used to be
+            impossible to add without inventing an address. */}
+        <Field
+          label="Email"
+          description={isEdit ? undefined : "A phone number or an email is enough."}
+        >
           <Input
             name="email"
             type="email"
@@ -87,7 +92,7 @@ export function CustomerForm({
           />
         </Field>
 
-        <Field label="Phone" required={requireContact}>
+        <Field label="Phone">
           <Input
             name="phone"
             type="tel"
@@ -121,8 +126,11 @@ export function CustomerForm({
         <p className="text-xs font-semibold uppercase tracking-wide text-altair-ink-on-paper-secondary">
           Service location
         </p>
+        <p className="text-xs text-altair-ink-on-paper-secondary">
+          Optional now. Technicians need it before the first visit.
+        </p>
         <div className={fieldGroupClass}>
-          <Field label="Street address" required>
+          <Field label="Street address">
             <Input
               name="address"
               defaultValue={defaults.address}
@@ -130,13 +138,13 @@ export function CustomerForm({
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="City" required>
+            <Field label="City">
               <Input name="city" defaultValue={defaults.city} />
             </Field>
-            <Field label="State" required>
+            <Field label="State">
               <Input name="state" defaultValue={defaults.state} />
             </Field>
-            <Field label="ZIP" required>
+            <Field label="ZIP">
               <Input name="zip" defaultValue={defaults.zip} />
             </Field>
           </div>

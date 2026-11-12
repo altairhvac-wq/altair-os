@@ -104,6 +104,7 @@ export default async function CompanySettingsPage() {
         "owner",
         "admin",
       ])}
+      showMarketingConnections={companyContext.isPlatformAdmin}
       stripeConnected={stripeSummary !== null}
       stripeStatusLabel={
         stripeSummary

@@ -62,9 +62,6 @@ function escapeHtml(value: string): string {
 export async function sendTeamInviteEmail(
   input: SendTeamInviteEmailInput,
 ): Promise<SendTeamInviteEmailResult> {
-  console.info("[team-invite-prod-debug] sendTeamInviteEmail entered", {
-    toDomain: input.to.split("@")[1] ?? "unknown",
-  });
 
   console.info("[team-invite-debug:sendTeamInviteEmail] entered", {
     toDomain: input.to.split("@")[1] ?? "unknown",
@@ -126,11 +123,6 @@ export async function sendTeamInviteEmail(
       fromDomain: env.resend.from.split("@")[1] ?? "unknown",
     });
 
-    console.info("[team-invite-prod-debug] before Resend fetch", {
-      toDomain: input.to.split("@")[1] ?? "unknown",
-      fromDomain: env.resend.from.split("@")[1] ?? "unknown",
-    });
-
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -155,15 +147,6 @@ export async function sendTeamInviteEmail(
     const payload = (await response.json().catch(() => null)) as
       | { id?: string; message?: string; name?: string }
       | null;
-
-    console.info("[team-invite-prod-debug] Resend response status", {
-      status: response.status,
-      ok: response.ok,
-    });
-
-    console.info("[team-invite-prod-debug] Resend response body", {
-      body: payload,
-    });
 
     console.info("[team-invite-debug:sendTeamInviteEmail] Resend API response", {
       status: response.status,

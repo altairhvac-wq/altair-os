@@ -12,7 +12,7 @@ import {
 } from "@/shared/lib/customer-import-mapping";
 import {
   normalizeCustomerFormData,
-  validateCustomerFormData,
+  validateCustomerRecord,
   type CustomerFormData,
 } from "@/shared/types/customer";
 
@@ -87,8 +87,17 @@ export type CustomerImportPreviewSummary = {
   errorCount: number;
 };
 
+/**
+ * Exports often hold several addresses in one cell ("jill@x.com; park@y.com").
+ * The first one is kept and the customer is imported, instead of the whole row
+ * being rejected as "Enter a valid email address".
+ */
 export function normalizeImportEmail(email: string): string {
-  return email.trim().toLowerCase();
+  const first = email
+    .split(/[;,\s]+/)
+    .map((part) => part.trim())
+    .find(Boolean);
+  return (first ?? "").toLowerCase();
 }
 
 export function normalizeImportPhoneKey(phone: string): string | null {
@@ -176,19 +185,8 @@ export function validateCustomerImportRow(
     buildCustomerFormDataFromImportRow(row),
   );
 
-  const validationError = validateCustomerFormData(formData, {
-    requireContact: false,
-    requireAddress: false,
-  });
-  if (validationError) {
-    return validationError;
-  }
-
-  if (!formData.phone && !formData.email) {
-    return "Phone or email is required.";
-  }
-
-  return null;
+  // The same rule as adding a customer by hand.
+  return validateCustomerRecord(formData);
 }
 
 function getExistingDuplicateReason(

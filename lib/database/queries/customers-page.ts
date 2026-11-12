@@ -247,9 +247,15 @@ export async function getCustomerQueueCounts(
     newThisMonthPromise,
   ]);
 
+  const total = totalResult.count ?? 0;
+
   return {
-    byQueue: Object.fromEntries(results) as Record<CustomerWorkQueue, number>,
-    total: totalResult.count ?? 0,
+    // `all` is the lifecycle-active book, which is exactly what `total` counts.
+    byQueue: {
+      ...(Object.fromEntries(results) as Omit<Record<CustomerWorkQueue, number>, "all">),
+      all: total,
+    },
+    total,
     newThisMonth: newResult.count ?? 0,
   };
 }

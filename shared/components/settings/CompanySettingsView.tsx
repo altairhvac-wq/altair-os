@@ -33,6 +33,7 @@ export function CompanySettingsView({
   showBillingDefaultsSetupHint,
   facebookAccounts,
   canManageMarketingAccounts,
+  showMarketingConnections = false,
   stripeConnected,
   stripeStatusLabel,
   demoDataStatus,
@@ -46,6 +47,8 @@ export function CompanySettingsView({
   showBillingDefaultsSetupHint: boolean;
   facebookAccounts: MarketingConnectedAccount[];
   canManageMarketingAccounts: boolean;
+  /** Facebook / Instagram publishing: the founder's Marketing Hub only. */
+  showMarketingConnections?: boolean;
   stripeConnected: boolean;
   stripeStatusLabel: string;
   demoDataStatus?: DemoDataStatus;
@@ -143,6 +146,7 @@ export function CompanySettingsView({
               </Link>
             </li>
 
+            {showMarketingConnections ? (
             <li
               className={`${altairMcListRowClass} flex flex-wrap items-center justify-between gap-2 border-t border-altair-border`}
             >
@@ -170,11 +174,18 @@ export function CompanySettingsView({
                 Open Marketing Hub
               </Link>
             </li>
+            ) : null}
           </ul>
           <p className="mt-2 text-xs text-altair-ink-muted">
-            Twilio, Resend, QuickBooks, Google Business Profile, Zapier, Google
-            Calendar, and webhooks are not tenant Connect integrations today —
-            Twilio and Resend are server send paths configured by environment.
+            Altair does not connect to QuickBooks, Google Calendar or Zapier
+            yet. If one of these would make Altair work for you,{" "}
+            <Link
+              href="/help"
+              className="font-semibold text-altair-ink underline-offset-2 hover:underline"
+            >
+              tell us
+            </Link>
+            : it decides what we build next.
           </p>
         </SettingsWorkspaceSection>
       </div>

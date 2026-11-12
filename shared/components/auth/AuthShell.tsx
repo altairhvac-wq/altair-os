@@ -44,7 +44,8 @@ const PLATFORM_TIERS = [
       {
         icon: MapPin,
         title: "Dispatch",
-        description: "Assign, route, and track crews in real time.",
+        // No routing and no live GPS exist; the board shows every crew's day.
+        description: "Assign jobs and see every crew's day on one board.",
       },
       {
         icon: Smartphone,

@@ -74,6 +74,7 @@ export function buildCustomersGlanceStats(input: {
   }
 
   const queueDetails: Record<CustomerWorkQueue, string> = {
+    all: "Everyone in your customer book",
     active: "Complete profiles marked active",
     "needs-info": "Missing contact or service address",
     inactive: "Marked inactive — still in the customer book",
@@ -109,6 +110,9 @@ export function buildCustomersGlanceStats(input: {
         totalCustomers === 0
           ? "No customers loaded"
           : "In your customer book",
+      // Total is also the "all" filter, the default view: clicking it returns
+      // to the whole book from Complete / Needs info / Inactive.
+      filterQueue: "all",
     },
     ...queueStats,
     {

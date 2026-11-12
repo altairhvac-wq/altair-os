@@ -1,5 +1,6 @@
 "use server";
 
+import { queueWelcomeEmailForNewCompany } from "@/lib/onboarding/welcome";
 import type { User } from "@supabase/supabase-js";
 import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
@@ -10,7 +11,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PASSWORD_RESET_RATE_LIMIT_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
-import { validateNewPassword } from "@/lib/auth/password";
+import { validateNewPassword, validatePasswordLength } from "@/lib/auth/password";
 import {
   buildAuthCallbackUrl,
   resolveAuthRedirectOrigin,
@@ -95,6 +96,10 @@ async function ensureCompanyAfterAuth(
       }
 
       if (bootstrapResult.companyId) {
+        await queueWelcomeEmailForNewCompany({
+          user,
+          companyId: bootstrapResult.companyId,
+        });
         context = await getActiveCompanyContext({
           companyId: bootstrapResult.companyId,
         });
@@ -239,6 +244,13 @@ export async function signupAction(
 
   if (!fullName || !email || !password) {
     return { error: "Full name, email, and password are required." };
+  }
+
+  // The form's minLength is a hint, not a rule: a request that skips the form
+  // must meet the same minimum (launch audit M5).
+  const passwordLengthError = validatePasswordLength(password);
+  if (passwordLengthError) {
+    return { error: passwordLengthError };
   }
 
   // ============================== THE COMPANY NAME IS FOR FOUNDERS ==============================
@@ -425,6 +437,10 @@ export async function signupAction(
     }
 
     if (bootstrapResult.companyId && data.user) {
+      await queueWelcomeEmailForNewCompany({
+        user: data.user,
+        companyId: bootstrapResult.companyId,
+      });
       await processNetworkInviteAfterCompanyBootstrap({
         user: data.user,
         companyId: bootstrapResult.companyId,
@@ -482,6 +498,10 @@ export async function setupCompanyAction(
   }
 
   if (bootstrapResult.companyId) {
+    await queueWelcomeEmailForNewCompany({
+      user,
+      companyId: bootstrapResult.companyId,
+    });
     await processNetworkInviteAfterCompanyBootstrap({
       user,
       companyId: bootstrapResult.companyId,

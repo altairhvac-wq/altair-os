@@ -14,6 +14,8 @@ import type { ActiveCompanyContext } from "@/lib/database/types";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { AdminMobileHomeTopBar } from "@/shared/components/dashboard/AdminMobileHomeTopBar";
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import { LiveOnboardingBanner } from "@/shared/components/support/LiveOnboardingBanner";
+import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
 
 /**
  * Admin home — mobile-only launcher (md:hidden). Sidebar + calendar
@@ -143,6 +145,8 @@ type AdminMobileHomeProps = {
   companyContext: ActiveCompanyContext;
   userDisplayName: string;
   companyTimeZone?: string;
+  /** Live onboarding invitation; null outside a company's first weeks. */
+  liveOnboarding?: LiveOnboardingInfo | null;
 };
 
 export function AdminMobileHome({
@@ -150,6 +154,7 @@ export function AdminMobileHome({
   companyContext,
   userDisplayName,
   companyTimeZone,
+  liveOnboarding = null,
 }: AdminMobileHomeProps) {
   const attentionRows = buildAttentionRows(data);
 
@@ -298,6 +303,10 @@ export function AdminMobileHome({
           </div>
         </Link>
       </div>
+
+      {liveOnboarding ? (
+        <LiveOnboardingBanner info={liveOnboarding} tone="dark" />
+      ) : null}
     </div>
   );
 }

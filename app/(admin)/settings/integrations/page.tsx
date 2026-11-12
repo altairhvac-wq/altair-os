@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { canManageIntegrations, canViewIntegrations } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
@@ -49,6 +50,14 @@ export default async function IntegrationsSettingsPage({
   // marketing_connected_accounts, so the page and the database agree.
   if (!canViewIntegrations(companyContext)) {
     return null;
+  }
+
+  // Every row on this page is a marketing channel or creative source for the
+  // founder's own publishing (Marketing Hub is platform-admin only). A customer
+  // company saw nine "Not available" rows with developer variable names and
+  // could connect none of them; its connections live on Settings > Company.
+  if (!companyContext.isPlatformAdmin) {
+    redirect("/settings/company#connections");
   }
 
   const params = await searchParams;

@@ -5,9 +5,26 @@ import {
   type Customer,
 } from "@/shared/types/customer";
 
-export type CustomerWorkQueue = "active" | "needs-info" | "inactive" | "past";
+/**
+ * `all` is every customer still in the book (not archived, not deleted),
+ * whatever state its contact details are in. It is the default view.
+ *
+ * The default used to be `active`, which means "complete profile": email AND
+ * phone AND full service address. A company that imported a list without
+ * emails, or whose phone column was not matched, landed on "Add your first
+ * customer" with every imported row hidden under a filter the empty page did
+ * not even show (retention audit 2026-11-12). The `active` key stays as it is
+ * for deep links; its label is "Complete" so it is not read as the status.
+ */
+export type CustomerWorkQueue =
+  | "all"
+  | "active"
+  | "needs-info"
+  | "inactive"
+  | "past";
 
 export const CUSTOMER_WORK_QUEUE_ORDER: readonly CustomerWorkQueue[] = [
+  "all",
   "active",
   "needs-info",
   "inactive",
@@ -15,7 +32,8 @@ export const CUSTOMER_WORK_QUEUE_ORDER: readonly CustomerWorkQueue[] = [
 ];
 
 export const CUSTOMER_WORK_QUEUE_LABELS: Record<CustomerWorkQueue, string> = {
-  active: "Active",
+  all: "All",
+  active: "Complete",
   "needs-info": "Needs info",
   inactive: "Inactive",
   past: "Past",
@@ -28,6 +46,11 @@ function isCustomerRecordActive(customer: Customer): boolean {
 /** Archived and recently deleted customer records. */
 export function isCustomerPastQueue(customer: Customer): boolean {
   return !isCustomerRecordActive(customer);
+}
+
+/** Every customer still in the book: not archived, not deleted. */
+export function isCustomerBookQueue(customer: Customer): boolean {
+  return !isCustomerPastQueue(customer);
 }
 
 /** Active lifecycle customers marked inactive. */
@@ -75,6 +98,7 @@ export function filterCustomersForWorkQueue(
   queue: CustomerWorkQueue,
 ): Customer[] {
   const predicate = {
+    all: isCustomerBookQueue,
     active: isCustomerActiveQueue,
     "needs-info": isCustomerNeedsInfoQueue,
     inactive: isCustomerInactiveQueue,
@@ -92,7 +116,7 @@ export function countCustomersForWorkQueue(
 }
 
 export function resolveDefaultCustomerWorkQueue(): CustomerWorkQueue {
-  return "active";
+  return "all";
 }
 
 const CUSTOMER_WORK_QUEUE_SET = new Set<CustomerWorkQueue>(
