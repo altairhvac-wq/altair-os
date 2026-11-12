@@ -18,9 +18,9 @@ import {
 } from "@/shared/lib/site/public-site";
 import { buildSoftwareApplicationStructuredData } from "@/shared/lib/site/structured-data";
 
-const TITLE = "HVAC Software Demo Video: How Altair OS Works";
+const TITLE = "HVAC Software Demo Video: One Job, First Call to Paid";
 const DESCRIPTION =
-  "Watch one HVAC job go from first call to paid in full in Altair OS: estimate, customer signature, dispatch, the tech's phone and payment. Transcript included.";
+  "Watch one HVAC job go from first call to paid in full in Altair Operating System: estimate, customer signature, dispatch, the tech's phone and payment. Transcript included.";
 
 export const metadata: Metadata = {
   title: TITLE,

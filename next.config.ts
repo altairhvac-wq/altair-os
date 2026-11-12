@@ -35,6 +35,18 @@ const nextConfig: NextConfig = {
     : {}),
   // Nothing gains from announcing the framework and version to a scanner.
   poweredByHeader: false,
+  /**
+   * Title, description, canonical and link-preview tags always in <head>.
+   *
+   * Next streams metadata for dynamic pages: an ordinary browser, and
+   * Googlebot, received the Insights articles with those tags inside <body>.
+   * Search Console showed Google coping with it, but Lighthouse reported
+   * "no meta description" and tags in <body> are outside what the HTML spec
+   * and most crawlers expect. Matching every user agent turns streaming
+   * metadata off; the cost is one metadata lookup before the first byte on
+   * the few dynamic public pages.
+   */
+  htmlLimitedBots: /.*/,
   images: {
     qualities: [70, 75, 90],
     // Marketing screenshots change a few times a year, not a few times a

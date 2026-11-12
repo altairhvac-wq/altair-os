@@ -106,17 +106,17 @@ const ALTAIR_CONTRACT = "Monthly or annual billing, no long-term contract. Cance
 const ALTAIR_IMPORT_LIMITS =
   "The import brings over customer names, phone numbers, emails and addresses. Equipment and job history don't come across, so plan to add equipment as you visit each site.";
 
-const SHARED_TRADEMARK_NOTE = "Altair OS is not affiliated with or endorsed by any company named on this page.";
+const SHARED_TRADEMARK_NOTE = "Altair Operating System is not affiliated with or endorsed by any company named on this page.";
 
 // ====================================================================
 // /servicetitan-alternative
 // ====================================================================
 const SERVICETITAN: ComparisonPageContent = {
   path: "/servicetitan-alternative",
-  metaTitle: "ServiceTitan Alternative for Small HVAC Shops | Altair OS",
+  metaTitle: "ServiceTitan Alternative for Small HVAC Shops | Altair Operating System",
   metaDescription:
-    "Looking for a ServiceTitan alternative with public prices and no long contract? Compare Altair OS and ServiceTitan on pricing, contracts and setup.",
-  eyebrow: "Altair OS vs. ServiceTitan",
+    "Looking for a ServiceTitan alternative with public prices and no long contract? Compare Altair and ServiceTitan on pricing, contracts and setup.",
+  eyebrow: "Altair Operating System vs. ServiceTitan",
   headline: "A ServiceTitan alternative for small and growing HVAC shops",
   intro: [
     "ServiceTitan is a serious system. It doesn't publish prices, it describes its pricing as per technician, and its annual report says new customers typically sign 12- to 36-month agreements. That works for plenty of large operations. A smaller HVAC or field service shop may not need all of it, or want to pay for it.",
@@ -124,8 +124,8 @@ const SERVICETITAN: ComparisonPageContent = {
   ],
   priceNote: ALTAIR_PRICE_NOTE,
   table: {
-    heading: "Altair OS and ServiceTitan, side by side",
-    columns: ["Altair OS", "ServiceTitan"],
+    heading: "Altair and ServiceTitan, side by side",
+    columns: ["Altair", "ServiceTitan"],
     rows: [
       {
         label: "Pricing",
@@ -263,9 +263,9 @@ const SERVICETITAN: ComparisonPageContent = {
 // ====================================================================
 const JOBBER_HOUSECALL: ComparisonPageContent = {
   path: "/jobber-housecall-pro-alternatives",
-  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026) | Altair OS",
+  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026) | Altair Operating System",
   metaDescription:
-    "Comparing Jobber and Housecall Pro for an HVAC shop? See 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair OS.",
+    "Comparing Jobber and Housecall Pro for an HVAC shop? See 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair.",
   eyebrow: "HVAC software compared",
   headline: "Jobber and Housecall Pro alternatives for HVAC contractors",
   intro: [
@@ -275,7 +275,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
   priceNote: ALTAIR_PRICE_NOTE,
   table: {
     heading: "Prices and limits, side by side",
-    columns: ["Altair OS", "Jobber", "Housecall Pro"],
+    columns: ["Altair", "Jobber", "Housecall Pro"],
     rows: [
       {
         label: "1 user",
@@ -366,10 +366,10 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     heading: "The options in detail",
     items: [
       {
-        name: "Altair OS",
+        name: "Altair Operating System",
         highlight: true,
         summary:
-          "One connected system for HVAC and field service companies: leads, customers and their equipment, estimates customers approve from their phone, dispatch, a technician phone view, invoices with Stripe payment links, time clock, expenses, pay periods and reports. Built by an HVAC company owner.",
+          "One connected system for HVAC and field service companies: leads, customers and their equipment, estimates customers approve from their phone, dispatch, a technician phone view, invoices with Stripe payment links, time clock, timesheet approval, expenses and reports. Built by an HVAC company owner.",
         goodFor: `Small and growing shops that want public prices (${monthly(STARTER)} for 1 user, ${monthly(GROWTH)} for 5, ${monthly(PRO)} for 10), one record per job and no contract.`,
         worthKnowing:
           "It's a newer system. It has no QuickBooks sync, built-in phone system, drag-and-drop scheduling, automatic routing or live GPS today, and customer imports bring over contacts and addresses but not equipment or job history.",
@@ -441,7 +441,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       {
         question: "Does Altair connect to QuickBooks?",
         answer:
-          "Not today. Altair keeps invoices, payments, expenses and pay periods together, but it doesn't sync with QuickBooks. If QuickBooks sync is a must, Jobber (from Connect), Housecall Pro (from Essentials), Workiz and Kickserv all list it.",
+          "Not today. Altair keeps invoices, payments, expenses and approved timesheets together, but it doesn't sync with QuickBooks. If QuickBooks sync is a must, Jobber (from Connect), Housecall Pro (from Essentials), Workiz and Kickserv all list it.",
       },
       {
         question: "Does Altair work for HVAC specifically?",

@@ -387,11 +387,11 @@ function ShareHelpers() {
             Send to phone
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-stone-500">
-            Copy a ready-made message for beta testers.
+            Copy a ready-made message to send to your team.
           </p>
         </div>
         <CopyButton
-          label="Copy beta tester message"
+          label="Copy message for your team"
           copiedLabel="Message copied"
           compact
           onCopy={async () => {
@@ -610,7 +610,7 @@ export function InstallPageView() {
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
           <MessageSquare className="h-3 w-3" aria-hidden />
-          Beta testers · Add Altair to your home screen for quick access
+          Add Altair to your home screen for quick access
         </p>
 
         <PwaInstallDebugPanel />

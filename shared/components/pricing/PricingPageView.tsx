@@ -25,11 +25,11 @@ const PLATFORM_FEATURES = [
   "Estimates & Approvals",
   "Invoices & Payments",
   "Equipment Tracking",
-  "Technician Mobile App",
+  "Technician Phone View",
   "Time Tracking",
   "Team Management",
   "Business Reporting",
-  "AI-Powered Assistants",
+  "AI Drafting for Follow-Ups and Summaries",
   "Live Onboarding",
 ] as const;
 
@@ -86,7 +86,7 @@ export function PricingPageView() {
               {featured ? (
                 <div className="flex items-center justify-center gap-1.5 border-b border-[#C2A05A]/20 bg-gradient-to-r from-[#FDF9F0] via-[#FAF4E8] to-[#FDF9F0] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#77591B]">
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  Most popular
+                  Best for teams of 2 to 5
                 </div>
               ) : null}
 

@@ -39,13 +39,13 @@ const WORKFLOW_STAGES: WorkflowStage[] = [
   { label: "Field Work", icon: Wrench },
   { label: "Invoice", icon: ReceiptText },
   { label: "Payment", icon: CreditCard },
-  { label: "Review", icon: ClipboardCheck },
+  { label: "Close Out", icon: ClipboardCheck },
 ];
 
 const BENEFITS = [
   {
     title: "Never lose another customer",
-    description: "AI helps draft follow-ups and keeps every customer conversation organized.",
+    description: "Every lead has a next step and a log of calls and notes. AI can draft the follow-up for you to send.",
     outcome: "Smarter CRM",
     icon: Bot,
   },
@@ -57,13 +57,13 @@ const BENEFITS = [
   },
   {
     title: "Get paid faster",
-    description: "Professional invoices, Stripe payments, and workflow reminders keep collections moving.",
+    description: "Invoices from the finished job, card payments by link once Stripe is connected, and a reminder when one goes unpaid.",
     outcome: "Faster cash flow",
     icon: CircleDollarSign,
   },
   {
     title: "Know your business",
-    description: "Real-time revenue, technician performance, profitability, and reporting.",
+    description: "Revenue, what is owed, technician performance and job profit, from the records your team already keeps.",
     outcome: "Clear decisions",
     icon: BarChart3,
   },

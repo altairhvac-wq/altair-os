@@ -17,7 +17,7 @@ export const PUBLIC_SITE_ORIGIN = "https://www.altair-op.com";
 export const PUBLIC_SITE_NAME = "Altair Operating System";
 
 export const PUBLIC_SITE_TITLE =
-  "Altair OS · HVAC Business Software · 14-Day Free Trial";
+  "Altair Operating System · HVAC Software · 14-Day Free Trial";
 
 export const PUBLIC_SITE_DESCRIPTION =
   "Software for HVAC and field service companies: jobs, dispatch, estimates, invoices and payments in one place. Free 14-day trial, no credit card.";

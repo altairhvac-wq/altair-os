@@ -50,7 +50,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     navLabel: "HVAC software",
     title: "HVAC Business Software",
     description:
-      "HVAC software for the whole company: leads, jobs, dispatch, estimates, invoices, payroll and reports in one place. 14-day free trial, no credit card.",
+      "HVAC software for the whole company: leads, jobs, dispatch, estimates, invoices, time clock and reports in one place. 14-day free trial, no credit card.",
     eyebrow: "HVAC software",
     headline: "Software for running an HVAC company, from the first call to the paid invoice.",
     intro:
@@ -59,7 +59,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     modules: [
       {
         title: "Leads",
-        text: "Every call and web inquiry becomes a lead with a next step, so nothing waits in a voicemail.",
+        text: "Log every call and web inquiry as a lead with a next step, so nothing waits in a voicemail.",
       },
       {
         title: "Customers and their equipment",
@@ -82,8 +82,8 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
         text: "Completed work becomes the invoice with the job attached. With Stripe connected, customers pay from the link.",
       },
       {
-        title: "Time clock, expenses and payroll",
-        text: "Hours, receipts and pay periods live next to the jobs they belong to, so the books match the work.",
+        title: "Time clock, timesheets and expenses",
+        text: "Shift and job hours and receipts live next to the jobs they belong to. Approve each technician's timesheet for the month, ready for your payroll provider.",
       },
       {
         title: "Reports",
@@ -124,11 +124,11 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
       },
       {
         title: "Assign and reassign",
-        text: "Put a job on a technician, take it off, give it to someone else when the day changes. The technician's phone updates with it.",
+        text: "Put a job on a technician, take it off, give it to someone else when the day changes. The technician sees the change the next time they open or refresh their jobs.",
       },
       {
         title: "A map of the work",
-        text: "Jobs on a map of your service area, so the next call goes to the truck that is already nearby.",
+        text: "Today's job addresses on a map of your service area, so you can see which jobs sit close together before you assign them.",
       },
       {
         title: "The schedule",
