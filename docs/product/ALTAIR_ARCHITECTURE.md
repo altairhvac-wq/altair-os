@@ -103,6 +103,15 @@ Rules:
 - **`--north-star-content-well` is retired as a visible layer.** L0 chrome now runs continuously behind L1; the variable remains only for legacy references and should not be reintroduced as a middle band.
 - **Scrollbars are chrome.** The shell-wide slim scrollbar treatment in globals.css is part of L0; components never style their own scrollbars.
 
+### Stylesheet entries (added 2026-11-12)
+
+`app/globals.css` holds the tokens, the Tailwind theme and the component CSS, but it is no longer imported directly. Two entry stylesheets import it:
+
+- `app/app.css`: Tailwind utilities for all of `app/` and `shared/`. Imported by the layouts of `(admin)`, `(concept)`, `tech`, `technician`, `activate-subscription`, `estimate-approval`, `install`, `invoice-payment` and `setup`.
+- `app/public.css`: utilities only for the files the public site uses, about a third of the size. Imported by the `(marketing)` and `(auth)` layouts.
+
+The root layout imports neither. The root `not-found.tsx` and `error.tsx` use the 2 KB `app/status-page.css`, because Next.js includes those two boundaries on every route. A new top-level route needs a layout that imports `../app.css`. A public page that imports a component outside `public.css`'s `@source` list needs that file added there. `scripts/verify-public-stylesheet.mjs` (part of `verify:all`) fails CI in both cases.
+
 ## 9. Rollout order (safe → structural)
 
 1. Commit this doc; append the naming law + experiment rule to the altair-design-system skill. *(No code risk)*

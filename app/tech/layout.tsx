@@ -1,3 +1,4 @@
+import "../app.css";
 import { redirect } from "next/navigation";
 import { TechnicianMobileShell } from "@/shared/components/technician/TechnicianMobileShell";
 import { getCurrentUser } from "@/lib/database/auth";

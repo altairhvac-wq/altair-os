@@ -1,0 +1,146 @@
+/*
+ * The root 404 (app/not-found.tsx) and error (app/error.tsx) pages.
+ *
+ * Why these two pages have their own few lines of CSS instead of the site
+ * stylesheet: Next.js places the root not-found and error boundaries in
+ * every route's tree, so any stylesheet they import is downloaded by every
+ * page, admin included. Importing app/public.css here would have sent the
+ * public sheet to every admin page as well.
+ *
+ * Self-contained on purpose. On an unknown URL nothing else is loaded, so
+ * each colour falls back to the token's light-theme value. Inside a loaded
+ * page the tokens win, exactly as the Tailwind classes did before.
+ *
+ * Loaded everywhere, so keep it tiny and keep every class `status-page`-
+ * prefixed. The one bare rule, body { margin: 0 }, matches Tailwind's own
+ * reset.
+ */
+body {
+  margin: 0;
+}
+
+.status-page {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 1.5rem;
+  background-color: var(--altair-paper, #fdfbf7);
+  color: var(--foreground, #151913);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.status-page * {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.status-page__eyebrow {
+  color: var(--altair-brass, #77591b);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.status-page__title {
+  margin-top: 1rem;
+  color: var(--altair-ink, #17130e);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.status-page__title--small {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.status-page__text {
+  max-width: 28rem;
+  margin-top: 0.75rem;
+  color: var(--altair-ink-secondary, #4f4638);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.status-page__note {
+  margin-top: 0.5rem;
+  color: var(--altair-ink-muted, #665f4d);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.status-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.status-page__actions--nowrap {
+  flex-wrap: nowrap;
+}
+
+.status-page__button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1.5rem;
+  border: 0 solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--altair-ink, #17130e);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  text-decoration: none;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-page__button--primary {
+  background-color: var(--altair-ink, #17130e);
+  color: var(--altair-paper, #fdfbf7);
+}
+
+.status-page__button--primary:hover {
+  opacity: 0.85;
+}
+
+.status-page__button--outline {
+  border-width: 1px;
+  border-color: color-mix(in oklab, var(--altair-ink, #17130e) 20%, transparent);
+}
+
+.status-page__button--outline:hover {
+  background-color: color-mix(in oklab, var(--altair-ink, #17130e) 5%, transparent);
+}
+
+/* The error page's outline button used the stronger border token. */
+.status-page__button--outline-strong {
+  border-width: 1px;
+  border-color: var(--altair-border-strong, rgb(172 161 135 / 0.35));
+}
+
+.status-page__button--outline-strong:hover {
+  background-color: var(--altair-paper-subtle, #f9f6ef);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-page__button {
+    transition: none;
+  }
+}
