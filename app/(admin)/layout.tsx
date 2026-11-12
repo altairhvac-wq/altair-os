@@ -37,12 +37,12 @@ export default async function AdminLayout({
     redirect("/technician");
   }
 
-  const billingAccess = await requireCompanyBillingAppAccess(
-    companyContext.company.id,
-  );
-
-  const [notifications, unreadNotificationCount, liveTheme] =
+  // Started together: the billing gate still redirects before anything
+  // renders (a redirect rejects the whole Promise.all), and the rest are
+  // reads with no side effects, so they no longer wait for the gate.
+  const [billingAccess, notifications, unreadNotificationCount, liveTheme] =
     await Promise.all([
+      requireCompanyBillingAppAccess(companyContext.company.id),
       getUserNotifications(companyContext.company.id, companyContext.user.id, {
         limit: 20,
       }),
