@@ -1,9 +1,7 @@
-import Image from "next/image";
 import {
   BarChart3,
   Bot,
   CalendarDays,
-  CheckCircle2,
   CircleDollarSign,
   ClipboardCheck,
   CreditCard,
@@ -18,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
+import { HeroCommercialVideo } from "./HeroCommercialVideo";
 import { LoginProductPreviews } from "./LoginProductPreviews";
 
 export const LOGIN_HERO_TITLE =
@@ -92,88 +91,10 @@ const TRUST_ITEMS = [
   },
 ] as const;
 
-function HeroStatusCard({
-  className,
-  eyebrow,
-  primary,
-  secondary,
-  icon: Icon,
-  tone = "gold",
-}: {
-  className: string;
-  eyebrow: string;
-  primary: string;
-  secondary: string;
-  icon: LucideIcon;
-  tone?: "gold" | "green" | "cyan";
-}) {
-  const toneClass =
-    tone === "green"
-      ? "text-emerald-300"
-      : tone === "cyan"
-        ? "text-cyan-300"
-        : "text-[#d9c188]";
-
-  return (
-    <div className={`absolute rounded-xl border border-[#c2a05a]/30 bg-[#0e100d]/88 px-3 py-2.5 shadow-[0_16px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl ${className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-400">{eyebrow}</p>
-        <Icon className={`h-3 w-3 ${toneClass}`} aria-hidden="true" />
-      </div>
-      <p className="mt-1 text-xs font-semibold text-white">{primary}</p>
-      <p className={`mt-0.5 text-[10px] ${toneClass}`}>{secondary}</p>
-    </div>
-  );
-}
-
 function FieldServiceHero() {
   return (
     <figure className="auth-panel-enter relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#131712] shadow-[0_28px_80px_-34px_rgba(0,0,0,0.9),0_0_0_1px_rgba(194,160,90,0.08)_inset]">
-      <div className="relative aspect-[16/11] min-h-[220px] sm:min-h-[290px]">
-        <Image
-          src="/marketing/hero/altair-field-service-hero.webp"
-          alt="HVAC technician arriving at a customer home with Altair coordinating the visit"
-          fill
-          fetchPriority="high"
-          sizes="(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), (max-width: 1279px) 60vw, 38vw"
-          className="object-cover"
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0b09]/75 via-transparent to-[#0a0b09]/10" />
-        <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10 ring-inset" />
-
-        <HeroStatusCard
-          className="left-3 top-3 hidden sm:block"
-          eyebrow="Today’s schedule"
-          primary="3 visits ready"
-          secondary="Next · system maintenance"
-          icon={CalendarDays}
-          tone="cyan"
-        />
-        <HeroStatusCard
-          className="right-3 top-3"
-          eyebrow="Estimate"
-          primary="Estimate approved"
-          secondary="Customer confirmed"
-          icon={CheckCircle2}
-          tone="green"
-        />
-        <HeroStatusCard
-          className="bottom-3 left-3"
-          eyebrow="Dispatch"
-          primary="Technician assigned"
-          secondary="Route updated"
-          icon={Radio}
-          tone="cyan"
-        />
-        <HeroStatusCard
-          className="bottom-3 right-3 hidden sm:block"
-          eyebrow="Invoice"
-          primary="Payment received"
-          secondary="Balance updated"
-          icon={CreditCard}
-          tone="green"
-        />
-      </div>
+      <HeroCommercialVideo />
     </figure>
   );
 }
