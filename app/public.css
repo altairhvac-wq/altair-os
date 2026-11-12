@@ -47,6 +47,8 @@
 @source "../shared/components/pwa";
 @source "../shared/components/resources";
 @source "../shared/components/site";
+/* The sign-in error screen only; the rest of support/ is admin-only. */
+@source "../shared/components/support/RouteErrorScreen.tsx";
 @source "../shared/components/ui/ModalPortal.tsx";
 @source "../shared/design-system/feedback";
 
