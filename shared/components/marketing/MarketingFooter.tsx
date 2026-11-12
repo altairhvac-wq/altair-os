@@ -7,6 +7,8 @@ const focusRing =
 const FOOTER_LINKS = [
   { href: "/hvac-software", label: "Product" },
   { href: "/how-it-works", label: "How It Works" },
+  { href: "/servicetitan-alternative", label: "vs ServiceTitan" },
+  { href: "/jobber-housecall-pro-alternatives", label: "vs Jobber & Housecall Pro" },
   { href: "/pricing", label: "Pricing" },
   { href: "/insights", label: "Insights" },
   { href: "/resources", label: "Resources" },
