@@ -28,13 +28,17 @@ export default async function TechnicianLayout({
     redirect("/setup");
   }
 
-  await requireCompanyBillingAppAccess(companyContext.company.id);
-
-  const unreadNotificationCount = await getUnreadNotificationCount(
-    companyContext.company.id,
-    companyContext.user.id,
-    { types: TECHNICIAN_NOTIFICATION_TYPES },
-  );
+  // Started together: the billing gate still redirects before anything
+  // renders (a redirect rejects the whole Promise.all), and the count is a
+  // read with no side effects, so it no longer waits for the gate.
+  const [, unreadNotificationCount] = await Promise.all([
+    requireCompanyBillingAppAccess(companyContext.company.id),
+    getUnreadNotificationCount(
+      companyContext.company.id,
+      companyContext.user.id,
+      { types: TECHNICIAN_NOTIFICATION_TYPES },
+    ),
+  ]);
 
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
 
