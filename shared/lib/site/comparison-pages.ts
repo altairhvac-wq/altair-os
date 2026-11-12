@@ -99,6 +99,50 @@ const PRO_EXTRA_USER_USD = (() => {
 const usd = (value: number) => `$${value.toLocaleString("en-US")}`;
 const monthly = (plan: { monthlyPriceUsd: number }) => `${usd(plan.monthlyPriceUsd)}/mo`;
 
+// ---------- A five-person shop, month to month ----------
+// One pair of competitor numbers, used by the Jobber & Housecall Pro page
+// below AND by the price comparison on /pricing, so the two cannot disagree.
+// List prices for 5 users, billed monthly, from each company's own pricing
+// page on COMPETITOR_FACTS_CHECKED. Re-check both before changing either.
+const JOBBER_CONNECT_5_USERS_USD = 199;
+const HOUSECALL_PRO_ESSENTIALS_5_USERS_USD = 189;
+
+export type FiveUserPriceRow = {
+  readonly name: string;
+  readonly plan: string;
+  readonly monthlyUsd: number;
+  /** The company's own pricing page; absent for Altair (it is this site). */
+  readonly sourceUrl?: string;
+  readonly ours?: boolean;
+};
+
+/** What a five-person shop pays per month, for the table on /pricing. */
+export const FIVE_USER_PRICE_COMPARISON: {
+  readonly checkedOn: string;
+  readonly users: number;
+  readonly comparisonPath: ComparisonPagePath;
+  readonly rows: readonly FiveUserPriceRow[];
+} = {
+  checkedOn: COMPETITOR_FACTS_CHECKED,
+  users: 5,
+  comparisonPath: "/jobber-housecall-pro-alternatives",
+  rows: [
+    { name: "Altair Operating System", plan: "Growth", monthlyUsd: GROWTH.monthlyPriceUsd, ours: true },
+    {
+      name: "Jobber",
+      plan: "Connect",
+      monthlyUsd: JOBBER_CONNECT_5_USERS_USD,
+      sourceUrl: "https://www.getjobber.com/pricing/",
+    },
+    {
+      name: "Housecall Pro",
+      plan: "Essentials",
+      monthlyUsd: HOUSECALL_PRO_ESSENTIALS_5_USERS_USD,
+      sourceUrl: "https://www.housecallpro.com/pricing/",
+    },
+  ],
+};
+
 const ALTAIR_PRICE_LINE = `Starter ${monthly(STARTER)} (${STARTER.includedAccounts} user), Growth ${monthly(GROWTH)} (${GROWTH.includedAccounts} users), Pro ${monthly(PRO)} (${PRO.includedAccounts} users, then ${usd(PRO_EXTRA_USER_USD)}/mo per extra user).`;
 const ALTAIR_PRICE_NOTE = `Plans from ${monthly(STARTER)} · ${TRIAL_DAYS} days free, no credit card · Cancel anytime`;
 const ALTAIR_TRIAL = `${TRIAL_DAYS}-day free trial with the whole system. No credit card.`;
@@ -289,8 +333,8 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
         label: "5 users",
         cells: [
           `${monthly(GROWTH)} (Growth)`,
-          "$199/mo (Connect) or $299/mo (Grow). Core is 1 user only.",
-          "$189/mo (Essentials). $149 billed annually.",
+          `${usd(JOBBER_CONNECT_5_USERS_USD)}/mo (Connect) or $299/mo (Grow). Core is 1 user only.`,
+          `${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)}/mo (Essentials). $149 billed annually.`,
         ],
       },
       {
@@ -346,7 +390,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     items: [
       {
         title: "What it costs when you add two more people",
-        text: `Both Jobber and Housecall Pro price by tier and by user count. On Jobber's Connect plan, going from 1 user to 5 takes the monthly price from $139 to $199. On Housecall Pro, 1 user on Basic is $79 and 5 users on Essentials is $189. On Altair, 1 user is ${usd(STARTER.monthlyPriceUsd)} and 5 users is ${usd(GROWTH.monthlyPriceUsd)}.`,
+        text: `Both Jobber and Housecall Pro price by tier and by user count. On Jobber's Connect plan, going from 1 user to 5 takes the monthly price from $139 to ${usd(JOBBER_CONNECT_5_USERS_USD)}. On Housecall Pro, 1 user on Basic is $79 and 5 users on Essentials is ${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)}. On Altair, 1 user is ${usd(STARTER.monthlyPriceUsd)} and 5 users is ${usd(GROWTH.monthlyPriceUsd)}.`,
       },
       {
         title: "Which tools sit on which tier",
@@ -436,7 +480,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       },
       {
         question: "Is Altair cheaper than Jobber or Housecall Pro?",
-        answer: `On their published monthly prices, yes, at each team size. 1 user is ${usd(STARTER.monthlyPriceUsd)} on Altair, $49 on Jobber Core and $79 on Housecall Pro Basic. 5 users is ${usd(GROWTH.monthlyPriceUsd)} on Altair, $199 on Jobber Connect and $189 on Housecall Pro Essentials. The plans don't include the same features, so compare the tools you'll actually use.`,
+        answer: `On their published monthly prices, yes, at each team size. 1 user is ${usd(STARTER.monthlyPriceUsd)} on Altair, $49 on Jobber Core and $79 on Housecall Pro Basic. 5 users is ${usd(GROWTH.monthlyPriceUsd)} on Altair, ${usd(JOBBER_CONNECT_5_USERS_USD)} on Jobber Connect and ${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)} on Housecall Pro Essentials. The plans don't include the same features, so compare the tools you'll actually use.`,
       },
       {
         question: "Does Altair connect to QuickBooks?",
