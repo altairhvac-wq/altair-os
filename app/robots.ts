@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 
@@ -31,6 +32,9 @@ export default function robots(): MetadataRoute.Robots {
           "/install",
           "/contact",
           ...LANDING_PAGE_PATHS,
+          // The commercial's watch page (it is in the sitemap; without this
+          // line Search Console rejects it as blocked by robots.txt).
+          VIDEO_PAGE_PATH,
           "/insights",
           "/resources",
           // The sitemap itself: with `disallow: "/"` below, an unlisted
@@ -40,6 +44,13 @@ export default function robots(): MetadataRoute.Robots {
           "/icons/",
           "/favicon.svg",
           "/apple-touch-icon.png",
+          // Public marketing media: the commercial (VideoObject contentUrl and
+          // thumbnail), its poster, the hero image and the product screenshots.
+          "/marketing/",
+          // The built CSS/JS and optimised images. Google renders pages before
+          // indexing them; with these blocked it sees every page unstyled.
+          "/_next/static/",
+          "/_next/image",
         ],
         disallow: "/",
       },
