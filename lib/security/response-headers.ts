@@ -182,11 +182,12 @@ export function buildSecurityHeaders(options: {
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     {
       key: "Permissions-Policy",
-      // Geolocation is allowed for the technician dispatch map; the rest are
-      // capabilities this application never uses.
+      // Geolocation is allowed for the technician dispatch map; autoplay is allowed
+      // for the site's own media (the muted homepage commercial preview); the rest
+      // are capabilities this application never uses.
       value: [
         "accelerometer=()",
-        "autoplay=()",
+        "autoplay=(self)",
         "camera=()",
         "display-capture=()",
         "encrypted-media=()",
