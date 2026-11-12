@@ -4,8 +4,11 @@ import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import {
   buildPublicSocialMetadata,
   PUBLIC_SITE_DESCRIPTION,
+  PUBLIC_SITE_NAME,
+  PUBLIC_SITE_ORIGIN,
   PUBLIC_SITE_TITLE,
 } from "@/shared/lib/site/public-site";
+import { VIDEO_PAGE_PATH, buildCommercialVideoStructuredData } from "@/shared/lib/site/commercial-video";
 import {
   buildOrganizationStructuredData,
   buildSoftwareApplicationStructuredData,
@@ -36,6 +39,14 @@ export default function WelcomePage() {
           catalog and site constants the visible page renders. */}
       <JsonLdScript data={buildOrganizationStructuredData()} />
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
+      {/* The commercial in the hero; its watch page is /how-it-works. */}
+      <JsonLdScript
+        data={buildCommercialVideoStructuredData({
+          origin: PUBLIC_SITE_ORIGIN,
+          pageUrl: `${PUBLIC_SITE_ORIGIN}${VIDEO_PAGE_PATH}`,
+          publisherName: PUBLIC_SITE_NAME,
+        })}
+      />
       <LoginLandingPage />
     </>
   );
