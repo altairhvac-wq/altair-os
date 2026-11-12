@@ -55,7 +55,7 @@ export function HomepagePricingSection() {
               >
                 {featured ? (
                   <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c2a05a]">
-                    Most popular
+                    Best for teams of 2 to 5
                   </p>
                 ) : null}
                 <h3 className="text-lg font-semibold text-[#fff9ea]">{plan.label}</h3>

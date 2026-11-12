@@ -15,7 +15,7 @@ import {
 } from "@/shared/lib/site/structured-data";
 
 export const metadata: Metadata = {
-  // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
+  // `absolute` opts the logged-out homepage out of the root "%s · Altair Operating System"
   // template — this title already leads with the product name.
   title: {
     absolute: PUBLIC_SITE_TITLE,

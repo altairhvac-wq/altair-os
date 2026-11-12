@@ -14,6 +14,12 @@ type ProductScreenshotPlaceholderProps = {
   alt: string;
   label: string;
   src?: string;
+  /**
+   * A 4:3 crop of the same screen for phone widths. A full desktop screenshot
+   * scaled to a 350px column is unreadable; the crop shows the working area
+   * at about twice the size. The lightbox always opens the full screenshot.
+   */
+  mobileSrc?: string;
   className?: string;
 };
 
@@ -89,6 +95,7 @@ export function ProductScreenshotPlaceholder({
   alt,
   label,
   src,
+  mobileSrc,
   className = "",
 }: ProductScreenshotPlaceholderProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -104,16 +111,32 @@ export function ProductScreenshotPlaceholder({
         <button
           type="button"
           onClick={() => setIsLightboxOpen(true)}
-          className={`${frameClass} relative aspect-[16/9] w-full cursor-zoom-in text-left`}
+          className={`${frameClass} relative w-full cursor-zoom-in text-left ${
+            mobileSrc ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[16/9]"
+          }`}
           aria-label={`View larger: ${alt}`}
         >
+          {mobileSrc ? (
+            <Image
+              src={mobileSrc}
+              alt=""
+              fill
+              sizes="95vw"
+              quality={90}
+              className="object-cover object-center sm:hidden"
+            />
+          ) : null}
           <Image
             src={src}
             alt={alt}
             fill
-            sizes="(max-width: 640px) 95vw, (max-width: 1024px) 45vw, 640px"
+            sizes="(max-width: 1024px) 92vw, 620px"
             quality={90}
-            className="object-contain object-center"
+            className={
+              mobileSrc
+                ? "hidden object-contain object-center sm:block"
+                : "object-contain object-center"
+            }
           />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0A0A0A]/70 via-[#0A0A0A]/20 to-transparent pb-2.5 pt-6" />
           <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-[#C2A05A]/28 bg-[#0A0A0A]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#C2A05A]/90 shadow-sm motion-safe:transition-opacity motion-safe:duration-200 sm:bottom-2.5 sm:right-2.5 sm:px-2.5 sm:py-1 sm:text-[11px]">

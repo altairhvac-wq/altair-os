@@ -3,11 +3,12 @@ import {
   LegalPageShell,
   LegalSection,
 } from "@/shared/components/marketing/LegalPageShell";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Altair OS collects, uses, and protects your data and your customers' data.",
+    "How Altair Operating System collects, uses, and protects your data and your customers' data.",
 };
 
 /**
@@ -18,8 +19,8 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      effectiveDate="October 19, 2026"
-      intro="Altair OS is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
+      effectiveDate="November 12, 2026"
+      intro="Altair Operating System is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
     >
       <LegalSection heading="What we collect">
         <p>
@@ -51,14 +52,20 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="Who processes it">
         <p>
-          We rely on a small set of infrastructure providers to run Altair OS:
+          We rely on a small set of infrastructure providers to run Altair:
           Supabase (database and file storage), Vercel (application hosting),
           Stripe (payment processing — card details go directly to Stripe and
-          we never store card numbers), OpenAI (powers optional AI drafting
-          features, using only the content needed to generate the draft), and
-          Meta (only if you connect your Facebook Page or Instagram account,
-          and only to publish the posts you approve). Each provider processes
-          data solely to deliver their service to us.
+          we never store card numbers), Resend (delivers the emails the
+          product sends, such as estimates, invoices, invitations and account
+          messages), Mapbox (draws the dispatch map; job addresses are sent to
+          it to place the pins), Cloudflare (the automated-abuse check on our
+          sign-in and sign-up forms), Sentry (error reports from the
+          application, set up not to include personal details), OpenAI (powers
+          optional AI drafting features, using only the content needed to
+          generate the draft), and Meta (only if you connect your Facebook
+          Page or Instagram account, and only to publish the posts you
+          approve). Each provider processes data solely to deliver their
+          service to us.
         </p>
       </LegalSection>
 
@@ -93,7 +100,7 @@ export default function PrivacyPolicyPage() {
       <LegalSection heading="Your customers' data">
         <p>
           You may store your own customers&apos; contact details and service
-          history in Altair OS. That data is yours: we process it only by
+          history in Altair. That data is yours: we process it only by
           operating the software on your instructions, and we never contact
           your customers or use their information for our own purposes.
         </p>
@@ -130,9 +137,9 @@ export default function PrivacyPolicyPage() {
           Questions about this policy:{" "}
           <a
             className="font-medium text-[#77591b] underline underline-offset-2"
-            href="mailto:altairhvac@gmail.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
           >
-            altairhvac@gmail.com
+            {SUPPORT_EMAIL}
           </a>
           . We&apos;ll post any material changes to this page and update the
           effective date.

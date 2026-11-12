@@ -1,4 +1,5 @@
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 
 /**
  * The questions a visitor asks before starting a trial, answered with facts
@@ -17,7 +18,7 @@ export type SiteFaqItem = {
   answer: string;
 };
 
-export const SUPPORT_EMAIL = "altairhvac@gmail.com";
+export { SUPPORT_EMAIL };
 
 const TRIAL_DAYS = SAAS_TRIAL_CONFIG.durationDays;
 

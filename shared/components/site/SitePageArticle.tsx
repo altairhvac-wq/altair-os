@@ -178,6 +178,8 @@ export function SitePageArticle({
   return (
     <div className="relative min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
       <HomepageNav />
+      {/* <main>: without it screen readers have no "skip to the article" landmark. */}
+      <main>
       <article className="mx-auto w-full max-w-[720px] px-5 pb-16 pt-24 sm:px-8 sm:pt-28">
         {hasStructuredData ? (
           <script
@@ -281,11 +283,11 @@ export function SitePageArticle({
         </div>
 
         <aside
-          aria-label="Try Altair OS"
+          aria-label="Try Altair Operating System"
           className="mt-14 rounded-2xl bg-[#0d0f0c] px-6 py-7 text-[#f3ebdd] shadow-[0_30px_80px_-40px_rgba(0,0,0,0.7)] sm:px-8"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
-            Altair OS
+            Altair Operating System
           </p>
           <p className="mt-2 text-xl font-semibold text-[#fff9ea] sm:text-2xl">
             Run every job from first call to paid, in one place.
@@ -369,6 +371,7 @@ export function SitePageArticle({
           </nav>
         ) : null}
       </article>
+      </main>
       <MarketingFooter />
     </div>
   );

@@ -10,6 +10,7 @@ import {
   PUBLIC_SITE_ORIGIN,
 } from "@/shared/lib/site/public-site";
 import { SITE_FAQ } from "@/shared/lib/site/faq";
+import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 
 /**
  * Structured data (JSON-LD) for the public marketing pages.
@@ -47,6 +48,8 @@ export function buildOrganizationStructuredData(): Record<string, unknown> {
     url: PUBLIC_SITE_ORIGIN,
     // The PWA icon in `public/icons/`, regenerated from its SVG source.
     logo: `${PUBLIC_SITE_ORIGIN}/icons/icon-512.png`,
+    // The two YouTube channels, which the footer links on every page.
+    sameAs: YOUTUBE_CHANNELS.map((channel) => channel.url),
   };
 }
 
