@@ -1,3 +1,4 @@
+import "../public.css";
 export default function AuthLayout({
   children,
 }: Readonly<{

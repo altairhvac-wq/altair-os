@@ -289,6 +289,6 @@ https://altair-op.com/?utm_source=facebook&utm_medium=paid_social&utm_campaign=b
   tracking".
 - DAU / WAU / MAU fall back to sign-in times until tracking has data.
 - A visitor who switches device or clears storage counts as a new visitor.
-- `shared/components/analytics/AnalyticsPageView.tsx` and its siblings are an
-  older company-level analytics module on mock data that no route imports.
-  This work does not touch it; it is a candidate for removal.
+- The older company-level analytics module on mock data
+  (`shared/components/analytics/AnalyticsPageView.tsx` and its siblings), which
+  no route imported, was removed in the 2026-11-11 unused-code cleanup.

@@ -1,0 +1,56 @@
+/*
+ * The public site's stylesheet: the marketing pages, sign-in and sign-up.
+ * (The root 404 and error pages use the tiny app/status-page.css instead;
+ * that file says why.)
+ *
+ * It has the same tokens, theme and component CSS as the full sheet
+ * (app/app.css), but Tailwind generates utilities only for the files the
+ * public pages actually use, listed below. A visitor's first page therefore
+ * downloads well under half the CSS that the admin needs.
+ *
+ * Utilities live in `site-utilities`, not `utilities`. Both entry sheets
+ * declare the same layer order, and `site-utilities` sits below the full
+ * sheet's `utilities`. React keeps a stylesheet in the page after you leave
+ * the route that loaded it, so an admin session that passes through the
+ * public site can end up with both sheets. The full sheet then wins every
+ * utility, whichever arrived first. On its own, this sheet behaves exactly as
+ * the full one does: utilities above theme, base and components, and the
+ * unlayered component CSS above all of them.
+ *
+ * KEEP THE SOURCES COMPLETE. A public page that imports a file not covered
+ * below loses that file's utilities on the public site. scripts/verify-public-
+ * stylesheet.mjs (part of `npm run verify:all`, so CI) walks every import from
+ * the public routes and fails if any reached file is missing here.
+ */
+@layer theme, base, components, site-utilities, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(site-utilities) source(none);
+
+/* Tokens, theme and component CSS, shared with app/app.css. */
+@import "./globals.css";
+
+/* Public routes, and the root layout that wraps them. */
+@source "../app/(marketing)";
+@source "../app/(auth)";
+@source "../app/layout.tsx";
+
+/* Components the public pages use. */
+@source "../shared/components/analytics";
+@source "../shared/components/auth";
+@source "../shared/components/brand";
+@source "../shared/components/feedback";
+@source "../shared/components/homepage";
+@source "../shared/components/marketing";
+@source "../shared/components/pricing";
+@source "../shared/components/pwa";
+@source "../shared/components/resources";
+@source "../shared/components/site";
+@source "../shared/components/ui/ModalPortal.tsx";
+@source "../shared/design-system/feedback";
+
+/* Helpers and types the public pages import (some carry class strings). */
+@source "../shared/hooks";
+@source "../shared/lib";
+@source "../shared/types";

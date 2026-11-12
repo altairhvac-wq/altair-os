@@ -1,3 +1,4 @@
+import "./status-page.css";
 import Link from "next/link";
 
 /**
@@ -6,33 +7,33 @@ import Link from "next/link";
  */
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-altair-paper px-6 text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-altair-brass">
+    <main className="status-page">
+      <p className="status-page__eyebrow">
         Altair Operating System
       </p>
-      <h1 className="mt-4 text-5xl font-bold tracking-tight text-altair-ink">
+      <h1 className="status-page__title">
         404
       </h1>
-      <p className="mt-3 max-w-md text-sm text-altair-ink-secondary">
+      <p className="status-page__text">
         This page doesn&apos;t exist or may have moved. Check the address, or
         start from one of these.
       </p>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <div className="status-page__actions">
         <Link
           href="/"
-          className="inline-flex items-center rounded-full bg-altair-ink px-6 py-2.5 text-sm font-semibold text-altair-paper transition-opacity hover:opacity-85"
+          className="status-page__button status-page__button--primary"
         >
           Home
         </Link>
         <Link
           href="/pricing"
-          className="inline-flex items-center rounded-full border border-altair-ink/20 px-6 py-2.5 text-sm font-semibold text-altair-ink transition-colors hover:bg-altair-ink/5"
+          className="status-page__button status-page__button--outline"
         >
           Pricing
         </Link>
         <Link
           href="/resources"
-          className="inline-flex items-center rounded-full border border-altair-ink/20 px-6 py-2.5 text-sm font-semibold text-altair-ink transition-colors hover:bg-altair-ink/5"
+          className="status-page__button status-page__button--outline"
         >
           Resources
         </Link>

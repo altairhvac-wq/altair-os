@@ -1,3 +1,4 @@
+import "../app.css";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/shared/components/admin/AdminShell";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
