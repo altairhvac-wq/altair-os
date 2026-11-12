@@ -208,7 +208,7 @@ export function SitePageArticle({
             {publishedAt ? (
               <time dateTime={publishedAt}>{formatDate(publishedAt)}</time>
             ) : null}
-            {publishedAt && updatedAt > publishedAt ? (
+            {publishedAt && formatDate(updatedAt) !== formatDate(publishedAt) ? (
               <>
                 {" · updated "}
                 <time dateTime={updatedAt}>{formatDate(updatedAt)}</time>
