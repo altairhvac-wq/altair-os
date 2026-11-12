@@ -67,7 +67,7 @@ const DEFAULTS: Record<Key, string> = {
 };
 
 export function LaborRateCalculator() {
-  const { values, setField, reset } = useCalculatorFields<Key>(DEFAULTS);
+  const { values, setField, reset, restored, shareUrl } = useCalculatorFields<Key>(DEFAULTS, "labor-rate");
 
   const result = calculateLaborRate({
     hourlyWage: parseNumber(values.hourlyWage),
@@ -81,6 +81,8 @@ export function LaborRateCalculator() {
   return (
     <CalculatorLayout
       onReset={reset}
+      shareUrl={shareUrl}
+      restored={restored}
       fields={FIELDS.map((spec) => (
         <NumberField key={spec.key} spec={spec} value={values[spec.key]} onChange={setField} />
       ))}

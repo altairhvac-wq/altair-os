@@ -57,7 +57,7 @@ const DEFAULTS: Record<Key, string> = {
 };
 
 export function JobProfitabilityCalculator() {
-  const { values, setField, reset } = useCalculatorFields<Key>(DEFAULTS);
+  const { values, setField, reset, restored, shareUrl } = useCalculatorFields<Key>(DEFAULTS, "job-profitability");
 
   const result = calculateJobProfitability({
     revenue: parseNumber(values.revenue),
@@ -72,6 +72,8 @@ export function JobProfitabilityCalculator() {
   return (
     <CalculatorLayout
       onReset={reset}
+      shareUrl={shareUrl}
+      restored={restored}
       fields={FIELDS.map((spec) => (
         <NumberField key={spec.key} spec={spec} value={values[spec.key]} onChange={setField} />
       ))}
