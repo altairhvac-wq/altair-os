@@ -11,6 +11,8 @@ export const RESOURCES_CALCULATORS_PATH = "/resources/calculators";
 export const RESOURCES_TEMPLATES_PATH = "/resources/templates";
 export const RESOURCES_GUIDES_PATH = "/resources/guides";
 export const RESOURCES_LIBRARY_PATH = "/resources/library";
+export const RESOURCES_BLACK_FRIDAY_TOOL_BAGS_PATH =
+  "/resources/best-hvac-tool-bag-black-friday-2026";
 
 export type ResourceCalculatorEntry = {
   slug: "labor-rate" | "job-profitability" | "break-even";
@@ -56,6 +58,7 @@ export const RESOURCE_STATIC_PATHS: readonly string[] = [
   RESOURCES_TEMPLATES_PATH,
   RESOURCES_GUIDES_PATH,
   RESOURCES_LIBRARY_PATH,
+  RESOURCES_BLACK_FRIDAY_TOOL_BAGS_PATH,
 ];
 
 export const RESOURCES_HUB_DESCRIPTION =

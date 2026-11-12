@@ -7,6 +7,7 @@ import {
 } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import {
+  RESOURCES_BLACK_FRIDAY_TOOL_BAGS_PATH,
   RESOURCES_CALCULATORS_PATH,
   RESOURCES_GUIDES_PATH,
   RESOURCES_HUB_DESCRIPTION,
@@ -78,6 +79,18 @@ const SECTIONS = [
     description:
       "Search articles and public videos from the Altair HVAC Exploration and Altair Operating System channels in one place.",
     links: [{ label: "Search the library", href: RESOURCES_LIBRARY_PATH }],
+  },
+  {
+    title: "HVAC tool guides",
+    href: RESOURCES_BLACK_FRIDAY_TOOL_BAGS_PATH,
+    description:
+      "Three complete HVAC tool bags compared for Black Friday 2026, with every tool's price, store, specs, the good and the bad.",
+    links: [
+      {
+        label: "Best HVAC tool bag for Black Friday 2026",
+        href: RESOURCES_BLACK_FRIDAY_TOOL_BAGS_PATH,
+      },
+    ],
   },
 ] as const;
 
