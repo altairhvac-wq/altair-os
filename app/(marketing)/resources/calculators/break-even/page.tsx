@@ -6,7 +6,7 @@ import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 const TITLE = "Break-even calculator";
 const DESCRIPTION =
-  "Find how many jobs and how much revenue per month it takes to cover your fixed costs, from fixed monthly costs, average job revenue and variable cost percentage. Free, with the formula shown.";
+  "Free break-even calculator: how many jobs and how much revenue a month it takes to cover your fixed costs. Formula shown, no account needed.";
 
 export const metadata: Metadata = {
   title: TITLE,

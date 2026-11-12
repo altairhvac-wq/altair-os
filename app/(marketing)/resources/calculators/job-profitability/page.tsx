@@ -6,7 +6,7 @@ import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 const TITLE = "Job profitability calculator";
 const DESCRIPTION =
-  "Work out gross profit, net profit and margin on a single job from revenue, labor hours, loaded labor cost, materials, subcontract and overhead allocation. Free, with the formula shown.";
+  "Free job profitability calculator: gross profit, net profit and margin on one job from revenue, labor, materials and overhead. Formula shown.";
 
 export const metadata: Metadata = {
   title: TITLE,

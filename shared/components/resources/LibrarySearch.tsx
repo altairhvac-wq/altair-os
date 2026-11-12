@@ -123,10 +123,12 @@ export function LibrarySearch({ items }: { readonly items: readonly LibraryItem[
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    // The new-tab note lives in the accessible name, not in the
+                    // heading text, so search engines read the title alone.
+                    aria-label={`${item.title} (opens YouTube in a new tab)`}
                     className="hover:text-[#77591B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40"
                   >
                     {item.title}
-                    <span className="sr-only"> (opens YouTube in a new tab)</span>
                   </a>
                 ) : (
                   <Link

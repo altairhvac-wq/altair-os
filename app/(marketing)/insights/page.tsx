@@ -5,6 +5,7 @@ import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
+import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 
 /**
  * The Insights index: every published Altair site page, newest first.
@@ -17,7 +18,7 @@ import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
  */
 
 const INSIGHTS_DESCRIPTION =
-  "Articles from Altair Operating System for field service businesses: running leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one connected system.";
+  "Practical articles for HVAC and field service owners on pricing, estimates, dispatch, invoicing and growing past the first truck.";
 
 export const metadata: Metadata = {
   title: "Insights",
@@ -91,6 +92,45 @@ export default async function InsightsIndexPage() {
             })}
           </ul>
         )}
+
+        <section aria-labelledby="insights-tools-heading" className="mt-14 rounded-2xl border border-stone-200/80 bg-white px-6 py-6 shadow-sm">
+          <h2 id="insights-tools-heading" className="text-base font-semibold tracking-tight text-[#0A0A0A]">
+            Put a number on it
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-stone-600">
+            Free calculators that answer the questions these articles raise. No account, formulas shown, and your
+            numbers stay in your browser.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <li>
+              <Link href="/resources/calculators/labor-rate" className="font-semibold text-[#77591B] hover:underline">
+                Labor rate calculator
+              </Link>
+            </li>
+            <li>
+              <Link href="/resources/calculators/job-profitability" className="font-semibold text-[#77591B] hover:underline">
+                Job profitability calculator
+              </Link>
+            </li>
+            <li>
+              <Link href="/resources/calculators/break-even" className="font-semibold text-[#77591B] hover:underline">
+                Break-even calculator
+              </Link>
+            </li>
+            <li>
+              <Link href="/resources/templates" className="font-semibold text-[#77591B] hover:underline">
+                Free templates
+              </Link>
+            </li>
+          </ul>
+        </section>
+
+        <p className="mt-8 text-center text-sm text-stone-600">
+          Want to see the software these articles keep pointing at?{" "}
+          <Link href={VIDEO_PAGE_PATH} className="font-semibold text-[#77591B] hover:underline">
+            Watch one job go from first call to paid (2:27)
+          </Link>
+        </p>
       </main>
 
       <MarketingFooter />

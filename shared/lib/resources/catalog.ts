@@ -59,7 +59,7 @@ export const RESOURCE_STATIC_PATHS: readonly string[] = [
 ];
 
 export const RESOURCES_HUB_DESCRIPTION =
-  "Free calculators, templates, guides and videos for HVAC and trade business owners: price your labor, check job profit, find your break-even, and run the office day. No account required.";
+  "Free calculators, templates and guides for HVAC and trade owners: price your labor, check job profit and find your break-even. No account needed.";
 
 export const CALCULATOR_DISCLAIMER =
   "Estimates only. This calculator is for planning and education; it is not financial, tax or legal advice. Results depend entirely on the numbers you enter. Verify your figures and decisions with your accountant.";
