@@ -37,7 +37,7 @@ Typical request flow:
 - `app/(admin)/`: authenticated office/admin product surfaces.
 - `app/(auth)/`: login, signup, password recovery, and reset flows.
 - `app/technician/`: current database-backed technician experience.
-- `app/tech/`: older technician routes; the root still uses mock dashboard data.
+- `app/tech/`: live technician pages for time (`/tech/time`), receipts and alerts, linked from the technician nav. `/tech` itself redirects to `/technician` (next.config.ts).
 - `app/actions/`: mutation boundary. Actions must authenticate, resolve company context, check permissions, validate input, and revalidate affected routes as appropriate.
 - `lib/database/`: company context, access control, typed queries, domain services, revalidation helpers, and database types.
 - `lib/supabase/`: browser, server-cookie, request-boundary, and service-role Supabase clients.
@@ -46,7 +46,6 @@ Typical request flow:
 - `shared/components/`: reusable UI grouped by product domain. North Star variants are colocated in domain-specific `north-star-*` folders.
 - `shared/design-system/`: tokens, shell, signature, components, and design-system documentation.
 - `shared/types/`: domain models, validation/normalization helpers, and action-facing types.
-- `shared/data/`: legacy/sample mock data; do not assume it is production data.
 - `supabase/migrations/`: ordered PostgreSQL schema, RLS, function, trigger, and grant migrations.
 - `public/`: static assets, PWA files, import templates, and marketing screenshots.
 - `scripts/`: integration smoke scripts and local asset/screenshot tooling.

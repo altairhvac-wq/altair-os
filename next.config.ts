@@ -86,6 +86,18 @@ const nextConfig: NextConfig = {
         destination: "/technician",
         permanent: false,
       },
+      // Retired design experiments (removed 2026-11-12). Old bookmarks land on
+      // the dashboard instead of a 404, as their stub pages used to do.
+      ...[
+        "/command-center-v1",
+        "/workspace-v1",
+        "/dashboard-north-star-v1",
+        "/dashboard-north-star-v2",
+        "/altair-shell-color-lab-v1",
+        "/altair-shell-north-star-v1",
+        "/altair-shell-north-star-v2",
+        "/altair-shell-north-star-v3",
+      ].map((source) => ({ source, destination: "/", permanent: false })),
       {
         source: "/tech/jobs",
         destination: "/technician",

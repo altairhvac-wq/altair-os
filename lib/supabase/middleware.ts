@@ -132,12 +132,8 @@ const PUBLIC_WEB_ASSET_ROUTES = [
 const AUTHENTICATED_ROUTE_PREFIXES = [
   // app/(admin)
   "/alpha-tracker",
-  "/altair-design-lab",
-  "/command-center-v1",
   "/community",
   "/customers",
-  "/dashboard-north-star-v1",
-  "/dashboard-north-star-v2",
   "/dispatch",
   "/estimates",
   "/expenses",
@@ -159,12 +155,6 @@ const AUTHENTICATED_ROUTE_PREFIXES = [
   "/time",
   "/time-clock",
   "/work",
-  "/workspace-v1",
-  // app/(concept)
-  "/altair-shell-color-lab-v1",
-  "/altair-shell-north-star-v1",
-  "/altair-shell-north-star-v2",
-  "/altair-shell-north-star-v3",
   // other authenticated roots
   "/technician",
   "/tech",

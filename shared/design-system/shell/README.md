@@ -21,9 +21,9 @@ Master Shell V2 architecture migration is **complete** across major admin surfac
 | Work cards | Ivory surfaces with readable dark text — **M3+ complete** |
 | Status | Semantic colors separate from brand/command accents |
 
-**Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
+**Primary reference:** palette `mission-control-refined`, frozen in `shared/design-system/north-star/tokens.ts`. (The `/altair-shell-color-lab-v1` concept route it came from was removed on 2026-11-12; it lives in git history.)
 
-**Concept routes (reference only):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`. Retain; do not productionize wholesale.
+**Concept routes:** removed on 2026-11-12 (`/altair-shell-north-star-v1`–`v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`). Their old addresses redirect to the dashboard; the code is in git history.
 
 **Flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables the North Star experience layer. See `lib/beta/north-star-shell.ts`.
 
@@ -233,7 +233,7 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 | Type | Routes / views |
 |------|----------------|
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
-| Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab`; `/altair-shell-color-lab-v1`; `/altair-shell-north-star-v1`; `/altair-shell-north-star-v2`; `/altair-shell-north-star-v3` |
+| Design prototypes | None. Removed 2026-11-12; the founder theming tool is `/platform/design-lab`. |
 
 **Deferred (intentional):**
 

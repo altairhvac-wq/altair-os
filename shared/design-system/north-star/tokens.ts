@@ -1,6 +1,6 @@
 /**
  * North Star production tokens — frozen from Mission Control Original Refined.
- * Source: shared/components/altair-shell-color-lab-v1/palette-tokens.ts (missionControlRefined)
+ * Source: the Color Lab concept's palette-tokens.ts (missionControlRefined), since removed; see git history.
  * Do not import Color Lab at runtime. No palette switching.
  */
 import { buttonClassName } from "@/shared/design-system/components/button-styles";

@@ -110,7 +110,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Primary home: `/technician` (assigned jobs)
 - Enabled nav: Today, Time, Receipts, Alerts
 - Time / breaks: `/tech/time`
-- Legacy mock route: `/tech` root (orphan mock dashboard)
+- `/tech` root redirects to `/technician`; the old mock dashboard and `/tech/demo` were removed on 2026-11-12
 
 **Mobile:** Two-row primary nav + overflow; pull-to-refresh on selected routes
 
