@@ -1,3 +1,5 @@
+import { GearSpinner } from "@/shared/components/feedback/GearSpinner";
+
 function Skeleton({ className }: { className?: string }) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
@@ -10,9 +12,12 @@ export function AdminShellContentLoadingState() {
       aria-busy="true"
       aria-label="Loading page"
     >
-      <div className="space-y-2">
-        <Skeleton className="h-7 w-40 rounded-lg sm:h-8 sm:w-48" />
-        <Skeleton className="h-4 w-56 max-w-full sm:w-72" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-40 rounded-lg sm:h-8 sm:w-48" />
+          <Skeleton className="h-4 w-56 max-w-full sm:w-72" />
+        </div>
+        <GearSpinner size={28} label="" className="mt-1 shrink-0" />
       </div>
 
       <div className="admin-card space-y-3 p-4">

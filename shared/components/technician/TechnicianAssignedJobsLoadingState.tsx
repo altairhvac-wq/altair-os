@@ -1,3 +1,5 @@
+import { GearSpinner } from "@/shared/components/feedback/GearSpinner";
+
 function Skeleton({ className }: { className?: string }) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
@@ -46,6 +48,9 @@ function UpNextRowSkeleton() {
 export function TechnicianAssignedJobsLoadingState() {
   return (
     <div className="space-y-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+      <div className="flex justify-center pb-1 pt-2">
+        <GearSpinner size={30} label="Loading your jobs" />
+      </div>
       <div className="space-y-1.5">
         <div className="flex min-h-6 items-center gap-1.5 px-0.5">
           <Skeleton className="h-3 w-12" />

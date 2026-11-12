@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import { FirstPartyAnalytics } from "@/shared/components/analytics/FirstPartyAnalytics";
 import { ToastViewport } from "@/shared/design-system/feedback";
+import { NavigationProgress } from "@/shared/components/feedback/NavigationProgress";
+import { Suspense } from "react";
 // No stylesheet import here, on purpose. The public site loads app/public.css
 // and every other route loads app/app.css, each from its own layout, so a
 // visitor's first page downloads only the CSS the public pages use. See
@@ -117,6 +119,10 @@ export default function RootLayout({
         className="flex min-h-full max-w-full flex-col overflow-x-clip"
         style={{ backgroundColor: APP_SHELL_BACKGROUND }}
       >
+        {/* Gold bar on internal link clicks; Suspense because it reads search params. */}
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <PwaServiceWorkerRegistration />
         {/* First-party, cookieless analytics (migration 202). Root-level so
             marketing, auth and product pages share one count. */}
