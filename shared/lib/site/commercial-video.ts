@@ -21,8 +21,15 @@ export const COMMERCIAL_VIDEO = {
   /** Site-hosted files (public/marketing/video). */
   file: "/marketing/video/altair-commercial.mp4",
   poster: "/marketing/video/altair-commercial-poster.webp",
-  /** The same video on the Altair Operating System YouTube channel. */
-  youtubeId: "kVL6ulgAzCo",
+  /**
+   * The same video on the Altair Operating System YouTube channel, or null
+   * when there is no public copy there. When set, the structured data adds
+   * the YouTube thumbnail and embed URL. It is null because on 2026-11-12
+   * YouTube removed the first upload (kVL6ulgAzCo) under its personal-
+   * information policy (the demo customer's street address shows at 1:25).
+   * Set the new id here after the re-rendered video is public.
+   */
+  youtubeId: null as string | null,
   uploadDate: "2026-11-11",
   /** ISO 8601, 2:27. */
   duration: "PT2M27S",
@@ -65,16 +72,19 @@ export function buildCommercialVideoStructuredData(input: {
   readonly publisherName: string;
 }): Record<string, unknown> {
   const v = COMMERCIAL_VIDEO;
+  const yt = v.youtubeId;
   return {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     name: v.title,
     description: v.description,
-    thumbnailUrl: [`${input.origin}${v.poster}`, `https://i.ytimg.com/vi/${v.youtubeId}/maxresdefault.jpg`],
+    thumbnailUrl: yt
+      ? [`${input.origin}${v.poster}`, `https://i.ytimg.com/vi/${yt}/maxresdefault.jpg`]
+      : [`${input.origin}${v.poster}`],
     uploadDate: v.uploadDate,
     duration: v.duration,
     contentUrl: `${input.origin}${v.file}`,
-    embedUrl: `https://www.youtube.com/embed/${v.youtubeId}`,
+    ...(yt ? { embedUrl: `https://www.youtube.com/embed/${yt}` } : {}),
     url: input.pageUrl,
     inLanguage: "en-US",
     transcript: COMMERCIAL_TRANSCRIPT.join(" "),
