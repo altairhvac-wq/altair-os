@@ -6,6 +6,7 @@ const focusRing =
 
 const FOOTER_LINKS = [
   { href: "/hvac-software", label: "Product" },
+  { href: "/how-it-works", label: "How It Works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/insights", label: "Insights" },
   { href: "/resources", label: "Resources" },
