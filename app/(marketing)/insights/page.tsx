@@ -17,7 +17,7 @@ import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
  */
 
 const INSIGHTS_DESCRIPTION =
-  "Articles from Altair Operating System for field service businesses: running leads, customers, jobs, dispatch, technicians, estimates, invoices, payments, and reporting in one connected system.";
+  "Practical articles for HVAC and field service owners on pricing, estimates, dispatch, invoicing and growing past the first truck.";
 
 export const metadata: Metadata = {
   title: "Insights",

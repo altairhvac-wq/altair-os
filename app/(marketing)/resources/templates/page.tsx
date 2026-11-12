@@ -15,7 +15,7 @@ import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 const TITLE = "Free templates for contractors";
 const DESCRIPTION =
-  "Download free, original templates for HVAC and trade businesses: an estimate template, a maintenance agreement outline, a pricing worksheet and a daily operations checklist. No account required.";
+  "Free templates for HVAC and trade businesses: an estimate template, maintenance agreement outline, pricing worksheet and daily checklist. No account.";
 
 export const metadata: Metadata = {
   title: TITLE,
