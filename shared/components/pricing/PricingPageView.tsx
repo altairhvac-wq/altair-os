@@ -10,6 +10,8 @@ import {
   listPublicSaasCatalogPlans,
 } from "@/lib/saas-billing/catalog";
 import { SAAS_PLAN_DESCRIPTIONS } from "@/shared/components/pricing/plan-descriptions";
+import { FIVE_USER_PRICE_COMPARISON } from "@/shared/lib/site/comparison-pages";
+import { ALTAIR_NOT_YET } from "@/shared/lib/site/not-yet";
 
 const POSITIONING = [
   "One connected operating system",
@@ -141,6 +143,96 @@ export function PricingPageView() {
           })}
         </div>
 
+        {/* What a five-person shop pays. The clearest fact on the comparison
+            page, two clicks away from where the buyer is deciding. Numbers and
+            sources come from the comparison page's own data. */}
+        <section
+          aria-labelledby="five-user-prices-heading"
+          className="auth-panel-enter mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-[0_4px_8px_rgba(10,10,10,0.05),0_12px_32px_rgba(10,10,10,0.08)] ring-1 ring-[#C2A05A]/16"
+        >
+          <div className="border-b border-stone-200/70 px-6 py-6 sm:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
+              How the price compares
+            </p>
+            <h2
+              id="five-user-prices-heading"
+              className="mt-2 text-xl font-semibold tracking-tight text-[#0A0A0A] sm:text-2xl"
+            >
+              What a {FIVE_USER_PRICE_COMPARISON.users}-person shop pays each month
+            </h2>
+          </div>
+          <table className="w-full text-left">
+            <caption className="sr-only">
+              Monthly list price for {FIVE_USER_PRICE_COMPARISON.users} users, billed month to month
+            </caption>
+            <thead className="sr-only">
+              <tr>
+                <th scope="col">Software and plan</th>
+                <th scope="col">Price per month</th>
+              </tr>
+            </thead>
+            <tbody>
+              {FIVE_USER_PRICE_COMPARISON.rows.map((row) => (
+                <tr
+                  key={row.name}
+                  className={[
+                    "border-b border-stone-200/70 last:border-b-0",
+                    row.ours ? "bg-gradient-to-r from-[#FDF9F0] to-[#FAF4E8]" : "",
+                  ].join(" ")}
+                >
+                  <th scope="row" className="px-6 py-4 font-normal sm:px-8">
+                    <span className="block text-base font-semibold text-[#0A0A0A]">{row.name}</span>
+                    <span className="block text-sm text-stone-600">
+                      {row.plan} plan, {FIVE_USER_PRICE_COMPARISON.users} users
+                    </span>
+                  </th>
+                  <td className="whitespace-nowrap px-6 py-4 text-right sm:px-8">
+                    <span
+                      className={[
+                        "font-mono text-2xl font-semibold tracking-tight",
+                        row.ours ? "text-[#0A0A0A]" : "text-stone-700",
+                      ].join(" ")}
+                    >
+                      ${row.monthlyUsd}
+                    </span>
+                    <span className="text-sm text-stone-600"> / month</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="border-t border-stone-200/70 bg-stone-50/70 px-6 py-4 text-sm leading-relaxed text-stone-600 sm:px-8">
+            <p>
+              Published list prices, billed month to month, checked{" "}
+              {FIVE_USER_PRICE_COMPARISON.checkedOn} on each company&apos;s own pricing page (
+              {FIVE_USER_PRICE_COMPARISON.rows
+                .filter((row) => row.sourceUrl)
+                .map((row, index) => (
+                  <span key={row.name}>
+                    {index > 0 ? ", " : ""}
+                    <a
+                      href={row.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className={`font-medium text-[#77591B] underline underline-offset-2 ${ctaFocusClass}`}
+                    >
+                      {row.name}
+                      <span className="sr-only"> pricing (opens in a new tab)</span>
+                    </a>
+                  </span>
+                ))}
+              ). The plans don&apos;t include the same features, so compare the tools you&apos;ll actually use.{" "}
+              <Link
+                href={FIVE_USER_PRICE_COMPARISON.comparisonPath}
+                className={`font-semibold text-[#77591B] underline underline-offset-2 ${ctaFocusClass}`}
+              >
+                See the full comparison
+              </Link>
+              .
+            </p>
+          </div>
+        </section>
+
         <div className="auth-panel-enter mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border border-stone-200/80 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] shadow-[0_4px_8px_rgba(10,10,10,0.05),0_12px_32px_rgba(10,10,10,0.08)] ring-1 ring-[#C2A05A]/16">
           <div className="border-b border-stone-200/70 px-6 py-6 text-center sm:px-8">
             <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-stone-500">
@@ -148,7 +240,7 @@ export function PricingPageView() {
             </h2>
             <p className="mt-2 text-sm text-stone-600">
               Every plan includes the core Altair Operating System workflows and live onboarding.
-              Plans differ by the number of accounts: an account is any user, owner, office or technician.
+              Plans differ only by the number of users. A user is anyone who signs in: owner, office or technician.
             </p>
           </div>
 
@@ -166,6 +258,35 @@ export function PricingPageView() {
             </ul>
           </div>
         </div>
+
+        {/* The honest list. See shared/lib/site/not-yet.ts for why it is here. */}
+        <section
+          id="not-yet"
+          aria-labelledby="not-yet-heading"
+          className="auth-panel-enter mx-auto mt-12 max-w-4xl scroll-mt-24 rounded-2xl border border-stone-200/80 bg-white px-6 py-7 shadow-[0_4px_8px_rgba(10,10,10,0.05),0_12px_32px_rgba(10,10,10,0.06)] sm:px-8"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
+            Before you decide
+          </p>
+          <h2
+            id="not-yet-heading"
+            className="mt-2 text-xl font-semibold tracking-tight text-[#0A0A0A] sm:text-2xl"
+          >
+            What Altair does not do yet
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-[15px]">
+            Better you read it here than find it on day three of a trial. If one of
+            these is a must for your shop today, Altair is not the right fit yet.
+          </p>
+          <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+            {ALTAIR_NOT_YET.map((item) => (
+              <li key={item.title} className="text-sm leading-relaxed">
+                <span className="block font-semibold text-[#0A0A0A]">{item.title}</span>
+                <span className="block text-stone-600">Today: {item.today}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <div className="auth-hero-enter mx-auto mt-16 max-w-5xl">
           <SeeAltairInActionSection variant="light" />
