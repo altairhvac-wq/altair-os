@@ -52,7 +52,10 @@ export function MetaPixel() {
     <>
       <Script
         id="meta-pixel"
-        strategy="afterInteractive"
+        // After the page has loaded and gone idle: the pixel is ~260 KB of
+        // third-party script and ~250 ms of main-thread work on a phone, and
+        // nothing on the page needs it to be interactive. PageView still fires.
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
 !function(f,b,e,v,n,t,s)

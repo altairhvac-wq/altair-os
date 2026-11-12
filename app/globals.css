@@ -1216,12 +1216,6 @@ a[href] {
  * alongside this class (e.g. opacity-[0.05]) so it reads as a subtle
  * "precision instrument" texture, not a loud graphic.
  */
-.auth-gear-motif {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%23C8CDD3' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='240.0' cy='240.0' r='200'/%3E%3Ccircle cx='240.0' cy='240.0' r='178' stroke-width='1' opacity='0.6'/%3E%3Ccircle cx='240.0' cy='240.0' r='138' stroke-width='1' opacity='0.35'/%3E%3Cline x1='440.0' y1='240.0' x2='454.0' y2='240.0'/%3E%3Cline x1='433.2' y1='291.8' x2='446.7' y2='295.4'/%3E%3Cline x1='413.2' y1='340.0' x2='425.3' y2='347.0'/%3E%3Cline x1='381.4' y1='381.4' x2='391.3' y2='391.3'/%3E%3Cline x1='340.0' y1='413.2' x2='347.0' y2='425.3'/%3E%3Cline x1='291.8' y1='433.2' x2='295.4' y2='446.7'/%3E%3Cline x1='240.0' y1='440.0' x2='240.0' y2='454.0'/%3E%3Cline x1='188.2' y1='433.2' x2='184.6' y2='446.7'/%3E%3Cline x1='140.0' y1='413.2' x2='133.0' y2='425.3'/%3E%3Cline x1='98.6' y1='381.4' x2='88.7' y2='391.3'/%3E%3Cline x1='66.8' y1='340.0' x2='54.7' y2='347.0'/%3E%3Cline x1='46.8' y1='291.8' x2='33.3' y2='295.4'/%3E%3Cline x1='40.0' y1='240.0' x2='26.0' y2='240.0'/%3E%3Cline x1='46.8' y1='188.2' x2='33.3' y2='184.6'/%3E%3Cline x1='66.8' y1='140.0' x2='54.7' y2='133.0'/%3E%3Cline x1='98.6' y1='98.6' x2='88.7' y2='88.7'/%3E%3Cline x1='140.0' y1='66.8' x2='133.0' y2='54.7'/%3E%3Cline x1='188.2' y1='46.8' x2='184.6' y2='33.3'/%3E%3Cline x1='240.0' y1='40.0' x2='240.0' y2='26.0'/%3E%3Cline x1='291.8' y1='46.8' x2='295.4' y2='33.3'/%3E%3Cline x1='340.0' y1='66.8' x2='347.0' y2='54.7'/%3E%3Cline x1='381.4' y1='98.6' x2='391.3' y2='88.7'/%3E%3Cline x1='413.2' y1='140.0' x2='425.3' y2='133.0'/%3E%3Cline x1='433.2' y1='188.2' x2='446.7' y2='184.6'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
 
 @keyframes auth-panel-enter {
   from {

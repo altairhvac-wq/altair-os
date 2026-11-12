@@ -29,7 +29,7 @@ export function LoginLandingPage() {
         }
       >
         <Suspense fallback={null}>
-          <LoginFormFields />
+          <LoginFormFields deferSecurityCheck />
         </Suspense>
       </LoginPageShell>
     </div>
