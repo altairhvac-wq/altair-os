@@ -47,7 +47,7 @@ Typical request flow:
 - `shared/design-system/`: tokens, shell, signature, components, and design-system documentation.
 - `shared/types/`: domain models, validation/normalization helpers, and action-facing types.
 - `supabase/migrations/`: ordered PostgreSQL schema, RLS, function, trigger, and grant migrations.
-- `public/`: static assets, PWA files, import templates, and marketing screenshots.
+- `public/`: static assets, PWA files, import templates, and the marketing pictures and video the public pages show. Everything in it is served to anyone with the address, so it holds only files a page uses.
 - `scripts/`: integration smoke scripts and local asset/screenshot tooling.
 - `docs/README.md`: documentation architecture index.
 - `docs/DOCUMENTATION_ARCHITECTURE.md`: documentation organization audit and move log.
@@ -92,7 +92,7 @@ LABEL=after ROUTES=/,/customers BASE_URL=<preview-or-prod-url> npm run capture:c
 ```
 
 
-Output lands in `public/marketing/screenshots/comparison/<page>-<label>.png`. Refresh auth for the target host when needed: `BASE_URL=<url> npm run capture:founder-auth`.
+Output lands in `captures/screenshots/comparison/<page>-<label>.png` (git-ignored; captures of a signed-in company never go under `public/`). Refresh auth for the target host when needed: `BASE_URL=<url> npm run capture:founder-auth`.
 
 The Marketing page no longer has an in-app capture control (removed 2026-10-25 with the three-tab simplification); run the capture scripts above from a terminal. For non-localhost targets, refresh auth for that host first: `BASE_URL=<url> npm run capture:founder-auth`.
 
@@ -155,7 +155,7 @@ These scripts require local environment configuration, connect to Supabase, and 
 - Generated PWA PNGs under `public/icons/`: regenerate them with `node scripts/generate-pwa-icons.mjs` when changing their SVG source.
 - Existing applied SQL migrations: add a new ordered migration for schema/RLS/grant changes rather than rewriting database history.
 
-Do not commit `.env.local`, Playwright auth state, build output, credentials, access tokens, service-role keys, webhook secrets, or customer data.
+Do not commit `.env.local`, Playwright auth state, build output, credentials, access tokens, service-role keys, webhook secrets, or customer data. Screenshots of a signed-in company are customer data: capture scripts write to the git-ignored `captures/` folder, and a picture goes into `public/` only when a public page shows it and it contains sample data only.
 
 ## Security and environment precautions
 
