@@ -81,13 +81,17 @@ function loadTurnstile(): Promise<TurnstileApi> {
   return scriptPromise;
 }
 
-type Status = "loading" | "waiting" | "solved" | "error";
+type Status = "idle" | "loading" | "waiting" | "solved" | "error";
+
+/** Anything that shows a person is using the form (autofill fires `input`). */
+const INTERACTION_EVENTS = ["focusin", "pointerdown", "keydown", "input"] as const;
 
 export function TurnstileField({
   action,
   theme = "light",
   resetSignal,
   onTokenChange,
+  startOnInteraction = false,
 }: {
   /** Shown in Cloudflare analytics: "signup", "login", "password_reset". */
   action: string;
@@ -95,14 +99,44 @@ export function TurnstileField({
   /** Any value that changes after each submission (the action state works). */
   resetSignal?: unknown;
   onTokenChange?: (token: string | null) => void;
+  /**
+   * Load Turnstile only once the visitor touches the surrounding form.
+   *
+   * For forms most visitors never use (the sign-in form on the logged-out
+   * homepage). The challenge costs ~1.7 MB and seconds of main-thread work on
+   * a phone; starting it on the first focus, tap, keystroke or autofill means
+   * it is normally finished by the time the password is typed, and visitors
+   * who only read the page never pay for it. Submission still waits for a
+   * token exactly as before.
+   */
+  startOnInteraction?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
   const firstSignalRef = useRef(true);
   const onTokenChangeRef = useRef(onTokenChange);
   const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<Status>("loading");
+  const [armed, setArmed] = useState(!startOnInteraction);
+  const [status, setStatus] = useState<Status>(startOnInteraction ? "idle" : "loading");
   const [attempt, setAttempt] = useState(0);
+
+  // Arm on the first interaction with the form this field sits in.
+  useEffect(() => {
+    if (armed) return;
+    const form = containerRef.current?.closest("form");
+    if (!form) {
+      setArmed(true);
+      return;
+    }
+    const arm = () => {
+      setArmed(true);
+      setStatus("loading");
+    };
+    for (const type of INTERACTION_EVENTS) form.addEventListener(type, arm, { once: true, passive: true });
+    return () => {
+      for (const type of INTERACTION_EVENTS) form.removeEventListener(type, arm);
+    };
+  }, [armed]);
 
   useEffect(() => {
     onTokenChangeRef.current = onTokenChange;
@@ -114,7 +148,7 @@ export function TurnstileField({
   }, []);
 
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return;
+    if (!TURNSTILE_SITE_KEY || !armed) return;
 
     let cancelled = false;
 
@@ -166,7 +200,7 @@ export function TurnstileField({
         }
       }
     };
-  }, [action, theme, updateToken, attempt]);
+  }, [action, theme, updateToken, attempt, armed]);
 
   // A fresh token after every submission: Supabase has consumed the last one.
   useEffect(() => {

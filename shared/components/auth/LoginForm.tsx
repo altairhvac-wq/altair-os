@@ -21,7 +21,12 @@ import {
 
 const initialState: AuthActionState = {};
 
-export function LoginFormFields() {
+export function LoginFormFields({
+  deferSecurityCheck = false,
+}: {
+  /** Start the Turnstile check on the first interaction (logged-out homepage). */
+  deferSecurityCheck?: boolean;
+} = {}) {
   const searchParams = useSearchParams();
   const callbackError =
     searchParams.get("error") === "auth_callback"
@@ -104,6 +109,7 @@ export function LoginFormFields() {
         theme="dark"
         resetSignal={state}
         onTokenChange={setCaptchaToken}
+        startOnInteraction={deferSecurityCheck}
       />
 
       <div className="pt-2">
