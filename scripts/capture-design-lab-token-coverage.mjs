@@ -17,8 +17,7 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const AUTH_PATH = path.join(ROOT, ".playwright", "founder-auth.json");
 const OUT_DIR = path.join(
   ROOT,
-  "public",
-  "marketing",
+  "captures",
   "screenshots",
   "comparison",
 );
