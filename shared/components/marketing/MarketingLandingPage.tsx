@@ -3,8 +3,10 @@ import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billin
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { HomepageOnboardingSection } from "@/shared/components/homepage/HomepageOnboardingSection";
 import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
+import { CommercialVideoPlayer } from "@/shared/components/marketing/CommercialVideoPlayer";
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { LANDING_PAGES, type LandingPageConfig } from "@/shared/lib/site/landing-pages";
 
 const focusRing =
@@ -16,6 +18,30 @@ function lowestMonthlyPrice(): number | null {
     .filter((price): price is number => typeof price === "number");
   return prices.length ? Math.min(...prices) : null;
 }
+
+/** Free tools that answer an owner's next question; no account needed. */
+const FREE_TOOLS: readonly { href: string; label: string; text: string }[] = [
+  {
+    href: "/resources/calculators/labor-rate",
+    label: "Labor rate calculator",
+    text: "The hourly rate a technician has to bill to cover wage, burden, overhead and margin.",
+  },
+  {
+    href: "/resources/calculators/job-profitability",
+    label: "Job profitability calculator",
+    text: "Gross profit, net profit and margin on a single job.",
+  },
+  {
+    href: "/resources/calculators/break-even",
+    label: "Break-even calculator",
+    text: "How many jobs a month it takes to cover your fixed costs.",
+  },
+  {
+    href: "/resources/templates",
+    label: "Free templates",
+    text: "An estimate template, a maintenance agreement outline, a pricing worksheet and a daily checklist.",
+  },
+];
 
 /**
  * The search landing page: what Altair runs for this search, how the trial
@@ -61,6 +87,35 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
               No credit card to start.
               {fromPrice !== null ? ` Plans from $${fromPrice}/month after the trial.` : ""}{" "}
               Live onboarding included.
+            </p>
+          </div>
+        </section>
+
+        {/* The commercial: the same job these pages describe, run start to finish. */}
+        <section aria-labelledby="landing-video-heading" className="px-5 pb-4 sm:px-8">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
+              See it run
+            </p>
+            <h2
+              id="landing-video-heading"
+              className="mt-3 text-center text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.8rem]"
+            >
+              One job, from first call to paid
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[#c9bfae]">
+              2 minutes 27 seconds, with sound. Jump to any step below the player.
+            </p>
+            <div className="mt-6">
+              <CommercialVideoPlayer />
+            </div>
+            <p className="mt-3 text-center text-xs text-[#8e826f]">
+              <Link
+                href={VIDEO_PAGE_PATH}
+                className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+              >
+                Read the full transcript
+              </Link>
             </p>
           </div>
         </section>
@@ -124,6 +179,32 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
         <HomepageOnboardingSection />
         <HomepagePricingSection />
         <MarketingFaqSection variant="dark" />
+
+        <section aria-labelledby="landing-tools-heading" className="px-5 pb-6 pt-4 sm:px-8">
+          <div className="mx-auto max-w-5xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">Free for owners</p>
+            <h2
+              id="landing-tools-heading"
+              className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]"
+            >
+              Check your numbers before you decide anything.
+            </h2>
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {FREE_TOOLS.map((tool) => (
+                <li key={tool.href}>
+                  <Link
+                    href={tool.href}
+                    className={`block h-full rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] p-5 transition-colors hover:border-[#c2a05a]/60 ${focusRing}`}
+                  >
+                    <span className="block text-base font-semibold text-[#fff9ea]">{tool.label}</span>
+                    <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">{tool.text}</span>
+                    <span className="mt-3 block text-xs font-semibold text-[#c2a05a]">Open it, no account →</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
         <section className="px-5 pb-16 pt-6 sm:px-8 sm:pb-20">
           <div className="mx-auto max-w-2xl rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-5 py-8 text-center sm:px-8 sm:py-9">
