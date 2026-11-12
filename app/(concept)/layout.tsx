@@ -1,3 +1,4 @@
+import "../app.css";
 import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { getCurrentUser } from "@/lib/database/auth";

@@ -1,29 +1,14 @@
 /*
- * Tailwind v4 source discovery — deliberately constrained.
+ * Altair's shared stylesheet body: design tokens, the Tailwind theme, and the
+ * hand-written component CSS. It is not imported directly. Two entry
+ * stylesheets import it, each with its own Tailwind utilities:
  *
- * By default v4 auto-detects sources by walking the whole project (everything
- * not covered by .gitignore) and treating any class-shaped token it finds as a
- * utility to generate. In this repo that swept in `docs/`, `branding/`,
- * `logs/`, `public/`, `scripts/`, `supabase/`, and `ui-audit/` — so a class
- * name written inside a *markdown note* became a real rule in the production
- * stylesheet. A malformed one — an arbitrary-value radius utility whose value
- * was a bare asterisk — is worse than dead weight: it fails CSS parsing and
- * takes down `next dev` AND `npm run build`. (Deliberately described rather
- * than quoted: this file is itself inside the source set below.)
+ *   app/app.css     every route outside the public site (all utilities)
+ *   app/public.css  the marketing and sign-in pages (only their utilities)
  *
- * `source(none)` turns automatic detection off, and the `@source` rules below
- * re-add exactly the two trees that contain runtime classes. Paths resolve
- * relative to this file.
- *
- * If a new top-level directory ever ships runtime Tailwind classes, add it
- * here — utilities used only there will not be generated otherwise.
+ * Token-reading scripts (check-status-pill-contrast, verify-capture-manifest
+ * and the contrast verifiers) read this file by path, so tokens stay here.
  */
-@import "tailwindcss" source(none);
-
-/* Routes, layouts, and route-level UI. */
-@source "../app";
-/* Components, design-system primitives, and class-string token modules. */
-@source "../shared";
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * ALTAIR PRESTIGE — canonical visual foundation

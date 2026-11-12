@@ -3,16 +3,26 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import { FirstPartyAnalytics } from "@/shared/components/analytics/FirstPartyAnalytics";
 import { ToastViewport } from "@/shared/design-system/feedback";
-import "./globals.css";
+// No stylesheet import here, on purpose. The public site loads app/public.css
+// and every other route loads app/app.css, each from its own layout, so a
+// visitor's first page downloads only the CSS the public pages use. See
+// app/public.css; scripts/verify-public-stylesheet.mjs checks the wiring.
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+/**
+ * Not preloaded. Every page used to preload this 23 KB file in the same
+ * breath as the stylesheet, although mono only sets small details (step
+ * numbers, figures). The browser still fetches it the moment a page uses it,
+ * and `swap` shows the fallback mono until then.
+ */
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 /**

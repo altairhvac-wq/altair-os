@@ -1,4 +1,5 @@
 "use client";
+import "./status-page.css";
 
 import Link from "next/link";
 import { useEffect } from "react";
@@ -28,33 +29,33 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-altair-paper px-6 text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-altair-brass">
+    <main className="status-page">
+      <p className="status-page__eyebrow">
         Altair Operating System
       </p>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight text-altair-ink">
+      <h1 className="status-page__title status-page__title--small">
         Something went wrong
       </h1>
-      <p className="mt-3 max-w-md text-sm text-altair-ink-secondary">
+      <p className="status-page__text">
         An unexpected error interrupted this page. Your data is safe — try
         again, and if it keeps happening use the Feedback button to tell us.
       </p>
       {error.digest ? (
-        <p className="mt-2 text-xs text-altair-ink-muted">
+        <p className="status-page__note">
           Reference: {error.digest}
         </p>
       ) : null}
-      <div className="mt-8 flex items-center gap-3">
+      <div className="status-page__actions status-page__actions--nowrap">
         <button
           type="button"
           onClick={reset}
-          className="inline-flex items-center rounded-full bg-altair-ink px-6 py-2.5 text-sm font-semibold text-altair-paper transition-opacity hover:opacity-85"
+          className="status-page__button status-page__button--primary"
         >
           Try again
         </button>
         <Link
           href="/"
-          className="inline-flex items-center rounded-full border border-altair-border-strong px-6 py-2.5 text-sm font-semibold text-altair-ink transition-colors hover:bg-altair-paper-subtle"
+          className="status-page__button status-page__button--outline-strong"
         >
           Back to dashboard
         </Link>
