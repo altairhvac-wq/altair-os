@@ -23,8 +23,13 @@ export function getPayrollTechnicianTimeStateStyles(
   }
 }
 
+/*
+ * An ended entry is neutral, not green (UI audit 2026-11-12, B8). Green reads
+ * as "finished, nothing to do", and these badges sit on every row under
+ * "Needs review", where the row is exactly not finished.
+ */
 export function getPayrollEntryStatusStyles(isActive: boolean): string {
   return isActive
     ? "bg-[rgba(194,160,90,0.14)] text-[#77591B] ring-[rgba(194,160,90,0.28)]"
-    : "bg-[rgba(5,150,105,0.10)] text-[#047857] ring-[rgba(5,150,105,0.20)]";
+    : "bg-[rgba(119,89,27,0.08)] text-[#6B6255] ring-[rgba(119,89,27,0.16)]";
 }

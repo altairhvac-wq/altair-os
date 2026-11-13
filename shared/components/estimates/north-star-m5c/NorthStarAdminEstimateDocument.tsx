@@ -126,7 +126,6 @@ export function NorthStarAdminEstimateDocument({
               taxAmount={estimate.tax ?? 0}
               total={estimate.total}
               documentStyle="estimate"
-              hideTotal
               compactSubtotal
               northStar
             />

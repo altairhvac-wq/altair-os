@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -37,7 +38,7 @@ function StatCard({
   tone: Tone;
   label: string;
   value: string;
-  detail: string;
+  detail: ReactNode;
   detailTone?: "neutral" | "danger" | "success";
   href?: string;
   alert?: boolean;
@@ -102,18 +103,30 @@ export function OverviewStatCards({
     : null;
   const priorMonth = extras.performance?.collectedPriorMonth ?? null;
 
-  const jobsDetail =
-    operations.totalJobsToday === 0
-      ? "Nothing scheduled today"
-      : [
-          `${operations.inProgress} in progress`,
-          `${operations.completedToday} done`,
-          operations.unassignedToday > 0
-            ? `${operations.unassignedToday} unassigned`
-            : null,
-        ]
-          .filter(Boolean)
-          .join(" · ");
+  /*
+   * Only "unassigned" is a problem, so only it is red (UI audit 2026-11-12,
+   * B9). The whole line used to turn red when one job had no technician,
+   * which made "3 done" read as bad news.
+   */
+  const jobsDetail: ReactNode =
+    operations.totalJobsToday === 0 ? (
+      "Nothing scheduled today"
+    ) : (
+      <>
+        {operations.inProgress} in progress · {operations.completedToday} done
+        {operations.unassignedToday > 0 ? (
+          <>
+            {" · "}
+            <span
+              className="font-semibold text-altair-danger"
+              data-testid="dashboard-jobs-unassigned"
+            >
+              {operations.unassignedToday} unassigned
+            </span>
+          </>
+        ) : null}
+      </>
+    );
 
   const attentionDetail =
     attentionCount === 0
@@ -151,7 +164,6 @@ export function OverviewStatCards({
         label="Today's jobs"
         value={String(operations.totalJobsToday)}
         detail={jobsDetail}
-        detailTone={operations.unassignedToday > 0 ? "danger" : "neutral"}
         href={DISPATCH_PAGE_TODAY_HREF}
       />
       <StatCard
