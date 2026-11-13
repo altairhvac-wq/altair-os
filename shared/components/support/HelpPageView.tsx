@@ -97,7 +97,7 @@ function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
 
 /**
  * One place inside the app that answers "how do I get help?". Before it, the
- * support address appeared only on the public site, the live onboarding the
+ * support address appeared only on the public site, the setup call the
  * site promises was not linked anywhere in the workspace, and the Feedback
  * button was the only in-app channel (retention audit 2026-11-12).
  */
@@ -113,7 +113,7 @@ export function HelpPageView({
         <MasterContentStack density="compact">
           <MasterPageHeader
             title="Help & support"
-            subtitle="Talk to a person, join live onboarding, or get set up."
+            subtitle="Talk to a person, book a setup call, or get set up."
             density="compact"
           />
 
@@ -122,13 +122,12 @@ export function HelpPageView({
               <div className="flex items-start gap-3">
                 <IconBadge icon={Video} />
                 <div className="min-w-0">
-                  <h2 className={cardTitleClass}>Live onboarding on Zoom</h2>
+                  <h2 className={cardTitleClass}>Setup call on Zoom</h2>
                   <p className={cardBodyClass}>
-                    {info.schedule
-                      ? `${info.schedule}.`
-                      : "Twice a week."}{" "}
-                    Free for every customer. Bring your questions: setup,
-                    importing customers, pricing, your first jobs and invoices.
+                    A free one-on-one call for every customer. Bring your
+                    questions: setup, importing customers, pricing, your first
+                    jobs and invoices.
+                    {info.schedule ? ` Open times: ${info.schedule}.` : ""}
                   </p>
                 </div>
               </div>
@@ -140,18 +139,18 @@ export function HelpPageView({
                     rel="noopener noreferrer"
                     className={primaryButtonClass}
                   >
-                    Join a session
+                    Pick a time
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                   </a>
                 ) : (
                   <a
                     href={mailto(
                       info.supportEmail,
-                      `Live onboarding session for ${companyName}`,
+                      `Setup call for ${companyName}`,
                     )}
                     className={primaryButtonClass}
                   >
-                    Email us for the next session link
+                    Email us to set up a call
                   </a>
                 )}
               </div>

@@ -25,8 +25,8 @@ const ONBOARDING_ITEMS: { title: string; detail: string; icon: LucideIcon }[] = 
     icon: Lightbulb,
   },
   {
-    title: "Live Q&A",
-    detail: "Bring real questions and get more from Altair as your business grows.",
+    title: "Your questions",
+    detail: "Bring the real ones from your shop and get straight answers.",
     icon: CircleHelp,
   },
 ];
@@ -66,12 +66,12 @@ export function HomepageOnboardingSection() {
             id="mc-onboarding-heading"
             className="mt-3 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.35rem] sm:leading-[1.15]"
           >
-            Live onboarding, twice every week.
+            A one-on-one setup call, when it suits you.
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#c9bfae]">
-            Every Altair customer can join live Zoom onboarding sessions for
-            practical guidance from setup through daily use. Come once, return
-            whenever it helps, and bring the questions that matter to your team.
+            Every Altair customer can book a free call on Zoom for practical
+            guidance from setup through daily use. Book it from your
+            workspace, and bring the questions that matter to your team.
           </p>
           <Link
             href="/signup"

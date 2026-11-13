@@ -192,7 +192,7 @@ const SERVICETITAN: ComparisonPageContent = {
       {
         label: "Onboarding",
         cells: [
-          "Set up the account yourself in minutes. Live Zoom onboarding twice a week is included on every plan.",
+          "Set up the account yourself in minutes. A one-on-one setup call on Zoom, booked when it suits you, is included on every plan.",
           "Onboarding and training fees are billed separately, per its annual report. The amount isn't published.",
         ],
       },
@@ -223,7 +223,7 @@ const SERVICETITAN: ComparisonPageContent = {
       },
       {
         title: "Start today, not after an implementation project",
-        text: "Create the account yourself, load sample data from Settings or import your customer list, and run a real job the same day. If you want a walkthrough, live onboarding runs on Zoom twice a week at no extra cost.",
+        text: "Create the account yourself, load sample data from Settings or import your customer list, and run a real job the same day. If you want a walkthrough, book a one-on-one setup call on Zoom at no extra cost.",
       },
       {
         title: "One record from first call to paid invoice",

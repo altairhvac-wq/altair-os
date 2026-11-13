@@ -14,7 +14,7 @@ import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
  *
  * Until this email existed a new customer heard nothing from Altair after the
  * confirmation link: no first steps, no support address, and no sign of the
- * live onboarding the site promises (retention audit 2026-11-12). Reply-To is
+ * setup call the site promises (retention audit 2026-11-12). Reply-To is
  * the support inbox, so a reply reaches a person.
  */
 
@@ -43,12 +43,14 @@ export function buildWelcomeEmail(
   const greeting = firstName ? `Hi ${firstName},` : "Hello,";
   const { onboarding } = input;
 
+  const onboardingWhat =
+    "A one-on-one setup call on Zoom is included. It is free, and you can bring any question: setup, importing, pricing, your first jobs.";
   const onboardingLine = onboarding.schedule
-    ? `Live onboarding runs on Zoom ${onboarding.schedule}. It is free, and you can bring any question: setup, importing, pricing, your first jobs.`
-    : "Live onboarding runs on Zoom twice a week. It is free, and you can bring any question: setup, importing, pricing, your first jobs.";
+    ? `${onboardingWhat} Open times: ${onboarding.schedule}.`
+    : onboardingWhat;
   const onboardingAction = onboarding.joinUrl
-    ? `Join here: ${onboarding.joinUrl}`
-    : "Reply to this email and we'll send you the next session link.";
+    ? `Pick a time here: ${onboarding.joinUrl}`
+    : "Reply to this email and we'll set up a time.";
 
   const subject = `Your Altair workspace for ${input.companyName} is ready`;
   const readyLine = input.trialStarted
@@ -77,7 +79,7 @@ export function buildWelcomeEmail(
   ).join("");
 
   const onboardingActionHtml = onboarding.joinUrl
-    ? `<p><a href="${escapeBillingEmailHtml(onboarding.joinUrl)}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-weight:600;">Join live onboarding</a></p>`
+    ? `<p><a href="${escapeBillingEmailHtml(onboarding.joinUrl)}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-weight:600;">Book your setup call</a></p>`
     : `<p>${escapeBillingEmailHtml(onboardingAction)}</p>`;
 
   const html = wrapBillingEmailHtml(`

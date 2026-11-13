@@ -28,13 +28,13 @@ function readJoinUrl(raw: string | undefined): string | null {
 }
 
 /**
- * Reads the live onboarding settings:
+ * Reads the setup-call settings:
  *
- *   ALTAIR_LIVE_ONBOARDING_URL       the Zoom (or other) join link, https only
- *   ALTAIR_LIVE_ONBOARDING_SCHEDULE  plain-language times shown next to it
+ *   ALTAIR_LIVE_ONBOARDING_URL       the booking page for a setup call, https only
+ *   ALTAIR_LIVE_ONBOARDING_SCHEDULE  plain-language hours shown next to it
  *
  * Both are optional. Without them the app still invites people to onboarding,
- * and tells them to email for the next session link.
+ * and tells them to email to set up a time.
  */
 export function getLiveOnboardingInfo(): LiveOnboardingInfo {
   const schedule = process.env.ALTAIR_LIVE_ONBOARDING_SCHEDULE?.trim() ?? "";
