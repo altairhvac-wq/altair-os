@@ -4,7 +4,11 @@ import {
 } from "@/lib/database/types/roles";
 import type { CompanyRole, Json } from "@/lib/database/types/enums";
 import type { NotificationEntityType, NotificationType } from "@/lib/database/types/enums";
-import { listActiveMemberUserIdsByRoles } from "@/lib/database/queries/notification-role-targeting";
+import type { DbClient } from "@/lib/database/db-client";
+import {
+  listActiveMemberUserIdsByRoles,
+  listActiveMemberUserIdsByRolesWithServiceRole,
+} from "@/lib/database/queries/notification-role-targeting";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -36,6 +40,12 @@ export type CreateNotificationsForRoleInput = {
   entityId?: string;
   metadata?: Record<string, unknown>;
   excludeUserIds?: string[];
+  /**
+   * Service-role client for an unauthenticated entry point that already
+   * verified its own token for this company (public estimate approval). Leave
+   * unset everywhere else so fan-out runs as the signed-in user under RLS.
+   */
+  serviceRoleDb?: DbClient;
 };
 
 function fireAndForget(promise: Promise<void>): void {
@@ -75,9 +85,16 @@ export async function createNotification(
 export async function createNotificationsForRole(
   input: CreateNotificationsForRoleInput,
 ): Promise<void> {
-  const userIds = await listActiveMemberUserIdsByRoles(input.companyId, input.roles, {
-    excludeUserIds: input.excludeUserIds,
-  });
+  const userIds = input.serviceRoleDb
+    ? await listActiveMemberUserIdsByRolesWithServiceRole(
+        input.serviceRoleDb,
+        input.companyId,
+        input.roles,
+        { excludeUserIds: input.excludeUserIds },
+      )
+    : await listActiveMemberUserIdsByRoles(input.companyId, input.roles, {
+        excludeUserIds: input.excludeUserIds,
+      });
 
   if (userIds.length === 0) {
     return;
@@ -94,7 +111,7 @@ export async function createNotificationsForRole(
     metadata: (input.metadata ?? {}) as Json,
   }));
 
-  const { error } = await insertNotifications(rows);
+  const { error } = await insertNotifications(rows, input.serviceRoleDb);
 
   if (error) {
     console.error("[createNotificationsForRole] failed:", {

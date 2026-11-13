@@ -644,6 +644,10 @@ export async function applyEstimateApprovalRouting(
         customerId,
         jobId: jobId ?? undefined,
         approvalSource: "public_link",
+        // The anonymous visitor cannot read memberships or write notifications.
+        // input.db is the service-role client submitPublicEstimateApproval
+        // creates only after the token RPC approved this estimate.
+        serviceRoleDb: input.db,
       });
       return;
     }
