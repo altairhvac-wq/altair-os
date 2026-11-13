@@ -15,7 +15,7 @@ import { ALTAIR_NOT_YET } from "@/shared/lib/site/not-yet";
 
 const POSITIONING = [
   "One connected operating system",
-  "Live onboarding included",
+  "One-on-one setup call included",
   "Monthly or annual billing",
   "Built for field service businesses",
 ] as const;
@@ -32,7 +32,7 @@ const PLATFORM_FEATURES = [
   "Team Management",
   "Business Reporting",
   "AI Drafting for Follow-Ups and Summaries",
-  "Live Onboarding",
+  "One-on-One Setup Call",
 ] as const;
 
 const ctaFocusClass =
@@ -239,7 +239,7 @@ export function PricingPageView() {
               One connected platform
             </h2>
             <p className="mt-2 text-sm text-stone-600">
-              Every plan includes the core Altair Operating System workflows and live onboarding.
+              Every plan includes the core Altair Operating System workflows and a one-on-one setup call.
               Plans differ only by the number of users. A user is anyone who signs in: owner, office or technician.
             </p>
           </div>
@@ -313,8 +313,8 @@ export function PricingPageView() {
             Start with the complete operating system
           </p>
           <p className="mt-3 text-base leading-relaxed text-stone-700">
-            Try Altair free for {SAAS_TRIAL_CONFIG.durationDays} days with live
-            onboarding included, then continue on the plan that fits your business.
+            Try Altair free for {SAAS_TRIAL_CONFIG.durationDays} days with a
+            one-on-one setup call included, then continue on the plan that fits your business.
           </p>
           <p className="mt-3 text-sm font-medium text-stone-600">
             No credit card required to start. Cancel anytime.

@@ -44,7 +44,7 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     id: "onboarding",
     question: "Is onboarding included?",
     answer:
-      "Yes. Every plan includes live Zoom onboarding twice a week: setup, workflow guidance and open questions. Come once, or come back whenever it helps.",
+      "Yes. Every plan includes a free one-on-one setup call on Zoom, booked at a time that suits you: setup, workflow guidance and your questions. You book it from your workspace after you sign up.",
   },
   {
     id: "team",
@@ -92,6 +92,6 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
   {
     id: "help",
     question: "How do I get help?",
-    answer: `Email ${SUPPORT_EMAIL}, or bring your questions to a live onboarding session.`,
+    answer: `Email ${SUPPORT_EMAIL}, or book a one-on-one setup call from your workspace.`,
   },
 ];

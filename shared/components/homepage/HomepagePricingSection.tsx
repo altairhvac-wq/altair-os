@@ -35,7 +35,7 @@ export function HomepagePricingSection() {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
             Choose the plan that fits your team. Every plan starts with the same
-            connected Altair experience and live onboarding.
+            connected Altair experience and a one-on-one setup call.
           </p>
         </div>
 

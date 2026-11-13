@@ -123,7 +123,7 @@ export const adminNavItems: NavItem[] = [
     label: "Help",
     href: "/help",
     icon: LifeBuoy,
-    description: "Live onboarding, support email, and getting started",
+    description: "Setup call, support email, and getting started",
   },
 ];
 

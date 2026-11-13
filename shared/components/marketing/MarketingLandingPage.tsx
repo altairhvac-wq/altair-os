@@ -86,7 +86,7 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
             <p className="mt-5 text-[13px] text-[#8e826f] sm:text-sm">
               No credit card to start.
               {fromPrice !== null ? ` Plans from $${fromPrice}/month after the trial.` : ""}{" "}
-              Live onboarding included.
+              A one-on-one setup call is included.
             </p>
           </div>
         </section>

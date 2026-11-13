@@ -9,26 +9,24 @@ type LiveOnboardingBannerProps = {
 };
 
 function buildScheduleLine(info: LiveOnboardingInfo): string {
-  if (info.schedule) {
-    return `${info.schedule}. Free for every customer: setup, importing your customers, your first jobs.`;
-  }
+  const what = "A free one-on-one call: setup, importing your customers, your first jobs.";
 
-  return "Free for every customer, twice a week: setup, importing your customers, your first jobs.";
+  return info.schedule ? `${what} Open times: ${info.schedule}.` : what;
 }
 
 function buildMailtoHref(supportEmail: string): string {
   return `mailto:${supportEmail}?subject=${encodeURIComponent(
-    "Live onboarding session",
+    "Setup call",
   )}`;
 }
 
 /**
- * The live onboarding invitation the public site promises is "in your
- * workspace after you sign up". Shown on the dashboard during a company's
- * first weeks; the Help page carries the same information permanently.
+ * The setup-call invitation the public site promises is "in your workspace
+ * after you sign up". Shown on the dashboard during a company's first weeks;
+ * the Help page carries the same information permanently.
  *
- * Without a configured join link the banner does not render a dead button: it
- * offers to email for the next session link instead.
+ * Without a configured booking link the banner does not render a dead button:
+ * it offers to book by email instead.
  */
 export function LiveOnboardingBanner({
   info,
@@ -39,7 +37,7 @@ export function LiveOnboardingBanner({
   if (tone === "dark") {
     return (
       <section
-        aria-label="Live onboarding"
+        aria-label="Setup call"
         className="mt-5 rounded-2xl bg-white/[0.07] px-3.5 py-3.5 ring-1 ring-inset ring-white/10"
       >
         <div className="flex items-start gap-3">
@@ -47,7 +45,7 @@ export function LiveOnboardingBanner({
             <Video className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-white">Live onboarding on Zoom</p>
+            <p className="text-sm font-bold text-white">Book your setup call</p>
             <p className="mt-0.5 text-xs leading-relaxed text-[#a29f96]">
               {scheduleLine}
             </p>
@@ -61,7 +59,7 @@ export function LiveOnboardingBanner({
               rel="noopener noreferrer"
               className="flex min-h-11 touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-[#c2a05a] px-3 text-sm font-bold text-[#1c1913] active:bg-[#d4b46c]"
             >
-              Join a session
+              Pick a time
               <ArrowUpRight className="h-4 w-4" aria-hidden />
             </a>
           ) : (
@@ -69,7 +67,7 @@ export function LiveOnboardingBanner({
               href={buildMailtoHref(info.supportEmail)}
               className="flex min-h-11 touch-manipulation items-center justify-center rounded-xl bg-[#c2a05a] px-3 text-sm font-bold text-[#1c1913] active:bg-[#d4b46c]"
             >
-              Get the link
+              Email to book
             </a>
           )}
           <Link
@@ -86,7 +84,7 @@ export function LiveOnboardingBanner({
 
   return (
     <section
-      aria-label="Live onboarding"
+      aria-label="Setup call"
       className="flex flex-wrap items-center gap-3 rounded-[var(--radius-control)] border border-altair-border/40 bg-altair-paper px-4 py-3"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-altair-brass/15 text-[var(--brand-metal-text)]">
@@ -94,7 +92,7 @@ export function LiveOnboardingBanner({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-altair-ink-on-paper">
-          Live onboarding on Zoom
+          Book your setup call
         </p>
         <p className="text-sm text-altair-ink-on-paper-secondary">
           {scheduleLine}{" "}
@@ -107,7 +105,7 @@ export function LiveOnboardingBanner({
               >
                 {info.supportEmail}
               </a>{" "}
-              for the next session link.
+              to set up a time.
             </>
           )}
         </p>
@@ -120,7 +118,7 @@ export function LiveOnboardingBanner({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-altair-brass px-3 py-2 text-xs font-bold text-[#1C1913] transition-colors hover:bg-altair-brass-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           >
-            Join a session
+            Pick a time
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
         ) : null}

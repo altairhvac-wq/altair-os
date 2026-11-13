@@ -50,7 +50,7 @@ export default async function DashboardPage() {
     companyContext,
   );
 
-  // The live onboarding invitation the public site promises is "in your
+  // The setup-call invitation the public site promises is "in your
   // workspace after you sign up": on the dashboard for the first weeks, and
   // on /help for good.
   const liveOnboarding = isWithinLiveOnboardingWindow(

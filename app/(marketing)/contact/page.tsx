@@ -8,14 +8,14 @@ import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Reach the people behind Altair Operating System: email for questions and support, and live onboarding sessions twice a week for every customer.",
+    "Reach the people behind Altair Operating System: email for questions and support, and a one-on-one setup call on Zoom for every customer.",
   ...buildPublicSocialMetadata({ path: "/contact" }),
 };
 
 /**
  * Visitors type /contact (the analytics saw it land on the 404 page). The
  * two ways to reach us are the ones every other page already states: the
- * email on the privacy and terms pages, and the live onboarding sessions.
+ * email on the privacy and terms pages, and the one-on-one setup call.
  */
 export default function ContactPage() {
   return (
@@ -52,14 +52,15 @@ export default function ContactPage() {
 
             <section className="rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] p-6">
               <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#c2a05a]">
-                Live onboarding
+                Setup call
               </h2>
               <p className="mt-3 text-lg font-semibold text-[#fff9ea]">
-                Twice every week, on Zoom
+                One-on-one, on Zoom
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[#c9bfae]">
-                Every customer can join: setup help, workflow guidance and open
-                questions. The invitation is in your workspace after you sign up.
+                Every customer can book a free call: setup help, workflow
+                guidance and your questions. You book it from your workspace
+                after you sign up.
               </p>
             </section>
           </div>
