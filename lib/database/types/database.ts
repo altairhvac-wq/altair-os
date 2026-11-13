@@ -1357,6 +1357,107 @@ export type Database = {
         }>;
         Relationships: [];
       };
+      // directory_listings / directory_listing_reports: migration 210 — the
+      // public contractor directory. Service role only; public pages read
+      // through the directory_* functions, which never return contact_email.
+      directory_listings: {
+        Row: {
+          id: string;
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code: string | null;
+          service_area: string;
+          phone: string;
+          website: string | null;
+          description: string;
+          accepts_sub_work: boolean;
+          contact_email: string;
+          status: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          review_note: string | null;
+          published_at: string | null;
+          removed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code?: string | null;
+          service_area?: string;
+          phone: string;
+          website?: string | null;
+          description: string;
+          accepts_sub_work?: boolean;
+          contact_email: string;
+          status?: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes?: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          review_note?: string | null;
+          published_at?: string | null;
+          removed_at?: string | null;
+        };
+        Update: Partial<{
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code: string | null;
+          service_area: string;
+          phone: string;
+          website: string | null;
+          description: string;
+          accepts_sub_work: boolean;
+          status: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          review_note: string | null;
+          published_at: string | null;
+          removed_at: string | null;
+        }>;
+        Relationships: [];
+      };
+      directory_listing_reports: {
+        Row: {
+          id: string;
+          listing_id: string;
+          reason: "wrong_details" | "closed" | "not_a_real_business" | "offensive" | "other";
+          note: string;
+          status: "open" | "resolved";
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          reason: "wrong_details" | "closed" | "not_a_real_business" | "offensive" | "other";
+          note?: string;
+          status?: "open" | "resolved";
+        };
+        Update: Partial<{
+          status: "open" | "resolved";
+          resolved_at: string | null;
+        }>;
+        Relationships: [];
+      };
       // web_analytics_internal_visitors: migration 206 — the owner's own
       // browsers (HMAC of the analytics browser id), left out of every website
       // figure. Service role only.
@@ -1849,6 +1950,27 @@ export type Database = {
           expenses_missing_amount: number | string;
           open_labor_entry_count: number | string;
         }[];
+      };
+      // directory_*: migration 210 — service_role only. The public directory's
+      // only read path: public columns of published listings, as jsonb.
+      directory_search_listings: {
+        Args: {
+          p_trade?: string | null;
+          p_state?: string | null;
+          p_place?: string | null;
+          p_sub_only?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: unknown;
+      };
+      directory_public_listing: {
+        Args: { p_slug: string };
+        Returns: unknown;
+      };
+      directory_published_paths: {
+        Args: Record<string, never>;
+        Returns: unknown;
       };
       // platform_web_analytics_engagement: migration 209 — service_role only.
       // Counts of deliberate visitor actions by event and label; one jsonb

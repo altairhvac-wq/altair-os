@@ -47,7 +47,10 @@ export type PublicRateLimitScope =
   | "public.token_view"
   | "public.analytics_collect"
   | "public.analytics_new_visitor"
-  | "public.resource_email";
+  | "public.resource_email"
+  | "public.directory_submit"
+  | "public.directory_manage_link"
+  | "public.directory_report";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -127,6 +130,23 @@ export const PUBLIC_RATE_LIMITS: Record<
     { dimension: "email", windowSeconds: 86400, limit: 6 },
     { dimension: "ip", windowSeconds: 3600, limit: 12 },
   ],
+  // "List your business" on the public directory (migration 210). Each
+  // submission sends one confirmation email to the address typed, so the
+  // inbox dimension stops the form being aimed at someone else; the address
+  // dimension stops one client filling the review queue. A contractor lists
+  // one business, perhaps two.
+  "public.directory_submit": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 6 },
+  ],
+  // "Email me my manage link": mails the listing's own address, so the same
+  // two dimensions for the same two reasons.
+  "public.directory_manage_link": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 10 },
+  ],
+  // "Report this listing": writes one row for the owner to read. No mail.
+  "public.directory_report": [{ dimension: "ip", windowSeconds: 3600, limit: 10 }],
 };
 
 /**

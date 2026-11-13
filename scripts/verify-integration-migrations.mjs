@@ -203,6 +203,11 @@ const PLATFORM_ONLY_TABLES = new Set([
   // Migration 209: people who opted in to hear about new free tools. A
   // platform mailing list, not tenant data: no company, service role only.
   "resource_email_subscribers",
+  // Migration 210: the public contractor directory. Listings belong to no
+  // workspace (a lister has no account), one column is private, and public
+  // pages read only through the directory_* functions: service role only.
+  "directory_listings",
+  "directory_listing_reports",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");
@@ -247,7 +252,11 @@ for (const file of files) {
       );
       check(
         `${table}: has no policy (service role only)`,
-        !new RegExp(`on\\s+public\\.${table}\\s+for\\s+`).test(sql),
+        // A policy names a command ("for select"); a trigger says "for each
+        // row" on the same table and is not a policy.
+        !new RegExp(
+          `create\\s+policy[^;]*on\\s+public\\.${table}\\b|on\\s+public\\.${table}\\s+for\\s+(select|insert|update|delete|all)\\b`,
+        ).test(sql),
       );
       continue;
     }
@@ -415,6 +424,13 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "209_site_engagement_events_and_resource_subscribers.sql",
     new Set(["platform_web_analytics_engagement"]),
+  ],
+  // 210 adds the public directory's only read path: three read-only
+  // functions that return the public columns of PUBLISHED listings, security
+  // invoker, executable by service_role only.
+  [
+    "210_public_contractor_directory.sql",
+    new Set(["directory_search_listings", "directory_public_listing", "directory_published_paths"]),
   ],
 ]);
 

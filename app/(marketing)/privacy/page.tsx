@@ -120,6 +120,23 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection heading="The contractor directory">
+        <p>
+          If you list a business in our public directory, the details you
+          enter (business name, trade, city and state, ZIP code, service area,
+          phone number, website and description) are shown publicly once a
+          person here has approved the listing. Your email address is not
+          shown. We use it to confirm the listing and to send you the link
+          that lets you edit or remove it.
+        </p>
+        <p>
+          You can remove your listing at any time with that link, and it comes
+          off the site straight away. To have the record deleted from our
+          systems as well, write to us. If you report a listing, we store the
+          reason and any note you add, not who you are.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="Your customers' data">
         <p>
           You may store your own customers&apos; contact details and service

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
+import { listPublishedListingPaths } from "@/lib/directory/listings";
+import { DIRECTORY_LIST_PATH, DIRECTORY_PATH, directoryListingPath } from "@/shared/types/directory";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
@@ -74,6 +76,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     })),
+    { url: `${origin}${DIRECTORY_PATH}`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${origin}${DIRECTORY_LIST_PATH}`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${origin}/contact`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${origin}/install`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${origin}/privacy`, changeFrequency: "yearly", priority: 0.2 },
@@ -94,5 +98,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticEntries, ...pageEntries];
+  // Published directory listings, each at its own address. An empty list
+  // (no listings yet, or the directory not set up) adds nothing.
+  const listingEntries: MetadataRoute.Sitemap = (await listPublishedListingPaths()).map((listing) => ({
+    url: `${origin}${directoryListingPath(listing.slug)}`,
+    ...(listing.updatedAt ? { lastModified: new Date(listing.updatedAt) } : {}),
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  }));
+
+  return [...staticEntries, ...pageEntries, ...listingEntries];
 }

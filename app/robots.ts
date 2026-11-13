@@ -19,7 +19,7 @@ import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
  * (the longest-match rule used by Google and Bing). `/insights` covers the
  * index and every published article beneath it; `/resources` covers the
  * Resource Center hub, calculators, templates (downloads included), guides
- * and library.
+ * and library; `/directory` covers the contractor directory.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -41,6 +41,9 @@ export default function robots(): MetadataRoute.Robots {
           ...COMPARISON_PAGE_PATHS,
           "/insights",
           "/resources",
+          // The contractor directory: search, listings and the listing form.
+          // The manage page is under it and marks itself noindex.
+          "/directory",
           // The sitemap itself: with `disallow: "/"` below, an unlisted
           // /sitemap.xml is blocked and Search Console reports "Couldn't fetch".
           "/sitemap.xml",

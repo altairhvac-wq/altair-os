@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { pt } from "@/shared/components/platform-admin/north-star-m13/platform-north-star-styles";
-import { BarChart3, Bug, LayoutDashboard, Palette } from "lucide-react";
+import { BarChart3, Bug, Building2, LayoutDashboard, Palette } from "lucide-react";
 
 const LINKS = [
   {
@@ -19,6 +19,13 @@ const LINKS = [
     icon: BarChart3,
     match: (pathname: string) =>
       pathname === "/platform/analytics" || pathname.startsWith("/platform/analytics/"),
+  },
+  {
+    href: "/platform/directory",
+    label: "Directory",
+    icon: Building2,
+    match: (pathname: string) =>
+      pathname === "/platform/directory" || pathname.startsWith("/platform/directory/"),
   },
   {
     href: "/platform/design-lab",

@@ -119,6 +119,24 @@ const ENTRY_POINTS = [
     scope: "public.resource_email",
     why: "mail flooding: the calculators email a result to any address typed into the form",
   },
+  {
+    file: "app/actions/directory.ts",
+    fn: "submitListingAction",
+    scope: "public.directory_submit",
+    why: "mail flooding and review-queue flooding: a listing emails a confirmation link to the address typed",
+  },
+  {
+    file: "app/actions/directory.ts",
+    fn: "requestManageLinkAction",
+    scope: "public.directory_manage_link",
+    why: "mail flooding against a lister's inbox, and probing which addresses have a listing",
+  },
+  {
+    file: "app/actions/directory.ts",
+    fn: "reportListingAction",
+    scope: "public.directory_report",
+    why: "report flooding against a business's listing",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */
