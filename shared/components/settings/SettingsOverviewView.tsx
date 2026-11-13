@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ChevronRight,
   AlertTriangle,
   Building2,
   CheckCircle2,
@@ -12,7 +13,6 @@ import {
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import {
   altairMcListClass,
-  altairMcListRowClass,
   altairMcTileClass,
 } from "@/shared/design-system/components/mc-surface";
 import {
@@ -132,23 +132,32 @@ function StatusCard({ card }: { card: SettingsOverviewStatusCard }) {
   return (
     <Link
       href={card.href}
-      className={`${altairMcTileClass} group block transition-colors hover:border-altair-brass/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2`}
+      className={`${altairMcTileClass} group flex min-w-0 items-center gap-3 transition-colors hover:border-altair-brass/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-section)] text-altair-ink-secondary">
-          <Icon className="h-4 w-4" aria-hidden="true" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-section)] text-altair-ink-secondary">
+        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-medium text-altair-ink-secondary">
+          {card.label}
         </span>
-        <span
-          className={`mt-1 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[card.tone]}`}
-        />
-      </div>
-      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-muted">
-        {card.label}
-      </p>
-      <p className="mt-1 truncate text-base font-bold text-altair-ink">
-        {card.value}
-      </p>
-      <p className="mt-0.5 text-xs text-altair-ink-secondary">{card.meta}</p>
+        <span className="mt-0.5 flex min-w-0 items-center gap-2">
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${TONE_DOT[card.tone]}`}
+            aria-hidden="true"
+          />
+          <span className="truncate text-[15px] font-bold text-altair-ink">
+            {card.value}
+          </span>
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-altair-ink-secondary">
+          {card.meta}
+        </span>
+      </span>
+      <ChevronRight
+        className="h-4 w-4 shrink-0 text-altair-ink-muted transition-transform group-hover:translate-x-0.5"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
@@ -157,7 +166,6 @@ export function SettingsOverviewView({
   companyName,
   statusCards,
   attentionItems,
-  readinessMetrics,
   onboardingChecklist,
   companyId,
   userId,
@@ -166,59 +174,61 @@ export function SettingsOverviewView({
   return (
     <SettingsWorkspacePage
       title="Overview"
-      description="Health, readiness, and the configuration that keeps your company running."
+      description="What is set up, and what still needs you."
     >
-      <HealthBanner
-        attentionCount={attentionItems.length}
-        companyName={companyName}
-      />
-
-      <SettingsWorkspaceSection
-        title="Status"
-        description="A live read on the areas that matter most."
-        card={false}
-      >
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {statusCards.map((card) => (
-            <StatusCard key={card.id} card={card} />
-          ))}
-        </div>
-      </SettingsWorkspaceSection>
-
+      {/*
+       * Each problem is stated once, with the button that fixes it (UI audit
+       * 2026-11-12: the same two problems used to appear in a banner, a
+       * status card, this list and a fourth row, with two tiny "Fix" links
+       * between them). When nothing needs attention, the banner says so.
+       */}
       {attentionItems.length > 0 ? (
         <SettingsWorkspaceSection
-          title="Needs attention"
-          description="Start here — these items affect readiness or day-to-day operations."
+          title={`${attentionItems.length} ${attentionItems.length === 1 ? "thing needs" : "things need"} you`}
+          description="Each one affects how the workspace runs day to day."
           card={false}
         >
           <ul className={`${altairMcListClass} divide-y divide-altair-border`}>
             {attentionItems.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 px-3 py-3 sm:px-4">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${TONE_DOT[item.tone]}`}
+                  aria-hidden="true"
+                />
+                <span className="min-w-[12rem] flex-1">
+                  <span className="block text-sm font-semibold text-altair-ink">
+                    {item.title}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] leading-relaxed text-altair-ink-secondary">
+                    {item.description}
+                  </span>
+                </span>
                 <Link
                   href={item.href}
-                  className={`${altairMcListRowClass} flex min-w-0 items-start gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-altair-brass`}
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-altair-border/60 bg-altair-paper px-3.5 text-[13px] font-semibold text-altair-ink-on-paper shadow-[var(--elev-hairline)] transition-colors hover:bg-altair-paper-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                 >
-                  <span
-                    className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[item.tone]}`}
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-altair-ink">
-                      {item.title}
-                    </span>
-                    <span className="mt-0.5 block text-xs leading-5 text-altair-ink-secondary sm:text-sm">
-                      {item.description}
-                    </span>
-                  </span>
-                  <span className="mt-0.5 shrink-0 text-[11px] font-semibold text-altair-brass">
-                    Fix
-                  </span>
+                  Fix this
+                  <span className="sr-only">: {item.title}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </SettingsWorkspaceSection>
-      ) : null}
+      ) : (
+        <HealthBanner attentionCount={0} companyName={companyName} />
+      )}
+
+      <SettingsWorkspaceSection
+        title="Where things stand"
+        description="Open an area to change it."
+        card={false}
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          {statusCards.map((card) => (
+            <StatusCard key={card.id} card={card} />
+          ))}
+        </div>
+      </SettingsWorkspaceSection>
 
       <OnboardingChecklistSection
         checklist={onboardingChecklist}
@@ -226,36 +236,6 @@ export function SettingsOverviewView({
         userId={userId}
         variant="settings"
       />
-
-      <SettingsWorkspaceSection
-        title="Workspace pulse"
-        description="Operational signals from your current setup — useful even when nothing needs fixing."
-        card={false}
-      >
-        <dl className="grid gap-2.5 sm:grid-cols-2">
-          {readinessMetrics.map((metric) => (
-            <div
-              key={metric.id}
-              className={`${altairMcTileClass} flex min-w-0 items-center justify-between gap-3 !p-3`}
-            >
-              <dt className="min-w-0 text-xs font-medium text-altair-ink-secondary">
-                {metric.label}
-              </dt>
-              <dd className="flex shrink-0 items-center gap-1.5">
-                <span className="text-sm font-semibold text-altair-ink">
-                  {metric.value}
-                </span>
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    metric.ok ? TONE_DOT.success : TONE_DOT.neutral
-                  }`}
-                  aria-hidden="true"
-                />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </SettingsWorkspaceSection>
 
       {showSystemCheck ? (
         <Link
@@ -268,15 +248,15 @@ export function SettingsOverviewView({
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-altair-ink">
-                System Check
+                System check
               </span>
-              <span className="block text-xs text-altair-ink-secondary sm:text-sm">
-                Run owner diagnostics when you need a production readiness pass.
+              <span className="block text-[13px] text-altair-ink-secondary">
+                Technical diagnostics. Written for whoever set up the system, not for daily use.
               </span>
             </span>
           </span>
-          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-altair-ink-muted">
-            Owner
+          <span className="shrink-0 text-xs font-semibold text-altair-ink-muted">
+            Owner only
           </span>
         </Link>
       ) : null}

@@ -1,7 +1,6 @@
 import {
   altairMcCardClass,
   altairMcCardPadClass,
-  altairMcGridGapClass,
 } from "@/shared/design-system/components/mc-surface";
 
 type SettingsWorkspacePageProps = {
@@ -32,17 +31,17 @@ export function SettingsWorkspacePage({
 }: SettingsWorkspacePageProps) {
   return (
     <article className="min-w-0">
-      {/* Compact header: the shell + active tab already name this page, so
-       * the in-page header is one slim line, not a second billboard. */}
-      <header className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5 border-b border-[var(--north-star-plate-border)] pb-2">
-        <h1 className="text-sm font-bold tracking-tight text-altair-ink-on-paper">
+      {/* The section's own heading: an h2, since the shell owns the page's
+       * one h1 ("Settings"). The description gets a line to itself. */}
+      <header className="min-w-0">
+        <h2 className="text-lg font-bold tracking-tight text-altair-ink-on-paper">
           {title}
-        </h1>
-        <p className="min-w-0 text-xs leading-5 text-altair-ink-on-paper-secondary">
+        </h2>
+        <p className="mt-0.5 text-sm leading-relaxed text-altair-ink-on-paper-secondary">
           {description}
         </p>
       </header>
-      <div className={`mt-3 flex flex-col ${altairMcGridGapClass}`}>{children}</div>
+      <div className="mt-4 flex flex-col gap-4">{children}</div>
     </article>
   );
 }
@@ -58,10 +57,10 @@ export function SettingsWorkspaceSection({
   const body = (
     <>
       {title ? (
-        <div className="mb-2">
-          <h2 className="text-sm font-semibold text-altair-ink">{title}</h2>
+        <div className="mb-3">
+          <h3 className="text-[15px] font-bold tracking-tight text-altair-ink">{title}</h3>
           {description ? (
-            <p className="mt-0.5 text-xs leading-5 text-altair-ink-secondary">
+            <p className="mt-0.5 text-[13px] leading-relaxed text-altair-ink-secondary">
               {description}
             </p>
           ) : null}

@@ -23,6 +23,10 @@ type CompanyProfileFormProps = {
   canManage: boolean;
 };
 
+/** A group heading that takes a whole row of the form grid. */
+const GROUP_HEADING_CLASS =
+  "col-span-full text-[11px] font-semibold uppercase tracking-[0.1em] text-altair-ink-secondary";
+
 export function CompanyProfileForm({
   initialProfile,
   canManage,
@@ -83,11 +87,12 @@ export function CompanyProfileForm({
   }
 
   /*
-   * Dense single-grid layout (settings IA v2): every field lives in ONE
-   * 4-column grid on wide screens, so the whole form is four short rows
-   * instead of a nine-row stack. Column spans, not section dividers, do
-   * the grouping. The L5 density register in globals.css owns control
-   * heights/gaps; this component only decides field order and spans.
+   * One 4-column grid on wide screens, in the order a person fills it in,
+   * with a small heading over each group: the business, how to reach it,
+   * where it is. Each group starts its own row, so a field never shares a
+   * row with a field from another group (UI audit 2026-11-12: Phone and
+   * Email used to sit beside Address line 1, and Postal code beside a blank
+   * half row). The L5 density register in globals.css owns control heights.
    */
   return (
     <form onSubmit={handleSubmit} className="space-y-3" aria-busy={isPending}>
@@ -97,7 +102,8 @@ export function CompanyProfileForm({
         </SettingsAlertBanner>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
+        <p className={GROUP_HEADING_CLASS}>Business</p>
         <label className="block space-y-1 sm:col-span-2">
           <span className={fieldLabelClass}>Company name</span>
           <input
@@ -150,6 +156,7 @@ export function CompanyProfileForm({
           </select>
         </label>
 
+        <p className={`${GROUP_HEADING_CLASS} mt-1.5`}>Contact</p>
         <label className="block space-y-1">
           <span className={fieldLabelClass}>Phone</span>
           <input
@@ -163,7 +170,7 @@ export function CompanyProfileForm({
           />
         </label>
 
-        <label className="block space-y-1">
+        <label className="block space-y-1 xl:col-span-2">
           <span className={fieldLabelClass}>Email</span>
           <input
             type="email"
@@ -176,6 +183,7 @@ export function CompanyProfileForm({
           />
         </label>
 
+        <p className={`${GROUP_HEADING_CLASS} mt-1.5`}>Address</p>
         <label className="block space-y-1 sm:col-span-2">
           <span className={fieldLabelClass}>Address line 1</span>
           <input
