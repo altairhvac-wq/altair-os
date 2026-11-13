@@ -432,6 +432,13 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "210_public_contractor_directory.sql",
     new Set(["directory_search_listings", "directory_public_listing", "directory_published_paths"]),
   ],
+  // 211 replaces two of those functions with versions that add one key,
+  // is_member (a yes/no), and list members first. Still read-only, security
+  // invoker, service_role only; the linked workspace id is never returned.
+  [
+    "211_directory_listing_claims.sql",
+    new Set(["directory_search_listings", "directory_public_listing"]),
+  ],
 ]);
 
 for (const file of files) {

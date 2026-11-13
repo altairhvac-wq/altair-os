@@ -11,10 +11,13 @@ import {
   dirPrimaryButton,
   dirSecondaryButton,
 } from "@/shared/components/directory/directory-styles";
+import { DirectoryMemberBadge } from "@/shared/components/directory/DirectoryMemberBadge";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import {
   DIRECTORY_LIST_PATH,
+  DIRECTORY_MEMBER_LABEL,
+  DIRECTORY_MEMBER_MEANING,
   DIRECTORY_PAGE_SIZE,
   DIRECTORY_PATH,
   DIRECTORY_TRADES,
@@ -79,11 +82,14 @@ function ListingRow({ listing }: { readonly listing: DirectoryPublicListing }) {
     <li>
       <article className={`px-5 py-5 sm:flex sm:items-start sm:justify-between sm:gap-8 sm:px-6 ${dirCard}`}>
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold tracking-tight text-[#0A0A0A]">
-            <Link href={href} className="inline-block rounded-sm py-0.5 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40">
-              {listing.businessName}
-            </Link>
-          </h2>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-[#0A0A0A]">
+              <Link href={href} className="inline-block rounded-sm py-0.5 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40">
+                {listing.businessName}
+              </Link>
+            </h2>
+            {listing.isMember ? <DirectoryMemberBadge /> : null}
+          </div>
           <p className="mt-1 text-sm text-stone-600">
             {listing.tradeType} · {listing.city}, {listing.state}
           </p>
@@ -118,6 +124,8 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
   const filtered = hasActiveSearch(search);
   const pages = Math.max(1, Math.ceil(result.total / DIRECTORY_PAGE_SIZE));
   const page = Math.min(search.page, pages);
+  // Members are listed first. A visitor is told so wherever it is true.
+  const showsMembers = result.listings.some((listing) => listing.isMember);
 
   return (
     <ResourceChrome>
@@ -237,9 +245,12 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <>
-              <h2 id="directory-results-heading" aria-live="polite" className="text-sm font-medium text-stone-600">
-                {describeResults(search, result.total)}
-              </h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h2 id="directory-results-heading" aria-live="polite" className="text-sm font-medium text-stone-600">
+                  {describeResults(search, result.total)}
+                </h2>
+                {showsMembers ? <p className="text-xs text-stone-500">{DIRECTORY_MEMBER_LABEL}s are listed first.</p> : null}
+              </div>
               <ul className="mt-4 space-y-3">
                 {result.listings.map((listing) => (
                   <ListingRow key={listing.slug} listing={listing} />
@@ -287,6 +298,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         <p className="mt-8 text-xs leading-relaxed text-stone-500">
           Listings are written by the businesses themselves and checked by a person before they show. We do not verify
           licenses or insurance: confirm those with the contractor.{" "}
+          {showsMembers ? `“${DIRECTORY_MEMBER_LABEL}”: ${DIRECTORY_MEMBER_MEANING} ` : ""}
           <Link href="/directory/manage" className={dirLink}>
             Manage your listing
           </Link>

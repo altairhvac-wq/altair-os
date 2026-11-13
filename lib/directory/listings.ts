@@ -159,6 +159,7 @@ type PublicRow = {
   description?: unknown;
   accepts_sub_work?: unknown;
   published_at?: unknown;
+  is_member?: unknown;
 };
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -178,6 +179,8 @@ function toPublicListing(row: PublicRow): DirectoryPublicListing | null {
     description: text(row.description),
     acceptsSubWork: row.accepts_sub_work === true,
     publishedAt: typeof row.published_at === "string" ? row.published_at : null,
+    // Absent before migration 211 is applied, which reads as "not a member".
+    isMember: row.is_member === true,
   };
 }
 
@@ -483,29 +486,6 @@ export async function findListingsForEmail(contactEmail: string): Promise<{ id: 
     return (data ?? []).map((row) => ({ id: row.id, businessName: row.business_name, status: row.status }));
   } catch (error) {
     logFailure("lookup by email", error);
-    return [];
-  }
-}
-
-/**
- * Which published listings belong to this signed-in person: the ones listed
- * with the same email address they sign in with. Returns slugs only, so the
- * Community screen can label a member's own listing as theirs instead of as
- * a stranger's. The email itself goes nowhere.
- */
-export async function findPublishedSlugsForEmail(contactEmail: string): Promise<string[]> {
-  try {
-    const supabase = createServiceRoleClient();
-    const { data, error } = await supabase
-      .from("directory_listings")
-      .select("slug")
-      .eq("contact_email", contactEmail)
-      .eq("status", "published")
-      .limit(10);
-    if (error) throw error;
-    return (data ?? []).map((row) => row.slug).filter(isValidListingSlug);
-  } catch (error) {
-    logFailure("own listing lookup", error);
     return [];
   }
 }

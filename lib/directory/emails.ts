@@ -5,7 +5,7 @@ import { sendViaResend, type ResendSendResult } from "@/lib/email/resend";
 import { buildManageUrl, buildPublicListingUrl, buildReviewUrl } from "@/lib/directory/links";
 import { resolveResourceLinkOrigin } from "@/lib/resources/subscribers";
 import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
-import { DIRECTORY_STATUS_LABELS, type DirectoryListingStatus } from "@/shared/types/directory";
+import { DIRECTORY_MEMBER_LABEL, DIRECTORY_STATUS_LABELS, type DirectoryListingStatus } from "@/shared/types/directory";
 
 /**
  * Every email the public directory sends.
@@ -17,7 +17,9 @@ import { DIRECTORY_STATUS_LABELS, type DirectoryListingStatus } from "@/shared/t
  * Each one is sent because of something that person just did or asked for,
  * and each carries the manage link, which is how a lister edits or removes a
  * listing without an account. None of them is marketing; the one line about
- * the product says who runs the directory.
+ * the product says who runs the directory, and the "your listing is live"
+ * email adds one sentence about a feature of the listing itself (linking it
+ * to an Altair workspace), pointing at the manage page rather than selling.
  *
  * The business name is the only lister-supplied text that appears, and it is
  * escaped in the HTML part. Builders are separate from senders so the words
@@ -81,6 +83,9 @@ export function buildLiveEmail(input: { businessName: string; publicUrl: string;
         ? `The changes you made to the listing for ${input.businessName} have been approved and are now showing.`
         : `Your listing for ${input.businessName} has been approved and is now public.`,
       "Have a look, and share the link with other contractors you work with.",
+      input.changesOnly
+        ? ""
+        : `If you run your business on Altair Operating System, you can link this listing to your workspace. It then shows “${DIRECTORY_MEMBER_LABEL}” and is listed ahead of non-members. Your manage link below explains how.`,
     ],
     { url: input.publicUrl, label: "See my listing" },
     input.manageUrl,

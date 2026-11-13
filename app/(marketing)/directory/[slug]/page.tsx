@@ -3,6 +3,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicListing } from "@/lib/directory/listings";
+import { DirectoryMemberBadge } from "@/shared/components/directory/DirectoryMemberBadge";
 import { ReportListingForm } from "@/shared/components/directory/DirectorySmallForms";
 import {
   dirBadge,
@@ -17,6 +18,8 @@ import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import {
   DIRECTORY_MANAGE_PATH,
+  DIRECTORY_MEMBER_LABEL,
+  DIRECTORY_MEMBER_MEANING,
   DIRECTORY_PATH,
   directoryListingPath,
   directorySearchHref,
@@ -116,9 +119,10 @@ export default async function DirectoryListingPage({ params }: PageProps) {
           <p className="mt-3 text-base text-stone-600 sm:text-lg">
             {listing.city}, {stateName(listing.state)}
           </p>
-          {listing.acceptsSubWork ? (
-            <p className="mt-4">
-              <span className={dirBadge}>Takes subcontract work</span>
+          {listing.isMember || listing.acceptsSubWork ? (
+            <p className="mt-4 flex flex-wrap items-center gap-2">
+              {listing.isMember ? <DirectoryMemberBadge /> : null}
+              {listing.acceptsSubWork ? <span className={dirBadge}>Takes subcontract work</span> : null}
             </p>
           ) : null}
         </header>
@@ -165,6 +169,7 @@ export default async function DirectoryListingPage({ params }: PageProps) {
           {listedSince ? `Listed since ${listedSince}. ` : ""}
           This listing was written by the business. We do not verify licenses or insurance: confirm those with the
           contractor.
+          {listing.isMember ? ` “${DIRECTORY_MEMBER_LABEL}”: ${DIRECTORY_MEMBER_MEANING}` : ""}
         </p>
 
         <div className="mt-8 grid gap-4 border-t border-stone-200 pt-6 sm:grid-cols-2">

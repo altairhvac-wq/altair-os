@@ -61,7 +61,7 @@ import { IncomingNetworkInvitesCard } from "../IncomingNetworkInvitesCard";
 import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
 import { NetworkInviteForm } from "../NetworkInviteForm";
 import { CommunityPublicListingCard, CommunityPublicListingPanel } from "../CommunityPublicListing";
-import { DIRECTORY_PATH, type DirectoryPublicListing } from "@/shared/types/directory";
+import { DIRECTORY_PATH, type DirectoryOwnListing, type DirectoryPublicListing } from "@/shared/types/directory";
 import type { NetworkInviteFormData } from "@/shared/types/network-invite";
 import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
@@ -100,8 +100,11 @@ export type NetworkNorthStarViewProps = {
    */
   initialPublicListings?: DirectoryPublicListing[];
   publicListingTotal?: number;
-  /** Slugs of public listings that are the signed-in person's own. */
-  ownPublicListingSlugs?: string[];
+  /**
+   * The signed-in person's own public listings (same email as their sign-in,
+   * or linked to this workspace), with how each relates to the workspace.
+   */
+  ownPublicListings?: DirectoryOwnListing[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
@@ -110,7 +113,7 @@ export type NetworkNorthStarViewProps = {
 };
 
 const NO_PUBLIC_LISTINGS: DirectoryPublicListing[] = [];
-const NO_SLUGS: string[] = [];
+const NO_OWN_LISTINGS: DirectoryOwnListing[] = [];
 
 function sortProfilesWithTrustedFirst(
   profiles: NetworkProfile[],
@@ -141,7 +144,7 @@ export function NetworkNorthStarView({
   initialMyHelpRequests,
   initialPublicListings = NO_PUBLIC_LISTINGS,
   publicListingTotal = 0,
-  ownPublicListingSlugs = NO_SLUGS,
+  ownPublicListings = NO_OWN_LISTINGS,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -288,7 +291,10 @@ export function NetworkNorthStarView({
     });
   }, [initialPublicListings, search, tradeFilter, locationFilter, acceptingReferralsOnly]);
 
-  const ownListingSlugs = useMemo(() => new Set(ownPublicListingSlugs), [ownPublicListingSlugs]);
+  const ownListingBySlug = useMemo(
+    () => new Map(ownPublicListings.map((own) => [own.listing.slug, own])),
+    [ownPublicListings],
+  );
 
   const selectedListing = useMemo(
     () => initialPublicListings.find((listing) => listing.slug === selectedListingSlug) ?? null,
@@ -659,7 +665,7 @@ export function NetworkNorthStarView({
   const directoryDetailPanel = selectedListing ? (
     <CommunityPublicListingPanel
       listing={selectedListing}
-      isOwn={ownListingSlugs.has(selectedListing.slug)}
+      own={ownListingBySlug.get(selectedListing.slug) ?? null}
       canInvite={canManageNetwork}
       onInvite={() => handleInviteListing(selectedListing)}
       onClose={() => setSelectedListingSlug(null)}
@@ -1090,7 +1096,7 @@ export function NetworkNorthStarView({
                               <CommunityPublicListingCard
                                 key={listing.slug}
                                 listing={listing}
-                                isOwn={ownListingSlugs.has(listing.slug)}
+                                isOwn={ownListingBySlug.has(listing.slug)}
                                 selected={listing.slug === selectedListingSlug}
                                 onSelect={() => handleSelectListing(listing.slug)}
                               />

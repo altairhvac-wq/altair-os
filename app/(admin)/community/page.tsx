@@ -32,7 +32,8 @@ import {
   listOpenNetworkHelpRequests,
 } from "@/lib/database/queries/network-help-requests";
 import { getCurrentUser } from "@/lib/database/auth";
-import { findPublishedSlugsForEmail, listListingsForCommunity } from "@/lib/directory/listings";
+import { findOwnListings, listSlugsLinkedToCompanies } from "@/lib/directory/claims";
+import { listListingsForCommunity } from "@/lib/directory/listings";
 import { normalizeDirectoryEmail } from "@/shared/types/directory";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
@@ -110,9 +111,24 @@ export default async function CommunityPage() {
   // A member who also listed their business publicly, with the email they
   // sign in with, sees that listing marked as their own rather than as a
   // business that is "not on Altair yet".
-  const viewerEmail = normalizeDirectoryEmail((await getCurrentUser())?.email);
-  const ownPublicListingSlugs =
-    viewerEmail && publicDirectory.listings.length > 0 ? await findPublishedSlugsForEmail(viewerEmail) : [];
+  // The same goes for a listing already linked to this workspace. Only a
+  // confirmed sign-in address counts as proof of whose inbox it is.
+  const viewer = await getCurrentUser();
+  const viewerEmail = viewer?.email_confirmed_at ? normalizeDirectoryEmail(viewer.email) : null;
+  const [ownPublicListings, slugsWithVisibleProfile] = await Promise.all([
+    findOwnListings(viewerEmail, companyId),
+    // A business that linked its listing AND has a visible Community profile
+    // is already in the members group above; it is not shown a second time.
+    listSlugsLinkedToCompanies(profiles.map((profile) => profile.companyId)),
+  ]);
+  const ownSlugs = new Set(ownPublicListings.map((own) => own.listing.slug));
+  const duplicateSlugs = new Set(slugsWithVisibleProfile);
+  // The viewer's own listings always lead the group, including one that is
+  // not on the first page of the directory.
+  const publicListings = [
+    ...ownPublicListings.map((own) => own.listing),
+    ...publicDirectory.listings.filter((listing) => !ownSlugs.has(listing.slug) && !duplicateSlugs.has(listing.slug)),
+  ];
 
   // Computed trust metrics for the directory profiles on screen (aggregate
   // RPC, visible profiles only — see migration 137).
@@ -134,9 +150,13 @@ export default async function CommunityPage() {
       initialIncomingNetworkInvites={incomingNetworkInvites}
       initialOpenHelpRequests={openHelpRequests}
       initialMyHelpRequests={myHelpRequests}
-      initialPublicListings={publicDirectory.listings}
-      publicListingTotal={publicDirectory.total}
-      ownPublicListingSlugs={ownPublicListingSlugs}
+      initialPublicListings={publicListings}
+      // When the whole directory fits on the first page, the count is what is
+      // shown here (a business already in the members group is not repeated).
+      publicListingTotal={
+        publicDirectory.total > publicDirectory.listings.length ? publicDirectory.total : publicListings.length
+      }
+      ownPublicListings={ownPublicListings}
       invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
       companyId={companyId}
       canSendReferral={canSendReferral}
