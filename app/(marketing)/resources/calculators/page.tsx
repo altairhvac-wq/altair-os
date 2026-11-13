@@ -16,7 +16,7 @@ import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
 const TITLE = "Business calculators for contractors";
 const DESCRIPTION =
-  "Free labor rate, job profitability and break-even calculators for HVAC and trade business owners. Every formula and assumption is shown. No account required.";
+  "Six free calculators for HVAC and trade business owners: labor rate, job profit, break-even, maintenance agreement pricing, technician pay and callback cost. Every formula is shown. No account required.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -33,6 +33,9 @@ const ANSWERS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
   "labor-rate": "What do I have to charge per billable hour so a technician's time actually pays for itself?",
   "job-profitability": "Did that job make money once labor, materials and overhead are counted?",
   "break-even": "How many jobs a month does it take before the business stops losing money?",
+  "maintenance-agreement": "What should a maintenance agreement cost so the visits and the member discount are paid for?",
+  "technician-pay": "Would this week have paid more on hourly, flat rate or commission?",
+  "callback-cost": "What are free return trips really costing me every month?",
 };
 
 /** A sensible order to run them in. */
@@ -48,6 +51,18 @@ const STEPS: readonly { title: string; text: string }[] = [
   {
     title: "Then see what the month needs",
     text: "The break-even calculator turns your fixed monthly costs and average job into the number of jobs it takes to cover them. Everything past that line is profit.",
+  },
+  {
+    title: "Price the agreement from your cost",
+    text: "The maintenance agreement calculator uses the cost per billable hour from step one. Visits, materials, office time and the member discount go in; a monthly price comes out.",
+  },
+  {
+    title: "Compare pay plans on a real week",
+    text: "The technician pay calculator runs one week three ways. Owners use it before changing a pay plan; technicians use it to check an offer.",
+  },
+  {
+    title: "Put a number on callbacks",
+    text: "The callback cost calculator turns last month's free return trips into dollars and lost hours, so you know what fixing the cause is worth.",
   },
 ];
 
@@ -115,8 +130,8 @@ export default function ResourceCalculatorsIndexPage() {
           ))}
         </ol>
         <p className="mt-6 text-sm text-stone-600">
-          Every calculator shows its formula and assumptions, remembers your numbers in this browser, and can copy a
-          link to your result. Need the paperwork side?{" "}
+          Every calculator shows its formula and assumptions, remembers your numbers in this browser, can copy a
+          link to your result, and can email the result to you. Need the paperwork side?{" "}
           <Link href="/resources/templates" className={resourceLinkClass}>
             Free templates
           </Link>{" "}

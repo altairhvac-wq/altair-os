@@ -6,6 +6,7 @@ import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
+import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 
 /**
  * The sitemap — the only place a published page announces itself.
@@ -67,6 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${origin}${path}`,
       changeFrequency: "monthly" as const,
       priority: path === RESOURCES_PATH ? 0.7 : 0.6,
+    })),
+    ...COMPANY_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
     })),
     { url: `${origin}/contact`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${origin}/install`, changeFrequency: "monthly", priority: 0.3 },

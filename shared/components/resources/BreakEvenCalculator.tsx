@@ -59,6 +59,7 @@ export function BreakEvenCalculator() {
       onReset={reset}
       shareUrl={shareUrl}
       restored={restored}
+      emailResults={{ slug: "break-even", values }}
       fields={FIELDS.map((spec) => (
         <NumberField key={spec.key} spec={spec} value={values[spec.key]} onChange={setField} />
       ))}

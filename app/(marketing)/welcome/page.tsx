@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LoginLandingPage } from "@/shared/components/homepage/LoginLandingPage";
+import { HomeLandingPage } from "@/shared/components/homepage/HomeLandingPage";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import {
   buildPublicSocialMetadata,
@@ -39,7 +39,7 @@ export default function WelcomePage() {
           catalog and site constants the visible page renders. */}
       <JsonLdScript data={buildOrganizationStructuredData()} />
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
-      {/* The commercial in the hero; its watch page is /how-it-works. */}
+      {/* The commercial under the hero; its watch page is /how-it-works. */}
       <JsonLdScript
         data={buildCommercialVideoStructuredData({
           origin: PUBLIC_SITE_ORIGIN,
@@ -47,7 +47,7 @@ export default function WelcomePage() {
           publisherName: PUBLIC_SITE_NAME,
         })}
       />
-      <LoginLandingPage />
+      <HomeLandingPage />
     </>
   );
 }

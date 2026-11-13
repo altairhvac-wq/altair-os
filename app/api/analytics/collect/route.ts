@@ -11,6 +11,11 @@ import {
   markInternalVisitor,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
+import {
+  ENGAGEMENT_EVENT_NAMES,
+  isValidEngagementLabel,
+  type EngagementEventName,
+} from "@/shared/lib/analytics/engagement";
 import { enforceNewVisitorBurstLimit } from "@/lib/analytics/new-visitor-burst";
 import { isInternalAnalyticsUser } from "@/lib/analytics/internal";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
@@ -46,11 +51,16 @@ export const runtime = "nodejs";
  *     browser internal the same way, for devices the owner never signs in on.
  *
  * signup_completed is NOT accepted here: only the signup action records it.
+ *
+ * Engagement events (migration 209: a video played, a trial button pressed, a
+ * calculator used, a template downloaded) arrive here too. Each carries at
+ * most a label, which must be a slug our own code chose; anything else is
+ * dropped. No value a visitor typed is ever accepted.
  */
 
 const NO_CONTENT = () => new Response(null, { status: 204 });
 const INTERNAL = () => new Response(null, { status: 204, headers: { "x-altair-analytics": "internal" } });
-const CLIENT_EVENTS = new Set(["pageview", "signup_started", "exclude_device"]);
+const CLIENT_EVENTS = new Set<string>(["pageview", "signup_started", "exclude_device", ...ENGAGEMENT_EVENT_NAMES]);
 const CHANNELS = new Set<AnalyticsChannel>([
   "direct", "search", "social", "email", "paid", "referral", "internal", "unknown",
 ]);
@@ -109,6 +119,10 @@ export async function POST(request: Request): Promise<Response> {
     if (!isValidClientId(body.visitorId) || !isValidClientId(body.eventId)) return NO_CONTENT();
     const path = typeof body.path === "string" ? body.path : null;
     if (!path || !path.startsWith("/")) return NO_CONTENT();
+    // A label is optional, but a malformed one refuses the whole event rather
+    // than being stored blank: it means the sender is not our code.
+    const label = body.label === undefined || body.label === null ? null : body.label;
+    if (label !== null && !isValidEngagementLabel(label)) return NO_CONTENT();
 
     const address = await resolveRequestAddress();
     const limit = await enforcePublicRateLimit("public.analytics_collect", { ip: address });
@@ -164,7 +178,8 @@ export async function POST(request: Request): Promise<Response> {
     });
 
     await recordAnalyticsEvent({
-      event: event as "pageview" | "signup_started",
+      event: event as "pageview" | "signup_started" | EngagementEventName,
+      label: label as string | null,
       path,
       visitorId: body.visitorId as string,
       sessionId: typeof body.sessionId === "string" ? body.sessionId : null,

@@ -14,6 +14,10 @@ import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
  * Insights, Resources and Contact. The long scrolling homepage it replaces
  * was retired; its pricing and onboarding sections live on in the search
  * landing pages.
+ *
+ * NOT RENDERED since 2026-11-12: the homepage is HomeLandingPage again (that
+ * file says why). Kept so going back is a one-line change in
+ * app/(marketing)/welcome/page.tsx if the owner prefers this screen.
  */
 export function LoginLandingPage() {
   return (

@@ -9,6 +9,10 @@ import {
   type AnalyticsChannel,
   type AnalyticsDevice,
 } from "@/shared/lib/analytics/attribution";
+import {
+  isValidEngagementLabel,
+  type EngagementEventName,
+} from "@/shared/lib/analytics/engagement";
 import { hashAuditSubject } from "@/lib/security/public-rate-limit";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -27,7 +31,9 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
  */
 
 export type ServerAnalyticsEvent = {
-  event: "pageview" | "signup_started" | "signup_completed";
+  event: "pageview" | "signup_started" | "signup_completed" | EngagementEventName;
+  /** Migration 209: which video / calculator / template / button. A slug, never visitor input. */
+  label?: string | null;
   path: string;
   visitorId: string;
   sessionId?: string | null;
@@ -83,6 +89,10 @@ export async function recordAnalyticsEvent(input: ServerAnalyticsEvent): Promise
       input.eventId && isValidClientId(input.eventId)
         ? `c:${input.eventId}`
         : `s:${randomUUID()}`,
+    // Only present when there is a label: a pageview row never names the
+    // column, so recording keeps working on a database that has not had
+    // migration 209 applied yet.
+    ...(isValidEngagementLabel(input.label) ? { event_label: input.label } : {}),
   };
 
   try {

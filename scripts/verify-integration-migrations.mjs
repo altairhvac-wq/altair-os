@@ -200,6 +200,9 @@ const PLATFORM_ONLY_TABLES = new Set([
   // Migration 206: hashed browser ids the owner marked as internal. Same
   // shape as the events they filter: no tenant, service role only.
   "web_analytics_internal_visitors",
+  // Migration 209: people who opted in to hear about new free tools. A
+  // platform mailing list, not tenant data: no company, service role only.
+  "resource_email_subscribers",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");
@@ -405,6 +408,13 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "208_time_entry_close_clock_skew.sql",
     new Set(["close_time_entry"]),
+  ],
+  // 209 adds engagement events to web analytics: one read-only aggregation
+  // over web_analytics_events, security invoker, executable by service_role
+  // only, with the owner's browsers excluded exactly as the 206 summary does.
+  [
+    "209_site_engagement_events_and_resource_subscribers.sql",
+    new Set(["platform_web_analytics_engagement"]),
   ],
 ]);
 

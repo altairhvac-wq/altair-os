@@ -95,6 +95,29 @@ export default function PrivacyPolicyPage() {
           Global Privacy Control or Do Not Track, we do not record your visit.
           We delete these records after 25 months.
         </p>
+        <p>
+          On the public site the same analytics count a few actions: playing
+          the video, pressing a free-trial button, using a calculator,
+          downloading a template, or asking for a result by email. We record
+          which one it was, never anything you typed.
+        </p>
+      </LegalSection>
+
+      <LegalSection heading="Free calculators and the email list">
+        <p>
+          The calculators run in your browser. The numbers you type are saved
+          on your own device so they are there next time, and they are not
+          sent to us.
+        </p>
+        <p>
+          If you ask us to email your result, the numbers in the calculator
+          and your email address are sent to our server to write that one
+          email, which Resend delivers. We do not store the numbers. We keep
+          your address only if you tick the box to hear about new calculators
+          and guides; we then send a confirmation link and add you to the
+          list only after you press it. Every email to the list has an
+          unsubscribe link, and you can also write to us to be removed.
+        </p>
       </LegalSection>
 
       <LegalSection heading="Your customers' data">

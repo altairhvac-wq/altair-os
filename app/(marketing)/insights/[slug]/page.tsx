@@ -46,7 +46,7 @@ export async function generateMetadata({
   // The root layout appends " · Altair Operating System"; a stored meta title
   // that already ends in the brand would otherwise carry it twice.
   const title = (page.metaTitle ?? page.title).replace(
-    /\s*[|·-]\s*Altair OS\s*$/i,
+    /\s*[|·-]\s*Altair (?:OS|Operating System)\s*$/i,
     "",
   );
   const description = page.metaDescription ?? undefined;

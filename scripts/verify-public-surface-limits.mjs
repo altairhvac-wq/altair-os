@@ -113,6 +113,12 @@ const ENTRY_POINTS = [
     scope: "public.analytics_new_visitor",
     why: "a tool opening the site in fresh browser profiles counted as a crowd of new visitors",
   },
+  {
+    file: "app/api/resources/email-results/route.ts",
+    fn: "POST",
+    scope: "public.resource_email",
+    why: "mail flooding: the calculators email a result to any address typed into the form",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */

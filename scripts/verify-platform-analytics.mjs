@@ -173,7 +173,21 @@ check(
 // ------------------------------------------------------------------ static guarantees
 console.log("\nIngest route");
 const route = read("app/api/analytics/collect/route.ts");
-check("only pageview, signup_started and exclude_device accepted from browsers", /CLIENT_EVENTS = new Set\(\["pageview", "signup_started", "exclude_device"\]\)/.test(route));
+check("browsers may send pageview, signup_started, exclude_device and the named engagement events, nothing else", /CLIENT_EVENTS = new Set<string>\(\["pageview", "signup_started", "exclude_device", \.\.\.ENGAGEMENT_EVENT_NAMES\]\)/.test(route));
+{
+  // Migration 209: the engagement events and their one label.
+  const engagementSource = read("shared/lib/analytics/engagement.ts");
+  const names = [...engagementSource.matchAll(/^\s*"([a-z_]+)",$/gm)].map((m) => m[1]);
+  check("six engagement events are declared", names.length === 6, names);
+  check("signup_completed is not an engagement event", !names.includes("signup_completed") && !names.includes("pageview"));
+  const migration209 = read("supabase/migrations/209_site_engagement_events_and_resource_subscribers.sql");
+  check("every engagement event is allowed by the 209 check constraint", names.every((name) => migration209.includes(`'${name}'`)), names);
+  check("a label must be a slug in the database too", migration209.includes("event_label ~ '^[a-z0-9][a-z0-9_-]{0,63}$'") && engagementSource.includes("/^[a-z0-9][a-z0-9_-]{0,63}$/"));
+  check("a malformed label drops the whole event", /if \(label !== null && !isValidEngagementLabel\(label\)\) return NO_CONTENT\(\)/.test(route));
+  check("the engagement summary leaves out the owner's browsers and signed-in use", /web_analytics_internal_visitors/.test(migration209) && /e\.user_id is null/.test(migration209));
+  const fields = read("shared/components/resources/CalculatorFields.tsx");
+  check("calculator use records the calculator's name only", /trackEngagement\("calculator_used", id\)/.test(fields));
+}
 check("signup_completed cannot be posted by a browser", !/CLIENT_EVENTS[^\n]*signup_completed/.test(route));
 check("cross-site origins refused", /if \(!isSameOriginBeacon\(request\)\) return NO_CONTENT\(\)/.test(route));
 check("origin check fails closed (exact host:port, no Host means refuse)", /originHost === hostHeader/.test(route) && /Boolean\(hostHeader\)/.test(route) && /catch \{\s*return false;/.test(route));
