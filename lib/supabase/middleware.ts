@@ -137,6 +137,9 @@ const AUTHENTICATED_ROUTE_PREFIXES = [
   "/dispatch",
   "/estimates",
   "/expenses",
+  // The welcome email links here; without this entry a new owner who opens
+  // that link on a device where they are not signed in is shown a 404.
+  "/help",
   "/invoices",
   "/jobs",
   "/leads",

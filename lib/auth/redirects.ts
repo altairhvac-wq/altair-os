@@ -36,6 +36,8 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/community",
   "/reports",
   "/alpha-tracker",
+  // So signing in from /login?next=/help lands on Help, not the dashboard.
+  "/help",
   "/settings",
   "/settings/system-check",
   "/technician",
