@@ -487,6 +487,29 @@ export async function findListingsForEmail(contactEmail: string): Promise<{ id: 
   }
 }
 
+/**
+ * Which published listings belong to this signed-in person: the ones listed
+ * with the same email address they sign in with. Returns slugs only, so the
+ * Community screen can label a member's own listing as theirs instead of as
+ * a stranger's. The email itself goes nowhere.
+ */
+export async function findPublishedSlugsForEmail(contactEmail: string): Promise<string[]> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("directory_listings")
+      .select("slug")
+      .eq("contact_email", contactEmail)
+      .eq("status", "published")
+      .limit(10);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.slug).filter(isValidListingSlug);
+  } catch (error) {
+    logFailure("own listing lookup", error);
+    return [];
+  }
+}
+
 export async function createListingReport(listingId: string, reason: DirectoryReportReason, note: string): Promise<boolean> {
   if (!isDirectoryReportReason(reason)) return false;
   try {

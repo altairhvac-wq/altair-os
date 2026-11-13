@@ -92,6 +92,7 @@ type NetworkReferralsPageViewProps = {
   /** Published public-directory listings (not Altair members). North Star surface only. */
   initialPublicListings?: DirectoryPublicListing[];
   publicListingTotal?: number;
+  ownPublicListingSlugs?: string[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;

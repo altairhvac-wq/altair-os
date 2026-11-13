@@ -56,10 +56,23 @@ Internal code, tables, queries, actions, and types remain Network-oriented. Do n
 
 **Boundary:** Referrals create leads at send time. Outcome sync only maps lead status → referral status. Referrals never mutate `network_partners`.
 
+### `directory_listings` — the PUBLIC directory (not a Network model)
+
+| Field | Meaning |
+|-------|---------|
+| **Purpose** | A business listed on altair-op.com/directory without an account (migration 210, `shared/types/directory.ts`) |
+| **Owner** | Nobody in the app. The lister holds a signed link from their email; there is no `company_id` |
+| **In Community** | Published listings are shown in the Directory tab in their own group, "From the public directory" (`CommunityPublicListing.tsx`). Each is tagged "Public listing", or "Your listing" when it was listed with the email the viewer signs in with |
+| **What a member can do** | Call, open the website, open the public page, or "Invite to Altair" (the normal invitation form, pre-filled with name, phone and trade) |
+| **What a member cannot do** | Send a referral, add as a trusted partner, see a trust record or a map pin. All of those need a workspace on the other side |
+
+**Boundary:** a public listing never becomes a `network_profiles` row by being shown here. It joins the Network only by accepting an invitation and creating a workspace. The lister's email is private and is never available to this screen.
+
 ## Mental model
 
 ```
-network_profiles   → "Who can I find in the directory?"
+network_profiles   → "Who can I find in the directory?" (Altair members)
+directory_listings → "Who else is out there?" (public, not members; call or invite)
 network_partners   → "My private trusted partners." (linked_company_id = My Network V1)
 network_invites    → "Invite them to Altair + link partners on accept."
 network_referrals  → "I'm sending this lead to that company."

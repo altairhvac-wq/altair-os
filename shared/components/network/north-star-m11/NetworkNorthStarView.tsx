@@ -100,6 +100,8 @@ export type NetworkNorthStarViewProps = {
    */
   initialPublicListings?: DirectoryPublicListing[];
   publicListingTotal?: number;
+  /** Slugs of public listings that are the signed-in person's own. */
+  ownPublicListingSlugs?: string[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
@@ -108,6 +110,7 @@ export type NetworkNorthStarViewProps = {
 };
 
 const NO_PUBLIC_LISTINGS: DirectoryPublicListing[] = [];
+const NO_SLUGS: string[] = [];
 
 function sortProfilesWithTrustedFirst(
   profiles: NetworkProfile[],
@@ -138,6 +141,7 @@ export function NetworkNorthStarView({
   initialMyHelpRequests,
   initialPublicListings = NO_PUBLIC_LISTINGS,
   publicListingTotal = 0,
+  ownPublicListingSlugs = NO_SLUGS,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -283,6 +287,8 @@ export function NetworkNorthStarView({
       return true;
     });
   }, [initialPublicListings, search, tradeFilter, locationFilter, acceptingReferralsOnly]);
+
+  const ownListingSlugs = useMemo(() => new Set(ownPublicListingSlugs), [ownPublicListingSlugs]);
 
   const selectedListing = useMemo(
     () => initialPublicListings.find((listing) => listing.slug === selectedListingSlug) ?? null,
@@ -653,6 +659,7 @@ export function NetworkNorthStarView({
   const directoryDetailPanel = selectedListing ? (
     <CommunityPublicListingPanel
       listing={selectedListing}
+      isOwn={ownListingSlugs.has(selectedListing.slug)}
       canInvite={canManageNetwork}
       onInvite={() => handleInviteListing(selectedListing)}
       onClose={() => setSelectedListingSlug(null)}
@@ -1076,13 +1083,14 @@ export function NetworkNorthStarView({
                         <div className="mt-4">
                           <div className={st.rosterSectionHeader}>
                             <p className={st.sectionTitle}>From the public directory</p>
-                            <p className={st.countMeta}>Not on Altair yet</p>
+                            <p className={st.countMeta}>Listed on altair-op.com</p>
                           </div>
                           <div className={st.rosterList}>
                             {filteredListings.map((listing) => (
                               <CommunityPublicListingCard
                                 key={listing.slug}
                                 listing={listing}
+                                isOwn={ownListingSlugs.has(listing.slug)}
                                 selected={listing.slug === selectedListingSlug}
                                 onSelect={() => handleSelectListing(listing.slug)}
                               />
