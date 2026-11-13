@@ -13,7 +13,6 @@ import { HeaderScheduleCalendar } from "@/shared/components/admin/HeaderSchedule
 import { AvatarUploadControl } from "@/shared/components/profile/AvatarUploadControl";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
-import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateInTimeZone, getHourInTimeZone } from "@/shared/lib/datetime";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
@@ -30,10 +29,6 @@ type HeaderProps = {
   showViewSwitcher?: boolean;
   viewMode?: OwnerViewMode;
   onViewModeChange?: (viewMode: OwnerViewMode) => void;
-  /** When set, shows the mobile Quick Navigation toggle (hidden on desktop). */
-  showQuickNav?: boolean;
-  quickNavOpen?: boolean;
-  onQuickNavOpenChange?: (open: boolean) => void;
   /**
    * Accepted for call-site compatibility; the top bar no longer renders a
    * billing pill (see the comment in the account cluster below).
@@ -89,9 +84,6 @@ export function Header({
   showViewSwitcher = false,
   viewMode = "owner_admin",
   onViewModeChange,
-  showQuickNav = false,
-  quickNavOpen = false,
-  onQuickNavOpenChange,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -113,8 +105,6 @@ export function Header({
    * client-side viewport read from the shell's first paint. */
   const northStarChrome = true;
   const chromeTone = "dark" as const;
-  const showMobileQuickNav =
-    showQuickNav && typeof onQuickNavOpenChange === "function";
   const showScheduleCalendar = canAccessOperationalJobsArea(companyContext);
   const timeZone = useCompanyTimezone();
   const greetingName = getGreetingName(
@@ -130,15 +120,13 @@ export function Header({
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3 md:flex-1">
-        {showMobileQuickNav ? (
-          <div className="md:hidden">
-            <QuickNavToggle
-              open={quickNavOpen}
-              onOpenChange={(open) => onQuickNavOpenChange?.(open)}
-            />
-          </div>
-        ) : null}
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        {/* Phone: the company name, so the bar says whose workspace this is.
+          * There is no menu button here any more. Navigation on a phone is
+          * the tab bar at the bottom of the screen (AdminBottomNav). */}
+        <p className="north-star-header-company min-w-0 truncate text-[15px] font-semibold leading-tight lg:hidden">
+          {companyContext.company.name}
+        </p>
 
         {/* Hidden below `lg`: with the tablet rail in place the top bar's
           * functional controls take the width they need, and the greeting was
@@ -209,7 +197,7 @@ export function Header({
        * max-w-[9.5rem]`, but a `shrink-0` parent blocks a child from ever
        * shrinking, so that intent never applied. Letting the cluster compress
        * lets the pill truncate as it was written to. */}
-      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
+      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
         {/*
          * No global Search control here. A Search button used to ship in this
          * slot with no onClick, no form, and no dialog — it was announced to

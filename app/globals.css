@@ -5257,9 +5257,19 @@ a[href] {
   backdrop-filter: blur(12px);
 }
 
-.tech-bottom-nav {
+/* Phone: keep the end of every office page clear of the fixed tab bar.
+ * Plain CSS on purpose; a utility on the element loses to the shell's own
+ * padding rules. */
+@media (max-width: 767.98px) {
+  .admin-shell-main[data-bottom-nav="true"] {
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.tech-bottom-nav,
+.admin-bottom-nav {
   border-top: 1px solid rgb(234 231 225 / 0.45);
-  background-color: rgb(255 255 255 / 0.9);
+  background-color: rgb(255 255 255 / 0.94);
   backdrop-filter: blur(12px);
   box-shadow: 0 -4px 24px -8px rgb(21 25 19 / 0.06);
 }
@@ -5734,7 +5744,33 @@ a[href] {
  * (owner report 2026-11-01: "the logout and the bell blend into the
  * background"). Give them the same topbar icon colour at every width.
  */
+@media (max-width: 1023.98px) {
+  /* The company name shown in the bar below the desktop width. */
+  .admin-north-star-shell .admin-premium-header .north-star-header-company {
+    color: var(--north-star-topbar-heading);
+  }
+}
+
 @media (max-width: 767.98px) {
+  /*
+   * The avatar and the bell's count were also styled only inside the
+   * desktop block, so on a phone the initials were dark on the dark bar and
+   * the count had no background (UI audit 2026-11-12). Same treatment as
+   * desktop, at every width.
+   */
+  .admin-north-star-shell .admin-premium-header .north-star-header-avatar {
+    background: linear-gradient(180deg, #c2a05a 0%, #77591b 100%);
+    color: var(--north-star-text-dark);
+    box-shadow:
+      0 1px 4px rgb(0 0 0 / 0.28),
+      0 0 0 2px rgb(194 160 90 / 0.35);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell-badge {
+    background-color: var(--north-star-gold);
+    color: var(--north-star-text-dark);
+  }
+
   .admin-north-star-shell .admin-premium-header .north-star-header-signout,
   .admin-north-star-shell .admin-premium-header .north-star-header-bell,
   .admin-north-star-shell .admin-premium-header [data-testid="quick-nav-toggle"] {

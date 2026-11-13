@@ -5,7 +5,11 @@ import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician
 import {
   getCurrentTimeState,
 } from "@/lib/database/services/time-tracking";
-import { TechnicianHomeScreen } from "@/shared/components/technician/TechnicianHomeScreen";
+import {
+  TechnicianHomeScreen,
+  type TechnicianHomeNextJob,
+} from "@/shared/components/technician/TechnicianHomeScreen";
+import { hasCompleteServiceAddress } from "@/shared/lib/maps";
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
 import {
   filterJobsForTechnicianScheduleDay,
@@ -16,7 +20,10 @@ import {
   getTechnicianJobDeckOrder,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
-import { formatTechnicianJobTime } from "@/shared/types/technician";
+import {
+  formatTechnicianJobAddress,
+  formatTechnicianJobTime,
+} from "@/shared/types/technician";
 import {
   formatTechnicianTimeState,
   formatTime,
@@ -27,11 +34,12 @@ type TechnicianPageProps = {
   searchParams: Promise<{ jobId?: string }>;
 };
 
+// Dots on a light card: green = on the clock, amber = on a break, neutral = off.
 const TIME_STATE_DOT_CLASSES: Record<string, string> = {
-  clocked_in: "bg-emerald-400",
-  on_break: "bg-amber-400",
-  working_job: "bg-cyan-400",
-  off_clock: "bg-slate-400",
+  clocked_in: "bg-altair-success",
+  on_break: "bg-altair-warning",
+  working_job: "bg-altair-success",
+  off_clock: "bg-altair-ink-on-paper-muted",
 };
 
 export const metadata: Metadata = {
@@ -78,7 +86,24 @@ export default async function TechnicianPage({
   const completedTodayCount = sortCompletedTodayTechnicianJobs(jobs, {
     timeZone,
   }).length;
-  const nextJob = deckJobs[0] ?? null;
+  const nextJobRecord = deckJobs[0] ?? null;
+  const nextJob: TechnicianHomeNextJob | null = nextJobRecord
+    ? {
+        id: nextJobRecord.id,
+        customerName: nextJobRecord.customerName,
+        jobType: nextJobRecord.jobType,
+        timeLabel: formatTechnicianJobTime(nextJobRecord.scheduledDate, timeZone),
+        addressLine: hasCompleteServiceAddress({
+          serviceAddress: nextJobRecord.serviceAddress,
+          city: nextJobRecord.city,
+          state: nextJobRecord.state,
+          zip: nextJobRecord.zip,
+        })
+          ? formatTechnicianJobAddress(nextJobRecord)
+          : null,
+        status: nextJobRecord.status,
+      }
+    : null;
 
   const noonUtc = new Date(
     `${scheduleContext.todayDateOnly}T12:00:00.000Z`,
@@ -116,15 +141,10 @@ export default async function TechnicianPage({
       dayOfMonth={dayOfMonth}
       openJobCount={deckJobs.length}
       completedTodayCount={completedTodayCount}
-      nextJobTimeLabel={
-        nextJob
-          ? formatTechnicianJobTime(nextJob.scheduledDate, timeZone)
-          : null
-      }
-      nextJobCustomerName={nextJob ? nextJob.customerName : null}
+      nextJob={nextJob}
       timeStateLabel={formatTechnicianTimeState(timeState.state)}
       timeStateDotClass={
-        TIME_STATE_DOT_CLASSES[timeState.state] ?? "bg-slate-400"
+        TIME_STATE_DOT_CLASSES[timeState.state] ?? "bg-altair-ink-on-paper-muted"
       }
       clockedSinceLabel={activeSince ? formatTime(activeSince, timeZone) : null}
     />
