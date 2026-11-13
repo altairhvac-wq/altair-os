@@ -74,6 +74,7 @@ export function JobProfitabilityCalculator() {
       onReset={reset}
       shareUrl={shareUrl}
       restored={restored}
+      emailResults={{ slug: "job-profitability", values }}
       fields={FIELDS.map((spec) => (
         <NumberField key={spec.key} spec={spec} value={values[spec.key]} onChange={setField} />
       ))}

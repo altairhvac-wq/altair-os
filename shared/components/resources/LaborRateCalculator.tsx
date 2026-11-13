@@ -83,6 +83,7 @@ export function LaborRateCalculator() {
       onReset={reset}
       shareUrl={shareUrl}
       restored={restored}
+      emailResults={{ slug: "labor-rate", values }}
       fields={FIELDS.map((spec) => (
         <NumberField key={spec.key} spec={spec} value={values[spec.key]} onChange={setField} />
       ))}

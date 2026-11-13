@@ -44,6 +44,15 @@ const FILES = {
   labor: `${LIB}/labor-rate.ts`,
   job: `${LIB}/job-profitability.ts`,
   breakEven: `${LIB}/break-even.ts`,
+  agreement: `${LIB}/maintenance-agreement.ts`,
+  techPay: `${LIB}/technician-pay.ts`,
+  callback: `${LIB}/callback-cost.ts`,
+  summaries: `${LIB}/calculator-summaries.ts`,
+  emailList: `${LIB}/email-list.ts`,
+  emailRoute: "app/api/resources/email-results/route.ts",
+  emailForm: "shared/components/resources/ResultsEmailForm.tsx",
+  subscribers: "lib/resources/subscribers.ts",
+  subscriberActions: "app/actions/resource-subscribers.ts",
   templates: `${LIB}/templates.ts`,
   feed: `${LIB}/youtube-feed.ts`,
   features: `${LIB}/feature-links.ts`,
@@ -122,6 +131,134 @@ const be = await loadPureModule(FILES.breakEven, "res-be");
   check("jobs per week 9.83", near(r.breakEvenJobsPerWeek, 9.8316, 1e-3), r.breakEvenJobsPerWeek);
   check("100% variable -> null", be.calculateBreakEven({ ...be.BREAK_EVEN_DEFAULTS, variableCostRate: 1 }) === null);
   check("$0 job -> null", be.calculateBreakEven({ ...be.BREAK_EVEN_DEFAULTS, averageJobRevenue: 0 }) === null);
+}
+
+console.log("\nMaintenance agreement");
+const agr = await loadPureModule(FILES.agreement, "res-agr");
+{
+  // 2 visits x (1.5 h x $96 + $15) = 318; office 20; 15% of $300 repairs = 45.
+  //   cost to serve 383; at a 20% margin 478.75 a year, 39.90 a month, 95.75 left.
+  const r = agr.calculateMaintenanceAgreement(agr.MAINTENANCE_AGREEMENT_DEFAULTS);
+  check("cost per visit 159.00", near(r.costPerVisit, 159));
+  check("visits per year at cost 318.00", near(r.visitCostPerYear, 318));
+  check("repair discount given 45.00", near(r.repairDiscountGiven, 45));
+  check("cost to serve 383.00", near(r.costToServePerYear, 383));
+  check("annual price 478.75", near(r.annualPrice, 478.75));
+  check("monthly price 39.90", near(r.monthlyPrice, 39.8958));
+  check("left per agreement 95.75", near(r.profitPerAgreement, 95.75));
+  check("price minus cost is the margin share of price", near(r.profitPerAgreement / r.annualPrice, 0.2, 1e-9));
+  check("0 visits -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, visitsPerYear: 0 }) === null);
+  check("100% margin -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, targetNetMargin: 1 }) === null);
+  check("discount above 100% -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, repairDiscountRate: 1.2 }) === null);
+  check("NaN input does not produce NaN", Number.isFinite(agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, materialsPerVisit: Number.NaN }).annualPrice));
+}
+
+console.log("\nTechnician pay");
+const pay = await loadPureModule(FILES.techPay, "res-pay");
+{
+  // $30/h, 45 h on the clock: 40 x 30 + 5 x 45 = 1,425.
+  //   flat rate 38 book h x $34 = 1,292; commission 12% of $7,500 = 900.
+  //   to match hourly: 1,425 / 34 = 41.91 book hours; 1,425 / 0.12 = $11,875.
+  const r = pay.calculateTechnicianPay(pay.TECHNICIAN_PAY_DEFAULTS);
+  check("overtime threshold is 40 h at time and a half", pay.OVERTIME_THRESHOLD_HOURS === 40 && pay.OVERTIME_MULTIPLIER === 1.5);
+  check("regular 40 h, overtime 5 h", r.regularHours === 40 && r.overtimeHours === 5);
+  check("hourly pay 1425.00", near(r.hourlyPay, 1425));
+  check("flat rate pay 1292.00", near(r.flatRatePay, 1292));
+  check("commission pay 900.00", near(r.commissionPay, 900));
+  check("hourly per clock hour 31.67", near(r.effectiveHourly.hourly, 31.6667));
+  check("flat rate per clock hour 28.71", near(r.effectiveHourly["flat-rate"], 28.7111));
+  check("commission per clock hour 20.00", near(r.effectiveHourly.commission, 20));
+  check("highest is hourly", r.highest === "hourly");
+  check("book hours to match hourly 41.91", near(r.bookHoursToMatchHourly, 41.9118));
+  check("revenue to match hourly 11875.00", near(r.revenueToMatchHourly, 11875));
+  const busy = pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, bookHours: 50 });
+  check("a busy flat-rate week wins", busy.highest === "flat-rate" && near(busy.flatRatePay, 1700));
+  const none = pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, hoursOnClock: 0 });
+  check("0 hours -> per-hour figures null, not Infinity", none.effectiveHourly.hourly === null && none.effectiveHourly.commission === null);
+  check("0% commission -> no revenue target, not Infinity", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, commissionRate: 0 }).revenueToMatchHourly === null);
+  check("more than 168 hours -> null", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, hoursOnClock: 169 }) === null);
+  check("commission above 100% -> null", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, commissionRate: 1.5 }) === null);
+}
+
+console.log("\nCallback cost");
+const cb = await loadPureModule(FILES.callback, "res-cb");
+{
+  // 6 callbacks in 120 jobs = 5%. Each: 1.5 h x $96 + $25 parts = 169.
+  //   1,014 a month, 12,168 a year; 9 hours lost, which would bill 9 x $121 = 1,089.
+  const r = cb.calculateCallbackCost(cb.CALLBACK_COST_DEFAULTS);
+  check("callback rate 5%", near(r.callbackRate, 0.05, 1e-9));
+  check("cost per callback 169.00", near(r.costPerCallback, 169));
+  check("cost per month 1014.00", near(r.costPerMonth, 1014));
+  check("cost per year 12168.00", near(r.costPerYear, 12168));
+  check("hours lost per month 9", near(r.hoursLostPerMonth, 9));
+  check("revenue those hours would bill 1089.00", near(r.revenueNotBilledPerMonth, 1089));
+  check("more callbacks than jobs -> null", cb.calculateCallbackCost({ ...cb.CALLBACK_COST_DEFAULTS, callbacksPerMonth: 200 }) === null);
+  check("0 jobs -> rate null, not NaN", cb.calculateCallbackCost({ ...cb.CALLBACK_COST_DEFAULTS, callbacksPerMonth: 0, jobsPerMonth: 0 })?.callbackRate === null);
+}
+
+// ------------------------------------------------- summaries + email results
+console.log("\nResult summaries (page and email share them)");
+const sums = await loadPureModule(FILES.summaries, "res-sum");
+const list = await loadPureModule(FILES.emailList, "res-list");
+{
+  const slugs = Object.keys(sums.CALCULATOR_FIELD_KEYS);
+  check("a summary exists for all six calculators", slugs.length === 6, slugs);
+  const example = {
+    "labor-rate": { hourlyWage: "30", burdenPercent: "25", billableHoursPerWeek: "30", nonBillableHoursPerWeek: "10", monthlyOverhead: "6000", targetMarginPercent: "20" },
+    "job-profitability": { revenue: "2500", laborHours: "6", loadedLaborRate: "45", materialsCost: "900", subcontractCost: "0", overheadPercent: "25" },
+    "break-even": { fixedMonthlyCosts: "18000", averageJobRevenue: "650", variableCostPercent: "35" },
+    "maintenance-agreement": { visitsPerYear: "2", hoursPerVisit: "1.5", costPerBillableHour: "96", materialsPerVisit: "15", officeCostPerYear: "20", expectedRepairSpendPerYear: "300", repairDiscountPercent: "15", targetMarginPercent: "20" },
+    "technician-pay": { hourlyWage: "30", hoursOnClock: "45", bookHours: "38", payPerBookHour: "34", revenueProduced: "7500", commissionPercent: "12" },
+    "callback-cost": { callbacksPerMonth: "6", jobsPerMonth: "120", hoursPerCallback: "1.5", costPerBillableHour: "96", partsPerCallback: "25", billableRate: "121" },
+  };
+  const headline = {
+    "labor-rate": "$120.19",
+    "job-profitability": "$705.00",
+    "break-even": "43",
+    "maintenance-agreement": "$39.90",
+    "technician-pay": "Hourly: $1,425.00",
+    "callback-cost": "$1,014.00",
+  };
+  for (const slug of slugs) {
+    const picked = sums.pickCalculatorValues(slug, example[slug]);
+    check(`${slug}: example values are accepted`, picked !== null && Object.keys(picked).length === sums.CALCULATOR_FIELD_KEYS[slug].length);
+    const s = sums.summarizeCalculator(slug, picked ?? {});
+    check(`${slug}: headline is the worked example (${headline[slug]})`, s?.headlineValue === headline[slug], s?.headlineValue);
+    check(`${slug}: summary has working lines`, Array.isArray(s?.lines) && s.lines.length >= 3);
+    check(`${slug}: has a page`, existsSync(`app/(marketing)/resources/calculators/${slug}/page.tsx`));
+  }
+  check("a missing field is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "2" }) === null);
+  check("text in a number field is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "<b>2</b>", variableCostPercent: "3" }) === null);
+  check("a non-string value is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: 1, averageJobRevenue: "2", variableCostPercent: "3" }) === null);
+  check("extra keys are dropped", !("note" in (sums.pickCalculatorValues("break-even", { ...example["break-even"], note: "hello" }) ?? { note: 1 })));
+  check("inputs with no answer -> null summary", sums.summarizeCalculator("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "0", variableCostPercent: "3" }) === null);
+
+  check("email: ordinary address accepted and lower-cased", list.normalizeListEmail("  Owner@Example.COM ") === "owner@example.com");
+  for (const bad of ["", "a@b", "no at sign.com", "two@@example.com", "a b@example.com", "x@example.com, y@example.com", "<x@example.com>", 42, null]) {
+    check(`email: ${JSON.stringify(bad)} refused`, list.normalizeListEmail(bad) === null);
+  }
+  check("the opt-in sentence says how often and how to stop", /month/i.test(list.RESOURCE_LIST_CONSENT_TEXT) && /unsubscribe/i.test(list.RESOURCE_LIST_CONSENT_TEXT));
+
+  const route = read(FILES.emailRoute);
+  check("email route recomputes the result on the server", /summarizeCalculator\(/.test(route) && /pickCalculatorValues\(/.test(route));
+  check("email route never reads a result from the request", !/body\.(headline|result|lines|summary)/.test(route));
+  check("email route is rate limited by address and by inbox", /enforcePublicRateLimit\(\s*"public\.resource_email"/.test(route) && /\bip:/.test(route) && /\bemail\b/.test(route));
+  check("email route refuses cross-site posts", /isSameOrigin/.test(route));
+  check("email route has a size limit and a honeypot", /MAX_BODY/.test(route) && /website/.test(route));
+  check("email route stores an address only when the box was ticked", /subscribe === true/.test(route));
+  const form = read(FILES.emailForm);
+  check("the opt-in box starts unticked", /useState\(false\)/.test(form) && form.includes("RESOURCE_LIST_CONSENT_TEXT"));
+  const subs = read(FILES.subscribers);
+  check("subscriber service is server-only and uses the service role", /import "server-only"/.test(subs) && /createServiceRoleClient/.test(subs));
+  check("links are compared in constant time", /timingSafeEqual/.test(subs));
+  const actions = read(FILES.subscriberActions);
+  check("confirm and unsubscribe happen on a button press, not on opening the link", /"use server"/.test(actions) && /confirmResourceSubscriptionAction/.test(actions) && /unsubscribeResourceSubscriptionAction/.test(actions));
+  check("the link page acts only through a form posted to a server action", /<form action=\{action\}>/.test(read("shared/components/resources/SubscriberLinkPage.tsx")));
+  for (const page of ["confirm", "unsubscribe"]) {
+    const src = read(`app/(marketing)/resources/email/${page}/page.tsx`);
+    check(`/resources/email/${page} is noindex`, /index: false/.test(src));
+    check(`/resources/email/${page} changes nothing when the link is opened`, /<SubscriberLinkPage/.test(src) && !/(confirm|unsubscribe)Subscriber\(/.test(src));
+  }
 }
 
 // -------------------------------------------------------------- templates
@@ -220,7 +357,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 3 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 8, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 6 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 11, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
@@ -236,7 +373,8 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   const frame = read(FILES.frame);
   check("calculator frame renders the shared disclaimer", frame.includes("CALCULATOR_DISCLAIMER"));
   check("disclaimer names accountant and not-advice", /not financial, tax or legal advice/.test(read(FILES.catalog)) && /accountant/.test(read(FILES.catalog)));
-  for (const slug of ["labor-rate", "job-profitability", "break-even"]) {
+  check("catalog and summaries name the same calculators", JSON.stringify(catalog.RESOURCE_CALCULATORS.map((c) => c.slug).sort()) === JSON.stringify(Object.keys(sums.CALCULATOR_FIELD_KEYS).sort()));
+  for (const slug of catalog.RESOURCE_CALCULATORS.map((c) => c.slug)) {
     const page = read(`app/(marketing)/resources/calculators/${slug}/page.tsx`);
     check(`${slug} page uses CalculatorFrame with assumptions and how-to`, /<CalculatorFrame/.test(page) && /assumptions=/.test(page) && /howToUse=/.test(page) && /formula=/.test(page));
   }

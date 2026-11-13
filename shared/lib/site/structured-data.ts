@@ -11,6 +11,7 @@ import {
 } from "@/shared/lib/site/public-site";
 import { SITE_FAQ } from "@/shared/lib/site/faq";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
+import { COMPANY_FACTS, FOUNDER } from "@/shared/lib/site/about";
 
 /**
  * Structured data (JSON-LD) for the public marketing pages.
@@ -50,6 +51,9 @@ export function buildOrganizationStructuredData(): Record<string, unknown> {
     logo: `${PUBLIC_SITE_ORIGIN}/icons/icon-512.png`,
     // The two YouTube channels, which the footer links on every page.
     sameAs: YOUTUBE_CHANNELS.map((channel) => channel.url),
+    // Named on /about, in the same words (shared/lib/site/about.ts).
+    founder: { "@type": "Person", name: FOUNDER.name, jobTitle: FOUNDER.title },
+    foundingDate: COMPANY_FACTS.foundedYear,
   };
 }
 

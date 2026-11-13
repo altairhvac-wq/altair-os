@@ -1278,7 +1278,9 @@ export type Database = {
         Row: {
           id: number;
           occurred_at: string;
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          /** Migration 209: which video / calculator / template / button. */
+          event_label: string | null;
           path: string;
           referrer_host: string | null;
           channel: string;
@@ -1297,7 +1299,8 @@ export type Database = {
         Insert: {
           id?: never;
           occurred_at?: string;
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          event_label?: string | null;
           path: string;
           referrer_host?: string | null;
           channel?: string;
@@ -1314,8 +1317,43 @@ export type Database = {
           dedupe_key: string;
         };
         Update: Partial<{
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
           path: string;
+        }>;
+        Relationships: [];
+      };
+      // resource_email_subscribers: migration 209 — people who ticked "send me
+      // new tools" on a free calculator. Double opt-in. Service role only.
+      resource_email_subscribers: {
+        Row: {
+          id: string;
+          email: string;
+          status: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          created_at: string;
+          last_requested_at: string;
+          confirmed_at: string | null;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          status?: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          created_at?: string;
+          last_requested_at?: string;
+          confirmed_at?: string | null;
+          unsubscribed_at?: string | null;
+        };
+        Update: Partial<{
+          status: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          last_requested_at: string;
+          confirmed_at: string | null;
+          unsubscribed_at: string | null;
         }>;
         Relationships: [];
       };
@@ -1811,6 +1849,13 @@ export type Database = {
           expenses_missing_amount: number | string;
           open_labor_entry_count: number | string;
         }[];
+      };
+      // platform_web_analytics_engagement: migration 209 — service_role only.
+      // Counts of deliberate visitor actions by event and label; one jsonb
+      // array, parsed defensively by lib/database/services/platform-analytics.ts.
+      platform_web_analytics_engagement: {
+        Args: { p_from: string; p_to: string };
+        Returns: unknown;
       };
       // platform_web_analytics_summary: migration 202, replaced by 206 (owner's
       // browsers excluded, session detail, optional p_tz) — service_role only.

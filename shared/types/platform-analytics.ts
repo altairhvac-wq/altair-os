@@ -52,6 +52,18 @@ export type PlatformAnalyticsTraffic = {
   timeZone: string;
   /** The latest visits, one row each, newest first (at most 100). */
   recentSessions: TrafficSession[];
+  /**
+   * What visitors did (migration 209): video plays, trial-button presses,
+   * calculator use, downloads. `value` is how many times, `secondary` how
+   * many different visitors. Null before 209 is applied.
+   */
+  actions: NamedCount[] | null;
+  /**
+   * The Resource Center email list as it stands now (not for the period):
+   * people who confirmed, and people who ticked the box but have not pressed
+   * the link yet. Null before 209 is applied.
+   */
+  emailList: { confirmed: number; pending: number } | null;
 };
 
 export type TrafficSession = {

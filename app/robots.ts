@@ -3,6 +3,7 @@ import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
+import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 
 /**
  * Crawl policy for the public origin.
@@ -32,6 +33,7 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/install",
           "/contact",
+          ...COMPANY_PAGE_PATHS,
           ...LANDING_PAGE_PATHS,
           // The commercial's watch page (it is in the sitemap; without this
           // line Search Console rejects it as blocked by robots.txt).

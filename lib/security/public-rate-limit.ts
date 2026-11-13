@@ -46,7 +46,8 @@ export type PublicRateLimitScope =
   | "public.invoice_checkout"
   | "public.token_view"
   | "public.analytics_collect"
-  | "public.analytics_new_visitor";
+  | "public.analytics_new_visitor"
+  | "public.resource_email";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -117,6 +118,15 @@ export const PUBLIC_RATE_LIMITS: Record<
   // carrier address do not arrive at that rate. Over the cap, the pageview
   // is dropped (silently, like the limit above).
   "public.analytics_new_visitor": [{ dimension: "ip", windowSeconds: 600, limit: 30 }],
+  // "Email me these results" on the free calculators (migration 209). It
+  // sends mail to an address a stranger typed, so the inbox dimension is the
+  // one that matters: six a day covers one result from each calculator and
+  // stops the form being pointed at someone else's inbox. The address limit
+  // stops one client working through a list of inboxes.
+  "public.resource_email": [
+    { dimension: "email", windowSeconds: 86400, limit: 6 },
+    { dimension: "ip", windowSeconds: 3600, limit: 12 },
+  ],
 };
 
 /**

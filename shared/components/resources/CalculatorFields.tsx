@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { ResultsEmailForm } from "@/shared/components/resources/ResultsEmailForm";
+import { trackEngagement } from "@/shared/lib/analytics/client";
+import type { CalculatorSlug } from "@/shared/lib/resources/calculator-summaries";
 
 /**
  * The shared input and results pieces for the Resource Center calculators.
@@ -13,8 +16,11 @@ import { useEffect, useId, useState } from "react";
  * So an owner can come back to their own numbers, the inputs are saved in
  * this browser's localStorage and restored on the next visit, and "Copy a
  * link to these numbers" puts them in the page's query string for the owner
- * to share. Nothing is sent to Altair: there is no request, no cookie and no
- * analytics event carrying a value. A shared link wins over saved numbers;
+ * to share. The numbers are not sent to Altair by using a calculator: there
+ * is no request and no cookie, and the one analytics event ("this calculator
+ * was used") carries the calculator's name and nothing the visitor typed. The
+ * only way a number leaves the browser is the visitor asking to have their
+ * result emailed (ResultsEmailForm). A shared link wins over saved numbers;
  * "Reset" clears both back to the example.
  */
 
@@ -22,7 +28,7 @@ export type FieldSpec<K extends string> = {
   readonly key: K;
   readonly label: string;
   readonly hint?: string;
-  readonly unit: "$" | "%" | "hrs" | "hrs/wk";
+  readonly unit: "$" | "%" | "hrs" | "hrs/wk" | "visits" | "jobs" | "callbacks";
   readonly step?: number;
   readonly min?: number;
   readonly max?: number;
@@ -91,12 +97,15 @@ export function useCalculatorFields<K extends string>(defaults: Record<K, string
     }
   };
 
-  const setField = (key: K, value: string) =>
+  const setField = (key: K, value: string) => {
+    // That the calculator was used, once per page view. Never the value.
+    if (id) trackEngagement("calculator_used", id);
     setValues((current) => {
       const next = { ...current, [key]: value };
       persist(next);
       return next;
     });
+  };
   const reset = () => {
     setValues(defaults);
     setRestored(null);
@@ -242,6 +251,7 @@ export function CalculatorLayout({
   onReset,
   shareUrl,
   restored = null,
+  emailResults,
 }: {
   readonly fields: React.ReactNode;
   readonly results: React.ReactNode;
@@ -249,6 +259,8 @@ export function CalculatorLayout({
   /** Builds a link carrying the current inputs; omit to hide the button. */
   readonly shareUrl?: () => string;
   readonly restored?: "link" | "saved" | null;
+  /** Shows "Email me these results" under the result; omit to hide it. */
+  readonly emailResults?: { readonly slug: CalculatorSlug; readonly values: Record<string, string> };
 }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
@@ -266,7 +278,7 @@ export function CalculatorLayout({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
       <form
-        className="rounded-2xl border border-stone-200/80 bg-white px-5 py-5 shadow-sm sm:px-6"
+        className="rounded-2xl border border-stone-200/80 bg-white px-5 py-5 shadow-sm sm:px-6 lg:self-start"
         onSubmit={(event) => event.preventDefault()}
         aria-label="Calculator inputs"
       >
@@ -290,11 +302,15 @@ export function CalculatorLayout({
         </div>
         {shareUrl ? (
           <p className="mt-3 text-xs text-stone-500">
-            Your numbers are saved in this browser so they are here when you come back. They are never sent to us.
+            Your numbers are saved in this browser so they are here when you come back. They stay on this device
+            unless you ask us to email your result.
           </p>
         ) : null}
       </form>
-      <div className="lg:sticky lg:top-24 lg:self-start">{results}</div>
+      <div className="lg:sticky lg:top-24 lg:self-start">
+        {results}
+        {emailResults ? <ResultsEmailForm slug={emailResults.slug} values={emailResults.values} /> : null}
+      </div>
     </div>
   );
 }

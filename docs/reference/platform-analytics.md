@@ -236,6 +236,64 @@ Tested on the scratch project inside a rolled-back transaction: a marked
 browser's views move to `excluded`, and sessions, bounce, time on site,
 landing and exit pages and journeys come out as expected.
 
+## Migration 209
+
+`supabase/migrations/209_site_engagement_events_and_resource_subscribers.sql`
+does two things.
+
+1. Engagement events. It widens the `event_name` check on
+   `web_analytics_events` to allow `cta_click`, `video_play`,
+   `calculator_used`, `template_download`, `results_email_requested` and
+   `boss_share`, adds a nullable `event_label` column (a slug chosen by our
+   code: which button, video, calculator or template; never anything a visitor
+   typed; the same pattern is enforced in the browser, the collect route and a
+   check constraint), and adds `platform_web_analytics_engagement(p_from, p_to)`
+   for the "What visitors did" panel. Like the 206 summary it leaves out the
+   owner's browsers and signed-in use. Service role only.
+2. `public.resource_email_subscribers`: the opt-in list from the free
+   calculators (RLS on, nothing granted to anon or authenticated). It holds an
+   email address, a status (`pending`, `confirmed`, `unsubscribed`), which
+   calculator it came from and the consent sentence that was shown. No
+   calculator inputs are stored anywhere.
+
+Where the events come from (`shared/lib/analytics/engagement.ts`,
+`trackEngagement` in `shared/lib/analytics/client.ts`):
+
+| Event | Sent when | Label |
+| --- | --- | --- |
+| `cta_click` | a link to `/signup` is pressed | the link's `data-cta`, or `signup` |
+| `video_play` | a video starts playing, except the muted preview loop | `data-video`, or `commercial` |
+| `calculator_used` | the first field change on a calculator, once per page view | the calculator's slug |
+| `template_download` | a template link is pressed | the template's id |
+| `results_email_requested` | "Email me these results" succeeds | the calculator's slug |
+| `boss_share` | a "Send this to your boss" button is pressed | `text`, `email`, `copy` or `share` |
+
+Order: deploying before 209 is applied is safe. Pageviews are unaffected (a
+pageview row never names the new column). Engagement events are refused by
+the old check constraint and dropped with one log line each, the panel reads
+"Not measured yet", "email me these results" still sends, and ticking the
+list box reports that the list is unavailable. It deletes nothing and changes
+no rows when applied, and can be run twice.
+
+Read-only probe:
+
+```sql
+select
+  to_regclass('public.resource_email_subscribers') is not null as list_table,
+  to_regprocedure('public.platform_web_analytics_engagement(timestamptz, timestamptz)') is not null as engagement_fn,
+  exists (select 1 from information_schema.columns where table_name = 'web_analytics_events' and column_name = 'event_label') as label_column,
+  has_table_privilege('anon', 'public.resource_email_subscribers', 'select') as anon_can_read_list,
+  has_function_privilege('anon', 'public.platform_web_analytics_engagement(timestamptz, timestamptz)', 'execute') as anon_can_call;
+```
+
+Expected: `true, true, true, false, false`.
+
+Tested on the scratch project 2026-11-12: applied twice without error; with a
+browser that does not announce itself as automated, one calculator change,
+one deliberate video play, one trial-button press, one template download and
+one "copy the message" each produced exactly one row with the expected label,
+and the muted preview loop produced none.
+
 ## Tagging links
 
 Use UTM tags on every video description, post and ad link so the Marketing tab

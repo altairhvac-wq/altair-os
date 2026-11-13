@@ -11,6 +11,7 @@ import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
+import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = [
@@ -49,6 +50,8 @@ const RESOURCES_ROUTE_PREFIX = "/resources";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 const CONTACT_ROUTE = "/contact";
+/** The About page and the page for technicians (shared/lib/site/about.ts). Static, no data. */
+const COMPANY_PAGE_ROUTES: readonly string[] = COMPANY_PAGE_PATHS;
 /** Search landing pages: static marketing, one per way an owner searches. */
 const LANDING_ROUTES: readonly string[] = LANDING_PAGE_PATHS;
 /** The commercial's watch page (shared/lib/site/commercial-video.ts). */
@@ -86,6 +89,13 @@ const MARKETING_MEDIA_INGEST_ROUTE = "/api/marketing/media/ingest";
  * sanitised event. Exact path only.
  */
 const ANALYTICS_COLLECT_ROUTE = "/api/analytics/collect";
+/**
+ * "Email me these results" on the free calculators. Visitors have no account,
+ * so it must not redirect to /login. The handler refuses cross-site posts,
+ * recomputes the result itself and is rate limited per address and per inbox
+ * (app/api/resources/email-results/route.ts). Exact path only.
+ */
+const RESOURCE_EMAIL_ROUTE = "/api/resources/email-results";
 
 /**
  * Files a browser or crawler fetches on its own initiative, before anyone has
@@ -270,6 +280,10 @@ function isContactRoute(pathname: string) {
   return pathname === CONTACT_ROUTE;
 }
 
+function isCompanyPageRoute(pathname: string) {
+  return COMPANY_PAGE_ROUTES.includes(pathname);
+}
+
 function isLandingRoute(pathname: string) {
   return LANDING_ROUTES.includes(pathname);
 }
@@ -321,6 +335,7 @@ function isMarketingRoute(pathname: string) {
     isResourcesRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
+    isCompanyPageRoute(pathname) ||
     isLandingRoute(pathname) ||
     isVideoPageRoute(pathname) ||
     isComparisonRoute(pathname)
@@ -338,6 +353,7 @@ function isPublicRoute(pathname: string) {
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
+    isCompanyPageRoute(pathname) ||
     isLandingRoute(pathname) ||
     isVideoPageRoute(pathname) ||
     isComparisonRoute(pathname) ||
@@ -351,6 +367,7 @@ function isPublicRoute(pathname: string) {
     isAgentBridgeRoute(pathname) ||
     isMarketingMediaIngestRoute(pathname) ||
     pathname === ANALYTICS_COLLECT_ROUTE ||
+    pathname === RESOURCE_EMAIL_ROUTE ||
     isDemoFingerprintRoute(pathname)
   );
 }

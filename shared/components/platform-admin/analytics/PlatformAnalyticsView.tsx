@@ -247,6 +247,30 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
         />
       </AnalyticsPanel>
 
+      <AnalyticsPanel
+        title="What visitors did"
+        description="Deliberate actions on the public site: the video played, a trial button pressed, a calculator used, a template downloaded. Counts how many times and by how many different visitors. Nothing a visitor typed is recorded."
+      >
+        {t.actions === null ? (
+          <p className="text-sm text-[#6B6255]">
+            Not measured yet. Apply migration 209 in Supabase to start counting these.
+          </p>
+        ) : (
+          <BarList
+            rows={t.actions}
+            valueLabel="Times"
+            secondaryLabel="Visitors"
+            emptyTitle="No actions recorded in this period."
+          />
+        )}
+        {t.emailList ? (
+          <p className="mt-3 text-sm text-[#6B6255]">
+            Email list today: <strong className="text-[#1F1B14]">{t.emailList.confirmed}</strong> confirmed,{" "}
+            {t.emailList.pending} waiting to confirm.
+          </p>
+        ) : null}
+      </AnalyticsPanel>
+
       <div className="grid gap-3 lg:grid-cols-2">
         <AnalyticsPanel title="Most visited pages">
           <BarList rows={t.topPages} valueLabel="Views" secondaryLabel="Visitors" />

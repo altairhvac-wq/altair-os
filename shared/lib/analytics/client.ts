@@ -28,6 +28,7 @@ import {
   readUtmParams,
   type AnalyticsAttribution,
 } from "./attribution";
+import { isValidEngagementLabel, type EngagementEventName } from "./engagement";
 
 const VISITOR_KEY = "altair_vid_v1";
 const FIRST_SEEN_KEY = "altair_first_seen_v1";
@@ -163,18 +164,19 @@ function firstTouch(): AnalyticsAttribution | null {
 let lastPageviewKey: string | null = null;
 let lastPageviewAt = 0;
 
-type ClientEvent = "pageview" | "signup_started" | "exclude_device";
+type ClientEvent = "pageview" | "signup_started" | "exclude_device" | EngagementEventName;
 
 function send(event: "pageview" | "signup_started", path: string): void {
   post(event, path);
 }
 
-function post(event: ClientEvent, path: string): void {
+function post(event: ClientEvent, path: string, label?: string): void {
   const { visitorId, isReturning } = visitor();
   const attribution = sessionAttribution();
   const body = JSON.stringify({
     event,
     path,
+    ...(label ? { label } : {}),
     eventId: randomId(),
     visitorId,
     sessionId: sessionId(),
@@ -226,6 +228,33 @@ export function trackPageview(pathname: string, search: string): void {
   lastPageviewKey = key;
   lastPageviewAt = now;
   send("pageview", pathname);
+}
+
+const engagementSent = new Set<string>();
+
+/**
+ * Records one deliberate action: a video played, a trial button pressed, a
+ * calculator used, a template downloaded (migration 209).
+ *
+ * `label` says WHICH one and must be a slug our own code chose. Nothing the
+ * visitor typed is ever passed here. Each event + label is sent at most once
+ * per page view, so holding a key down or replaying a video cannot inflate a
+ * count; `repeat` lifts that for actions where every press matters.
+ */
+export function trackEngagement(
+  event: EngagementEventName,
+  label: string,
+  options: { repeat?: boolean } = {},
+): void {
+  if (typeof window === "undefined" || !isValidEngagementLabel(label)) return;
+  if (!isAnalyticsAllowed()) return;
+  const path = window.location.pathname;
+  const key = `${event}:${label}:${path}`;
+  if (!options.repeat) {
+    if (engagementSent.has(key)) return;
+    engagementSent.add(key);
+  }
+  post(event, path, label);
 }
 
 let signupStartedSent = false;

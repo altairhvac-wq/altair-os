@@ -5,6 +5,8 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import { fetchAllAuthUsers } from "@/lib/database/services/auth-users";
 import { fetchLatestPlatformAutomationRun } from "@/lib/database/services/platform-automation-runs";
 import { isInternalAnalyticsEmail } from "@/lib/analytics/internal";
+import { countListSubscribers } from "@/lib/resources/subscribers";
+import { ENGAGEMENT_EVENT_LABELS, isEngagementEventName } from "@/shared/lib/analytics/engagement";
 import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
 import { resolveEffectiveSubscriptionStatus } from "@/lib/saas-billing/trial-policy";
 import { SAAS_SUBSCRIPTION_CATALOG, isSaasPlanKey } from "@/lib/saas-billing/catalog";
@@ -92,6 +94,8 @@ async function readAllPages<T>(
 }
 
 type CompanyRow = { id: string; name: string; created_at: string; settings: unknown };
+/** One row of platform_web_analytics_engagement (migration 209). */
+type ActionRow = { event: string; label: string | null; events: number | string; visitors: number | string };
 type SubscriptionRow = {
   company_id: string;
   status: string;
@@ -247,6 +251,8 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
 
   const [
     summaryResult,
+    actionsResult,
+    emailList,
     companies,
     subscriptions,
     memberships,
@@ -261,6 +267,8 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
     rollupResult,
   ] = await Promise.all([
     readTrafficSummary(supabase, range.fromIso, range.toIso),
+    supabase.rpc("platform_web_analytics_engagement", { p_from: range.fromIso, p_to: range.toIso }),
+    countListSubscribers(),
     readAllPages<CompanyRow>(
       "companies",
       (from, to) =>
@@ -591,6 +599,30 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
     { key: "paid", label: "Paid subscriber", count: paidInRange.length, source: "subscriptions" },
   ]);
 
+  // ---------------------------------------------------------------- visitor actions (209)
+  // Null, not empty, while migration 209 is not applied: "nobody played the
+  // video" and "we are not measuring it yet" must not look the same.
+  let actions: NamedCount[] | null = null;
+  if (actionsResult.error) {
+    const missing =
+      actionsResult.error.code === "PGRST202" ||
+      actionsResult.error.code === "42883" ||
+      /function|does not exist/i.test(actionsResult.error.message);
+    if (!missing) diagnostics.push(`platform_web_analytics_engagement: ${actionsResult.error.message}`);
+  } else {
+    const rows = Array.isArray(actionsResult.data) ? (actionsResult.data as ActionRow[]) : [];
+    actions = rows
+      .filter((row) => row && typeof row.event === "string")
+      .map((row) => {
+        const name = isEngagementEventName(row.event) ? ENGAGEMENT_EVENT_LABELS[row.event] : row.event;
+        return {
+          label: row.label ? `${name} · ${row.label}` : name,
+          value: num(row.events),
+          secondary: num(row.visitors),
+        };
+      });
+  }
+
   // ---------------------------------------------------------------- traffic
   let traffic: PlatformAnalyticsTraffic | null = null;
   if (summary) {
@@ -648,6 +680,8 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
       exitPages: toNamed(summary.exit_pages, (row) => row.path, (row) => num(row.sessions)),
       hourly: (summary.hourly ?? []).map((row) => ({ hour: num(row.hour), visitors: num(row.visitors) })),
       timeZone: ANALYTICS_TIME_ZONE,
+      actions,
+      emailList,
       recentSessions: (summary.recent_sessions ?? []).map((row) => ({
         startedAt: row.started_at,
         channel: row.channel,

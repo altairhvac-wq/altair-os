@@ -13,7 +13,13 @@ export const RESOURCES_GUIDES_PATH = "/resources/guides";
 export const RESOURCES_LIBRARY_PATH = "/resources/library";
 
 export type ResourceCalculatorEntry = {
-  slug: "labor-rate" | "job-profitability" | "break-even";
+  slug:
+    | "labor-rate"
+    | "job-profitability"
+    | "break-even"
+    | "maintenance-agreement"
+    | "technician-pay"
+    | "callback-cost";
   title: string;
   /** One sentence for cards and meta descriptions. */
   description: string;
@@ -37,6 +43,24 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
     title: "Break-even calculator",
     description:
       "Find how many jobs and how much revenue a month it takes to cover your fixed costs.",
+  },
+  {
+    slug: "maintenance-agreement",
+    title: "Maintenance agreement pricing calculator",
+    description:
+      "Price a maintenance agreement from what it costs to serve: the visits, the materials, the office time and the repair discount members get.",
+  },
+  {
+    slug: "technician-pay",
+    title: "Technician pay calculator: hourly, flat rate or commission",
+    description:
+      "Compare one week of technician pay three ways: hourly with overtime, flat rate by book hours, and commission on revenue.",
+  },
+  {
+    slug: "callback-cost",
+    title: "Callback cost calculator",
+    description:
+      "See what unpaid return trips cost a month and a year, your callback rate, and the billable hours they take off the board.",
   },
 ];
 
