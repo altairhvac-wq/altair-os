@@ -4602,6 +4602,20 @@ a[href] {
  * /invoices. Light text is not the answer — it would fight the white active
  * pill — so the surface has to actually be the surface it claims. 85% keeps
  * the frosted read and measures 5.14:1. */
+/*
+ * Tab strips never squeeze their labels.
+ *
+ * Items used to be `flex: 1 1 0%` with `min-width: 0`: every tab took an
+ * equal share however little room there was, so with eight tabs (the
+ * customer page) the labels were printed on top of each other, and with a
+ * long label ("Lead Pipeline", "All Jobs 50") the text wrapped onto two
+ * lines (UI audit 2026-11-12). This is plain CSS, so no utility class on an
+ * item could override it.
+ *
+ * Now a tab is as wide as its label, takes a share of any spare room, and
+ * never shrinks below its label. When the tabs do not fit, the strip scrolls
+ * sideways instead of overlapping.
+ */
 .admin-segmented-control {
   display: flex;
   gap: 0.125rem;
@@ -4609,12 +4623,20 @@ a[href] {
   border: 1px solid rgb(234 231 225 / 0.9);
   background: rgb(246 244 242 / 0.85);
   padding: 0.125rem;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.admin-segmented-control::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-segmented-item {
-  min-width: 0;
   min-height: 2.25rem;
-  flex: 1 1 0%;
+  flex: 1 0 auto;
+  white-space: nowrap;
   border-radius: 0.375rem;
   padding: 0.25rem 0.625rem;
   font-size: 0.875rem;
