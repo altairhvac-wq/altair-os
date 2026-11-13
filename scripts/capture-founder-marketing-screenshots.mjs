@@ -179,7 +179,7 @@ const CAPTURES = [
     label: "Reports workspace",
     route: "/reports?range=30d",
     output: "reports-full-page.png",
-    // ReportsNorthStarView uses a plain <header><h1>; tax-summary keeps the old NS header class.
+    // ReportsOverviewView uses a plain <header><h1>; tax-summary keeps the old NS header class.
     anchor: "header h1",
     ready: 'a[href*="/reports/tax-summary"]',
   },
