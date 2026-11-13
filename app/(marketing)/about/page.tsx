@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
-import { ABOUT_PATH, COMPANY_FACTS, FOUNDER } from "@/shared/lib/site/about";
+import { ABOUT_PATH, COMPANY_FACTS, FOUNDER, FOUNDER_PHOTO } from "@/shared/lib/site/about";
 import { ALTAIR_NOT_YET } from "@/shared/lib/site/not-yet";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { buildOrganizationStructuredData } from "@/shared/lib/site/structured-data";
@@ -35,8 +36,9 @@ const textLink = `font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e
  * Every statement about the founder and the company comes from
  * shared/lib/site/about.ts, and every statement about the product is one the
  * site already makes elsewhere. There is no story here that has not been
- * told to us: no years in the trade, no customer counts, no photo until the
- * owner supplies one.
+ * told to us: no years in the trade, no customer counts. The picture is the
+ * one the owner supplied; it is shown small with no way to enlarge it
+ * (FOUNDER_PHOTO in about.ts says why).
  */
 export default function AboutPage() {
   const trialDays = SAAS_TRIAL_CONFIG.durationDays;
@@ -47,14 +49,34 @@ export default function AboutPage() {
       <HomepageNav />
       <main className="relative flex-1 px-5 pb-20 pt-28 sm:px-8 sm:pt-32">
         <div className="mx-auto max-w-3xl">
-          <p className={eyebrow}>About</p>
-          <h1 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.5rem] sm:leading-[1.15]">
-            Built by an HVAC company owner.
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
-            Altair Operating System is built by {FOUNDER.name}, who owns an HVAC company. It is made for HVAC companies
-            first; plumbing, electrical and other field service trades run on the same workflow.
-          </p>
+          <div className="sm:flex sm:items-start sm:gap-8">
+            <div className="min-w-0 flex-1">
+              <p className={eyebrow}>About</p>
+              <h1 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.5rem] sm:leading-[1.15]">
+                Built by an HVAC company owner.
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
+                Altair Operating System is built by {FOUNDER.name}, who owns an HVAC company. It is made for HVAC
+                companies first; plumbing, electrical and other field service trades run on the same workflow.
+              </p>
+            </div>
+            {/* Small, not a link, and served as the one small file it is. */}
+            <figure className="mx-auto mt-8 w-[240px] shrink-0 sm:mx-0 sm:mt-2 sm:w-[220px]">
+              <Image
+                src={FOUNDER_PHOTO.src}
+                alt={FOUNDER_PHOTO.alt}
+                width={FOUNDER_PHOTO.width}
+                height={FOUNDER_PHOTO.height}
+                unoptimized
+                priority
+                draggable={false}
+                className="h-auto w-full select-none rounded-2xl border border-[rgba(230,227,220,0.14)] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)]"
+              />
+              <figcaption className="mt-2 text-center text-xs text-[#8e826f]">
+                {FOUNDER.name}, founder, with family.
+              </figcaption>
+            </figure>
+          </div>
 
           <dl className={`mt-10 grid gap-x-8 gap-y-5 px-5 py-6 sm:grid-cols-2 sm:px-8 ${card}`}>
             <div>

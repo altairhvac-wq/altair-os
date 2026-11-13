@@ -23,6 +23,26 @@ export const FOUNDER = {
   title: "Founder and CEO",
 } as const;
 
+/**
+ * The picture on /about, supplied by the owner on 2026-11-12 "for now".
+ *
+ * ============ SMALL ON PURPOSE ============
+ * The owner asked that nobody be able to zoom in on it: the picture has flaws
+ * that show when it is enlarged. A browser cannot be stopped from zooming, so
+ * the limit is in the file itself. public/marketing/about/founder-family.webp
+ * is 480 x 640 and is the only copy on the site; the page shows it about
+ * 240 px wide, links to nothing larger, and serves it as it is (no generated
+ * larger variants). Do not replace it with a bigger file, and do not add a
+ * click-to-enlarge. When the owner supplies a better photo, swap the file and
+ * these numbers together.
+ */
+export const FOUNDER_PHOTO = {
+  src: "/marketing/about/founder-family.webp",
+  width: 480,
+  height: 640,
+  alt: "Jeremiah Arn with family and the family dog, standing on red rock at sunset.",
+} as const;
+
 export const COMPANY_FACTS = {
   foundedYear: "2026",
   location: "Salt Lake County, Utah",
