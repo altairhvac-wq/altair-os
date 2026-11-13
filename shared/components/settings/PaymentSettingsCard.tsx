@@ -270,14 +270,20 @@ export function PaymentSettingsCard({
         {actionError ? <p className={errorNoticeClass}>{actionError}</p> : null}
         {actionSuccess ? <p className={successNoticeClass}>{actionSuccess}</p> : null}
         <p className={noticeClass}>{mainCopy}</p>
-        {payNowClarify ? <p className={subtleNoticeClass}>{payNowClarify}</p> : null}
-        {paymentLinksClarify ? (
+        {/* With no Stripe account at all, the box above already says what
+          * works and what does not; the three notes below repeated it (UI
+          * audit 2026-11-12). They are kept for an account that exists but is
+          * not taking payments yet, where they are news. */}
+        {payNowClarify && stripeAccount ? <p className={subtleNoticeClass}>{payNowClarify}</p> : null}
+        {paymentLinksClarify && stripeAccount ? (
           <p className={subtleNoticeClass}>{paymentLinksClarify}</p>
         ) : null}
         {cardPaymentsGuidance ? (
           <p className={noticeClass}>{cardPaymentsGuidance}</p>
         ) : null}
-        <p className={subtleNoticeClass}>{PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE}</p>
+        {stripeAccount ? (
+          <p className={subtleNoticeClass}>{PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE}</p>
+        ) : null}
       </div>
 
       {isConnected &&
@@ -411,13 +417,15 @@ export function PaymentSettingsCard({
             {isPending ? "Opening Stripe…" : startButtonLabel}
           </button>
         ) : (
-          <button type="button" disabled className={primaryButtonClass}>
+          // A status, so it is written as one. It used to be a greyed-out
+          // button, which read as something to press (UI audit 2026-11-12).
+          <p className="text-sm font-medium text-altair-ink-secondary">
             {canStartStripeSetup && !stripeOnboardingConfigured
-              ? "Stripe setup not configured"
+              ? "Card payments cannot be turned on from here yet. Write to support and we will set it up with you."
               : displayStatus === "active"
-                ? "Stripe account connected"
-                : "Stripe setup requires owner or admin"}
-          </button>
+                ? "Your Stripe account is connected."
+                : "Only an owner or admin can connect Stripe."}
+          </p>
         )}
         {showCheckoutControls ? (
           showEnableCheckoutButton ? (
@@ -452,7 +460,7 @@ export function PaymentSettingsCard({
         ) : null}
       </div>
 
-      {!isConnected && canStartStripeSetup ? (
+      {!isConnected && canLaunchOnboarding ? (
         <p className={`${subtleNoticeClass} mt-2`}>
           {PAYMENT_SETTINGS_STRIPE_SETUP_LATER_NOTE}
         </p>

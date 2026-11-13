@@ -38,20 +38,20 @@ type SettingsNavigationItem = {
 const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
   {
     label: "Overview",
-    description: "Health, readiness, and setup checklist.",
+    description: "What is set up and what still needs you.",
     href: "/settings",
     exact: true,
     icon: LayoutDashboard,
   },
   {
     label: "Company",
-    description: "Profile, document defaults, timezone, and connections.",
+    description: "Name, address, and what goes on estimates and invoices.",
     href: "/settings/company",
     icon: Building2,
   },
   {
     label: "Billing",
-    description: "Altair plan and customer payment collection.",
+    description: "Your Altair plan and taking card payments.",
     href: "/settings/billing",
     icon: CreditCard,
   },
@@ -63,7 +63,7 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
   },
   {
     label: "Users",
-    description: "Company tree, roles, and invitations.",
+    description: "Who has access, their roles, and invitations.",
     href: "/settings/users",
     icon: Users,
   },
@@ -103,35 +103,53 @@ export function SettingsNavigation({
       );
 
   return (
-    <nav aria-label="Settings categories">
-      <div className="flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-none border border-[var(--north-star-border)] bg-[var(--surface-section)] p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Settings categories" className="min-w-0 lg:sticky lg:top-2">
+      {/*
+       * One list, two shapes. Below the desktop width it is a row of equal
+       * tabs that always fits the screen (icon over label), so no section is
+       * cut off or hidden behind a sideways scroll. From the desktop width
+       * up it is a list down the left, each section with a line saying what
+       * is in it.
+       */}
+      <ul
+        className={`grid gap-1 rounded-[var(--radius-panel)] border border-altair-border/40 bg-altair-paper p-1 shadow-[var(--elev-hairline),var(--elev-2)] lg:grid-cols-1 lg:gap-0.5 lg:p-1.5 ${
+          items.length >= 5 ? "grid-cols-5" : "grid-cols-4"
+        }`}
+      >
         {items.map((item) => {
           const active = isSettingsItemActive(pathname, item);
           const Icon = item.icon;
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={item.description}
-              aria-current={active ? "page" : undefined}
-              className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-none px-2.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass focus-visible:ring-offset-2 sm:px-3 ${
-                active
-                  ? "bg-[var(--surface-card)] text-altair-ink shadow-sm ring-1 ring-[var(--north-star-border)]"
-                  : "text-altair-ink-secondary hover:bg-[var(--surface-tile)] hover:text-altair-ink"
-              }`}
-            >
-              <Icon
-                className={`h-4 w-4 shrink-0 ${
-                  active ? "text-altair-brass" : "text-altair-ink-muted"
+            <li key={item.href} className="min-w-0">
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-12 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-[calc(var(--radius-panel)-4px)] px-1.5 py-1.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] lg:min-h-0 lg:flex-row lg:items-start lg:justify-start lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left ${
+                  active
+                    ? "bg-altair-brass/15 text-altair-ink-on-paper"
+                    : "text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"
                 }`}
-                aria-hidden="true"
-              />
-              {item.label}
-            </Link>
+              >
+                <Icon
+                  className={`h-[18px] w-[18px] shrink-0 lg:mt-0.5 ${
+                    active ? "text-[var(--brand-metal-text)]" : "text-altair-ink-on-paper-muted"
+                  }`}
+                  aria-hidden="true"
+                />
+                <span className="min-w-0">
+                  <span className={`block truncate text-[12px] leading-tight lg:text-sm ${active ? "font-bold" : "font-semibold"}`}>
+                    {item.label}
+                  </span>
+                  <span className="hidden text-xs leading-snug text-altair-ink-on-paper-secondary lg:mt-0.5 lg:block">
+                    {item.description}
+                  </span>
+                </span>
+              </Link>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </nav>
   );
 }
