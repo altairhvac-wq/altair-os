@@ -60,6 +60,9 @@ import { CommunityMyBusinessProfileControl } from "../CommunityMyBusinessProfile
 import { IncomingNetworkInvitesCard } from "../IncomingNetworkInvitesCard";
 import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
 import { NetworkInviteForm } from "../NetworkInviteForm";
+import { CommunityPublicListingCard, CommunityPublicListingPanel } from "../CommunityPublicListing";
+import { DIRECTORY_PATH, type DirectoryPublicListing } from "@/shared/types/directory";
+import type { NetworkInviteFormData } from "@/shared/types/network-invite";
 import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
 import { NetworkNearbySearch } from "../NetworkNearbySearch";
@@ -90,12 +93,21 @@ export type NetworkNorthStarViewProps = {
   initialIncomingNetworkInvites: IncomingNetworkInvite[];
   initialOpenHelpRequests: NetworkHelpRequest[];
   initialMyHelpRequests: NetworkHelpRequest[];
+  /**
+   * Published listings from the public contractor directory. These are NOT
+   * Altair members: no workspace, so no referrals, trust record or map pin.
+   * They are shown in their own group in the Directory tab.
+   */
+  initialPublicListings?: DirectoryPublicListing[];
+  publicListingTotal?: number;
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
   canManageNetwork: boolean;
   canManageReceivedReferrals: boolean;
 };
+
+const NO_PUBLIC_LISTINGS: DirectoryPublicListing[] = [];
 
 function sortProfilesWithTrustedFirst(
   profiles: NetworkProfile[],
@@ -124,6 +136,8 @@ export function NetworkNorthStarView({
   initialIncomingNetworkInvites,
   initialOpenHelpRequests,
   initialMyHelpRequests,
+  initialPublicListings = NO_PUBLIC_LISTINGS,
+  publicListingTotal = 0,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -180,6 +194,10 @@ export function NetworkNorthStarView({
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
+  // A public directory listing open in the detail panel, and the invite form
+  // started from one.
+  const [selectedListingSlug, setSelectedListingSlug] = useState<string | null>(null);
+  const [inviteDraft, setInviteDraft] = useState<Partial<NetworkInviteFormData> | null>(null);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
   const [latestInviteEmailNotice, setLatestInviteEmailNotice] = useState<
@@ -239,9 +257,36 @@ export function NetworkNorthStarView({
     ? partnerByCompanyId.get(selectedProfile.companyId)
     : undefined;
 
-  const availableTradeTypes = useMemo(
-    () => collectTradeTypesFromProfiles(profiles),
-    [profiles],
+  const availableTradeTypes = useMemo(() => {
+    const trades = new Set<TradeType>(collectTradeTypesFromProfiles(profiles));
+    for (const listing of initialPublicListings) trades.add(listing.tradeType);
+    return [...trades].sort((left, right) => left.localeCompare(right));
+  }, [profiles, initialPublicListings]);
+
+  // The same search, trade and place filters, applied to the public listings.
+  // "Accepting referrals only" hides them: a business without a workspace
+  // cannot accept a referral.
+  const filteredListings = useMemo(() => {
+    if (acceptingReferralsOnly) return NO_PUBLIC_LISTINGS;
+    const text = search.trim().toLowerCase();
+    const place = locationFilter.trim().toLowerCase();
+    return initialPublicListings.filter((listing) => {
+      if (tradeFilter !== "all" && listing.tradeType !== tradeFilter) return false;
+      if (text) {
+        const haystack = `${listing.businessName} ${listing.tradeType} ${listing.city} ${listing.state} ${listing.description}`.toLowerCase();
+        if (!haystack.includes(text)) return false;
+      }
+      if (place) {
+        const where = `${listing.city} ${listing.state} ${listing.postalCode ?? ""} ${listing.serviceArea}`.toLowerCase();
+        if (!where.includes(place)) return false;
+      }
+      return true;
+    });
+  }, [initialPublicListings, search, tradeFilter, locationFilter, acceptingReferralsOnly]);
+
+  const selectedListing = useMemo(
+    () => initialPublicListings.find((listing) => listing.slug === selectedListingSlug) ?? null,
+    [initialPublicListings, selectedListingSlug],
   );
 
   const filteredProfiles = useMemo(() => {
@@ -299,6 +344,7 @@ export function NetworkNorthStarView({
     setLocationFilter("");
     setAcceptingReferralsOnly(false);
     setSelectedProfileId(null);
+    setSelectedListingSlug(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
     setNetworkActionTarget(null);
@@ -407,6 +453,7 @@ export function NetworkNorthStarView({
   };
 
   function handleSelectProfile(profileId: string) {
+    setSelectedListingSlug(null);
     setSelectedProfileId(profileId);
     setPanelMode("detail");
     clearNetworkActionFeedback();
@@ -416,6 +463,24 @@ export function NetworkNorthStarView({
     setSelectedProfileId(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
+  }
+
+  function handleSelectListing(slug: string) {
+    setSelectedProfileId(null);
+    setPanelMode("empty");
+    clearNetworkActionFeedback();
+    setSelectedListingSlug(slug);
+  }
+
+  /** Opens the invitation form with what the public listing already says. */
+  function handleInviteListing(listing: DirectoryPublicListing) {
+    handleTabChange("invitations");
+    setInviteDraft({
+      invitedCompanyName: listing.businessName,
+      invitedPhone: listing.phone,
+      tradeCategory: listing.tradeType,
+    });
+    setShowInviteForm(true);
   }
 
   function handleSendReferral(profileId: string) {
@@ -581,6 +646,19 @@ export function NetworkNorthStarView({
       onReferralCancel={() => setPanelMode("detail")}
       surface="north-star"
     />
+  );
+
+  // In the Directory tab the detail column shows either an Altair member's
+  // profile or a public directory listing, whichever was picked last.
+  const directoryDetailPanel = selectedListing ? (
+    <CommunityPublicListingPanel
+      listing={selectedListing}
+      canInvite={canManageNetwork}
+      onInvite={() => handleInviteListing(selectedListing)}
+      onClose={() => setSelectedListingSlug(null)}
+    />
+  ) : (
+    profileDetailPanel
   );
 
   function renderDirectoryProfileCard(profile: NetworkProfile) {
@@ -940,7 +1018,8 @@ export function NetworkNorthStarView({
                     <div className={st.rosterSectionHeader}>
                       <p className={st.sectionTitle}>Business directory</p>
                       <p className={st.countMeta}>
-                        {filteredProfiles.length} companies
+                        {filteredProfiles.length} on Altair
+                        {initialPublicListings.length > 0 ? ` · ${filteredListings.length} public` : ""}
                       </p>
                     </div>
 
@@ -951,6 +1030,12 @@ export function NetworkNorthStarView({
                         <p className={st.permissionCopy}>
                           Directory and referrals are available to owners and
                           admins.
+                        </p>
+                      ) : filteredProfiles.length === 0 && filteredListings.length > 0 ? (
+                        <p className={st.permissionCopy}>
+                          {hasActiveDirectoryFilters
+                            ? "No Altair members match those filters."
+                            : "No Altair members have a visible profile yet."}
                         </p>
                       ) : filteredProfiles.length === 0 ? (
                         <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
@@ -986,16 +1071,43 @@ export function NetworkNorthStarView({
                           )}
                         </div>
                       )}
+
+                      {filteredListings.length > 0 ? (
+                        <div className="mt-4">
+                          <div className={st.rosterSectionHeader}>
+                            <p className={st.sectionTitle}>From the public directory</p>
+                            <p className={st.countMeta}>Not on Altair yet</p>
+                          </div>
+                          <div className={st.rosterList}>
+                            {filteredListings.map((listing) => (
+                              <CommunityPublicListingCard
+                                key={listing.slug}
+                                listing={listing}
+                                selected={listing.slug === selectedListingSlug}
+                                onSelect={() => handleSelectListing(listing.slug)}
+                              />
+                            ))}
+                          </div>
+                          {publicListingTotal > initialPublicListings.length ? (
+                            <p className="mt-2 text-[11px] text-[#786D53]">
+                              Showing the first {initialPublicListings.length} of {publicListingTotal}.{" "}
+                              <a href={DIRECTORY_PATH} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#77591B] underline-offset-2 hover:underline">
+                                Search all of them in the public directory
+                              </a>
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 
                   <div className={st.directoryDetailColumn}>
-                    {selectedProfileId && !isDesktopLayout ? (
-                      <div className="min-w-0 shrink-0">{profileDetailPanel}</div>
+                    {(selectedProfileId || selectedListing) && !isDesktopLayout ? (
+                      <div className="min-w-0 shrink-0">{directoryDetailPanel}</div>
                     ) : null}
 
                     <div className="hidden min-w-0 shrink-0 lg:block">
-                      {profileDetailPanel}
+                      {directoryDetailPanel}
                     </div>
                   </div>
                 </div>
@@ -1084,7 +1196,10 @@ export function NetworkNorthStarView({
                       {!showInviteForm ? (
                         <button
                           type="button"
-                          onClick={() => setShowInviteForm(true)}
+                          onClick={() => {
+                            setInviteDraft(null);
+                            setShowInviteForm(true);
+                          }}
                           className={st.secondaryAction}
                         >
                           <UserPlus className="h-4 w-4" />
@@ -1102,8 +1217,16 @@ export function NetworkNorthStarView({
                         </p>
                         <div className="mt-4">
                           <NetworkInviteForm
-                            onSuccess={handleInviteSuccess}
-                            onCancel={() => setShowInviteForm(false)}
+                            key={inviteDraft?.invitedCompanyName ?? "blank"}
+                            initialValues={inviteDraft ?? undefined}
+                            onSuccess={(invite, inviteUrl, emailNotice) => {
+                              setInviteDraft(null);
+                              handleInviteSuccess(invite, inviteUrl, emailNotice);
+                            }}
+                            onCancel={() => {
+                              setShowInviteForm(false);
+                              setInviteDraft(null);
+                            }}
                             surface="north-star"
                           />
                         </div>

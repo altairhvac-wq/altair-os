@@ -31,6 +31,7 @@ import {
   listMyNetworkHelpRequests,
   listOpenNetworkHelpRequests,
 } from "@/lib/database/queries/network-help-requests";
+import { listListingsForCommunity } from "@/lib/directory/listings";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
 
@@ -73,6 +74,7 @@ export default async function CommunityPage() {
     incomingNetworkInvites,
     openHelpRequests,
     myHelpRequests,
+    publicDirectory,
   ] = await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -98,6 +100,9 @@ export default async function CommunityPage() {
       canManageHelpRequests
         ? listMyNetworkHelpRequests(companyId)
         : Promise.resolve([]),
+      // Businesses from the public directory (altair-op.com/directory). The
+      // same published, public details anyone can see; no private column.
+      listListingsForCommunity(),
     ]);
 
   // Computed trust metrics for the directory profiles on screen (aggregate
@@ -120,6 +125,8 @@ export default async function CommunityPage() {
       initialIncomingNetworkInvites={incomingNetworkInvites}
       initialOpenHelpRequests={openHelpRequests}
       initialMyHelpRequests={myHelpRequests}
+      initialPublicListings={publicDirectory.listings}
+      publicListingTotal={publicDirectory.total}
       invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
       companyId={companyId}
       canSendReferral={canSendReferral}
