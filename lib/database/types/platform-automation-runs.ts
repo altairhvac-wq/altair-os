@@ -30,6 +30,10 @@ export type PlatformAutomationRunTotals = {
   /** Card-free trial reminders folded into billing-maintenance (migration 200). */
   trialReminderCandidates?: number;
   trialRemindersSent?: number;
+  /** Public directory listings linked to a workspace that the daily run re-checked (migration 211). */
+  directoryLinkedListingsChecked?: number;
+  /** Linked listings whose "Altair member" mark was turned on or off by that re-check. */
+  directoryMemberBadgesChanged?: number;
 };
 
 export type PlatformAutomationRunRow = {

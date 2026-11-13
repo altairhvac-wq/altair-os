@@ -1384,6 +1384,10 @@ export type Database = {
           review_note: string | null;
           published_at: string | null;
           removed_at: string | null;
+          // Migration 211: the linked Altair workspace, and whether it is active.
+          claimed_company_id: string | null;
+          claimed_at: string | null;
+          member_active: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -1432,6 +1436,9 @@ export type Database = {
           review_note: string | null;
           published_at: string | null;
           removed_at: string | null;
+          claimed_company_id: string | null;
+          claimed_at: string | null;
+          member_active: boolean;
         }>;
         Relationships: [];
       };

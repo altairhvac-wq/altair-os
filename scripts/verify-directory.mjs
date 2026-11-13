@@ -22,6 +22,11 @@
  *   inside the signed-in Community tab, public listings come from the same
  *     public function, are marked as not being Altair members, cannot be
  *     sent a referral, and the invitation never receives the lister's email
+ *   "claim your listing" (migration 211): only an owner or admin whose
+ *     confirmed sign-in email is the listing's email can link it; the public
+ *     functions return a yes/no and never the workspace; "active" is the
+ *     billing resolver's answer, re-asked daily; the mark is explained
+ *     wherever it is shown
  *
  * Run: node scripts/verify-directory.mjs
  */
@@ -63,6 +68,11 @@ const FILES = {
   communityPage: "app/(admin)/community/page.tsx",
   communityView: "shared/components/network/north-star-m11/NetworkNorthStarView.tsx",
   communityListing: "shared/components/network/CommunityPublicListing.tsx",
+  claimMigration: "supabase/migrations/211_directory_listing_claims.sql",
+  claims: "lib/directory/claims.ts",
+  claimActions: "app/actions/directory-claim.ts",
+  memberBadge: "shared/components/directory/DirectoryMemberBadge.tsx",
+  billingCron: "app/api/cron/billing-maintenance/route.ts",
   inviteForm: "shared/components/network/NetworkInviteForm.tsx",
 };
 for (const path of Object.values(FILES)) check(`${path} exists`, existsSync(path));
@@ -328,7 +338,7 @@ console.log("\nPublic listings inside Community");
   check("Community asks for one page, and reports the total", /p_limit: 50/.test(fn) && /total:/.test(fn));
 
   const page = read(FILES.communityPage);
-  check("the Community page passes the listings and their total to the view", /listListingsForCommunity\(\)/.test(page) && /initialPublicListings=\{publicDirectory\.listings\}/.test(page) && /publicListingTotal=\{publicDirectory\.total\}/.test(page));
+  check("the Community page passes the listings and their total to the view", /listListingsForCommunity\(\)/.test(page) && /initialPublicListings=\{publicListings\}/.test(page) && /publicListingTotal=\{/.test(page) && /publicDirectory\.total/.test(page));
 
   const card = read(FILES.communityListing);
   check("a public listing is tagged, and the panel says it is not on Altair", /Public listing/.test(card) && /Not on Altair yet/.test(card));
@@ -345,11 +355,84 @@ console.log("\nPublic listings inside Community");
   check("and never an email address: the member has to get that from the contractor", !/invitedEmail/.test(draft));
   check("'Accepting referrals only' hides businesses that cannot accept one", /if \(acceptingReferralsOnly\) return NO_PUBLIC_LISTINGS;/.test(view));
   check("the public group is labelled as coming from the public site", /From the public directory/.test(view) && /Listed on altair-op\.com/.test(view));
-  check("a member's own listing is found by their sign-in email, on the server, as slugs only", /findPublishedSlugsForEmail\(viewerEmail\)/.test(page) && /\.select\("slug"\)/.test(listings.slice(listings.indexOf("export async function findPublishedSlugsForEmail"), listings.indexOf("export async function createListingReport"))));
-  check("their own listing is labelled as theirs, with no invitation to themselves", /Your listing/.test(card) && /This is your own listing/.test(card) && /isOwn \? \(/.test(card));
+  check("a member's own listing is found on the server, by their confirmed sign-in email or their workspace", /findOwnListings\(viewerEmail, companyId\)/.test(page) && /email_confirmed_at \? normalizeDirectoryEmail/.test(page));
+  check("their own listing is labelled as theirs, with no invitation to themselves", /Your listing/.test(card) && /This is your own listing/.test(card) && /\{own \? \(/.test(card));
   check("members and public listings are counted separately", /on Altair/.test(view) && /public\`/.test(view));
   check("when there are more listings than shown, the screen says so and links the full search", /publicListingTotal > initialPublicListings\.length/.test(view) && /DIRECTORY_PATH/.test(view));
   check("the invitation form accepts starting values without changing its default", /initialValues\?: Partial<NetworkInviteFormData>/.test(read(FILES.inviteForm)) && /\{ \.\.\.DEFAULT_FORM, \.\.\.initialValues \}/.test(read(FILES.inviteForm)));
+}
+
+// ---------------------------------------------------------------- claim your listing
+console.log("\nClaim your listing (migration 211)");
+{
+  const claimSql = read(FILES.claimMigration);
+  const claimCode = claimSql.replace(/--[^\n]*/g, "");
+  const claims = read(FILES.claims);
+  const actions = read(FILES.claimActions);
+  const card = read(FILES.communityListing);
+  const page = read(FILES.communityPage);
+  const flat = (text) => text.replace(/\s+/g, " ");
+
+  check("the label and the limit are what the screens say", rules.DIRECTORY_MEMBER_LABEL === "Altair member" && rules.DIRECTORY_CLAIM_LIMIT === 3);
+  check("the meaning names the product in full and says it is not an endorsement", /Altair Operating System/.test(rules.DIRECTORY_MEMBER_MEANING) && /not a review or an endorsement/.test(rules.DIRECTORY_MEMBER_MEANING) && !/Altair OS(?![A-Za-z])/.test(rules.DIRECTORY_MEMBER_MEANING));
+
+  check("211 only adds: three columns, an index and two replaced functions", (claimCode.match(/add column if not exists/g) ?? []).length === 3 && !/drop\s+(table|column|function)|delete\s+from|truncate|create\s+policy|alter\s+policy/i.test(claimCode));
+  check("the link points at a workspace and clears itself if the workspace is deleted", /claimed_company_id uuid references public\.companies \(id\) on delete set null/.test(claimCode));
+  check("a listing starts as not a member", /member_active boolean not null default false/.test(claimCode));
+  check("211 grants nothing to the public roles", !/grant[^;]*to\s+(anon|authenticated|public)\b/i.test(claimCode) && (claimCode.match(/to service_role;/g) ?? []).length === 2);
+  check("211's functions run with the caller's rights", !/security\s+definer/i.test(claimCode) && (claimCode.match(/language sql\s+stable/g) ?? []).length === 2);
+  check("the public functions return a yes/no, never the workspace or the email", !/'claimed_company_id'|'contact_email'|'member_active'|'claimed_at'/.test(claimCode) && (claimCode.match(/'is_member'/g) ?? []).length === 2);
+  check("a member is a linked listing whose workspace is active, and both must hold", (claimCode.match(/claimed_company_id is not null and l\.member_active/g) ?? []).length === 2);
+  check("the search still returns published listings only", /where l\.status = 'published'/.test(claimCode) && (claimCode.match(/l\.status = 'published'/g) ?? []).length === 2);
+  check("members are listed first, then by name, in the page and inside it", (claimCode.match(/is_member desc, lower\((page|m)\.business_name\), (page|m)\.slug/g) ?? []).length === 2);
+  check("the search limit is still capped at 50", /least\(greatest\(coalesce\(p_limit, 20\), 1\), 50\)/.test(claimCode));
+
+  check("the claim actions are Server Actions", /^"use server";/.test(actions));
+  check("each action resolves the caller itself", (actions.match(/await resolveCaller\(\)/g) ?? []).length === 2);
+  check("only an owner or admin of the active workspace may link or unlink", /getActiveCompanyContext\(\)/.test(actions) && /if \(!context\.permissions\.manageCompany\)/.test(actions));
+  check("the email comes from the session, and only a confirmed one counts", /getCurrentUser\(\)/.test(actions) && /user\.id === context\.user\.id && user\.email_confirmed_at \? normalizeDirectoryEmail\(user\.email\)/.test(flat(actions)));
+  check("the browser says which listing and nothing else", /export async function linkListingToWorkspaceAction\(slug: string\)/.test(actions) && /export async function unlinkListingFromWorkspaceAction\(slug: string\)/.test(actions) && !/formData|FormData/.test(actions));
+  check("linking uses the session's email and workspace", /linkListingToCompany\(slug, caller\.email, caller\.companyId\)/.test(actions));
+  check("unlinking is limited to the caller's own workspace", /unlinkListingFromCompany\(slug, caller\.companyId\)/.test(actions));
+  check("a listing that is not the caller's gives one answer whether it exists or not", (actions.match(/NOT_YOURS/g) ?? []).length >= 3);
+
+  const link = claims.slice(claims.indexOf("export async function linkListingToCompany"), claims.indexOf("export type UnlinkOutcome"));
+  check("the link is one conditional UPDATE: published, this email, not linked yet", /\.eq\("slug", slug\)\s*\.eq\("status", "published"\)\s*\.eq\("contact_email", contactEmail\)\s*\.is\("claimed_company_id", null\)/.test(link));
+  check("a workspace cannot link more than the limit", /\(held\.count \?\? 0\) < DIRECTORY_CLAIM_LIMIT/.test(link));
+  check("the explanation after a failed link is also bound to the caller's email", /\.eq\("status", "published"\)\s*\.eq\("contact_email", contactEmail\)\s*\.maybeSingle\(\)/.test(link));
+  const unlink = claims.slice(claims.indexOf("export async function unlinkListingFromCompany"), claims.indexOf("export type MemberFlagRefreshResult"));
+  check("unlinking touches only a listing linked to that workspace, and turns the mark off", /\.eq\("claimed_company_id", companyId\)/.test(unlink) && /claimed_company_id: null, claimed_at: null, member_active: false/.test(unlink));
+  check("'active' is the billing resolver's answer, by the app shell's rule", /resolveCompanyBillingAccess\(companyId\)/.test(claims) && /billingPolicyAllowsAppShell\(access\)/.test(claims));
+  const refresh = claims.slice(claims.indexOf("export async function refreshDirectoryMemberFlags"));
+  check("the daily re-check asks that same question", /await workspaceIsActive\(companyId\)/.test(refresh));
+  check("a workspace that could not be checked keeps yesterday's answer", /activeByCompany\.get\(row\.claimed_company_id\) === wanted && row\.member_active !== wanted/.test(refresh) && /could not be checked/.test(refresh));
+  check("before migration 211 the re-check is quiet, not a failure", /if \(isNotInstalled\(error\)\) \{\s*result\.installed = false;\s*return result;/.test(refresh));
+  check("the claim code never logs an email, a name or a workspace id", !/console\.(log|error|warn)\([^)]*(email|Email|companyId|businessName|slug)/.test(claims));
+  const cron = read(FILES.billingCron);
+  check("the daily billing run re-checks the marks, and cannot be failed by them throwing", /try \{\s*memberFlags = await refreshDirectoryMemberFlags\(\);\s*\} catch \{/.test(cron) && /memberFlags\.errors\.length/.test(cron));
+
+  const rulesSource = read(FILES.rules);
+  const ownType = rulesSource.slice(rulesSource.indexOf("export type DirectoryOwnListing"), rulesSource.indexOf("/** The fields a lister fills in"));
+  check("what Community is told about a member's own listing has no email and no workspace id", /linked: "none" \| "this" \| "other"/.test(ownType) && !/email: |Email: string|companyId|company_id/.test(ownType));
+  check("the public listing type carries only the yes/no", /isMember: boolean;/.test(rulesSource) && /isMember: row\.is_member === true/.test(read(FILES.listings)));
+  check("the Community component cannot name a workspace or an email", !/claimed_company_id|claimedCompanyId|companyId|contactEmail|contact_email|mailto:/.test(card));
+  check("the Link button needs an owner or admin AND a matching email", /canManage && own\.emailMatches \? \(/.test(card) && /linkListingToWorkspaceAction/.test(card));
+  check("a member's listing is not offered an invitation it does not need", /\) : listing\.isMember \? \(/.test(card) && /has not made its Community profile visible/.test(flat(card)));
+  check("a business with a visible profile is not shown twice", /listSlugsLinkedToCompanies\(profiles\.map\(\(profile\) => profile\.companyId\)\)/.test(page) && /!duplicateSlugs\.has\(listing\.slug\)/.test(page));
+  check("the member's own listings lead the public group", /\.\.\.ownPublicListings\.map\(\(own\) => own\.listing\),/.test(page));
+
+  const search = read(FILES.searchPage);
+  const listing = read(FILES.listingPage);
+  const badge = read(FILES.memberBadge);
+  check("the mark is one component with one label", /DIRECTORY_MEMBER_LABEL/.test(badge) && !/Altair OS(?![A-Za-z])/.test(badge));
+  check("the search page shows the mark only on a member's row", /\{listing\.isMember \? <DirectoryMemberBadge \/> : null\}/.test(search));
+  check("the search page says members are listed first whenever one is on the page", /showsMembers = result\.listings\.some\(\(listing\) => listing\.isMember\)/.test(search) && /\{DIRECTORY_MEMBER_LABEL\}s are listed first\./.test(search));
+  check("both public pages say what the mark means", /DIRECTORY_MEMBER_MEANING/.test(search) && /DIRECTORY_MEMBER_MEANING/.test(listing));
+  check("the business page shows the mark only for a member", /\{listing\.isMember \? <DirectoryMemberBadge \/> : null\}/.test(listing));
+  const manage = read(FILES.managePage);
+  check("the manage page explains linking only for a live listing, and counts the trial link", /record\.status === "published" \? await getListingLinkState\(record\.id\) : null/.test(manage) && /href="\/signup" data-cta="directory-manage-member"/.test(manage));
+  const emails = read(FILES.emails);
+  check("the 'listing is live' email mentions linking once, and not on a change", /input\.changesOnly\s*\? ""\s*: `If you run your business on Altair Operating System, you can link this listing/.test(emails));
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

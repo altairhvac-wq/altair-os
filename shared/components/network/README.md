@@ -66,7 +66,9 @@ Internal code, tables, queries, actions, and types remain Network-oriented. Do n
 | **What a member can do** | Call, open the website, open the public page, or "Invite to Altair" (the normal invitation form, pre-filled with name, phone and trade) |
 | **What a member cannot do** | Send a referral, add as a trusted partner, see a trust record or a map pin. All of those need a workspace on the other side |
 
-**Boundary:** a public listing never becomes a `network_profiles` row by being shown here. It joins the Network only by accepting an invitation and creating a workspace. The lister's email is private and is never available to this screen.
+**Linking ("claim your listing", migration 211):** the viewer's own listing (same confirmed sign-in email, or already linked to their workspace; `findOwnListings` in `lib/directory/claims.ts`) leads the group. An owner or admin can link it to the workspace or unlink it from the panel (`app/actions/directory-claim.ts`). A linked listing whose workspace is active shows "Altair member" publicly and is listed first. Someone else's linked listing is tagged "Altair member" here and gets no invitation button; if that business also has a visible Community profile, it appears only in the members group. This screen is given yes/no facts only: never a workspace id, never an email.
+
+**Boundary:** a public listing never becomes a `network_profiles` row by being shown here, and linking does not create one either. It joins the Network only by accepting an invitation and creating a workspace. The lister's email is private and is never available to this screen.
 
 ## Mental model
 

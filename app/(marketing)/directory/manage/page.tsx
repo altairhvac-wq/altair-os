@@ -5,6 +5,7 @@ import {
   removeListingAction,
   saveListingEditAction,
 } from "@/app/actions/directory";
+import { getListingLinkState } from "@/lib/directory/claims";
 import { verifyManageLink } from "@/lib/directory/links";
 import { getListingRecord } from "@/lib/directory/listings";
 import { ManageLinkRequestForm } from "@/shared/components/directory/DirectorySmallForms";
@@ -20,6 +21,7 @@ import { ResourceChrome, ResourceMain } from "@/shared/components/resources/Reso
 import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 import {
   DIRECTORY_LIST_PATH,
+  DIRECTORY_MEMBER_LABEL,
   DIRECTORY_PATH,
   directoryListingPath,
   type DirectoryListingStatus,
@@ -126,6 +128,9 @@ export default async function DirectoryManagePage({
   // The form starts from what the lister last asked for: a waiting change if
   // there is one, otherwise the listing as it stands.
   const formFields = record.pendingFields ?? record.fields;
+  // Only a live listing can carry the member mark. Null (not known) reads as
+  // "not linked", which is also the answer before migration 211.
+  const linkState = record.status === "published" ? await getListingLinkState(record.id) : null;
 
   return (
     <ResourceChrome>
@@ -179,6 +184,60 @@ export default async function DirectoryManagePage({
             ) : null}
           </div>
         </section>
+
+        {record.status === "published" ? (
+          <section aria-labelledby="manage-member-heading" className={`mt-4 px-5 py-6 sm:px-7 ${dirCard}`}>
+            {linkState?.badgeShowing ? (
+              <>
+                <h2 id="manage-member-heading" className="text-base font-semibold text-[#0A0A0A]">
+                  Your listing shows “{DIRECTORY_MEMBER_LABEL}”
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-stone-700">
+                  It is linked to your Altair workspace, so it carries the mark and is listed ahead of non-members for
+                  as long as the workspace is active. To unlink it, sign in to Altair and open Community, then
+                  Directory.
+                </p>
+              </>
+            ) : linkState?.linked ? (
+              <>
+                <h2 id="manage-member-heading" className="text-base font-semibold text-[#0A0A0A]">
+                  Linked, but “{DIRECTORY_MEMBER_LABEL}” is not showing
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-stone-700">
+                  This listing is linked to an Altair workspace that is not active right now. The mark comes back
+                  within a day of the workspace being active again. Your listing itself is not affected.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 id="manage-member-heading" className="text-base font-semibold text-[#0A0A0A]">
+                  Run your business on Altair? Show it.
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-stone-700">
+                  Link this listing to your Altair workspace and it shows “{DIRECTORY_MEMBER_LABEL}” and is listed
+                  ahead of non-members, for as long as the workspace is active.
+                </p>
+                <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm leading-relaxed text-stone-700">
+                  <li>Sign in to Altair with the same email you used for this listing.</li>
+                  <li>Open Community, then Directory, and pick your listing.</li>
+                  <li>Press “Link to this workspace”.</li>
+                </ol>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Link href="/community" className={dirSecondaryButton}>
+                    Open Community
+                  </Link>
+                  <p className="text-sm text-stone-600">
+                    Not on Altair yet?{" "}
+                    <Link href="/signup" data-cta="directory-manage-member" className={dirLink}>
+                      Start a 14-day free trial
+                    </Link>
+                    . No credit card.
+                  </p>
+                </div>
+              </>
+            )}
+          </section>
+        ) : null}
 
         {editable ? (
           <>

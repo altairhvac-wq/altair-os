@@ -117,6 +117,37 @@ export type DirectoryPublicListing = {
   description: string;
   acceptsSubWork: boolean;
   publishedAt: string | null;
+  /**
+   * The business has linked this listing to an Altair workspace that is
+   * currently active (migration 211). A yes/no: which workspace is never
+   * part of what a visitor, or a member, is given.
+   */
+  isMember: boolean;
+};
+
+/** The public label for a linked listing. One spelling everywhere. */
+export const DIRECTORY_MEMBER_LABEL = "Altair member";
+
+/** What the label means, said plainly wherever it is shown in full. */
+export const DIRECTORY_MEMBER_MEANING =
+  "This business runs on Altair Operating System. It is not a review or an endorsement.";
+
+/** How many listings one workspace may link. A business has one name, sometimes two or three. */
+export const DIRECTORY_CLAIM_LIMIT = 3;
+
+/**
+ * A member's own public listing, as Community shows it to them: the public
+ * details plus how the listing relates to the workspace they are signed in
+ * to. Worked out on the server; only these yes/no facts reach the browser.
+ */
+export type DirectoryOwnListing = {
+  listing: DirectoryPublicListing;
+  /** "none": not linked. "this": linked to this workspace. "other": linked to a different workspace. */
+  linked: "none" | "this" | "other";
+  /** The listing was confirmed with the email this person signs in with, so they may link it. */
+  emailMatches: boolean;
+  /** Linked to this workspace and the workspace is active, so the public badge is showing. */
+  badgeShowing: boolean;
 };
 
 /** The fields a lister fills in and may later edit (the email is asked once, separately). */
