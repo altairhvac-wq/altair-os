@@ -1,5 +1,4 @@
 import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
-import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import type { ReportTimeTrackingSummary } from "@/shared/types/reports-page";
 import type { TimeEntry } from "@/shared/types/time-entry";
 
@@ -27,6 +26,12 @@ export function isStaleOpenShift(
 /**
  * Shared shift metrics for Reports Shift Time and Time Clock header.
  * Hours use calendar-day overlap in the company timezone (open shifts count to now).
+ *
+ * A shift left open 12 hours or longer is a missed clock-out, not work. It is
+ * reported in `staleOpenShifts` and is NOT counted in `shiftHoursToday` (UI
+ * audit 2026-11-12, B5). Counting it made the figure grow by one hour per
+ * forgotten shift per hour: three forgotten shifts read as "45.7 h today".
+ * Every screen that shows the hours also shows the stale count beside them.
  */
 export function buildShiftTimeTrackingSummary(input: {
   openClockEntries: TimeEntry[];
@@ -52,6 +57,9 @@ export function buildShiftTimeTrackingSummary(input: {
 
   const shiftMinutesToday = [...clockEntriesForToday.values()].reduce(
     (total, entry) => {
+      if (!entry.endedAt && isStaleOpenShift(entry.startedAt, now)) {
+        return total;
+      }
       const overlapStart = Math.max(Date.parse(entry.startedAt), todayStartMs);
       const overlapEnd = Math.min(
         entry.endedAt ? Date.parse(entry.endedAt) : now,
@@ -72,7 +80,8 @@ export function buildShiftTimeTrackingSummary(input: {
     .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
 
   return {
-    shiftHoursToday: roundJobMaterialAmount(shiftMinutesToday / 60),
+    // One decimal: a tenth of an hour is six minutes, as fine as this needs.
+    shiftHoursToday: Math.round((shiftMinutesToday / 60) * 10) / 10,
     openShiftCount: input.openClockEntries.length,
     staleOpenShifts,
   };

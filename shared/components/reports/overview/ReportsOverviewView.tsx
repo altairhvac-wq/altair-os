@@ -741,7 +741,7 @@ export function ReportsOverviewView({
                       {time.staleOpenShifts.length} open 12 hours or longer
                     </p>
                     <p className={`mt-0.5 text-xs ${MUTED}`}>
-                      Probably a missed clock-out. Today&apos;s hours are overstated until these are corrected.
+                      Probably a missed clock-out. These are not counted in today&apos;s hours.
                     </p>
                     <ul className="mt-2 space-y-1 text-sm text-altair-ink-on-paper">
                       {time.staleOpenShifts.map((shift) => (

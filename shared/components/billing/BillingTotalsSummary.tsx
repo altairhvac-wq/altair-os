@@ -93,7 +93,7 @@ export function BillingTotalsSummary({
   if (isPremiumStyle) {
     const totalLabel = isEstimateStyle ? "Estimated total" : "Total";
 
-    if (compactSubtotal && hideTotal) {
+    if (compactSubtotal) {
       return (
         <div className="ml-auto w-full max-w-[280px] space-y-1 print:max-w-[220px]">
           <InvoiceTotalsRow
@@ -125,6 +125,41 @@ export function BillingTotalsSummary({
                   : "text-xs font-medium tabular-nums text-slate-700"
               }
             />
+          ) : null}
+          {/*
+           * The sum, under the lines it sums (UI audit 2026-11-12, B11). An
+           * estimate used to end at Subtotal and Tax. The total was only in
+           * the box at the top of the page, so the customer had to add the
+           * two lines themselves or scroll back up.
+           */}
+          {!hideTotal ? (
+            <div
+              className={`!mt-1.5 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t pt-1.5 ${
+                northStar
+                  ? "border-[rgba(119,89,27,0.28)] print:border-slate-400"
+                  : "border-slate-300"
+              }`}
+              data-testid="document-total-row"
+            >
+              <span
+                className={
+                  northStar
+                    ? "text-right text-xs font-bold text-[#17130E] print:text-slate-900"
+                    : "text-right text-xs font-bold text-slate-900"
+                }
+              >
+                {totalLabel}
+              </span>
+              <span
+                className={
+                  northStar
+                    ? "text-sm font-bold tabular-nums text-[#17130E] print:text-slate-900"
+                    : "text-sm font-bold tabular-nums text-slate-900"
+                }
+              >
+                {formatCurrencyExact(total)}
+              </span>
+            </div>
           ) : null}
         </div>
       );

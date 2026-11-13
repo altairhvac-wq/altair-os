@@ -27,10 +27,14 @@ export function DispatchStatStrip({ metrics }: DispatchStatStripProps) {
       title: "Non-cancelled jobs on today's operational board",
     },
     {
+      // "On site", not "In progress" (UI audit 2026-11-12, B10): this counts
+      // technicians who have arrived or are working. The Work page lists
+      // "On site" and "In progress" separately, so the old label read 1 here
+      // while Work read "In progress 0" for the same job.
       id: "in-progress",
-      label: "In Progress",
+      label: "On Site",
       value: String(metrics.inProgress),
-      title: "Jobs currently arrived or in progress",
+      title: "Jobs where the technician has arrived or is working",
     },
     {
       id: "completed",
