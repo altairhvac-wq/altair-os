@@ -125,6 +125,10 @@ steps.push(
     // Runs the SHIPPED policy + gate (grace window, H7), not a copy.
     typescript: true,
   },
+  // The free calculators, templates and library (pure modules + wiring).
+  { name: "resource-center", script: "scripts/verify-resource-center.mjs" },
+  // The public contractor directory: listing rules, migration 210, wiring.
+  { name: "public-directory", script: "scripts/verify-directory.mjs" },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
   { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
   {

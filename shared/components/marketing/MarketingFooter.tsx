@@ -22,6 +22,7 @@ const FOOTER_LINKS = [
   { href: "/insights", label: "Insights" },
   { href: "/resources", label: "Resources" },
   { href: "/resources/calculators", label: "Calculators" },
+  { href: "/directory", label: "Contractor Directory" },
   { href: "/for-techs", label: "For Techs" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },

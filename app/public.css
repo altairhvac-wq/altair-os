@@ -45,6 +45,7 @@
 @source "../shared/components/marketing";
 @source "../shared/components/pricing";
 @source "../shared/components/pwa";
+@source "../shared/components/directory";
 @source "../shared/components/resources";
 @source "../shared/components/site";
 /* The sign-in error screen only; the rest of support/ is admin-only. */

@@ -47,6 +47,15 @@ const SITE_PAGE_ROUTE_PREFIX = "/insights";
  * needed and nothing here reads or writes tenant data.
  */
 const RESOURCES_ROUTE_PREFIX = "/resources";
+/**
+ * The public contractor directory (migration 210): search, a page per
+ * published listing, the "list your business" form and the manage page a
+ * lister reaches from their email. Visitors have no account. The pages read
+ * only published listings' public columns, and every change goes through a
+ * Server Action that checks a signed link or the rate limit itself
+ * (app/actions/directory.ts).
+ */
+const DIRECTORY_ROUTE_PREFIX = "/directory";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 const CONTACT_ROUTE = "/contact";
@@ -268,6 +277,13 @@ function isResourcesRoute(pathname: string) {
   );
 }
 
+function isDirectoryRoute(pathname: string) {
+  return (
+    pathname === DIRECTORY_ROUTE_PREFIX ||
+    pathname.startsWith(`${DIRECTORY_ROUTE_PREFIX}/`)
+  );
+}
+
 function isSitemapRoute(pathname: string) {
   return pathname === SITEMAP_ROUTE;
 }
@@ -333,6 +349,7 @@ function isMarketingRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isDirectoryRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
     isCompanyPageRoute(pathname) ||
@@ -350,6 +367,7 @@ function isPublicRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isDirectoryRoute(pathname) ||
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
