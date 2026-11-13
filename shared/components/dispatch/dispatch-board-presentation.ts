@@ -117,10 +117,13 @@ export const dispatchMissionClasses = {
     "absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-altair-danger",
 
   /** Compact inline KPIs opposite the board title. */
+  /* Phones: four equal tiles on one full-width row. As a wrapping flex row
+     the fourth tile ("On time") ran off the right edge. */
   metricStrip:
-    "flex shrink-0 flex-wrap items-stretch justify-end gap-1 sm:gap-1.5",
-  metricTile: `${altairReportTileClass} min-w-[4.25rem] px-2 py-1 sm:min-w-[4.75rem] sm:px-2.5 sm:py-1.5`,
-  metricLabel: altairReportMetricLabelClass,
+    "flex shrink-0 flex-wrap items-stretch justify-end gap-1 max-sm:grid max-sm:w-full max-sm:grid-cols-4 sm:gap-1.5",
+  metricTile: `${altairReportTileClass} min-w-[4.25rem] px-2 py-1 max-sm:flex max-sm:min-w-0 max-sm:flex-col max-sm:justify-between max-sm:gap-1 max-sm:px-1.5 max-sm:py-1.5 sm:min-w-[4.75rem] sm:px-2.5 sm:py-1.5`,
+  /* Phones: tighter letter spacing so "COMPLETED" stays inside its tile. */
+  metricLabel: `${altairReportMetricLabelClass} max-sm:leading-tight max-sm:tracking-[0.04em]`,
   metricValue:
     "truncate text-sm font-extrabold tracking-tight tabular-nums leading-none text-altair-paper sm:text-base",
 

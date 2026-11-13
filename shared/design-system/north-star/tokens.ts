@@ -342,7 +342,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
   badgeArchived:
     "inline-flex shrink-0 rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] ring-1 ring-[rgba(119,89,27,0.12)]",
   bulkBar:
-    "sticky bottom-0 z-20 border-t border-[rgba(119,89,27,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
+    "sticky bottom-[var(--bottom-nav-offset,0px)] z-20 border-t border-[rgba(119,89,27,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
   bulkBarTitle: "text-sm font-bold text-[#17130E]",
   bulkClearButton: buttonClassName("quiet", "sm", "shrink-0"),
   bulkPrimaryAction: buttonClassName("primary", "sm"),
@@ -422,8 +422,11 @@ export type NorthStarDetailPageTokens = {
 
 export const northStarDetailTokens: NorthStarDetailPageTokens = {
   pageCanvas: "north-star-detail-page-canvas",
+  /* Ink, not cream: this link sits on the light page canvas (invoice, team
+     member). The old cream text was written for a dark band and measured
+     about 1.4:1 here, so it read as disabled. */
   backLink:
-    "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-[#D4CFC2] transition-colors hover:text-[#FFF9EA]",
+    "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:text-altair-ink-on-paper",
   heroShell: "north-star-detail-hero relative overflow-hidden rounded-xl p-3 sm:p-3.5",
   heroAccentRail:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(217,193,136,0.42)] to-transparent",

@@ -4976,23 +4976,26 @@ a[href] {
   color: #464031;
 }
 
+/*
+ * The action bar fixed to the bottom of a phone invoice or estimate.
+ *
+ * Solid, not frosted (UI audit 2026-11-12, item A9): at 92% white with a
+ * blur, the invoice number and total showed through behind the bar's own
+ * words.
+ *
+ * It sits on top of the phone tab bar, not under it. --bottom-nav-offset is
+ * the tab bar's height where the shell has one, and 0 everywhere else.
+ */
 .admin-sticky-footer {
   position: fixed;
   inset-inline: 0;
-  bottom: 0;
+  bottom: var(--bottom-nav-offset, 0px);
   z-index: 30;
-  border-top: 1px solid rgb(234 231 225 / 0.95);
-  background-color: rgb(255 255 255 / 0.96);
+  border-top: 1px solid rgb(234 231 225);
+  background-color: #ffffff;
   padding: 0.75rem 1rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   box-shadow: var(--shadow-sticky);
-  backdrop-filter: blur(8px);
-}
-
-@supports (backdrop-filter: blur(8px)) {
-  .admin-sticky-footer {
-    background-color: rgb(255 255 255 / 0.92);
-  }
 }
 
 .admin-sticky-footer-spacer {
@@ -5263,14 +5266,29 @@ a[href] {
 @media (max-width: 767.98px) {
   .admin-shell-main[data-bottom-nav="true"] {
     padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+    /*
+     * The tab bar's own height: 1px rule, 6px, a 56px tab, then its bottom
+     * inset. Anything else pinned to the bottom of a phone page (an invoice's
+     * action bar, a list's selection bar) starts above this, so the tab bar
+     * never covers it.
+     */
+    --bottom-nav-offset: calc(
+      3.9375rem + max(0.375rem, env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  /* The tab bar already clears the home indicator, so the bar above it
+   * needs no inset of its own. */
+  .admin-shell-main[data-bottom-nav="true"] .admin-sticky-footer {
+    padding-bottom: 0.75rem;
   }
 }
 
+/* Solid, like the action bar above it: page text must not show through. */
 .tech-bottom-nav,
 .admin-bottom-nav {
-  border-top: 1px solid rgb(234 231 225 / 0.45);
-  background-color: rgb(255 255 255 / 0.94);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid rgb(234 231 225);
+  background-color: #ffffff;
   box-shadow: 0 -4px 24px -8px rgb(21 25 19 / 0.06);
 }
 
