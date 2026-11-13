@@ -589,7 +589,7 @@ export function TeamMembersTable({
             {isCurrentUser ? " (You)" : ""}
           </span>
           <span
-            className={`mt-0.5 block truncate text-[10px] font-medium leading-tight ${
+            className={`mt-0.5 block truncate text-xs font-medium leading-tight ${
               isRoot ? "text-cyan-100" : "text-altair-ink-on-paper-muted"
             }`}
           >

@@ -251,7 +251,7 @@ export function SettingsOverviewView({
                 System check
               </span>
               <span className="block text-[13px] text-altair-ink-secondary">
-                Technical diagnostics. Written for whoever set up the system, not for daily use.
+                Whether your workspace, email and card payments are working.
               </span>
             </span>
           </span>
