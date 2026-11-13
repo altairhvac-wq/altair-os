@@ -85,7 +85,9 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
   {
     id: "data-out",
     question: "Can I get my data out if I leave?",
-    answer: `Yes. Your data is yours. Email ${SUPPORT_EMAIL} and we send you a file with everything in your workspace. A self-serve export button is not in the product yet.`,
+    // Settings sits behind the subscription gate, so a lapsed workspace cannot
+    // reach the button; that case is the email.
+    answer: `Yes. Your data is yours. An owner or admin can download every record in the workspace as one file from Settings, during the trial or while subscribed. If your access has already ended, email ${SUPPORT_EMAIL} and we send you the file.`,
   },
   {
     id: "help",

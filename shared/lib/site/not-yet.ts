@@ -54,8 +54,4 @@ export const ALTAIR_NOT_YET: readonly NotYetItem[] = [
     title: "Importing equipment or job history",
     today: "The import brings over customer names, phone numbers, emails and addresses.",
   },
-  {
-    title: "A self-serve export button",
-    today: "Your data is yours. Email us and we send you a file of everything in your workspace.",
-  },
 ];

@@ -18,6 +18,7 @@ import {
   SettingsWorkspacePage,
   SettingsWorkspaceSection,
 } from "./SettingsWorkspacePage";
+import { WorkspaceExportCard } from "./WorkspaceExportCard";
 
 /**
  * Company — the consolidated "everything about your business" tab
@@ -201,6 +202,17 @@ export function CompanySettingsView({
           ) : null}
         </SettingsWorkspaceSection>
       ) : null}
+
+      {/* Last on the page: a complete copy of the workspace, for the owner's
+       * records or for leaving. The server action decides who may run it. */}
+      <SettingsWorkspaceSection
+        id="export"
+        title="Export your data"
+        description="A complete copy of this workspace's records, in one file."
+        className="scroll-mt-24"
+      >
+        <WorkspaceExportCard companyName={companyProfile.name} />
+      </SettingsWorkspaceSection>
     </SettingsWorkspacePage>
   );
 }
