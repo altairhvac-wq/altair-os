@@ -35,10 +35,18 @@ export function MasterPageHeader({
 }: MasterPageHeaderProps) {
   const isCompact = density === "compact";
   const hasActions = Boolean(primaryAction || secondaryAction);
-  const hasMobileContent = Boolean(subtitle || eyebrow || hasActions);
-  const responsiveTitleClass = "sr-only md:not-sr-only";
+  /*
+   * Phones (UI audit 2026-11-12). The title used to be hidden below 768px
+   * ("sr-only md:not-sr-only"), so a phone page had no name on it: only its
+   * description, on one row with the action buttons, which squeezed that
+   * description into a column a word wide (Community, Tax summary) or cut it
+   * to "See what is happen…" (Work, Sales, Customers, Team).
+   *
+   * Below 640px the header is now two rows: the title and its description
+   * at full width, then the actions. The title shows at every width.
+   */
   const actionRowClass = isCompact
-    ? "flex shrink-0 items-center gap-2"
+    ? "flex shrink-0 items-center gap-2 max-sm:flex-wrap"
     : "flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center";
 
   const surfaceClass =
@@ -67,7 +75,7 @@ export function MasterPageHeader({
 
   return (
     <header
-      className={`${surfaceClass} ${hasMobileContent ? "flex" : "hidden md:flex"} shrink-0 gap-2 ${center ? "" : "justify-between"} ${layoutClass} ${className}`}
+      className={`${surfaceClass} flex shrink-0 gap-2 max-sm:flex-col max-sm:items-stretch ${center ? "" : "sm:justify-between"} ${layoutClass} ${className}`}
     >
       {/* `flex-auto` (`flex: 1 1 auto`), not `flex-1` (`flex: 1 1 0%`). With a
           zero basis this block made no claim on width at all, so it collapsed
@@ -94,16 +102,16 @@ export function MasterPageHeader({
               className={`sm:shrink-0 ${
                 titleClassName ||
                 "min-w-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg"
-              } ${responsiveTitleClass}`}
+              }`}
             >
               {title}
             </h1>
             {subtitle ? (
               <p
-                className={
+                className={`${
                   subtitleClassName ||
                   "min-w-0 text-xs leading-snug text-slate-500 sm:truncate"
-                }
+                } max-sm:whitespace-normal`}
               >
                 {subtitle}
               </p>
@@ -111,7 +119,7 @@ export function MasterPageHeader({
           </div>
         ) : (
           <>
-            <h1 className={`admin-heading-page ${responsiveTitleClass}`}>{title}</h1>
+            <h1 className="admin-heading-page">{title}</h1>
             {subtitle ? (
               <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
             ) : null}

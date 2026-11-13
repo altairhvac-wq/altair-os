@@ -42,7 +42,9 @@ const northStarTableHeaderRow =
 
 const northStarTableHeaderCell = "admin-table-cell text-xs font-semibold text-[#4F4638]";
 
-const northStarItemNameClass = "truncate text-sm font-bold text-[#17130E]";
+// On a phone the name wraps instead of pushing the price off the screen.
+const northStarItemNameClass =
+  "truncate text-sm font-bold text-[#17130E] max-sm:whitespace-normal max-sm:break-words";
 
 const northStarItemDescriptionClass =
   "mt-0.5 line-clamp-2 text-sm leading-snug text-[#4F4638]";
@@ -107,7 +109,14 @@ export function ServiceItemsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left text-sm">
+      {/*
+       * On a phone the table is two columns: the item and its price. It used
+       * to keep its 720px desktop width, so only the Item column was on
+       * screen and the price was off the right edge (UI audit 2026-11-12:
+       * "no prices on a phone"). Category, a missing cost and an inactive
+       * state move under the item name; the full columns return from 640px.
+       */}
+      <table className="w-full text-left text-sm max-sm:table-fixed sm:min-w-[720px]">
         <thead>
           <tr
             className={
@@ -132,23 +141,24 @@ export function ServiceItemsTable({
               </th>
             ) : null}
             <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>Item</th>
-            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
+            <th className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} max-sm:hidden`}>
               Category
             </th>
             <th
-              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right`}
+              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right max-sm:hidden`}
             >
               Internal cost
             </th>
             <th
-              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right`}
+              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right max-sm:w-[6rem]`}
             >
-              Customer price
+              <span className="sm:hidden">Price</span>
+              <span className="max-sm:hidden">Customer price</span>
             </th>
-            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
+            <th className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} max-sm:hidden`}>
               Taxable
             </th>
-            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
+            <th className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} max-sm:hidden`}>
               Status
             </th>
           </tr>
@@ -224,9 +234,17 @@ export function ServiceItemsTable({
                         {item.description}
                       </p>
                     ) : null}
+                    {/* Phone only: what the hidden columns would have said. */}
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-altair-ink-on-paper-secondary sm:hidden">
+                      <span>{category.text}</span>
+                      {internalCost.missing ? (
+                        <span className="font-semibold text-altair-warning-foreground">Missing cost</span>
+                      ) : null}
+                      {item.isActive ? null : <span className="font-semibold">Inactive</span>}
+                    </p>
                   </div>
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3 text-slate-600"}>
+                <td className={`${northStar ? "admin-table-cell" : "px-4 py-3 text-slate-600"} max-sm:hidden`}>
                   {northStar && !category.missing ? (
                     <span className={northStarCategoryChipClass}>{category.text}</span>
                   ) : (
@@ -240,7 +258,7 @@ export function ServiceItemsTable({
                   )}
                 </td>
                 <td
-                  className={`${
+                  className={`max-sm:hidden ${
                     northStar ? "admin-table-cell text-right" : "px-4 py-3 text-right"
                   } ${
                     internalCost.missing
@@ -270,15 +288,15 @@ export function ServiceItemsTable({
                   {formatCurrencyExact(item.unitPrice)}
                 </td>
                 <td
-                  className={
+                  className={`max-sm:hidden ${
                     northStar
                       ? `admin-table-cell ${lt.tableSecondaryText}`
                       : "px-4 py-3 text-slate-600"
-                  }
+                  }`}
                 >
                   {item.taxable ? "Yes" : "No"}
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                <td className={`${northStar ? "admin-table-cell" : "px-4 py-3"} max-sm:hidden`}>
                   <span
                     className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
                       item.isActive

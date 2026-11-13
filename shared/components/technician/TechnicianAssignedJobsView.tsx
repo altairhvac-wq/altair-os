@@ -7,6 +7,7 @@ import {
   filterJobsForTechnicianScheduleDay,
   formatTechnicianScheduleDayHeading,
   formatTechnicianScheduleCaughtUpDescription,
+  formatTechnicianScheduleCaughtUpTitle,
   formatTechnicianScheduleEmptyDescription,
   formatTechnicianScheduleEmptyTitle,
   formatTechnicianScheduleQueueLabel,
@@ -293,10 +294,15 @@ export function TechnicianAssignedJobsView({
             title={
               jobs.length === 0
                 ? "Nothing on your schedule"
-                : formatTechnicianScheduleEmptyTitle(
-                    selectedDateOnly,
-                    scheduleContext,
-                  )
+                : selectedDayJobs.length > 0
+                  ? formatTechnicianScheduleCaughtUpTitle(
+                      selectedDateOnly,
+                      scheduleContext,
+                    )
+                  : formatTechnicianScheduleEmptyTitle(
+                      selectedDateOnly,
+                      scheduleContext,
+                    )
             }
             description={
               jobs.length === 0
