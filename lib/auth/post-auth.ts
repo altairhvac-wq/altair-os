@@ -1,3 +1,4 @@
+import { queueWelcomeEmailForNewCompany } from "@/lib/onboarding/welcome";
 import {
   bootstrapCompanyForNewUser,
   getCompanyNameFromUserMetadata,
@@ -65,6 +66,11 @@ export async function resolveAuthCallbackDestination(
 
       if (!bootstrapResult.error && bootstrapResult.companyId) {
         companyContext = await getActiveCompanyContext({
+          companyId: bootstrapResult.companyId,
+        });
+
+        await queueWelcomeEmailForNewCompany({
+          user,
           companyId: bootstrapResult.companyId,
         });
 

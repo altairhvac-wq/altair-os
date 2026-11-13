@@ -7,6 +7,7 @@ import {
   DollarSign,
   HardHat,
   LayoutDashboard,
+  LifeBuoy,
   Megaphone,
   Network,
   Receipt,
@@ -117,6 +118,12 @@ export const adminNavItems: NavItem[] = [
     href: "/settings",
     icon: Settings,
     description: "Company and platform configuration",
+  },
+  {
+    label: "Help",
+    href: "/help",
+    icon: LifeBuoy,
+    description: "Live onboarding, support email, and getting started",
   },
 ];
 
@@ -231,7 +238,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "company",
     label: "Company",
-    hrefs: ["/settings", "/platform"],
+    hrefs: ["/settings", "/help", "/platform"],
   },
 ];
 

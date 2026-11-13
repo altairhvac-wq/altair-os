@@ -6,11 +6,14 @@ import {
 type SettingsShellProps = {
   children: React.ReactNode;
   showSystemCheck: boolean;
+  /** The marketing-channel Integrations tab (platform admins only). */
+  showIntegrations?: boolean;
 };
 
 export function SettingsShell({
   children,
   showSystemCheck,
+  showIntegrations = false,
 }: SettingsShellProps) {
   return (
     <section
@@ -28,7 +31,10 @@ export function SettingsShell({
             </p>
           </div>
           <div className="mt-2">
-            <SettingsNavigation showSystemCheck={showSystemCheck} />
+            <SettingsNavigation
+              showSystemCheck={showSystemCheck}
+              showIntegrations={showIntegrations}
+            />
           </div>
         </div>
       </div>

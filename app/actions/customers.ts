@@ -33,6 +33,7 @@ import {
 import {
   normalizeCustomerFormData,
   validateCustomerFormData,
+  validateCustomerRecord,
   type Customer,
   type CustomerFormData,
   type LegacyCustomerStatus,
@@ -82,7 +83,8 @@ export async function createCustomerAction(
 
   const requestedStatus = data.status as LegacyCustomerStatus;
   const normalized = normalizeCustomerFormData(data);
-  const validationError = validateCustomerFormData(normalized);
+  // Name plus phone OR email; the address is optional (validateCustomerRecord).
+  const validationError = validateCustomerRecord(normalized);
   if (validationError) {
     return { error: validationError };
   }
@@ -128,8 +130,11 @@ export async function updateCustomerAction(
   }
 
   const normalized = normalizeCustomerFormData(data);
+  // Editing never demands more than creating did: an imported customer with
+  // no address can still have a phone number added.
   const validationError = validateCustomerFormData(normalized, {
     requireContact: false,
+    requireAddress: false,
   });
   if (validationError) {
     return { error: validationError };

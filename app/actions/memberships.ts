@@ -233,10 +233,6 @@ export async function inviteTeamMemberAction(
   email: string,
   role: CompanyRole,
 ): Promise<InviteTeamMemberActionResult> {
-  console.info("[team-invite-prod-debug] inviteTeamMemberAction entered", {
-    role,
-    toDomain: email.includes("@") ? email.split("@")[1] : "invalid",
-  });
 
   const access = await requireTeamManagementContext();
 
@@ -281,23 +277,6 @@ export async function inviteTeamMemberAction(
     ? buildTeamInviteAcceptUrl(appBaseUrl)
     : undefined;
 
-  console.info("[team-invite-prod-debug] env presence check", {
-    RESEND_API_KEY: Boolean(process.env.RESEND_API_KEY?.trim()),
-    RESEND_FROM_EMAIL: Boolean(process.env.RESEND_FROM_EMAIL?.trim()),
-    NEXT_PUBLIC_APP_URL: Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim()),
-    VERCEL_URL: Boolean(process.env.VERCEL_URL?.trim()),
-    NODE_ENV: process.env.NODE_ENV ?? "unknown",
-  });
-
-  console.info("[team-invite-prod-debug] resolved app URL", {
-    appBaseUrl: appBaseUrl ?? null,
-    source: process.env.NEXT_PUBLIC_APP_URL?.trim()
-      ? "NEXT_PUBLIC_APP_URL"
-      : process.env.VERCEL_URL?.trim()
-        ? "VERCEL_URL"
-        : "none",
-  });
-
   console.info("[team-invite-debug:inviteTeamMemberAction] invite saved, sending email", {
     toDomain: result.member.email.split("@")[1] ?? "unknown",
     membershipId: result.member.id,
@@ -334,10 +313,6 @@ export async function inviteTeamMemberAction(
 
   if (emailResult.ok) {
     const emailDelivery = { status: "sent" as const };
-    console.info("[team-invite-prod-debug] final emailDelivery status", {
-      emailDelivery,
-      membershipId: result.member.id,
-    });
     return {
       member: result.member,
       inviteAcceptUrl,
@@ -351,10 +326,6 @@ export async function inviteTeamMemberAction(
       message: emailResult.message,
       missingEnv: emailResult.missingEnv,
     };
-    console.info("[team-invite-prod-debug] final emailDelivery status", {
-      emailDelivery,
-      membershipId: result.member.id,
-    });
     return {
       member: result.member,
       inviteAcceptUrl,
@@ -366,10 +337,6 @@ export async function inviteTeamMemberAction(
     status: "failed" as const,
     message: emailResult.message,
   };
-  console.info("[team-invite-prod-debug] final emailDelivery status", {
-    emailDelivery,
-    membershipId: result.member.id,
-  });
   return {
     member: result.member,
     inviteAcceptUrl,

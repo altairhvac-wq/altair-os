@@ -1,10 +1,12 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { createBetaFeedbackReport } from "@/lib/database/queries/beta-feedback-reports";
+import { sendFeedbackAlertEmail } from "@/lib/email/feedback-alert";
 import type { BetaFeedbackReportFormData } from "@/shared/types/beta-feedback";
 import {
   BETA_FEEDBACK_EXPECTED_BEHAVIOR_MAX_LENGTH,
@@ -87,6 +89,32 @@ export async function submitBetaFeedbackReportAction(
     });
     return { error: error ?? "Could not send feedback. Please try again." };
   }
+
+  // Tell a person. The report used to sit in the database until someone
+  // opened the platform bug list. Sent after the response so a mail outage
+  // never turns a saved report into an error for the customer.
+  after(async () => {
+    try {
+      const result = await sendFeedbackAlertEmail({
+        severity: data.severity,
+        message,
+        expectedBehavior,
+        pageUrl,
+        companyName: context?.company.name ?? null,
+        reporterEmail: userEmail,
+        reporterRole: userRole,
+      });
+      if (!result.ok) {
+        console.warn("[submitBetaFeedbackReportAction] alert email not sent", {
+          reason: result.reason,
+        });
+      }
+    } catch (alertError) {
+      console.error("[submitBetaFeedbackReportAction] alert email failed", {
+        message: alertError instanceof Error ? alertError.message : "unknown",
+      });
+    }
+  });
 
   return { success: "Thanks — feedback sent." };
 }

@@ -7,6 +7,10 @@ import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
 import { getDashboardOverviewExtras } from "@/lib/database/services/dashboard-overview";
+import {
+  getLiveOnboardingInfo,
+  isWithinLiveOnboardingWindow,
+} from "@/lib/onboarding/live-onboarding";
 import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 import { BillingGraceBanner } from "@/shared/components/billing/BillingGraceBanner";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
@@ -46,6 +50,15 @@ export default async function DashboardPage() {
     companyContext,
   );
 
+  // The live onboarding invitation the public site promises is "in your
+  // workspace after you sign up": on the dashboard for the first weeks, and
+  // on /help for good.
+  const liveOnboarding = isWithinLiveOnboardingWindow(
+    companyContext.company.created_at,
+  )
+    ? getLiveOnboardingInfo()
+    : null;
+
   const userDisplayName =
     companyContext.profile.full_name ??
     companyContext.user.email ??
@@ -66,6 +79,7 @@ export default async function DashboardPage() {
         userDisplayName={userDisplayName}
         onboardingChecklist={onboardingChecklist}
         demoDataStatus={demoDataStatus}
+        liveOnboarding={liveOnboarding}
         companyTimeZone={companyContext.company.timezone}
         companyContext={companyContext}
       />

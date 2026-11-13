@@ -102,6 +102,11 @@ export function applyCustomerQueueFilters<Q extends FilterableQuery<Q>>(
   // Every remaining queue is lifecycle-active.
   let scoped = query.is("deleted_at", null).is("archived_at", null);
 
+  // all = the whole book, complete or not (isCustomerBookQueue).
+  if (queue === "all") {
+    return scoped;
+  }
+
   if (queue === "inactive") {
     return scoped.eq("status", "inactive");
   }

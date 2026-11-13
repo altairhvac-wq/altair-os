@@ -464,7 +464,8 @@ export type AdminNavHref =
   | "/community"
   | "/reports"
   | "/alpha-tracker"
-  | "/settings";
+  | "/settings"
+  | "/help";
 
 const ADMIN_NAV_HREF_SET = new Set<string>([
   "/",
@@ -490,6 +491,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/reports",
   "/alpha-tracker",
   "/settings",
+  "/help",
 ]);
 
 export function isAdminNavHref(href: string): href is AdminNavHref {
@@ -561,6 +563,9 @@ export function canAccessAdminNavItem(
       return context.isPlatformAdmin && permissions.manageCompany;
     case "/settings":
       return permissions.manageCompany;
+    case "/help":
+      // Support contacts and live onboarding: everyone in the office shell.
+      return true;
     default:
       return false;
   }
@@ -603,6 +608,7 @@ export function getAccessibleAdminNavHrefs(
     "/reports",
     "/alpha-tracker",
     "/settings",
+    "/help",
   ];
 
   const visible = hrefs.filter(
@@ -649,6 +655,7 @@ export function canAccessAppRedirectPath(
     path.startsWith("/technician") ||
     path.startsWith("/tech/") ||
     path.startsWith("/setup") ||
+    path.startsWith("/help") ||
     path.startsWith("/expenses") ||
     path.startsWith("/time") ||
     path.startsWith("/payroll")

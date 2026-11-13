@@ -72,6 +72,13 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
 type SettingsNavigationProps = {
   /** Kept for call-site compatibility; System Check now lives on Overview. */
   showSystemCheck?: boolean;
+  /**
+   * Integrations lists the founder's marketing channels (Facebook, TikTok,
+   * Higgsfield...) with developer variable names. A customer company cannot
+   * use any of them (Marketing Hub is platform-admin only), so the tab is
+   * shown to platform admins only.
+   */
+  showIntegrations?: boolean;
 };
 
 function isSettingsItemActive(
@@ -85,13 +92,20 @@ function isSettingsItemActive(
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-export function SettingsNavigation(_props: SettingsNavigationProps) {
+export function SettingsNavigation({
+  showIntegrations = false,
+}: SettingsNavigationProps) {
   const pathname = usePathname();
+  const items = showIntegrations
+    ? SETTINGS_NAVIGATION_ITEMS
+    : SETTINGS_NAVIGATION_ITEMS.filter(
+        (item) => item.href !== "/settings/integrations",
+      );
 
   return (
     <nav aria-label="Settings categories">
       <div className="flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain rounded-none border border-[var(--north-star-border)] bg-[var(--surface-section)] p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {SETTINGS_NAVIGATION_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = isSettingsItemActive(pathname, item);
           const Icon = item.icon;
 

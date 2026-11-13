@@ -31,6 +31,7 @@ import {
   type CustomerImportPreset,
   type CustomerImportPreviewRow,
 } from "@/shared/lib/customer-import";
+import { describeCustomerImportMappingGaps } from "@/shared/lib/customer-import-mapping";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   MasterContentStack,
@@ -116,6 +117,11 @@ export function CustomerImportPageView({
 
   const hasHiddenPreviewRows =
     previewRows.length > CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT;
+
+  const mappingGaps = useMemo(
+    () => describeCustomerImportMappingGaps(fieldMapping, csvHeaders),
+    [fieldMapping, csvHeaders],
+  );
 
   function resetImportState() {
     setPhase("upload");
@@ -539,6 +545,33 @@ export function CustomerImportPageView({
               </div>
             ))}
           </div>
+
+          {mappingGaps.warnings.length > 0 ||
+          mappingGaps.unmappedHeaders.length > 0 ? (
+            <div
+              role="status"
+              className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900"
+            >
+              {mappingGaps.warnings.map((warning) => (
+                <p key={warning} className="flex items-start gap-2">
+                  <AlertCircle
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>{warning}</span>
+                </p>
+              ))}
+              {mappingGaps.unmappedHeaders.length > 0 ? (
+                <p className="text-amber-800">
+                  Not imported:{" "}
+                  <span className="font-medium">
+                    {mappingGaps.unmappedHeaders.join(", ")}
+                  </span>
+                  . Match any of these above if you want to keep them.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <button

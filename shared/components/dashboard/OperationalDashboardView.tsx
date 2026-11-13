@@ -13,6 +13,7 @@ import {
 } from "@/shared/types/dashboard-overview";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
 
 type OperationalDashboardViewProps = {
   data: DashboardData;
@@ -22,6 +23,8 @@ type OperationalDashboardViewProps = {
   userDisplayName: string;
   onboardingChecklist?: OnboardingChecklist;
   demoDataStatus?: DemoDataStatus | null;
+  /** Live onboarding invitation; null outside a company's first weeks. */
+  liveOnboarding?: LiveOnboardingInfo | null;
   companyTimeZone?: string;
   /** Enables the mobile-only launcher home; desktop always renders the overview. */
   companyContext?: ActiveCompanyContext | null;
@@ -34,6 +37,7 @@ export function OperationalDashboardView({
   userDisplayName,
   onboardingChecklist,
   demoDataStatus,
+  liveOnboarding = null,
   companyTimeZone,
   companyContext,
 }: OperationalDashboardViewProps) {
@@ -46,6 +50,7 @@ export function OperationalDashboardView({
             companyContext={companyContext}
             userDisplayName={userDisplayName}
             companyTimeZone={companyTimeZone}
+            liveOnboarding={liveOnboarding}
           />
         </div>
       ) : null}
@@ -62,6 +67,7 @@ export function OperationalDashboardView({
               companyTimeZone={companyTimeZone ?? companyContext?.company.timezone ?? "UTC"}
               onboardingChecklist={onboardingChecklist}
               demoDataStatus={demoDataStatus}
+              liveOnboarding={liveOnboarding}
             />
           </MasterPageCanvas>
         </MasterShellPage>
