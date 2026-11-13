@@ -3,6 +3,8 @@ import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { serializeJsonLd } from "@/shared/lib/site/structured-data";
+import type { ArticleAudio } from "@/shared/lib/site/article-audio";
+import { ArticleListenPlayer } from "@/shared/components/site/ArticleListenPlayer";
 
 /**
  * Renders one published site page.
@@ -141,6 +143,7 @@ export function SitePageArticle({
   internalLinks,
   pathPrefix,
   moreArticles = [],
+  audio = null,
 }: {
   readonly title: string;
   readonly bodyMarkdown: string;
@@ -151,6 +154,8 @@ export function SitePageArticle({
   readonly pathPrefix: string;
   /** Other published articles, newest first, excluding this one. */
   readonly moreArticles?: readonly ArticleSummary[];
+  /** The recorded reading of this article, when one has been approved. */
+  readonly audio?: ArticleAudio | null;
 }) {
   const blocks = parseArticleBlocks(bodyMarkdown);
   const hasStructuredData = Object.keys(structuredData).length > 0;
@@ -220,6 +225,8 @@ export function SitePageArticle({
             {minutes} min read
           </p>
         </header>
+
+        {audio ? <ArticleListenPlayer title={title} audio={audio} /> : null}
 
         {sections.length >= 3 ? (
           <nav
