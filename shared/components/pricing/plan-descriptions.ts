@@ -6,8 +6,8 @@ import type { SaasPlanKey } from "@/lib/saas-billing/types";
  */
 export const SAAS_PLAN_DESCRIPTIONS: Record<SaasPlanKey, string> = {
   beta: "",
-  starter: "For owner-operators and small teams building a stronger foundation.",
+  starter: "For an owner-operator running the business on their own.",
   growth:
-    "For growing service businesses coordinating more people and more work.",
-  pro: "For established operations managing multiple crews or locations.",
+    "For a growing shop: the owner, the office and a few technicians.",
+  pro: "For established shops running several crews.",
 };

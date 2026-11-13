@@ -182,7 +182,7 @@ marketing-estimate.png
 marketing-invoice.png
 ```
 
-Place in `public/marketing/screenshots/` and wire `imageSrc` in `SeeAltairInActionSection.tsx` when ready.
+Capture scripts write to the git-ignored `captures/screenshots/` folder. Copy a picture into `public/marketing/screenshots/` only when a public page will show it and it contains sample data only (everything under `public/` is served to anyone with the address), then wire `imageSrc` in `SeeAltairInActionSection.tsx`.
 
 ---
 

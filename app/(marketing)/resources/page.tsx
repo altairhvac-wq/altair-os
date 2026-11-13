@@ -142,7 +142,7 @@ export default function ResourcesHubPage() {
 
       <p className="mt-10 text-center text-sm text-stone-600">
         Altair Operating System is field service software for the same work these resources cover.{" "}
-        <Link href="/#features" className={resourceLinkClass}>
+        <Link href="/hvac-software" className={resourceLinkClass}>
           See what is in the product
         </Link>
         .

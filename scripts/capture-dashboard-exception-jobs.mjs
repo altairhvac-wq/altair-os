@@ -18,8 +18,7 @@ const ENV_PATH = path.join(ROOT, ".env.local");
 const AUTH_PATH = path.join(ROOT, ".playwright", "founder-auth.json");
 const OUTPUT_DIR = path.join(
   ROOT,
-  "public",
-  "marketing",
+  "captures",
   "screenshots",
   "comparison",
 );

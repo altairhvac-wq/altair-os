@@ -35,7 +35,7 @@ export type ResourceTemplate = {
   filename: string;
   /** What the owner should do with it, one or two sentences. */
   howToUse: string;
-  /** Key of the "In Altair OS" note shown beside the template. */
+  /** Key of the "In Altair Operating System" note shown beside the template. */
   featureKey: ResourceTemplateFeatureKey;
   render: () => string;
 };

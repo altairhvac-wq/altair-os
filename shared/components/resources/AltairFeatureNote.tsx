@@ -5,7 +5,7 @@ import {
 } from "@/shared/lib/resources/feature-links";
 
 /**
- * "In Altair OS": one short paragraph naming where the product helps with
+ * "In Altair Operating System": one short paragraph naming where the product helps with
  * the task on this page. Copy lives in `feature-links.ts` and describes
  * Production modules only; it never claims an outcome.
  */

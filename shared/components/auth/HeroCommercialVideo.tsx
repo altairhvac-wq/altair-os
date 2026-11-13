@@ -8,7 +8,7 @@ const FULL_SRC = "/marketing/video/altair-commercial.mp4";
 const POSTER_SRC = "/marketing/video/altair-commercial-poster.webp";
 
 /**
- * Homepage/login hero: the Altair OS commercial.
+ * Homepage/login hero: the Altair Operating System commercial.
  * Until the visitor asks for it, a 30-second cut loops muted (1.3 MB, no sound track). Visitors who
  * prefer reduced motion see the poster instead. "Watch" swaps in the full 2:27 commercial with sound
  * and controls; that file is only requested on click.
@@ -62,7 +62,7 @@ export function HeroCommercialVideo() {
         autoPlay={!reducedMotion && !full}
         playsInline
         preload={reducedMotion ? "none" : "auto"}
-        aria-label="Altair OS commercial: one job from first call to paid"
+        aria-label="Altair Operating System commercial: one job from first call to paid"
       />
       {!full ? (
         <>

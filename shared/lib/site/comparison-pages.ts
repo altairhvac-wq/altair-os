@@ -99,6 +99,50 @@ const PRO_EXTRA_USER_USD = (() => {
 const usd = (value: number) => `$${value.toLocaleString("en-US")}`;
 const monthly = (plan: { monthlyPriceUsd: number }) => `${usd(plan.monthlyPriceUsd)}/mo`;
 
+// ---------- A five-person shop, month to month ----------
+// One pair of competitor numbers, used by the Jobber & Housecall Pro page
+// below AND by the price comparison on /pricing, so the two cannot disagree.
+// List prices for 5 users, billed monthly, from each company's own pricing
+// page on COMPETITOR_FACTS_CHECKED. Re-check both before changing either.
+const JOBBER_CONNECT_5_USERS_USD = 199;
+const HOUSECALL_PRO_ESSENTIALS_5_USERS_USD = 189;
+
+export type FiveUserPriceRow = {
+  readonly name: string;
+  readonly plan: string;
+  readonly monthlyUsd: number;
+  /** The company's own pricing page; absent for Altair (it is this site). */
+  readonly sourceUrl?: string;
+  readonly ours?: boolean;
+};
+
+/** What a five-person shop pays per month, for the table on /pricing. */
+export const FIVE_USER_PRICE_COMPARISON: {
+  readonly checkedOn: string;
+  readonly users: number;
+  readonly comparisonPath: ComparisonPagePath;
+  readonly rows: readonly FiveUserPriceRow[];
+} = {
+  checkedOn: COMPETITOR_FACTS_CHECKED,
+  users: 5,
+  comparisonPath: "/jobber-housecall-pro-alternatives",
+  rows: [
+    { name: "Altair Operating System", plan: "Growth", monthlyUsd: GROWTH.monthlyPriceUsd, ours: true },
+    {
+      name: "Jobber",
+      plan: "Connect",
+      monthlyUsd: JOBBER_CONNECT_5_USERS_USD,
+      sourceUrl: "https://www.getjobber.com/pricing/",
+    },
+    {
+      name: "Housecall Pro",
+      plan: "Essentials",
+      monthlyUsd: HOUSECALL_PRO_ESSENTIALS_5_USERS_USD,
+      sourceUrl: "https://www.housecallpro.com/pricing/",
+    },
+  ],
+};
+
 const ALTAIR_PRICE_LINE = `Starter ${monthly(STARTER)} (${STARTER.includedAccounts} user), Growth ${monthly(GROWTH)} (${GROWTH.includedAccounts} users), Pro ${monthly(PRO)} (${PRO.includedAccounts} users, then ${usd(PRO_EXTRA_USER_USD)}/mo per extra user).`;
 const ALTAIR_PRICE_NOTE = `Plans from ${monthly(STARTER)} · ${TRIAL_DAYS} days free, no credit card · Cancel anytime`;
 const ALTAIR_TRIAL = `${TRIAL_DAYS}-day free trial with the whole system. No credit card.`;
@@ -106,17 +150,17 @@ const ALTAIR_CONTRACT = "Monthly or annual billing, no long-term contract. Cance
 const ALTAIR_IMPORT_LIMITS =
   "The import brings over customer names, phone numbers, emails and addresses. Equipment and job history don't come across, so plan to add equipment as you visit each site.";
 
-const SHARED_TRADEMARK_NOTE = "Altair OS is not affiliated with or endorsed by any company named on this page.";
+const SHARED_TRADEMARK_NOTE = "Altair Operating System is not affiliated with or endorsed by any company named on this page.";
 
 // ====================================================================
 // /servicetitan-alternative
 // ====================================================================
 const SERVICETITAN: ComparisonPageContent = {
   path: "/servicetitan-alternative",
-  metaTitle: "ServiceTitan Alternative for Small HVAC Shops | Altair OS",
+  metaTitle: "ServiceTitan Alternative for Small HVAC Shops | Altair Operating System",
   metaDescription:
-    "Looking for a ServiceTitan alternative with public prices and no long contract? Compare Altair OS and ServiceTitan on pricing, contracts and setup.",
-  eyebrow: "Altair OS vs. ServiceTitan",
+    "Looking for a ServiceTitan alternative with public prices and no long contract? Compare Altair and ServiceTitan on pricing, contracts and setup.",
+  eyebrow: "Altair Operating System vs. ServiceTitan",
   headline: "A ServiceTitan alternative for small and growing HVAC shops",
   intro: [
     "ServiceTitan is a serious system. It doesn't publish prices, it describes its pricing as per technician, and its annual report says new customers typically sign 12- to 36-month agreements. That works for plenty of large operations. A smaller HVAC or field service shop may not need all of it, or want to pay for it.",
@@ -124,8 +168,8 @@ const SERVICETITAN: ComparisonPageContent = {
   ],
   priceNote: ALTAIR_PRICE_NOTE,
   table: {
-    heading: "Altair OS and ServiceTitan, side by side",
-    columns: ["Altair OS", "ServiceTitan"],
+    heading: "Altair and ServiceTitan, side by side",
+    columns: ["Altair", "ServiceTitan"],
     rows: [
       {
         label: "Pricing",
@@ -263,9 +307,9 @@ const SERVICETITAN: ComparisonPageContent = {
 // ====================================================================
 const JOBBER_HOUSECALL: ComparisonPageContent = {
   path: "/jobber-housecall-pro-alternatives",
-  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026) | Altair OS",
+  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026) | Altair Operating System",
   metaDescription:
-    "Comparing Jobber and Housecall Pro for an HVAC shop? See 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair OS.",
+    "Comparing Jobber and Housecall Pro for an HVAC shop? See 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair.",
   eyebrow: "HVAC software compared",
   headline: "Jobber and Housecall Pro alternatives for HVAC contractors",
   intro: [
@@ -275,7 +319,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
   priceNote: ALTAIR_PRICE_NOTE,
   table: {
     heading: "Prices and limits, side by side",
-    columns: ["Altair OS", "Jobber", "Housecall Pro"],
+    columns: ["Altair", "Jobber", "Housecall Pro"],
     rows: [
       {
         label: "1 user",
@@ -289,8 +333,8 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
         label: "5 users",
         cells: [
           `${monthly(GROWTH)} (Growth)`,
-          "$199/mo (Connect) or $299/mo (Grow). Core is 1 user only.",
-          "$189/mo (Essentials). $149 billed annually.",
+          `${usd(JOBBER_CONNECT_5_USERS_USD)}/mo (Connect) or $299/mo (Grow). Core is 1 user only.`,
+          `${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)}/mo (Essentials). $149 billed annually.`,
         ],
       },
       {
@@ -346,7 +390,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     items: [
       {
         title: "What it costs when you add two more people",
-        text: `Both Jobber and Housecall Pro price by tier and by user count. On Jobber's Connect plan, going from 1 user to 5 takes the monthly price from $139 to $199. On Housecall Pro, 1 user on Basic is $79 and 5 users on Essentials is $189. On Altair, 1 user is ${usd(STARTER.monthlyPriceUsd)} and 5 users is ${usd(GROWTH.monthlyPriceUsd)}.`,
+        text: `Both Jobber and Housecall Pro price by tier and by user count. On Jobber's Connect plan, going from 1 user to 5 takes the monthly price from $139 to ${usd(JOBBER_CONNECT_5_USERS_USD)}. On Housecall Pro, 1 user on Basic is $79 and 5 users on Essentials is ${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)}. On Altair, 1 user is ${usd(STARTER.monthlyPriceUsd)} and 5 users is ${usd(GROWTH.monthlyPriceUsd)}.`,
       },
       {
         title: "Which tools sit on which tier",
@@ -366,10 +410,10 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     heading: "The options in detail",
     items: [
       {
-        name: "Altair OS",
+        name: "Altair Operating System",
         highlight: true,
         summary:
-          "One connected system for HVAC and field service companies: leads, customers and their equipment, estimates customers approve from their phone, dispatch, a technician phone view, invoices with Stripe payment links, time clock, expenses, pay periods and reports. Built by an HVAC company owner.",
+          "One connected system for HVAC and field service companies: leads, customers and their equipment, estimates customers approve from their phone, dispatch, a technician phone view, invoices with Stripe payment links, time clock, timesheet approval, expenses and reports. Built by an HVAC company owner.",
         goodFor: `Small and growing shops that want public prices (${monthly(STARTER)} for 1 user, ${monthly(GROWTH)} for 5, ${monthly(PRO)} for 10), one record per job and no contract.`,
         worthKnowing:
           "It's a newer system. It has no QuickBooks sync, built-in phone system, drag-and-drop scheduling, automatic routing or live GPS today, and customer imports bring over contacts and addresses but not equipment or job history.",
@@ -436,12 +480,12 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       },
       {
         question: "Is Altair cheaper than Jobber or Housecall Pro?",
-        answer: `On their published monthly prices, yes, at each team size. 1 user is ${usd(STARTER.monthlyPriceUsd)} on Altair, $49 on Jobber Core and $79 on Housecall Pro Basic. 5 users is ${usd(GROWTH.monthlyPriceUsd)} on Altair, $199 on Jobber Connect and $189 on Housecall Pro Essentials. The plans don't include the same features, so compare the tools you'll actually use.`,
+        answer: `On their published monthly prices, yes, at each team size. 1 user is ${usd(STARTER.monthlyPriceUsd)} on Altair, $49 on Jobber Core and $79 on Housecall Pro Basic. 5 users is ${usd(GROWTH.monthlyPriceUsd)} on Altair, ${usd(JOBBER_CONNECT_5_USERS_USD)} on Jobber Connect and ${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)} on Housecall Pro Essentials. The plans don't include the same features, so compare the tools you'll actually use.`,
       },
       {
         question: "Does Altair connect to QuickBooks?",
         answer:
-          "Not today. Altair keeps invoices, payments, expenses and pay periods together, but it doesn't sync with QuickBooks. If QuickBooks sync is a must, Jobber (from Connect), Housecall Pro (from Essentials), Workiz and Kickserv all list it.",
+          "Not today. Altair keeps invoices, payments, expenses and approved timesheets together, but it doesn't sync with QuickBooks. If QuickBooks sync is a must, Jobber (from Connect), Housecall Pro (from Essentials), Workiz and Kickserv all list it.",
       },
       {
         question: "Does Altair work for HVAC specifically?",

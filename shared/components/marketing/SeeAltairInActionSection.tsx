@@ -16,63 +16,87 @@ export type ShowcaseItem = {
   imageAlt: string;
   imageLabel: string;
   imageSrc?: string;
+  /** 4:3 crop of the same screen, shown at phone widths. */
+  imageSrcMobile?: string;
   icon: LucideIcon;
 };
 
+/**
+ * The product tour on /pricing.
+ *
+ * ============ WHERE THE PICTURES COME FROM ============
+ * Each screenshot is the real product, signed in to the sample company on the
+ * scratch database ("Wasatch Valley Mechanical"), captured on 2026-11-12. The
+ * sample data uses realistic Utah street addresses and email domains, so the
+ * capture replaces them in the page with obviously made-up ones ("100 Sample
+ * St", "@example.com") before the shot. Nothing here is a real customer.
+ *
+ * The five pictures this replaced were captured from a working company in
+ * June and August 2026 and showed test rows, people's names, a personal email
+ * address, internal menu items and the dev-build badge.
+ *
+ * Copy rule: every sentence below describes something the screenshot beside
+ * it shows. No routing, no GPS, no accounting sync.
+ */
 export const SHOWCASE_ITEMS: ShowcaseItem[] = [
   {
     id: "dispatch",
-    headline: "Dispatch Command Center",
+    headline: "Dispatch board",
     description:
-      "See your day's jobs, crew assignments, and schedule changes in one place. Assign, reassign, and adjust without jumping between tools — everything stays linked to the customer and job record.",
-    badge: "Connected scheduling",
-    imageAlt: "Altair Operating System dispatch command center showing daily schedule and crew assignments",
-    imageLabel: "Dispatch Command Center",
-    imageSrc: "/marketing/screenshots/social/dispatch-full-page.png",
+      "Today's jobs on a timeline, one row per technician, with the job addresses on a map and an unassigned queue beside it. Assign or reassign a job and it stays linked to the customer and the job record.",
+    badge: "The day on one board",
+    imageAlt: "Altair Operating System dispatch board: a map of today's jobs above a timeline with one row per technician",
+    imageLabel: "Dispatch board",
+    imageSrc: "/marketing/screenshots/tour/dispatch-board.png",
+    imageSrcMobile: "/marketing/screenshots/tour/dispatch-board-phone.png",
     icon: CalendarClock,
   },
   {
     id: "customer-360",
-    headline: "Customer 360",
+    headline: "The customer record",
     description:
-      "Open any account and see contact details, service history, equipment, estimates, and invoices together. Your team gets the full picture before they pick up the phone or roll a truck.",
+      "Open a customer and see contact details, every job, estimates, invoices, payments, and the equipment on site together. Your team gets the full picture before they pick up the phone or roll a truck.",
     badge: "Single customer view",
-    imageAlt: "Altair Operating System Customer 360 view with service history and account details",
-    imageLabel: "Customer 360",
-    imageSrc: "/marketing/screenshots/social/customers-full-page.png",
+    imageAlt: "Altair Operating System customer record with job history, totals and equipment",
+    imageLabel: "Customer record",
+    imageSrc: "/marketing/screenshots/tour/customer-record.png",
+    imageSrcMobile: "/marketing/screenshots/tour/customer-record-phone.png",
     icon: Users,
   },
   {
     id: "estimates",
-    headline: "Estimates & Approvals",
+    headline: "Estimates & approvals",
     description:
-      "Build estimates in the platform and send them for customer review without extra steps. Approved work flows directly into scheduling and invoicing so your pipeline stays connected.",
+      "Build the estimate from your price book and send the customer a link. They approve and sign on their phone, and the approved estimate becomes the job and then the invoice without retyping.",
     badge: "Customer approvals built in",
-    imageAlt: "Altair Operating System estimates and customer approval workflow",
-    imageLabel: "Estimates & Approvals",
-    imageSrc: "/marketing/screenshots/social/estimates-full-page.png",
+    imageAlt: "An approved estimate in Altair Operating System with line items and the total",
+    imageLabel: "Estimates & approvals",
+    imageSrc: "/marketing/screenshots/tour/estimate-approved.png",
+    imageSrcMobile: "/marketing/screenshots/tour/estimate-approved-phone.png",
     icon: FileCheck,
   },
   {
     id: "invoicing",
-    headline: "Invoicing & Payments",
+    headline: "Invoicing & payments",
     description:
-      "Turn completed jobs into invoices and collect payment through linked customer workflows. Less re-entry, fewer handoffs, and a clearer path from work done to cash collected.",
-    badge: "End-to-end billing",
-    imageAlt: "Altair Operating System invoicing and payment collection interface",
-    imageLabel: "Invoicing & Payments",
-    imageSrc: "/marketing/screenshots/social/invoices-full-page.png",
+      "Turn the finished job into an invoice and email it. Record cash and check payments, or connect Stripe and let customers pay by card from a link. Each invoice shows what is paid and what is still owed.",
+    badge: "From finished job to paid",
+    imageAlt: "A paid invoice in Altair Operating System showing the invoice total and the amount paid",
+    imageLabel: "Invoicing & payments",
+    imageSrc: "/marketing/screenshots/tour/invoice-paid.png",
+    imageSrcMobile: "/marketing/screenshots/tour/invoice-paid-phone.png",
     icon: Receipt,
   },
   {
     id: "reporting",
-    headline: "Reporting & Business Insights",
+    headline: "Reports",
     description:
-      "Track revenue, job activity, and team performance from dashboards designed for service businesses. See what matters without exporting spreadsheets or building reports from scratch.",
-    badge: "Operations at a glance",
-    imageAlt: "Altair Operating System reporting dashboards and business insights",
-    imageLabel: "Reporting & Business Insights",
-    imageSrc: "/marketing/screenshots/social/reports-full-page.png",
+      "Collected, outstanding and overdue money, average ticket, estimate close rate and jobs completed for the last 7, 30 or 90 days or the year to date, from the same records your team works in.",
+    badge: "The numbers at a glance",
+    imageAlt: "Altair Operating System reports page with collected, outstanding and overdue totals and key metrics",
+    imageLabel: "Reports",
+    imageSrc: "/marketing/screenshots/tour/reports.png",
+    imageSrcMobile: "/marketing/screenshots/tour/reports-phone.png",
     icon: BarChart3,
   },
 ];
@@ -101,15 +125,17 @@ function ShowcaseRow({
     <article
       className={[
         "group/row flex flex-col gap-4 sm:gap-5",
-        isEven ? "flex-col-reverse lg:flex-row-reverse" : "lg:flex-row",
+        // Picture first on phones for every row; alternate sides from lg up.
+        isEven ? "lg:flex-row-reverse" : "lg:flex-row",
         compact ? "lg:gap-6" : "lg:items-center lg:gap-10",
       ].join(" ")}
     >
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 lg:flex-[1.5]">
         <ProductScreenshotPlaceholder
           alt={item.imageAlt}
           label={item.imageLabel}
           src={item.imageSrc}
+          mobileSrc={item.imageSrcMobile}
         />
       </div>
 
@@ -191,8 +217,8 @@ export function SeeAltairInActionSection({
             isDark ? "text-neutral-400" : "text-stone-600",
           ].join(" ")}
         >
-          A connected platform built for speed and simplicity — from the dispatch
-          board to the field and back to your books.
+          Real screens from a sample HVAC company: the dispatch board, the
+          customer record, an approved estimate, a paid invoice and the reports.
         </p>
       </div>
 

@@ -50,7 +50,25 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     id: "team",
     question: "Can my technicians use it too?",
     answer:
-      "Yes. Invite your office and field team from Settings; technicians get their own mobile view with the day's jobs. Plans differ by accounts: Starter includes 1, Growth up to 5, Pro 10 and then $15/month for each additional account. An account is any user, owner, office or technician.",
+      "Yes. Invite your office and field team from Settings; technicians get their own mobile view with the day's jobs. Plans differ by users: Starter includes 1, Growth up to 5, Pro 10 and then $15/month for each extra user. A user is anyone who signs in: owner, office or technician.",
+  },
+  {
+    id: "phone-app",
+    question: "Is there a phone app?",
+    answer:
+      "It runs in the phone's web browser on iPhone and Android, and you can add it to the home screen so it opens like an app. There is nothing to download from an app store.",
+  },
+  {
+    id: "import",
+    question: "Can I bring my customers over from another system?",
+    answer:
+      "Yes. Import your customer list as a CSV file exported from ServiceTitan, Housecall Pro, Jobber, QuickBooks or a spreadsheet. It brings over names, phone numbers, emails and addresses. Equipment and job history do not come across.",
+  },
+  {
+    id: "quickbooks",
+    question: "Does it work with QuickBooks?",
+    answer:
+      "Not yet. Altair does not sync with QuickBooks today. Invoices, payments and expenses are recorded in Altair, and you can import a customer list exported from QuickBooks.",
   },
   {
     id: "sample-data",
@@ -63,6 +81,13 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     question: "Where does my data live, and is it secure?",
     answer:
       "Altair runs on a hosted PostgreSQL database with row-level security, so each company can only ever see its own records. Card payments are processed by Stripe; Altair never stores card numbers.",
+  },
+  {
+    id: "data-out",
+    question: "Can I get my data out if I leave?",
+    // Settings sits behind the subscription gate, so a lapsed workspace cannot
+    // reach the button; that case is the email.
+    answer: `Yes. Your data is yours. An owner or admin can download every record in the workspace as one file from Settings, during the trial or while subscribed. If your access has already ended, email ${SUPPORT_EMAIL} and we send you the file.`,
   },
   {
     id: "help",
