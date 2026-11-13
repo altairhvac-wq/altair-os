@@ -31,6 +31,9 @@ import {
   listMyNetworkHelpRequests,
   listOpenNetworkHelpRequests,
 } from "@/lib/database/queries/network-help-requests";
+import { getCurrentUser } from "@/lib/database/auth";
+import { findPublishedSlugsForEmail, listListingsForCommunity } from "@/lib/directory/listings";
+import { normalizeDirectoryEmail } from "@/shared/types/directory";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { NetworkReferralsPageView } from "@/shared/components/network/NetworkReferralsPageView";
 
@@ -73,6 +76,7 @@ export default async function CommunityPage() {
     incomingNetworkInvites,
     openHelpRequests,
     myHelpRequests,
+    publicDirectory,
   ] = await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -98,7 +102,17 @@ export default async function CommunityPage() {
       canManageHelpRequests
         ? listMyNetworkHelpRequests(companyId)
         : Promise.resolve([]),
+      // Businesses from the public directory (altair-op.com/directory). The
+      // same published, public details anyone can see; no private column.
+      listListingsForCommunity(),
     ]);
+
+  // A member who also listed their business publicly, with the email they
+  // sign in with, sees that listing marked as their own rather than as a
+  // business that is "not on Altair yet".
+  const viewerEmail = normalizeDirectoryEmail((await getCurrentUser())?.email);
+  const ownPublicListingSlugs =
+    viewerEmail && publicDirectory.listings.length > 0 ? await findPublishedSlugsForEmail(viewerEmail) : [];
 
   // Computed trust metrics for the directory profiles on screen (aggregate
   // RPC, visible profiles only — see migration 137).
@@ -120,6 +134,9 @@ export default async function CommunityPage() {
       initialIncomingNetworkInvites={incomingNetworkInvites}
       initialOpenHelpRequests={openHelpRequests}
       initialMyHelpRequests={myHelpRequests}
+      initialPublicListings={publicDirectory.listings}
+      publicListingTotal={publicDirectory.total}
+      ownPublicListingSlugs={ownPublicListingSlugs}
       invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
       companyId={companyId}
       canSendReferral={canSendReferral}

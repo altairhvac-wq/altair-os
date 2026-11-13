@@ -19,6 +19,9 @@
  *     rate limited
  *   /directory is public in middleware, allowed in robots, in the sitemap,
  *     and the manage page is noindex
+ *   inside the signed-in Community tab, public listings come from the same
+ *     public function, are marked as not being Altair members, cannot be
+ *     sent a referral, and the invitation never receives the lister's email
  *
  * Run: node scripts/verify-directory.mjs
  */
@@ -57,6 +60,10 @@ const FILES = {
   sitemap: "app/sitemap.ts",
   stylesheet: "app/public.css",
   footer: "shared/components/marketing/MarketingFooter.tsx",
+  communityPage: "app/(admin)/community/page.tsx",
+  communityView: "shared/components/network/north-star-m11/NetworkNorthStarView.tsx",
+  communityListing: "shared/components/network/CommunityPublicListing.tsx",
+  inviteForm: "shared/components/network/NetworkInviteForm.tsx",
 };
 for (const path of Object.values(FILES)) check(`${path} exists`, existsSync(path));
 if (failures > 0) {
@@ -309,6 +316,40 @@ console.log("\nPages and wiring");
   check("emails escape the business name in HTML", /const esc = escapeBillingEmailHtml;/.test(emails) && !/\$\{input\.businessName\}<|>\$\{input\.businessName\}/.test(emails));
   check("emails never say the short product name", !/Altair OS(?![A-Za-z])/.test(emails));
   check("the consent sentence says the details will be public", /shown publicly/.test(rules.DIRECTORY_CONSENT_TEXT) && /except my email address/.test(rules.DIRECTORY_CONSENT_TEXT));
+}
+
+// ---------------------------------------------------------------- inside the app
+console.log("\nPublic listings inside Community");
+{
+  const listings = read(FILES.listings);
+  const start = listings.indexOf("export async function listListingsForCommunity");
+  const fn = listings.slice(start, listings.indexOf("\n}", start));
+  check("Community reads public listings through the public database function", /rpc\("directory_search_listings"/.test(fn) && !/\.from\("directory_listings"\)/.test(fn));
+  check("Community asks for one page, and reports the total", /p_limit: 50/.test(fn) && /total:/.test(fn));
+
+  const page = read(FILES.communityPage);
+  check("the Community page passes the listings and their total to the view", /listListingsForCommunity\(\)/.test(page) && /initialPublicListings=\{publicDirectory\.listings\}/.test(page) && /publicListingTotal=\{publicDirectory\.total\}/.test(page));
+
+  const card = read(FILES.communityListing);
+  check("a public listing is tagged, and the panel says it is not on Altair", /Public listing/.test(card) && /Not on Altair yet/.test(card));
+  check("the panel explains why a referral cannot be sent", /referral\s+cannot be sent or tracked here yet/.test(card.replace(/\s+/g, " ")));
+  check("the panel never offers 'Send referral' for a public listing", !/Send Referral|onSendReferral|SendReferral/.test(card));
+  check("the lister's email is not part of what the component can show", !/contactEmail|contact_email|mailto:/.test(card));
+  check("inviting needs the same permission as every other invitation", /canInvite/.test(card) && /canInvite=\{canManageNetwork\}/.test(read(FILES.communityView)));
+  check("the panel repeats that licences are not verified", /does not verify licenses or insurance/.test(card));
+  check("the short product name is not used", !/Altair OS(?![A-Za-z])/.test(card));
+
+  const view = read(FILES.communityView);
+  const draft = view.slice(view.indexOf("function handleInviteListing"), view.indexOf("function handleInviteListing") + 500);
+  check("an invitation started from a listing carries its name, phone and trade", /invitedCompanyName: listing\.businessName/.test(draft) && /invitedPhone: listing\.phone/.test(draft) && /tradeCategory: listing\.tradeType/.test(draft));
+  check("and never an email address: the member has to get that from the contractor", !/invitedEmail/.test(draft));
+  check("'Accepting referrals only' hides businesses that cannot accept one", /if \(acceptingReferralsOnly\) return NO_PUBLIC_LISTINGS;/.test(view));
+  check("the public group is labelled as coming from the public site", /From the public directory/.test(view) && /Listed on altair-op\.com/.test(view));
+  check("a member's own listing is found by their sign-in email, on the server, as slugs only", /findPublishedSlugsForEmail\(viewerEmail\)/.test(page) && /\.select\("slug"\)/.test(listings.slice(listings.indexOf("export async function findPublishedSlugsForEmail"), listings.indexOf("export async function createListingReport"))));
+  check("their own listing is labelled as theirs, with no invitation to themselves", /Your listing/.test(card) && /This is your own listing/.test(card) && /isOwn \? \(/.test(card));
+  check("members and public listings are counted separately", /on Altair/.test(view) && /public\`/.test(view));
+  check("when there are more listings than shown, the screen says so and links the full search", /publicListingTotal > initialPublicListings\.length/.test(view) && /DIRECTORY_PATH/.test(view));
+  check("the invitation form accepts starting values without changing its default", /initialValues\?: Partial<NetworkInviteFormData>/.test(read(FILES.inviteForm)) && /\{ \.\.\.DEFAULT_FORM, \.\.\.initialValues \}/.test(read(FILES.inviteForm)));
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

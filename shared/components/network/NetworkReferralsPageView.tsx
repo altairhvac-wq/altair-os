@@ -46,6 +46,7 @@ import {
 } from "@/shared/types/network-referral";
 import type { TradeType } from "@/shared/types/network";
 import type { NetworkReferralTrustStats } from "@/shared/lib/network/trust-metrics";
+import type { DirectoryPublicListing } from "@/shared/types/directory";
 import {
   filterInvitesByTab,
   isNetworkInviteConnected,
@@ -88,6 +89,10 @@ type NetworkReferralsPageViewProps = {
   initialIncomingNetworkInvites: IncomingNetworkInvite[];
   initialOpenHelpRequests: NetworkHelpRequest[];
   initialMyHelpRequests: NetworkHelpRequest[];
+  /** Published public-directory listings (not Altair members). North Star surface only. */
+  initialPublicListings?: DirectoryPublicListing[];
+  publicListingTotal?: number;
+  ownPublicListingSlugs?: string[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;

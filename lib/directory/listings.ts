@@ -233,6 +233,29 @@ export async function getPublicListing(
   }
 }
 
+/**
+ * Public listings for the signed-in Community directory: the same published
+ * listings, through the same function, so a member sees exactly what the
+ * public page shows and nothing more. The first page only; `total` says how
+ * many there are so the screen can point to the full public search.
+ */
+export async function listListingsForCommunity(): Promise<{ listings: DirectoryPublicListing[]; total: number }> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase.rpc("directory_search_listings", { p_limit: 50, p_offset: 0 });
+    if (error) throw error;
+    const result = (data ?? {}) as { total?: unknown; rows?: unknown };
+    const rows = Array.isArray(result.rows) ? (result.rows as PublicRow[]) : [];
+    return {
+      listings: rows.map(toPublicListing).filter((listing): listing is DirectoryPublicListing => listing !== null),
+      total: Number.isFinite(Number(result.total)) ? Number(result.total) : 0,
+    };
+  } catch (error) {
+    logFailure("community list", error);
+    return { listings: [], total: 0 };
+  }
+}
+
 export async function listPublishedListingPaths(): Promise<{ slug: string; updatedAt: string | null }[]> {
   try {
     const supabase = createServiceRoleClient();
@@ -460,6 +483,29 @@ export async function findListingsForEmail(contactEmail: string): Promise<{ id: 
     return (data ?? []).map((row) => ({ id: row.id, businessName: row.business_name, status: row.status }));
   } catch (error) {
     logFailure("lookup by email", error);
+    return [];
+  }
+}
+
+/**
+ * Which published listings belong to this signed-in person: the ones listed
+ * with the same email address they sign in with. Returns slugs only, so the
+ * Community screen can label a member's own listing as theirs instead of as
+ * a stranger's. The email itself goes nowhere.
+ */
+export async function findPublishedSlugsForEmail(contactEmail: string): Promise<string[]> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("directory_listings")
+      .select("slug")
+      .eq("contact_email", contactEmail)
+      .eq("status", "published")
+      .limit(10);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.slug).filter(isValidListingSlug);
+  } catch (error) {
+    logFailure("own listing lookup", error);
     return [];
   }
 }
