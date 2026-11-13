@@ -1,66 +1,33 @@
 import Link from "next/link";
-import {
-  Bell,
-  CalendarDays,
-  Clock,
-  Receipt,
-  type LucideIcon,
-} from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, MapPin } from "lucide-react";
+import type { DispatchJobStatus } from "@/shared/types/dispatch";
+import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 /**
- * Technician home — iOS-homescreen-style launcher.
- * Two glass widgets (Today / Time clock) over a dark graphite wallpaper,
- * then an app-icon grid of the technician tools. Every number shown is
- * real data passed from the server page — no fabricated stats.
- */
-
-type TechnicianHomeTile = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  chipClass: string;
-};
-
-/**
- * PRESTIGE: these four chips were authored as arbitrary hex gradients
- * (`#d4af37` metallic gold, `#22d3ee` cyan, `#34d399`, `#f59e0b`), so they
- * bypassed the palette entirely and stayed candy-bright while the rest of the
- * product moved. Four saturated gradients side by side is the "rainbow
- * gradients" failure, and `#d4af37` is the cheap gold this campaign exists to
- * remove.
+ * Technician home: what is next, and the clock.
  *
- * They stay four DIFFERENT colours — these are categorical navigation targets
- * and a technician picks them by colour at a glance — but they now walk the
- * canonical ramps. The mid stop of each was also darkened deliberately: the
- * white glyph sat at ~1.9:1 on the old gold, which was a legibility bug on a
- * one-handed field surface, and now clears 3:1 on every chip.
+ * A technician opens the app to find the next job, so that is the first
+ * thing on the screen and the one primary action. Under it: where the day
+ * stands, and the time clock.
+ *
+ * UI audit 2026-11-12: this screen used to be a dark launcher with a grid of
+ * four buttons (Schedule, Time, Receipts, Alerts). The bottom tab bar lists
+ * exactly those places, so the grid was a second copy of the navigation and
+ * the bottom half of the screen was empty. The grid is gone. The screen is
+ * also light now, like every other technician screen.
+ *
+ * Every number and name here is real data passed from the server page.
  */
-const HOME_TILES: TechnicianHomeTile[] = [
-  {
-    href: "/technician/schedule",
-    label: "Schedule",
-    icon: CalendarDays,
-    chipClass: "bg-gradient-to-br from-[#c2a05a] via-[#987836] to-[#5f4715]",
-  },
-  {
-    href: "/tech/time",
-    label: "Time",
-    icon: Clock,
-    chipClass: "bg-gradient-to-br from-[#78939a] via-[#465c64] to-[#2f3b40]",
-  },
-  {
-    href: "/tech/receipts",
-    label: "Receipts",
-    icon: Receipt,
-    chipClass: "bg-gradient-to-br from-[#5fa07d] via-[#35755a] to-[#1f4733]",
-  },
-  {
-    href: "/tech/notifications",
-    label: "Alerts",
-    icon: Bell,
-    chipClass: "bg-gradient-to-br from-[#cc6a5e] via-[#a64f2d] to-[#6f3520]",
-  },
-];
+
+export type TechnicianHomeNextJob = {
+  id: string;
+  customerName: string;
+  jobType: string;
+  timeLabel: string;
+  /** Formatted street address, or null when the job has no usable address. */
+  addressLine: string | null;
+  status: DispatchJobStatus;
+};
 
 type TechnicianHomeScreenProps = {
   greeting: string;
@@ -69,12 +36,16 @@ type TechnicianHomeScreenProps = {
   dayOfMonth: number;
   openJobCount: number;
   completedTodayCount: number;
-  nextJobTimeLabel: string | null;
-  nextJobCustomerName: string | null;
+  nextJob: TechnicianHomeNextJob | null;
   timeStateLabel: string;
   timeStateDotClass: string;
   clockedSinceLabel: string | null;
 };
+
+const CARD_CLASS =
+  "rounded-2xl border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]";
+const EYEBROW_CLASS =
+  "text-[11px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted";
 
 export function TechnicianHomeScreen({
   greeting,
@@ -83,109 +54,121 @@ export function TechnicianHomeScreen({
   dayOfMonth,
   openJobCount,
   completedTodayCount,
-  nextJobTimeLabel,
-  nextJobCustomerName,
+  nextJob,
   timeStateLabel,
   timeStateDotClass,
   clockedSinceLabel,
 }: TechnicianHomeScreenProps) {
-  const openJobsLine =
-    openJobCount === 0 && completedTodayCount === 0
-      ? "Nothing scheduled"
-      : `${openJobCount} open job${openJobCount === 1 ? "" : "s"}${
-          completedTodayCount > 0
-            ? ` · ${completedTodayCount} done`
-            : ""
-        }`;
+  const nothingToday = openJobCount === 0 && completedTodayCount === 0;
+  const allDone = openJobCount === 0 && completedTodayCount > 0;
 
   return (
-    <div className="-mx-4 -mt-4 -mb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-[max(8rem,calc(7rem+env(safe-area-inset-bottom,0px)))] pt-6 sm:-mx-5 sm:-mt-5">
-      {/* Greeting */}
-      <header className="px-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
+    <div className="space-y-4">
+      <header>
+        <p className={EYEBROW_CLASS}>
           {weekdayLabel}, {monthLabel} {dayOfMonth}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-altair-ink-on-paper">
           {greeting}
         </h1>
       </header>
 
-      {/* Widgets */}
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      {/* Next job: the one primary action on this screen. */}
+      <section aria-label="Next job">
+        {nextJob ? (
+          <Link
+            href={`/technician/schedule?jobId=${encodeURIComponent(nextJob.id)}`}
+            data-testid="tech-home-next-job"
+            className={`${CARD_CLASS} block touch-manipulation p-4 transition-colors active:bg-altair-paper-subtle`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className={EYEBROW_CLASS}>Next job</p>
+              <TechnicianJobStatusBadge status={nextJob.status} className="shrink-0" />
+            </div>
+            <p className="mt-2 break-words text-xl font-bold leading-tight tracking-tight text-altair-ink-on-paper">
+              {nextJob.customerName}
+            </p>
+            <p className="mt-0.5 text-[15px] text-altair-ink-on-paper-secondary">
+              {nextJob.jobType}
+            </p>
+            <dl className="mt-3 space-y-1.5 text-[15px] text-altair-ink-on-paper">
+              <div className="flex items-center gap-2">
+                <dt className="sr-only">Time</dt>
+                <Clock className="h-4 w-4 shrink-0 text-altair-ink-on-paper-muted" aria-hidden />
+                <dd className="font-semibold tabular-nums">{nextJob.timeLabel}</dd>
+              </div>
+              <div className="flex items-start gap-2">
+                <dt className="sr-only">Address</dt>
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-altair-ink-on-paper-muted" aria-hidden />
+                <dd className="min-w-0 break-words">
+                  {nextJob.addressLine ?? "No address on this job. Check with dispatch."}
+                </dd>
+              </div>
+            </dl>
+            <span className="mt-4 flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-[var(--chrome-elevated)] px-4 text-[15px] font-semibold text-white">
+              Open job
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </span>
+          </Link>
+        ) : (
+          <div className={`${CARD_CLASS} p-4`}>
+            <p className={EYEBROW_CLASS}>Next job</p>
+            <p className="mt-2 text-lg font-bold tracking-tight text-altair-ink-on-paper">
+              {allDone ? "All done for today" : "Nothing scheduled today"}
+            </p>
+            <p className="mt-1 text-[15px] text-altair-ink-on-paper-secondary">
+              {allDone
+                ? `You finished ${completedTodayCount} ${completedTodayCount === 1 ? "job" : "jobs"} today.`
+                : "No jobs are assigned to you today. The week is on the Schedule tab."}
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* Where the day stands, and the clock. Each opens its own tab. */}
+      <div className="grid grid-cols-2 gap-3">
         <Link
           href="/technician/schedule"
-          className="group flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+          className={`${CARD_CLASS} flex min-h-[7.5rem] touch-manipulation flex-col p-4 transition-colors active:bg-altair-paper-subtle`}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
+          <p className={`${EYEBROW_CLASS} flex items-center gap-1.5`}>
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
             Today
           </p>
-          <p className="mt-1 text-4xl font-bold tabular-nums leading-none text-white">
-            {dayOfMonth}
-          </p>
-          <div className="mt-auto space-y-0.5 pt-3">
-            <p className="text-[13px] font-semibold text-[#e9e8e4]">
-              {openJobsLine}
+          {nothingToday ? (
+            <p className="mt-2 text-[15px] font-semibold text-altair-ink-on-paper">
+              No jobs
             </p>
-            {nextJobTimeLabel ? (
-              <p className="truncate text-xs text-[#9b9fa6]">
-                Next · {nextJobTimeLabel}
-                {nextJobCustomerName ? ` · ${nextJobCustomerName}` : ""}
+          ) : (
+            <>
+              <p className="mt-2 text-3xl font-bold tabular-nums leading-none text-altair-ink-on-paper">
+                {openJobCount}
               </p>
-            ) : null}
-          </div>
+              <p className="mt-1 text-[13px] text-altair-ink-on-paper-secondary">
+                {openJobCount === 1 ? "job left" : "jobs left"}
+                {completedTodayCount > 0 ? ` · ${completedTodayCount} done` : ""}
+              </p>
+            </>
+          )}
         </Link>
 
         <Link
           href="/tech/time"
-          className="group flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+          className={`${CARD_CLASS} flex min-h-[7.5rem] touch-manipulation flex-col p-4 transition-colors active:bg-altair-paper-subtle`}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
+          <p className={`${EYEBROW_CLASS} flex items-center gap-1.5`}>
+            <Clock className="h-3.5 w-3.5" aria-hidden />
             Time clock
           </p>
-          <div className="mt-2 flex items-center gap-2">
-            <span
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${timeStateDotClass}`}
-              aria-hidden
-            />
-            <p className="text-lg font-bold leading-tight text-white">
-              {timeStateLabel}
-            </p>
-          </div>
-          <div className="mt-auto pt-3">
-            <p className="text-xs text-[#9b9fa6]">
-              {clockedSinceLabel
-                ? `Since ${clockedSinceLabel}`
-                : "Tap to open the time clock"}
-            </p>
-          </div>
+          <p className="mt-2 flex items-center gap-2 text-[17px] font-bold leading-tight text-altair-ink-on-paper">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${timeStateDotClass}`} aria-hidden />
+            {timeStateLabel}
+          </p>
+          <p className="mt-1 text-[13px] text-altair-ink-on-paper-secondary">
+            {clockedSinceLabel ? `Since ${clockedSinceLabel}` : "Open the time clock"}
+          </p>
         </Link>
       </div>
-
-      {/* App grid */}
-      <nav aria-label="Technician tools" className="mt-8">
-        <ul className="grid grid-cols-4 gap-x-2 gap-y-6">
-          {HOME_TILES.map((tile) => {
-            const Icon = tile.icon;
-            return (
-              <li key={tile.href} className="min-w-0">
-                <Link
-                  href={tile.href}
-                  className="group flex touch-manipulation flex-col items-center gap-1.5 outline-none"
-                >
-                  <span
-                    className={`flex h-16 w-16 items-center justify-center rounded-[1.35rem] ${tile.chipClass} shadow-[0_8px_20px_-8px_rgb(0_0_0_/_0.6)] ring-1 ring-inset ring-white/20 transition-transform group-active:scale-95`}
-                  >
-                    <Icon className="h-7 w-7 text-white drop-shadow-sm" aria-hidden />
-                  </span>
-                  <span className="w-full truncate text-center text-[11px] font-medium text-[#d7d3cc]">
-                    {tile.label}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
     </div>
   );
 }

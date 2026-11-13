@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
@@ -9,14 +8,11 @@ import { logoutAction } from "@/app/actions/auth";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
-import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
-import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianConnectivityBanner } from "./TechnicianConnectivityBanner";
-import { TechnicianQuickNavDrawer } from "./TechnicianQuickNavDrawer";
 import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoadingState";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
@@ -38,8 +34,6 @@ export function TechnicianMobileShell({
   unreadNotificationCount = 0,
   hideDemoPrefixes = false,
 }: TechnicianMobileShellProps) {
-  const pathname = usePathname();
-  const [quickNavOpen, setQuickNavOpen] = useState(false);
   // Hydration guard: `redirectPending` is client-derived (owner view-mode
   // redirect) and can be true on the client's first render while the server
   // rendered the children — swapping in the loading skeleton during
@@ -53,10 +47,6 @@ export function TechnicianMobileShell({
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    setQuickNavOpen(false);
-  }, [pathname]);
-
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
@@ -66,11 +56,10 @@ export function TechnicianMobileShell({
       <div className="tech-canvas min-h-dvh max-w-full overflow-x-clip">
         <div className="tech-shell mx-auto flex min-h-dvh min-w-0 flex-col">
           <header className="tech-header tech-header-safe sticky top-0 z-30">
-            <div className="flex min-w-0 items-center gap-2 px-4 pb-2.5 pt-0.5">
-              <QuickNavToggle
-                open={quickNavOpen}
-                onOpenChange={setQuickNavOpen}
-              />
+            {/* No menu button and no bell here. The bottom tab bar is the
+              * one navigation (UI audit 2026-11-12), and the unread alert
+              * count rides on its Alerts tab. */}
+            <div className="flex min-w-0 items-center gap-2.5 px-4 pb-2.5 pt-0.5">
               <AltairLogo variant="gold" size="sm" showWordmark={false} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-900">Altair Operating System</p>
@@ -86,7 +75,6 @@ export function TechnicianMobileShell({
                   onViewModeChange={setViewMode}
                 />
               ) : null}
-              <TechnicianNotificationLink />
               <form action={logoutAction}>
                 <button
                   type="submit"
@@ -113,11 +101,6 @@ export function TechnicianMobileShell({
           </main>
 
           <TechnicianBottomNav companyContext={navigationContext} />
-          <TechnicianQuickNavDrawer
-            open={quickNavOpen}
-            onClose={() => setQuickNavOpen(false)}
-            companyContext={navigationContext}
-          />
           {isBetaBugReportEnabled() ? (
             <BetaBugReportButton aboveMobileBottomNav />
           ) : null}

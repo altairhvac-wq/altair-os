@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -12,19 +13,28 @@ import {
 } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import type { DashboardData } from "@/shared/types/dashboard";
-import { AdminMobileHomeTopBar } from "@/shared/components/dashboard/AdminMobileHomeTopBar";
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
 import { LiveOnboardingBanner } from "@/shared/components/support/LiveOnboardingBanner";
 import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
 
 /**
- * Admin home — mobile-only launcher (md:hidden). Sidebar + calendar
- * buttons sandwich the date/greeting up top; below, a needs-attention
- * stack that only surfaces buckets with real work in them (desktop
- * dashboard parity) and the Today's board / Money glass widgets.
- * Navigation lives in the sidebar drawer. Every number comes straight
- * from DashboardData — nothing invented.
+ * Admin home on a phone (md:hidden): the greeting, a needs-attention list
+ * that only shows buckets with real work in them (the same buckets as the
+ * desktop dashboard), then today's board and money.
+ *
+ * UI audit 2026-11-12: this screen used to be a dark panel with its own menu
+ * button, a second one beside the menu button in the top bar. Navigation is
+ * now the tab bar at the bottom of the screen and nothing here repeats it.
+ * The screen also uses the same paper cards as the desktop dashboard, so the
+ * phone and the desktop read as one product.
+ *
+ * Every number comes straight from DashboardData. Nothing is invented.
  */
+
+const CARD_CLASS =
+  "overflow-hidden rounded-2xl border border-altair-border/40 bg-altair-paper shadow-[var(--elev-hairline),var(--elev-2)]";
+const EYEBROW_CLASS =
+  "text-[11px] font-semibold uppercase tracking-[0.12em] text-altair-ink-on-paper-muted";
 
 function formatWholeDollars(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -51,12 +61,12 @@ const ATTENTION_TONE_CLASSES: Record<
   { chip: string; count: string }
 > = {
   danger: {
-    chip: "bg-rose-500/20 text-rose-300",
-    count: "text-rose-300",
+    chip: "bg-altair-danger-surface text-altair-danger",
+    count: "text-altair-danger",
   },
   warning: {
-    chip: "bg-amber-400/15 text-amber-300",
-    count: "text-amber-300",
+    chip: "bg-altair-warning-surface text-altair-warning-foreground",
+    count: "text-altair-warning-foreground",
   },
 };
 
@@ -142,7 +152,8 @@ function buildAttentionRows(data: DashboardData): AttentionRow[] {
 
 type AdminMobileHomeProps = {
   data: DashboardData;
-  companyContext: ActiveCompanyContext;
+  /** Kept for callers; the screen no longer opens its own navigation. */
+  companyContext?: ActiveCompanyContext;
   userDisplayName: string;
   companyTimeZone?: string;
   /** Live onboarding invitation; null outside a company's first weeks. */
@@ -151,7 +162,6 @@ type AdminMobileHomeProps = {
 
 export function AdminMobileHome({
   data,
-  companyContext,
   userDisplayName,
   companyTimeZone,
   liveOnboarding = null,
@@ -194,29 +204,38 @@ export function AdminMobileHome({
   const hasOverdue = money.overdueCount > 0;
 
   return (
-    <div data-testid="page-dashboard-mobile" className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-12 pt-4">
-      <AdminMobileHomeTopBar
-        companyContext={companyContext}
-        dateEyebrow={dateEyebrow}
-        greeting={greetingLine}
-      />
+    <div data-testid="page-dashboard-mobile" className="space-y-4 px-1 pb-4 pt-1">
+      {/* Greeting, and the one shortcut that is not a tab: today's schedule. */}
+      <header className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          {dateEyebrow ? <p className={EYEBROW_CLASS}>{dateEyebrow}</p> : null}
+          <h1 className="mt-0.5 truncate text-[22px] font-bold leading-tight tracking-tight text-altair-ink-on-paper">
+            {greetingLine}
+          </h1>
+        </div>
+        <Link
+          href="/schedule"
+          aria-label="Today's schedule"
+          className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-altair-border/40 bg-altair-paper text-altair-ink-on-paper-secondary shadow-[var(--elev-hairline)] transition-colors active:bg-altair-paper-subtle"
+        >
+          <CalendarDays className="h-5 w-5" aria-hidden />
+        </Link>
+      </header>
 
-      {/* Needs attention — only buckets with real work surface here */}
-      <section aria-label="Needs attention" className="mt-6">
-        <p className="px-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
-          Needs attention
-        </p>
+      {/* Needs attention: only buckets with real work surface here */}
+      <section aria-label="Needs attention">
+        <p className={EYEBROW_CLASS}>Needs attention</p>
         {attentionRows.length === 0 ? (
-          <div className="mt-2 flex items-center gap-3 rounded-2xl bg-white/[0.07] px-3.5 py-3.5 ring-1 ring-inset ring-white/10">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-300">
+          <div className={`${CARD_CLASS} mt-2 flex items-center gap-3 px-3.5 py-3.5`}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-altair-success-surface text-altair-success-foreground">
               <CheckCircle2 className="h-5 w-5" aria-hidden />
             </span>
-            <p className="text-sm font-semibold text-[#e9e8e4]">
-              All caught up — nothing needs attention.
+            <p className="text-sm font-semibold text-altair-ink-on-paper">
+              All caught up. Nothing needs attention.
             </p>
           </div>
         ) : (
-          <ul className="mt-2 space-y-2">
+          <ul className={`${CARD_CLASS} mt-2 divide-y divide-altair-border/30`}>
             {attentionRows.map((row) => {
               const Icon = row.icon;
               const tone = ATTENTION_TONE_CLASSES[row.tone];
@@ -225,30 +244,23 @@ export function AdminMobileHome({
                 <li key={row.key}>
                   <Link
                     href={row.href}
-                    className="flex touch-manipulation items-center gap-3 rounded-2xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+                    className="flex min-h-14 touch-manipulation items-center gap-3 px-3.5 py-3 transition-colors active:bg-altair-paper-subtle"
                   >
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone.chip}`}
-                    >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone.chip}`}>
                       <Icon className="h-5 w-5" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-bold text-white">
+                      <span className="block text-[15px] font-bold text-altair-ink-on-paper">
                         {row.label}
                       </span>
-                      <span className="block truncate text-xs text-[#a29f96]">
+                      <span className="block text-[13px] leading-snug text-altair-ink-on-paper-secondary">
                         {row.detail}
                       </span>
                     </span>
-                    <span
-                      className={`shrink-0 text-lg font-bold tabular-nums ${tone.count}`}
-                    >
+                    <span className={`shrink-0 text-lg font-bold tabular-nums ${tone.count}`}>
                       {row.count}
                     </span>
-                    <ChevronRight
-                      className="h-4 w-4 shrink-0 text-[#726f68]"
-                      aria-hidden
-                    />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-altair-ink-on-paper-muted" aria-hidden />
                   </Link>
                 </li>
               );
@@ -257,46 +269,42 @@ export function AdminMobileHome({
         )}
       </section>
 
-      {/* Widgets */}
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      {/* Today's board and money: each opens its own screen. */}
+      <div className="grid grid-cols-2 gap-3">
         <Link
           href="/dispatch"
-          className="flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+          className={`${CARD_CLASS} flex min-h-[8.5rem] touch-manipulation flex-col p-4 transition-colors active:bg-altair-paper-subtle`}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
-            Today&apos;s board
-          </p>
-          <p className="mt-1 text-4xl font-bold tabular-nums leading-none text-white">
+          <p className={EYEBROW_CLASS}>Today&apos;s board</p>
+          <p className="mt-2 text-4xl font-bold tabular-nums leading-none text-altair-ink-on-paper">
             {operations.totalJobsToday}
           </p>
           <div className="mt-auto space-y-0.5 pt-3">
-            <p className="text-[13px] font-semibold text-[#e9e8e4]">
+            <p className="text-[13px] font-semibold text-altair-ink-on-paper">
               {operations.totalJobsToday === 1 ? "job today" : "jobs today"}
             </p>
-            <p className="truncate text-xs text-[#a29f96]">{boardLine}</p>
+            <p className="truncate text-xs text-altair-ink-on-paper-secondary">{boardLine}</p>
           </div>
         </Link>
 
         <Link
           href="/sales"
-          className="flex min-h-[9.5rem] touch-manipulation flex-col rounded-[1.5rem] bg-white/[0.07] p-4 ring-1 ring-inset ring-white/10 transition-colors active:bg-white/[0.12]"
+          className={`${CARD_CLASS} flex min-h-[8.5rem] touch-manipulation flex-col p-4 transition-colors active:bg-altair-paper-subtle`}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c2a05a]">
-            Money
-          </p>
-          <p className="mt-1 text-3xl font-bold tabular-nums leading-none text-white">
+          <p className={EYEBROW_CLASS}>{hasOverdue ? "Past due" : "Collected today"}</p>
+          <p className={`mt-2 text-3xl font-bold tabular-nums leading-none ${hasOverdue ? "text-altair-danger" : "text-altair-ink-on-paper"}`}>
             {hasOverdue
               ? formatWholeDollars(money.overdueTotal)
               : formatWholeDollars(money.paymentsTodayTotal)}
           </p>
           <div className="mt-auto space-y-0.5 pt-3">
-            <p className="text-[13px] font-semibold text-[#e9e8e4]">
+            <p className="text-[13px] font-semibold text-altair-ink-on-paper">
               {hasOverdue
-                ? `${money.overdueCount} past due invoice${money.overdueCount === 1 ? "" : "s"}`
-                : "collected today"}
+                ? `${money.overdueCount} invoice${money.overdueCount === 1 ? "" : "s"}`
+                : "in payments"}
             </p>
-            {hasOverdue && money.paymentsTodayTotal > 0 ? (
-              <p className="truncate text-xs text-[#a29f96]">
+            {hasOverdue ? (
+              <p className="truncate text-xs text-altair-ink-on-paper-secondary">
                 {formatWholeDollars(money.paymentsTodayTotal)} collected today
               </p>
             ) : null}
@@ -304,9 +312,7 @@ export function AdminMobileHome({
         </Link>
       </div>
 
-      {liveOnboarding ? (
-        <LiveOnboardingBanner info={liveOnboarding} tone="dark" />
-      ) : null}
+      {liveOnboarding ? <LiveOnboardingBanner info={liveOnboarding} /> : null}
     </div>
   );
 }

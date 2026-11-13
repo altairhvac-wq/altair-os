@@ -621,6 +621,7 @@ export function getAccessibleAdminNavHrefs(
 
 export type TechnicianNavId =
   | "today"
+  | "schedule"
   | "jobs"
   | "time"
   | "receipts"
@@ -633,6 +634,7 @@ export function canAccessTechnicianNavItem(
 ): boolean {
   switch (navId) {
     case "today":
+    case "schedule":
     case "time":
     case "receipts":
     case "notifications":

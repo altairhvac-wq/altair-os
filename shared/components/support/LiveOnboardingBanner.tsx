@@ -90,7 +90,9 @@ export function LiveOnboardingBanner({
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-altair-brass/15 text-[var(--brand-metal-text)]">
         <Video className="h-5 w-5" aria-hidden="true" />
       </span>
-      <div className="min-w-0 flex-1">
+      {/* A minimum width, so on a phone the buttons wrap under the text
+        * instead of squeezing it into a narrow column. */}
+      <div className="min-w-[13rem] flex-1">
         <p className="text-sm font-bold text-altair-ink-on-paper">
           Book your setup call
         </p>
@@ -110,7 +112,7 @@ export function LiveOnboardingBanner({
           )}
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 max-sm:w-full [&>a]:max-sm:min-h-11 [&>a]:max-sm:flex-1 [&>a]:max-sm:justify-center">
         {info.joinUrl ? (
           <a
             href={info.joinUrl}
