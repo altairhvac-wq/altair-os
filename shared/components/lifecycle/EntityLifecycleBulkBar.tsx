@@ -127,7 +127,7 @@ export function EntityLifecycleBulkBar({
 
   const shellClass = northStar
     ? lt.bulkBar
-    : "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.12)] backdrop-blur-sm sm:px-4";
+    : "sticky bottom-[var(--bottom-nav-offset,0px)] z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(6,7,5,0.12)] backdrop-blur-sm sm:px-4";
   const titleClass = northStar
     ? lt.bulkBarTitle
     : "text-sm font-semibold text-altair-ink-on-paper";
@@ -149,7 +149,7 @@ export function EntityLifecycleBulkBar({
 
   return (
     <div
-      className={`sticky bottom-0 z-20 ${shellClass}`}
+      className={`sticky bottom-[var(--bottom-nav-offset,0px)] z-20 ${shellClass}`}
       role="region"
       aria-label={`Bulk ${entityLabel} lifecycle actions`}
     >
