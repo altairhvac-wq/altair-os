@@ -302,6 +302,13 @@ export async function createSubscriptionCheckout(input: {
       // Always: this session exists to put a card on file. (The catalog's
       // requiresPaymentMethod describes the start of the trial, not Checkout.)
       payment_method_collection: "always",
+      // Shows Stripe's own "Add promotion code" box. An affiliate partner's
+      // code is a Stripe promotion code the owner made by hand; typing it
+      // here is what records, on the subscription, who sent this customer
+      // (shared/types/affiliates.ts). Only codes that exist and are active
+      // in the Stripe account are accepted, so with none made this changes
+      // nothing a customer can do.
+      allow_promotion_codes: true,
       metadata: sharedMetadata,
       subscription_data: {
         ...trialParams,

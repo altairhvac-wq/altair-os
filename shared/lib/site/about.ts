@@ -14,9 +14,15 @@
 
 export const ABOUT_PATH = "/about";
 export const FOR_TECHS_PATH = "/for-techs";
+/**
+ * The affiliate program page and its application (shared/types/affiliates.ts,
+ * migration 213). The page itself reads no data; the form posts to a Server
+ * Action that checks everything itself (app/actions/affiliates.ts).
+ */
+export const AFFILIATES_PATH = "/affiliates";
 
 /** Public pages added with the About page; listed once for middleware, robots and the sitemap. */
-export const COMPANY_PAGE_PATHS: readonly string[] = [ABOUT_PATH, FOR_TECHS_PATH];
+export const COMPANY_PAGE_PATHS: readonly string[] = [ABOUT_PATH, FOR_TECHS_PATH, AFFILIATES_PATH];
 
 export const FOUNDER = {
   name: "Jeremiah Arn",
