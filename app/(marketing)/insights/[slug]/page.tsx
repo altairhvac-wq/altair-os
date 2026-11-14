@@ -7,6 +7,7 @@ import {
 import { SITE_PAGE_PATH_PREFIX, isValidSlug } from "@/shared/types/site-page";
 import { SitePageArticle } from "@/shared/components/site/SitePageArticle";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { findArticleAudio } from "@/shared/lib/site/article-audio";
 import {
   PUBLIC_SITE_ORIGIN,
   buildPublicSocialMetadata,
@@ -132,6 +133,7 @@ export default async function SitePage({
         internalLinks={page.internalLinks}
         pathPrefix={SITE_PAGE_PATH_PREFIX}
         moreArticles={others}
+        audio={findArticleAudio(page.slug)}
       />
     </>
   );

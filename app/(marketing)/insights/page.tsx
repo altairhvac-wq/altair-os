@@ -6,6 +6,8 @@ import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
+import { Headphones } from "lucide-react";
+import { findArticleAudio, listenLength } from "@/shared/lib/site/article-audio";
 
 /**
  * The Insights index: every published Altair site page, newest first.
@@ -62,6 +64,7 @@ export default async function InsightsIndexPage() {
           <ul className="mt-12 space-y-4">
             {pages.map((page) => {
               const href = `${SITE_PAGE_PATH_PREFIX}/${page.slug}`;
+              const audio = findArticleAudio(page.slug);
               return (
                 <li
                   key={page.id}
@@ -80,11 +83,22 @@ export default async function InsightsIndexPage() {
                       {page.metaDescription}
                     </p>
                   ) : null}
-                  {page.publishedAt ? (
-                    <p className="mt-3 text-xs text-stone-500">
-                      <time dateTime={page.publishedAt}>
-                        {formatDate(page.publishedAt)}
-                      </time>
+                  {page.publishedAt || audio ? (
+                    <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-500">
+                      {page.publishedAt ? (
+                        <time dateTime={page.publishedAt}>
+                          {formatDate(page.publishedAt)}
+                        </time>
+                      ) : null}
+                      {audio ? (
+                        <Link
+                          href={`${href}#listen`}
+                          className="inline-flex items-center gap-1.5 font-semibold text-[#77591B] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40"
+                        >
+                          <Headphones aria-hidden="true" className="h-3.5 w-3.5" />
+                          Listen, {listenLength(audio.durationSeconds)}
+                        </Link>
+                      ) : null}
                     </p>
                   ) : null}
                 </li>

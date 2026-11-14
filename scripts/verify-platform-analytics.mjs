@@ -178,10 +178,13 @@ check("browsers may send pageview, signup_started, exclude_device and the named 
   // Migration 209: the engagement events and their one label.
   const engagementSource = read("shared/lib/analytics/engagement.ts");
   const names = [...engagementSource.matchAll(/^\s*"([a-z_]+)",$/gm)].map((m) => m[1]);
-  check("six engagement events are declared", names.length === 6, names);
+  check("seven engagement events are declared", names.length === 7, names);
   check("signup_completed is not an engagement event", !names.includes("signup_completed") && !names.includes("pageview"));
   const migration209 = read("supabase/migrations/209_site_engagement_events_and_resource_subscribers.sql");
-  check("every engagement event is allowed by the 209 check constraint", names.every((name) => migration209.includes(`'${name}'`)), names);
+  // Migration 213 re-states the whole check with article_listen added, so it is the one that has to list them all.
+  const migration213 = read("supabase/migrations/213_article_listen_engagement_event.sql");
+  check("every engagement event is allowed by the 213 check constraint", names.every((name) => migration213.includes(`'${name}'`)), names);
+  check("213 keeps every event name 209 allowed", [...migration209.matchAll(/^\s{4}'([a-z_]+)',?$/gm)].every((m) => migration213.includes(`'${m[1]}'`)));
   check("a label must be a slug in the database too", migration209.includes("event_label ~ '^[a-z0-9][a-z0-9_-]{0,63}$'") && engagementSource.includes("/^[a-z0-9][a-z0-9_-]{0,63}$/"));
   check("a malformed label drops the whole event", /if \(label !== null && !isValidEngagementLabel\(label\)\) return NO_CONTENT\(\)/.test(route));
   check("the engagement summary leaves out the owner's browsers and signed-in use", /web_analytics_internal_visitors/.test(migration209) && /e\.user_id is null/.test(migration209));

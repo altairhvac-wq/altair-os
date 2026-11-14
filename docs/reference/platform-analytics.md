@@ -267,6 +267,7 @@ Where the events come from (`shared/lib/analytics/engagement.ts`,
 | `template_download` | a template link is pressed | the template's id |
 | `results_email_requested` | "Email me these results" succeeds | the calculator's slug |
 | `boss_share` | a "Send this to your boss" button is pressed | `text`, `email`, `copy` or `share` |
+| `article_listen` | the first press of play on an article's recording, once per page view (migration `213`) | the article's slug |
 
 Order: deploying before 209 is applied is safe. Pageviews are unaffected (a
 pageview row never names the new column). Engagement events are refused by
