@@ -50,7 +50,8 @@ export type PublicRateLimitScope =
   | "public.resource_email"
   | "public.directory_submit"
   | "public.directory_manage_link"
-  | "public.directory_report";
+  | "public.directory_report"
+  | "public.affiliate_apply";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -147,6 +148,15 @@ export const PUBLIC_RATE_LIMITS: Record<
   ],
   // "Report this listing": writes one row for the owner to read. No mail.
   "public.directory_report": [{ dimension: "ip", windowSeconds: 3600, limit: 10 }],
+  // The affiliate program application (migration 213). Each submission
+  // stores one row for the owner to read and sends one "we have it" email to
+  // the address typed, so the inbox dimension stops the form being aimed at
+  // someone else and the address dimension stops one client filling the
+  // owner's queue. A person applies once, perhaps again to correct something.
+  "public.affiliate_apply": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+  ],
 };
 
 /**

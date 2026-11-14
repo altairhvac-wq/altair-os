@@ -137,6 +137,16 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection heading="The affiliate program">
+        <p>
+          If you apply to our affiliate program, we keep what you enter (your
+          name, email address, business name, state, the links you give us and
+          your answers) so a person here can read the application and reply.
+          None of it is shown publicly and none of it is sold or shared for
+          advertising. To have your application deleted, write to us.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="Your customers' data">
         <p>
           You may store your own customers&apos; contact details and service

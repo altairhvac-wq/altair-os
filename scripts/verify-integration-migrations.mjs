@@ -208,6 +208,10 @@ const PLATFORM_ONLY_TABLES = new Set([
   // pages read only through the directory_* functions: service role only.
   "directory_listings",
   "directory_listing_reports",
+  // Migration 213: applications to the affiliate program. An applicant has
+  // no account and no workspace, and every column is private: service role
+  // only, read by the Platform review page after a platform admin check.
+  "affiliate_applications",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");

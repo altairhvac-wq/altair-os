@@ -1442,6 +1442,72 @@ export type Database = {
         }>;
         Relationships: [];
       };
+      // affiliate_applications: migration 213 — applications to the affiliate
+      // program and the owner's decision on each. Service role only; every
+      // column is private.
+      affiliate_applications: {
+        Row: {
+          id: string;
+          full_name: string;
+          email: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships: string;
+          state: string;
+          rules_text: string;
+          status: "new" | "approved" | "declined";
+          partner_code: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          full_name: string;
+          email: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url?: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships?: string;
+          state: string;
+          rules_text: string;
+          status?: "new" | "approved" | "declined";
+          partner_code?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+        };
+        Update: Partial<{
+          full_name: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships: string;
+          state: string;
+          rules_text: string;
+          status: "new" | "approved" | "declined";
+          partner_code: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+        }>;
+        Relationships: [];
+      };
       directory_listing_reports: {
         Row: {
           id: string;

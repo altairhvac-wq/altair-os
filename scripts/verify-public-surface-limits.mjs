@@ -137,6 +137,12 @@ const ENTRY_POINTS = [
     scope: "public.directory_report",
     why: "report flooding against a business's listing",
   },
+  {
+    file: "app/actions/affiliates.ts",
+    fn: "submitAffiliateApplicationAction",
+    scope: "public.affiliate_apply",
+    why: "mail flooding and review-queue flooding: an application emails a receipt to the address typed and adds a row for the owner to read",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */
