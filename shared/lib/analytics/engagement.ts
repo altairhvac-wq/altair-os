@@ -26,6 +26,8 @@ export const ENGAGEMENT_EVENT_NAMES = [
   "results_email_requested",
   /** "Send this to your boss" was used. Label: how (text, email, copy, share). */
   "boss_share",
+  /** An article's recording was started by the visitor (migration 213). Label: the article's slug. */
+  "article_listen",
 ] as const;
 
 export type EngagementEventName = (typeof ENGAGEMENT_EVENT_NAMES)[number];
@@ -48,4 +50,5 @@ export const ENGAGEMENT_EVENT_LABELS: Record<EngagementEventName, string> = {
   template_download: "Template downloaded",
   results_email_requested: "Results emailed",
   boss_share: "Sent to the boss",
+  article_listen: "Article listened to",
 };

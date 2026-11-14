@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, X } from "lucide-react";
+import { trackEngagement } from "@/shared/lib/analytics/client";
 import {
   listenLength,
   sectionAt,
@@ -21,8 +22,10 @@ import {
  * through the Media Session API where the browser has it.
  *
  * The place reached is remembered per article in this browser only, so a
- * visitor who comes back picks up where they stopped. Nothing is sent
- * anywhere.
+ * visitor who comes back picks up where they stopped. That place is never
+ * sent anywhere. The first press of play is counted as one "article listened
+ * to" event with the article's slug, through the same first-party analytics
+ * as video plays (and not at all for a visitor who has opted out).
  */
 
 const RATES = [1, 1.25, 1.5, 2] as const;
@@ -111,6 +114,8 @@ export function ArticleListenPlayer({
         setCurrent(saved);
       }
       setStarted(true);
+      // Counted once per page view, by article, and only when tracking is allowed.
+      trackEngagement("article_listen", audio.slug);
     }
     setBarClosed(false);
     setFailed(false);
