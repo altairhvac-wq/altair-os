@@ -68,7 +68,7 @@ export const INVOICING_META = {
 
 export const INVOICING_HERO = {
   eyebrow: "HVAC invoicing software",
-  headline: "HVAC invoicing software that bills the finished job and gets you paid from a link.",
+  headline: "HVAC invoicing software: bill the finished job, get paid from a link.",
   intro:
     "Invoices lag when the office has to rebuild the job from notes before it can bill. In Altair Operating System the invoice is made from the job, with the customer, the address and the approved estimate already on it. Send it by email, let the customer pay by card from a link, and record cash and checks against the same invoice.",
 } as const;

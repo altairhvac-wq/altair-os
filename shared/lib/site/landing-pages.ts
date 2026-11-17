@@ -118,7 +118,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     description:
       "HVAC dispatch software for small shops: today's jobs on one board, assign and reassign technicians, job addresses on a map, and each job on the tech's phone. 14-day free trial.",
     eyebrow: "Dispatch software",
-    headline: "HVAC dispatch software: one board for the day, and the same job on the technician's phone.",
+    headline: "HVAC dispatch software: one board for the whole day.",
     intro:
       "Dispatch in Altair is not a separate tool bolted onto the calendar. The job on the board is the job the technician opens on their phone, the one the estimate came from, and the one the invoice will be made from.",
     modulesHeading: "What a dispatcher gets.",
@@ -174,7 +174,7 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
     description:
       "HVAC estimating software: build estimates from your price book, the customer approves and signs on their phone, and the approved estimate becomes the job. 14-day free trial.",
     eyebrow: "Estimating software",
-    headline: "HVAC estimating software: send the estimate, the customer approves it on their phone, and it becomes the job.",
+    headline: "HVAC estimating software that turns phone approvals into jobs.",
     intro:
       "The slow part of estimating is not writing the number. It is the days of chasing after you send it. Altair sends a link, records the approval and the signature, and turns the approved estimate into the scheduled job and the invoice.",
     modulesHeading: "From price book to paid.",
