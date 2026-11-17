@@ -8,6 +8,13 @@ import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqS
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { LANDING_PAGES, type LandingPageConfig } from "@/shared/lib/site/landing-pages";
+import { RESOURCE_CALCULATORS, calculatorPath } from "@/shared/lib/resources/catalog";
+import {
+  SOFTWARE_PAGES,
+  SOFTWARE_PAGE_RELATED,
+  type SoftwarePagePath,
+} from "@/shared/lib/site/internal-links";
+import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
@@ -19,29 +26,27 @@ function lowestMonthlyPrice(): number | null {
   return prices.length ? Math.min(...prices) : null;
 }
 
-/** Free tools that answer an owner's next question; no account needed. */
-const FREE_TOOLS: readonly { href: string; label: string; text: string }[] = [
-  {
-    href: "/resources/calculators/labor-rate",
-    label: "Labor rate calculator",
-    text: "The hourly rate a technician has to bill to cover wage, burden, overhead and margin.",
-  },
-  {
-    href: "/resources/calculators/job-profitability",
-    label: "Job profitability calculator",
-    text: "Gross profit, net profit and margin on a single job.",
-  },
-  {
-    href: "/resources/calculators/break-even",
-    label: "Break-even calculator",
-    text: "How many jobs a month it takes to cover your fixed costs.",
-  },
-  {
-    href: "/resources/templates",
-    label: "Free templates",
-    text: "An estimate template, a maintenance agreement outline, a pricing worksheet and a daily checklist.",
-  },
-];
+/** The templates card every landing page keeps beside its own calculators. */
+const TEMPLATES_TOOL = {
+  href: "/resources/templates",
+  label: "Free templates",
+  text: "An estimate template, a maintenance agreement outline, a pricing worksheet and a daily checklist.",
+} as const;
+
+/** Calculators and articles for this page, from shared/lib/site/internal-links.ts. */
+function relatedFor(path: string) {
+  const related = SOFTWARE_PAGE_RELATED[path as SoftwarePagePath];
+  if (!related) return { tools: [TEMPLATES_TOOL], articles: [] };
+  const tools = related.tools
+    .map((slug) => RESOURCE_CALCULATORS.find((calculator) => calculator.slug === slug))
+    .filter((calculator): calculator is (typeof RESOURCE_CALCULATORS)[number] => Boolean(calculator))
+    .map((calculator) => ({
+      href: calculatorPath(calculator.slug),
+      label: calculator.title,
+      text: calculator.description,
+    }));
+  return { tools: [...tools, TEMPLATES_TOOL], articles: related.articles };
+}
 
 /**
  * The search landing page: what Altair runs for this search, how the trial
@@ -53,6 +58,7 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
   const fromPrice = lowestMonthlyPrice();
   const trialDays = SAAS_TRIAL_CONFIG.durationDays;
   const siblings = LANDING_PAGES.filter((other) => other.path !== page.path);
+  const related = relatedFor(page.path);
 
   return (
     <div className="mc-homepage relative min-h-dvh overflow-x-clip bg-[#080907] text-[#f3ebdd]">
@@ -190,7 +196,7 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
               Check your numbers before you decide anything.
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {FREE_TOOLS.map((tool) => (
+              {related.tools.map((tool) => (
                 <li key={tool.href}>
                   <Link
                     href={tool.href}
@@ -203,6 +209,22 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
                 </li>
               ))}
             </ul>
+            {related.articles.length ? (
+              <p className="mt-6 text-sm text-[#8e826f]">
+                Read:{" "}
+                {related.articles.map((article, index) => (
+                  <span key={article.slug}>
+                    {index > 0 ? " · " : ""}
+                    <Link
+                      href={`${SITE_PAGE_PATH_PREFIX}/${article.slug}`}
+                      className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+                    >
+                      {article.title}
+                    </Link>
+                  </span>
+                ))}
+              </p>
+            ) : null}
           </div>
         </section>
 
@@ -231,7 +253,7 @@ export function MarketingLandingPage({ page }: { page: LandingPageConfig }) {
                     href={other.path}
                     className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
                   >
-                    {other.navLabel}
+                    {SOFTWARE_PAGES[other.path as SoftwarePagePath]?.label ?? other.navLabel}
                   </Link>
                 </span>
               ))}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER } from "@/shared/lib/site/internal-links";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
@@ -104,7 +105,7 @@ export default async function InsightsIndexPage() {
           <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <li>
               <Link href="/resources/calculators/labor-rate" className="font-semibold text-[#77591B] hover:underline">
-                Labor rate calculator
+                HVAC labor rate calculator
               </Link>
             </li>
             <li>
@@ -114,7 +115,7 @@ export default async function InsightsIndexPage() {
             </li>
             <li>
               <Link href="/resources/calculators/break-even" className="font-semibold text-[#77591B] hover:underline">
-                Break-even calculator
+                HVAC break-even calculator
               </Link>
             </li>
             <li>
@@ -131,6 +132,17 @@ export default async function InsightsIndexPage() {
             Watch one job go from first call to paid (2:27)
           </Link>
         </p>
+        <nav aria-label="HVAC software" className="mt-4 text-center text-sm text-stone-600">
+          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+            {SOFTWARE_PAGE_ORDER.map((path) => (
+              <li key={path}>
+                <Link href={path} className="font-semibold text-[#77591B] hover:underline">
+                  {SOFTWARE_PAGES[path].label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </main>
 
       <MarketingFooter />

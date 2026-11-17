@@ -13,6 +13,11 @@
  *
  * This file imports nothing from the app, so the middleware can read the
  * path list at the edge.
+ *
+ * /hvac-invoicing-software renders its own, longer page
+ * (shared/components/marketing/InvoicingLandingPage.tsx, copy in
+ * invoicing-page.ts); its entry here still names it for the robots allow-list,
+ * the sitemap and the links between these pages.
  */
 export type LandingModule = { title: string; text: string };
 export type LandingStep = { title: string; text: string };
@@ -109,11 +114,11 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
   {
     path: "/hvac-dispatch-software",
     navLabel: "Dispatch software",
-    title: "HVAC Dispatch Software",
+    title: "HVAC Dispatch Software: Day Board, Job Map, Tech Phone View",
     description:
-      "HVAC dispatch software: one board for the day's jobs, a map of the work, and the same job on the technician's phone. 14-day free trial, no card.",
+      "HVAC dispatch software for small shops: today's jobs on one board, assign and reassign technicians, job addresses on a map, and each job on the tech's phone. 14-day free trial.",
     eyebrow: "Dispatch software",
-    headline: "One board for the day. The field sees the same job the office does.",
+    headline: "HVAC dispatch software: one board for the day, and the same job on the technician's phone.",
     intro:
       "Dispatch in Altair is not a separate tool bolted onto the calendar. The job on the board is the job the technician opens on their phone, the one the estimate came from, and the one the invoice will be made from.",
     modulesHeading: "What a dispatcher gets.",
@@ -165,11 +170,11 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
   {
     path: "/hvac-estimating-software",
     navLabel: "Estimating software",
-    title: "HVAC Estimating Software",
+    title: "HVAC Estimating Software: Price Book Estimates, Phone Approval",
     description:
-      "HVAC estimating software: build estimates from your price book, the customer approves and signs on their phone, and it becomes the job. Free trial.",
+      "HVAC estimating software: build estimates from your price book, the customer approves and signs on their phone, and the approved estimate becomes the job. 14-day free trial.",
     eyebrow: "Estimating software",
-    headline: "Send the estimate. The customer approves it on their phone. It becomes the job.",
+    headline: "HVAC estimating software: send the estimate, the customer approves it on their phone, and it becomes the job.",
     intro:
       "The slow part of estimating is not writing the number. It is the days of chasing after you send it. Altair sends a link, records the approval and the signature, and turns the approved estimate into the scheduled job and the invoice.",
     modulesHeading: "From price book to paid.",
@@ -221,9 +226,9 @@ export const LANDING_PAGES: readonly LandingPageConfig[] = [
   {
     path: "/hvac-invoicing-software",
     navLabel: "Invoicing software",
-    title: "HVAC Invoicing Software",
+    title: "HVAC Invoicing Software: Invoice From the Job, Get Paid by Link",
     description:
-      "HVAC invoicing software: the finished job becomes the invoice, customers can pay from a link, and overdue invoices surface on their own. Free trial.",
+      "HVAC invoicing software for heating and air conditioning shops: the finished job becomes the invoice and customers pay by card from a link. 14-day free trial.",
     eyebrow: "Invoicing and payments",
     headline: "The finished job becomes the invoice. The customer pays from a link.",
     intro:

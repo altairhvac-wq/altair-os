@@ -79,6 +79,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${DIRECTORY_PATH}`, changeFrequency: "daily", priority: 0.7 },
     { url: `${origin}${DIRECTORY_LIST_PATH}`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${origin}/contact`, changeFrequency: "monthly", priority: 0.4 },
+    // The trial sign-up page ranks for the brand; robots.ts allows it.
+    { url: `${origin}/signup`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${origin}/install`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${origin}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${origin}/terms`, changeFrequency: "yearly", priority: 0.2 },

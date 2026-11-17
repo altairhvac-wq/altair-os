@@ -35,7 +35,7 @@ export function AltairFeatureNote({
           href={feature.href}
           className="rounded-sm font-medium text-[#77591B] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40"
         >
-          See {feature.label}
+          See {feature.linkText}
         </Link>
       </p>
     </aside>

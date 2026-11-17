@@ -546,3 +546,29 @@ export function buildComparisonFaqStructuredData(page: ComparisonPageContent): R
     })),
   };
 }
+
+// ====================================================================
+// The invoicing page's comparison (/hvac-invoicing-software)
+// ====================================================================
+const INVOICING_COMPARISON_LABELS = ["1 user", "5 users", "Features by plan", "QuickBooks sync", "Free trial", "Contract"];
+
+/**
+ * The rows of the Jobber & Housecall Pro table that matter to someone
+ * choosing invoicing software, taken from that table rather than retyped, so
+ * the two pages carry the same dated facts and change together.
+ */
+export const INVOICING_COMPARISON: {
+  readonly checkedOn: string;
+  readonly columns: readonly string[];
+  readonly rows: readonly { readonly label: string; readonly cells: readonly string[] }[];
+  readonly footnote: string;
+  readonly fullComparisonPath: ComparisonPagePath;
+  readonly sources: readonly { readonly label: string; readonly url: string }[];
+} = {
+  checkedOn: COMPETITOR_FACTS_CHECKED,
+  columns: JOBBER_HOUSECALL.table.columns,
+  rows: JOBBER_HOUSECALL.table.rows.filter((row) => INVOICING_COMPARISON_LABELS.includes(row.label)),
+  footnote: JOBBER_HOUSECALL.table.footnote,
+  fullComparisonPath: JOBBER_HOUSECALL.path,
+  sources: JOBBER_HOUSECALL.sources.items.filter((item) => /pricing/i.test(item.label) && /Jobber|Housecall/.test(item.label)),
+};

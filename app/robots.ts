@@ -33,6 +33,14 @@ export default function robots(): MetadataRoute.Robots {
           "/terms",
           "/install",
           "/contact",
+          // The trial sign-up page is indexed (it carries a canonical without
+          // its query string). /login is crawlable only so Google can read
+          // its noindex and canonical: in November 2026 Search Console still
+          // held two old /login?next=... redirect targets as "Duplicate
+          // without user-selected canonical", and a blocked page can never
+          // tell Google it should be dropped.
+          "/signup",
+          "/login",
           ...COMPANY_PAGE_PATHS,
           ...LANDING_PAGE_PATHS,
           // The commercial's watch page (it is in the sitemap; without this
@@ -50,6 +58,9 @@ export default function robots(): MetadataRoute.Robots {
           "/og.png",
           "/icons/",
           "/favicon.svg",
+          // Next links app/favicon.ico from every page; Search Console listed
+          // it as "Blocked by robots.txt", and Google uses it in results.
+          "/favicon.ico",
           "/apple-touch-icon.png",
           // Public marketing media: the commercial (VideoObject contentUrl and
           // thumbnail), its poster, the hero image and the product screenshots.

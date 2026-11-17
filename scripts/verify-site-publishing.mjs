@@ -39,7 +39,7 @@ const strip = (src) =>
 const MIGRATION = "supabase/migrations/187_marketing_site_pages.sql";
 const ADAPTER = "lib/integrations/altair-site/adapter.ts";
 const QUERIES = "lib/database/queries/marketing-site-pages.ts";
-const ROUTE = "app/(marketing)/insights/[slug]/page.tsx";
+const ROUTE = "app/(articles)/insights/[slug]/page.tsx";
 const ARTICLE = "shared/components/site/SitePageArticle.tsx";
 /** The one JSON-LD serializer, shared by the article, homepage and pricing. */
 const STRUCTURED_DATA = "shared/lib/site/structured-data.ts";
@@ -346,7 +346,21 @@ check(
 );
 check(
   "an invalid slug 404s before any query",
-  route.indexOf("isValidSlug(slug)") < route.indexOf("getPublishedSitePageBySlug(slug)"),
+  (() => {
+    // The route looks the page up through a request-scoped cache
+    // (`loadPublishedPage`) shared by generateMetadata and the page.
+    const lookup = route.includes("loadPublishedPage(slug)")
+      ? "loadPublishedPage(slug)"
+      : "getPublishedSitePageBySlug(slug)";
+    const at = route.indexOf(lookup);
+    return at > 0 && route.indexOf("isValidSlug(slug)") < at;
+  })(),
+);
+check(
+  "an unknown slug is a real 404: the route sits outside any loading.tsx Suspense boundary",
+  !existsSync("app/(articles)/loading.tsx") &&
+    !existsSync("app/(articles)/insights/loading.tsx") &&
+    !existsSync("app/(articles)/insights/[slug]/loading.tsx"),
 );
 check(
   "anon may read pages but never revisions",

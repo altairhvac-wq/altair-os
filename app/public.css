@@ -33,6 +33,7 @@
 
 /* Public routes, and the root layout that wraps them. */
 @source "../app/(marketing)";
+@source "../app/(articles)";
 @source "../app/(auth)";
 @source "../app/layout.tsx";
 

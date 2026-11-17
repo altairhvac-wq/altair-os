@@ -15,12 +15,28 @@ import {
 } from "@/shared/lib/resources/catalog";
 import type { AltairFeatureKey } from "@/shared/lib/resources/feature-links";
 import { buildResourceWebPageStructuredData } from "@/shared/lib/resources/structured-data";
+import { CALCULATOR_SOFTWARE, SOFTWARE_PAGES } from "@/shared/lib/site/internal-links";
+import { buildFaqPageStructuredData } from "@/shared/lib/site/structured-data";
+
+export type CalculatorInputNote = { readonly name: string; readonly text: string };
+export type CalculatorFaqItem = { readonly question: string; readonly answer: string };
+export type CalculatorWorkedExample = {
+  /** One sentence setting up the example shop. */
+  readonly setup: string;
+  /** Each line of the arithmetic, label and result, computed by the calculator's own function. */
+  readonly lines: readonly { readonly label: string; readonly value: string }[];
+  /** What the result means, in a sentence or two. */
+  readonly conclusion: string;
+};
 
 /**
  * The shared calculator page pattern: header, the interactive calculator
  * (a client component passed as children), then "how to use this", the
  * formula, the assumptions, the disclaimer, the Altair note and the other
- * calculators. Server-rendered so every explanation is in the HTML a
+ * calculators. Optionally a worked example, a plain explanation of each
+ * input and a short FAQ (with FAQPage JSON-LD built from the same list).
+ * Every calculator links to the software pages its numbers feed
+ * (shared/lib/site/internal-links.ts). Server-rendered so every explanation is in the HTML a
  * crawler and a no-JS reader receive; only the inputs need the client.
  */
 export function CalculatorFrame({
@@ -30,6 +46,9 @@ export function CalculatorFrame({
   formula,
   assumptions,
   featureKeys,
+  inputs,
+  workedExample,
+  faq,
   children,
 }: {
   readonly slug: ResourceCalculatorEntry["slug"];
@@ -38,11 +57,15 @@ export function CalculatorFrame({
   readonly formula: readonly string[];
   readonly assumptions: readonly string[];
   readonly featureKeys: readonly AltairFeatureKey[];
+  readonly inputs?: readonly CalculatorInputNote[];
+  readonly workedExample?: CalculatorWorkedExample;
+  readonly faq?: readonly CalculatorFaqItem[];
   readonly children: React.ReactNode;
 }) {
   const entry = RESOURCE_CALCULATORS.find((calculator) => calculator.slug === slug);
   if (!entry) return null;
   const others = RESOURCE_CALCULATORS.filter((calculator) => calculator.slug !== slug);
+  const software = CALCULATOR_SOFTWARE[slug].map((path) => SOFTWARE_PAGES[path]);
 
   return (
     <>
@@ -53,6 +76,7 @@ export function CalculatorFrame({
           path: calculatorPath(slug),
         })}
       />
+      {faq && faq.length > 0 ? <JsonLdScript data={buildFaqPageStructuredData(faq)} /> : null}
       <ResourcePageHeader
         eyebrow="Free calculator"
         title={entry.title}
@@ -64,6 +88,39 @@ export function CalculatorFrame({
       />
 
       <div className="mt-10">{children}</div>
+
+      {inputs && inputs.length > 0 ? (
+        <ResourceCard className="mt-10">
+          <h2 className="text-base font-semibold text-[#0A0A0A]">What each input means</h2>
+          <dl className="mt-3 space-y-3 text-sm leading-relaxed text-stone-700">
+            {inputs.map((input) => (
+              <div key={input.name}>
+                <dt className="font-semibold text-stone-900">{input.name}</dt>
+                <dd className="mt-0.5">{input.text}</dd>
+              </div>
+            ))}
+          </dl>
+        </ResourceCard>
+      ) : null}
+
+      {workedExample ? (
+        <ResourceCard className="mt-5">
+          <h2 className="text-base font-semibold text-[#0A0A0A]">A worked example</h2>
+          <p className="mt-3 text-sm leading-relaxed text-stone-700">{workedExample.setup}</p>
+          <dl className="mt-4 divide-y divide-stone-200 rounded-lg border border-stone-200 bg-stone-50 text-sm">
+            {workedExample.lines.map((line) => (
+              <div
+                key={line.label}
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-2.5"
+              >
+                <dt className="min-w-0 text-stone-700">{line.label}</dt>
+                <dd className="font-mono font-semibold tabular-nums text-stone-900">{line.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 text-sm leading-relaxed text-stone-700">{workedExample.conclusion}</p>
+        </ResourceCard>
+      ) : null}
 
       <div className="mt-10 grid gap-5 md:grid-cols-2">
         <ResourceCard>
@@ -102,9 +159,39 @@ export function CalculatorFrame({
         {CALCULATOR_DISCLAIMER}
       </p>
 
+      {faq && faq.length > 0 ? (
+        <section aria-labelledby="calculator-faq-heading" className="mt-10">
+          <h2 id="calculator-faq-heading" className="text-lg font-semibold text-[#0A0A0A]">
+            Common questions
+          </h2>
+          <div className="mt-4 space-y-3">
+            {faq.map((item) => (
+              <ResourceCard key={item.question}>
+                <h3 className="text-sm font-semibold text-[#0A0A0A]">{item.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-700">{item.answer}</p>
+              </ResourceCard>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {featureKeys.map((key) => (
         <AltairFeatureNote key={key} featureKey={key} />
       ))}
+
+      <nav aria-label="Software for this work" className="mt-8">
+        <h2 className="text-sm font-semibold text-[#0A0A0A]">Where these numbers get used</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          {software.map((page) => (
+            <li key={page.href}>
+              <Link href={page.href} className={resourceLinkClass}>
+                {page.label}
+              </Link>
+              <span className="text-stone-600"> — {page.text}</span>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <nav aria-label="Other calculators" className="mt-10 border-t border-stone-200 pt-6">
         <h2 className="text-sm font-semibold text-[#0A0A0A]">Other calculators</h2>

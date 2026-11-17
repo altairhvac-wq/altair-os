@@ -85,7 +85,7 @@ function walk(dir) {
   return out;
 }
 
-const PUBLIC_GROUPS = ["(marketing)", "(auth)"];
+const PUBLIC_GROUPS = ["(marketing)", "(articles)", "(auth)"];
 const ROOT_PUBLIC_FILES = ["layout.tsx"];
 const entries = [
   ...PUBLIC_GROUPS.flatMap((group) => walk(path.join(APP, group))),
