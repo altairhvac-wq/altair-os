@@ -3,6 +3,10 @@ import { CalculatorFrame } from "@/shared/components/resources/CalculatorFrame";
 import { JobProfitabilityCalculator } from "@/shared/components/resources/JobProfitabilityCalculator";
 import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import {
+  JOB_PROFITABILITY_DEFAULTS,
+  calculateJobProfitability,
+} from "@/shared/lib/resources/job-profitability";
 
 const TITLE = "Job profitability calculator";
 const DESCRIPTION =
@@ -17,6 +21,14 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
   }),
 };
+
+const usd = (value: number) =>
+  value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+const pct = (fraction: number | null) => (fraction === null ? "n/a" : `${(fraction * 100).toFixed(1)}%`);
+
+/** The calculator's own defaults through its own function: the page cannot disagree with the tool. */
+const EXAMPLE_INPUT = JOB_PROFITABILITY_DEFAULTS;
+const EXAMPLE = calculateJobProfitability(EXAMPLE_INPUT);
 
 export default function JobProfitabilityCalculatorPage() {
   return (
@@ -45,6 +57,36 @@ export default function JobProfitabilityCalculatorPage() {
         "Revenue excludes sales tax.",
         "Warranty callbacks and financing or card fees are not included unless you add them to materials or subcontract.",
         "Default values are placeholders to show how it works, not industry benchmarks.",
+      ]}
+      workedExample={{
+        setup: `A ${usd(EXAMPLE_INPUT.revenue)} job (before tax) that took ${EXAMPLE_INPUT.laborHours} paid hours at a loaded ${usd(EXAMPLE_INPUT.loadedLaborRate)} an hour, ${usd(EXAMPLE_INPUT.materialsCost)} of materials, no subcontractor, and overhead running at ${Math.round(EXAMPLE_INPUT.overheadAllocationRate * 100)}% of revenue. These are the calculator's example values, not industry averages.`,
+        lines: [
+          { label: "Labor cost", value: usd(EXAMPLE.laborCost) },
+          { label: "Direct cost (labor, materials, subcontract)", value: usd(EXAMPLE.directCost) },
+          { label: "Gross profit", value: usd(EXAMPLE.grossProfit) },
+          { label: "Gross margin", value: pct(EXAMPLE.grossMargin) },
+          { label: "Overhead share", value: usd(EXAMPLE.overheadAllocated) },
+          { label: "Net profit", value: usd(EXAMPLE.netProfit) },
+          { label: "Net margin", value: pct(EXAMPLE.netMargin) },
+        ],
+        conclusion: `The job shows ${usd(EXAMPLE.grossProfit)} of gross profit, but once it carries its share of the office it leaves ${usd(EXAMPLE.netProfit)}. Net profit, not gross, is what the business keeps.`,
+      }}
+      faq={[
+        {
+          question: "What is the difference between gross profit and net profit on a job?",
+          answer:
+            "Gross profit is revenue minus the job's direct costs: labor, materials and subcontractors. Net profit also takes off the job's share of overhead (the office, trucks, insurance, software), which is what the business actually keeps.",
+        },
+        {
+          question: "What labor cost should I use?",
+          answer:
+            "Every paid hour on the job, including drive time and return trips, at your loaded cost: wage plus payroll taxes, insurance and benefits. Not the rate you bill. The HVAC labor rate calculator shows both numbers.",
+        },
+        {
+          question: "How do I work out my overhead percentage?",
+          answer:
+            "Divide last year's total overhead by last year's revenue. If overhead was $150,000 on $600,000 of revenue, that is 25%.",
+        },
       ]}
       featureKeys={["estimates", "reports"]}
     >

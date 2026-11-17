@@ -103,10 +103,21 @@ export function buildSoftwareApplicationStructuredData(): Record<string, unknown
  * more than the page does.
  */
 export function buildFaqStructuredData(): Record<string, unknown> {
+  return buildFaqPageStructuredData(SITE_FAQ);
+}
+
+/**
+ * FAQPage JSON-LD for a page that renders its OWN questions (the invoicing
+ * page, the calculators). Pass the same list the page shows, never a second
+ * copy, and render only one FAQPage per page.
+ */
+export function buildFaqPageStructuredData(
+  items: readonly { readonly question: string; readonly answer: string }[],
+): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: SITE_FAQ.map((item) => ({
+    mainEntity: items.map((item) => ({
       "@type": "Question",
       name: item.question,
       acceptedAnswer: { "@type": "Answer", text: item.answer },

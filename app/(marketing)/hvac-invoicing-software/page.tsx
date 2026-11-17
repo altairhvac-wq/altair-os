@@ -1,36 +1,34 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { MarketingLandingPage } from "@/shared/components/marketing/MarketingLandingPage";
+import { InvoicingLandingPage } from "@/shared/components/marketing/InvoicingLandingPage";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
-import { findLandingPage } from "@/shared/lib/site/landing-pages";
+import { INVOICING_FAQ, INVOICING_META, INVOICING_PAGE_PATH } from "@/shared/lib/site/invoicing-page";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import {
-  buildFaqStructuredData,
+  buildFaqPageStructuredData,
   buildSoftwareApplicationStructuredData,
 } from "@/shared/lib/site/structured-data";
 
-const PAGE = findLandingPage("/hvac-invoicing-software");
+export const metadata: Metadata = {
+  title: INVOICING_META.title,
+  description: INVOICING_META.description,
+  ...buildPublicSocialMetadata({
+    path: INVOICING_PAGE_PATH,
+    title: `${INVOICING_META.title} · Altair Operating System`,
+    description: INVOICING_META.description,
+  }),
+};
 
-export const metadata: Metadata = PAGE
-  ? {
-      title: PAGE.title,
-      description: PAGE.description,
-      ...buildPublicSocialMetadata({
-        path: PAGE.path,
-        title: `${PAGE.title} · Altair Operating System`,
-        description: PAGE.description,
-      }),
-    }
-  : {};
-
-/** Search landing page; the copy lives in shared/lib/site/landing-pages.ts. */
-export default function LandingPage() {
-  if (!PAGE) notFound();
+/**
+ * HVAC invoicing software. Its own component and copy
+ * (shared/lib/site/invoicing-page.ts); the FAQPage JSON-LD is built from the
+ * same questions the page renders, and the site-wide FAQ is not on this page.
+ */
+export default function HvacInvoicingSoftwarePage() {
   return (
     <>
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
-      <JsonLdScript data={buildFaqStructuredData()} />
-      <MarketingLandingPage page={PAGE} />
+      <JsonLdScript data={buildFaqPageStructuredData(INVOICING_FAQ)} />
+      <InvoicingLandingPage />
     </>
   );
 }

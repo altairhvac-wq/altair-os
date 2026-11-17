@@ -40,7 +40,7 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
   },
   {
     slug: "break-even",
-    title: "Break-even calculator",
+    title: "HVAC break-even calculator",
     description:
       "Find how many jobs and how much revenue a month it takes to cover your fixed costs.",
   },

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import {
   getPublishedSitePageBySlug,
   listPublishedSitePages,
@@ -32,16 +33,26 @@ import {
 
 type Params = { readonly slug: string };
 
+/**
+ * One lookup per request, shared by `generateMetadata` and the page.
+ *
+ * A missing or unpublished slug calls `notFound()` in both places. This route
+ * sits in the (articles) group, outside the marketing `loading.tsx`, so
+ * nothing has streamed yet and the answer is a real `404` rather than a
+ * `200` with `noindex` (see app/(articles)/layout.tsx).
+ */
+const loadPublishedPage = cache(getPublishedSitePageBySlug);
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  if (!isValidSlug(slug)) return {};
+  if (!isValidSlug(slug)) notFound();
 
-  const page = await getPublishedSitePageBySlug(slug);
-  if (!page) return {};
+  const page = await loadPublishedPage(slug);
+  if (!page) notFound();
 
   // The root layout appends " · Altair Operating System"; a stored meta title
   // that already ends in the brand would otherwise carry it twice.
@@ -89,7 +100,7 @@ export default async function SitePage({
   // round trip entirely.
   if (!isValidSlug(slug)) notFound();
 
-  const page = await getPublishedSitePageBySlug(slug);
+  const page = await loadPublishedPage(slug);
   if (!page) notFound();
 
   const others = (await listPublishedSitePages())
@@ -124,6 +135,7 @@ export default async function SitePage({
         }}
       />
       <SitePageArticle
+        slug={page.slug}
         title={page.title}
         bodyMarkdown={page.bodyMarkdown}
         publishedAt={page.publishedAt}

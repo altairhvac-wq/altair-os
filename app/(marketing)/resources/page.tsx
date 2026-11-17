@@ -19,6 +19,7 @@ import {
 import { buildResourceCollectionStructuredData } from "@/shared/lib/resources/structured-data";
 import { RESOURCE_TEMPLATES } from "@/shared/lib/resources/templates";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER } from "@/shared/lib/site/internal-links";
 
 /**
  * The Contractor Business Resource Center hub.
@@ -140,13 +141,20 @@ export default function ResourcesHubPage() {
         ))}
       </div>
 
-      <p className="mt-10 text-center text-sm text-stone-600">
-        Altair Operating System is field service software for the same work these resources cover.{" "}
-        <Link href="/hvac-software" className={resourceLinkClass}>
-          See what is in the product
-        </Link>
-        .
-      </p>
+      <nav aria-labelledby="resources-software-heading" className="mt-10 text-center text-sm text-stone-600">
+        <p id="resources-software-heading">
+          Altair Operating System is field service software for the same work these resources cover:
+        </p>
+        <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2">
+          {SOFTWARE_PAGE_ORDER.map((path) => (
+            <li key={path}>
+              <Link href={path} className={resourceLinkClass}>
+                {SOFTWARE_PAGES[path].label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </ResourcePageShell>
   );
 }

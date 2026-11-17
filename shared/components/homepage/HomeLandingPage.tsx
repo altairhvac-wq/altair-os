@@ -12,6 +12,7 @@ import { RESOURCES_CALCULATORS_PATH, RESOURCE_CALCULATORS, calculatorPath } from
 import { ABOUT_PATH, FOUNDER } from "@/shared/lib/site/about";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { FIVE_USER_PRICE_COMPARISON } from "@/shared/lib/site/comparison-pages";
+import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER } from "@/shared/lib/site/internal-links";
 
 /**
  * The logged-out homepage.
@@ -115,6 +116,35 @@ export function HomeLandingPage() {
             <SeeAltairInActionSection variant="dark" />
           </div>
         </div>
+
+        {/* One link per software page, in the words owners search with. */}
+        <section aria-labelledby="home-software-heading" className="px-5 pb-12 sm:px-8">
+          <div className="mx-auto max-w-5xl">
+            <p className={eyebrow}>Each part of the job</p>
+            <h2
+              id="home-software-heading"
+              className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]"
+            >
+              Dispatch, estimates and invoices on one record.
+            </h2>
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {SOFTWARE_PAGE_ORDER.map((path) => {
+                const page = SOFTWARE_PAGES[path];
+                return (
+                  <li key={path}>
+                    <Link
+                      href={page.href}
+                      className={`block h-full p-5 transition-colors hover:border-[#c2a05a]/60 ${card} ${focusRing}`}
+                    >
+                      <span className="block text-base font-semibold text-[#fff9ea]">{page.label}</span>
+                      <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">{page.text}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
 
         <section aria-labelledby="home-compare-heading" className="px-5 pb-6 sm:px-8">
           <div className={`mx-auto max-w-3xl px-5 py-7 sm:px-8 sm:py-9 ${card}`}>

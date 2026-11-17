@@ -11,10 +11,10 @@ const focusRing =
  * They, and the calculators, are listed here with the rest.
  */
 const FOOTER_LINKS = [
-  { href: "/hvac-software", label: "Product" },
-  { href: "/hvac-dispatch-software", label: "Dispatch" },
-  { href: "/hvac-estimating-software", label: "Estimating" },
-  { href: "/hvac-invoicing-software", label: "Invoicing" },
+  { href: "/hvac-software", label: "HVAC Software" },
+  { href: "/hvac-dispatch-software", label: "HVAC Dispatch Software" },
+  { href: "/hvac-estimating-software", label: "HVAC Estimating Software" },
+  { href: "/hvac-invoicing-software", label: "HVAC Invoicing Software" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/servicetitan-alternative", label: "vs ServiceTitan" },
   { href: "/jobber-housecall-pro-alternatives", label: "vs Jobber & Housecall Pro" },

@@ -3,6 +3,8 @@ import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { serializeJsonLd } from "@/shared/lib/site/structured-data";
+import { RESOURCE_CALCULATORS, calculatorPath } from "@/shared/lib/resources/catalog";
+import { SOFTWARE_PAGES, articleLinksFor } from "@/shared/lib/site/internal-links";
 
 /**
  * Renders one published site page.
@@ -104,24 +106,19 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Free tools every article can point to: they answer the next question an owner has. */
-const FREE_TOOLS: readonly { href: string; label: string; text: string }[] = [
-  {
-    href: "/resources/calculators/labor-rate",
-    label: "Labor rate calculator",
-    text: "The hourly rate a technician has to bill to cover wage, burden, overhead and margin.",
-  },
-  {
-    href: "/resources/calculators/job-profitability",
-    label: "Job profitability calculator",
-    text: "Gross profit, net profit and margin on a single job.",
-  },
-  {
-    href: "/resources/calculators/break-even",
-    label: "Break-even calculator",
-    text: "How many jobs a month it takes to cover your fixed costs.",
-  },
-];
+/**
+ * The free tools and the software page each article points to come from
+ * shared/lib/site/internal-links.ts (by slug, with a default for newer
+ * articles), so every article links to the matching /hvac-* page with the
+ * words owners search for, and to the calculators that answer its next
+ * question.
+ */
+function toolsFor(slug: string) {
+  const wanted = articleLinksFor(slug).tools;
+  return wanted
+    .map((toolSlug) => RESOURCE_CALCULATORS.find((calculator) => calculator.slug === toolSlug))
+    .filter((calculator): calculator is (typeof RESOURCE_CALCULATORS)[number] => Boolean(calculator));
+}
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2";
@@ -133,6 +130,7 @@ type ArticleSummary = {
 };
 
 export function SitePageArticle({
+  slug,
   title,
   bodyMarkdown,
   publishedAt,
@@ -142,6 +140,8 @@ export function SitePageArticle({
   pathPrefix,
   moreArticles = [],
 }: {
+  /** This article's slug: picks the software page and tools it links to. */
+  readonly slug: string;
   readonly title: string;
   readonly bodyMarkdown: string;
   readonly publishedAt: string | null;
@@ -160,20 +160,21 @@ export function SitePageArticle({
   );
   const minutes = readingMinutes(bodyMarkdown);
   // The generator's own "read next" picks come first, then the newest of the rest.
+  // Only PUBLISHED articles are linked: a pick the database does not return
+  // (a draft, or a slug that was never published) used to be rendered from
+  // its slug and sent the reader, and Google, to a 404.
   const byslug = new Map(
     moreArticles.map((article) => [article.slug, article]),
   );
   const readNext: ArticleSummary[] = [
-    ...internalLinks.map(
-      (slug) =>
-        byslug.get(slug) ?? {
-          slug,
-          title: slug.replace(/-/g, " "),
-          metaDescription: null,
-        },
-    ),
+    ...internalLinks.flatMap((linkSlug) => {
+      const article = byslug.get(linkSlug);
+      return article ? [article] : [];
+    }),
     ...moreArticles.filter((article) => !internalLinks.includes(article.slug)),
   ].slice(0, 3);
+  const tools = toolsFor(slug);
+  const software = SOFTWARE_PAGES[articleLinksFor(slug).software];
 
   return (
     <div className="relative min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
@@ -296,6 +297,15 @@ export function SitePageArticle({
             Leads, estimates, dispatch, the technician&apos;s phone, invoices
             and payments on one record. Free for 14 days, no credit card.
           </p>
+          <p className="mt-3 text-sm text-[#c9bfae]">
+            For this part of the job:{" "}
+            <Link
+              href={software.href}
+              className={`font-semibold text-[#e8d9ac] underline underline-offset-4 hover:text-[#fff9ea] ${focusRing} focus-visible:ring-offset-[#0d0f0c]`}
+            >
+              {software.label}
+            </Link>
+          </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/signup"
@@ -320,17 +330,17 @@ export function SitePageArticle({
             Free tools for owners
           </h2>
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
-            {FREE_TOOLS.map((tool) => (
-              <li key={tool.href}>
+            {tools.map((tool) => (
+              <li key={tool.slug}>
                 <Link
-                  href={tool.href}
+                  href={calculatorPath(tool.slug)}
                   className={`block h-full rounded-xl border border-stone-200 bg-white px-4 py-4 transition-colors hover:border-[#c2a05a] ${focusRing}`}
                 >
                   <span className="block text-sm font-semibold text-[#0A0A0A]">
-                    {tool.label}
+                    {tool.title}
                   </span>
                   <span className="mt-1 block text-xs leading-relaxed text-stone-600">
-                    {tool.text}
+                    {tool.description}
                   </span>
                 </Link>
               </li>

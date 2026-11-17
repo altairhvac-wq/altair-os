@@ -1,9 +1,20 @@
 import { SITE_FAQ } from "@/shared/lib/site/faq";
 
+type FaqEntry = { readonly id: string; readonly question: string; readonly answer: string };
+
 type MarketingFaqSectionProps = {
   /** `dark` for the Mission Control homepage, `light` for the pricing page. */
   variant: "dark" | "light";
   className?: string;
+  /**
+   * A page's own questions in place of the site FAQ (the invoicing page).
+   * The page must then emit FAQPage JSON-LD from this same list, and not the
+   * site FAQ's, so the markup never says more than the page.
+   */
+  items?: readonly FaqEntry[];
+  eyebrowText?: string;
+  headingText?: string;
+  introText?: string;
 };
 
 /**
@@ -14,7 +25,14 @@ type MarketingFaqSectionProps = {
  * answer with a tap. Every page that renders this also emits the matching
  * FAQPage JSON-LD (`buildFaqStructuredData`), from the same list.
  */
-export function MarketingFaqSection({ variant, className = "" }: MarketingFaqSectionProps) {
+export function MarketingFaqSection({
+  variant,
+  className = "",
+  items = SITE_FAQ,
+  eyebrowText = "Before you start",
+  headingText = "Questions owners ask before the trial.",
+  introText = "Straight answers, the same ones the product enforces.",
+}: MarketingFaqSectionProps) {
   const dark = variant === "dark";
   const eyebrow = dark ? "text-[#c2a05a]" : "text-[#77591B]";
   const heading = dark ? "text-[#fff9ea]" : "text-[#0A0A0A]";
@@ -34,20 +52,20 @@ export function MarketingFaqSection({ variant, className = "" }: MarketingFaqSec
     >
       <div className="mx-auto max-w-3xl">
         <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${eyebrow}`}>
-          Before you start
+          {eyebrowText}
         </p>
         <h2
           id="site-faq-heading"
           className={`mt-3 text-[1.6rem] font-semibold tracking-tight sm:text-[2rem] sm:leading-[1.2] ${heading}`}
         >
-          Questions owners ask before the trial.
+          {headingText}
         </h2>
         <p className={`mt-3 max-w-2xl text-sm leading-relaxed sm:text-base ${intro}`}>
-          Straight answers, the same ones the product enforces.
+          {introText}
         </p>
 
         <div className="mt-8 space-y-3">
-          {SITE_FAQ.map((entry) => (
+          {items.map((entry) => (
             <details
               key={entry.id}
               className={`group rounded-xl border transition-colors ${item}`}
