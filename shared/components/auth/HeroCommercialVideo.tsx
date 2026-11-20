@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
-const PREVIEW_SRC = "/marketing/video/altair-commercial-preview.mp4";
-const FULL_SRC = "/marketing/video/altair-commercial.mp4";
-const POSTER_SRC = "/marketing/video/altair-commercial-poster.webp";
+const PREVIEW_SRC = "/marketing/video/before-dawn-preview.mp4";
+const FULL_SRC = "/marketing/video/before-dawn.mp4";
+const POSTER_SRC = "/marketing/video/before-dawn-poster.webp";
 
 /**
- * Homepage/login hero: the Altair Operating System commercial.
- * Until the visitor asks for it, a 30-second cut loops muted (1.3 MB, no sound track). Visitors who
- * prefer reduced motion see the poster instead. "Watch" swaps in the full 2:27 commercial with sound
- * and controls; that file is only requested on click.
+ * Homepage/login hero: "Before Dawn", the Altair Operating System brand film (owner 2026-11-20:
+ * "Put it on the website too"). Until the visitor asks for it, the 40-second film loops muted at a
+ * small size (2.4 MB, no sound track). Visitors who prefer reduced motion see the poster instead.
+ * "Watch" swaps in the full-quality film with its score and controls; that file is only requested on
+ * click. The step-by-step product demo (2:27) stays on /how-it-works (shared/lib/site/commercial-video.ts).
  */
 export function HeroCommercialVideo() {
   const ref = useRef<HTMLVideoElement>(null);
@@ -62,7 +63,7 @@ export function HeroCommercialVideo() {
         autoPlay={!reducedMotion && !full}
         playsInline
         preload={reducedMotion ? "none" : "auto"}
-        aria-label="Altair Operating System commercial: one job from first call to paid"
+        aria-label="Before Dawn: the Altair Operating System film. Film scenes are AI-generated; app screens are the real product with sample data."
       />
       {!full ? (
         <>
@@ -76,8 +77,8 @@ export function HeroCommercialVideo() {
               <Play className="ml-0.5 h-4 w-4 fill-current" aria-hidden="true" />
             </span>
             <span className="flex flex-col leading-tight">
-              <span className="text-xs font-semibold sm:text-sm">Watch one job, start to finish</span>
-              <span className="text-[10px] text-slate-300 sm:text-[11px]">2:27 · with sound</span>
+              <span className="text-xs font-semibold sm:text-sm">Watch the film</span>
+              <span className="text-[10px] text-slate-300 sm:text-[11px]">0:40 · with sound</span>
             </span>
           </button>
         </>

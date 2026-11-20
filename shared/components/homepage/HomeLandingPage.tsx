@@ -93,19 +93,19 @@ export function HomeLandingPage() {
           </div>
         </section>
 
-        {/* The commercial. A short silent cut loops; "Watch" plays all of it with sound. */}
+        {/* "Before Dawn", the brand film. It loops muted; "Watch" plays it with sound. The step-by-step demo lives on VIDEO_PAGE_PATH. */}
         <section aria-labelledby="home-video-heading" className="px-5 pb-6 sm:px-8">
           <div className="mx-auto max-w-4xl">
             <h2 id="home-video-heading" className="sr-only">
-              Watch one job go from the first call to the paid invoice
+              Before Dawn: the Altair Operating System film
             </h2>
             <figure className="relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#131712] shadow-[0_28px_80px_-34px_rgba(0,0,0,0.9),0_0_0_1px_rgba(194,160,90,0.08)_inset]">
               <HeroCommercialVideo />
             </figure>
             <p className="mt-3 text-center text-xs text-[#8e826f]">
-              One job, from the first call to the paid invoice, in 2 minutes 27 seconds.{" "}
+              Film scenes are AI-generated; every app screen is the real product with sample data.{" "}
               <Link href={VIDEO_PAGE_PATH} className={textLink}>
-                Chapters and transcript
+                Watch one job from first call to paid (2:27)
               </Link>
             </p>
           </div>
