@@ -8,13 +8,17 @@ import {
 import { SITE_PAGE_PATH_PREFIX, isValidSlug } from "@/shared/types/site-page";
 import { SitePageArticle } from "@/shared/components/site/SitePageArticle";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { buildArticleView } from "@/shared/lib/site/article-view";
+import { readingMinutes } from "@/shared/lib/site/article-markdown";
+import { buildInsightsArticleStructuredData } from "@/shared/lib/site/structured-data";
 import {
+  PUBLIC_SITE_NAME,
   PUBLIC_SITE_ORIGIN,
   buildPublicSocialMetadata,
 } from "@/shared/lib/site/public-site";
 
 /**
- * A published Altair site page.
+ * A published Altair site page, in the Insights article template.
  *
  * ============ THIS IS THE PUBLIC SURFACE ============
  * Anonymous, indexable, and read through the ordinary anon-key client so
@@ -24,14 +28,19 @@ import {
  * version of that guarantee worth having.
  *
  * ============ NO HTML IS RENDERED FROM THE DATABASE ============
- * The body is markdown and is rendered as escaped text by
- * `SitePageArticle`. There is no `dangerouslySetInnerHTML` anywhere in this
- * route, so a compromised generator cannot put script on a public page. The
- * one `<script>` here is the JSON-LD block, and its content is serialised
- * with `JSON.stringify` and escaped for `</script>` before it is emitted.
+ * The body is markdown, parsed into blocks by
+ * shared/lib/site/article-markdown.ts and rendered as React elements, so
+ * every character of it is escaped text. The one `<script>` here is the
+ * JSON-LD block: built in code from the row's fields, serialised with
+ * `JSON.stringify` and escaped for `</script>` by JsonLdScript.
  */
 
 type Params = { readonly slug: string };
+
+/** The root layout's title template adds this to every page title. */
+const TITLE_SUFFIX = ` · ${PUBLIC_SITE_NAME}`;
+/** Google shows about 60 characters of a title. */
+const TITLE_MAX = 60;
 
 /**
  * One lookup per request, shared by `generateMetadata` and the page.
@@ -76,7 +85,11 @@ export async function generateMetadata({
   });
 
   return {
-    title,
+    // With the brand suffix most article titles ran 77 to 82 characters and
+    // were cut off in results (site audit 2026-11-20). A stored title that
+    // fits with the suffix keeps it; a longer one (60 or under on its own) is
+    // used as the whole title.
+    title: title.length + TITLE_SUFFIX.length <= TITLE_MAX ? title : { absolute: title },
     description,
     ...social,
     openGraph: {
@@ -103,47 +116,50 @@ export default async function SitePage({
   const page = await loadPublishedPage(slug);
   if (!page) notFound();
 
+  // Only PUBLISHED pages are linked from here (related reading, links in the
+  // text): a slug the database does not return would send readers to a 404.
   const others = (await listPublishedSitePages())
     .filter((other) => other.slug !== page.slug)
     .map((other) => ({
       slug: other.slug,
       title: other.title,
       metaDescription: other.metaDescription,
+      minutes: readingMinutes(other.bodyMarkdown),
     }));
-  const pageUrl = `${PUBLIC_SITE_ORIGIN}${SITE_PAGE_PATH_PREFIX}/${page.slug}`;
+  const view = buildArticleView(page.slug, page.bodyMarkdown);
+  const pageUrl = page.canonicalUrl ?? `${PUBLIC_SITE_ORIGIN}${SITE_PAGE_PATH_PREFIX}/${page.slug}`;
+
+  // The stored structured data is the publisher's Article block; the graph
+  // below says the same and more (author, section, FAQ), so the stored copy
+  // is emitted only when it is something else, never as a second Article.
+  const stored = page.structuredData;
+  const storedType = typeof stored["@type"] === "string" ? stored["@type"] : null;
+  const extraStored = storedType && !["Article", "BlogPosting", "NewsArticle"].includes(storedType) ? stored : null;
 
   return (
     <>
       <JsonLdScript
-        data={{
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Insights",
-              item: `${PUBLIC_SITE_ORIGIN}${SITE_PAGE_PATH_PREFIX}`,
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: page.title,
-              item: pageUrl,
-            },
-          ],
-        }}
+        data={buildInsightsArticleStructuredData({
+          title: page.title,
+          description: page.metaDescription,
+          url: pageUrl,
+          publishedAt: page.publishedAt,
+          updatedAt: page.updatedAt,
+          section: view.topic.label,
+          wordCount: view.wordCount,
+          faq: view.faq,
+        })}
       />
+      {extraStored ? <JsonLdScript data={extraStored} /> : null}
       <SitePageArticle
         slug={page.slug}
         title={page.title}
-        bodyMarkdown={page.bodyMarkdown}
+        summary={page.metaDescription}
+        view={view}
         publishedAt={page.publishedAt}
         updatedAt={page.updatedAt}
-        structuredData={page.structuredData}
-        internalLinks={page.internalLinks}
         pathPrefix={SITE_PAGE_PATH_PREFIX}
-        moreArticles={others}
+        others={others}
       />
     </>
   );
