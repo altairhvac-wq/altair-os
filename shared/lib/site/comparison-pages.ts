@@ -1,6 +1,7 @@
 import { SAAS_SUBSCRIPTION_CATALOG, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import type { ComparisonPagePath } from "@/shared/lib/site/comparison-paths";
+import { CUSTOMER_IMPORT_MAX_ROWS } from "@/shared/lib/customer-import-mapping";
 
 /**
  * ==================== COMPETITOR COMPARISON PAGES ====================
@@ -21,9 +22,21 @@ import type { ComparisonPagePath } from "@/shared/lib/site/comparison-paths";
  *    described as not publishing prices. Re-check every competitor page
  *    before changing a number here; Workiz in particular has changed its
  *    pricing page several times in 2026.
+ *
+ * Re-checked 2026-11-21 (site upgrade batch 5), each fact against the page
+ * it is sourced to. Changed then: ServiceTitan's packages are now Core,
+ * Demand AI, Field AI and MAX behind a "Get Pricing" button, and its pricing
+ * page no longer says "per technician" or "at any size" (the technician
+ * fact now cites the 10-K, which says "partially"); Jobber's Receptionist
+ * add-on is $99/mo and its Core card offers extra users; Kickserv's prices
+ * are quoted billed monthly with the annual figures beside them; Workiz lists
+ * its Genius Phone add-on as sold separately. Removed then, because no page
+ * says it: "Housecall Pro's trade packages are priced separately".
  */
 
-export const COMPETITOR_FACTS_CHECKED = "November 11, 2026";
+export const COMPETITOR_FACTS_CHECKED = "November 21, 2026";
+/** The same day, machine-readable, for the <time> element on the pages. */
+export const COMPETITOR_FACTS_CHECKED_ISO = "2026-11-21";
 
 export type ComparisonPageContent = {
   readonly path: ComparisonPagePath;
@@ -62,6 +75,8 @@ export type ComparisonPageContent = {
     readonly usTitle: string;
     readonly us: readonly string[];
   };
+  /** The moving-day checklist: customers, price book, open invoices, team. */
+  readonly switching: SwitchingChecklist;
   readonly faq: {
     readonly heading: string;
     readonly items: readonly { readonly question: string; readonly answer: string }[];
@@ -152,18 +167,91 @@ const ALTAIR_IMPORT_LIMITS =
 
 const SHARED_TRADEMARK_NOTE = "Altair Operating System is not affiliated with or endorsed by any company named on this page.";
 
+/** How the comparison was made, shown beside the "facts checked" date. */
+export const COMPARISON_METHOD_NOTE =
+  "Each competitor fact on this page comes from that company's own pricing page, feature page or annual report, and each source is linked at the bottom of the page. List prices are in US dollars, billed monthly, without promotions. A fact we could not find on the company's own pages is left out.";
+
+// ---------- Moving over ----------
+// Every step is what the product does today: the customer import and its
+// presets (shared/lib/customer-import-mapping.ts, up to
+// CUSTOMER_IMPORT_MAX_ROWS rows a file), the price book (added item by
+// item; there is no price-book import), invoices created for a customer and
+// paid from a link or recorded by hand (there is no invoice import), and
+// team invitations from Settings.
+
+export type SwitchingChecklist = {
+  readonly heading: string;
+  readonly intro: string;
+  readonly steps: readonly { readonly title: string; readonly items: readonly string[] }[];
+};
+
+function buildSwitchingChecklist(from: string): SwitchingChecklist {
+  return {
+    heading: `Switching from ${from}: the checklist`,
+    intro: `What to bring over, in the order that keeps the work moving. Run it during the ${TRIAL_DAYS}-day trial, while your old account is still open.`,
+    steps: [
+      {
+        title: "Customers",
+        items: [
+          `Export your customer list from ${from} as a CSV file.`,
+          `In Altair, open Customers and choose Import. A preset for ${from} matches the columns; check the preview before you import.`,
+          `Up to ${CUSTOMER_IMPORT_MAX_ROWS} customers per file. Names, phone numbers, emails and addresses come across; equipment and job history do not.`,
+        ],
+      },
+      {
+        title: "Price book",
+        items: [
+          "Print or export your current services and prices before you start.",
+          "Add them to the Altair price book: services, parts and labor, each with its price and whether it is taxable. There is no price-book import today, so start with the jobs you run most.",
+          "Need to check your flat-rate prices on the way? The free Labor Cost Workspace builds them from your own costs.",
+        ],
+      },
+      {
+        title: "Open invoices",
+        items: [
+          `There is no invoice import. List every unpaid invoice in ${from} before you move.`,
+          `Either collect them in ${from} until they are paid, or create each one in Altair for that customer and send the payment link (once Stripe is connected).`,
+          `Payments that arrive by check or cash are recorded on the invoice with Record payment. Keep ${from} open until the last old invoice is paid.`,
+        ],
+      },
+      {
+        title: "Your team and first job",
+        items: [
+          "Invite your office and technicians from Settings. Technicians open the phone view in their browser and can add it to the home screen.",
+          "Run one real job end to end: estimate, approval, dispatch, invoice and payment.",
+          `Cancel ${from} only after that job, and the old invoices, are done.`,
+        ],
+      },
+    ],
+  };
+}
+
+/** Two questions every switcher asks, the same on both pages. */
+function switchingFaq(from: string): readonly { readonly question: string; readonly answer: string }[] {
+  return [
+    {
+      question: `Can I bring my price book and open invoices over from ${from}?`,
+      answer: `Not by import. You add price-book items in Altair by hand, and an invoice still owed is either collected in ${from} or created again in Altair for that customer, then paid from its link or recorded when the check arrives.`,
+    },
+    {
+      question: `Can I run Altair and ${from} side by side while I switch?`,
+      answer: `Yes. The trial runs ${TRIAL_DAYS} days with no credit card, so you can import your customers, run real jobs in Altair and keep ${from} open until your old invoices are paid.`,
+    },
+  ];
+}
+
 // ====================================================================
 // /servicetitan-alternative
 // ====================================================================
 const SERVICETITAN: ComparisonPageContent = {
   path: "/servicetitan-alternative",
-  metaTitle: "ServiceTitan Alternative for Small HVAC Shops | Altair Operating System",
+  metaTitle: "ServiceTitan Alternative for HVAC · Altair Operating System",
   metaDescription:
-    "Looking for a ServiceTitan alternative with public prices and no long contract? Compare Altair and ServiceTitan on pricing, contracts and setup.",
+    "A ServiceTitan alternative with public prices and no long contract. Pricing, contracts and setup compared from sourced facts, plus a switching checklist.",
   eyebrow: "Altair Operating System vs. ServiceTitan",
   headline: "A ServiceTitan alternative for small and growing HVAC shops",
   intro: [
-    "ServiceTitan is a serious system. It doesn't publish prices, it describes its pricing as per technician, and its annual report says new customers typically sign 12- to 36-month agreements. That works for plenty of large operations. A smaller HVAC or field service shop may not need all of it, or want to pay for it.",
+    "ServiceTitan is a serious system. It doesn't publish prices, its annual report says contracts typically run 12 to 36 months, and onboarding is invoiced separately. That works for plenty of large operations. A smaller HVAC or field service shop may not need all of it, or want to pay for it.",
     `Altair is one connected system for the work a smaller shop does every day: leads, customers and the equipment on site, estimates customers approve from their phone, dispatch, a technician phone view, invoices and payment links. The prices are on our website, you can try it for ${TRIAL_DAYS} days without a card, and there's no contract after that.`,
   ],
   priceNote: ALTAIR_PRICE_NOTE,
@@ -175,47 +263,47 @@ const SERVICETITAN: ComparisonPageContent = {
         label: "Pricing",
         cells: [
           `Published. ${ALTAIR_PRICE_LINE}`,
-          "Not published. Its three packages (Starter, Essentials, The Works) each show a \"Request Pricing\" button, and the page describes per-technician pricing.",
+          "Not published. Its pricing page lists four packages (Core, Demand AI, Field AI and MAX) and a \"Get Pricing\" button. Its annual report says pricing is partly based on the number of technicians.",
         ],
       },
       {
         label: "Trying it",
-        cells: [ALTAIR_TRIAL, "Request a demo. Its pricing page doesn't offer a free trial or self-serve sign-up."],
+        cells: [ALTAIR_TRIAL, "Book a demo or ask for pricing. Its pricing page doesn't offer a free trial or self-serve sign-up."],
       },
       {
         label: "Contract",
         cells: [
           ALTAIR_CONTRACT,
-          "New customers typically sign 12- to 36-month agreements that renew automatically, per its fiscal 2026 annual report. Some customers are month-to-month.",
+          "Contract terms typically run 12 to 36 months and renew automatically unless cancelled, per its fiscal 2026 annual report. Some customers are month to month.",
         ],
       },
       {
         label: "Onboarding",
         cells: [
           "Set up the account yourself in minutes. A one-on-one setup call on Zoom, booked when it suits you, is included on every plan.",
-          "Onboarding and training fees are billed separately, per its annual report. The amount isn't published.",
+          "Onboarding and training fees are generally invoiced separately when the contract starts, per its annual report. The amount isn't published.",
         ],
       },
       {
         label: "Built for",
         cells: [
           "Small and growing HVAC and field service companies. Built by an HVAC company owner.",
-          "Contractors \"at any size\", per its pricing page. It sells to small and midsize companies and to enterprise customers.",
+          "Residential and commercial contractors, from a single shop to many locations, per its pricing page. Its annual report says most of its customers are small and medium-sized businesses.",
         ],
       },
       {
         label: "Adding a technician",
         cells: [
           `A known amount: every plan's user count and price is public. Past ${PRO.includedAccounts} users, each one is ${usd(PRO_EXTRA_USER_USD)}/mo.`,
-          "Priced in your quote. Its annual report says pricing is generally based on the number of field technicians.",
+          "Priced in your quote. Its annual report says pricing is partly based on the number of technicians a customer employs.",
         ],
       },
     ],
     footnote: `ServiceTitan details come from servicetitan.com and its fiscal 2026 annual report (Form 10-K), checked ${COMPETITOR_FACTS_CHECKED}. Prices and terms change, so ask ServiceTitan for a current written quote.`,
   },
   reasons: {
-    eyebrow: "Why shops switch",
-    heading: "Four reasons smaller HVAC shops pick Altair over ServiceTitan",
+    eyebrow: "Where they differ",
+    heading: "Four differences that matter to a smaller HVAC shop",
     items: [
       {
         title: "Prices you can see before you talk to anyone",
@@ -242,7 +330,7 @@ const SERVICETITAN: ComparisonPageContent = {
       "You run a large operation, with many trucks, several locations or a call center, and want one vendor for all of it.",
       "You have someone on staff whose job includes configuring and running the software.",
       "You need features Altair doesn't offer today, such as a built-in phone system, drag-and-drop scheduling, automatic routing, live technician GPS or QuickBooks sync. Confirm that whichever system you choose has them.",
-      "A multi-year agreement and separate onboarding fees fit your budget.",
+      "A contract of a year or more and separate onboarding fees fit your budget.",
     ],
     usTitle: "Altair is likely the better fit if:",
     us: [
@@ -252,6 +340,7 @@ const SERVICETITAN: ComparisonPageContent = {
       "You'd rather pay month to month than sign for a year or more.",
     ],
   },
+  switching: buildSwitchingChecklist("ServiceTitan"),
   faq: {
     heading: "Questions about switching from ServiceTitan",
     items: [
@@ -262,7 +351,7 @@ const SERVICETITAN: ComparisonPageContent = {
       {
         question: "What does ServiceTitan cost?",
         answer:
-          "ServiceTitan doesn't publish prices. Its pricing page asks you to request pricing and describes per-technician pricing, and its annual report says onboarding fees are billed separately. If you're comparing, ask for a written quote that includes onboarding, the contract length, the cost of ending early and the price for each added technician.",
+          "ServiceTitan doesn't publish prices. Its pricing page asks you to get pricing from its team, and its annual report says pricing is partly based on the number of technicians and that onboarding fees are invoiced separately. If you're comparing, ask for a written quote that includes onboarding, the contract length, the cost of ending early and the price for each added technician.",
       },
       {
         question: "How much would Altair cost a shop with 9 people?",
@@ -277,6 +366,7 @@ const SERVICETITAN: ComparisonPageContent = {
         question: "Is there a long-term contract?",
         answer: `No. Try Altair free for ${TRIAL_DAYS} days with no credit card. After that, pay monthly and cancel any time, or pay yearly and get two months free.`,
       },
+      ...switchingFaq("ServiceTitan"),
     ],
   },
   closing: {
@@ -289,7 +379,7 @@ const SERVICETITAN: ComparisonPageContent = {
     { href: VIDEO_PAGE_PATH, label: "How Altair works" },
   ],
   sources: {
-    note: `Competitor facts were checked on ${COMPETITOR_FACTS_CHECKED}, on ServiceTitan's own website and in its SEC filing. Altair facts come from our pricing page and the product itself.`,
+    note: `Competitor facts were checked on ${COMPETITOR_FACTS_CHECKED}, on ServiceTitan's own pricing page and in its annual report filed with the SEC. Altair facts come from our pricing page and the product itself.`,
     items: [
       { label: "ServiceTitan pricing page", url: "https://www.servicetitan.com/pricing" },
       {
@@ -307,13 +397,13 @@ const SERVICETITAN: ComparisonPageContent = {
 // ====================================================================
 const JOBBER_HOUSECALL: ComparisonPageContent = {
   path: "/jobber-housecall-pro-alternatives",
-  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026) | Altair Operating System",
+  metaTitle: "Jobber & Housecall Pro Alternatives for HVAC (2026)",
   metaDescription:
-    "Comparing Jobber and Housecall Pro for an HVAC shop? See 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair.",
+    "Jobber and Housecall Pro for an HVAC shop: 2026 prices, user limits and contracts side by side, plus Workiz, FieldPulse, Kickserv and Altair.",
   eyebrow: "HVAC software compared",
   headline: "Jobber and Housecall Pro alternatives for HVAC contractors",
   intro: [
-    "Jobber and Housecall Pro are two of the best-known names in field service software, and both serve HVAC companies. What catches growing shops out is how the price moves. Both charge by plan tier and by number of users, and some tools, like QuickBooks sync, only start on a higher tier.",
+    "Jobber and Housecall Pro are two well-known names in field service software, and both serve HVAC companies. What catches growing shops out is how the price moves. Both charge by plan tier and by number of users, and some tools, like QuickBooks sync, only start on a higher tier.",
     "Here is what each one costs on its own website today, what the money gets you, how three other options compare, and where Altair fits.",
   ],
   priceNote: ALTAIR_PRICE_NOTE,
@@ -333,7 +423,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
         label: "5 users",
         cells: [
           `${monthly(GROWTH)} (Growth)`,
-          `${usd(JOBBER_CONNECT_5_USERS_USD)}/mo (Connect) or $299/mo (Grow). Core is 1 user only.`,
+          `${usd(JOBBER_CONNECT_5_USERS_USD)}/mo (Connect) or $299/mo (Grow). Core includes 1 user.`,
           `${usd(HOUSECALL_PRO_ESSENTIALS_5_USERS_USD)}/mo (Essentials). $149 billed annually.`,
         ],
       },
@@ -422,25 +512,25 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
         name: "Jobber",
         summary:
           "A long-established field service system with four plans (Core, Connect, Grow and Plus) priced by team size. HVAC is one of the industries it lists.",
-        goodFor: "Shops that want tiered plans and optional add-ons: Marketing Suite ($99/mo), Receptionist ($29/mo) and Pipeline ($49/mo).",
+        goodFor: "Shops that want tiered plans and optional add-ons: Marketing Suite ($99/mo), Receptionist ($99/mo) and Pipeline ($49/mo).",
         worthKnowing:
-          "Core is 1 user only. QuickBooks sync starts on Connect ($139/mo for 1 user), and job costing and two-way texting on Grow. Extra users are $29/mo each, and teams of 16 or more get a custom quote.",
+          "Core includes 1 user. QuickBooks sync starts on Connect ($139/mo for 1 user), and job costing and two-way texting on Grow. Extra users are $29/mo each, and teams of 16 or more get a custom quote.",
       },
       {
         name: "Housecall Pro",
         summary:
-          "Three plans (Basic, Essentials and MAX) for home service companies, plus HVAC, plumbing and electrical packages that are priced separately.",
+          "Three plans (Basic, Essentials and MAX) for home service companies. It has also announced HVAC, plumbing and electrical packages.",
         goodFor:
           "Residential shops that want job costing and online booking on the entry plan, and are ready to move up for QuickBooks sync, GPS tracking or route optimization.",
         worthKnowing:
-          "Basic includes 1 user and Essentials 5. Extra users are priced only on MAX ($35/mo each). The price of the HVAC package isn't published.",
+          "Basic includes 1 user and Essentials 5. MAX includes 8, and extra users are priced only on MAX ($35/mo each).",
       },
       {
         name: "Workiz",
-        summary: "Three plans (Standard, Pro and Ultimate) with a phone system, call tracking and two-way texting, and QuickBooks Online sync on every plan.",
+        summary: "Three plans (Standard, Pro and Ultimate), each listing an integrated phone system, two-way texting and QuickBooks Online sync.",
         goodFor: "Phone-heavy shops. Workiz labels its plans for growing teams, mid-size teams and multi-location companies.",
         worthKnowing:
-          "Prices aren't published: every plan says \"Request pricing\". The free trial is 7 days, and the pricing page doesn't make clear whether the phone system costs extra.",
+          "Prices aren't published: every plan says \"Request pricing\". The free trial is 7 days. Its Genius Phone add-on is listed as sold separately, with no price shown.",
       },
       {
         name: "FieldPulse",
@@ -450,9 +540,9 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       },
       {
         name: "Kickserv",
-        summary: "Job management for small service companies, with three plans: Start ($75/mo, 5 users), Run ($149/mo, 10 users) and Scale ($249/mo, 20 users).",
+        summary: "Job management for small service companies, with three plans billed monthly: Start ($75/mo, 5 users), Run ($149/mo, 10 users) and Scale ($249/mo, 20 users). Billed annually, they are $60, $119 and $199 a month.",
         goodFor: "Small shops that want QuickBooks Online included on every plan and a 30-day free trial.",
-        worthKnowing: "QuickBooks Desktop is $50/mo extra and isn't available on Start. Annual plans aren't refundable.",
+        worthKnowing: "QuickBooks Desktop is listed from Run, at $50/mo, and isn't on Start. Annual subscriptions aren't pro-rated or refundable.",
       },
     ],
   },
@@ -471,6 +561,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       "You run HVAC or another field service trade and want software built by an HVAC company owner.",
     ],
   },
+  switching: buildSwitchingChecklist("Jobber or Housecall Pro"),
   faq: {
     heading: "Questions about switching from Jobber or Housecall Pro",
     items: [
@@ -496,6 +587,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
         question: "Do I need a contract?",
         answer: `No. ${TRIAL_DAYS} days free with no card, then monthly or annual billing that you can cancel from Settings at any time.`,
       },
+      ...switchingFaq("Jobber or Housecall Pro"),
     ],
   },
   closing: {

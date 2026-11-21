@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { CommercialVideoPlayer } from "@/shared/components/marketing/CommercialVideoPlayer";
@@ -24,16 +24,18 @@ import {
 } from "@/shared/lib/site/public-site";
 import { buildSoftwareApplicationStructuredData } from "@/shared/lib/site/structured-data";
 
-const TITLE = "HVAC Software Demo Video: One Job, First Call to Paid";
+// 24 + " · Altair Operating System" = 50 characters; the description is 151.
+const TITLE = "HVAC Software Demo Video";
+const SOCIAL_TITLE = "HVAC Software Demo Video: One Job, First Call to Paid";
 const DESCRIPTION =
-  "Watch one HVAC job go from first call to paid in full in Altair Operating System: estimate, customer signature, dispatch, the tech's phone and payment. Transcript included.";
+  "Watch one HVAC job go from first call to paid in Altair Operating System: estimate, signature, dispatch, the tech's phone and payment. With transcript.";
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   ...buildPublicSocialMetadata({
     path: VIDEO_PAGE_PATH,
-    title: `${TITLE} · Altair Operating System`,
+    title: `${SOCIAL_TITLE} · Altair Operating System`,
     description: DESCRIPTION,
   }),
 };
@@ -90,7 +92,19 @@ export default function HowItWorksPage() {
                   See everything it runs
                 </Link>
               </div>
-              <p className="mt-4 text-[13px] text-[#8e826f]">No credit card to start.</p>
+              <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[#c9bfae]">
+                {[
+                  "The real product, with sample data",
+                  `${COMMERCIAL_JOB_STEPS.length} chapters you can jump to`,
+                  "Full transcript below",
+                  "No credit card to start",
+                ].map((line) => (
+                  <li key={line} className="inline-flex items-center gap-1.5">
+                    <Check aria-hidden="true" className="h-3.5 w-3.5 text-[#c2a05a]" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
 
@@ -164,15 +178,63 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          <section aria-labelledby="transcript-heading" className="px-5 pb-20 pt-6 sm:px-8">
-            <div className="mx-auto max-w-3xl rounded-2xl border border-[rgba(230,227,220,0.1)] bg-[rgba(18,21,17,0.7)] p-6 sm:p-8">
-              <h2 id="transcript-heading" className="text-lg font-semibold text-[#fff9ea]">
-                Transcript
-              </h2>
-              <div className="mt-4 space-y-4 text-[0.95rem] leading-[1.8] text-[#c9bfae]">
+          <section aria-labelledby="transcript-heading" className="px-5 pb-14 pt-2 sm:px-8">
+            <div className="mx-auto grid max-w-6xl gap-6 rounded-2xl border border-[rgba(230,227,220,0.1)] bg-[rgba(18,21,17,0.7)] p-6 sm:p-8 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">Read along</p>
+                <h2 id="transcript-heading" className="mt-2 text-lg font-semibold text-[#fff9ea]">
+                  Transcript
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-[#8e826f]">
+                  Every word of the narration. Play a chapter from here.
+                </p>
+                <ol className="mt-4 hidden space-y-1.5 md:block">
+                  {COMMERCIAL_JOB_STEPS.map((step) => (
+                    <li key={step.seconds}>
+                      <button
+                        type="button"
+                        data-seek={step.seconds}
+                        className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#c9bfae] transition-colors hover:bg-[rgba(194,160,90,0.08)] hover:text-[#fff9ea] ${focusRing}`}
+                      >
+                        <span className="w-9 shrink-0 font-mono text-xs text-[#c2a05a]">{step.at}</span>
+                        <span>{step.title}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div className="max-w-3xl space-y-4 text-[0.95rem] leading-[1.85] text-[#c9bfae] sm:text-base">
                 {COMMERCIAL_TRANSCRIPT.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          {/* The page ends on the job the visitor would run, not on the transcript. */}
+          <section className="px-5 pb-20 sm:px-8">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-6 py-9 text-center sm:px-10">
+              <h2 className="text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem]">
+                Run one of your own jobs through it
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
+                The same steps as the video, with your customer, your price and your technician. {trialDays} days free, no
+                credit card.
+              </p>
+              <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/signup"
+                  data-cta="how-it-works-end"
+                  className={`inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-8 py-3.5 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
+                >
+                  Start Your {trialDays}-Day Free Trial
+                </Link>
+                <Link
+                  href="/pricing#plan-finder"
+                  className={`inline-flex min-h-12 items-center justify-center rounded-lg border border-[rgba(230,227,220,0.18)] px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.32)] ${focusRing}`}
+                >
+                  Find your plan
+                </Link>
               </div>
             </div>
           </section>

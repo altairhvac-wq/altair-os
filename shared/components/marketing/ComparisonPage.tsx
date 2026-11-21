@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarCheck, CheckCircle2 } from "lucide-react";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { CommercialVideoPlayer } from "@/shared/components/marketing/CommercialVideoPlayer";
@@ -6,7 +7,12 @@ import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { NextStep } from "@/shared/components/site/NextStep";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
-import type { ComparisonPageContent } from "@/shared/lib/site/comparison-pages";
+import {
+  COMPARISON_METHOD_NOTE,
+  COMPETITOR_FACTS_CHECKED,
+  COMPETITOR_FACTS_CHECKED_ISO,
+  type ComparisonPageContent,
+} from "@/shared/lib/site/comparison-pages";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
@@ -30,6 +36,23 @@ function TrialButtons({ trialDays }: { trialDays: number }) {
         See Altair pricing
       </Link>
     </div>
+  );
+}
+
+/** The dated, sourced promise near the top of the page; the sources are at the bottom. */
+function FactsChecked() {
+  return (
+    <a
+      href="#sources"
+      className={`mt-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-[rgba(194,160,90,0.35)] bg-[rgba(194,160,90,0.08)] px-3.5 py-1.5 text-[13px] text-[#e8d9ac] transition-colors hover:border-[#c2a05a]/70 ${focusRing}`}
+    >
+      <CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0" />
+      <span>
+        Facts checked on <time dateTime={COMPETITOR_FACTS_CHECKED_ISO}>{COMPETITOR_FACTS_CHECKED}</time>
+        <span className="text-[#8e826f]"> · </span>
+        <span className="underline underline-offset-4">See the sources</span>
+      </span>
+    </a>
   );
 }
 
@@ -62,6 +85,7 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
               <TrialButtons trialDays={trialDays} />
             </div>
             <p className="mt-4 text-[13px] text-[#8e826f] sm:text-sm">{page.priceNote}</p>
+            <FactsChecked />
           </div>
         </section>
 
@@ -213,6 +237,37 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
           </div>
         </section>
 
+        {/* moving over: customers, price book, open invoices, team */}
+        <section aria-labelledby="compare-switch-heading" className="px-5 py-10 sm:px-8 sm:py-14">
+          <div className="mx-auto max-w-5xl">
+            <p className={eyebrowClass}>Moving over</p>
+            <h2 id="compare-switch-heading" className={h2Class}>
+              {page.switching.heading}
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">{page.switching.intro}</p>
+            <ol className="mt-8 grid gap-4 md:grid-cols-2">
+              {page.switching.steps.map((step, index) => (
+                <li key={step.title} className={`${card} p-5 sm:p-6`}>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#a4823a] text-sm font-semibold text-[#080907]">
+                      {index + 1}
+                    </span>
+                    <h3 className="text-base font-semibold text-[#fff9ea]">{step.title}</h3>
+                  </div>
+                  <ul className="mt-4 space-y-2.5">
+                    {step.items.map((item) => (
+                      <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-[#c9bfae]">
+                        <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#c2a05a]" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* the product, shown rather than claimed */}
         <section aria-labelledby="compare-video-heading" className="px-5 py-10 sm:px-8 sm:py-14">
           <div className="mx-auto max-w-4xl">
@@ -295,12 +350,13 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
         </div>
 
         {/* sources */}
-        <section aria-labelledby="compare-sources-heading" className="px-5 pb-16 sm:px-8">
+        <section id="sources" aria-labelledby="compare-sources-heading" className="scroll-mt-24 px-5 pb-16 sm:px-8">
           <div className="mx-auto max-w-3xl border-t border-[rgba(230,227,220,0.1)] pt-6 text-xs leading-relaxed text-[#8e826f]">
             <h2 id="compare-sources-heading" className="font-semibold text-[#c9bfae]">
               Sources
             </h2>
             <p className="mt-2">{page.sources.note}</p>
+            <p className="mt-2">{COMPARISON_METHOD_NOTE}</p>
             <ul className="mt-2 space-y-1">
               {page.sources.items.map((source) => (
                 <li key={source.url}>

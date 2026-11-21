@@ -258,6 +258,12 @@ export const NEXT_STEPS = {
     { ...VIDEO, text: "See the job land on the tech's phone, from the address to closing it out.", meta: "Starts at 0:51" },
     SOFTWARE.dispatch,
   ],
+  /** A partner should know the product before recommending it: the job, the prices, the whole system. */
+  affiliates: [
+    { ...VIDEO, text: "Two and a half minutes: one job from the first call to paid, in the real product with sample data." },
+    { ...PRICING, href: "/pricing#plan-finder", text: "The plans your shops would choose from, and what each one costs a month." },
+    SOFTWARE.business,
+  ],
   /** The comparison pages already show the video. */
   comparison: [SOFTWARE.business, PRICING, HUB],
   /**
