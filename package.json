@@ -56,6 +56,7 @@
     "verify:youtube-connect": "node scripts/verify-youtube-connect.mjs",
     "verify:youtube-upload": "node scripts/verify-youtube-upload.mjs",
     "verify:site-publishing": "node scripts/verify-site-publishing.mjs",
+    "verify:article-markdown": "node scripts/verify-article-markdown.mjs",
     "verify:marketing-command": "node scripts/verify-marketing-command.mjs",
     "verify:work-requests": "node scripts/verify-work-requests.mjs",
     "verify:queue-integrity": "node scripts/verify-agent-queue-integrity.mjs",

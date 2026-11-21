@@ -169,6 +169,7 @@ steps.push(
   { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
   { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
+  { name: "article-markdown", script: "scripts/verify-article-markdown.mjs" },
   { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
   { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
   // Behavioural, not static: the two above read these modules as text and

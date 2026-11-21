@@ -26,6 +26,7 @@ import {
 } from "@/shared/components/resources/calc/CalculatorTool";
 import { CHART, SplitBar } from "@/shared/components/resources/calc/charts";
 import { num, useCalculatorTool, type CalcPreset } from "@/shared/components/resources/calc/useCalculatorTool";
+import { CompactCalculator, CompactStat, withNumbers } from "@/shared/components/resources/calc/CompactCalculator";
 import { LABOR_RATE_DEFAULTS as D, calculateLaborRate, type LaborRateInput, type LaborRateResult } from "@/shared/lib/resources/labor-rate";
 import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
@@ -69,8 +70,12 @@ function toInput(v: Record<K, string>): LaborRateInput {
   };
 }
 
-/** The quick six-input version. The full crew version is the Labor Cost Workspace. */
-export function LaborRateTool() {
+/**
+ * The quick six-input version. The full crew version is the Labor Cost Workspace.
+ * `compact`: the version built into an Insights article, with a link to this
+ * full calculator and to the workspace.
+ */
+export function LaborRateTool({ compact = false }: { readonly compact?: boolean } = {}) {
   const tool = useCalculatorTool<K>({ slug: "labor-rate", keys: KEYS, presets: PRESETS });
   const input = toInput(tool.values);
   const result = calculateLaborRate(input);
@@ -87,6 +92,62 @@ export function LaborRateTool() {
     if (!interacted.current || billedRate <= 0 || wage <= 0) return;
     writeCarried({ source: "labor-rate", billedRate, costPerBilledHour, loadedLaborCost, averageWage: wage, monthlyOverhead: null, techCount: null });
   }, [billedRate, costPerBilledHour, loadedLaborCost, wage, interacted]);
+
+  if (compact) {
+    return (
+      <CompactCalculator
+        name="Labor Rate Calculator"
+        text="One technician, six numbers. It opens with the example from the labor rate guide; change any of them."
+        tool={tool}
+        onReset={() => tool.loadPreset(PRESETS[0])}
+        inputs={
+          <>
+            <NumField tool={tool} k="hourlyWage" label="Technician wage" prefix="$" suffix="/hr" />
+            <NumField tool={tool} k="burdenPercent" label="Labor burden" suffix="% of wage" hint="Payroll taxes, workers' comp, insurance, benefits." />
+            <NumField tool={tool} k="billableHoursPerWeek" label="Billable hours" suffix="hrs/wk" invalid={input.billableHoursPerWeek <= 0 && tool.values.billableHoursPerWeek !== ""} />
+            <NumField tool={tool} k="nonBillableHoursPerWeek" label="Paid, not billable" suffix="hrs/wk" hint="Drive, shop, training, free callbacks." />
+            <NumField tool={tool} k="monthlyOverhead" label="Overhead for this tech" prefix="$" suffix="/mo" hint="Monthly overhead ÷ field technicians." />
+            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} />
+          </>
+        }
+        results={
+          result ? (
+            <>
+              <ResultHero
+                label="Billable hourly rate"
+                value={money(result.billableHourlyRate)}
+                unit="per billed hour"
+                note={
+                  <>
+                    Quote <span className="font-semibold text-[#e8d9ac]">{money(result.billableHourlyRateRounded, 0)}</span> rounded up, at a {pct(input.targetNetMargin)} net margin.
+                  </>
+                }
+              />
+              <dl className="space-y-2 rounded-xl border border-stone-200 bg-white p-3.5">
+                <CompactStat label="Break-even rate" value={money(result.costPerBillableHour)} note="cost per billed hour" />
+                <CompactStat label="Loaded hourly cost" value={money(result.loadedHourlyCost)} note="wage plus burden" />
+                <CompactStat label="Weekly cost" value={money(result.weeklyTotalCost, 0)} note="labor plus overhead share" />
+              </dl>
+            </>
+          ) : (
+            <NoResult title="No rate yet" text={marginBad ? "Set a target margin from 0% to 99%." : "Enter more than 0 billable hours a week to see a rate."} />
+          )
+        }
+        fullHref={withNumbers(calculatorPath("labor-rate"), tool.values)}
+        fullLabel="Open the full calculator with these numbers"
+        fullTrack="next-tool-labor-rate-embed"
+        footnote={
+          <>
+            Once you change a number, this rate is offered to the other free calculators, in this browser only. For a whole crew, use the{" "}
+            <Link href={LABOR_WORKSPACE_PATH} className="font-medium text-[#77591B] hover:underline">
+              Labor Cost Workspace
+            </Link>
+            .
+          </>
+        }
+      />
+    );
+  }
 
   return (
     <CalculatorTool

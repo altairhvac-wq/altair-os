@@ -21,6 +21,8 @@ import {
 } from "@/shared/components/resources/calc/CalculatorTool";
 import { CHART, LineChart } from "@/shared/components/resources/calc/charts";
 import { num, useCalculatorTool, type CalcPreset } from "@/shared/components/resources/calc/useCalculatorTool";
+import { CompactCalculator, CompactStat, withNumbers } from "@/shared/components/resources/calc/CompactCalculator";
+import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { BREAK_EVEN_DEFAULTS as D, calculateBreakEven, type BreakEvenResult } from "@/shared/lib/resources/break-even";
 
 const KEYS = ["fixedMonthlyCosts", "averageJobRevenue", "variableCostPercent", "targetProfit", "techs", "jobsPerTechPerDay", "workDays"] as const;
@@ -55,7 +57,8 @@ const PRESETS: readonly CalcPreset<K>[] = [
 const WEEKS_PER_MONTH = 52 / 12;
 const int = (n: number) => Math.round(n).toLocaleString("en-US");
 
-export function BreakEvenTool() {
+/** `compact`: the version built into an Insights article (the three numbers that set the break-even, and a link to this full tool with them filled in). */
+export function BreakEvenTool({ compact = false }: { readonly compact?: boolean } = {}) {
   const tool = useCalculatorTool<K>({ slug: "break-even", keys: KEYS, presets: PRESETS });
   const carried = useCarried();
   const v = tool.values;
@@ -67,6 +70,67 @@ export function BreakEvenTool() {
   const result = calculateBreakEven({ fixedMonthlyCosts: fixed, averageJobRevenue: avg, variableCostRate: variableRate });
   const targetJobs = result ? Math.ceil((fixed + target) / result.contributionPerJob) : null;
   const problem = avg <= 0 ? "Enter an average job revenue above $0." : "Set variable costs from 0% to 99% of revenue.";
+
+  if (compact) {
+    return (
+      <CompactCalculator
+        name="Break-Even Calculator"
+        text="Your month in three numbers. It opens with the article's example; change any of them."
+        tool={tool}
+        onReset={() => tool.loadPreset(PRESETS[0])}
+        carry={
+          carried?.monthlyOverhead ? (
+            <CarryBanner
+              tool={tool}
+              carried={carried}
+              buttonLabel="Use my overhead from the"
+              fields={[{ key: "fixedMonthlyCosts", from: "monthlyOverhead", label: "Monthly overhead", format: (n) => money(n, 0) }]}
+              emptyText=""
+            />
+          ) : undefined
+        }
+        inputs={
+          <>
+            <div className="sm:col-span-2">
+              <NumField tool={tool} k="fixedMonthlyCosts" label="Fixed monthly costs" prefix="$" suffix="/mo" hint="Rent, insurance, office pay, truck and loan payments, software." />
+            </div>
+            <NumField tool={tool} k="averageJobRevenue" label="Average job revenue" prefix="$" invalid={avg <= 0} hint="Revenue ÷ jobs, last 3 to 6 months." />
+            <NumField
+              tool={tool}
+              k="variableCostPercent"
+              label="Variable costs"
+              suffix="% of revenue"
+              invalid={variableRate >= 1 || variableRate < 0}
+              hint="Parts, field labor, permits, card fees."
+            />
+          </>
+        }
+        results={
+          result ? (
+            <>
+              <ResultHero
+                label="Break-even point"
+                value={String(result.breakEvenJobs)}
+                unit="jobs a month"
+                note={<>About {result.breakEvenJobsPerWeek.toFixed(1)} a week. Every job past that adds {money(result.contributionPerJob)} of profit.</>}
+              />
+              <dl className="space-y-2 rounded-xl border border-stone-200 bg-white p-3.5">
+                <CompactStat label="Each job leaves" value={money(result.contributionPerJob)} note="toward fixed costs" />
+                <CompactStat label="Break-even revenue" value={money(result.breakEvenRevenue, 0)} note="a month" />
+                <CompactStat label="Exactly" value={`${result.breakEvenJobsExact.toFixed(1)} jobs`} note="before rounding up" />
+              </dl>
+            </>
+          ) : (
+            <NoResult title="No break-even yet" text={problem} />
+          )
+        }
+        fullHref={withNumbers(calculatorPath("break-even"), tool.values)}
+        fullLabel="Open the full calculator with these numbers"
+        fullTrack="next-tool-break-even-embed"
+        footnote="The full calculator adds a chart, a profit goal, crew capacity, a what-if table and print."
+      />
+    );
+  }
 
   return (
     <CalculatorTool

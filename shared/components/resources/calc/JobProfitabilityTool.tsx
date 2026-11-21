@@ -23,6 +23,8 @@ import {
 } from "@/shared/components/resources/calc/CalculatorTool";
 import { Waterfall } from "@/shared/components/resources/calc/charts";
 import { num, useCalculatorTool, type CalcPreset } from "@/shared/components/resources/calc/useCalculatorTool";
+import { CompactCalculator, CompactStat, withNumbers } from "@/shared/components/resources/calc/CompactCalculator";
+import { calculatorPath } from "@/shared/lib/resources/catalog";
 import {
   JOB_PROFITABILITY_DEFAULTS as D,
   calculateJobProfitability,
@@ -77,7 +79,8 @@ function priceForMargin(directCost: number, overheadRate: number, margin: number
   return left > 0 ? directCost / left : null;
 }
 
-export function JobProfitabilityTool() {
+/** `compact`: the version built into an Insights article (one job's five numbers, and a link to this full tool with them filled in). */
+export function JobProfitabilityTool({ compact = false }: { readonly compact?: boolean } = {}) {
   const tool = useCalculatorTool<K>({ slug: "job-profitability", keys: KEYS, presets: PRESETS });
   const carried = useCarried();
   const v = tool.values;
@@ -88,6 +91,66 @@ export function JobProfitabilityTool() {
   const billedRate = num(v.billedRate);
   const targetPrice = priceForMargin(r.directCost, input.overheadAllocationRate, target);
   const laborBilled = input.laborHours > 0 ? (input.revenue - input.materialsCost - input.subcontractCost) / input.laborHours : null;
+
+  if (compact) {
+    return (
+      <CompactCalculator
+        name="Job Profitability Calculator"
+        text="One finished job. It opens with the article's install example; put in one of your own."
+        tool={tool}
+        onReset={() => tool.loadPreset(PRESETS[0])}
+        carry={
+          carried ? (
+            <CarryBanner
+              tool={tool}
+              carried={carried}
+              buttonLabel="Use my labor cost from the"
+              fields={[{ key: "loadedLaborRate", from: "loadedLaborCost", label: "Loaded labor cost", format: (n) => `${money(n)}/paid hr` }]}
+              emptyText=""
+            />
+          ) : undefined
+        }
+        inputs={
+          <>
+            <NumField tool={tool} k="revenue" label="Job revenue" prefix="$" invalid={input.revenue <= 0 && v.revenue !== ""} hint="What the customer paid, before tax." />
+            <NumField tool={tool} k="materialsCost" label="Materials" prefix="$" hint="Parts and supplies at cost." />
+            <NumField tool={tool} k="laborHours" label="Labor hours" suffix="hrs" hint="Every paid hour, return trips included." />
+            <NumField tool={tool} k="loadedLaborRate" label="Loaded labor cost" prefix="$" suffix="/hr" hint="Wage plus burden: your cost, not your rate." />
+            <div className="sm:col-span-2">
+              <NumField tool={tool} k="overheadPercent" label="Overhead share" suffix="% of revenue" hint="Last year's overhead ÷ last year's revenue." />
+            </div>
+          </>
+        }
+        results={
+          result ? (
+            <>
+              <ResultHero
+                label="Net profit on this job"
+                value={money(result.netProfit)}
+                note={
+                  <>
+                    {pct(result.netMargin)} net · {pct(result.grossMargin)} gross
+                    {result.netProfit < 0 ? <span className="mt-1 block font-semibold text-[#f0a58f]">This job lost money once overhead is counted.</span> : null}
+                  </>
+                }
+              />
+              <dl className="space-y-2 rounded-xl border border-stone-200 bg-white p-3.5">
+                <CompactStat label="Direct cost" value={money(result.directCost)} note="labor, materials, subcontract" />
+                <CompactStat label="Gross profit" value={money(result.grossProfit)} tone={result.grossProfit < 0 ? "negative" : "neutral"} />
+                <CompactStat label="Overhead share" value={money(result.overheadAllocated)} />
+              </dl>
+            </>
+          ) : (
+            <NoResult text="Enter the job revenue to see its profit and margins." />
+          )
+        }
+        fullHref={withNumbers(calculatorPath("job-profitability"), tool.values)}
+        fullLabel="Open the full calculator with these numbers"
+        fullTrack="next-tool-job-profitability-embed"
+        footnote="The full calculator adds subcontract costs, the price for your target margin, a chart and print."
+      />
+    );
+  }
 
   return (
     <CalculatorTool

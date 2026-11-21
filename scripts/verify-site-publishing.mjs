@@ -211,10 +211,16 @@ check(
   "the article renderer never injects database text as HTML",
   !/dangerouslySetInnerHTML=\{\{\s*__html:\s*(bodyMarkdown|title|block)/.test(article),
 );
+// Since batch 4 the article JSON-LD is built in code by the route and emitted
+// through JsonLdScript (serializeJsonLd); the article template itself emits
+// no raw HTML at all (scripts/verify-article-markdown.mjs reads it too).
+const jsonLdScript = read("shared/components/site/JsonLdScript.tsx");
 check(
   "the only raw HTML is the JSON-LD block, and it is escaped first",
-  article.includes("serializeJsonLd(structuredData)") &&
-    article.includes('from "@/shared/lib/site/structured-data"') &&
+  !strip(article).includes("dangerouslySetInnerHTML") &&
+    route.includes("<JsonLdScript") &&
+    route.includes("buildInsightsArticleStructuredData(") &&
+    jsonLdScript.includes("serializeJsonLd(data)") &&
     structuredData.includes('replace(/</g, "\\\\u003c")'),
 );
 check(
