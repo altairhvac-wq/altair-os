@@ -105,6 +105,18 @@ const ANALYTICS_COLLECT_ROUTE = "/api/analytics/collect";
  * (app/api/resources/email-results/route.ts). Exact path only.
  */
 const RESOURCE_EMAIL_ROUTE = "/api/resources/email-results";
+/**
+ * The public directory's two endpoints (migration 214). Visitors and listers
+ * have no account, so neither may redirect to /login:
+ *   listing-event  counts a view or a tap on a published listing; refuses
+ *                  bots, other sites and non-production deployments, is rate
+ *                  limited, and stores counts only.
+ *   media          a lister's logo or photo upload; requires the signed
+ *                  manage link, stores into the PRIVATE bucket only.
+ * Exact paths only.
+ */
+const DIRECTORY_EVENT_ROUTE = "/api/directory/listing-event";
+const DIRECTORY_MEDIA_ROUTE = "/api/directory/media";
 
 /**
  * Files a browser or crawler fetches on its own initiative, before anyone has
@@ -386,6 +398,8 @@ function isPublicRoute(pathname: string) {
     isMarketingMediaIngestRoute(pathname) ||
     pathname === ANALYTICS_COLLECT_ROUTE ||
     pathname === RESOURCE_EMAIL_ROUTE ||
+    pathname === DIRECTORY_EVENT_ROUTE ||
+    pathname === DIRECTORY_MEDIA_ROUTE ||
     isDemoFingerprintRoute(pathname)
   );
 }

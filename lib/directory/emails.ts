@@ -2,10 +2,17 @@ import "server-only";
 
 import { escapeBillingEmailHtml, wrapBillingEmailHtml } from "@/lib/email/billing-email-layout";
 import { sendViaResend, type ResendSendResult } from "@/lib/email/resend";
-import { buildManageUrl, buildPublicListingUrl, buildReviewUrl } from "@/lib/directory/links";
+import { buildManageUrl, buildPublicListingUrl, buildReviewUrl, buildStatsStopUrl } from "@/lib/directory/links";
 import { resolveResourceLinkOrigin } from "@/lib/resources/subscribers";
 import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
-import { DIRECTORY_MEMBER_LABEL, DIRECTORY_STATUS_LABELS, type DirectoryListingStatus } from "@/shared/types/directory";
+import {
+  DIRECTORY_MEMBER_LABEL,
+  DIRECTORY_STATS_LABELS,
+  DIRECTORY_STATUS_LABELS,
+  formatPermissionDate,
+  type DirectoryListingStats,
+  type DirectoryListingStatus,
+} from "@/shared/types/directory";
 
 /**
  * Every email the public directory sends.
@@ -72,6 +79,52 @@ export function buildConfirmEmail(input: { businessName: string; manageUrl: stri
     ],
     { url: input.manageUrl, label: "Confirm my listing" },
     null,
+  );
+}
+
+/**
+ * Sent when the owner adds a business after speaking with it (migration
+ * 214). It says who agreed and when, what to do next, and how to remove the
+ * listing in one step. The name of the person is lister-supplied text and is
+ * escaped like the business name.
+ */
+export function buildPermissionAddedEmail(input: {
+  businessName: string;
+  givenBy: string;
+  givenAt: string;
+  published: boolean;
+  manageUrl: string;
+}): Message {
+  return compose(
+    `${input.businessName} is in the contractor directory: please check it`,
+    [
+      `We spoke with ${input.givenBy} on ${formatPermissionDate(input.givenAt)} and added your listing with the information you agreed to. Please check it, add your own description and photos, or remove it.`,
+      input.published
+        ? "It is already showing in the directory, marked as waiting for you to confirm it. Press the button to confirm or change anything."
+        : "It is not public yet. Press the button to confirm it; a person then checks it and it goes live, usually within one business day.",
+      "If you would rather not be listed, open the same page and press Remove. It comes down straight away. Listing is free and always will be: no lead fees.",
+    ],
+    { url: input.manageUrl, label: "Check my listing" },
+    null,
+  );
+}
+
+export function sendPermissionAddedEmail(
+  to: string,
+  listing: { id: string; businessName: string },
+  permission: { givenBy: string; givenAt: string },
+  published: boolean,
+): Promise<ResendSendResult> {
+  return send(
+    to,
+    buildPermissionAddedEmail({
+      businessName: listing.businessName,
+      givenBy: permission.givenBy,
+      givenAt: permission.givenAt,
+      published,
+      manageUrl: buildManageUrl(listing.id),
+    }),
+    "directory/permission-added",
   );
 }
 
@@ -143,6 +196,91 @@ export function buildManageLinkEmail(input: { listings: { businessName: string; 
     `${paragraph(intro)}${items}${paragraph("If you did not ask for this, ignore this email. Nothing has changed.")}<div style="margin-top:18px;border-top:1px solid #e4e4e7;padding-top:14px;">${foot.html}</div>`,
   );
   return { subject, text, html };
+}
+
+/**
+ * The monthly numbers email (migration 214): last month's views and taps for
+ * one listing, sent to the listing's own address. It reports counts only and
+ * carries a stop link (its own signature, so it cannot edit the listing) and
+ * the manage link. The only lines about the product are the footer every
+ * directory email has.
+ */
+export function buildMonthlyStatsEmail(input: {
+  businessName: string;
+  monthLabel: string;
+  stats: DirectoryListingStats;
+  publicUrl: string;
+  manageUrl: string;
+  stopUrl: string;
+}): Message {
+  const { stats } = input;
+  const taps = stats.calls + stats.website + stats.directions;
+  const rows: [string, number][] = [
+    [DIRECTORY_STATS_LABELS.views, stats.views],
+    [DIRECTORY_STATS_LABELS.calls, stats.calls],
+    [DIRECTORY_STATS_LABELS.website, stats.website],
+    [DIRECTORY_STATS_LABELS.directions, stats.directions],
+  ];
+  const subject = `${input.businessName}: your directory listing in ${input.monthLabel}`;
+  const intro = `Here is how your directory listing for ${input.businessName} did in ${input.monthLabel}.`;
+  const summary =
+    taps > 0
+      ? `People viewed it ${stats.views} ${stats.views === 1 ? "time" : "times"} and tapped to reach you ${taps} ${taps === 1 ? "time" : "times"}.`
+      : `People viewed it ${stats.views} ${stats.views === 1 ? "time" : "times"}.`;
+  const tip = "Listings with photos, hours and a list of services give people more to go on. You can add them with your manage link.";
+  const stopLine = "Do not want these? Stop the monthly email";
+  const foot = footer(input.manageUrl);
+
+  const text = [
+    intro,
+    "",
+    summary,
+    "",
+    ...rows.map(([label, value]) => `${label}: ${value}`),
+    "",
+    tip,
+    "",
+    `See your listing: ${input.publicUrl}`,
+    "",
+    `${stopLine}: ${input.stopUrl}`,
+    "",
+    ...foot.text,
+  ].join("\n");
+
+  const table = `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 16px;">${rows
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:8px 0;border-bottom:1px solid #f4f4f5;color:#52525b;font-size:14px;">${esc(label)}</td><td style="padding:8px 0;border-bottom:1px solid #f4f4f5;color:#18181b;font-size:16px;font-weight:700;text-align:right;">${value}</td></tr>`,
+    )
+    .join("")}</table>`;
+  const html = wrapBillingEmailHtml(
+    `${paragraph(intro)}${paragraph(summary)}${table}${paragraph(tip)}${button(input.publicUrl, "See my listing")}<div style="margin-top:18px;border-top:1px solid #e4e4e7;padding-top:14px;">${foot.html}<p style="margin:10px 0 0;color:#71717a;font-size:12px;line-height:1.5;">${esc(stopLine)}: <a href="${esc(input.stopUrl)}" style="color:#71717a;">stop these emails</a>.</p></div>`,
+  );
+  return { subject, text, html };
+}
+
+export function sendMonthlyStatsEmail(
+  to: string,
+  listing: { id: string; slug: string; businessName: string },
+  monthLabel: string,
+  stats: DirectoryListingStats,
+): Promise<ResendSendResult> {
+  const stopUrl = buildStatsStopUrl(listing.id);
+  return sendViaResend({
+    to,
+    ...buildMonthlyStatsEmail({
+      businessName: listing.businessName,
+      monthLabel,
+      stats,
+      publicUrl: buildPublicListingUrl(listing.slug),
+      manageUrl: buildManageUrl(listing.id),
+      stopUrl,
+    }),
+    logContext: "directory/monthly-stats",
+    fromDisplayName: "Altair Operating System",
+    replyTo: SUPPORT_EMAIL,
+    headers: { "List-Unsubscribe": `<${stopUrl}>` },
+  });
 }
 
 /** To the owner. Carries the business name and trade only; the details are on the review screen. */

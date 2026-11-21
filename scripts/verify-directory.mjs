@@ -30,7 +30,8 @@
  *
  * Run: node scripts/verify-directory.mjs
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { loadPureModule } from "./lib/load-pure-module.mjs";
 
 let failures = 0;
@@ -44,6 +45,16 @@ function check(name, condition, detail) {
   }
 }
 const read = (p) => readFileSync(p, "utf8").replace(/\r\n/g, "\n");
+/** Every .ts/.tsx file under a folder, as forward-slash paths. */
+function listFiles(root) {
+  const out = [];
+  for (const name of readdirSync(root)) {
+    const path = join(root, name);
+    if (statSync(path).isDirectory()) out.push(...listFiles(path));
+    else if (/\.tsx?$/.test(name)) out.push(path.replace(/\\/g, "/"));
+  }
+  return out;
+}
 
 const FILES = {
   rules: "shared/types/directory.ts",
@@ -134,7 +145,9 @@ console.log("\nA listing: what is refused, and where the message goes");
   check("a link in the description", bad({ description: "Great work, see https://spam.example for deals today" }, "description"));
   check("a service area longer than 120 characters", bad({ serviceArea: "y".repeat(121) }, "serviceArea"));
   const all = rules.validateListingInput({});
-  check("an empty form reports every required field at once", all.ok === false && ["businessName", "tradeType", "city", "state", "phone", "description"].every((k) => k in all.errors), Object.keys(all.errors ?? {}));
+  check("an empty form reports every required field at once", all.ok === false && ["businessName", "tradeType", "city", "state", "phone"].every((k) => k in all.errors), Object.keys(all.errors ?? {}));
+  check("the description is optional since 214: blank is accepted", rules.validateListingInput({ ...GOOD, description: "" }).ok === true);
+  check("before 214 the description is still required (the old table demands it)", rules.validateListingInput({ ...GOOD, description: "" }, { requireDescription: true }).ok === false);
   const junk = rules.validateListingInput({ ...GOOD, businessName: 42, description: null, phone: {} });
   check("values that are not text are refused, not crashed on", junk.ok === false);
   const control = rules.validateListingInput({ ...GOOD, businessName: "Acme\u0000\u0007 HVAC" });
@@ -247,7 +260,7 @@ console.log("\nThe lister's actions");
     return start < 0 ? "" : actions.slice(start, actions.indexOf("\n}", start));
   };
   check("actions file is a server module", actions.startsWith('"use server";'));
-  check("submitting validates the form before anything else is done", /validateListingInput\(values\)/.test(body("submitListingAction")) && body("submitListingAction").indexOf("validateListingInput") < body("submitListingAction").indexOf("createListing("));
+  check("submitting validates the form before anything else is done", /validateListingInput\(values[,)]/.test(body("submitListingAction")) && body("submitListingAction").indexOf("validateListingInput") < body("submitListingAction").indexOf("createListing("));
   check("submitting is limited per sender and per inbox", /enforcePublicRateLimit\("public\.directory_submit"/.test(body("submitListingAction")) && /\bip:/.test(body("submitListingAction")) && /email: contactEmail/.test(body("submitListingAction")));
   check("submitting refuses when the limiter is unavailable", /limit\.degraded/.test(body("submitListingAction")));
   check("submitting requires the consent box", /formData\.get\("consent"\) !== "on"/.test(body("submitListingAction")));
@@ -280,7 +293,7 @@ console.log("\nThe owner's actions");
 {
   const owner = read(FILES.ownerActions);
   const names = [...owner.matchAll(/export async function (\w+)/g)].map((m) => m[1]);
-  check("six review actions", names.length === 6, names);
+  check("seven owner actions: six review decisions and adding a business with permission", names.length === 7 && names.includes("addListingWithPermissionAction"), names);
   for (const name of names) {
     const start = owner.indexOf(`export async function ${name}`);
     const body = owner.slice(start, owner.indexOf("\n}", start));
@@ -315,8 +328,11 @@ console.log("\nPages and wiring");
   check("the search page never claims a size", !/\b(hundreds|thousands|\d+\+?) (of )?(contractors|businesses)\b/i.test(search));
   const listing = read(FILES.listingPage);
   check("an unpublished address is a 404", /if \(!found\) notFound\(\);/.test(listing));
-  check("a lister's website link passes no ranking and is marked as theirs", /rel="noopener noreferrer nofollow ugc"/.test(listing));
-  check("the business page says licences are not verified", /do not verify licenses or insurance/.test(listing));
+  // Every public listing was read by a person before it showed, so its
+  // website link is vouched for: followed (no nofollow, no ugc), and the
+  // referrer is kept so the business sees the visit came from the directory.
+  check("a reviewed listing's website link is followed", /href=\{listing\.website\}\s+target="_blank"\s+rel="noopener"/.test(listing) && !/nofollow ugc/.test(listing));
+  check("the business page says licences are not verified", /do not verify licenses or insurance/.test(listing.replace(/\s+/g, " ")));
   for (const file of [FILES.searchPage, FILES.listingPage, FILES.listPage, FILES.managePage, FILES.form]) {
     const source = read(file);
     check(`${file}: no raw HTML`, !source.includes("dangerouslySetInnerHTML"));
@@ -425,14 +441,273 @@ console.log("\nClaim your listing (migration 211)");
   const listing = read(FILES.listingPage);
   const badge = read(FILES.memberBadge);
   check("the mark is one component with one label", /DIRECTORY_MEMBER_LABEL/.test(badge) && !/Altair OS(?![A-Za-z])/.test(badge));
-  check("the search page shows the mark only on a member's row", /\{listing\.isMember \? <DirectoryMemberBadge \/> : null\}/.test(search));
+  check("the search page shows the mark only on a member's row", /ListingResultCard/.test(search) && /\{listing\.isMember \? <DirectoryMemberBadge \/> : null\}/.test(read("shared/components/directory/DirectoryUi.tsx")));
   check("the search page says members are listed first whenever one is on the page", /showsMembers = result\.listings\.some\(\(listing\) => listing\.isMember\)/.test(search) && /\{DIRECTORY_MEMBER_LABEL\}s are listed first\./.test(search));
   check("both public pages say what the mark means", /DIRECTORY_MEMBER_MEANING/.test(search) && /DIRECTORY_MEMBER_MEANING/.test(listing));
   check("the business page shows the mark only for a member", /\{listing\.isMember \? <DirectoryMemberBadge \/> : null\}/.test(listing));
   const manage = read(FILES.managePage);
-  check("the manage page explains linking only for a live listing, and counts the trial link", /record\.status === "published" \? await getListingLinkState\(record\.id\) : null/.test(manage) && /href="\/signup" data-cta="directory-manage-member"/.test(manage));
+  check("the manage page explains linking only for a live listing, and counts the trial link", /record\.status === "published" \? await getListingLinkState\(record\.id\) : null/.test(manage.replace(/\s+/g, " ")) && /href="\/signup" data-cta="directory-manage-member"/.test(manage.replace(/\s+/g, " ")));
   const emails = read(FILES.emails);
   check("the 'listing is live' email mentions linking once, and not on a change", /input\.changesOnly\s*\? ""\s*: `If you run your business on Altair Operating System, you can link this listing/.test(emails));
+}
+
+// ---------------------------------------------------------------- the revamp (migration 214)
+console.log("\nRicher listings, images, numbers and place pages (migration 214)");
+{
+  const P = {
+    migration: "supabase/migrations/214_directory_rich_listings_and_stats.sql",
+    media: "lib/directory/media.ts",
+    places: "lib/directory/places.ts",
+    stats: "lib/directory/stats.ts",
+    monthly: "lib/directory/monthly-stats.ts",
+    mediaRoute: "app/api/directory/media/route.ts",
+    eventRoute: "app/api/directory/listing-event/route.ts",
+    cronRoute: "app/api/cron/directory-stats/route.ts",
+    stopPage: "app/(marketing)/directory/manage/monthly-email/page.tsx",
+    hub: "shared/components/directory/DirectoryHub.tsx",
+    cityPage: "app/(marketing)/directory/[slug]/[city]/page.tsx",
+    tradePage: "app/(marketing)/directory/[slug]/[city]/[trade]/page.tsx",
+    badgeSvg: "public/badges/listed-on-altair.svg",
+    beacon: "shared/components/directory/ListingStatsBeacon.tsx",
+    engagement: "shared/lib/analytics/engagement.ts",
+    vercel: "vercel.json",
+    cronMonitor: "lib/operations/cron-monitor.ts",
+    nextConfig: "next.config.ts",
+  };
+  for (const path of Object.values(P)) check(`${path} exists`, existsSync(path));
+  const m = read(P.migration);
+  const code = m.replace(/--[^\n]*/g, "");
+  const flat = (text) => text.replace(/\s+/g, " ");
+  const D = rules.DIRECTORY_DETAIL_LIMITS;
+
+  // The migration: additive, private, and in step with the rules.
+  check("214 only adds or replaces: nothing dropped but old constraints", !/drop\s+(table|column|function|policy|index)|delete\s+from|truncate|alter\s+column/i.test(code));
+  check("214 creates no policy (storage or table)", !/create\s+policy/i.test(code));
+  for (const table of ["directory_listing_daily_stats", "directory_stats_emails"]) {
+    check(`${table}: row level security is on`, code.includes(`alter table public.${table} enable row level security;`));
+    for (const role of ["public", "anon", "authenticated"]) check(`${table}: everything revoked from ${role}`, code.includes(`revoke all on table public.${table} from ${role};`));
+    check(`${table}: service role only`, code.includes(`grant all on table public.${table} to service_role;`));
+  }
+  const statsTable = code.slice(code.indexOf("create table if not exists public.directory_listing_daily_stats"), code.indexOf("comment on table public.directory_listing_daily_stats"));
+  check("the numbers table stores counts only: no address, visitor, device or user", !/\b(ip|address|visitor|device|user_id|session|agent|referrer)\b/i.test(statsTable) && /views integer/.test(statsTable));
+  check("approved images live in a public bucket", /values \('directory-public', 'directory-public', true,/.test(code));
+  check("uploads waiting for review live in a private bucket", /values \('directory-pending', 'directory-pending', false,/.test(code));
+  check("the description may be blank, otherwise the old limits", code.includes(`check (char_length(description) = 0 or char_length(description) between ${rules.DIRECTORY_LIMITS.description.min} and ${rules.DIRECTORY_LIMITS.description.max})`));
+  check("services limit matches", code.includes(`coalesce(array_length(services, 1), 0) <= ${D.services.max}`));
+  check("languages limit matches", code.includes(`coalesce(array_length(languages, 1), 0) <= ${D.languages.max}`));
+  check("photos limit matches", code.includes(`coalesce(array_length(photo_paths, 1), 0) <= ${D.photos.max}`));
+  check("license length matches", code.includes(`char_length(license_number) <= ${D.licenseNumber.max}`));
+  check("radius range matches", code.includes(`service_radius_miles between ${D.serviceRadiusMiles.min} and ${D.serviceRadiusMiles.max}`));
+  check("year founded lower bound matches", code.includes(`year_founded between ${D.yearFounded.min} and`));
+  check("an image path can only name a file in a listing's own folder", /logo_path ~ '\^\[0-9a-f-\]\{36\}\/\[0-9a-f-\]\{36\}\\\.\(png\|jpg\|webp\)\$'/.test(code));
+
+  const fn214 = (name) => {
+    const start = code.indexOf(`create or replace function public.${name}(`);
+    return start < 0 ? "" : code.slice(start, code.indexOf("$$;", start));
+  };
+  for (const name of ["directory_search_listings", "directory_public_listing", "directory_facets", "directory_record_listing_event"]) {
+    const body = fn214(name);
+    check(`${name} (214): exists`, body.length > 0);
+    check(`${name} (214): published listings only`, /status = 'published'/.test(body));
+    check(`${name} (214): never the email, a waiting change, waiting images, the email preference or a workspace`, !/contact_email|pending_changes|pending_media|stats_email_opt_out|'claimed_company_id'/.test(body));
+    check(`${name} (214): not security definer`, !/security definer/i.test(body));
+    for (const role of ["public", "anon", "authenticated"]) check(`${name} (214): revoked from ${role}`, new RegExp(`revoke all on function public\\.${name}\\([^)]*\\) from ${role};`).test(code));
+    check(`${name} (214): service role only`, new RegExp(`grant execute on function public\\.${name}\\([^)]*\\) to service_role;`).test(code));
+  }
+  check("the public listing returns approved image paths only, never the waiting set", /'logo_path', l\.logo_path/.test(fn214("directory_public_listing")) && !/pending/.test(fn214("directory_public_listing")));
+  check("the counter accepts exactly the four events the app sends", JSON.stringify(rules.DIRECTORY_LISTING_EVENTS) === JSON.stringify(["view", "call", "website", "directions"]) && /p_event not in \('view', 'call', 'website', 'directions'\)/.test(fn214("directory_record_listing_event")));
+  check("the counter picks today's date itself; a caller cannot", /create or replace function public\.directory_record_listing_event\(p_slug text, p_event text\)/.test(code));
+
+  // The rules for the optional details.
+  const GOOD_DETAILS = {
+    ...GOOD,
+    services: "furnaces,air-conditioning,residential",
+    hours: "mon=08:00-17:00;tue=08:00-17:00;wed=closed",
+    licenseNumber: "S350-123456",
+    licenseState: "",
+    insured: "yes",
+    emergencyService: "no",
+    yearFounded: "2009",
+    serviceRadiusMiles: "40",
+    languages: "es,en",
+  };
+  const ok = rules.validateListingInput(GOOD_DETAILS);
+  check("a listing with every detail is accepted", ok.ok === true, ok.errors);
+  if (ok.ok) {
+    const f = ok.fields;
+    check("services keep the catalogue's order", JSON.stringify(f.services) === JSON.stringify(["furnaces", "air-conditioning", "residential"]), f.services);
+    check("the license state defaults to the business's state", f.licenseState === "UT");
+    check("yes / no become true / false", f.insured === true && f.emergencyService === false);
+    check("hours are read day by day, missing days are closed", f.hours?.mon?.open === "08:00" && f.hours?.wed === null && f.hours?.sun === null);
+    check("languages keep the list's order", JSON.stringify(f.languages) === JSON.stringify(["en", "es"]));
+    check("hours survive the form's encoding both ways", JSON.stringify(rules.parseHoursInput(rules.encodeHours(f.hours))) === JSON.stringify(f.hours));
+  }
+  const badDetail = (change, field) => {
+    const r = rules.validateListingInput({ ...GOOD_DETAILS, ...change });
+    return r.ok === false && typeof r.errors[field] === "string";
+  };
+  check("a service another trade offers is refused", badDetail({ services: "panel-upgrades" }, "services"));
+  check("a made-up service is refused", badDetail({ services: "best-in-town" }, "services"));
+  check("a closing time before the opening time is refused", badDetail({ hours: "mon=17:00-08:00" }, "hours"));
+  check("a malformed time is refused", badDetail({ hours: "mon=8am-5pm" }, "hours"));
+  check("a year in the future is refused", badDetail({ yearFounded: String(new Date().getUTCFullYear() + 1) }, "yearFounded"));
+  check("a radius of zero is refused", badDetail({ serviceRadiusMiles: "0" }, "serviceRadiusMiles"));
+  check("a license number with markup is refused", badDetail({ licenseNumber: "<b>123</b>" }, "licenseNumber"));
+  check("a yes/no that is neither is refused", badDetail({ insured: "maybe" }, "insured"));
+  check("a language not on the list is refused", badDetail({ languages: "klingon" }, "languages"));
+  const none = rules.validateListingInput(GOOD);
+  check("every detail is optional", none.ok === true && none.fields.services.length === 0 && none.fields.hours === null && none.fields.insured === null);
+  check("seven closed days is the same as no hours", rules.parseHoursInput("mon=closed") === null);
+  const lines = rules.summarizeHours({ mon: { open: "08:00", close: "17:00" }, tue: { open: "08:00", close: "17:00" }, wed: { open: "08:00", close: "17:00" }, thu: { open: "08:00", close: "17:00" }, fri: { open: "08:00", close: "17:00" }, sat: null, sun: null });
+  check("hours read as runs of days", JSON.stringify(lines) === JSON.stringify([{ days: "Mon–Fri", time: "8 AM – 5 PM" }, { days: "Sat–Sun", time: "Closed" }]), lines);
+
+  // Place pages: addresses that cannot collide with a business.
+  check("the indexing threshold is one constant, set to 3", rules.DIRECTORY_HUB_INDEX_MIN === 3);
+  check("a state segment is exactly two lower-case letters", rules.stateFromSegment("ut") === "UT" && rules.stateFromSegment("UT") === null && rules.stateFromSegment("utah") === null && rules.stateFromSegment("zz") === null);
+  check("no business slug can be a state segment (slugs are 3+ characters)", rules.DIRECTORY_LIMITS.slug.min >= 3 && rules.buildListingSlug("A", "", "").length >= 3 && /char_length\(slug\) between 3 and/.test(sql));
+  check("every trade has an address of its own and back", rules.DIRECTORY_TRADES.every((t) => rules.tradeFromSlug(rules.tradeSlug(t)) === t) && new Set(rules.DIRECTORY_TRADES.map(rules.tradeSlug)).size === rules.DIRECTORY_TRADES.length);
+  check("a city reads as an address", rules.placeSlug("St. George") === "st-george" && rules.directoryCityTradePath("UT", "Salt Lake City", "HVAC") === "/directory/ut/salt-lake-city/hvac");
+  const hub = read(P.hub);
+  check("a thin place page is noindex", /hub\.indexable \? \{\} : \{ robots: \{ index: false, follow: true \} \}/.test(hub));
+  check("a city with no business based there is a 404, not an empty page", /if \(!city\) return null;/.test(hub) && /notFound\(\)/.test(read(P.cityPage)) && /notFound\(\)/.test(read(P.tradePage)));
+  const places = read(P.places);
+  check("indexable means the one rule, everywhere", /count >= DIRECTORY_HUB_INDEX_MIN/.test(places) && (places.match(/isIndexableHub\(/g) ?? []).length >= 4);
+  check("the sitemap lists only indexable place pages", /listIndexableHubPaths\(\)/.test(read(FILES.sitemap)));
+  check("place counts come from the public function, published only", /rpc\("directory_facets"\)/.test(places) && !/\.from\("directory_listings"\)/.test(places));
+  const listingPage = read(FILES.listingPage);
+  check("the business page breadcrumb names only indexable place pages", (listingPage.match(/if \(isIndexableHub\(/g) ?? []).length === 3 && !/directorySearchHref/.test(listingPage));
+  check("the business page structured data uses only given fields and no rating", !/aggregateRating|ratingValue|review/i.test(listingPage));
+  check("'insured' is labelled as the business's own statement", /The business&apos;s own statement/.test(listingPage));
+  const search = read(FILES.searchPage);
+  check("the search page carries ItemList and BreadcrumbList data", /itemListJsonLd\(/.test(search) && /breadcrumbJsonLd\(/.test(search));
+  check("the empty search invites the business to be first", /Be the first \$\{what\} listed in \$\{where\}\./.test(search));
+
+  // Images: private until approved.
+  const media = read(P.media);
+  check("media code is server-only", media.startsWith('import "server-only";'));
+  check("uploads go to the private bucket only", /from\(DIRECTORY_PENDING_BUCKET\)\.upload\(path/.test(media) && !/from\(DIRECTORY_PUBLIC_BUCKET\)\.upload\(path, bytes, \{\s*contentType: type\.contentType,\s*upsert: false/.test(media));
+  check("the file type is read from its bytes; SVG is never accepted", /sniffImageType\(bytes\)/.test(media) && !/svg/i.test(media.replace(/No SVG \(it can carry script\)/, "")));
+  check("a public address is only ever built for the public bucket", /object\/public\/\$\{DIRECTORY_PUBLIC_BUCKET\}/.test(media) && !/object\/public\/\$\{DIRECTORY_PENDING_BUCKET\}/.test(media));
+  check("a proposal can only name the listing's own files", /path\.startsWith\(`\$\{listingId\}\/`\)/.test(media));
+  const listingsSrc = read(FILES.listings);
+  const repoUses = (needle) => ["lib", "app", "shared"].flatMap((root) => listFiles(root)).filter((file) => read(file).includes(needle));
+  check("only an approval copies images into the public bucket", JSON.stringify(repoUses("publishMediaSet(").sort()) === JSON.stringify([P.media, FILES.listings].sort()) && (listingsSrc.match(/await publishPendingMedia\(/g) ?? []).length === 2);
+  const mediaRoute = read(P.mediaRoute);
+  check("an upload needs the signed manage link, checked first", mediaRoute.indexOf("verifyManageLink(id, token)") > 0 && mediaRoute.indexOf("verifyManageLink(id, token)") < mediaRoute.indexOf("uploadPendingImage("));
+  check("uploads are rate limited", /enforcePublicRateLimit\("public\.token_view"/.test(mediaRoute));
+  check("a removed listing's images are deleted", (listingsSrc.match(/await deleteAllListingMedia\(id\)/g) ?? []).length === 2);
+
+  // Numbers: counts only, honest exclusions.
+  const eventRoute = read(P.eventRoute);
+  check("the counter route refuses bots, other sites and non-production", /isBotUserAgent\(/.test(eventRoute) && /isSameOrigin\(request\)/.test(eventRoute) && /isAnalyticsRecordingEnabled\(\)/.test(eventRoute));
+  check("the counter route is rate limited and takes only a slug and an event", /enforcePublicRateLimit\("public\.analytics_collect"/.test(eventRoute) && /recordListingEvent\(body\.slug, body\.event\)/.test(eventRoute));
+  check("the page beacon respects the site's opt-out and sends no visitor data", /isAnalyticsAllowed\(\)/.test(read(P.beacon)) && /JSON\.stringify\(\{ slug, event \}\)/.test(read(P.beacon)) && /credentials: "omit"/.test(read(P.beacon)));
+  const mw = read(FILES.middleware);
+  check("the two directory endpoints are public by exact path", /DIRECTORY_EVENT_ROUTE = "\/api\/directory\/listing-event"/.test(mw) && /DIRECTORY_MEDIA_ROUTE = "\/api\/directory\/media"/.test(mw) && /pathname === DIRECTORY_EVENT_ROUTE/.test(mw));
+
+  // The monthly email.
+  const cron = read(P.cronRoute);
+  check("the monthly run refuses without CRON_SECRET, and without the bearer token", /if \(!getCronSecret\(\)\)[\s\S]*?status: 503/.test(cron) && /if \(!isAuthorizedCronRequest\(request\)\)[\s\S]*?status: 401/.test(cron));
+  const vercel = JSON.parse(read(P.vercel));
+  const schedule = vercel.crons.find((c) => c.path === "/api/cron/directory-stats")?.schedule;
+  check("vercel.json schedules it, matching the monitor", schedule === "0 15 2 * *" && read(P.cronMonitor).includes(`"directory-stats": "${schedule}"`) && vercel.functions["app/api/cron/directory-stats/route.ts"]?.maxDuration === 60);
+  const monthly = read(P.monthly);
+  check("a month is claimed before its email is sent, so it is never sent twice", monthly.indexOf('.from("directory_stats_emails")') < monthly.indexOf("sendMonthlyStatsEmail(") && /claim\.error\.code === "23505"/.test(monthly));
+  check("a business that stopped the email is not sent it", /\.eq\("stats_email_opt_out", false\)/.test(monthly));
+  check("a month with nothing to report is skipped, not sent", /if \(empty\) \{\s*result\.skipped \+= 1;/.test(monthly));
+  const emails = read(FILES.emails);
+  check("the monthly email has a stop link and a List-Unsubscribe header", /buildStatsStopUrl\(listing\.id\)/.test(emails) && /"List-Unsubscribe": `<\$\{stopUrl\}>`/.test(emails) && /stop these emails/.test(emails));
+  const links = read(FILES.links);
+  check("the stop link is signed for that purpose only", /hashAuditSubject\("directory-listing\.stats-stop", id\)/.test(links) && /timingSafeEqual/.test(links));
+  check("opening the stop link changes nothing; the button does", !/setStatsEmailOptOut\(/.test(read(P.stopPage)) && /stopStatsEmailAction/.test(read(P.stopPage)));
+
+  // The badge and the counted steps.
+  const svg = read(P.badgeSvg);
+  check("the badge is a plain picture: no script, no outside references", !/<script|on\w+=|href=|xlink/i.test(svg) && /Listed on Altair Operating System/.test(svg));
+  check("the badge snippet links to the listing and the static picture", rules.directoryBadgeSnippet("https://www.altair-op.com", "acme-hvac-provo-ut") === '<a href="https://www.altair-op.com/directory/acme-hvac-provo-ut" title="Listed on Altair Operating System"><img src="https://www.altair-op.com/badges/listed-on-altair.svg" alt="Listed on Altair Operating System" width="200" height="56" style="border:0"></a>');
+  const engagement = await loadPureModule(P.engagement, "dir-engagement");
+  const tracked = ["app", "shared"].flatMap((root) => listFiles(root)).flatMap((file) => [...read(file).matchAll(/(?:data-track(?:-submit)?=|track=|trackEngagement\("cta_click", )"(dir-[a-z0-9-]+)"/g)].map((match) => match[1]));
+  check("every counted directory step has a name in the analytics table", tracked.length >= 10 && tracked.every((label) => engagement.isDirectoryStepLabel(label) && engagement.isValidEngagementLabel(label)), tracked.filter((label) => !engagement.isDirectoryStepLabel(label)));
+  check("the broken /ZGlyZWN0b3 address sends visitors to the directory", /ZGlyZWN0b3\[A-Za-z0-9_=-\]\*/.test(read(P.nextConfig)));
+  for (const file of Object.values(P).filter((path) => /\.(tsx?|sql|svg)$/.test(path))) {
+    check(`${file}: never the short product name`, !/Altair OS(?![A-Za-z])/.test(read(file)));
+  }
+}
+
+// ---------------------------------------------------------------- added with permission (owner, 2026-11-20)
+console.log("\nAdding a business with permission (migration 214)");
+{
+  const m = read("supabase/migrations/214_directory_rich_listings_and_stats.sql").replace(/--[^\n]*/g, "");
+  const owner = read(FILES.ownerActions);
+  const listingsSrc = read(FILES.listings);
+  const emails = read(FILES.emails);
+  const form = read("shared/components/platform-admin/directory/AddWithPermissionForm.tsx");
+  const review = read("shared/components/platform-admin/directory/DirectoryReviewView.tsx");
+  const listingPage = read(FILES.listingPage);
+  const flat = (text) => text.replace(/\s+/g, " ");
+
+  check("the source is one of two words, self-listed by default", /source text not null default 'self_listed'/.test(m) && /check \(source in \('self_listed', 'added_with_permission'\)\)/.test(m));
+  check("an added listing must name who said yes and when; a self-listed one cannot", /source = 'self_listed' and permission_given_by is null and permission_given_at is null/.test(m) && /source = 'added_with_permission'\s+and char_length\(btrim\(permission_given_by\)\) between 2 and 120\s+and permission_given_at is not null/.test(m));
+  check("only an added listing may be live before its business confirms", /email_confirmed_at is not null or source = 'added_with_permission'/.test(m));
+  const publicFns = ["directory_search_listings", "directory_public_listing"].map((name) => {
+    const start = m.indexOf(`create or replace function public.${name}(`);
+    return m.slice(start, m.indexOf("$$;", start));
+  });
+  check("the public functions say only whether the business has confirmed", publicFns.every((body) => /'awaiting_owner', \((l|page)\.source = 'added_with_permission' and (l|page)\.email_confirmed_at is null\)/.test(body) && !/permission_given|permission_note|added_by|'source'/.test(body)));
+
+  const P = rules.validatePermissionInput;
+  const ok = P({ permissionGivenBy: "Dana Ruiz, owner", permissionGivenAt: "2026-11-18", permissionNote: "" }, "2026-11-20");
+  check("a named person and a recent date are accepted; waiting is the default", ok.ok === true && ok.permission.publish === "wait" && ok.permission.note === null, ok);
+  check("publishing now is only on an explicit choice", P({ permissionGivenBy: "Dana", permissionGivenAt: "2026-11-18", publish: "now" }, "2026-11-20").permission?.publish === "now");
+  check("no name is refused", P({ permissionGivenBy: " ", permissionGivenAt: "2026-11-18" }, "2026-11-20").ok === false);
+  check("a date in the future is refused", P({ permissionGivenBy: "Dana", permissionGivenAt: "2026-11-21" }, "2026-11-20").ok === false);
+  check("a date more than a year back is refused", P({ permissionGivenBy: "Dana", permissionGivenAt: "2025-10-01" }, "2026-11-20").ok === false);
+  check("an impossible date is refused", P({ permissionGivenBy: "Dana", permissionGivenAt: "2026-02-30" }, "2026-11-20").ok === false);
+  check("an email address is not a name", P({ permissionGivenBy: "dana@example.com", permissionGivenAt: "2026-11-18" }, "2026-11-20").ok === false);
+
+  const start = owner.indexOf("export async function addListingWithPermissionAction");
+  const body = owner.slice(start, owner.indexOf("\n}", start));
+  check("adding is for platform admins only, checked first in the action", /const reviewer = await requireReviewer\(\);\s+if \(!reviewer\) return \{ error:/.test(body) && body.indexOf("requireReviewer") < body.indexOf("createListingWithPermission("));
+  check("the action validates the listing, the permission and the email", /validateListingInput\(values\)/.test(body) && /validatePermissionInput\(values\)/.test(body) && /normalizeDirectoryEmail\(values\.contactEmail\)/.test(body));
+  check("the business is emailed on save", /sendPermissionAddedEmail\(/.test(body));
+  const callers = ["lib", "app", "shared"].flatMap((root) => listFiles(root)).filter((file) => read(file).includes("createListingWithPermission("));
+  check("only the admin action can add a listing with permission", JSON.stringify(callers.sort()) === JSON.stringify([FILES.ownerActions, FILES.listings].sort()));
+  const create = listingsSrc.slice(listingsSrc.indexOf("export async function createListingWithPermission"), listingsSrc.indexOf("export async function getListingRecord"));
+  check("an added listing stores its source, who, when, the note and the admin", /source: "added_with_permission"/.test(create) && /permission_given_by: permission\.givenBy/.test(create) && /permission_given_at: permission\.givenAt/.test(create) && /added_by: adminId/.test(create));
+  check("it goes in waiting for the business unless 'publish now' was chosen", /\.\.\.\(publishNow \? \{ status: "published" as const/.test(create) && /const publishNow = permission\.publish === "now";/.test(create));
+  check("the email says who agreed and when, in the owner's words", flat(emails).includes("We spoke with ${input.givenBy} on ${formatPermissionDate(input.givenAt)} and added your listing with the information you agreed to. Please check it, add your own description and photos, or remove it."));
+  check("the email explains one-step removal", /press Remove\. It comes down straight away/.test(emails));
+  const confirm = listingsSrc.slice(listingsSrc.indexOf("export async function confirmListingEmail"), listingsSrc.indexOf("export type SaveEditOutcome"));
+  check("a business confirming a live added listing only records the confirmation", /\.eq\("status", "published"\)\s*\.eq\("source", "added_with_permission"\)\s*\.is\("email_confirmed_at", null\)/.test(confirm));
+  check("the form waits for the business by default", /useState<"wait" \| "now">\("wait"\)/.test(form) && /Wait for the business to confirm/.test(form));
+  check("the review screen offers the form and shows who gave permission", /<AddWithPermissionForm available=\{canAddWithPermission\} \/>/.test(review) && /Added with permission: \{item\.permission\.givenBy\}/.test(review));
+  check("the public page shows nothing about the source but the confirm prompt", /Is this your business\? Confirm or edit your listing/.test(listingPage) && !/permission\b|givenBy|added_with_permission|bsourceb/.test(listingPage.replace(/with its permission|with their permission|added with permission/gi, "")));
+  check("removal is still one step for an added listing", !/source/.test(listingsSrc.slice(listingsSrc.indexOf("export async function removeListing("), listingsSrc.indexOf("export async function findListingsForEmail"))));
+}
+
+// ---------------------------------------------------------------- before migration 214 runs
+// The code ships first and the owner runs 214 afterwards, so every phase-2
+// path must ask isDirectory214Installed() and fall back to phase 1.
+console.log("\nWorks before migration 214 is applied");
+{
+  const schema = read("lib/directory/schema.ts");
+  const listingsSrc = read(FILES.listings);
+  check("one probe answers 'is 214 applied', remembered briefly, outages read as no", /export async function isDirectory214Installed/.test(schema) && /TTL_MS = 60_000/.test(schema) && /select\("source, services, pending_media"\)/.test(schema));
+  check("listing rows are read with only the columns that exist", /function rowColumns\(v214: boolean\)/.test(listingsSrc) && !/ROW_COLUMNS/.test(listingsSrc) && (listingsSrc.match(/select\(rowColumns\(v214\)\)/g) ?? []).length === 3);
+  check("listing rows are written with only the columns that exist", /if \(!v214\) return base;/.test(listingsSrc) && !/fieldColumns\(fields\)/.test(listingsSrc) && !/fieldColumns\(record\.pendingFields\)\b/.test(listingsSrc));
+  check("removal touches image columns and buckets only after 214", (listingsSrc.match(/\.\.\.mediaReset\(v214\)/g) ?? []).length === 2 && (listingsSrc.match(/if \(v214\) await deleteAllListingMedia\(id\);/g) ?? []).length === 2);
+  check("confirming does not ask about the source before 214", /if \(!\(await isDirectory214Installed\(\)\)\) \{\s*const current/.test(listingsSrc.slice(listingsSrc.indexOf("export async function confirmListingEmail"))));
+  check("images, the email preference and permission listings need 214", /async function saveListingMedia[\s\S]*?if \(!\(await isDirectory214Installed\(\)\)\) return "unavailable";/.test(listingsSrc) && /async function setStatsEmailOptOut[\s\S]*?if \(!\(await isDirectory214Installed\(\)\)\) return "unavailable";/.test(listingsSrc) && /if \(!\(await isDirectory214Installed\(\)\)\) return \{ status: "unavailable" \};/.test(listingsSrc));
+  check("before 214 the description is still required by the lister's actions", (read(FILES.actions).match(/validateListingInput\(values, \{ requireDescription: !\(await isDirectory214Installed\(\)\) \}\)/g) ?? []).length === 2);
+  check("the list page shows the plain form before 214", /basic=\{!v214\}/.test(read(FILES.listPage)) && /listingValue\(v214\)/.test(read(FILES.listPage)));
+  const manage = read(FILES.managePage);
+  check("the manage page hides numbers, images and the email setting before 214", /editable && record\.v214/.test(manage) && /record\.v214 \? \(/.test(manage) && /basic=\{!record\.v214\}/.test(manage) && /live && record\.v214 \? await getListingStats/.test(manage));
+  check("the counting route is a quiet no-op before 214", /if \(!\(await isDirectory214Installed\(\)\)\) return NO_CONTENT\(\);/.test(read("app/api/directory/listing-event/route.ts")));
+  check("uploads explain they need the update before 214", /if \(!\(await isDirectory214Installed\(\)\)\) return refuse\(/.test(read("app/api/directory/media/route.ts")));
+  check("the monthly run no-ops cleanly before 214", /if \(!\(await isDirectory214Installed\(\)\)\) \{\s*result\.installed = false;\s*return result;/.test(read("lib/directory/monthly-stats.ts")) && /!result\.installed \? "succeeded"/.test(read("app/api/cron/directory-stats/route.ts")));
+  check("adding with permission explains it needs 214, in the form and the action", /Needs the directory update \(migration 214\)/.test(read("shared/components/platform-admin/directory/AddWithPermissionForm.tsx")) && /isDirectory214Installed\(\)\)\) return \{ error: "This needs the directory update/.test(read(FILES.ownerActions)));
+  check("place counts fall back to the public search when directory_facets is missing", /if \(isMissingFunction\(error\)\) return facetsFromSearch\(\);/.test(read("lib/directory/places.ts")));
+  check("public listings read without 214 keys show no details and no prompt", /row\.services === undefined && row\.hours === undefined \? \{ \.\.\.EMPTY_DIRECTORY_DETAILS \}/.test(listingsSrc) && /awaitingOwnerConfirmation: row\.awaiting_owner === true/.test(listingsSrc));
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

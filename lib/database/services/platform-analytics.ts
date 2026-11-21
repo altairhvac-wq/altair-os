@@ -6,7 +6,12 @@ import { fetchAllAuthUsers } from "@/lib/database/services/auth-users";
 import { fetchLatestPlatformAutomationRun } from "@/lib/database/services/platform-automation-runs";
 import { isInternalAnalyticsEmail } from "@/lib/analytics/internal";
 import { countListSubscribers } from "@/lib/resources/subscribers";
-import { ENGAGEMENT_EVENT_LABELS, isEngagementEventName } from "@/shared/lib/analytics/engagement";
+import {
+  DIRECTORY_STEP_LABELS,
+  ENGAGEMENT_EVENT_LABELS,
+  isDirectoryStepLabel,
+  isEngagementEventName,
+} from "@/shared/lib/analytics/engagement";
 import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
 import { resolveEffectiveSubscriptionStatus } from "@/lib/saas-billing/trial-policy";
 import { SAAS_SUBSCRIPTION_CATALOG, isSaasPlanKey } from "@/lib/saas-billing/catalog";
@@ -615,6 +620,10 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
       .filter((row) => row && typeof row.event === "string")
       .map((row) => {
         const name = isEngagementEventName(row.event) ? ENGAGEMENT_EVENT_LABELS[row.event] : row.event;
+        // Directory steps share the press event; they are named for what they are.
+        if (row.event === "cta_click" && isDirectoryStepLabel(row.label)) {
+          return { label: DIRECTORY_STEP_LABELS[row.label], value: num(row.events), secondary: num(row.visitors) };
+        }
         return {
           label: row.label ? `${name} · ${row.label}` : name,
           value: num(row.events),

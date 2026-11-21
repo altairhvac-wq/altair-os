@@ -54,6 +54,8 @@ type SendViaResendInput = {
   logContext: string;
   fromDisplayName?: string;
   replyTo?: string;
+  /** Extra message headers, e.g. List-Unsubscribe for a recurring email. */
+  headers?: Record<string, string>;
 };
 
 function escapeDisplayName(displayName: string): string {
@@ -200,6 +202,7 @@ export async function sendViaResend(
         text: input.text,
         html: input.html,
         ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+        ...(input.headers && Object.keys(input.headers).length > 0 ? { headers: input.headers } : {}),
       }),
     });
 

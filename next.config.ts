@@ -125,6 +125,15 @@ const nextConfig: NextConfig = {
         destination: "/signup",
         permanent: true,
       },
+      {
+        // "ZGlyZWN0b3J5" is "directory" written in base64. A visit landed on
+        // /ZGlyZWN0b3 (the first ten characters) in November 2026: some shared
+        // link carried an encoded, cut-off copy of the address. Nothing in this
+        // repository writes it; this sends any such visit where it meant to go.
+        source: "/:encoded(ZGlyZWN0b3[A-Za-z0-9_=-]*)",
+        destination: "/directory",
+        permanent: false,
+      },
     ];
   },
 };

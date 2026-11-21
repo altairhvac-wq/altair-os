@@ -11,14 +11,20 @@ import {
   resolveListingReportsAction,
   type DirectoryReviewActionResult,
 } from "@/app/actions/platform-directory";
+import { AddWithPermissionForm } from "@/shared/components/platform-admin/directory/AddWithPermissionForm";
 import type { DirectoryReviewData, DirectoryReviewItem } from "@/lib/directory/listings";
 import {
+  DIRECTORY_DETAIL_KEYS,
   DIRECTORY_FIELD_LABELS,
   DIRECTORY_PATH,
   DIRECTORY_REPORT_REASONS,
   DIRECTORY_STATUS_LABELS,
   directoryListingPath,
+  formatPermissionDate,
   formatPhone,
+  languageLabel,
+  serviceLabel,
+  summarizeHours,
   type DirectoryFieldKey,
   type DirectoryListingFields,
 } from "@/shared/types/directory";
@@ -41,6 +47,13 @@ const secondary =
 const danger =
   "inline-flex min-h-10 items-center justify-center rounded-lg border border-[#e7b8a2] bg-white px-4 text-sm font-semibold text-[#8a2f0f] hover:bg-[#fdf3ee] disabled:opacity-60";
 
+export type ReviewImages = {
+  live: { logo: string | null; photos: { key: string; url: string }[] } | null;
+  waiting: { logo: string | null; photos: { key: string; url: string }[] } | null;
+};
+
+const yesNo = (value: boolean | null) => (value === null ? "(not answered)" : value ? "Yes" : "No");
+
 function show(key: DirectoryFieldKey, fields: DirectoryListingFields): string {
   switch (key) {
     case "phone":
@@ -53,9 +66,51 @@ function show(key: DirectoryFieldKey, fields: DirectoryListingFields): string {
       return fields.website ?? "(none)";
     case "serviceArea":
       return fields.serviceArea || "(none)";
+    case "description":
+      return fields.description || "(none)";
+    case "services":
+      return fields.services.length > 0 ? fields.services.map(serviceLabel).join(", ") : "(none)";
+    case "languages":
+      return fields.languages.length > 0 ? fields.languages.map(languageLabel).join(", ") : "(none)";
+    case "hours":
+      return fields.hours ? summarizeHours(fields.hours).map((line) => `${line.days} ${line.time}`).join(" · ") : "(none)";
+    case "licenseNumber":
+      return fields.licenseNumber ?? "(none)";
+    case "licenseState":
+      return fields.licenseState ?? "(none)";
+    case "insured":
+      return yesNo(fields.insured);
+    case "emergencyService":
+      return yesNo(fields.emergencyService);
+    case "yearFounded":
+      return fields.yearFounded ? String(fields.yearFounded) : "(none)";
+    case "serviceRadiusMiles":
+      return fields.serviceRadiusMiles ? `${fields.serviceRadiusMiles} miles` : "(none)";
     default:
       return String(fields[key]);
   }
+}
+
+function ImageStrip({ set, label }: { readonly set: { logo: string | null; photos: { key: string; url: string }[] }; readonly label: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{label}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {set.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={set.logo} alt="Logo" className="h-16 w-16 rounded-lg border border-stone-200 bg-white object-contain p-1" />
+        ) : (
+          <span className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-stone-300 text-[10px] text-stone-400">No logo</span>
+        )}
+        {set.photos.map((photo, index) => (
+          <a key={photo.key} href={photo.url} target="_blank" rel="noopener noreferrer" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.url} alt={`Photo ${index + 1}`} className="h-16 w-24 rounded-lg border border-stone-200 object-cover" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function formatDate(value: string): string {
@@ -96,10 +151,18 @@ function Details({ fields }: { readonly fields: DirectoryListingFields }) {
             <dd className="font-medium text-stone-900">{fields.serviceArea}</dd>
           </div>
         ) : null}
+        {DETAIL_KEYS_SHOWN.filter((key) => show(key, fields) !== "(none)" && show(key, fields) !== "(not answered)").map((key) => (
+          <div key={key} className="flex gap-2 sm:col-span-2">
+            <dt className="shrink-0 text-stone-500">{DIRECTORY_FIELD_LABELS[key]}</dt>
+            <dd className="min-w-0 break-words font-medium text-stone-900">{show(key, fields)}</dd>
+          </div>
+        ))}
       </dl>
     </>
   );
 }
+
+const DETAIL_KEYS_SHOWN: readonly DirectoryFieldKey[] = DIRECTORY_DETAIL_KEYS;
 
 type Kind = "new" | "edit" | "reported" | "other";
 type Outcome = DirectoryReviewActionResult & { businessName: string };
@@ -107,10 +170,12 @@ type Outcome = DirectoryReviewActionResult & { businessName: string };
 function ListingCard({
   item,
   kind,
+  images,
   onOutcome,
 }: {
   readonly item: DirectoryReviewItem;
   readonly kind: Kind;
+  readonly images?: ReviewImages;
   readonly onOutcome: (outcome: Outcome | null) => void;
 }) {
   const [pending, startTransition] = useTransition();
@@ -157,6 +222,18 @@ function ListingCard({
         </div>
       ) : null}
 
+      {images?.live || images?.waiting ? (
+        <div className="mt-4 grid gap-4 rounded-xl border border-stone-200 bg-stone-50/70 px-4 py-3 sm:grid-cols-2">
+          {images.live ? <ImageStrip set={images.live} label="Showing now" /> : null}
+          {images.waiting ? (
+            <ImageStrip
+              set={images.waiting}
+              label={item.status === "published" ? "Images waiting for your approval" : "Images (published with the listing)"}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
       {item.openReports.length > 0 ? (
         <div className="mt-4 rounded-xl border border-[#e7b8a2] bg-[#fdf3ee] px-4 py-3">
           <p className="text-sm font-semibold text-[#8a2f0f]">
@@ -175,6 +252,13 @@ function ListingCard({
       ) : null}
 
       <p className="mt-4 text-xs text-stone-500">
+        {item.permission ? (
+          <span className="mb-1.5 block font-medium text-[#5c4614]">
+            Added with permission: {item.permission.givenBy}, {formatPermissionDate(item.permission.givenAt)}
+            {item.permission.note ? ` · ${item.permission.note}` : ""}
+            {item.status === "published" && !item.emailConfirmedAt ? " · Live, awaiting the business’s confirmation" : ""}
+          </span>
+        ) : null}
         Private email: <span className="font-medium text-stone-700">{item.contactEmail}</span> · Sent {formatDate(item.createdAt)}
         {item.status === "published" ? (
           <>
@@ -189,7 +273,7 @@ function ListingCard({
 
       {item.status !== "removed" && item.status !== "pending_email" ? (
         <div className="mt-4 border-t border-stone-100 pt-4">
-          {kind !== "edit" || item.status !== "published" ? null : (
+          {kind !== "edit" || item.status !== "published" || (!item.pendingFields && !item.pendingMedia) ? null : (
             <div className="mb-3 flex flex-wrap gap-2">
               <button type="button" disabled={pending} className={primary} onClick={() => run(() => approveListingChangesAction(item.id))}>
                 Approve the change
@@ -249,12 +333,14 @@ function Section({
   empty,
   items,
   kind,
+  images,
   onOutcome,
 }: {
   readonly title: string;
   readonly empty: string;
   readonly items: DirectoryReviewItem[];
   readonly kind: Kind;
+  readonly images: Record<string, ReviewImages>;
   readonly onOutcome: (outcome: Outcome | null) => void;
 }) {
   return (
@@ -267,7 +353,7 @@ function Section({
       ) : (
         <ul className="mt-3 space-y-3">
           {items.map((item) => (
-            <ListingCard key={item.id} item={item} kind={kind} onOutcome={onOutcome} />
+            <ListingCard key={item.id} item={item} kind={kind} images={images[item.id]} onOutcome={onOutcome} />
           ))}
         </ul>
       )}
@@ -275,7 +361,16 @@ function Section({
   );
 }
 
-export function DirectoryReviewView({ data }: { readonly data: DirectoryReviewData }) {
+export function DirectoryReviewView({
+  data,
+  images = {},
+  canAddWithPermission = true,
+}: {
+  readonly data: DirectoryReviewData;
+  readonly images?: Record<string, ReviewImages>;
+  /** False until migration 214 is applied: the form then explains that it needs it. */
+  readonly canAddWithPermission?: boolean;
+}) {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   if (data.items === null) {
     return (
@@ -289,9 +384,9 @@ export function DirectoryReviewView({ data }: { readonly data: DirectoryReviewDa
   }
 
   const fresh = data.items.filter((item) => item.status === "pending_review");
-  const edits = data.items.filter((item) => item.status === "published" && item.pendingFields);
-  const reported = data.items.filter((item) => item.status === "published" && !item.pendingFields && item.openReports.length > 0);
-  const live = data.items.filter((item) => item.status === "published" && !item.pendingFields && item.openReports.length === 0);
+  const edits = data.items.filter((item) => item.status === "published" && (item.pendingFields || item.pendingMedia));
+  const reported = data.items.filter((item) => item.status === "published" && !item.pendingFields && !item.pendingMedia && item.openReports.length > 0);
+  const live = data.items.filter((item) => item.status === "published" && !item.pendingFields && !item.pendingMedia && item.openReports.length === 0);
   const waitingOnEmail = data.items.filter((item) => item.status === "pending_email");
   const closed = data.items.filter((item) => item.status === "rejected" || item.status === "removed");
   const needsYou = fresh.length + edits.length + reported.length;
@@ -326,18 +421,21 @@ export function DirectoryReviewView({ data }: { readonly data: DirectoryReviewDa
         </div>
       ) : null}
 
-      <Section title="New listings to approve" empty="No new listings." items={fresh} kind="new" onOutcome={setOutcome} />
-      <Section title="Changes to live listings" empty="No changes waiting." items={edits} kind="edit" onOutcome={setOutcome} />
-      <Section title="Reported listings" empty="No reports." items={reported} kind="reported" onOutcome={setOutcome} />
-      <Section title="Live" empty="No live listings yet." items={live} kind="other" onOutcome={setOutcome} />
+      <AddWithPermissionForm available={canAddWithPermission} />
+
+      <Section title="New listings to approve" empty="No new listings." items={fresh} kind="new" images={images} onOutcome={setOutcome} />
+      <Section title="Changes to live listings" empty="No changes waiting." items={edits} kind="edit" images={images} onOutcome={setOutcome} />
+      <Section title="Reported listings" empty="No reports." items={reported} kind="reported" images={images} onOutcome={setOutcome} />
+      <Section title="Live" empty="No live listings yet." items={live} kind="other" images={images} onOutcome={setOutcome} />
       <Section
         title="Waiting for the business to confirm its email"
         empty="None."
         items={waitingOnEmail}
         kind="other"
+        images={images}
         onOutcome={setOutcome}
       />
-      <Section title="Declined or removed" empty="None." items={closed} kind="other" onOutcome={setOutcome} />
+      <Section title="Declined or removed" empty="None." items={closed} kind="other" images={images} onOutcome={setOutcome} />
     </div>
   );
 }

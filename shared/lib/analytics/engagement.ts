@@ -40,6 +40,39 @@ export function isEngagementEventName(value: unknown): value is EngagementEventN
   return typeof value === "string" && (ENGAGEMENT_EVENT_NAMES as readonly string[]).includes(value);
 }
 
+/**
+ * Steps counted on the public directory ride on `cta_click` with a label
+ * that starts "dir-" (a `data-track` attribute in our markup), so measuring
+ * them needed no database change. They are not trial buttons, and the
+ * Platform analytics table names them as directory steps. The full list of
+ * labels, in the order a visitor meets them.
+ */
+export const DIRECTORY_STEP_PREFIX = "dir-";
+
+export const DIRECTORY_STEP_LABELS = {
+  "dir-search": "Directory search sent",
+  "dir-chip-trade": "Directory trade chip",
+  "dir-chip-city": "Directory city chip",
+  "dir-audience-pro": "Directory: finding a pro",
+  "dir-audience-sub": "Directory: finding a sub",
+  "dir-empty-list": "Directory empty state: list free",
+  "dir-list-cta": "Directory: list your business",
+  "dir-form-start": "Listing form started",
+  "dir-form-step-details": "Listing form: details step",
+  "dir-form-step-send": "Listing form: send step",
+  "dir-form-submit": "Listing form sent",
+  "dir-form-success": "Listing form success screen",
+  "dir-listing-call": "Listing: call tapped",
+  "dir-listing-website": "Listing: website tapped",
+  "dir-listing-directions": "Listing: map tapped",
+  "dir-listing-claim": "Listing: is this your business",
+  "dir-badge-copy": "Badge code copied",
+} as const;
+
+export function isDirectoryStepLabel(label: string | null | undefined): label is keyof typeof DIRECTORY_STEP_LABELS {
+  return typeof label === "string" && label in DIRECTORY_STEP_LABELS;
+}
+
 /** Plain words for the Platform analytics table. */
 export const ENGAGEMENT_EVENT_LABELS: Record<EngagementEventName, string> = {
   cta_click: "Trial button pressed",

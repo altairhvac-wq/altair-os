@@ -6,6 +6,7 @@ import { resolveCompanyBillingAccess } from "@/lib/saas-billing/resolver";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   DIRECTORY_CLAIM_LIMIT,
+  EMPTY_DIRECTORY_DETAILS,
   isValidListingSlug,
   type DirectoryOwnListing,
   type DirectoryPublicListing,
@@ -97,6 +98,11 @@ function toPublic(row: OwnRow): DirectoryPublicListing {
     acceptsSubWork: row.accepts_sub_work,
     publishedAt: row.published_at,
     isMember: row.claimed_company_id !== null && row.member_active,
+    // Community shows the essentials only; the full page has the rest.
+    details: { ...EMPTY_DIRECTORY_DETAILS },
+    logoUrl: null,
+    photoUrls: [],
+    awaitingOwnerConfirmation: false,
   };
 }
 

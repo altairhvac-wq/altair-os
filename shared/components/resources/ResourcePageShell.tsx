@@ -29,10 +29,12 @@ export function ResourceMain({
   width = "default",
   children,
 }: {
-  readonly width?: "default" | "wide";
+  readonly width?: "default" | "wide" | "app";
   readonly children: React.ReactNode;
 }) {
-  const maxWidth = width === "wide" ? "max-w-5xl" : "max-w-3xl";
+  // "app": the directory's search and listing screens, which carry a side
+  // column on wide screens.
+  const maxWidth = width === "app" ? "max-w-6xl" : width === "wide" ? "max-w-5xl" : "max-w-3xl";
   return (
     <main className={`relative mx-auto ${maxWidth} px-4 pb-16 pt-24 sm:px-8 sm:pt-28`}>
       {children}

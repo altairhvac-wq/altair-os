@@ -4,7 +4,7 @@ import { timingSafeEqual } from "node:crypto";
 import { getAppBaseUrl } from "@/lib/email/env";
 import { resolveResourceLinkOrigin } from "@/lib/resources/subscribers";
 import { hashAuditSubject } from "@/lib/security/public-rate-limit";
-import { DIRECTORY_MANAGE_PATH, directoryListingPath } from "@/shared/types/directory";
+import { DIRECTORY_MANAGE_PATH, DIRECTORY_STATS_EMAIL_PATH, directoryListingPath } from "@/shared/types/directory";
 
 /**
  * The lister's key to their own listing.
@@ -42,6 +42,27 @@ export function verifyManageLink(id: unknown, token: unknown): id is string {
 
 export function manageLinkToken(id: string): string {
   return sign(id);
+}
+
+/**
+ * The stop link in the monthly numbers email. Signed for that one purpose,
+ * so it can stop the email and do nothing else: a forwarded numbers email
+ * does not hand anyone the manage link.
+ */
+function signStatsStop(id: string): string {
+  return hashAuditSubject("directory-listing.stats-stop", id);
+}
+
+export function verifyStatsStopLink(id: unknown, token: unknown): id is string {
+  if (typeof id !== "string" || typeof token !== "string") return false;
+  if (!UUID.test(id) || !TOKEN.test(token)) return false;
+  const expected = Buffer.from(signStatsStop(id), "hex");
+  const given = Buffer.from(token, "hex");
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
+export function buildStatsStopUrl(id: string): string {
+  return `${resolveResourceLinkOrigin()}${DIRECTORY_STATS_EMAIL_PATH}?id=${id}&s=${signStatsStop(id)}`;
 }
 
 /** The manage page for this listing, on the public site. Never built from the request's Host. */

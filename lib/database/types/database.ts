@@ -1388,6 +1388,27 @@ export type Database = {
           claimed_company_id: string | null;
           claimed_at: string | null;
           member_active: boolean;
+          // Migration 214: optional details, approved images, the waiting
+          // image set, and the monthly numbers email preference.
+          services: string[];
+          hours: Record<string, unknown> | null;
+          license_number: string | null;
+          license_state: string | null;
+          insured: boolean | null;
+          emergency_service: boolean | null;
+          year_founded: number | null;
+          service_radius_miles: number | null;
+          languages: string[];
+          logo_path: string | null;
+          photo_paths: string[];
+          pending_media: Record<string, unknown> | null;
+          stats_email_opt_out: boolean;
+          stats_email_opt_out_at: string | null;
+          source: "self_listed" | "added_with_permission";
+          permission_given_by: string | null;
+          permission_given_at: string | null;
+          permission_note: string | null;
+          added_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1404,6 +1425,20 @@ export type Database = {
           website?: string | null;
           description: string;
           accepts_sub_work?: boolean;
+          services?: string[];
+          hours?: Record<string, unknown> | null;
+          license_number?: string | null;
+          license_state?: string | null;
+          insured?: boolean | null;
+          emergency_service?: boolean | null;
+          year_founded?: number | null;
+          service_radius_miles?: number | null;
+          languages?: string[];
+          source?: "self_listed" | "added_with_permission";
+          permission_given_by?: string | null;
+          permission_given_at?: string | null;
+          permission_note?: string | null;
+          added_by?: string | null;
           contact_email: string;
           status?: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
           pending_changes?: Record<string, unknown> | null;
@@ -1439,7 +1474,55 @@ export type Database = {
           claimed_company_id: string | null;
           claimed_at: string | null;
           member_active: boolean;
+          services: string[];
+          hours: Record<string, unknown> | null;
+          license_number: string | null;
+          license_state: string | null;
+          insured: boolean | null;
+          emergency_service: boolean | null;
+          year_founded: number | null;
+          service_radius_miles: number | null;
+          languages: string[];
+          logo_path: string | null;
+          photo_paths: string[];
+          pending_media: Record<string, unknown> | null;
+          stats_email_opt_out: boolean;
+          stats_email_opt_out_at: string | null;
+          source: "self_listed" | "added_with_permission";
+          permission_given_by: string | null;
+          permission_given_at: string | null;
+          permission_note: string | null;
+          added_by: string | null;
         }>;
+        Relationships: [];
+      };
+      // Migration 214: listing owners' numbers, per listing per UTC day.
+      // Counts only. Service role only.
+      directory_listing_daily_stats: {
+        Row: {
+          listing_id: string;
+          day: string;
+          views: number;
+          calls: number;
+          website_taps: number;
+          directions_taps: number;
+        };
+        Insert: {
+          listing_id: string;
+          day: string;
+          views?: number;
+          calls?: number;
+          website_taps?: number;
+          directions_taps?: number;
+        };
+        Update: Partial<{ views: number; calls: number; website_taps: number; directions_taps: number }>;
+        Relationships: [];
+      };
+      // Migration 214: which months of numbers were emailed to which listing.
+      directory_stats_emails: {
+        Row: { listing_id: string; month: string; outcome: "claimed" | "sent" | "skipped" | "failed"; created_at: string };
+        Insert: { listing_id: string; month: string; outcome?: "claimed" | "sent" | "skipped" | "failed" };
+        Update: Partial<{ outcome: "claimed" | "sent" | "skipped" | "failed" }>;
         Relationships: [];
       };
       // affiliate_applications: migration 213 — applications to the affiliate
@@ -2044,6 +2127,16 @@ export type Database = {
       directory_published_paths: {
         Args: Record<string, never>;
         Returns: unknown;
+      };
+      // Migration 214: place-and-trade counts of published listings, and the
+      // counter behind listing owners' numbers. Service role only.
+      directory_facets: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      directory_record_listing_event: {
+        Args: { p_slug: string; p_event: string };
+        Returns: boolean;
       };
       // platform_web_analytics_engagement: migration 209 — service_role only.
       // Counts of deliberate visitor actions by event and label; one jsonb

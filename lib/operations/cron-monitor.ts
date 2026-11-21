@@ -35,6 +35,9 @@ import {
 
 export const CRON_MONITOR_SCHEDULES = {
   "billing-maintenance": "15 11 * * *",
+  // The directory's monthly numbers email: 15:00 UTC on the 2nd, so the
+  // whole of last month (UTC) is counted and it lands in US working hours.
+  "directory-stats": "0 15 2 * *",
   "marketing-ai": "30 12 * * *",
   "marketing-insights": "45 11 * * *",
   "marketing-publish": "0 18 * * *",

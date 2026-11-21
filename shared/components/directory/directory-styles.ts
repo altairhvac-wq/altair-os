@@ -28,3 +28,18 @@ export const dirBadge =
   "inline-flex items-center rounded-full border border-[#C2A05A]/40 bg-[#FBF6EA] px-2.5 py-0.5 text-xs font-medium text-[#5c4614]";
 
 export const dirEyebrow = "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]";
+
+/** The focus ring of the in-page tools (shared/components/resources/tools). */
+export const dirFocus =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/60 focus-visible:ring-offset-2";
+
+/** The brass action button of the in-page tools: the one strong action on a screen. */
+export const dirBrassButton =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#A4823A] px-5 text-sm font-semibold text-[#080907] shadow-[0_1px_0_rgba(255,255,255,0.25)_inset] transition-colors hover:bg-[#C2A05A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+
+/** A quiet button on the dark band. */
+export const dirDarkButton =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-5 text-sm font-semibold text-[#f3ebdd] transition-colors hover:border-white/30 hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0f0c]";
+
+/** The light panel: a section of a page. */
+export const dirPanel = "rounded-2xl border border-stone-200 bg-white shadow-[0_1px_2px_rgba(28,25,23,0.04)]";
