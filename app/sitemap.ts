@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
 import { listPublishedListingPaths } from "@/lib/directory/listings";
+import { listIndexableHubPaths } from "@/lib/directory/places";
 import { DIRECTORY_LIST_PATH, DIRECTORY_PATH, directoryListingPath } from "@/shared/types/directory";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
@@ -109,5 +110,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticEntries, ...pageEntries, ...listingEntries];
+  // State, city and city-and-trade pages, only once enough businesses are
+  // based there to make a real page (DIRECTORY_HUB_INDEX_MIN). The same
+  // rule marks thinner ones noindex, so the two never disagree.
+  const hubEntries: MetadataRoute.Sitemap = (await listIndexableHubPaths()).map((path) => ({
+    url: `${origin}${path}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticEntries, ...pageEntries, ...listingEntries, ...hubEntries];
 }

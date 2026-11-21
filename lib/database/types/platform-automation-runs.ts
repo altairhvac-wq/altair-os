@@ -34,6 +34,12 @@ export type PlatformAutomationRunTotals = {
   directoryLinkedListingsChecked?: number;
   /** Linked listings whose "Altair member" mark was turned on or off by that re-check. */
   directoryMemberBadgesChanged?: number;
+  /** The directory's monthly numbers email (migration 214). */
+  directoryStatsInstalled?: boolean;
+  directoryStatsMonth?: string;
+  directoryStatsSent?: number;
+  directoryStatsFailed?: number;
+  directoryStatsAlreadyDone?: number;
 };
 
 export type PlatformAutomationRunRow = {

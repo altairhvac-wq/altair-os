@@ -5,22 +5,40 @@ import {
   DIRECTORY_CONSENT_TEXT,
   DIRECTORY_PAGE_SIZE,
   DIRECTORY_RESERVED_SLUGS,
+  EMPTY_DIRECTORY_DETAILS,
+  permissionConsentText,
   buildListingSlug,
   changedListingFields,
   isDirectoryReportReason,
   isValidListingSlug,
+  parseHoursInput,
+  validateListingDetails,
   validateListingInput,
   type DirectoryFieldKey,
+  type DirectoryListingDetails,
   type DirectoryListingFields,
+  type DirectoryListingSource,
   type DirectoryListingStatus,
+  type DirectoryPermission,
   type DirectoryPublicListing,
   type DirectoryReportReason,
   type DirectorySearch,
 } from "@/shared/types/directory";
 import { normalizeNetworkTradeType } from "@/shared/types/network";
+import { isDirectory214Installed } from "@/lib/directory/schema";
+import {
+  cleanupReplacedMedia,
+  deleteAllListingMedia,
+  discardPendingMedia,
+  parseMediaSet,
+  publicImageUrl,
+  publishMediaSet,
+  type DirectoryMediaSet,
+} from "@/lib/directory/media";
 
 /**
- * Reads and writes for the public contractor directory (migration 210).
+ * Reads and writes for the public contractor directory (migrations 210, 211,
+ * 214).
  *
  * ============ TWO KINDS OF CALLER ============
  * PUBLIC READS (`searchPublicListings`, `getPublicListing`,
@@ -35,6 +53,12 @@ import { normalizeNetworkTradeType } from "@/shared/types/network";
  * This module does not check either. It is the data layer; the actions in
  * app/actions/directory.ts and app/actions/platform-directory.ts are the
  * boundary.
+ *
+ * ============ IMAGES ============
+ * `logo_path` / `photo_paths` name approved files in the public bucket only.
+ * A proposed set waits in `pending_media` and is copied into the public
+ * bucket by the same approval that publishes a listing or its changes
+ * (lib/directory/media.ts). Nothing a lister does makes an image public.
  *
  * Errors are logged by code only. A lister's email address, business name or
  * phone number is never written to a log.
@@ -53,6 +77,23 @@ type Row = {
   website: string | null;
   description: string;
   accepts_sub_work: boolean;
+  services: string[] | null;
+  hours: unknown;
+  license_number: string | null;
+  license_state: string | null;
+  insured: boolean | null;
+  emergency_service: boolean | null;
+  year_founded: number | null;
+  service_radius_miles: number | null;
+  languages: string[] | null;
+  logo_path: string | null;
+  photo_paths: string[] | null;
+  pending_media: unknown;
+  stats_email_opt_out: boolean | null;
+  source: DirectoryListingSource | null;
+  permission_given_by: string | null;
+  permission_given_at: string | null;
+  permission_note: string | null;
   contact_email: string;
   status: DirectoryListingStatus;
   pending_changes: Record<string, unknown> | null;
@@ -64,8 +105,21 @@ type Row = {
   updated_at: string;
 };
 
-const ROW_COLUMNS =
+/** The columns every version of the table has (migrations 210 and 211). */
+const BASE_COLUMNS =
   "id, slug, business_name, trade_type, city, state, postal_code, service_area, phone, website, description, accepts_sub_work, contact_email, status, pending_changes, email_confirmed_at, reviewed_at, review_note, published_at, created_at, updated_at";
+/** Added by migration 214. Read and written only once it is applied (lib/directory/schema.ts). */
+const COLUMNS_214 =
+  "services, hours, license_number, license_state, insured, emergency_service, year_founded, service_radius_miles, languages, logo_path, photo_paths, pending_media, stats_email_opt_out, source, permission_given_by, permission_given_at, permission_note";
+
+function rowColumns(v214: boolean): string {
+  return v214 ? `${BASE_COLUMNS}, ${COLUMNS_214}` : BASE_COLUMNS;
+}
+
+/** Clearing a listing's images: only columns that exist. */
+function mediaReset(v214: boolean) {
+  return v214 ? { pending_media: null, logo_path: null, photo_paths: [] as string[] } : {};
+}
 
 /** A stored listing as the lister and the owner see it. Includes the private email. */
 export type DirectoryListingRecord = {
@@ -76,6 +130,18 @@ export type DirectoryListingRecord = {
   /** A proposed edit to a published listing, already validated; null when there is none. */
   pendingFields: DirectoryListingFields | null;
   pendingChangedKeys: DirectoryFieldKey[];
+  /** Approved images (public bucket paths). */
+  media: DirectoryMediaSet;
+  /** A proposed image set waiting for review; null when there is none. */
+  pendingMedia: DirectoryMediaSet | null;
+  /** The business asked us to stop the monthly numbers email. */
+  statsEmailOptOut: boolean;
+  /** Migration 214 is applied: details, images, numbers and permission records exist. */
+  v214: boolean;
+  /** How the listing arrived (migration 214). Private. */
+  source: DirectoryListingSource;
+  /** Who gave permission and when, for a listing added with permission. Private. */
+  permission: { givenBy: string; givenAt: string; note: string | null } | null;
   contactEmail: string;
   reviewNote: string | null;
   emailConfirmedAt: string | null;
@@ -89,10 +155,40 @@ function logFailure(what: string, error: unknown): void {
   console.error(`[directory] ${what} failed:`, { code });
 }
 
-function rowFields(row: Pick<Row, "business_name" | "trade_type" | "city" | "state" | "postal_code" | "service_area" | "phone" | "website" | "description" | "accepts_sub_work">): DirectoryListingFields {
+const stringList = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+/**
+ * The optional details as stored, run back through the same rule that let
+ * them in, so the page shows only values the form could have produced.
+ */
+function storedDetails(row: Record<string, unknown>, trade: DirectoryListingFields["tradeType"], state: string): DirectoryListingDetails {
+  const hours = parseHoursInput(row.hours ?? null);
+  const checked = validateListingDetails(
+    {
+      services: stringList(row.services),
+      hours: hours === "invalid" ? null : hours,
+      licenseNumber: typeof row.license_number === "string" ? row.license_number : "",
+      licenseState: typeof row.license_state === "string" ? row.license_state : "",
+      insured: typeof row.insured === "boolean" ? row.insured : null,
+      emergencyService: typeof row.emergency_service === "boolean" ? row.emergency_service : null,
+      yearFounded: typeof row.year_founded === "number" ? row.year_founded : null,
+      serviceRadiusMiles: typeof row.service_radius_miles === "number" ? row.service_radius_miles : null,
+      languages: stringList(row.languages),
+    },
+    trade,
+    state,
+  );
+  // A value that no longer passes (a trade changed, a service retired) is
+  // dropped rather than shown; the rest stand.
+  return checked.details;
+}
+
+function rowFields(row: Row): DirectoryListingFields {
+  const tradeType = normalizeNetworkTradeType(row.trade_type);
   return {
     businessName: row.business_name,
-    tradeType: normalizeNetworkTradeType(row.trade_type),
+    tradeType,
     city: row.city,
     state: row.state,
     postalCode: row.postal_code,
@@ -101,11 +197,12 @@ function rowFields(row: Pick<Row, "business_name" | "trade_type" | "city" | "sta
     website: row.website,
     description: row.description,
     acceptsSubWork: row.accepts_sub_work,
+    ...storedDetails(row as unknown as Record<string, unknown>, tradeType, row.state),
   };
 }
 
-function fieldColumns(fields: DirectoryListingFields) {
-  return {
+function fieldColumns(fields: DirectoryListingFields, v214: boolean) {
+  const base = {
     business_name: fields.businessName,
     trade_type: fields.tradeType,
     city: fields.city,
@@ -117,9 +214,22 @@ function fieldColumns(fields: DirectoryListingFields) {
     description: fields.description,
     accepts_sub_work: fields.acceptsSubWork,
   };
+  if (!v214) return base;
+  return {
+    ...base,
+    services: fields.services,
+    hours: fields.hours,
+    license_number: fields.licenseNumber,
+    license_state: fields.licenseState,
+    insured: fields.insured,
+    emergency_service: fields.emergencyService,
+    year_founded: fields.yearFounded,
+    service_radius_miles: fields.serviceRadiusMiles,
+    languages: fields.languages,
+  };
 }
 
-function toRecord(row: Row): DirectoryListingRecord {
+function toRecord(row: Row, v214: boolean): DirectoryListingRecord {
   const fields = rowFields(row);
   // A stored pending change is validated again on the way out: it is shown to
   // the owner and may be published, so it gets the same check as a new form.
@@ -135,6 +245,15 @@ function toRecord(row: Row): DirectoryListingRecord {
     fields,
     pendingFields,
     pendingChangedKeys: pendingFields ? changedListingFields(fields, pendingFields) : [],
+    media: { logo: row.logo_path ? `public/${row.logo_path}` : null, photos: stringList(row.photo_paths).map((path) => `public/${path}`) },
+    pendingMedia: parseMediaSet(row.pending_media, row.id),
+    statsEmailOptOut: row.stats_email_opt_out === true,
+    v214,
+    source: row.source === "added_with_permission" ? "added_with_permission" : "self_listed",
+    permission:
+      row.source === "added_with_permission" && row.permission_given_by && row.permission_given_at
+        ? { givenBy: row.permission_given_by, givenAt: row.permission_given_at, note: row.permission_note }
+        : null,
     contactEmail: row.contact_email,
     reviewNote: row.review_note,
     emailConfirmedAt: row.email_confirmed_at,
@@ -160,18 +279,32 @@ type PublicRow = {
   accepts_sub_work?: unknown;
   published_at?: unknown;
   is_member?: unknown;
+  services?: unknown;
+  hours?: unknown;
+  license_number?: unknown;
+  license_state?: unknown;
+  insured?: unknown;
+  emergency_service?: unknown;
+  year_founded?: unknown;
+  service_radius_miles?: unknown;
+  languages?: unknown;
+  logo_path?: unknown;
+  photo_paths?: unknown;
+  awaiting_owner?: unknown;
 };
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
 
 function toPublicListing(row: PublicRow): DirectoryPublicListing | null {
   if (!isValidListingSlug(row.slug) || !text(row.business_name)) return null;
+  const tradeType = normalizeNetworkTradeType(text(row.trade_type));
+  const state = text(row.state);
   return {
     slug: row.slug,
     businessName: text(row.business_name),
-    tradeType: normalizeNetworkTradeType(text(row.trade_type)),
+    tradeType,
     city: text(row.city),
-    state: text(row.state),
+    state,
     postalCode: typeof row.postal_code === "string" ? row.postal_code : null,
     serviceArea: text(row.service_area),
     phone: text(row.phone),
@@ -181,6 +314,13 @@ function toPublicListing(row: PublicRow): DirectoryPublicListing | null {
     publishedAt: typeof row.published_at === "string" ? row.published_at : null,
     // Absent before migration 211 is applied, which reads as "not a member".
     isMember: row.is_member === true,
+    // Absent before migration 214 is applied, which reads as "not given".
+    details: row.services === undefined && row.hours === undefined ? { ...EMPTY_DIRECTORY_DETAILS } : storedDetails(row as Record<string, unknown>, tradeType, state),
+    logoUrl: typeof row.logo_path === "string" ? publicImageUrl(row.logo_path) : null,
+    photoUrls: stringList(row.photo_paths)
+      .map((path) => publicImageUrl(path))
+      .filter((url): url is string => url !== null),
+    awaitingOwnerConfirmation: row.awaiting_owner === true,
   };
 }
 
@@ -191,7 +331,7 @@ export type DirectorySearchResult = {
   available: boolean;
 };
 
-export async function searchPublicListings(search: DirectorySearch): Promise<DirectorySearchResult> {
+export async function searchPublicListings(search: DirectorySearch, pageSize: number = DIRECTORY_PAGE_SIZE): Promise<DirectorySearchResult> {
   try {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase.rpc("directory_search_listings", {
@@ -199,8 +339,8 @@ export async function searchPublicListings(search: DirectorySearch): Promise<Dir
       p_state: search.state,
       p_place: search.place,
       p_sub_only: search.subOnly,
-      p_limit: DIRECTORY_PAGE_SIZE,
-      p_offset: (search.page - 1) * DIRECTORY_PAGE_SIZE,
+      p_limit: pageSize,
+      p_offset: (search.page - 1) * pageSize,
     });
     if (error) throw error;
     const result = (data ?? {}) as { total?: unknown; rows?: unknown };
@@ -291,6 +431,7 @@ export type CreateListingOutcome =
  */
 export async function createListing(fields: DirectoryListingFields, contactEmail: string): Promise<CreateListingOutcome> {
   try {
+    const v214 = await isDirectory214Installed();
     const supabase = createServiceRoleClient();
 
     const existing = await supabase
@@ -307,7 +448,7 @@ export async function createListing(fields: DirectoryListingFields, contactEmail
       }
       const refreshed = await supabase
         .from("directory_listings")
-        .update({ ...fieldColumns(fields), consent_text: DIRECTORY_CONSENT_TEXT })
+        .update({ ...fieldColumns(fields, v214), consent_text: DIRECTORY_CONSENT_TEXT })
         .eq("id", existing.data.id)
         .eq("status", "pending_email");
       if (refreshed.error) throw refreshed.error;
@@ -321,7 +462,7 @@ export async function createListing(fields: DirectoryListingFields, contactEmail
       const inserted = await supabase
         .from("directory_listings")
         .insert({
-          ...fieldColumns(fields),
+          ...fieldColumns(fields, v214),
           slug: candidate,
           contact_email: contactEmail,
           consent_text: DIRECTORY_CONSENT_TEXT,
@@ -350,12 +491,82 @@ export async function createListing(fields: DirectoryListingFields, contactEmail
   }
 }
 
+export type CreateWithPermissionOutcome =
+  | { status: "created"; id: string; slug: string; published: boolean }
+  /** This business is already listed (or waiting) from this email address. */
+  | { status: "exists"; id: string; listingStatus: DirectoryListingStatus }
+  | { status: "unavailable" };
+
+/**
+ * A platform admin adds a business after its spoken permission (migration
+ * 214). The caller must already have checked the admin and validated the
+ * fields, the email and the permission.
+ *
+ * permission.publish "wait" (the default): stored as pending_email, the
+ * normal lifecycle; the business confirms, then it is reviewed and
+ * published. "now": published straight away, marked as awaiting the
+ * business's confirmation until it presses the emailed link.
+ */
+export async function createListingWithPermission(
+  fields: DirectoryListingFields,
+  contactEmail: string,
+  permission: DirectoryPermission,
+  adminId: string,
+): Promise<CreateWithPermissionOutcome> {
+  try {
+    // Needs migration 214 (the source and permission columns).
+    if (!(await isDirectory214Installed())) return { status: "unavailable" };
+    const supabase = createServiceRoleClient();
+    const existing = await supabase
+      .from("directory_listings")
+      .select("id, status")
+      .eq("contact_email", contactEmail)
+      .ilike("business_name", fields.businessName.replace(/[\\%_]/g, (char) => `\\${char}`))
+      .in("status", ["pending_email", "pending_review", "published"])
+      .maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data) return { status: "exists", id: existing.data.id, listingStatus: existing.data.status };
+
+    const now = new Date().toISOString();
+    const publishNow = permission.publish === "now";
+    const base = buildListingSlug(fields.businessName, fields.city, fields.state);
+    for (let attempt = 1; attempt <= 6; attempt += 1) {
+      const candidate = attempt === 1 ? base : `${base.slice(0, 90)}-${attempt}`;
+      if (DIRECTORY_RESERVED_SLUGS.includes(candidate)) continue;
+      const inserted = await supabase
+        .from("directory_listings")
+        .insert({
+          ...fieldColumns(fields, true),
+          slug: candidate,
+          contact_email: contactEmail,
+          consent_text: permissionConsentText(permission),
+          source: "added_with_permission",
+          permission_given_by: permission.givenBy,
+          permission_given_at: permission.givenAt,
+          permission_note: permission.note,
+          added_by: adminId,
+          ...(publishNow ? { status: "published" as const, published_at: now, reviewed_at: now, reviewed_by: adminId } : {}),
+        })
+        .select("id, slug")
+        .single();
+      if (!inserted.error) return { status: "created", id: inserted.data.id, slug: inserted.data.slug, published: publishNow };
+      if (inserted.error.code !== "23505") throw inserted.error;
+      if (/one_per_inbox/.test(inserted.error.message ?? "")) return { status: "unavailable" };
+    }
+    return { status: "unavailable" };
+  } catch (error) {
+    logFailure("create with permission", error);
+    return { status: "unavailable" };
+  }
+}
+
 export async function getListingRecord(id: string): Promise<DirectoryListingRecord | null> {
   try {
+    const v214 = await isDirectory214Installed();
     const supabase = createServiceRoleClient();
-    const { data, error } = await supabase.from("directory_listings").select(ROW_COLUMNS).eq("id", id).maybeSingle();
+    const { data, error } = await supabase.from("directory_listings").select(rowColumns(v214)).eq("id", id).maybeSingle();
     if (error) throw error;
-    return data ? toRecord(data as Row) : null;
+    return data ? toRecord(data as unknown as Row, v214) : null;
   } catch (error) {
     logFailure("record read", error);
     return null;
@@ -364,7 +575,8 @@ export async function getListingRecord(id: string): Promise<DirectoryListingReco
 
 export type ListingChangeOutcome = "done" | "not_found" | "not_allowed" | "unavailable";
 
-export type ConfirmEmailOutcome = "confirmed" | "already" | "not_found" | "not_allowed" | "unavailable";
+/** "owner_confirmed": an added-with-permission listing that was already live has now been confirmed by the business. */
+export type ConfirmEmailOutcome = "confirmed" | "owner_confirmed" | "already" | "not_found" | "not_allowed" | "unavailable";
 
 /**
  * pending_email -> pending_review. "confirmed" only the first time, so the
@@ -382,6 +594,24 @@ export async function confirmListingEmail(id: string): Promise<ConfirmEmailOutco
       .select("id");
     if (updated.error) throw updated.error;
     if (updated.data.length > 0) return "confirmed";
+    if (!(await isDirectory214Installed())) {
+      const current = await supabase.from("directory_listings").select("status").eq("id", id).maybeSingle();
+      if (current.error) throw current.error;
+      if (!current.data) return "not_found";
+      return current.data.status === "removed" ? "not_allowed" : "already";
+    }
+    // A listing added with permission and published straight away: the
+    // business confirming it simply records that; it stays live.
+    const owned = await supabase
+      .from("directory_listings")
+      .update({ email_confirmed_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("status", "published")
+      .eq("source", "added_with_permission")
+      .is("email_confirmed_at", null)
+      .select("id");
+    if (owned.error) throw owned.error;
+    if (owned.data.length > 0) return "owner_confirmed";
     const current = await supabase.from("directory_listings").select("status").eq("id", id).maybeSingle();
     if (current.error) throw current.error;
     if (!current.data) return "not_found";
@@ -410,11 +640,12 @@ export type SaveEditOutcome =
  */
 export async function saveListingEdit(id: string, fields: DirectoryListingFields): Promise<SaveEditOutcome> {
   try {
+    const v214 = await isDirectory214Installed();
     const supabase = createServiceRoleClient();
-    const current = await supabase.from("directory_listings").select(ROW_COLUMNS).eq("id", id).maybeSingle();
+    const current = await supabase.from("directory_listings").select(rowColumns(v214)).eq("id", id).maybeSingle();
     if (current.error) throw current.error;
     if (!current.data) return { status: "not_found" };
-    const row = current.data as Row;
+    const row = current.data as unknown as Row;
     if (row.status === "removed") return { status: "not_allowed" };
 
     const live = rowFields(row);
@@ -436,7 +667,7 @@ export async function saveListingEdit(id: string, fields: DirectoryListingFields
     const updated = await supabase
       .from("directory_listings")
       .update({
-        ...fieldColumns(fields),
+        ...fieldColumns(fields, v214),
         pending_changes: null,
         // A declined listing that has been corrected is looked at again.
         ...(row.status === "rejected" ? { status: "pending_review" as const, review_note: null } : {}),
@@ -451,18 +682,77 @@ export async function saveListingEdit(id: string, fields: DirectoryListingFields
   }
 }
 
-/** Takes a listing down. The lister's own choice, so it is immediate. */
-export async function removeListing(id: string): Promise<ListingChangeOutcome> {
+export type SaveMediaOutcome = "saved" | "no_change" | "not_found" | "not_allowed" | "unavailable";
+
+/**
+ * Stores a lister's proposed image set. It always waits for a person, even
+ * on a listing that is not public yet, because an image is only ever made
+ * public by an approval (the copy into the public bucket happens there).
+ * `next` must already be checked (lib/directory/media.ts).
+ */
+export async function saveListingMedia(id: string, next: DirectoryMediaSet): Promise<SaveMediaOutcome> {
   try {
+    if (!(await isDirectory214Installed())) return "unavailable";
+    const supabase = createServiceRoleClient();
+    const current = await supabase.from("directory_listings").select("id, status, logo_path, photo_paths, pending_media").eq("id", id).maybeSingle();
+    if (current.error) throw current.error;
+    if (!current.data) return "not_found";
+    if (current.data.status === "removed") return "not_allowed";
+    const approved: DirectoryMediaSet = {
+      logo: current.data.logo_path ? `public/${current.data.logo_path}` : null,
+      photos: stringList(current.data.photo_paths).map((path) => `public/${path}`),
+    };
+    const previous = parseMediaSet(current.data.pending_media, id);
+    const same = JSON.stringify(next) === JSON.stringify(approved);
+    const updated = await supabase
+      .from("directory_listings")
+      .update({ pending_media: same ? null : next })
+      .eq("id", id)
+      .neq("status", "removed");
+    if (updated.error) throw updated.error;
+    // Uploads that the new proposal no longer uses are deleted straight away.
+    if (previous) await discardPendingMedia(previous, same ? null : next);
+    return same ? "no_change" : "saved";
+  } catch (error) {
+    logFailure("media save", error);
+    return "unavailable";
+  }
+}
+
+export async function setStatsEmailOptOut(id: string, optOut: boolean): Promise<ListingChangeOutcome> {
+  try {
+    if (!(await isDirectory214Installed())) return "unavailable";
     const supabase = createServiceRoleClient();
     const updated = await supabase
       .from("directory_listings")
-      .update({ status: "removed", removed_at: new Date().toISOString(), pending_changes: null })
+      .update({ stats_email_opt_out: optOut, stats_email_opt_out_at: optOut ? new Date().toISOString() : null })
+      .eq("id", id)
+      .select("id");
+    if (updated.error) throw updated.error;
+    return updated.data.length > 0 ? "done" : "not_found";
+  } catch (error) {
+    logFailure("stats email preference", error);
+    return "unavailable";
+  }
+}
+
+/** Takes a listing down. The lister's own choice, so it is immediate. */
+export async function removeListing(id: string): Promise<ListingChangeOutcome> {
+  try {
+    const v214 = await isDirectory214Installed();
+    const supabase = createServiceRoleClient();
+    const updated = await supabase
+      .from("directory_listings")
+      .update({ status: "removed", removed_at: new Date().toISOString(), pending_changes: null, ...mediaReset(v214) })
       .eq("id", id)
       .neq("status", "removed")
       .select("id");
     if (updated.error) throw updated.error;
-    if (updated.data.length > 0) return "done";
+    if (updated.data.length > 0) {
+      // A removed listing's pictures do not stay reachable by address.
+      if (v214) await deleteAllListingMedia(id);
+      return "done";
+    }
     const current = await supabase.from("directory_listings").select("id").eq("id", id).maybeSingle();
     return current.data ? "done" : "not_found";
   } catch (error) {
@@ -526,9 +816,10 @@ const EMPTY_COUNTS: Record<DirectoryListingStatus, number> = {
 /** Everything the review screen shows: every listing that still exists, with its open reports. */
 export async function listListingsForReview(): Promise<DirectoryReviewData> {
   try {
+    const v214 = await isDirectory214Installed();
     const supabase = createServiceRoleClient();
     const [listings, reports] = await Promise.all([
-      supabase.from("directory_listings").select(ROW_COLUMNS).order("created_at", { ascending: false }).limit(500),
+      supabase.from("directory_listings").select(rowColumns(v214)).order("created_at", { ascending: false }).limit(500),
       supabase
         .from("directory_listing_reports")
         .select("id, listing_id, reason, note, created_at")
@@ -546,9 +837,9 @@ export async function listListingsForReview(): Promise<DirectoryReviewData> {
       list.push({ id: report.id, reason: report.reason, note: report.note, createdAt: report.created_at });
       byListing.set(report.listing_id, list);
     }
-    const items = (listings.data as Row[]).map((row) => {
+    const items = (listings.data as unknown as Row[]).map((row) => {
       counts[row.status] += 1;
-      return { ...toRecord(row), openReports: byListing.get(row.id) ?? [] };
+      return { ...toRecord(row, v214), openReports: byListing.get(row.id) ?? [] };
     });
     return { items, counts };
   } catch (error) {
@@ -566,8 +857,31 @@ async function reload(id: string): Promise<ReviewOutcome> {
   return record ? { status: "done", record } : { status: "unavailable" };
 }
 
-/** pending_review (or a declined listing) -> published. */
-export async function approveListing(id: string, reviewerId: string): Promise<ReviewOutcome> {
+/**
+ * Makes a waiting image set public: copies its pending files into the public
+ * bucket, points the listing at them and clears the proposal. Only called
+ * from an approval. Returns false when the copy failed, in which case the
+ * listing keeps its old images and the proposal stays for another try.
+ */
+async function publishPendingMedia(record: DirectoryListingRecord): Promise<boolean> {
+  if (!record.pendingMedia) return true;
+  const published = await publishMediaSet(record.id, record.pendingMedia);
+  if (!published) return false;
+  const supabase = createServiceRoleClient();
+  const updated = await supabase
+    .from("directory_listings")
+    .update({ logo_path: published.logoPath, photo_paths: published.photoPaths, pending_media: null })
+    .eq("id", record.id);
+  if (updated.error) {
+    logFailure("media publish", updated.error);
+    return false;
+  }
+  await cleanupReplacedMedia(record.media, record.pendingMedia, published);
+  return true;
+}
+
+/** pending_review (or a declined listing) -> published, with any waiting images. */
+export async function approveListing(id: string, reviewerId: string): Promise<ReviewOutcome & { mediaFailed?: boolean }> {
   try {
     const supabase = createServiceRoleClient();
     const now = new Date().toISOString();
@@ -583,7 +897,10 @@ export async function approveListing(id: string, reviewerId: string): Promise<Re
       const current = await supabase.from("directory_listings").select("id").eq("id", id).maybeSingle();
       return { status: current.data ? "not_allowed" : "not_found" };
     }
-    return reload(id);
+    const record = await getListingRecord(id);
+    const mediaOk = record ? await publishPendingMedia(record) : true;
+    const outcome = await reload(id);
+    return mediaOk ? outcome : { ...outcome, mediaFailed: true };
   } catch (error) {
     logFailure("approve", error);
     return { status: "unavailable" };
@@ -612,45 +929,58 @@ export async function rejectListing(id: string, reviewerId: string, note: string
   }
 }
 
-/** Publishes a waiting edit: the pending fields become the live ones. */
-export async function approveListingChanges(id: string, reviewerId: string): Promise<ReviewOutcome> {
+/** Publishes a waiting edit and/or a waiting image set: they become the live ones. */
+export async function approveListingChanges(id: string, reviewerId: string): Promise<ReviewOutcome & { mediaFailed?: boolean }> {
   try {
     const record = await getListingRecord(id);
     if (!record) return { status: "not_found" };
-    if (record.status !== "published" || !record.pendingFields) return { status: "not_allowed" };
+    if (record.status !== "published" || (!record.pendingFields && !record.pendingMedia)) return { status: "not_allowed" };
     const supabase = createServiceRoleClient();
-    const updated = await supabase
-      .from("directory_listings")
-      .update({
-        ...fieldColumns(record.pendingFields),
-        pending_changes: null,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: reviewerId,
-      })
-      .eq("id", id)
-      .eq("status", "published")
-      .select("id");
-    if (updated.error) throw updated.error;
-    if (updated.data.length === 0) return { status: "not_allowed" };
-    return reload(id);
+    if (record.pendingFields) {
+      const updated = await supabase
+        .from("directory_listings")
+        .update({
+          ...fieldColumns(record.pendingFields, record.v214),
+          pending_changes: null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewerId,
+        })
+        .eq("id", id)
+        .eq("status", "published")
+        .select("id");
+      if (updated.error) throw updated.error;
+      if (updated.data.length === 0) return { status: "not_allowed" };
+    } else {
+      const touched = await supabase
+        .from("directory_listings")
+        .update({ reviewed_at: new Date().toISOString(), reviewed_by: reviewerId })
+        .eq("id", id)
+        .eq("status", "published");
+      if (touched.error) throw touched.error;
+    }
+    const mediaOk = await publishPendingMedia(record);
+    const outcome = await reload(id);
+    return mediaOk ? outcome : { ...outcome, mediaFailed: true };
   } catch (error) {
     logFailure("approve changes", error);
     return { status: "unavailable" };
   }
 }
 
-/** Discards a waiting edit. The live listing is untouched. */
+/** Discards a waiting edit and any waiting images. The live listing is untouched. */
 export async function discardListingChanges(id: string, reviewerId: string): Promise<ReviewOutcome> {
   try {
+    const before = await getListingRecord(id);
     const supabase = createServiceRoleClient();
     const updated = await supabase
       .from("directory_listings")
-      .update({ pending_changes: null, reviewed_at: new Date().toISOString(), reviewed_by: reviewerId })
+      .update({ pending_changes: null, ...(before?.v214 ? { pending_media: null } : {}), reviewed_at: new Date().toISOString(), reviewed_by: reviewerId })
       .eq("id", id)
       .eq("status", "published")
       .select("id");
     if (updated.error) throw updated.error;
     if (updated.data.length === 0) return { status: "not_allowed" };
+    if (before?.pendingMedia) await discardPendingMedia(before.pendingMedia, null);
     return reload(id);
   } catch (error) {
     logFailure("discard changes", error);
@@ -661,16 +991,26 @@ export async function discardListingChanges(id: string, reviewerId: string): Pro
 /** The owner takes a listing down. */
 export async function removeListingAsOwner(id: string, reviewerId: string, note: string | null): Promise<ReviewOutcome> {
   try {
+    const v214 = await isDirectory214Installed();
     const supabase = createServiceRoleClient();
     const now = new Date().toISOString();
     const updated = await supabase
       .from("directory_listings")
-      .update({ status: "removed", removed_at: now, reviewed_at: now, reviewed_by: reviewerId, review_note: note, pending_changes: null })
+      .update({
+        status: "removed",
+        removed_at: now,
+        reviewed_at: now,
+        reviewed_by: reviewerId,
+        review_note: note,
+        pending_changes: null,
+        ...mediaReset(v214),
+      })
       .eq("id", id)
       .neq("status", "removed")
       .select("id");
     if (updated.error) throw updated.error;
     if (updated.data.length === 0) return { status: "not_found" };
+    if (v214) await deleteAllListingMedia(id);
     return reload(id);
   } catch (error) {
     logFailure("owner remove", error);

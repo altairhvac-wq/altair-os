@@ -6,7 +6,7 @@ import {
   sendConfirmEmail,
   sendManageLinkEmail,
 } from "@/lib/directory/emails";
-import { manageLinkToken, verifyManageLink } from "@/lib/directory/links";
+import { manageLinkToken, verifyManageLink, verifyStatsStopLink } from "@/lib/directory/links";
 import {
   confirmListingEmail,
   createListing,
@@ -16,7 +16,11 @@ import {
   getPublicListing,
   removeListing,
   saveListingEdit,
+  saveListingMedia,
+  setStatsEmailOptOut,
 } from "@/lib/directory/listings";
+import { parseMediaSet } from "@/lib/directory/media";
+import { isDirectory214Installed } from "@/lib/directory/schema";
 import {
   enforcePublicRateLimit,
   rateLimitMessage,
@@ -25,6 +29,7 @@ import {
 import {
   DIRECTORY_LIMITS,
   DIRECTORY_MANAGE_PATH,
+  DIRECTORY_STATS_EMAIL_PATH,
   isDirectoryReportReason,
   isValidListingSlug,
   normalizeDirectoryEmail,
@@ -78,13 +83,32 @@ const FIELD_NAMES = [
   "description",
   "acceptsSubWork",
   "contactEmail",
+  // Optional details (migration 214).
+  "hours",
+  "licenseNumber",
+  "licenseState",
+  "insured",
+  "emergencyService",
+  "yearFounded",
+  "serviceRadiusMiles",
 ] as const;
+
+/** Fields sent as several ticked boxes; read as one comma-separated value. */
+const LIST_FIELD_NAMES = ["services", "languages"] as const;
 
 function readValues(formData: FormData): Record<string, string> {
   const values: Record<string, string> = {};
   for (const name of FIELD_NAMES) {
     const value = formData.get(name);
     if (typeof value === "string") values[name] = value.slice(0, 600);
+  }
+  for (const name of LIST_FIELD_NAMES) {
+    const items = formData
+      .getAll(name)
+      .filter((item): item is string => typeof item === "string")
+      .slice(0, 40)
+      .map((item) => item.slice(0, 48).replace(/,/g, ""));
+    values[name] = items.join(",");
   }
   return values;
 }
@@ -101,11 +125,12 @@ export async function submitListingAction(_previous: DirectoryFormState, formDat
   const values = readValues(formData);
   const sent: DirectoryFormState = {
     status: "done",
-    message: "Check your email. We sent a link to confirm your listing; it is not public until you press it and we have approved it.",
+    message: "We sent you a link to confirm your listing. It is not public until you press it and a person has approved it.",
   };
   if (isTrapped(formData)) return sent;
 
-  const checked = validateListingInput(values);
+  // Before migration 214 runs, the table still requires a description.
+  const checked = validateListingInput(values, { requireDescription: !(await isDirectory214Installed()) });
   const errors: DirectoryFieldErrors = checked.ok ? {} : { ...checked.errors };
   const contactEmail = normalizeDirectoryEmail(values.contactEmail);
   if (!contactEmail) errors.contactEmail = "Enter your email address. It is not shown on the listing.";
@@ -177,7 +202,7 @@ export async function confirmListingAction(formData: FormData): Promise<void> {
     }
   }
   const notice =
-    outcome === "confirmed" || outcome === "already" ? "confirmed" : outcome === "unavailable" ? "busy" : "gone";
+    outcome === "confirmed" || outcome === "already" || outcome === "owner_confirmed" ? "confirmed" : outcome === "unavailable" ? "busy" : "gone";
   redirect(manageUrl(id, notice));
 }
 
@@ -187,7 +212,7 @@ export async function saveListingEditAction(_previous: DirectoryFormState, formD
   const id = await readManageLink(formData);
   if (!id) return { status: "error", message: "This link is not valid any more. Open the link from your email again.", values };
 
-  const checked = validateListingInput(values);
+  const checked = validateListingInput(values, { requireDescription: !(await isDirectory214Installed()) });
   if (!checked.ok) {
     return { status: "error", message: "Some details need another look. They are marked below.", errors: checked.errors, values };
   }
@@ -216,6 +241,80 @@ export async function saveListingEditAction(_previous: DirectoryFormState, formD
     default:
       return { status: "error", message: UNAVAILABLE, values };
   }
+}
+
+export type DirectoryMediaState = { status: "idle" | "error" | "done"; message?: string };
+
+/**
+ * Saves the lister's proposed logo and photos (the keys the upload route
+ * returned, in the order they chose). The set waits for a person; nothing
+ * becomes public here. Checked: the signed link, and that every key is one
+ * of this listing's own files (lib/directory/media.ts).
+ */
+export async function saveListingMediaAction(input: { id: string; t: string; logo: string | null; photos: string[] }): Promise<DirectoryMediaState> {
+  const formData = new FormData();
+  formData.set("id", typeof input?.id === "string" ? input.id : "");
+  formData.set("t", typeof input?.t === "string" ? input.t : "");
+  const id = await readManageLink(formData);
+  if (!id) return { status: "error", message: "This link is not valid any more. Open the link from your email again." };
+  const set = parseMediaSet({ logo: input.logo ?? null, photos: Array.isArray(input.photos) ? input.photos : [] }, id);
+  if (!set) return { status: "error", message: "Those images could not be saved. Reload the page and try again." };
+
+  const saved = await saveListingMedia(id, set);
+  switch (saved) {
+    case "saved": {
+      const record = await getListingRecord(id);
+      if (record?.status === "published") {
+        await notifyOwnerOfReview({
+          businessName: record.fields.businessName,
+          tradeType: record.fields.tradeType,
+          place: `${record.fields.city}, ${record.fields.state}`,
+          kind: "edit",
+        });
+      }
+      return {
+        status: "done",
+        message:
+          record?.status === "published"
+            ? "Saved. Your new images show once a person has approved them, usually within one business day."
+            : "Saved. Your images are checked along with your listing.",
+      };
+    }
+    case "no_change":
+      return { status: "done", message: "Nothing was changed." };
+    case "not_allowed":
+      return { status: "error", message: "This listing has been removed, so it cannot take images." };
+    case "not_found":
+      return { status: "error", message: "We could not find this listing." };
+    default:
+      return { status: "error", message: UNAVAILABLE };
+  }
+}
+
+/** "Stop the monthly numbers email" / "send it again", on the manage page. */
+export async function setStatsEmailAction(formData: FormData): Promise<void> {
+  const id = await readManageLink(formData);
+  if (!id) redirect(`${DIRECTORY_MANAGE_PATH}?notice=invalid`);
+  const optOut = formData.get("optOut") === "1";
+  const outcome = await setStatsEmailOptOut(id, optOut);
+  redirect(manageUrl(id, outcome === "done" ? (optOut ? "stats-off" : "stats-on") : "busy"));
+}
+
+/**
+ * The stop link in the monthly numbers email. It carries its own signature
+ * (a different purpose from the manage link), so forwarding the email does
+ * not hand over the listing. Pressing the button on the page it opens is the
+ * change; opening the link alone changes nothing, so a mail scanner that
+ * follows links cannot unsubscribe anyone.
+ */
+export async function stopStatsEmailAction(formData: FormData): Promise<void> {
+  const id = formData.get("id");
+  const token = formData.get("s");
+  if (!verifyStatsStopLink(id, token)) redirect(`${DIRECTORY_STATS_EMAIL_PATH}?notice=invalid`);
+  const limit = await enforcePublicRateLimit("public.token_view", { ip: await resolveRequestAddress() });
+  if (!limit.allowed) redirect(`${DIRECTORY_STATS_EMAIL_PATH}?id=${id}&s=${token}&notice=busy`);
+  const outcome = await setStatsEmailOptOut(id, true);
+  redirect(`${DIRECTORY_STATS_EMAIL_PATH}?id=${id}&s=${token}&notice=${outcome === "done" ? "stopped" : "busy"}`);
 }
 
 /** The "Remove my listing" button. Immediate: it is the lister's own listing. */

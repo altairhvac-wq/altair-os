@@ -40,6 +40,12 @@ const TEMPLATE_DOWNLOAD = /^\/resources\/templates\/([a-z0-9][a-z0-9-]{0,63})$/;
 function EngagementTracker() {
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
+      // A step we chose to count, named in our own markup (`data-track`), on
+      // any link or button: the directory's search chips, a listing's call
+      // button, the form's steps. Recorded as a press with that name.
+      const tracked = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-track]") : null;
+      if (tracked?.dataset.track) trackEngagement("cta_click", tracked.dataset.track, { repeat: true });
+
       const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
       if (!(target instanceof HTMLAnchorElement)) return;
       let url: URL;
@@ -64,11 +70,21 @@ function EngagementTracker() {
       trackEngagement("video_play", video.dataset.video ?? "commercial");
     };
 
+    // A form we chose to count (`data-track-submit`) was sent, by button or
+    // by Enter. Only the form's name is recorded, never what was typed.
+    const onSubmit = (event: SubmitEvent) => {
+      const form = event.target instanceof HTMLFormElement ? event.target : null;
+      const label = form?.dataset.trackSubmit;
+      if (label) trackEngagement("cta_click", label, { repeat: true });
+    };
+
     document.addEventListener("click", onClick);
+    document.addEventListener("submit", onSubmit, true);
     // Media events do not bubble; capture is the only way to hear them here.
     document.addEventListener("play", onPlay, true);
     return () => {
       document.removeEventListener("click", onClick);
+      document.removeEventListener("submit", onSubmit, true);
       document.removeEventListener("play", onPlay, true);
     };
   }, []);

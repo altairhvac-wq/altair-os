@@ -212,6 +212,11 @@ const PLATFORM_ONLY_TABLES = new Set([
   // no account and no workspace, and every column is private: service role
   // only, read by the Platform review page after a platform admin check.
   "affiliate_applications",
+  // Migration 214: directory listing owners' numbers (counts per listing per
+  // day, no visitor data) and which months were emailed. They hang off
+  // directory_listings, which has no workspace: service role only.
+  "directory_listing_daily_stats",
+  "directory_stats_emails",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");
@@ -442,6 +447,16 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "211_directory_listing_claims.sql",
     new Set(["directory_search_listings", "directory_public_listing"]),
+  ],
+  // 214 replaces the same two with versions that add the optional details,
+  // approved image paths and an awaiting-owner yes/no; adds directory_facets
+  // (counts of published listings by state, city and trade; no names or
+  // ids) and directory_record_listing_event (adds one to a published
+  // listing's daily count; counts only). All security invoker, service_role
+  // only; scripts/verify-directory.mjs holds each to its rules.
+  [
+    "214_directory_rich_listings_and_stats.sql",
+    new Set(["directory_search_listings", "directory_public_listing", "directory_facets", "directory_record_listing_event"]),
   ],
 ]);
 
