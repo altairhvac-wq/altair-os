@@ -32,6 +32,7 @@
     "typecheck:readonly": "node scripts/typecheck.mjs --readonly",
     "verify:readonly": "node scripts/verify-all.mjs --readonly",
     "verify:all": "node scripts/verify-all.mjs",
+    "verify:pricing-calculator": "node --experimental-strip-types --import ./scripts/lib/ts-alias-loader-register.mjs scripts/verify-pricing-calculator.mjs",
     "verify:media": "node scripts/verify-marketing-media.mjs",
     "verify:reel": "node scripts/verify-marketing-reel.mjs",
     "verify:reel-transport": "node scripts/verify-marketing-reel-transport.mjs",

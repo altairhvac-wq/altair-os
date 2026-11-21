@@ -53,6 +53,8 @@
 /* The sign-in error screen only; the rest of support/ is admin-only. */
 @source "../shared/components/support/RouteErrorScreen.tsx";
 @source "../shared/components/ui/ModalPortal.tsx";
+/* The estimate approval's signature pad, reused by the estimating demo. */
+@source "../shared/components/billing/SignaturePad.tsx";
 @source "../shared/design-system/feedback";
 
 /* Helpers and types the public pages import (some carry class strings). */

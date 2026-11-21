@@ -129,6 +129,13 @@ steps.push(
   { name: "resource-center", script: "scripts/verify-resource-center.mjs" },
   // The public contractor directory: listing rules, migration 210, wiring.
   { name: "public-directory", script: "scripts/verify-directory.mjs" },
+  // The pricing plan finder and the software pages' metadata (batch 3).
+  {
+    name: "pricing-calculator",
+    script: "scripts/verify-pricing-calculator.mjs",
+    // Runs the shipped calculator against the plan catalog.
+    typescript: true,
+  },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
   { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
   {

@@ -1,36 +1,31 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { MarketingLandingPage } from "@/shared/components/marketing/MarketingLandingPage";
+import { EstimateDemo } from "@/shared/components/marketing/demos/EstimateDemo";
+import { SoftwareLandingPage } from "@/shared/components/marketing/software/SoftwareLandingPage";
+import { softwarePageMetadata } from "@/shared/components/marketing/software/software-page-metadata";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
-import { findLandingPage } from "@/shared/lib/site/landing-pages";
-import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
+import { SOFTWARE_PAGE_CONTENT } from "@/shared/lib/site/software-pages";
 import {
-  buildFaqStructuredData,
+  buildFaqPageStructuredData,
   buildSoftwareApplicationStructuredData,
 } from "@/shared/lib/site/structured-data";
 
-const PAGE = findLandingPage("/hvac-estimating-software");
+const CONTENT = SOFTWARE_PAGE_CONTENT["/hvac-estimating-software"];
 
-export const metadata: Metadata = PAGE
-  ? {
-      title: PAGE.title,
-      description: PAGE.description,
-      ...buildPublicSocialMetadata({
-        path: PAGE.path,
-        title: `${PAGE.title} · Altair Operating System`,
-        description: PAGE.description,
-      }),
-    }
-  : {};
+export const metadata: Metadata = softwarePageMetadata(CONTENT.path);
 
-/** Search landing page; the copy lives in shared/lib/site/landing-pages.ts. */
-export default function LandingPage() {
-  if (!PAGE) notFound();
+/**
+ * HVAC estimating software. The demo prices a repair with the Labor Cost
+ * Workspace's flat-rate builder and runs the product's own approval
+ * (printed name, drawn signature, authorization); the FAQPage JSON-LD is
+ * built from the questions the page renders.
+ */
+export default function HvacEstimatingSoftwarePage() {
   return (
     <>
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
-      <JsonLdScript data={buildFaqStructuredData()} />
-      <MarketingLandingPage page={PAGE} />
+      <JsonLdScript data={buildFaqPageStructuredData(CONTENT.faq)} />
+      <SoftwareLandingPage content={CONTENT} demo={<EstimateDemo />} nextSteps={NEXT_STEPS.estimatingSoftware} />
     </>
   );
 }
