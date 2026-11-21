@@ -362,8 +362,12 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
   }
-  // Since 2026-11-20 the hub is the menu's "Free tools" link and the footer's "All Free Tools".
-  check("public nav links the hub as Free tools", /href: "\/resources", label: "Free tools"/.test(read(FILES.nav)));
+  // Since 2026-11-21 the top bar's "Free tools" menu (shared/lib/site/site-menu.ts) ends with "All free tools",
+  // and the footer keeps "All Free Tools".
+  const menu = read("shared/lib/site/site-menu.ts");
+  check("public menu has a Free tools group", /id: "tools",\s*label: "Free tools"/.test(menu));
+  check("public menu links the hub as All free tools", /href: "\/resources", label: "All free tools"/.test(menu));
+  check("top bar renders the site menu", /SITE_MENU/.test(read(FILES.nav)));
   check("footer links the hub", /href: "\/resources", label: "All Free Tools"/.test(read(FILES.footer)));
 
   const route = read(FILES.route);
