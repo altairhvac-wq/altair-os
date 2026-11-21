@@ -6,6 +6,7 @@ import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { NextStep } from "@/shared/components/site/NextStep";
+import { BAND, GOLD_BUTTON, GOLD_SECONDARY_BUTTON, TONE } from "@/shared/lib/site/bands";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
@@ -40,6 +41,10 @@ const card = "rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,
 const heading = "mt-3 text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem] sm:leading-[1.2]";
 const body = "text-sm leading-relaxed text-[#c9bfae] sm:text-base";
 const textLink = `font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`;
+// Light bands (2026-11-21): the same page in alternating dark and warm-cream sections (shared/lib/site/bands.ts).
+const lightEyebrow = `text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`;
+const lightHeading = `mt-3 text-[1.5rem] font-semibold tracking-tight sm:text-[1.9rem] sm:leading-[1.2] ${TONE.light.heading}`;
+const lightBody = `text-sm leading-relaxed sm:text-base ${TONE.light.body}`;
 
 /** AboutPage around the same Organization the homepage describes. */
 function buildAboutPageStructuredData(): Record<string, unknown> {
@@ -80,8 +85,9 @@ export default function AboutPage() {
     <div className="mc-homepage relative flex min-h-dvh flex-col overflow-x-clip bg-[#080907] text-[#f3ebdd]">
       <JsonLdScript data={buildAboutPageStructuredData()} />
       <HomepageNav />
-      <main className="relative flex-1 px-5 pb-20 pt-28 sm:px-8 sm:pt-36">
+      <main className="relative flex-1">
         {/* ---------- hero ---------- */}
+        <section className={`${BAND.hero} px-5 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
         <div className="mx-auto max-w-5xl">
           <div className="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_260px] md:gap-14">
             <div className="min-w-0">
@@ -166,10 +172,12 @@ export default function AboutPage() {
             </figure>
           </div>
         </div>
+        </section>
 
         {/* ---------- why, and how decisions get made ---------- */}
-        <div className="mx-auto mt-16 grid max-w-5xl gap-4 md:grid-cols-2">
-          <section aria-labelledby="about-why-heading" className={`px-6 py-7 sm:px-8 sm:py-8 ${card}`}>
+        <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
+        <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
+          <section aria-labelledby="about-why-heading" className={`px-6 py-7 sm:px-8 sm:py-8 ${TONE.light.cardLit}`}>
             <p className={eyebrow}>Why it exists</p>
             <h2 id="about-why-heading" className="sr-only">
               Why it exists
@@ -179,15 +187,15 @@ export default function AboutPage() {
             </blockquote>
             <p className="mt-4 text-xs text-[#8e826f]">From the company&apos;s mission, as written.</p>
           </section>
-          <section aria-labelledby="about-decide-heading" className={`px-6 py-7 sm:px-8 sm:py-8 ${card}`}>
-            <p className={eyebrow}>How we decide</p>
-            <h2 id="about-decide-heading" className="mt-3 text-lg font-semibold text-[#fff9ea]">
+          <section aria-labelledby="about-decide-heading" className={`px-6 py-7 sm:px-8 sm:py-8 ${TONE.light.card}`}>
+            <p className={lightEyebrow}>How we decide</p>
+            <h2 id="about-decide-heading" className="mt-3 text-lg font-semibold text-[#14120e]">
               Every decision should answer yes to five questions
             </h2>
             <ol className="mt-4 space-y-2.5">
               {DECISION_QUESTIONS.map((question, index) => (
-                <li key={question} className="flex gap-3 text-sm leading-relaxed text-[#c9bfae]">
-                  <span className="font-mono text-xs font-semibold leading-6 text-[#c2a05a]">
+                <li key={question} className="flex gap-3 text-sm leading-relaxed text-stone-600">
+                  <span className="font-mono text-xs font-semibold leading-6 text-[#77591B]">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span>{question}</span>
@@ -196,9 +204,11 @@ export default function AboutPage() {
             </ol>
           </section>
         </div>
+        </div>
 
         {/* ---------- a small company ---------- */}
-        <div className="mx-auto mt-16 max-w-5xl">
+        <div className={`${BAND.olive} px-5 py-16 sm:px-8 sm:py-20`}>
+        <div className="mx-auto max-w-5xl">
           <section aria-labelledby="about-small-heading" className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:gap-12">
             <div>
               <p className={eyebrow}>Who you deal with</p>
@@ -219,34 +229,39 @@ export default function AboutPage() {
             </div>
           </section>
         </div>
+        </div>
 
         {/* ---------- timeline ---------- */}
-        <div className="mx-auto mt-16 max-w-5xl">
+        <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
+        <div className="mx-auto max-w-5xl">
           <section aria-labelledby="about-timeline-heading">
-            <p className={eyebrow}>What shipped, and when</p>
-            <h2 id="about-timeline-heading" className={heading}>
+            <p className={lightEyebrow}>What shipped, and when</p>
+            <h2 id="about-timeline-heading" className={lightHeading}>
               The work so far
             </h2>
-            <p className={`mt-3 max-w-2xl ${body}`}>
+            <p className={`mt-3 max-w-2xl ${lightBody}`}>
               Each date is the month the work was released, taken from the product&apos;s own change history.
             </p>
-            <ol className="relative mt-8 space-y-4 border-l border-[rgba(194,160,90,0.3)] pl-6 sm:pl-8">
+            <ol className="relative mt-8 space-y-4 border-l border-[#d9c7a0] pl-6 sm:pl-8">
               {ABOUT_TIMELINE.map((entry) => (
                 <li key={entry.month} className="relative">
                   <span
                     aria-hidden="true"
-                    className="absolute -left-[31px] top-5 h-3 w-3 rounded-full border-2 border-[#080907] bg-[#c2a05a] sm:-left-[39px]"
+                    className="absolute -left-[31px] top-5 h-3 w-3 rounded-full border-2 border-[#f5efe3] bg-[#a4823a] sm:-left-[39px]"
                   />
-                  <div className={`px-5 py-4 sm:px-6 sm:py-5 ${card}`}>
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#e8d9ac]">
+                  <div className={`px-5 py-4 sm:px-6 sm:py-5 ${TONE.light.card}`}>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#77591B]">
                       <time dateTime={entry.month}>{entry.label}</time>
                     </h3>
                     <ul className="mt-3 space-y-2">
                       {entry.items.map((item) => (
-                        <li key={item.text} className="flex gap-2.5 text-sm leading-relaxed text-[#c9bfae] sm:text-[15px]">
-                          <Check aria-hidden="true" className="mt-1 h-3.5 w-3.5 shrink-0 text-[#c2a05a]" />
+                        <li key={item.text} className="flex gap-2.5 text-sm leading-relaxed text-stone-700 sm:text-[15px]">
+                          <Check aria-hidden="true" className="mt-1 h-3.5 w-3.5 shrink-0 text-[#a4823a]" />
                           {item.href ? (
-                            <Link href={item.href} className={`hover:text-[#fff9ea] hover:underline underline-offset-4 ${focusRing}`}>
+                            <Link
+                              href={item.href}
+                              className="underline decoration-[#d9c7a0] underline-offset-4 hover:text-[#14120e] hover:decoration-[#a4823a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a4823a]/60"
+                            >
                               {item.text}
                             </Link>
                           ) : (
@@ -261,9 +276,11 @@ export default function AboutPage() {
             </ol>
           </section>
         </div>
+        </div>
 
         {/* ---------- honest gaps and data ---------- */}
-        <div className="mx-auto mt-16 max-w-5xl">
+        <div className={`${BAND.dark} px-5 py-16 sm:px-8 sm:py-20`}>
+        <div className="mx-auto max-w-5xl">
           <section aria-labelledby="about-honest-heading">
             <p className={eyebrow}>Said up front</p>
             <h2 id="about-honest-heading" className={heading}>
@@ -302,37 +319,32 @@ export default function AboutPage() {
           </section>
         </div>
 
+        </div>
+
+        <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
+          <div className="mx-auto max-w-5xl">
+            <NextStep tone="light" placement="about" steps={NEXT_STEPS.about} eyebrow="Keep going" trial={false} />
+          </div>
+        </div>
+
         {/* ---------- see it ---------- */}
-        <div className="mx-auto mt-16 max-w-5xl">
-          <div className="rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-6 py-9 text-center sm:px-10">
-            <h2 className="text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem]">
-              See it for yourself
-            </h2>
-            <p className={`mx-auto mt-3 max-w-xl ${body}`}>
+        <section className={`${BAND.gold} px-5 py-16 text-center sm:px-8 sm:py-20`}>
+          <div className="mx-auto max-w-2xl">
+            <h2 className="text-[1.6rem] font-semibold tracking-tight text-[#14120e] sm:text-[2.1rem]">See it for yourself</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#2a2416] sm:text-base">
               Watch one job go from the first call to the paid invoice, or start a trial and run your own.
             </p>
-            <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/signup"
-                data-cta="about"
-                className={`inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-8 py-3.5 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
-              >
+            <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link href="/signup" data-cta="about" className={GOLD_BUTTON}>
                 Start Your {trialDays}-Day Free Trial
               </Link>
-              <Link
-                href="/how-it-works"
-                className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[rgba(230,227,220,0.18)] px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.32)] ${focusRing}`}
-              >
+              <Link href="/how-it-works" className={GOLD_SECONDARY_BUTTON}>
                 Watch the 2-minute video
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             </div>
           </div>
-        </div>
-
-        <div className="mx-auto mt-14 max-w-5xl">
-          <NextStep tone="dark" placement="about" steps={NEXT_STEPS.about} eyebrow="Keep going" trial={false} />
-        </div>
+        </section>
       </main>
       <MarketingFooter />
     </div>

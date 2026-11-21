@@ -11,15 +11,16 @@ import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER, type SoftwarePagePath } from "@/shared/lib/site/internal-links";
 import type { NextStepItem } from "@/shared/lib/site/next-steps";
 import type { ShotId, SoftwarePageContent } from "@/shared/lib/site/software-pages";
+import { BAND, GOLD_BUTTON, GOLD_SECONDARY_BUTTON, LIGHT_SECONDARY_BUTTON, TONE, type BandTone } from "@/shared/lib/site/bands";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
-const eyebrowClass = "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]";
-const h2Class = "mt-3 max-w-3xl text-[1.6rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.1rem] sm:leading-[1.15]";
-const card = "rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)]";
+const eyebrow = (tone: BandTone) => `text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE[tone].eyebrow}`;
+const h2 = (tone: BandTone) =>
+  `mt-3 max-w-3xl text-[1.6rem] font-semibold tracking-tight sm:text-[2.1rem] sm:leading-[1.15] ${TONE[tone].heading}`;
+const link = (tone: BandTone) => `${TONE[tone].link} ${focusRing} ${TONE[tone].ringOffset}`;
 const primaryButton = `inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#a4823a] px-7 py-3.5 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`;
 const secondaryButton = `inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[rgba(230,227,220,0.18)] px-7 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.36)] ${focusRing}`;
-const textLink = `font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`;
 
 function Shot({ id, className = "" }: { readonly id: ShotId; readonly className?: string }) {
   const shot = SHOWCASE_ITEMS.find((item) => item.id === id);
@@ -46,10 +47,10 @@ const WORKFLOW: readonly { readonly title: string; readonly text: string; readon
 function WorkflowRail({ current }: { readonly current: SoftwarePagePath }) {
   const overview = current === "/hvac-software";
   return (
-    <section aria-labelledby="workflow-heading" className="px-5 py-12 sm:px-8 sm:py-16">
+    <section aria-labelledby="workflow-heading" className="px-5 py-14 sm:px-8 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <p className={eyebrowClass}>Where this fits</p>
-        <h2 id="workflow-heading" className={h2Class}>
+        <p className={eyebrow("dark")}>Where this fits</p>
+        <h2 id="workflow-heading" className={h2("dark")}>
           Estimate to job to invoice to payment, on one record.
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
@@ -132,14 +133,10 @@ export function SoftwareLandingPage({
       <HomepageNav />
       <main className="relative">
         {/* ---------------- hero ---------------- */}
-        <section className="relative px-5 pb-10 pt-28 sm:px-8 sm:pb-14 sm:pt-36">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_50%_at_70%_20%,rgba(194,160,90,0.12),transparent_70%)]"
-          />
+        <section className={`${BAND.hero} px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
           <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
             <div className="text-center lg:text-left">
-              <p className="inline-flex items-center rounded-full border border-[rgba(230,227,220,0.14)] bg-[rgba(24,28,22,0.55)] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#c9bfae]">
+              <p className="inline-flex items-center rounded-full border border-[rgba(194,160,90,0.35)] bg-[rgba(164,130,58,0.12)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e8d9ac]">
                 {content.hero.eyebrow}
               </p>
               <h1 className="ah-hero-display mt-5 text-[2.1rem] font-normal leading-[1.1] tracking-[-0.015em] text-[#fff9ea] sm:text-[2.8rem] lg:text-[3.1rem]">
@@ -180,28 +177,29 @@ export function SoftwareLandingPage({
         </section>
 
         {/* ---------------- the demo ---------------- */}
-        <section aria-labelledby="demo-heading" className="px-3 py-10 sm:px-8 sm:py-14">
+        <section aria-labelledby="demo-heading" className={`${BAND.light} px-3 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
             <div className="px-2 sm:px-0">
-              <p className={eyebrowClass}>{content.demo.eyebrow}</p>
-              <h2 id="demo-heading" className={h2Class}>
+              <p className={eyebrow("light")}>{content.demo.eyebrow}</p>
+              <h2 id="demo-heading" className={h2("light")}>
                 {content.demo.heading}
               </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">{content.demo.intro}</p>
+              <p className={`mt-3 max-w-3xl text-sm leading-relaxed sm:text-base ${TONE.light.body}`}>{content.demo.intro}</p>
             </div>
             <div className="mt-7">{demo}</div>
           </div>
         </section>
 
-        {afterDemo}
-
-        <WorkflowRail current={content.path} />
+        <div className={BAND.olive}>
+          {afterDemo}
+          <WorkflowRail current={content.path} />
+        </div>
 
         {/* ---------------- how it works, with real screens ---------------- */}
-        <section id={content.stepsId ?? "how-it-works"} aria-labelledby="steps-heading" className="scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
+        <section id={content.stepsId ?? "how-it-works"} aria-labelledby="steps-heading" className={`${BAND.light} scroll-mt-24 px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
-            <p className={eyebrowClass}>How it works</p>
-            <h2 id="steps-heading" className={h2Class}>
+            <p className={eyebrow("light")}>How it works</p>
+            <h2 id="steps-heading" className={h2("light")}>
               {content.stepsHeading}
             </h2>
             <ol className="mt-10 space-y-8 sm:space-y-12">
@@ -211,7 +209,7 @@ export function SoftwareLandingPage({
                   className={
                     step.shot
                       ? `flex flex-col gap-5 lg:items-center lg:gap-12 ${index % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"}`
-                      : `${card} p-5 sm:p-6 lg:mx-auto lg:max-w-3xl`
+                      : `${TONE.light.card} p-5 sm:p-6 lg:mx-auto lg:max-w-3xl`
                   }
                 >
                   {step.shot ? (
@@ -220,16 +218,16 @@ export function SoftwareLandingPage({
                     </div>
                   ) : null}
                   <div className="min-w-0 flex-1 lg:max-w-md">
-                    <p className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#c2a05a]">STEP {index + 1}</p>
-                    <h3 className="mt-2 text-lg font-semibold text-[#fff9ea] sm:text-xl">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-[#c9bfae] sm:text-[15px]">{step.text}</p>
+                    <p className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#77591B]">STEP {index + 1}</p>
+                    <h3 className="mt-2 text-lg font-semibold text-[#14120e] sm:text-xl">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-[15px]">{step.text}</p>
                   </div>
                 </li>
               ))}
             </ol>
-            <p className="mt-10 text-center text-xs text-[#8e826f]">
+            <p className="mt-10 text-center text-xs text-stone-500">
               Screens from a sample HVAC company; no real customers.{" "}
-              <Link href={VIDEO_PAGE_PATH} className={textLink}>
+              <Link href={VIDEO_PAGE_PATH} className={link("light")}>
                 Watch one job go from first call to paid (2:27)
               </Link>
             </p>
@@ -237,15 +235,15 @@ export function SoftwareLandingPage({
         </section>
 
         {/* ---------------- feature by feature ---------------- */}
-        <section aria-labelledby="features-heading" className="px-5 py-12 sm:px-8 sm:py-16">
+        <section aria-labelledby="features-heading" className={`${BAND.dark} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
-            <p className={eyebrowClass}>Feature by feature</p>
-            <h2 id="features-heading" className={h2Class}>
+            <p className={eyebrow("dark")}>Feature by feature</p>
+            <h2 id="features-heading" className={h2("dark")}>
               {content.featuresHeading}
             </h2>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {content.features.map((feature) => (
-                <li key={feature.title} className={`${card} p-5`}>
+                <li key={feature.title} className={`${TONE.dark.card} p-5`}>
                   <p className="flex items-start gap-2.5">
                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#a4823a]/20 ring-1 ring-inset ring-[#c2a05a]/40">
                       <Check aria-hidden="true" className="h-3 w-3 text-[#e8d9ac]" />
@@ -273,7 +271,7 @@ export function SoftwareLandingPage({
                 </ul>
                 <p className="mt-4 border-t border-[rgba(230,227,220,0.1)] pt-4 text-sm leading-relaxed text-[#a89c88]">
                   {content.scopeNote}{" "}
-                  <Link href="/pricing#not-yet" className={textLink}>
+                  <Link href="/pricing#not-yet" className={link("dark")}>
                     The full list
                   </Link>
                 </p>
@@ -283,39 +281,36 @@ export function SoftwareLandingPage({
         </section>
 
         {/* ---------------- the plans ---------------- */}
-        <section aria-labelledby="plans-heading" className="px-5 py-12 sm:px-8 sm:py-16">
+        <section aria-labelledby="plans-heading" className={`${BAND.light} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className={eyebrowClass}>Price</p>
-                <h2 id="plans-heading" className={h2Class}>
+                <p className={eyebrow("light")}>Price</p>
+                <h2 id="plans-heading" className={h2("light")}>
                   Every feature on every plan. You pay by team size.
                 </h2>
               </div>
-              <Link href="/pricing#plan-finder" className={secondaryButton}>
+              <Link href="/pricing#plan-finder" className={LIGHT_SECONDARY_BUTTON}>
                 Price it for my team
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             </div>
             <ul className="mt-8 grid gap-3 md:grid-cols-3">
               {plans.map((plan) => (
-                <li
-                  key={plan.planKey}
-                  className={`rounded-2xl border p-5 ${
-                    plan.planKey === "growth"
-                      ? "border-[#c2a05a]/50 bg-[linear-gradient(165deg,rgba(50,42,25,0.6),rgba(14,17,13,0.92))]"
-                      : "border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)]"
-                  }`}
-                >
-                  <p className="text-base font-semibold text-[#fff9ea]">{plan.label}</p>
-                  <p className="mt-2">
-                    <span className="font-mono text-3xl font-semibold text-[#fff9ea]">{formatUsd(plan.monthlyPriceUsd)}</span>
-                    <span className="text-sm text-[#9a9080]"> / month</span>
+                <li key={plan.planKey} className={`p-5 ${plan.planKey === "growth" ? TONE.light.cardLit : TONE.light.card}`}>
+                  <p className={`text-base font-semibold ${plan.planKey === "growth" ? "text-[#fff9ea]" : "text-[#14120e]"}`}>
+                    {plan.label}
                   </p>
-                  <p className="mt-1 text-sm text-[#9a9080]">
+                  <p className="mt-2">
+                    <span className={`font-mono text-3xl font-semibold ${plan.planKey === "growth" ? "text-[#e8d9ac]" : "text-[#14120e]"}`}>
+                      {formatUsd(plan.monthlyPriceUsd)}
+                    </span>
+                    <span className={`text-sm ${plan.planKey === "growth" ? "text-[#c9bfae]" : "text-stone-500"}`}> / month</span>
+                  </p>
+                  <p className={`mt-1 text-sm ${plan.planKey === "growth" ? "text-[#c9bfae]" : "text-stone-500"}`}>
                     or {formatUsd(plan.annualPriceUsd)}/year, save {formatUsd(plan.annualSavingsUsd)}
                   </p>
-                  <p className="mt-3 text-sm font-semibold text-[#f3ebdd]">
+                  <p className={`mt-3 text-sm font-semibold ${plan.planKey === "growth" ? "text-[#f3ebdd]" : "text-stone-800"}`}>
                     {plan.extraUserMonthlyUsd !== null
                       ? `${plan.includedUsers} users, then ${formatUsd(plan.extraUserMonthlyUsd)}/month each`
                       : plan.includedUsers === 1
@@ -325,39 +320,45 @@ export function SoftwareLandingPage({
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-sm text-[#8e826f]">
+            <p className="mt-4 text-sm text-stone-500">
               {trialDays}-day free trial with up to {PRICING_FACTS.trialUsers} users, no credit card. Cancel from Settings any
               time.{" "}
-              <Link href="/pricing#terms" className={textLink}>
+              <Link href="/pricing#terms" className={link("light")}>
                 The terms in plain words
               </Link>
             </p>
           </div>
         </section>
 
-        <MarketingFaqSection
-          variant="dark"
-          items={content.faq}
-          eyebrowText="Questions"
-          headingText={content.faqHeading}
-          introText="Straight answers, including what it does not do yet."
-        />
+        <div className={`${BAND.olive} py-4 sm:py-8`}>
+          <MarketingFaqSection
+            variant="dark"
+            items={content.faq}
+            eyebrowText="Questions"
+            headingText={content.faqHeading}
+            introText="Straight answers, including what it does not do yet."
+          />
+        </div>
 
         {/* ---------------- free tools and guides ---------------- */}
-        <section aria-labelledby="tools-heading" className="px-5 pb-6 pt-4 sm:px-8">
+        <div className={`${BAND.light} pb-16 pt-14 sm:pb-20 sm:pt-20`}>
+        <section aria-labelledby="tools-heading" className="px-5 sm:px-8">
           <div className="mx-auto max-w-6xl">
-            <p className={eyebrowClass}>Free for owners, no account</p>
-            <h2 id="tools-heading" className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]">
+            <p className={eyebrow("light")}>Free for owners, no account</p>
+            <h2 id="tools-heading" className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#14120e] sm:text-[1.75rem]">
               {content.toolsHeading}
             </h2>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {content.tools.map((tool) => (
                 <li key={tool.href}>
-                  <Link href={tool.href} className={`group flex h-full flex-col p-5 transition-colors hover:border-[#c2a05a]/60 ${card} ${focusRing}`}>
-                    {tool.meta ? <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8e826f]">{tool.meta}</span> : null}
-                    <span className="mt-1 block text-base font-semibold text-[#fff9ea]">{tool.title}</span>
-                    <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">{tool.text}</span>
-                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-[#c2a05a]">
+                  <Link
+                    href={tool.href}
+                    className={`group flex h-full flex-col p-5 transition-[border-color,box-shadow] ${TONE.light.card} ${TONE.light.cardHover} ${focusRing} ${TONE.light.ringOffset}`}
+                  >
+                    {tool.meta ? <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">{tool.meta}</span> : null}
+                    <span className="mt-1 block text-base font-semibold text-[#14120e]">{tool.title}</span>
+                    <span className="mt-2 block text-sm leading-relaxed text-stone-600">{tool.text}</span>
+                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-[#77591B]">
                       Open it
                       <ArrowRight aria-hidden="true" className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                     </span>
@@ -368,10 +369,10 @@ export function SoftwareLandingPage({
           </div>
         </section>
 
-        <div className="px-5 pt-10 sm:px-8">
+        <div className="px-5 pt-12 sm:px-8">
           <NextStep
             className="mx-auto max-w-6xl"
-            tone="dark"
+            tone="light"
             placement={slug}
             steps={nextSteps}
             eyebrow="Your next step"
@@ -379,28 +380,32 @@ export function SoftwareLandingPage({
             trial={false}
           />
         </div>
+        </div>
 
         {/* ---------------- closing ---------------- */}
-        <section className="px-5 pb-16 pt-10 sm:px-8 sm:pb-20">
-          <div className="mx-auto max-w-2xl rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-5 py-8 text-center sm:px-8 sm:py-9">
-            <h2 className="text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]">{content.closing.heading}</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">{content.closing.text}</p>
-            <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-              <Link href="/signup" data-cta={`${slug}-closing`} className={primaryButton}>
+        <section className={`${BAND.gold} px-5 py-16 sm:px-8 sm:py-20`}>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-[1.6rem] font-semibold tracking-tight text-[#14120e] sm:text-[2.1rem]">{content.closing.heading}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#2a2416] sm:text-base">{content.closing.text}</p>
+            <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link href="/signup" data-cta={`${slug}-closing`} className={GOLD_BUTTON}>
                 Start Your {trialDays}-Day Free Trial
               </Link>
-              <Link href={VIDEO_PAGE_PATH} className={secondaryButton}>
+              <Link href={VIDEO_PAGE_PATH} className={GOLD_SECONDARY_BUTTON}>
                 <PlayCircle aria-hidden="true" className="h-4 w-4" />
                 Watch one job (2:27)
               </Link>
             </div>
           </div>
-          <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-[#8e826f]">
+          <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-[#2a2416]">
             Also:{" "}
             {siblings.map((page, index) => (
               <span key={page.href}>
                 {index > 0 ? " · " : ""}
-                <Link href={page.href} className={textLink}>
+                <Link
+                  href={page.href}
+                  className="font-semibold text-[#14120e] underline decoration-[#14120e]/30 underline-offset-4 hover:decoration-[#14120e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14120e]/60"
+                >
                   {page.label}
                 </Link>
               </span>

@@ -9,6 +9,7 @@ import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqS
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
+import { BAND, TONE } from "@/shared/lib/site/bands";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { calculatorPath, RESOURCES_LIBRARY_PATH } from "@/shared/lib/resources/catalog";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
@@ -35,6 +36,10 @@ const eyebrow = "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2
 const card = "rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)]";
 const heading = "mt-3 text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem] sm:leading-[1.2]";
 const textLink = `font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`;
+// Light bands (2026-11-21): alternating dark and warm-cream sections (shared/lib/site/bands.ts).
+const lightEyebrow = `text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`;
+const lightHeading = `mt-3 text-[1.5rem] font-semibold tracking-tight sm:text-[1.9rem] sm:leading-[1.2] ${TONE.light.heading}`;
+const lightLink = `${TONE.light.link} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a4823a]/60`;
 
 /** A phone-shaped frame around one real capture. */
 function PhoneShot({ src, alt, priority }: { src: string; alt: string; priority?: boolean }) {
@@ -81,9 +86,9 @@ export default function ForTechsPage() {
     <div className="mc-homepage relative flex min-h-dvh flex-col overflow-x-clip bg-[#080907] text-[#f3ebdd]">
       <JsonLdScript data={buildFaqPageStructuredData(TECH_FAQ)} />
       <HomepageNav />
-      <main className="relative flex-1 pb-20 pt-28 sm:pt-36">
+      <main className="relative flex-1">
         {/* ---------- hero ---------- */}
-        <section className="px-5 sm:px-8">
+        <section className={`${BAND.hero} px-5 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
           <div className="mx-auto max-w-5xl">
             <p className={eyebrow}>For technicians</p>
             <h1 className="ah-hero-display mt-4 max-w-3xl text-[2.3rem] font-normal leading-[1.08] tracking-[-0.015em] text-[#fff9ea] sm:text-[3.2rem]">
@@ -115,16 +120,16 @@ export default function ForTechsPage() {
         </section>
 
         {/* ---------- the real screens ---------- */}
-        <section id="phone" aria-labelledby="techs-phone-heading" className="mt-16 scroll-mt-24 px-5 sm:px-8">
+        <section id="phone" aria-labelledby="techs-phone-heading" className={`${BAND.light} scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
-            <p className={eyebrow}>The software, from your side</p>
-            <h2 id="techs-phone-heading" className={heading}>
+            <p className={lightEyebrow}>The software, from your side</p>
+            <h2 id="techs-phone-heading" className={lightHeading}>
               What you get on your phone
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-base">
               Real screens from the technician view, filled with a sample company&apos;s jobs. Nothing to install: it
               runs in the phone&apos;s browser on iPhone and Android, and{" "}
-              <Link href="/install" className={textLink}>
+              <Link href="/install" className={lightLink}>
                 adds to your home screen
               </Link>{" "}
               like an app.
@@ -139,23 +144,23 @@ export default function ForTechsPage() {
                     <PhoneShot src={screen.src} alt={screen.alt} priority={index === 0} />
                   </div>
                   <figcaption className="mx-auto mt-4 max-w-[260px]">
-                    <span className="text-sm font-semibold text-[#fff9ea]">{screen.title}</span>
-                    <span className="mt-1 block text-sm leading-relaxed text-[#c9bfae]">{screen.caption}</span>
+                    <span className="text-sm font-semibold text-[#14120e]">{screen.title}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-stone-600">{screen.caption}</span>
                   </figcaption>
                 </figure>
               </li>
             ))}
           </ul>
-          <p className="mx-auto mt-4 max-w-5xl text-[13px] text-[#8e826f]">
+          <p className="mx-auto mt-4 max-w-5xl text-[13px] text-stone-500">
             It does not track where your truck is. The office sees the job addresses, not your location.{" "}
-            <Link href="/hvac-dispatch-software" className={textLink}>
+            <Link href="/hvac-dispatch-software" className={lightLink}>
               How dispatch works
             </Link>
           </p>
         </section>
 
         {/* ---------- a day on it ---------- */}
-        <section id="day" aria-labelledby="techs-day-heading" className="mt-16 scroll-mt-24 px-5 sm:px-8">
+        <section id="day" aria-labelledby="techs-day-heading" className={`${BAND.olive} scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
             <p className={eyebrow}>A day on the phone</p>
             <h2 id="techs-day-heading" className={heading}>
@@ -189,27 +194,27 @@ export default function ForTechsPage() {
         </section>
 
         {/* ---------- calculators ---------- */}
-        <section id="tools" aria-labelledby="techs-tools-heading" className="mt-16 scroll-mt-24 px-5 sm:px-8">
+        <section id="tools" aria-labelledby="techs-tools-heading" className={`${BAND.light} scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
-            <p className={eyebrow}>Free, no account</p>
-            <h2 id="techs-tools-heading" className={heading}>
+            <p className={lightEyebrow}>Free, no account</p>
+            <h2 id="techs-tools-heading" className={lightHeading}>
               Two calculators about your week
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               <li>
                 <Link
                   href={calculatorPath("technician-pay")}
-                  className={`group flex h-full flex-col p-5 transition-colors hover:border-[#c2a05a]/60 sm:p-6 ${card} ${focusRing}`}
+                  className={`group flex h-full flex-col p-5 transition-[border-color,box-shadow] sm:p-6 ${TONE.light.card} ${TONE.light.cardHover} ${focusRing} ${TONE.light.ringOffset}`}
                 >
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8e826f]">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
                     Pay calculator · about 3 min
                   </span>
-                  <span className="mt-2 block text-lg font-semibold text-[#fff9ea]">Hourly, flat rate or commission?</span>
-                  <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">
+                  <span className="mt-2 block text-lg font-semibold text-[#14120e]">Hourly, flat rate or commission?</span>
+                  <span className="mt-2 block text-sm leading-relaxed text-stone-600">
                     Put in one real week and see what each pay plan would have paid, and what it works out to per hour
                     on the clock. Handy before you say yes to an offer.
                   </span>
-                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#c2a05a]">
+                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#77591B]">
                     Open the pay calculator
                     <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
@@ -218,17 +223,17 @@ export default function ForTechsPage() {
               <li>
                 <Link
                   href={calculatorPath("callback-cost")}
-                  className={`group flex h-full flex-col p-5 transition-colors hover:border-[#c2a05a]/60 sm:p-6 ${card} ${focusRing}`}
+                  className={`group flex h-full flex-col p-5 transition-[border-color,box-shadow] sm:p-6 ${TONE.light.card} ${TONE.light.cardHover} ${focusRing} ${TONE.light.ringOffset}`}
                 >
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8e826f]">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
                     Callback calculator · about 2 min
                   </span>
-                  <span className="mt-2 block text-lg font-semibold text-[#fff9ea]">What a callback costs</span>
-                  <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">
+                  <span className="mt-2 block text-lg font-semibold text-[#14120e]">What a callback costs</span>
+                  <span className="mt-2 block text-sm leading-relaxed text-stone-600">
                     The hours and parts a free return trip uses up, by the month and the year. A good number to have when
                     you ask for time to do the job right the first time.
                   </span>
-                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#c2a05a]">
+                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#77591B]">
                     Open the callback calculator
                     <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
@@ -239,7 +244,8 @@ export default function ForTechsPage() {
         </section>
 
         {/* ---------- videos ---------- */}
-        <section id="videos" aria-labelledby="techs-videos-heading" className="mt-16 scroll-mt-24 px-5 sm:px-8">
+        <div className={`${BAND.dark} px-5 py-16 sm:px-8 sm:py-20`}>
+        <section id="videos" aria-labelledby="techs-videos-heading" className="scroll-mt-24">
           <div className={`mx-auto flex max-w-5xl flex-col gap-5 px-5 py-7 sm:px-8 md:flex-row md:items-center md:justify-between ${card}`}>
             <div className="max-w-2xl">
               <p className={eyebrow}>Training</p>
@@ -270,7 +276,7 @@ export default function ForTechsPage() {
         </section>
 
         {/* ---------- send to the boss ---------- */}
-        <section aria-labelledby="techs-boss-heading" className="mt-16 px-5 sm:px-8">
+        <section aria-labelledby="techs-boss-heading" className="mt-8">
           <div className="mx-auto max-w-5xl rounded-2xl border border-[rgba(194,160,90,0.3)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-5 py-8 sm:px-10 sm:py-10">
             <p className={eyebrow}>Think your shop should try it?</p>
             <h2 id="techs-boss-heading" className={heading}>
@@ -289,24 +295,27 @@ export default function ForTechsPage() {
             </div>
           </div>
         </section>
+        </div>
 
-        <MarketingFaqSection
-          variant="dark"
-          items={TECH_FAQ}
-          eyebrowText="Questions techs ask"
-          headingText="Straight answers about the phone view."
-          introText="What it does on your phone today, and what it does not do."
-        />
+        <div className={`${BAND.light} pb-16 pt-4 sm:pb-20 sm:pt-8`}>
+          <MarketingFaqSection
+            variant="light"
+            items={TECH_FAQ}
+            eyebrowText="Questions techs ask"
+            headingText="Straight answers about the phone view."
+            introText="What it does on your phone today, and what it does not do."
+          />
 
         <div className="px-5 sm:px-8">
           <NextStep
             className="mx-auto max-w-5xl"
-            tone="dark"
+            tone="light"
             placement="for-techs"
             steps={NEXT_STEPS.forTechs}
             eyebrow="Keep going"
             trial={false}
           />
+        </div>
         </div>
       </main>
       <MarketingFooter />

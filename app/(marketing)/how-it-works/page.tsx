@@ -8,6 +8,7 @@ import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { ToolStrip } from "@/shared/components/resources/hub/ToolCards";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
+import { BAND, GOLD_BUTTON, GOLD_SECONDARY_BUTTON, TONE } from "@/shared/lib/site/bands";
 import { INTERACTIVE_TOOL_COUNT, hubTool } from "@/shared/lib/resources/tool-hub";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import {
@@ -66,7 +67,7 @@ export default function HowItWorksPage() {
       <div className="mc-homepage relative min-h-dvh overflow-x-clip bg-[#080907] text-[#f3ebdd]">
         <HomepageNav />
         <main className="relative">
-          <section className="px-5 pb-10 pt-28 sm:px-8 sm:pt-36">
+          <section className={`${BAND.hero} px-5 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
             <div className="mx-auto max-w-4xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">How it works</p>
               <h1 className="ah-hero-display mt-3 text-[2rem] font-normal leading-[1.12] tracking-[-0.015em] text-[#fff9ea] sm:text-[2.8rem]">
@@ -111,12 +112,12 @@ export default function HowItWorksPage() {
           {/* "Jump to the part you care about": every visit that started here
               left after one page (audit, 2026-11-20), so each step of the job
               now plays from its moment and leads to the page for that part. */}
-          <section aria-labelledby="job-steps-heading" className="px-5 pb-14 pt-4 sm:px-8">
+          <section aria-labelledby="job-steps-heading" className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
             <div className="mx-auto max-w-6xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">See one job</p>
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`}>See one job</p>
               <h2
                 id="job-steps-heading"
-                className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]"
+                className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#14120e] sm:text-[1.75rem]"
               >
                 Jump to the part you care about.
               </h2>
@@ -124,30 +125,30 @@ export default function HowItWorksPage() {
                 {COMMERCIAL_JOB_STEPS.map((step, index) => (
                   <li
                     key={step.seconds}
-                    className="flex flex-col rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] p-5"
+                    className={`flex flex-col p-5 ${TONE.light.card}`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="flex items-center gap-2.5">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#a4823a] text-xs font-semibold text-[#080907]">
                           {index + 1}
                         </span>
-                        <h3 className="text-base font-semibold text-[#fff9ea]">{step.title}</h3>
+                        <h3 className="text-base font-semibold text-[#14120e]">{step.title}</h3>
                       </span>
                       <button
                         type="button"
                         data-seek={step.seconds}
                         aria-label={`Play ${step.title.toLowerCase()} from ${step.at}`}
-                        className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-[rgba(230,227,220,0.16)] px-3 text-xs font-semibold text-[#e8d9ac] transition-colors hover:border-[#c2a05a]/60 hover:text-[#fff9ea] ${focusRing}`}
+                        className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#14120e] px-3 text-xs font-semibold text-[#e8d9ac] transition-colors hover:bg-[#2a2620] hover:text-[#fff9ea] ${focusRing} ${TONE.light.ringOffset}`}
                       >
                         <Play aria-hidden="true" className="h-3 w-3 fill-current" />
                         {step.at}
                       </button>
                     </div>
-                    <p className="mt-3 text-sm leading-relaxed text-[#c9bfae]">{step.text}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-stone-600">{step.text}</p>
                     <Link
                       href={step.href}
                       data-track={`next-software-step-${step.seconds}`}
-                      className={`mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+                      className={`mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#77591B] underline-offset-4 hover:text-[#14120e] hover:underline ${focusRing} ${TONE.light.ringOffset}`}
                     >
                       {step.linkLabel}
                       <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -158,7 +159,7 @@ export default function HowItWorksPage() {
             </div>
           </section>
 
-          <div className="px-5 pb-14 sm:px-8">
+          <div className={`${BAND.olive} px-5 py-16 sm:px-8 sm:py-20`}>
             <div className="mx-auto max-w-6xl">
               <ToolStrip
                 id="how-tools-heading"
@@ -172,20 +173,19 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          <div className="px-5 pb-14 sm:px-8">
+          <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
             <div className="mx-auto max-w-6xl">
-              <NextStep tone="dark" placement="how-it-works" steps={NEXT_STEPS.howItWorks} />
+              <NextStep tone="light" placement="how-it-works" steps={NEXT_STEPS.howItWorks} />
             </div>
-          </div>
 
-          <section aria-labelledby="transcript-heading" className="px-5 pb-14 pt-2 sm:px-8">
-            <div className="mx-auto grid max-w-6xl gap-6 rounded-2xl border border-[rgba(230,227,220,0.1)] bg-[rgba(18,21,17,0.7)] p-6 sm:p-8 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
+          <section aria-labelledby="transcript-heading" className="pt-12">
+            <div className={`mx-auto grid max-w-6xl gap-6 p-6 sm:p-8 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10 ${TONE.light.card}`}>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">Read along</p>
-                <h2 id="transcript-heading" className="mt-2 text-lg font-semibold text-[#fff9ea]">
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`}>Read along</p>
+                <h2 id="transcript-heading" className="mt-2 text-lg font-semibold text-[#14120e]">
                   Transcript
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-[#8e826f]">
+                <p className="mt-2 text-sm leading-relaxed text-stone-500">
                   Every word of the narration. Play a chapter from here.
                 </p>
                 <ol className="mt-4 hidden space-y-1.5 md:block">
@@ -194,45 +194,39 @@ export default function HowItWorksPage() {
                       <button
                         type="button"
                         data-seek={step.seconds}
-                        className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#c9bfae] transition-colors hover:bg-[rgba(194,160,90,0.08)] hover:text-[#fff9ea] ${focusRing}`}
+                        className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-stone-600 transition-colors hover:bg-[#f5ecd9] hover:text-[#14120e] ${focusRing} ${TONE.light.ringOffset}`}
                       >
-                        <span className="w-9 shrink-0 font-mono text-xs text-[#c2a05a]">{step.at}</span>
+                        <span className="w-9 shrink-0 font-mono text-xs text-[#77591B]">{step.at}</span>
                         <span>{step.title}</span>
                       </button>
                     </li>
                   ))}
                 </ol>
               </div>
-              <div className="max-w-3xl space-y-4 text-[0.95rem] leading-[1.85] text-[#c9bfae] sm:text-base">
+              <div className="max-w-3xl space-y-4 text-[0.95rem] leading-[1.85] text-stone-700 sm:text-base">
                 {COMMERCIAL_TRANSCRIPT.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
             </div>
           </section>
+          </div>
 
           {/* The page ends on the job the visitor would run, not on the transcript. */}
-          <section className="px-5 pb-20 sm:px-8">
-            <div className="mx-auto max-w-3xl rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] px-6 py-9 text-center sm:px-10">
-              <h2 className="text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem]">
+          <section className={`${BAND.gold} px-5 py-16 sm:px-8 sm:py-20`}>
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-[1.6rem] font-semibold tracking-tight text-[#14120e] sm:text-[2.1rem]">
                 Run one of your own jobs through it
               </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#2a2416] sm:text-base">
                 The same steps as the video, with your customer, your price and your technician. {trialDays} days free, no
                 credit card.
               </p>
-              <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-                <Link
-                  href="/signup"
-                  data-cta="how-it-works-end"
-                  className={`inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-8 py-3.5 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
-                >
+              <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <Link href="/signup" data-cta="how-it-works-end" className={GOLD_BUTTON}>
                   Start Your {trialDays}-Day Free Trial
                 </Link>
-                <Link
-                  href="/pricing#plan-finder"
-                  className={`inline-flex min-h-12 items-center justify-center rounded-lg border border-[rgba(230,227,220,0.18)] px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.32)] ${focusRing}`}
-                >
+                <Link href="/pricing#plan-finder" className={GOLD_SECONDARY_BUTTON}>
                   Find your plan
                 </Link>
               </div>
