@@ -24,6 +24,19 @@ const FALLBACK_DELAY_MS = 5000;
 const INTERACTION_EVENTS = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
 
 /**
+ * Pages that never load the pixel: the in-page tools promise that nothing
+ * typed into them leaves the browser, and the invoice builder has customer
+ * name, email and phone fields, which Meta's automatic advanced matching
+ * could otherwise read. (A visitor who arrives here by client-side
+ * navigation from a page that already loaded the pixel still has it; turning
+ * automatic advanced matching off in Meta's Events Manager closes that too.)
+ */
+const PIXEL_FREE_PATHS: ReadonlySet<string> = new Set([
+  "/insights/hvac-invoice-template",
+  "/insights/how-to-calculate-hvac-labor-rate",
+]);
+
+/**
  * Module-level guards survive React Strict Mode remounts, so the pixel is
  * injected once and pathname changes are not double-fired in development.
  */
@@ -70,8 +83,10 @@ function loadPixel(pixelId: string) {
 export function MetaPixel() {
   const pathname = usePathname();
 
+  const pixelFree = PIXEL_FREE_PATHS.has(pathname);
+
   useEffect(() => {
-    if (!META_PIXEL_ID || pixelRequested) return;
+    if (!META_PIXEL_ID || pixelRequested || pixelFree) return;
 
     let timer: number | undefined;
     const start = () => {
@@ -92,7 +107,7 @@ export function MetaPixel() {
     else window.addEventListener("load", arm, { once: true });
 
     return cleanup;
-  }, []);
+  }, [pixelFree]);
 
   useEffect(() => {
     if (!META_PIXEL_ID) {
@@ -114,7 +129,7 @@ export function MetaPixel() {
     pageview();
   }, [pathname]);
 
-  if (!META_PIXEL_ID) {
+  if (!META_PIXEL_ID || pixelFree) {
     return null;
   }
 
