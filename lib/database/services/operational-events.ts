@@ -1,3 +1,4 @@
+import type { DbClient } from "@/lib/database/db-client";
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
 import { recordJobActivity } from "@/lib/database/queries/job-activities";
 import { recordMembershipActivity } from "@/lib/database/queries/membership-activities";
@@ -279,6 +280,8 @@ export async function emitEstimateApprovedEvent(input: {
   customerId?: string;
   jobId?: string;
   approvalSource?: "public_link" | "technician_device" | "admin_manual";
+  /** Public-link only: service-role client created after token verification. */
+  serviceRoleDb?: DbClient;
 }): Promise<void> {
   // Activity is recorded upstream via recordEstimateStatusChangedActivity today.
 
@@ -308,6 +311,8 @@ export async function emitEstimateApprovedEvent(input: {
     customerId: input.customerId,
     jobId: input.jobId,
     approvalSource: input.approvalSource,
+    serviceRoleDb:
+      input.approvalSource === "public_link" ? input.serviceRoleDb : undefined,
   });
 }
 
