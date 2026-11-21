@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listPublicSaasCatalogPlans } from "@/lib/saas-billing/catalog";
 import { AffiliateApplicationForm } from "@/shared/components/affiliates/AffiliateApplicationForm";
+import { AffiliateEarningsCalculator } from "@/shared/components/affiliates/AffiliateEarningsCalculator";
 import { dirCard, dirEyebrow, dirLink, dirPrimaryButton } from "@/shared/components/directory/directory-styles";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
+import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { NextStep } from "@/shared/components/site/NextStep";
+import type { EarningsPlan } from "@/shared/lib/site/affiliate-earnings";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
+import { buildFaqPageStructuredData } from "@/shared/lib/site/structured-data";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 import { AFFILIATES_PATH, AFFILIATE_PROGRAM, formatCommissionUsd } from "@/shared/types/affiliates";
@@ -11,8 +17,9 @@ import { AFFILIATES_PATH, AFFILIATE_PROGRAM, formatCommissionUsd } from "@/share
 const P = AFFILIATE_PROGRAM;
 const [PARTNER, SILVER, GOLD] = P.tiers;
 
-const TITLE = "Affiliate program";
-const DESCRIPTION = `Recommend Altair Operating System to the trade shops you work with and earn ${PARTNER.ratePercent}% of what they pay for ${P.commissionMonths} months, rising to ${GOLD.ratePercent}%. ${P.foundingPlaces} founding places. Apply here.`;
+// 34 + " · Altair Operating System" = 60 characters; the description is 150.
+const TITLE = `Affiliate Program: Earn ${PARTNER.ratePercent}% to ${GOLD.ratePercent}%`;
+const DESCRIPTION = `Recommend Altair Operating System to trade shops and earn ${PARTNER.ratePercent}% of what they pay for ${P.commissionMonths} months, up to ${GOLD.ratePercent}%. ${P.foundingPlaces} founding places. See an example and apply.`;
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -141,9 +148,15 @@ export default function AffiliatesPage() {
   const plans = listPublicSaasCatalogPlans().filter((plan) => plan.monthlyPriceUsd !== null);
   const example = plans.find((plan) => plan.planKey === "growth") ?? plans[0];
   const examplePrice = example?.monthlyPriceUsd ?? 0;
+  const earningsPlans: EarningsPlan[] = plans.flatMap((plan) =>
+    plan.monthlyPriceUsd !== null && plan.annualPriceUsd !== null
+      ? [{ key: plan.planKey, label: plan.label, monthlyPriceUsd: plan.monthlyPriceUsd, annualPriceUsd: plan.annualPriceUsd }]
+      : [],
+  );
 
   return (
     <ResourceChrome>
+      <JsonLdScript data={buildFaqPageStructuredData(FAQ)} />
       <ResourceMain>
         <header>
           <p className={dirEyebrow}>Affiliate program · {P.foundingPlaces} founding places</p>
@@ -275,6 +288,12 @@ export default function AffiliatesPage() {
               . A shop that pays for a year up front earns you the same share of that one payment.
             </p>
           ) : null}
+
+          {earningsPlans.length > 0 ? (
+            <div className="mt-6">
+              <AffiliateEarningsCalculator plans={earningsPlans} />
+            </div>
+          ) : null}
         </section>
 
         <section aria-labelledby="perks-heading" className="mt-14">
@@ -354,6 +373,16 @@ export default function AffiliatesPage() {
             .
           </p>
         </section>
+
+        <NextStep
+          className="mt-14"
+          tone="light"
+          placement="affiliates"
+          steps={NEXT_STEPS.affiliates}
+          eyebrow="Before you apply"
+          heading="See what you would be recommending"
+          trial={false}
+        />
       </ResourceMain>
     </ResourceChrome>
   );
