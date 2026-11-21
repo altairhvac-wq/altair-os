@@ -190,7 +190,17 @@ export type LineSeries = {
   readonly dashed?: boolean;
 };
 
-export type ChartMarker = { readonly key: string; readonly x: number; readonly y: number; readonly label: string; readonly tone: "strong" | "muted" };
+/**
+ * Where a point's label starts: to the right of the point, else to its left,
+ * else pinned inside the plot, so it is never cut off on a narrow phone.
+ */
+function labelX(x: number, width: number, min: number, max: number): number {
+  if (x + 10 + width <= max) return x + 10;
+  if (x - 10 - width >= min) return x - 10 - width;
+  return Math.max(min, max - width);
+}
+
+export type ChartMarker ={ readonly key: string; readonly x: number; readonly y: number; readonly label: string; readonly tone: "strong" | "muted" };
 
 /**
  * Lines over a shared x axis, with optional shaded areas (profit and loss),
@@ -288,9 +298,9 @@ export function LineChart({
             <g key={m.key}>
               <circle cx={sx(m.x)} cy={sy(m.y)} r={m.tone === "strong" ? 6 : 4.5} fill={m.tone === "strong" ? "#0d0f0c" : "#fff"} stroke="#0d0f0c" strokeWidth={2} />
               <text
-                x={sx(m.x) + (sx(m.x) + m.label.length * 7 + 14 > W - pad.r ? -10 : 10)}
+                x={labelX(sx(m.x), m.label.length * 6.8, pad.l + 4, W - pad.r)}
                 y={index % 2 === 0 ? sy(m.y) - 10 : sy(m.y) + 20}
-                textAnchor={sx(m.x) + m.label.length * 7 + 14 > W - pad.r ? "end" : "start"}
+                textAnchor="start"
                 fontSize="12"
                 fontWeight="600"
                 fill="#1c1917"
