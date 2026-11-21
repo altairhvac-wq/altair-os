@@ -126,6 +126,8 @@ export function HomepageNav() {
   }
 
   const closeAll = useCallback(() => {
+    // A hover that was about to open a menu must not reopen it after a click.
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
     setOpenGroup(null);
     setMenuOpen(false);
   }, []);
