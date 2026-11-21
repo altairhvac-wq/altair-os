@@ -39,7 +39,10 @@ export function ToolHero({
   updated,
   facts,
   jumpLinks,
+  trail = [{ label: "Insights", href: "/insights" }],
 }: {
+  /** The links before the current page in the breadcrumb. */
+  readonly trail?: readonly { readonly label: string; readonly href: string }[];
   readonly crumb: string;
   readonly eyebrow: string;
   readonly title: string;
@@ -52,12 +55,14 @@ export function ToolHero({
     <header className="mx-auto max-w-[90rem] px-4 pb-6 pt-24 sm:px-8 sm:pt-28 lg:px-12 print:hidden">
       <nav aria-label="Breadcrumb" className="text-xs text-stone-500">
         <ol className="flex flex-wrap items-center gap-1.5">
-          <li>
-            <Link href="/insights" className={`rounded-sm hover:text-[#77591B] ${focusRing}`}>
-              Insights
-            </Link>
-          </li>
-          <li aria-hidden="true">/</li>
+          {trail.map((item) => (
+            <li key={item.href} className="flex items-center gap-1.5">
+              <Link href={item.href} className={`rounded-sm hover:text-[#77591B] ${focusRing}`}>
+                {item.label}
+              </Link>
+              <span aria-hidden="true">/</span>
+            </li>
+          ))}
           <li aria-current="page" className="text-stone-600">
             {crumb}
           </li>

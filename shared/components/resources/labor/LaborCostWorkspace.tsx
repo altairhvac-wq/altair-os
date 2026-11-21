@@ -70,6 +70,9 @@ import {
   sumUnbillable,
   type WorkspaceResult,
 } from "@/shared/lib/resources/labor-workspace";
+import { CARRY_SOURCE_NAMES, useCarried, writeCarried } from "@/shared/components/resources/calc/carry";
+import { calculatorPath } from "@/shared/lib/resources/catalog";
+import Link from "next/link";
 
 /**
  * HVAC Labor Cost Workspace.
@@ -159,6 +162,22 @@ export function LaborCostWorkspace() {
   const input = useMemo(() => toWorkspaceInput(state), [state]);
   const outcome = useMemo(() => calculateWorkspace(input), [input]);
   const result = outcome.ok ? outcome.result : null;
+
+  // "Carry my numbers": once the visitor has changed something, the rate is
+  // offered to the other calculators in this browser (never sent anywhere,
+  // never filled in there until they press "Use my labor rate").
+  useEffect(() => {
+    if (!interacted.current || !result || result.paidHoursPerYear <= 0) return;
+    writeCarried({
+      source: "labor-workspace",
+      billedRate: result.recommendedRateRounded,
+      costPerBilledHour: result.breakEvenRate,
+      loadedLaborCost: result.loadedCostPerPaidHour,
+      averageWage: result.totalWages / result.paidHoursPerYear,
+      monthlyOverhead: result.monthlyOverhead > 0 ? result.monthlyOverhead : null,
+      techCount: result.techs.length,
+    });
+  }, [result]);
 
   const set = (key: NumericKey, value: string) => setState((s) => ({ ...s, [key]: value }));
   const patch = (next: Partial<LaborState>) => setState((s) => ({ ...s, ...next }));
@@ -905,6 +924,17 @@ function ResultsPanel({
         <p className="text-[13px] font-semibold text-stone-900">What one billed hour pays for</p>
         <RateBar result={result} />
       </div>
+
+      <p className="flex items-start gap-2 text-xs leading-relaxed text-stone-600 print:hidden">
+        <Check aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+        <span>
+          Change a number and your rate is offered to the{" "}
+          <Link href={calculatorPath("maintenance-agreement")} className="font-medium text-[#77591B] hover:underline">agreement</Link>,{" "}
+          <Link href={calculatorPath("callback-cost")} className="font-medium text-[#77591B] hover:underline">callback</Link>,{" "}
+          <Link href={calculatorPath("job-profitability")} className="font-medium text-[#77591B] hover:underline">job profit</Link> and{" "}
+          <Link href={calculatorPath("break-even")} className="font-medium text-[#77591B] hover:underline">break-even</Link> calculators, in this browser only.
+        </span>
+      </p>
     </div>
   );
 }
@@ -1052,6 +1082,9 @@ function FlatRateBuilder({
   const mult = num(state.afterHoursMult);
   const fee = num(state.diagnosticFee);
   const showFee = fee > 0;
+  // A rate worked out in the quick calculator can price the book instead.
+  const carried = useCarried();
+  const quickRate = carried?.source === "labor-rate" ? carried.billedRate : null;
 
   const update = (id: string, next: Partial<TaskRow>) =>
     setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...next } : t)) }));
@@ -1081,6 +1114,14 @@ function FlatRateBuilder({
           ]}
         />
       </div>
+      {quickRate !== null && !(state.rateSource === "custom" && num(state.customRate) === quickRate) ? (
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-stone-600 print:hidden">
+          Your {CARRY_SOURCE_NAMES["labor-rate"]} gave {formatMoney(quickRate, 0)} an hour.
+          <ToolButton size="sm" onClick={() => setState((s) => ({ ...s, rateSource: "custom", customRate: String(quickRate) }))}>
+            Use {formatMoney(quickRate, 0)} for the price book
+          </ToolButton>
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {state.rateSource === "custom" ? (

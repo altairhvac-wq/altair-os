@@ -13,10 +13,12 @@ import {
 } from "@/shared/lib/resources/catalog";
 import { buildResourceCollectionStructuredData } from "@/shared/lib/resources/structured-data";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import { LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
 
-const TITLE = "Business calculators for contractors";
+const TITLE = "HVAC Business Calculators";
+const H1 = "Business calculators for HVAC contractors";
 const DESCRIPTION =
-  "Six free calculators for HVAC and trade business owners: labor rate, job profit, break-even, maintenance agreement pricing, technician pay and callback cost. Every formula is shown. No account required.";
+  "Free HVAC business calculators: labor rate, job profit, break-even, maintenance agreement pricing, technician pay and callback cost. Formulas shown.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -42,7 +44,7 @@ const ANSWERS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
 const STEPS: readonly { title: string; text: string }[] = [
   {
     title: "Set your rate first",
-    text: "Start with the labor rate calculator. Wage is only part of what a billed hour has to cover: burden, the paid hours nobody can bill, and a share of the office all ride on the hours you do bill.",
+    text: "Start with the Labor Cost Workspace, or the quick labor rate calculator for one technician. Wage is only part of what a billed hour has to cover: burden, the paid hours nobody can bill, and a share of the office all ride on the hours you do bill.",
   },
   {
     title: "Then check real jobs against it",
@@ -68,10 +70,10 @@ const STEPS: readonly { title: string; text: string }[] = [
 
 export default function ResourceCalculatorsIndexPage() {
   return (
-    <>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
       <JsonLdScript
         data={buildResourceCollectionStructuredData({
-          name: TITLE,
+          name: H1,
           description: DESCRIPTION,
           path: RESOURCES_CALCULATORS_PATH,
           parts: RESOURCE_CALCULATORS.map((calculator) => ({
@@ -82,7 +84,7 @@ export default function ResourceCalculatorsIndexPage() {
       />
       <ResourcePageHeader
         eyebrow="Calculators"
-        title={TITLE}
+        title={H1}
         intro={<p>{DESCRIPTION}</p>}
         crumbs={[{ label: "Calculators" }]}
       />
@@ -130,14 +132,18 @@ export default function ResourceCalculatorsIndexPage() {
           ))}
         </ol>
         <p className="mt-6 text-sm text-stone-600">
-          Every calculator shows its formula and assumptions, remembers your numbers in this browser, can copy a
-          link to your result, and can email the result to you. Need the paperwork side?{" "}
+          Every calculator shows its formula worked with your own numbers, has a chart and a what-if table, can
+          save your numbers in this browser, copy a share link or print a one-page PDF. Your labor rate from the{" "}
+          <Link href={LABOR_WORKSPACE_PATH} className={resourceLinkClass}>
+            Labor Cost Workspace
+          </Link>{" "}
+          carries into the others with one button, and nothing is sent anywhere. Need the paperwork side?{" "}
           <Link href="/resources/templates" className={resourceLinkClass}>
             Free templates
           </Link>{" "}
-          cover estimates, maintenance agreements and pricing.
+          cover estimates, maintenance agreements and pricing, as PDF, Excel and Word.
         </p>
       </section>
-    </>
+    </div>
   );
 }
