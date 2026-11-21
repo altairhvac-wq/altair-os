@@ -106,7 +106,13 @@ function Panel({ id }: { readonly id: string }) {
   if (id === "estimate") return <EstimateDemo />;
   if (id === "dispatch") return <DispatchDemo />;
   if (id === "invoice") return <InvoiceDemo />;
-  return <JobJourney />;
+  // JobJourney's panel is see-through (it sits on a dark page on /hvac-software); on the cream band it
+  // needs a solid dark backing or it turns grey.
+  return (
+    <div className="overflow-hidden rounded-2xl bg-[#0d100c] shadow-[0_30px_70px_-40px_rgba(20,18,14,0.8)]">
+      <JobJourney />
+    </div>
+  );
 }
 
 export function HomeTryItSection() {
