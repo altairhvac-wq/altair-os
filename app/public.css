@@ -59,3 +59,10 @@
 @source "../shared/hooks";
 @source "../shared/lib";
 @source "../shared/types";
+
+/* The tool pages (labor workspace, invoice builder) print as clean worksheets. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+}
