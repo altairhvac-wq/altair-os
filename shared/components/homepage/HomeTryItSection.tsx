@@ -37,7 +37,7 @@ function DemoLoading() {
   return (
     <div
       aria-hidden="true"
-      className="flex min-h-[520px] items-center justify-center rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)]"
+      className="flex min-h-[520px] items-center justify-center rounded-2xl border border-[#e4d9c4] bg-white"
     >
       <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#c2a05a]/30 border-t-[#c2a05a]" />
     </div>
@@ -121,20 +121,20 @@ export function HomeTryItSection() {
   };
 
   return (
-    <section aria-labelledby="home-try-heading" className="px-5 pt-14 sm:px-8 sm:pt-20">
+    <section aria-labelledby="home-try-heading" className="px-5 pt-16 sm:px-8 sm:pt-24">
       <div className="mx-auto max-w-6xl">
         <div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
               Try it right here · no account
             </p>
             <h2
               id="home-try-heading"
-              className="mt-3 scroll-mt-28 text-[1.6rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.1rem]"
+              className="mt-3 scroll-mt-28 text-[1.6rem] font-semibold tracking-tight text-[#14120e] sm:text-[2.1rem]"
             >
               Use the software before you sign up for anything.
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-base">
               The same screens and steps your office and techs use, with a made-up HVAC company. Nothing you do here is
               saved or sent.
             </p>
@@ -169,24 +169,24 @@ export function HomeTryItSection() {
                 onClick={() => select(index, false)}
                 className={`group flex min-h-[4.25rem] items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors sm:px-4 ${
                   selected
-                    ? "border-[#c2a05a]/70 bg-[linear-gradient(160deg,rgba(164,130,58,0.22)_0%,rgba(20,23,18,0.9)_70%)]"
-                    : "border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] hover:border-[rgba(230,227,220,0.28)]"
-                } ${focusRing} focus-visible:ring-offset-[#080907]`}
+                    ? "border-[#14120e] bg-[#14120e] shadow-[0_16px_36px_-20px_rgba(20,18,14,0.75)]"
+                    : "border-[#e4d9c4] bg-white hover:border-[#c2a05a] hover:shadow-[0_12px_28px_-20px_rgba(90,68,24,0.45)]"
+                } ${focusRing} focus-visible:ring-offset-[#f5efe3]`}
               >
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ${
                     selected
-                      ? "bg-[#a4823a] text-[#080907] ring-[#e8d9ac]/40"
-                      : "bg-[#a4823a]/12 text-[#e8d9ac] ring-[#c2a05a]/25"
+                      ? "bg-[#c2a05a] text-[#14120e] ring-[#e8d9ac]/40"
+                      : "bg-[#f5ecd9] text-[#77591B] ring-[#e4d9c4]"
                   }`}
                 >
                   <Icon aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <span className="min-w-0">
-                  <span className={`block text-sm font-semibold ${selected ? "text-[#fff9ea]" : "text-[#e6dccb]"}`}>
+                  <span className={`block text-sm font-semibold ${selected ? "text-[#fff9ea]" : "text-[#14120e]"}`}>
                     {item.label}
                   </span>
-                  <span className="mt-0.5 hidden text-xs text-[#8e826f] sm:block">{item.hint}</span>
+                  <span className={`mt-0.5 hidden text-xs sm:block ${selected ? "text-[#c9bfae]" : "text-stone-500"}`}>{item.hint}</span>
                 </span>
               </button>
             );
@@ -202,10 +202,10 @@ export function HomeTryItSection() {
           <Panel id={tab.id} />
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[rgba(230,227,220,0.1)] bg-[rgba(14,17,13,0.5)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#e4d9c4] bg-white px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <Link
             href={tab.deeper.href}
-            className={`inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#e8d9ac] underline-offset-4 hover:text-[#fff9ea] hover:underline ${focusRing} focus-visible:ring-offset-[#080907]`}
+            className={`inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#77591B] underline-offset-4 hover:text-[#14120e] hover:underline ${focusRing} focus-visible:ring-offset-white`}
           >
             {tab.deeper.label}
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
@@ -213,11 +213,11 @@ export function HomeTryItSection() {
           <Link
             href={`${VIDEO_PAGE_PATH}?t=${tab.video.seconds}`}
             data-track={`home-demo-video-${tab.id}`}
-            className={`inline-flex min-h-10 items-center gap-2 text-sm text-[#c9bfae] hover:text-[#fff9ea] ${focusRing} focus-visible:ring-offset-[#080907]`}
+            className={`inline-flex min-h-10 items-center gap-2 text-sm text-stone-600 hover:text-[#14120e] ${focusRing} focus-visible:ring-offset-white`}
           >
-            <PlayCircle aria-hidden="true" className="h-4 w-4 text-[#c2a05a]" />
+            <PlayCircle aria-hidden="true" className="h-4 w-4 text-[#a4823a]" />
             Watch this part in the job video
-            <span className="font-semibold tabular-nums text-[#c2a05a]">{tab.video.at}</span>
+            <span className="font-semibold tabular-nums text-[#77591B]">{tab.video.at}</span>
           </Link>
         </div>
       </div>
