@@ -154,7 +154,7 @@ export const SOFTWARE_PAGE_RELATED: Record<
     tools: ["labor-rate", "job-profitability", "maintenance-agreement"],
     articles: [
       { slug: "how-to-price-an-hvac-service-call", title: "How to Price an HVAC Service Call: A Worked Example" },
-      { slug: "how-to-calculate-hvac-labor-rate", title: "How to Calculate Your HVAC Labor Rate" },
+      { slug: "how-to-calculate-hvac-labor-rate", title: "HVAC labor rate calculator and cost workspace" },
       { slug: "job-profitability-per-job", title: "Is That HVAC Job Making Money?" },
     ],
   },
@@ -162,7 +162,7 @@ export const SOFTWARE_PAGE_RELATED: Record<
     tools: ["labor-rate", "job-profitability", "break-even"],
     articles: [
       { slug: "what-to-put-on-an-hvac-invoice", title: "What to Put on an HVAC Invoice: A Line-by-Line Checklist" },
-      { slug: "hvac-invoice-template", title: "HVAC Invoice Template: Every Field, Explained" },
+      { slug: "hvac-invoice-template", title: "HVAC invoice template and builder" },
       { slug: "job-completion-to-invoice-gap", title: "Why Invoices Lag Behind Finished Jobs" },
     ],
   },

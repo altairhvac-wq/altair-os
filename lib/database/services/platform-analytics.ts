@@ -11,6 +11,7 @@ import {
   ENGAGEMENT_EVENT_LABELS,
   isDirectoryStepLabel,
   isEngagementEventName,
+  pressDisplayName,
 } from "@/shared/lib/analytics/engagement";
 import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
 import { resolveEffectiveSubscriptionStatus } from "@/lib/saas-billing/trial-policy";
@@ -624,6 +625,9 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
         if (row.event === "cta_click" && isDirectoryStepLabel(row.label)) {
           return { label: DIRECTORY_STEP_LABELS[row.label], value: num(row.events), secondary: num(row.visitors) };
         }
+        // So are "next step" links and workspace actions (print, share link, save).
+        const press = row.event === "cta_click" ? pressDisplayName(row.label) : null;
+        if (press) return { label: press, value: num(row.events), secondary: num(row.visitors) };
         return {
           label: row.label ? `${name} · ${row.label}` : name,
           value: num(row.events),

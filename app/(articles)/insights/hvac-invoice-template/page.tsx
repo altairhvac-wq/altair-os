@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { NextStep } from "@/shared/components/site/NextStep";
 import { InvoiceBuilder } from "@/shared/components/resources/invoice/InvoiceBuilder";
 import { computeInvoice } from "@/shared/components/resources/invoice/InvoicePaper";
 import { SAMPLE_INVOICE } from "@/shared/components/resources/invoice/invoice-state";
@@ -21,6 +22,8 @@ import {
 } from "@/shared/components/resources/tools/ToolGuide";
 import { formatCents, formatQty, parseCents } from "@/shared/lib/resources/invoice-builder";
 import { RESOURCES_TEMPLATES_PATH, calculatorPath } from "@/shared/lib/resources/catalog";
+import { CODE_ROUTED_ARTICLES } from "@/shared/lib/site/code-routed-articles";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildPublicSocialMetadata, PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 
 /**
@@ -37,9 +40,8 @@ import { buildPublicSocialMetadata, PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN } from 
 
 const PATH = "/insights/hvac-invoice-template";
 const TITLE = "HVAC Invoice Template: Free Builder, Example and PDF";
-const DESCRIPTION =
-  "Free HVAC invoice template and builder: equipment, refrigerant, labor and parts, a live invoice to print or save as PDF, and a filled-in example.";
-const H1 = "HVAC invoice template and builder";
+/** Shared with the Insights cards, so a card names the page it opens. */
+const { title: H1, description: DESCRIPTION } = CODE_ROUTED_ARTICLES["hvac-invoice-template"];
 const PUBLISHED = "2026-11-17T23:24:12.977Z";
 const MODIFIED = "2026-11-20T00:00:00.000Z";
 
@@ -180,6 +182,12 @@ export default function InvoiceTemplatePage() {
           which of your lines are taxable. This page stores nothing you type unless you turn on &ldquo;Remember my
           company details&rdquo;.
         </p>
+        <NextStep
+          className="mx-auto mt-10 max-w-6xl print:hidden"
+          placement="invoice-builder"
+          steps={NEXT_STEPS.invoiceBuilder}
+          heading="Invoice done? Here is what to do next."
+        />
       </ToolStage>
 
       <GuideLayout eyebrow="The guide" title="How to write an HVAC invoice that gets paid" nav={NAV}>

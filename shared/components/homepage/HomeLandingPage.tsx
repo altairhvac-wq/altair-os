@@ -8,11 +8,14 @@ import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePri
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
-import { RESOURCES_CALCULATORS_PATH, RESOURCE_CALCULATORS, calculatorPath } from "@/shared/lib/resources/catalog";
+import { ToolStrip } from "@/shared/components/resources/hub/ToolCards";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { INTERACTIVE_TOOL_COUNT, hubTool } from "@/shared/lib/resources/tool-hub";
 import { ABOUT_PATH, FOUNDER } from "@/shared/lib/site/about";
-import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
+import { COMMERCIAL_JOB_STEPS, VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { FIVE_USER_PRICE_COMPARISON } from "@/shared/lib/site/comparison-pages";
 import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER } from "@/shared/lib/site/internal-links";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 
 /**
  * The logged-out homepage.
@@ -30,6 +33,14 @@ import { SOFTWARE_PAGES, SOFTWARE_PAGE_ORDER } from "@/shared/lib/site/internal-
  * comparison from the same constant /pricing uses, and the onboarding,
  * pricing and FAQ blocks are the ones the search landing pages render.
  * The old screen is kept as LoginLandingPage; /login is unchanged.
+ *
+ * ============ WAYS DEEPER (2026-11-20) ============
+ * 76 of the 84 visits that started here left after one page: the page
+ * offered six trial buttons and little for a visitor not ready to try. Under
+ * the film there is now a "Start here" strip (two free tools and the one-job
+ * video, with a jump to each step of that job), and the free tools moved up
+ * from the bottom with previews of what each one gives you. The trial stays
+ * the main button; these are the second path.
  */
 
 const focusRing =
@@ -47,15 +58,8 @@ function lowestMonthlyPrice(): number | null {
   return prices.length ? Math.min(...prices) : null;
 }
 
-/** The question each free calculator answers, in a few words. */
-const TOOL_BLURBS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
-  "labor-rate": "What an hour has to bill for.",
-  "job-profitability": "Whether that job made money.",
-  "break-even": "The jobs a month it takes to cover costs.",
-  "maintenance-agreement": "What to charge for an agreement.",
-  "technician-pay": "Hourly, flat rate or commission.",
-  "callback-cost": "What free return trips cost.",
-};
+/** The tools shown on the homepage strip; the hub has the rest. */
+const HOME_TOOLS = ["labor-workspace", "invoice-builder", "technician-pay", "break-even"].map(hubTool);
 
 export function HomeLandingPage() {
   const fromPrice = lowestMonthlyPrice();
@@ -111,6 +115,40 @@ export function HomeLandingPage() {
           </div>
         </section>
 
+        {/* "Start here": for the visitor who is not ready to try the software yet. */}
+        <section className="px-5 pt-10 sm:px-8 sm:pt-14">
+          <div className="mx-auto max-w-6xl">
+            <NextStep
+              tone="dark"
+              placement="home-start"
+              steps={NEXT_STEPS.home}
+              eyebrow="Start here"
+              heading="Not ready for a trial? Start with these."
+              intro="Two free tools that work without an account, and a short look at one real job in the software."
+              trial={false}
+            />
+            <nav aria-label="One job, step by step" className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e826f]">
+                Jump to one step of the job
+              </p>
+              <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
+                {COMMERCIAL_JOB_STEPS.map((step) => (
+                  <li key={step.seconds} className="shrink-0">
+                    <Link
+                      href={`${VIDEO_PAGE_PATH}?t=${step.seconds}`}
+                      data-track={`next-video-${step.seconds}`}
+                      className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-[rgba(230,227,220,0.14)] bg-[rgba(24,28,22,0.55)] px-3.5 text-xs text-[#c9bfae] transition-colors hover:border-[#c2a05a]/60 hover:text-[#fff9ea] ${focusRing}`}
+                    >
+                      <span className="font-semibold tabular-nums text-[#c2a05a]">{step.at}</span>
+                      {step.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </section>
+
         <div className="px-5 py-14 sm:px-8 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <SeeAltairInActionSection variant="dark" />
@@ -145,6 +183,21 @@ export function HomeLandingPage() {
             </ul>
           </div>
         </section>
+
+        {/* The free tools, moved up from the bottom of the page, with what each one gives you. */}
+        <div className="px-5 pb-14 sm:px-8 sm:pb-16">
+          <div className="mx-auto max-w-6xl">
+            <ToolStrip
+              id="home-tools-heading"
+              tone="dark"
+              tools={HOME_TOOLS}
+              eyebrow="Free, no account"
+              heading="Free tools for the numbers that run a shop."
+              intro="Each one opens with a worked example you can change. Your numbers stay in your browser."
+              hubLabel={`All ${INTERACTIVE_TOOL_COUNT} free tools`}
+            />
+          </div>
+        </div>
 
         <section aria-labelledby="home-compare-heading" className="px-5 pb-6 sm:px-8">
           <div className={`mx-auto max-w-3xl px-5 py-7 sm:px-8 sm:py-9 ${card}`}>
@@ -192,43 +245,22 @@ export function HomeLandingPage() {
         <HomepagePricingSection />
         <MarketingFaqSection variant="dark" />
 
-        <section aria-labelledby="home-tools-heading" className="px-5 pb-6 pt-4 sm:px-8">
-          <div className="mx-auto max-w-5xl">
-            <p className={eyebrow}>Free, no account</p>
-            <h2
-              id="home-tools-heading"
-              className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.75rem]"
-            >
-              Six calculators for the numbers that run a shop.
-            </h2>
-            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {RESOURCE_CALCULATORS.map((calculator) => (
-                <li key={calculator.slug}>
-                  <Link
-                    href={calculatorPath(calculator.slug)}
-                    className={`block h-full p-5 transition-colors hover:border-[#c2a05a]/60 ${card} ${focusRing}`}
-                  >
-                    <span className="block text-base font-semibold text-[#fff9ea]">{calculator.title}</span>
-                    <span className="mt-2 block text-sm leading-relaxed text-[#c9bfae]">
-                      {TOOL_BLURBS[calculator.slug]}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 flex flex-wrap gap-x-6 text-sm">
-              <Link href={RESOURCES_CALCULATORS_PATH} className={`inline-flex min-h-9 items-center ${textLink}`}>
-                All calculators
-              </Link>
-              <Link href="/resources/templates" className={`inline-flex min-h-9 items-center ${textLink}`}>
-                Free templates
-              </Link>
-              <Link href="/for-techs" className={`inline-flex min-h-9 items-center ${textLink}`}>
-                For technicians
-              </Link>
-            </p>
-          </div>
-        </section>
+        <nav aria-label="More for owners and technicians" className="px-5 pb-6 pt-4 sm:px-8">
+          <p className="mx-auto flex max-w-3xl flex-wrap justify-center gap-x-6 text-sm">
+            <Link href="/resources" className={`inline-flex min-h-9 items-center ${textLink}`}>
+              All free tools
+            </Link>
+            <Link href="/resources/templates" className={`inline-flex min-h-9 items-center ${textLink}`}>
+              Free templates
+            </Link>
+            <Link href="/for-techs" className={`inline-flex min-h-9 items-center ${textLink}`}>
+              For technicians
+            </Link>
+            <Link href="/directory" className={`inline-flex min-h-9 items-center ${textLink}`}>
+              Contractor directory
+            </Link>
+          </p>
+        </nav>
 
         <section aria-labelledby="home-founder-heading" className="px-5 pb-6 pt-10 sm:px-8">
           <div className={`mx-auto max-w-3xl px-5 py-7 sm:px-8 sm:py-9 ${card}`}>

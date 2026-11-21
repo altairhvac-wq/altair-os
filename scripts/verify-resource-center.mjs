@@ -362,8 +362,9 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
   }
-  check("public nav links Resources", /href: "\/resources", label: "Resources"/.test(read(FILES.nav)));
-  check("footer links Resources", /href: "\/resources", label: "Resources"/.test(read(FILES.footer)));
+  // Since 2026-11-20 the hub is the menu's "Free tools" link and the footer's "All Free Tools".
+  check("public nav links the hub as Free tools", /href: "\/resources", label: "Free tools"/.test(read(FILES.nav)));
+  check("footer links the hub", /href: "\/resources", label: "All Free Tools"/.test(read(FILES.footer)));
 
   const route = read(FILES.route);
   check("download route rejects unknown ids (dynamicParams = false)", /export const dynamicParams = false/.test(route));

@@ -23,6 +23,25 @@ export function CommercialVideoPlayer() {
     else video.addEventListener("loadedmetadata", seek, { once: true });
   }, []);
 
+  // The "see one job" step cards elsewhere on the page are server-rendered
+  // buttons carrying `data-seek="<seconds>"`; one listener here plays the
+  // video from that moment and brings it into view.
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const button = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-seek]") : null;
+      const video = ref.current;
+      const seconds = Number(button?.dataset.seek);
+      if (!button || !video || !Number.isFinite(seconds) || seconds < 0) return;
+      event.preventDefault();
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      video.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+      video.currentTime = seconds;
+      video.play().catch(() => undefined);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
   const jump = (seconds: number) => {
     const video = ref.current;
     if (!video) return;

@@ -6,9 +6,11 @@ import {
   resourceLinkClass,
 } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { NextStep } from "@/shared/components/site/NextStep";
 import {
   CALCULATOR_DISCLAIMER,
   RESOURCES_CALCULATORS_PATH,
+  RESOURCES_PATH,
   RESOURCE_CALCULATORS,
   calculatorPath,
   type ResourceCalculatorEntry,
@@ -16,7 +18,12 @@ import {
 import type { AltairFeatureKey } from "@/shared/lib/resources/feature-links";
 import { buildResourceWebPageStructuredData } from "@/shared/lib/resources/structured-data";
 import { CALCULATOR_SOFTWARE, SOFTWARE_PAGES } from "@/shared/lib/site/internal-links";
+import { CALCULATOR_NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildFaqPageStructuredData } from "@/shared/lib/site/structured-data";
+import { HUB_TOOLS } from "@/shared/lib/resources/tool-hub";
+
+/** The two full workspaces, listed with the other calculators. */
+const WORKSPACES = HUB_TOOLS.filter((tool) => tool.workspace);
 
 export type CalculatorInputNote = { readonly name: string; readonly text: string };
 export type CalculatorFaqItem = { readonly question: string; readonly answer: string };
@@ -88,6 +95,16 @@ export function CalculatorFrame({
       />
 
       <div className="mt-10">{children}</div>
+
+      {/* Right after the result: the calculator used to end in lists, so the
+          next tool, its guide and its software page now sit where the
+          visitor finishes. Chosen per calculator in shared/lib/site/next-steps.ts. */}
+      <NextStep
+        className="mt-8"
+        placement={`calc-${slug}`}
+        steps={CALCULATOR_NEXT_STEPS[slug]}
+        heading="Got your number? Here is where it goes next."
+      />
 
       {inputs && inputs.length > 0 ? (
         <ResourceCard className="mt-10">
@@ -204,7 +221,20 @@ export function CalculatorFrame({
               <span className="text-stone-600"> — {calculator.description}</span>
             </li>
           ))}
+          {WORKSPACES.map((tool) => (
+            <li key={tool.id}>
+              <Link href={tool.href} className={resourceLinkClass}>
+                {tool.title}
+              </Link>
+              <span className="text-stone-600"> — {tool.youGet}</span>
+            </li>
+          ))}
         </ul>
+        <p className="mt-4 text-sm">
+          <Link href={RESOURCES_PATH} className={resourceLinkClass}>
+            Every free tool, grouped by job →
+          </Link>
+        </p>
       </nav>
     </>
   );

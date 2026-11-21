@@ -4,6 +4,8 @@ import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billin
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { BossShareButtons } from "@/shared/components/marketing/BossShareButtons";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { calculatorPath, RESOURCES_LIBRARY_PATH } from "@/shared/lib/resources/catalog";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 import { FOR_TECHS_PATH } from "@/shared/lib/site/about";
@@ -180,6 +182,11 @@ export default function ForTechsPage() {
               />
             </div>
           </section>
+        </div>
+
+        {/* Wider than the column above, so three cards fit side by side. */}
+        <div className="mx-auto mt-14 max-w-5xl">
+          <NextStep tone="dark" placement="for-techs" steps={NEXT_STEPS.forTechs} eyebrow="Keep going" trial={false} />
         </div>
       </main>
       <MarketingFooter />

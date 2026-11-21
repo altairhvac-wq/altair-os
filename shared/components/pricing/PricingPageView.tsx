@@ -3,6 +3,8 @@ import { Check, Sparkles } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 import {
   SAAS_TRIAL_CONFIG,
@@ -326,6 +328,15 @@ export function PricingPageView() {
             Start Your 14-Day Free Trial
           </Link>
         </section>
+
+        <NextStep
+          className="auth-panel-enter mx-auto mt-12 max-w-5xl"
+          placement="pricing"
+          steps={NEXT_STEPS.pricing}
+          eyebrow="Not ready to pick a plan?"
+          heading="See it work first, or run your numbers"
+          trial={false}
+        />
       </main>
 
       <MarketingFooter />

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 import { ABOUT_PATH, COMPANY_FACTS, FOUNDER, FOUNDER_PHOTO } from "@/shared/lib/site/about";
@@ -184,6 +186,11 @@ export default function AboutPage() {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Wider than the column above, so three cards fit side by side. */}
+        <div className="mx-auto mt-14 max-w-5xl">
+          <NextStep tone="dark" placement="about" steps={NEXT_STEPS.about} eyebrow="Keep going" trial={false} />
         </div>
       </main>
       <MarketingFooter />
