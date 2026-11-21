@@ -244,6 +244,11 @@ export const NEXT_STEPS = {
     SOFTWARE.invoicing,
   ],
   insights: [HUB, VIDEO, SOFTWARE.business],
+  templates: [
+    { ...TOOLS.agreement, text: "Price the maintenance agreement before you write it up: visits, materials and the member discount." },
+    { ...TOOLS.laborWorkspace, text: "The labor rate that belongs on every estimate line, worked out from your own costs." },
+    SOFTWARE.estimating,
+  ],
   pricing: [VIDEO, { ...TOOLS.laborWorkspace, text: "Check what your hours have to bill for before you choose a plan." }, HUB],
   contact: [VIDEO, HUB, SOFTWARE.business],
   /** The page already ends with the video and the trial. */

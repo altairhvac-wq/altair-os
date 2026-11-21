@@ -185,8 +185,8 @@ check("browsers may send pageview, signup_started, exclude_device and the named 
   check("a label must be a slug in the database too", migration209.includes("event_label ~ '^[a-z0-9][a-z0-9_-]{0,63}$'") && engagementSource.includes("/^[a-z0-9][a-z0-9_-]{0,63}$/"));
   check("a malformed label drops the whole event", /if \(label !== null && !isValidEngagementLabel\(label\)\) return NO_CONTENT\(\)/.test(route));
   check("the engagement summary leaves out the owner's browsers and signed-in use", /web_analytics_internal_visitors/.test(migration209) && /e\.user_id is null/.test(migration209));
-  const fields = read("shared/components/resources/CalculatorFields.tsx");
-  check("calculator use records the calculator's name only", /trackEngagement\("calculator_used", id\)/.test(fields));
+  const fields = read("shared/components/resources/calc/useCalculatorTool.ts");
+  check("calculator use records the calculator's name only", /trackEngagement\("calculator_used", slug\)/.test(fields));
 }
 check("signup_completed cannot be posted by a browser", !/CLIENT_EVENTS[^\n]*signup_completed/.test(route));
 check("cross-site origins refused", /if \(!isSameOriginBeacon\(request\)\) return NO_CONTENT\(\)/.test(route));

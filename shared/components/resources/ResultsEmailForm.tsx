@@ -33,9 +33,12 @@ const LIST_NOTES: Record<string, string> = {
 export function ResultsEmailForm({
   slug,
   values,
+  bare = false,
 }: {
   readonly slug: CalculatorSlug;
   readonly values: Record<string, string>;
+  /** Inside another panel: no card of its own. */
+  readonly bare?: boolean;
 }) {
   const emailId = useId();
   const subscribeId = useId();
@@ -76,9 +79,9 @@ export function ResultsEmailForm({
     <form
       onSubmit={submit}
       aria-label="Email me these results"
-      className="mt-4 rounded-2xl border border-stone-200/80 bg-white px-5 py-5 shadow-sm"
+      className={bare ? "relative" : "relative mt-4 rounded-2xl border border-stone-200/80 bg-white px-5 py-5 shadow-sm"}
     >
-      <label htmlFor={emailId} className="block text-sm font-semibold text-stone-900">
+      <label htmlFor={emailId} className={bare ? "sr-only" : "block text-sm font-semibold text-stone-900"}>
         Email me these results
       </label>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row lg:flex-col">

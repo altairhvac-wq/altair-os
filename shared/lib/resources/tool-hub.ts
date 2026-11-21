@@ -234,7 +234,7 @@ export const HUB_TOOLS: readonly HubTool[] = [
     href: RESOURCES_TEMPLATES_PATH,
     job: "paid",
     solves: "Where do I start on an estimate or an agreement?",
-    youGet: "An estimate template, pricing worksheet, agreement outline and daily checklist.",
+    youGet: "An estimate, pricing worksheet, agreement outline and daily checklist: PDF, Excel or Word, each with a filled-in HVAC example.",
     minutes: 1,
     inputs: null,
     workspace: false,

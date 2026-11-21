@@ -28,9 +28,9 @@ export type ResourceCalculatorEntry = {
 export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
   {
     slug: "labor-rate",
-    title: "HVAC labor rate calculator",
+    title: "Quick HVAC labor rate calculator",
     description:
-      "Work out the hourly rate a technician needs to bill to cover wage, burden, unbillable hours, overhead and your target margin.",
+      "The quick version: one technician's billable rate from wage, burden, unbillable hours, overhead and your target margin.",
   },
   {
     slug: "job-profitability",

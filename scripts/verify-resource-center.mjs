@@ -393,5 +393,62 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("no iframes (videos are links to YouTube)", iframes.length === 0, iframes);
 }
 
+// ------------------------------------------- batch 2: files, carry, metadata
+console.log("\nEditable template files (site upgrade batch 2)");
+{
+  const files = await loadPureModule(`${LIB}/template-files.ts`, "res-files");
+  const names = files.TEMPLATE_FILES.map((f) => f.name);
+  check("a blank and an example file per template", names.length === tpl.RESOURCE_TEMPLATES.length * 2, names);
+  check("file names are unique safe slugs", new Set(names).size === names.length && names.every((n) => /^[a-z0-9-]+\.(xlsx|docx)$/.test(n)), names);
+  for (const file of files.TEMPLATE_FILES) {
+    const bytes = file.build();
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    check(`${file.name}: a zip (local header first, end record last)`, view.getUint32(0, true) === 0x04034b50 && view.getUint32(bytes.length - 22, true) === 0x06054b50);
+    const text = new TextDecoder().decode(bytes);
+    check(`${file.name}: carries its main part`, text.includes(file.ext === "xlsx" ? "xl/workbook.xml" : "word/document.xml"));
+    check(`${file.name}: no raw HTML`, !/<\s*(script|iframe|html)\b/i.test(text));
+  }
+  const ooxml = await loadPureModule(`${LIB}/ooxml.ts`, "res-ooxml");
+  check("crc32 matches the standard check value", ooxml.crc32(new TextEncoder().encode("123456789")) === 0xcbf43926);
+  check("column names run A..Z, AA", ooxml.colName(0) === "A" && ooxml.colName(25) === "Z" && ooxml.colName(26) === "AA");
+  check("XML text is escaped", ooxml.escapeXml(`<a & "b">`) === "&lt;a &amp; &quot;b&quot;&gt;");
+  const route = read("app/(marketing)/resources/templates/download/[file]/route.ts");
+  check("file route rejects unknown names (dynamicParams = false)", /export const dynamicParams = false/.test(route));
+  check("file route sets nosniff and an attachment name from the list", /X-Content-Type-Options/.test(route) && /filename="\$\{file\.name\}"/.test(route));
+  const ex = tpl.ESTIMATE_EXAMPLE;
+  check("estimate example subtotal is 607.00", near(tpl.estimateTotals(ex).subtotal, 607));
+}
+
+console.log("\nCarry my numbers and calculator pages");
+{
+  const carry = read("shared/components/resources/calc/carry.ts");
+  check("carried numbers live in localStorage only (no fetch, no beacon)", /localStorage/.test(carry) && !/fetch\(|sendBeacon|XMLHttpRequest/.test(carry));
+  check("reads, writes and removals are each wrapped in try/catch", (carry.match(/try \{/g) ?? []).length >= 3 && (carry.match(/catch \{/g) ?? []).length >= 3);
+  const hook = read("shared/components/resources/calc/useCalculatorTool.ts");
+  check("calculator use is tracked by name only", /trackEngagement\("calculator_used", slug\)/.test(hook));
+  for (const slug of catalog.RESOURCE_CALCULATORS.map((c) => c.slug)) {
+    const page = read(`app/(marketing)/resources/calculators/${slug}/page.tsx`);
+    check(`${slug}: has an FAQ (one FAQPage JSON-LD, built by the frame)`, /faq=\{/.test(page));
+    const title = page.match(/const TITLE = "([^"]+)"/)?.[1] ?? "";
+    const description = (page.match(/const DESCRIPTION =\s*"([^"]+)"/)?.[1] ?? "").trim();
+    const absolute = /title: \{ absolute: TITLE \}/.test(page);
+    const shownTitle = absolute ? title : `${title} · Altair Operating System`;
+    check(`${slug}: title ≤ 60 characters (${shownTitle.length})`, shownTitle.length > 0 && shownTitle.length <= 60, shownTitle);
+    check(`${slug}: description ≤ 155 characters (${description.length})`, description.length > 0 && description.length <= 155, description);
+  }
+  const frame = read(FILES.frame);
+  check("the frame emits exactly one FAQPage", (frame.match(/buildFaqPageStructuredData\(/g) ?? []).length === 1);
+  for (const path of ["app/(marketing)/resources/templates/page.tsx", "app/(marketing)/resources/calculators/page.tsx"]) {
+    const page = read(path);
+    const title = page.match(/const TITLE = "([^"]+)"/)?.[1] ?? "";
+    const description = (page.match(/const DESCRIPTION =\s*"([^"]+)"/)?.[1] ?? "").trim();
+    check(`${path}: title ≤ 60 with the site suffix`, `${title} · Altair Operating System`.length <= 60, title);
+    check(`${path}: description ≤ 155`, description.length > 0 && description.length <= 155, description.length);
+  }
+  check("templates page has one FAQPage", (read("app/(marketing)/resources/templates/page.tsx").match(/buildFaqPageStructuredData\(/g) ?? []).length === 1);
+  const labor = read("app/(marketing)/resources/calculators/labor-rate/page.tsx");
+  check("the quick labor rate page keeps its own canonical and links the workspace", /calculatorPath\("labor-rate"\)/.test(labor) && /LABOR_WORKSPACE_PATH/.test(labor) && !/redirect\(/.test(labor));
+}
+
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) process.exit(1);
