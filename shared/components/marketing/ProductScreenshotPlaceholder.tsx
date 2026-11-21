@@ -117,9 +117,11 @@ export function ProductScreenshotPlaceholder({
           aria-label={`View larger: ${alt}`}
         >
           {mobileSrc ? (
+            // Same alt as the desktop copy: only one of the two is displayed
+            // at a time, and the hidden one is skipped by screen readers.
             <Image
               src={mobileSrc}
-              alt=""
+              alt={alt}
               fill
               sizes="95vw"
               quality={90}

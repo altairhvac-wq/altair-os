@@ -255,6 +255,31 @@ export const NEXT_STEPS = {
   ],
   /** The comparison pages already show the video. */
   comparison: [SOFTWARE.business, PRICING, HUB],
+  /**
+   * The four software pages list their free tools and guides just above
+   * this module, so it points along the job instead: the next part of the
+   * workflow, the one-job video and the plan finder.
+   */
+  invoicingSoftware: [
+    { ...SOFTWARE.estimating, text: "Where the invoice starts: estimates customers approve and sign on their phone." },
+    VIDEO,
+    { ...PRICING, href: "/pricing#plan-finder", text: "Answer three questions and see the plan and monthly cost for your team." },
+  ],
+  estimatingSoftware: [
+    { ...SOFTWARE.dispatch, text: "What happens after the yes: the approved job on the day's board." },
+    VIDEO,
+    { ...PRICING, href: "/pricing#plan-finder", text: "Answer three questions and see the plan and monthly cost for your team." },
+  ],
+  dispatchSoftware: [
+    { ...SOFTWARE.invoicing, text: "When the job is done: the invoice is drafted from it and paid from a link." },
+    VIDEO,
+    { ...PRICING, href: "/pricing#plan-finder", text: "Answer three questions and see the plan and monthly cost for your team." },
+  ],
+  businessSoftware: [
+    VIDEO,
+    HUB,
+    { ...PRICING, href: "/pricing#plan-finder", text: "Answer three questions and see the plan and monthly cost for your team." },
+  ],
 } as const satisfies Record<string, readonly NextStepItem[]>;
 
 /** Each calculator's next tool, guide and software page. */
