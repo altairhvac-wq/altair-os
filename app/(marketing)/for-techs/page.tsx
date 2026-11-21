@@ -115,8 +115,8 @@ export default function ForTechsPage() {
         </section>
 
         {/* ---------- the real screens ---------- */}
-        <section id="phone" aria-labelledby="techs-phone-heading" className="mt-16 scroll-mt-24">
-          <div className="mx-auto max-w-5xl px-5 sm:px-8">
+        <section id="phone" aria-labelledby="techs-phone-heading" className="mt-16 scroll-mt-24 px-5 sm:px-8">
+          <div className="mx-auto max-w-5xl">
             <p className={eyebrow}>The software, from your side</p>
             <h2 id="techs-phone-heading" className={heading}>
               What you get on your phone
@@ -131,7 +131,7 @@ export default function ForTechsPage() {
             </p>
           </div>
           {/* Phones scroll sideways on a narrow screen; three across from md up. */}
-          <ul className="mx-auto mt-8 flex max-w-5xl snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 sm:px-8 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible">
+          <ul className="-mx-5 mt-8 flex max-w-5xl snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 sm:-mx-8 sm:px-8 md:mx-auto md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0">
             {TECH_SCREENS.map((screen, index) => (
               <li key={screen.src} className="w-[220px] shrink-0 snap-center md:w-auto">
                 <figure>
@@ -146,7 +146,7 @@ export default function ForTechsPage() {
               </li>
             ))}
           </ul>
-          <p className="mx-auto mt-4 max-w-5xl px-5 text-[13px] text-[#8e826f] sm:px-8">
+          <p className="mx-auto mt-4 max-w-5xl text-[13px] text-[#8e826f]">
             It does not track where your truck is. The office sees the job addresses, not your location.{" "}
             <Link href="/hvac-dispatch-software" className={textLink}>
               How dispatch works
@@ -161,7 +161,7 @@ export default function ForTechsPage() {
             <h2 id="techs-day-heading" className={heading}>
               From clock-in to the last job
             </h2>
-            <ol className="mt-8 grid gap-3 md:grid-cols-5">
+            <ol className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {TECH_DAY.map((step, index) => (
                 <li key={step.title} className={`flex flex-col p-5 ${card}`}>
                   <span className="flex items-center gap-2.5">

@@ -113,17 +113,17 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-5">
                 <Link
                   href="/signup"
                   data-cta="contact"
-                  className={`inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-6 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
+                  className={`inline-flex min-h-12 items-center justify-center whitespace-nowrap rounded-lg bg-[#a4823a] px-6 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
                 >
                   Start Your {trialDays}-Day Free Trial
                 </Link>
                 <a
                   href="#faq"
-                  className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[rgba(230,227,220,0.18)] px-6 py-3 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.32)] ${focusRing}`}
+                  className={`inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
                 >
                   Common questions
                   <ArrowRight aria-hidden="true" className="h-4 w-4 rotate-90" />

@@ -149,7 +149,7 @@ export default function AboutPage() {
             </div>
 
             {/* Small, not a link, and served as the one small file it is. */}
-            <figure className="mx-auto w-[240px] shrink-0 md:mx-0 md:mt-10 md:w-full">
+            <figure className="mx-auto w-[240px] shrink-0 md:ml-auto md:mr-0 md:mt-10">
               <Image
                 src={FOUNDER_PHOTO.src}
                 alt={FOUNDER_PHOTO.alt}

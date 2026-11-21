@@ -386,7 +386,6 @@ const SERVICETITAN: ComparisonPageContent = {
         label: "ServiceTitan, Inc. Form 10-K for the fiscal year ended January 31, 2026 (SEC)",
         url: "https://www.sec.gov/Archives/edgar/data/1638826/000163882626000028/ttan-20260131.htm",
       },
-      { label: "ServiceTitan Terms of Use", url: "https://www.servicetitan.com/legal/terms-of-use" },
     ],
     trademarks: `ServiceTitan is a trademark of ServiceTitan, Inc. ${SHARED_TRADEMARK_NOTE}`,
   },
