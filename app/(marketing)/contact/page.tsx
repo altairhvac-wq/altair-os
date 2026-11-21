@@ -8,6 +8,7 @@ import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqS
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
+import { BAND, TONE } from "@/shared/lib/site/bands";
 import { CONTACT_EXPECTATIONS, CONTACT_FAQ, CONTACT_PATH } from "@/shared/lib/site/contact";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -66,8 +67,8 @@ export default function ContactPage() {
       <JsonLdScript data={buildContactPageStructuredData()} />
       <JsonLdScript data={buildFaqPageStructuredData(CONTACT_FAQ)} />
       <HomepageNav />
-      <main className="relative flex-1 pb-20 pt-28 sm:pt-36">
-        <div className="px-5 sm:px-8">
+      <main className="relative flex-1">
+        <div className={`${BAND.hero} px-5 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
           <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-14">
             {/* ---------- left: who and how ---------- */}
             <div>
@@ -151,24 +152,24 @@ export default function ContactPage() {
         </div>
 
         {/* ---------- what to expect ---------- */}
-        <section aria-labelledby="contact-expect-heading" className="mt-16 px-5 sm:px-8">
+        <section aria-labelledby="contact-expect-heading" className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
-            <p className={eyebrow}>What happens next</p>
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`}>What happens next</p>
             <h2
               id="contact-expect-heading"
-              className="mt-3 text-[1.5rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[1.9rem]"
+              className="mt-3 text-[1.5rem] font-semibold tracking-tight text-[#14120e] sm:text-[1.9rem]"
             >
               Who answers, and when
             </h2>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {CONTACT_EXPECTATIONS.map((item) => (
-                <li key={item.title} className={`flex flex-col p-5 ${card}`}>
-                  <h3 className="text-[15px] font-semibold text-[#fff9ea]">{item.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#c9bfae]">{item.text}</p>
+                <li key={item.title} className={`flex flex-col p-5 ${TONE.light.card}`}>
+                  <h3 className="text-[15px] font-semibold text-[#14120e]">{item.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-stone-600">{item.text}</p>
                   {item.href && item.linkLabel ? (
                     <Link
                       href={item.href}
-                      className={`mt-auto inline-flex items-center gap-1 pt-3 text-[13px] font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+                      className="mt-auto inline-flex items-center gap-1 pt-3 text-[13px] font-semibold text-[#77591B] underline-offset-4 hover:text-[#14120e] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a4823a]/60"
                     >
                       {item.linkLabel}
                       <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -180,18 +181,20 @@ export default function ContactPage() {
           </div>
         </section>
 
-        <MarketingFaqSection
-          variant="dark"
-          items={CONTACT_FAQ}
-          eyebrowText="Common questions"
-          headingText="Answers to what people write in about."
-          introText="The questions that come in most, answered from what the product does today."
-        />
+        <div className={`${BAND.olive} py-4 sm:py-8`}>
+          <MarketingFaqSection
+            variant="dark"
+            items={CONTACT_FAQ}
+            eyebrowText="Common questions"
+            headingText="Answers to what people write in about."
+            introText="The questions that come in most, answered from what the product does today."
+          />
+        </div>
 
-        <div className="px-5 sm:px-8">
+        <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
           <NextStep
             className="mx-auto max-w-5xl"
-            tone="dark"
+            tone="light"
             placement="contact"
             steps={NEXT_STEPS.contact}
             eyebrow="While you are here"
