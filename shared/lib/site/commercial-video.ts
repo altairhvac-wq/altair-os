@@ -43,6 +43,78 @@ export const COMMERCIAL_CHAPTERS: readonly { at: string; seconds: number; label:
   { at: "2:13", seconds: 133, label: "Try it free" },
 ];
 
+/** Where the one-job walkthrough starts (the third chapter). */
+export const COMMERCIAL_JOB_START = 51;
+
+/**
+ * The one-job walkthrough, step by step, for the "see one job" cards on
+ * /how-it-works and the homepage.
+ *
+ * The start times were read from the video itself on 2026-11-20: frames every
+ * two seconds from 0:50 to 1:52, noting the first frame whose step label
+ * (LEAD, QUOTE, APPROVAL, DISPATCH, FIELD, INVOICE, PAID) is on screen, then
+ * starting one second earlier so the step is never cut into. Each line says
+ * only what that part of the video shows and the narration says. Re-check
+ * them if the video is re-cut.
+ */
+export const COMMERCIAL_JOB_STEPS: readonly {
+  readonly seconds: number;
+  readonly at: string;
+  readonly title: string;
+  readonly text: string;
+  readonly href: string;
+  readonly linkLabel: string;
+}[] = [
+  {
+    seconds: 51,
+    at: "0:51",
+    title: "The call becomes a lead",
+    text: "The office adds the customer as a lead while they are still on the phone.",
+    href: "/hvac-software",
+    linkLabel: "HVAC business software",
+  },
+  {
+    seconds: 59,
+    at: "0:59",
+    title: "One click to an estimate",
+    text: "Her details carry over and the prices come from your price book. $2,820.",
+    href: "/hvac-estimating-software",
+    linkLabel: "HVAC estimating software",
+  },
+  {
+    seconds: 69,
+    at: "1:09",
+    title: "Signed on her phone",
+    text: "No app and no login. She signs with her finger and the estimate is approved.",
+    href: "/hvac-estimating-software",
+    linkLabel: "Estimates and approvals",
+  },
+  {
+    seconds: 79,
+    at: "1:19",
+    title: "On today's board",
+    text: "The signed job lands on the dispatch board and is assigned to a technician.",
+    href: "/hvac-dispatch-software",
+    linkLabel: "HVAC dispatch software",
+  },
+  {
+    seconds: 85,
+    at: "1:25",
+    title: "Run from the tech's phone",
+    text: "Address, notes and the approved estimate on his phone; his hours start when the work does.",
+    href: "/for-techs",
+    linkLabel: "For technicians",
+  },
+  {
+    seconds: 99,
+    at: "1:39",
+    title: "Invoiced and paid",
+    text: "The approved estimate becomes the invoice in one click, and it is paid in full the same day.",
+    href: "/hvac-invoicing-software",
+    linkLabel: "HVAC invoicing software",
+  },
+];
+
 /**
  * The narration, paragraph by paragraph. The voice says "Altair OS" in two
  * places; the written transcript uses the product's public name, "Altair

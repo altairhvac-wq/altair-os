@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { NextStep } from "@/shared/components/site/NextStep";
 import { LaborCostWorkspace } from "@/shared/components/resources/labor/LaborCostWorkspace";
 import {
   BulletList,
@@ -21,6 +22,8 @@ import {
 } from "@/shared/components/resources/tools/ToolGuide";
 import { LABOR_RATE_DEFAULTS, calculateLaborRate } from "@/shared/lib/resources/labor-rate";
 import { calculatorPath } from "@/shared/lib/resources/catalog";
+import { CODE_ROUTED_ARTICLES } from "@/shared/lib/site/code-routed-articles";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildPublicSocialMetadata, PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 
 /**
@@ -45,9 +48,8 @@ import { buildPublicSocialMetadata, PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN } from 
 
 const PATH = "/insights/how-to-calculate-hvac-labor-rate";
 const TITLE = "HVAC Labor Rate Calculator: Hourly Cost and Averages";
-const DESCRIPTION =
-  "Work out your HVAC hourly labor rate for the whole crew: wages, burden, unbilled time, overhead and margin. Plus sourced average and commercial rates.";
-const H1 = "HVAC labor rate calculator and cost workspace";
+/** Shared with the Insights cards, so a card names the page it opens. */
+const { title: H1, description: DESCRIPTION } = CODE_ROUTED_ARTICLES["how-to-calculate-hvac-labor-rate"];
 const PUBLISHED = "2026-11-12T04:10:16.965Z";
 const MODIFIED = "2026-11-20T00:00:00.000Z";
 
@@ -239,6 +241,12 @@ export default function LaborCostWorkspacePage() {
           tax figures with your payroll provider or accountant. Values marked &ldquo;sample&rdquo; are placeholders,
           not industry data.
         </p>
+        <NextStep
+          className="mx-auto mt-10 max-w-6xl print:hidden"
+          placement="labor-workspace"
+          steps={NEXT_STEPS.laborWorkspace}
+          heading="Got your rate? Put it to work."
+        />
       </ToolStage>
 
       <GuideLayout eyebrow="The guide" title="How to calculate an HVAC labor rate" nav={NAV}>

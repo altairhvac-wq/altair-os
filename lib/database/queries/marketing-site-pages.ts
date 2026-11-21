@@ -3,6 +3,7 @@ import "server-only";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient as createReadClient } from "@/lib/supabase/server";
+import { withCodeRouteDisplay } from "@/shared/lib/site/code-routed-articles";
 import type { SitePageState } from "@/shared/types/site-page";
 import type { SitePublishingDetails } from "@/shared/types/site-publishing-details";
 
@@ -153,7 +154,9 @@ export async function listPublishedSitePages(): Promise<SitePage[]> {
     return [];
   }
 
-  return (data ?? []).map((row: unknown) => toPage(row as SitePageRow));
+  // Two slugs are answered by pages in code whose titles differ from their
+  // rows; every list shows the page's own title (display only, nothing written).
+  return (data ?? []).map((row: unknown) => withCodeRouteDisplay(toPage(row as SitePageRow)));
 }
 
 /* -------------------------------------------------------------- internal */

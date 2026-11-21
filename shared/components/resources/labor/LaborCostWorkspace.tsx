@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { trackEngagement } from "@/shared/lib/analytics/client";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -97,6 +98,9 @@ const PROBLEM_TEXT: Record<string, string> = {
   "margin-out-of-range": "Set a target margin from 0% to 99%.",
 };
 
+/** Analytics label for this tool: a slug written here, never anything typed. */
+const TOOL_ID = "labor-workspace";
+
 export function LaborCostWorkspace() {
   const [state, setState] = useState<LaborState>(WORKED_EXAMPLE);
   const [step, setStep] = useState<StepId>("team");
@@ -105,6 +109,18 @@ export function LaborCostWorkspace() {
   const [presetsOpen, setPresetsOpen] = useState(false);
   const toast = useToast();
   const presetsRef = useRef<HTMLDivElement>(null);
+  // "Tool used" (first-party analytics, once per page view, never a value):
+  // the numbers changed because the visitor pressed or typed something, not
+  // because a saved copy or a shared link was restored on load.
+  const interacted = useRef(false);
+  const markInteracted = () => {
+    interacted.current = true;
+  };
+  useEffect(() => {
+    if (interacted.current) trackEngagement("calculator_used", TOOL_ID);
+  }, [state]);
+  const trackAction = (action: "print" | "link" | "save") =>
+    trackEngagement("cta_click", `tool-${TOOL_ID}-${action}`, { repeat: true });
 
   // After the first render (so server HTML and hydration agree): a shared
   // link wins over this browser's saved copy.
@@ -157,12 +173,14 @@ export function LaborCostWorkspace() {
   };
 
   const copyLink = async () => {
+    trackAction("link");
     const url = `${window.location.origin}${window.location.pathname}?${SHARE_PARAM}=${encodeState(state)}#workspace`;
     const ok = await copyText(url);
     toast.show(ok ? "Link copied. Anyone with it sees these numbers." : "Could not copy. Your browser blocked the clipboard.");
   };
 
   const save = () => {
+    trackAction("save");
     const ok = writeStorage(STORAGE_KEY, storableState(state));
     if (ok) setHasSaved(true);
     toast.show(ok ? "Saved in this browser only." : "This browser is blocking storage, so nothing was saved.");
@@ -179,7 +197,7 @@ export function LaborCostWorkspace() {
   const marginInvalid = num(state.marginPct) >= 100 || num(state.marginPct) < 0;
 
   return (
-    <div id="workspace" className="scroll-mt-24">
+    <div id="workspace" className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
         <div className="flex flex-col gap-3 bg-[#0d0f0c] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 print:hidden">
@@ -249,7 +267,15 @@ export function LaborCostWorkspace() {
             <ToolButton variant="dark" size="sm" icon={Save} onClick={save}>
               Save in this browser
             </ToolButton>
-            <ToolButton variant="primary" size="sm" icon={Printer} onClick={() => window.print()}>
+            <ToolButton
+              variant="primary"
+              size="sm"
+              icon={Printer}
+              onClick={() => {
+                trackAction("print");
+                window.print();
+              }}
+            >
               Print / PDF
             </ToolButton>
           </div>

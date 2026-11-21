@@ -5,6 +5,8 @@ import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { serializeJsonLd } from "@/shared/lib/site/structured-data";
 import { RESOURCE_CALCULATORS, calculatorPath } from "@/shared/lib/resources/catalog";
 import { SOFTWARE_PAGES, articleLinksFor } from "@/shared/lib/site/internal-links";
+import { ARTICLE_NEXT_STEPS } from "@/shared/lib/site/next-steps";
+import { NextStep } from "@/shared/components/site/NextStep";
 
 /**
  * Renders one published site page.
@@ -322,6 +324,17 @@ export function SitePageArticle({
           </div>
         </aside>
 
+        {/* A hand-chosen next tool, guide and software page where the article has
+            one (shared/lib/site/next-steps.ts); the generic tools list otherwise. */}
+        {ARTICLE_NEXT_STEPS[slug] ? (
+          <NextStep
+            className="mt-12"
+            placement={`article-${slug}`}
+            steps={ARTICLE_NEXT_STEPS[slug]}
+            heading="Do this next"
+            trial={false}
+          />
+        ) : (
         <section aria-labelledby="free-tools-heading" className="mt-12">
           <h2
             id="free-tools-heading"
@@ -347,6 +360,7 @@ export function SitePageArticle({
             ))}
           </ul>
         </section>
+        )}
 
         {readNext.length > 0 ? (
           <nav

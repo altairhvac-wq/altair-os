@@ -73,6 +73,23 @@ export function isDirectoryStepLabel(label: string | null | undefined): label is
   return typeof label === "string" && label in DIRECTORY_STEP_LABELS;
 }
 
+/**
+ * "Next step" links (shared/components/site/NextStep.tsx) and actions inside
+ * the two free workspaces ride on `cta_click` the same way, with labels that
+ * start "next-" ("next-tool-labor-workspace", "next-guide-…") or "tool-"
+ * ("tool-labor-workspace-print"). They are not trial buttons either.
+ */
+export const NEXT_STEP_PREFIX = "next-";
+export const TOOL_ACTION_PREFIX = "tool-";
+
+/** The Platform analytics name for a `cta_click` label that is not a trial button, or null. */
+export function pressDisplayName(label: string | null | undefined): string | null {
+  if (typeof label !== "string") return null;
+  if (label.startsWith(NEXT_STEP_PREFIX)) return `Next step · ${label.slice(NEXT_STEP_PREFIX.length)}`;
+  if (label.startsWith(TOOL_ACTION_PREFIX)) return `Tool action · ${label.slice(TOOL_ACTION_PREFIX.length)}`;
+  return null;
+}
+
 /** Plain words for the Platform analytics table. */
 export const ENGAGEMENT_EVENT_LABELS: Record<EngagementEventName, string> = {
   cta_click: "Trial button pressed",

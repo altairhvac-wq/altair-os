@@ -3,6 +3,8 @@ import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { CommercialVideoPlayer } from "@/shared/components/marketing/CommercialVideoPlayer";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import type { ComparisonPageContent } from "@/shared/lib/site/comparison-pages";
 
@@ -279,6 +281,18 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
             ))}
           </p>
         </section>
+
+        <div className="px-5 pb-12 sm:px-8">
+          <NextStep
+            className="mx-auto max-w-5xl"
+            tone="dark"
+            placement="comparison"
+            steps={NEXT_STEPS.comparison}
+            eyebrow="Still deciding?"
+            heading="Look closer before you switch"
+            trial={false}
+          />
+        </div>
 
         {/* sources */}
         <section aria-labelledby="compare-sources-heading" className="px-5 pb-16 sm:px-8">

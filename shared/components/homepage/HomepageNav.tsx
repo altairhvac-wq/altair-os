@@ -6,14 +6,40 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
+/**
+ * Six links. "Free tools" (the /resources hub) replaced "Onboarding" on
+ * 2026-11-20: the site audit found a visitor who came for one calculator had
+ * no way to see the others, while onboarding only matters to customers (it
+ * is still on the Product page and the homepage). "How it works" took the
+ * old Resources slot, since the hub is now the Free tools link.
+ */
 const NAV_LINKS = [
   { href: "/hvac-software", label: "Product", id: "product" },
-  { href: "/hvac-software#onboarding", label: "Onboarding", id: "onboarding" },
+  { href: "/how-it-works", label: "How it works", id: "how-it-works" },
+  { href: "/resources", label: "Free tools", id: "resources" },
   { href: "/pricing", label: "Pricing", id: "pricing" },
   { href: "/insights", label: "Insights", id: "insights" },
-  { href: "/resources", label: "Resources", id: "resources" },
   { href: "/contact", label: "Contact", id: "contact" },
 ] as const;
+
+type NavId = (typeof NAV_LINKS)[number]["id"];
+
+function isActive(id: NavId, pathname: string): boolean {
+  switch (id) {
+    case "product":
+      return pathname === "/hvac-software";
+    case "how-it-works":
+      return pathname === "/how-it-works";
+    case "resources":
+      return pathname === "/resources" || pathname.startsWith("/resources/");
+    case "pricing":
+      return pathname === "/pricing";
+    case "insights":
+      return pathname.startsWith("/insights");
+    case "contact":
+      return pathname === "/contact";
+  }
+}
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0f0b]";
@@ -30,12 +56,6 @@ export function HomepageNav() {
   const onHomepage = isHomepagePath(pathname);
   const forceSolid = !onHomepage;
   const solid = scrolled || forceSolid;
-  const pricingActive = pathname === "/pricing";
-  const insightsActive = pathname.startsWith("/insights");
-  const resourcesActive =
-    pathname === "/resources" || pathname.startsWith("/resources/");
-  const productActive = pathname === "/hvac-software";
-  const contactActive = pathname === "/contact";
 
   useEffect(() => {
     const onScroll = () => {
@@ -96,12 +116,7 @@ export function HomepageNav() {
           className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 xl:flex 2xl:gap-10"
         >
           {NAV_LINKS.map((link) => {
-            const active =
-              (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive) ||
-              (link.id === "resources" && resourcesActive) ||
-              (link.id === "product" && productActive) ||
-              (link.id === "contact" && contactActive);
+            const active = isActive(link.id, pathname);
             return (
               <Link
                 key={link.href}
@@ -162,10 +177,7 @@ export function HomepageNav() {
             className="mx-auto flex max-w-[90rem] flex-col gap-1 px-5 py-4"
           >
             {NAV_LINKS.map((link) => {
-              const active =
-              (link.id === "pricing" && pricingActive) ||
-              (link.id === "insights" && insightsActive) ||
-              (link.id === "resources" && resourcesActive);
+              const active = isActive(link.id, pathname);
               return (
                 <Link
                   key={link.href}

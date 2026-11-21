@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { SUPPORT_EMAIL } from "@/shared/lib/site/faq";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 
@@ -79,6 +81,18 @@ export default function ContactPage() {
               Read the common questions
             </Link>
           </div>
+        </div>
+
+        {/* Wider than the column above, so three cards fit side by side. */}
+        <div className="mx-auto mt-14 max-w-5xl">
+          <NextStep
+            tone="dark"
+            placement="contact"
+            steps={NEXT_STEPS.contact}
+            eyebrow="While you are here"
+            heading="See it, try the free tools, or read up"
+            trial={false}
+          />
         </div>
       </main>
       <MarketingFooter />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { trackEngagement } from "@/shared/lib/analytics/client";
 import {
   ClipboardCopy,
   Eye,
@@ -60,12 +61,32 @@ function todayIso(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+/** Analytics label for this tool: a slug written here, never anything typed. */
+const TOOL_ID = "invoice-builder";
+
 export function InvoiceBuilder() {
   const [state, setState] = useState<InvoiceState>(BLANK_INVOICE);
   const [view, setView] = useState<"form" | "preview">("form");
   const [blankPrint, setBlankPrint] = useState(false);
   const [rememberCompany, setRememberCompany] = useState(false);
   const toast = useToast();
+
+  // "Tool used" (first-party analytics, once per page view, never a value):
+  // the invoice changed because the visitor pressed or typed something, not
+  // because today's date or a remembered company block was filled in on load.
+  const interacted = useRef(false);
+  const markInteracted = () => {
+    interacted.current = true;
+  };
+  useEffect(() => {
+    if (interacted.current) trackEngagement("calculator_used", TOOL_ID);
+  }, [state]);
+  const trackAction = (action: "print" | "print-blank" | "copy-blank") =>
+    trackEngagement("cta_click", `tool-${TOOL_ID}-${action}`, { repeat: true });
+  const printInvoice = () => {
+    trackAction("print");
+    window.print();
+  };
 
   // After mount: today's date, and the visitor's own saved company block.
   useEffect(() => {
@@ -140,6 +161,7 @@ export function InvoiceBuilder() {
     toast.show(rememberCompany ? "Cleared. Your company details were kept." : "Cleared.");
   };
   const copyBlank = async () => {
+    trackAction("copy-blank");
     const ok = await copyText(BLANK_TEMPLATE_TEXT);
     toast.show(ok ? "Blank template copied. Paste it into any document." : "Could not copy. Your browser blocked the clipboard.");
   };
@@ -171,7 +193,7 @@ export function InvoiceBuilder() {
   const computed = useMemo(() => computeInvoice(state), [state]);
 
   return (
-    <div id="invoice-builder" className="scroll-mt-24">
+    <div id="invoice-builder" className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
         <div className="flex flex-col gap-3 bg-[#0d0f0c] px-4 py-3 sm:px-5 xl:flex-row xl:items-center xl:justify-between print:hidden">
@@ -194,10 +216,18 @@ export function InvoiceBuilder() {
             <ToolButton variant="dark" size="sm" icon={ClipboardCopy} onClick={copyBlank}>
               Copy blank template
             </ToolButton>
-            <ToolButton variant="dark" size="sm" icon={FileText} onClick={() => setBlankPrint(true)}>
+            <ToolButton
+              variant="dark"
+              size="sm"
+              icon={FileText}
+              onClick={() => {
+                trackAction("print-blank");
+                setBlankPrint(true);
+              }}
+            >
               Print blank
             </ToolButton>
-            <ToolButton variant="primary" size="sm" icon={Printer} onClick={() => window.print()}>
+            <ToolButton variant="primary" size="sm" icon={Printer} onClick={printInvoice}>
               Print / Save PDF
             </ToolButton>
           </div>
@@ -460,7 +490,7 @@ export function InvoiceBuilder() {
             </button>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={printInvoice}
               className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#0d0f0c] px-3 text-[13px] font-semibold text-[#f3ebdd] ${focusRing}`}
             >
               <Printer aria-hidden="true" className="h-3.5 w-3.5" /> PDF

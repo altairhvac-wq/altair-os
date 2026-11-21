@@ -83,7 +83,7 @@ export const RESOURCE_STATIC_PATHS: readonly string[] = [
 ];
 
 export const RESOURCES_HUB_DESCRIPTION =
-  "Free calculators, templates and guides for HVAC and trade owners: price your labor, check job profit and find your break-even. No account needed.";
+  "Free HVAC business tools: a labor cost workspace, an invoice builder, pay, break-even and pricing calculators, and templates. No account needed.";
 
 export const CALCULATOR_DISCLAIMER =
   "Estimates only. This calculator is for planning and education; it is not financial, tax or legal advice. Results depend entirely on the numbers you enter. Verify your figures and decisions with your accountant.";
