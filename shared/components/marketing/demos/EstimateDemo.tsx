@@ -195,11 +195,11 @@ export function EstimateDemo() {
               <p className="mt-2 text-xs text-stone-500">
                 {rateValue === WORKED_RATE ? (
                   <>
-                    {money(WORKED_RATE)}/hr is the{" "}
+                    ${WORKED_RATE}/hr is the{" "}
                     <Link href={LABOR_WORKSPACE_PATH} className={`font-semibold text-[#77591B] underline-offset-2 hover:underline ${focusRing}`}>
                       Labor Cost Workspace
                     </Link>{" "}
-                    worked example. Use your own.
+                    worked example&apos;s rate, rounded up to the dollar. Use your own.
                   </>
                 ) : (
                   <>Prices follow your rate.</>
