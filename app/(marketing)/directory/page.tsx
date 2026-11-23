@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { ArrowRight, HardHat, Home, Search, SearchX } from "lucide-react";
 import { searchPublicListings } from "@/lib/directory/listings";
 import { citiesWithListings, listDirectoryFacets, tradesWithListings } from "@/lib/directory/places";
@@ -18,7 +20,7 @@ import {
   breadcrumbJsonLd,
   itemListJsonLd,
 } from "@/shared/components/directory/DirectoryUi";
-import { ListFreeBand } from "@/shared/components/directory/DirectoryPitch";
+import { ListFreeBand, ListSideCard, ListStrip } from "@/shared/components/directory/DirectoryPitch";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -101,6 +103,45 @@ function listHrefFor(search: DirectorySearch): string {
   return query ? `${DIRECTORY_LIST_PATH}?${query}` : DIRECTORY_LIST_PATH;
 }
 
+/** One of the two "who are you hiring" choices: a link, highlighted when it is the view shown. */
+function AudienceCard({
+  href,
+  active,
+  icon: Icon,
+  title,
+  text,
+  track,
+}: {
+  readonly href: string;
+  readonly active: boolean;
+  readonly icon: LucideIcon;
+  readonly title: string;
+  readonly text: string;
+  readonly track: string;
+}) {
+  return (
+    <Link
+      href={href}
+      data-track={track}
+      aria-current={active ? "true" : undefined}
+      className={`flex min-h-16 items-center gap-3.5 rounded-2xl px-4 py-3.5 transition-colors ${dirFocus} focus-visible:ring-offset-[#0d0f0c] ${
+        active ? "border-2 border-[#C2A05A] bg-[#fff9ea] text-[#0d0f0c]" : "border border-white/15 bg-white/[0.04] text-[#fff9ea] hover:border-white/35"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#0d0f0c] text-[#C2A05A]" : "bg-[#C2A05A]/15 text-[#C2A05A]"}`}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[15px] font-semibold leading-snug">{title}</span>
+        <span className={`mt-0.5 block text-[13px] ${active ? "text-stone-600" : "text-[#a99f8f]"}`}>{text}</span>
+      </span>
+    </Link>
+  );
+}
+
 export default async function DirectoryPage({ searchParams }: PageProps) {
   const search = parseDirectorySearch(await searchParams);
   const [result, facetData] = await Promise.all([searchPublicListings(search), listDirectoryFacets()]);
@@ -125,40 +166,38 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
       ) : null}
       <ResourceMain width="app">
         <DirectoryBand>
-          <div className="lg:flex lg:items-end lg:justify-between lg:gap-10">
-            <div className="max-w-2xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">Contractor directory</p>
-              <h1 className="mt-3 text-[2rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.75rem]">
-                {contractorMode ? "Find a sub or a referral partner." : "Find a trade pro near you."}
-              </h1>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-[#cfc6b6] sm:text-lg">
-                Every business here is listed by its owner or with its permission, and checked by a person. Free to search. No
-                account.
-              </p>
-            </div>
-            {/* Who is looking. Two links, so each view is its own address. */}
-            <div role="group" aria-label="Who is looking" className="mt-6 inline-flex rounded-xl border border-white/10 bg-white/[0.04] p-1 lg:mt-0">
-              <Link
-                href={directorySearchHref({ ...search, subOnly: false, page: 1 })}
-                data-track="dir-audience-pro"
-                aria-current={!contractorMode ? "true" : undefined}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3.5 text-[13px] font-semibold transition-colors ${dirFocus} focus-visible:ring-offset-[#0d0f0c] ${
-                  !contractorMode ? "bg-[#f3ebdd] text-[#0d0f0c]" : "text-[#cfc6b6] hover:text-[#fff9ea]"
-                }`}
-              >
-                <Home aria-hidden="true" className="h-4 w-4" /> I need a pro
-              </Link>
-              <Link
-                href={directorySearchHref({ ...search, subOnly: true, page: 1 })}
-                data-track="dir-audience-sub"
-                aria-current={contractorMode ? "true" : undefined}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3.5 text-[13px] font-semibold transition-colors ${dirFocus} focus-visible:ring-offset-[#0d0f0c] ${
-                  contractorMode ? "bg-[#f3ebdd] text-[#0d0f0c]" : "text-[#cfc6b6] hover:text-[#fff9ea]"
-                }`}
-              >
-                <HardHat aria-hidden="true" className="h-4 w-4" /> I need a sub
-              </Link>
-            </div>
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">Contractor directory</p>
+            <h1 className="mt-3 text-[2rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.75rem]">
+              {contractorMode ? "Find a sub or a referral partner." : "Find a trade pro near you."}
+            </h1>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-[#cfc6b6] sm:text-lg">
+              Every business here is listed by its owner or with its permission, and checked by a person. Free to search. No
+              account.
+            </p>
+          </div>
+
+          {/* Who is hiring. Two links, so each view is its own address someone can send. */}
+          <p id="directory-audience-label" className="mt-7 text-sm font-semibold text-[#fff9ea]">
+            Who are you hiring?
+          </p>
+          <div role="group" aria-labelledby="directory-audience-label" className="mt-3 grid gap-3 sm:grid-cols-2">
+            <AudienceCard
+              href={directorySearchHref({ ...search, subOnly: false, page: 1 })}
+              active={!contractorMode}
+              icon={Home}
+              title="A pro for my home or business"
+              text="Repairs, installs and projects"
+              track="dir-audience-pro"
+            />
+            <AudienceCard
+              href={directorySearchHref({ ...search, subOnly: true, page: 1 })}
+              active={contractorMode}
+              icon={HardHat}
+              title="A subcontractor"
+              text="For contractors with overflow work"
+              track="dir-audience-sub"
+            />
           </div>
 
           <form
@@ -215,25 +254,21 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                 <Search aria-hidden="true" className="h-4 w-4" /> Search
               </button>
             </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 px-1 pt-3">
-              <label className="flex min-h-9 items-center gap-2.5 text-sm text-stone-800">
-                <input
-                  type="checkbox"
-                  name="sub"
-                  value="1"
-                  defaultChecked={search.subOnly}
-                  className="h-4 w-4 rounded border-stone-400 accent-[#77591B]"
-                />
-                Only businesses that take subcontract work
-              </label>
-              {filtered ? (
+            {/* The "who are you hiring" choice above sets this; a search keeps it. */}
+            {search.subOnly ? <input type="hidden" name="sub" value="1" /> : null}
+            {search.trade || search.place || search.state ? (
+              <div className="mt-3 flex justify-end border-t border-stone-100 px-1 pt-2">
                 <Link href={DIRECTORY_PATH} className={`inline-flex min-h-9 items-center text-sm ${dirLink}`}>
                   Clear search
                 </Link>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </form>
         </DirectoryBand>
+
+        <div className="mt-4">
+          <ListStrip listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
+        </div>
 
         {liveTrades.length > 0 ? (
           <section aria-label="Trades and cities with listings" className="mt-6 space-y-3">
@@ -247,6 +282,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                     count={count}
                     active={search.trade === trade}
                     track="dir-chip-trade"
+                    trade={trade}
                   >
                     {trade}
                   </Chip>
@@ -268,7 +304,8 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
           </section>
         ) : null}
 
-        <section aria-labelledby="directory-results-heading" className="mt-8">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start">
+        <section aria-labelledby="directory-results-heading">
           {!result.available ? (
             <div role="status" className={`px-6 py-10 text-center ${dirPanel}`}>
               <h2 id="directory-results-heading" className="text-lg font-semibold text-[#0A0A0A]">
@@ -315,9 +352,17 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                 </h2>
                 {showsMembers ? <p className="text-xs text-stone-500">{DIRECTORY_MEMBER_LABEL}s are listed first.</p> : null}
               </div>
-              <ul className="mt-4 grid gap-3 md:grid-cols-2">
-                {result.listings.map((listing) => (
-                  <ListingResultCard key={listing.slug} listing={listing} />
+              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {result.listings.map((listing, index) => (
+                  <Fragment key={listing.slug}>
+                    <ListingResultCard listing={listing} />
+                    {/* Phones have no sidebar: the card sits after the third business instead. */}
+                    {index === 2 && result.listings.length > 3 ? (
+                      <li className="md:col-span-2 lg:hidden">
+                        <ListSideCard listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
+                      </li>
+                    ) : null}
+                  </Fragment>
                 ))}
               </ul>
               {pages > 1 ? (
@@ -344,6 +389,17 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
             </>
           )}
         </section>
+
+        <aside aria-label="List your business" className="hidden space-y-3 lg:sticky lg:top-24 lg:block">
+          <ListSideCard listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
+          <p className={`px-5 py-4 text-sm text-stone-600 ${dirPanel}`}>
+            Already listed?{" "}
+            <Link href="/directory/manage" className={dirLink}>
+              Manage your listing
+            </Link>
+          </p>
+        </aside>
+        </div>
 
         <ListFreeBand />
 

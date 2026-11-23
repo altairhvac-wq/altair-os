@@ -208,7 +208,7 @@ const DIRECTORY = {
   id: "directory-list",
   href: "/directory/list",
   title: "List your business in the directory",
-  text: "A free listing with no lead fees, a link to your website and monthly numbers.",
+  text: "A free listing with a link to your website and monthly numbers.",
   meta: "Free",
 } as const satisfies NextStepItem;
 

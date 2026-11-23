@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Clock, MapPin, Phone, Siren } from "lucide-react";
 import { DirectoryMemberBadge } from "@/shared/components/directory/DirectoryMemberBadge";
 import { dirFocus } from "@/shared/components/directory/directory-styles";
+import { TradeIcon } from "@/shared/components/directory/trade-icons";
 import {
   directoryListingPath,
   formatPhone,
@@ -33,10 +34,13 @@ export function ListingMark({
   name,
   logoUrl,
   size = "md",
+  trade = null,
 }: {
   readonly name: string;
   readonly logoUrl: string | null;
   readonly size?: "sm" | "md" | "lg";
+  /** Without a logo, the mark shows this trade's icon in brass; without a trade, the initials. */
+  readonly trade?: string | null;
 }) {
   const box = size === "lg" ? "h-20 w-20 rounded-2xl text-2xl sm:h-24 sm:w-24" : size === "sm" ? "h-10 w-10 rounded-lg text-sm" : "h-14 w-14 rounded-xl text-base";
   if (logoUrl) {
@@ -45,6 +49,14 @@ export function ListingMark({
         {/* A business's own approved logo, served from our storage. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoUrl} alt={`${name} logo`} className="h-full w-full object-contain p-1.5" loading="lazy" decoding="async" />
+      </span>
+    );
+  }
+  if (trade) {
+    const icon = size === "lg" ? "h-9 w-9 sm:h-10 sm:w-10" : size === "sm" ? "h-5 w-5" : "h-6 w-6";
+    return (
+      <span aria-hidden="true" className={`flex shrink-0 items-center justify-center bg-[#FBF6EA] text-[#77591B] ring-1 ring-inset ring-[#C2A05A]/45 ${box}`}>
+        <TradeIcon trade={trade} className={icon} strokeWidth={1.75} />
       </span>
     );
   }
@@ -75,12 +87,15 @@ export function Chip({
   active = false,
   track,
   tone = "light",
+  trade,
 }: {
   readonly href: string;
   readonly children: React.ReactNode;
   readonly count?: number;
   readonly active?: boolean;
   readonly track?: string;
+  /** A trade chip: shows that trade's small icon before the label. */
+  readonly trade?: string;
   /** "dark": the chip sits on the dark band. */
   readonly tone?: "light" | "dark";
 }) {
@@ -100,10 +115,16 @@ export function Chip({
       aria-current={active ? "true" : undefined}
       className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors ${dirFocus} ${look}`}
     >
+      {trade ? <ChipIcon trade={trade} active={active} dark={tone === "dark"} /> : null}
       {children}
       {typeof count === "number" ? <span className={`tabular-nums ${countLook}`}>{count}</span> : null}
     </Link>
   );
+}
+
+function ChipIcon({ trade, active, dark }: { readonly trade: string; readonly active: boolean; readonly dark: boolean }) {
+  const color = active ? (dark ? "text-[#3b2f14]" : "text-[#C2A05A]") : dark ? "text-[#C2A05A]" : "text-[#A4823A]";
+  return <TradeIcon trade={trade} className={`h-3.5 w-3.5 ${color}`} strokeWidth={2} />;
 }
 
 /** One business in a list of results. */
@@ -115,7 +136,7 @@ export function ListingResultCard({ listing, showCity = true }: { readonly listi
     <li className="flex">
       <article className="group relative flex w-full flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-[0_1px_2px_rgba(28,25,23,0.04)] transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(28,25,23,0.45)] sm:p-5">
         <div className="flex flex-1 gap-4">
-          <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} />
+          <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} trade={listing.tradeType} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h3 className="min-w-0 break-words text-[17px] font-semibold leading-snug tracking-tight text-[#0A0A0A]">
@@ -183,7 +204,7 @@ export function ListingResultCard({ listing, showCity = true }: { readonly listi
 /** The dark band each directory page opens with, in the look of the in-page tools. */
 export function DirectoryBand({ children }: { readonly children: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[#0d0f0c] px-5 py-8 text-[#f3ebdd] shadow-[0_40px_100px_-60px_rgba(28,25,23,0.75)] sm:px-10 sm:py-12">
+    <div className="relative overflow-hidden rounded-3xl border-t-2 border-[#C2A05A] bg-[#0d0f0c] px-5 py-8 text-[#f3ebdd] shadow-[0_40px_100px_-60px_rgba(28,25,23,0.75)] sm:px-10 sm:py-12">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-[0.55]"

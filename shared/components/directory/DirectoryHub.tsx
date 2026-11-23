@@ -20,7 +20,7 @@ import {
   itemListJsonLd,
   type Crumb,
 } from "@/shared/components/directory/DirectoryUi";
-import { ListFreeBand } from "@/shared/components/directory/DirectoryPitch";
+import { ListFreeBand, ListSideCard } from "@/shared/components/directory/DirectoryPitch";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -141,7 +141,7 @@ function faqFor(hub: ResolvedHub): { q: string; a: React.ReactNode }[] {
     },
     {
       q: `What does it cost?`,
-      a: `Nothing, either way. Searching is free and so is listing a business: no subscription and no lead fees. You call the business directly.`,
+      a: `Searching is free, and listing a business is free. You call the business directly.`,
     },
     {
       q: `How do I list my ${noun}business in ${where}?`,
@@ -193,7 +193,7 @@ export async function DirectoryHubPage({ place }: { readonly place: HubPlace }) 
           <h1 className="mt-4 max-w-3xl text-[2rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.75rem]">{hub.heading}</h1>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#cfc6b6] sm:text-lg">
             {hub.basedCount > 0
-              ? `${hub.basedCount} ${hub.basedCount === 1 ? "business is" : "businesses are"} based ${hub.city ? `in ${hub.city}` : `in ${stateName(place.state)}`}. Each one is listed by its owner or with its permission, and was checked by a person. Call them directly; there is no middleman and no lead fee.`
+              ? `${hub.basedCount} ${hub.basedCount === 1 ? "business is" : "businesses are"} based ${hub.city ? `in ${hub.city}` : `in ${stateName(place.state)}`}. Each one is listed by its owner or with its permission, and was checked by a person. Call them directly; there is no middleman.`
               : `No ${place.trade ?? "trade"} business based in ${hub.placeLabel} is listed yet.`}
           </p>
           {trades.length > 0 ? (
@@ -211,6 +211,7 @@ export async function DirectoryHubPage({ place }: { readonly place: HubPlace }) 
                   active={place.trade === trade}
                   track="dir-chip-trade"
                   tone="dark"
+                  trade={trade}
                 >
                   {trade}
                 </Chip>
@@ -235,7 +236,7 @@ export async function DirectoryHubPage({ place }: { readonly place: HubPlace }) 
                     Be the first {place.trade ?? "trade"} business listed in {hub.city ?? stateName(place.state)}.
                   </h2>
                   <p className="mt-2 max-w-lg text-sm leading-relaxed text-stone-600">
-                    Listing is free, there are no lead fees, and a person checks it before it shows.
+                    Listing is free, and a person checks it before it shows.
                   </p>
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                     <Link href={listHref} data-track="dir-empty-list" className={dirBrassButton}>
@@ -308,6 +309,7 @@ export async function DirectoryHubPage({ place }: { readonly place: HubPlace }) 
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <ListSideCard listHref={listHref} heading={`Run a business ${hub.city ? `in ${hub.city}` : `in ${stateName(place.state)}`}?`} />
             {cities.length > 0 ? (
               <div className={`px-5 py-5 ${dirPanel}`}>
                 <h2 className="text-sm font-semibold text-stone-900">
@@ -333,13 +335,6 @@ export async function DirectoryHubPage({ place }: { readonly place: HubPlace }) 
                 </ul>
               </div>
             ) : null}
-            <div className={`px-5 py-5 ${dirPanel}`}>
-              <h2 className="text-sm font-semibold text-stone-900">Run a business {hub.city ? `in ${hub.city}` : `in ${stateName(place.state)}`}?</h2>
-              <p className="mt-1 text-sm leading-relaxed text-stone-600">Get listed free. No lead fees, and your listing links to your website.</p>
-              <Link href={listHref} data-track="dir-list-cta" className={`mt-4 w-full ${dirBrassButton}`}>
-                Get listed free
-              </Link>
-            </div>
           </aside>
         </div>
 
