@@ -859,7 +859,7 @@ function EditorBody({
                       <ArrowLeft aria-hidden="true" className="h-4 w-4" /> Back
                     </button>
                   ) : (
-                    <p className="text-xs leading-relaxed text-stone-500">Free forever. No account. No lead fees.</p>
+                    <p className="text-xs leading-relaxed text-stone-500">Free to list. No account.</p>
                   )}
                   <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
                     {step === 1 ? (

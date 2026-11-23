@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, ChartColumn, Link2, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChartColumn, Check, Link2, ShieldCheck, Wallet } from "lucide-react";
 import { dirBrassButton, dirDarkButton } from "@/shared/components/directory/directory-styles";
 import { DIRECTORY_LIST_PATH, DIRECTORY_MEMBER_LABEL } from "@/shared/types/directory";
 import { isDirectory214Installed } from "@/lib/directory/schema";
@@ -7,10 +7,11 @@ import { isDirectory214Installed } from "@/lib/directory/schema";
 /**
  * What a business gets for listing, said the same way everywhere it is
  * offered. Each line is a thing the directory actually does; none is a
- * promise of customers. "Free forever" is the owner's decision (2026-11-20).
+ * promise of customers. No line promises the listing stays free or fee-less:
+ * the owner keeps the option to add paid features or fees (2026-11-23).
  */
 export const LISTING_VALUE: readonly { icon: typeof Wallet; title: string; text: string }[] = [
-  { icon: Wallet, title: "Free forever, no lead fees", text: "No subscription, no charge per call, and no selling the same customer to five companies." },
+  { icon: Wallet, title: "Free to list", text: "No account to make. Customers call you directly, not through a middleman." },
   { icon: Link2, title: "A followed link to your website", text: "Your listing links straight to your site, the way a real referral would." },
   { icon: ChartColumn, title: "Your numbers every month", text: "How many people viewed your listing and tapped call, website or map." },
   { icon: BadgeCheck, title: "A badge for your own website", text: "“Listed on Altair” links visitors from your site to your listing." },
@@ -58,5 +59,63 @@ export async function ListFreeBand({ heading = "Run a trade business? Get listed
         Run your business on Altair Operating System? Link your listing and it shows “{DIRECTORY_MEMBER_LABEL}”.
       </p>
     </aside>
+  );
+}
+
+/**
+ * The "get listed" card beside the results (owner, 2026-11-23: put it where
+ * business owners see it, not only at the bottom). It follows who the page is
+ * for: on the subcontractor view it speaks to trades that want sub work.
+ * Three reasons, each something the directory does today; no promise about
+ * price beyond "free to list" (fees stay an option for the owner).
+ */
+export function ListSideCard({
+  listHref = DIRECTORY_LIST_PATH,
+  mode = "pro",
+  heading,
+  className = "",
+}: {
+  readonly listHref?: string;
+  readonly mode?: "pro" | "sub";
+  readonly heading?: string;
+  readonly className?: string;
+}) {
+  const sub = mode === "sub";
+  const reasons = sub
+    ? ["Contractors with overflow work find you", "Tick “takes subcontract work”", "A link to your website"]
+    : ["Homeowners and contractors find you", "A link to your website", "Monthly numbers on views and calls"];
+  return (
+    <div className={`rounded-2xl border-t-2 border-[#C2A05A] bg-[#0d0f0c] px-5 py-5 text-[#f3ebdd] ${className}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">{sub ? "Looking for sub work?" : "For contractors"}</p>
+      <h2 className="mt-2 text-lg font-semibold tracking-tight text-[#fff9ea]">{heading ?? (sub ? "Get found by contractors" : "Get listed free")}</h2>
+      <ul className="mt-3 space-y-1.5">
+        {reasons.map((reason) => (
+          <li key={reason} className="flex items-start gap-2 text-[13px] leading-snug text-[#cfc6b6]">
+            <Check aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C2A05A]" strokeWidth={2.5} />
+            {reason}
+          </li>
+        ))}
+      </ul>
+      <Link href={listHref} data-track={sub ? "dir-side-list-sub" : "dir-side-list"} className={`mt-4 w-full ${dirBrassButton}`}>
+        List your business <ArrowRight aria-hidden="true" className="h-4 w-4" />
+      </Link>
+      <p className="mt-2.5 text-center text-[11px] text-[#8f8676]">Free to list. About two minutes.</p>
+    </div>
+  );
+}
+
+/** The one-line version for phones, under the search, where the side card does not fit. */
+export function ListStrip({ listHref = DIRECTORY_LIST_PATH, mode = "pro" }: { readonly listHref?: string; readonly mode?: "pro" | "sub" }) {
+  return (
+    <Link
+      href={listHref}
+      data-track="dir-strip-list"
+      className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[#C2A05A]/50 bg-[#FBF6EA] px-4 text-sm text-[#5c4614] lg:hidden"
+    >
+      <span>{mode === "sub" ? "Want sub work? Get found here." : "Own a trade business?"}</span>
+      <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-[#77591B]">
+        List free <ArrowRight aria-hidden="true" className="h-4 w-4" />
+      </span>
+    </Link>
   );
 }

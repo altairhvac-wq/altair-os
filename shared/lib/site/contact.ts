@@ -72,6 +72,6 @@ export const CONTACT_FAQ: readonly SiteFaqItem[] = [
     id: "directory",
     question: "How do I get my business into the directory?",
     answer:
-      "Fill in the free listing form. There is no account to create and no lead fee. A person checks each listing before it goes live, usually within one business day.",
+      "Fill in the free listing form. There is no account to create. A person checks each listing before it goes live, usually within one business day.",
   },
 ];

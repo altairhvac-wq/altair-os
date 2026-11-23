@@ -89,7 +89,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
       { href: "/resources/guides", label: "Learning path", text: "The guides and tools a new owner needs, in order." },
       { href: "/resources/library", label: "Resource library", text: "Search every article and video from both Altair channels." },
       { href: "/directory", label: "Contractor directory", text: "Find HVAC and trade companies near you." },
-      { href: "/directory/list", label: "List your business free", text: "No lead fees, a link to your website. A person checks every listing." },
+      { href: "/directory/list", label: "List your business free", text: "A link to your website. A person checks every listing." },
     ],
     feature: {
       href: "/how-it-works",

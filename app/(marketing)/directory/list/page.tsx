@@ -19,7 +19,7 @@ import {
 
 const TITLE = "Get your business listed free";
 const DESCRIPTION =
-  "List your HVAC, plumbing, electrical or other trade business free: no lead fees, a followed link to your website, monthly numbers and a badge for your site. A person checks every listing.";
+  "List your HVAC, plumbing, electrical or other trade business free: a followed link to your website, monthly numbers and a badge for your site. A person checks every listing.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -67,8 +67,8 @@ export default async function DirectoryListPage({ searchParams }: PageProps) {
                 Be easy to find, and keep every call.
               </h1>
               <p className="mt-3 max-w-xl text-base leading-relaxed text-[#cfc6b6] sm:text-lg">
-                Homeowners look here for a pro, and contractors look here for subs and referral partners. Your listing is
-                free forever, and the calls come straight to you.
+                Homeowners look here for a pro, and contractors look here for subs and referral partners. Listing is
+                free, and the calls come straight to you.
               </p>
             </div>
             <ul className="grid gap-2.5 sm:grid-cols-2">

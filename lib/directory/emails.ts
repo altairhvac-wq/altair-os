@@ -102,7 +102,7 @@ export function buildPermissionAddedEmail(input: {
       input.published
         ? "It is already showing in the directory, marked as waiting for you to confirm it. Press the button to confirm or change anything."
         : "It is not public yet. Press the button to confirm it; a person then checks it and it goes live, usually within one business day.",
-      "If you would rather not be listed, open the same page and press Remove. It comes down straight away. Listing is free and always will be: no lead fees.",
+      "If you would rather not be listed, open the same page and press Remove. It comes down straight away.",
     ],
     { url: input.manageUrl, label: "Check my listing" },
     null,

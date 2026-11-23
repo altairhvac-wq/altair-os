@@ -198,7 +198,7 @@ function SmallListingLink({ listing }: { readonly listing: DirectoryPublicListin
         href={directoryListingPath(listing.slug)}
         className={`flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-stone-50 ${dirFocus}`}
       >
-        <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} size="sm" />
+        <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} trade={listing.tradeType} size="sm" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-stone-900">{listing.businessName}</span>
           <span className="block truncate text-xs text-stone-500">
@@ -318,7 +318,7 @@ export default async function DirectorySlugPage({ params }: PageProps) {
               <div className="px-5 pb-6 sm:px-7">
                 <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end">
                   <span className="rounded-2xl bg-white p-1 shadow-sm">
-                    <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} size="lg" />
+                    <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} trade={listing.tradeType} size="lg" />
                   </span>
                   <div className="min-w-0 pb-1">
                     <h1 className="break-words text-[1.85rem] font-semibold leading-[1.15] tracking-tight text-[#0A0A0A] sm:text-[2.25rem]">

@@ -52,7 +52,7 @@ export function ListingPreview({ values, compact = false }: { readonly values: P
       <div className="px-4 pb-4">
         <div className="-mt-7 flex items-end gap-3">
           <span className="rounded-xl bg-white p-0.5 shadow-sm">
-            <ListingMark name={name || "Your business"} logoUrl={values.logoUrl ?? null} />
+            <ListingMark name={name || "Your business"} logoUrl={values.logoUrl ?? null} trade={values.tradeType || null} />
           </span>
           <div className="min-w-0 pb-0.5">
             <p className="truncate text-lg font-semibold leading-tight tracking-tight text-[#0A0A0A]">{name || <Placeholder>Your business name</Placeholder>}</p>
