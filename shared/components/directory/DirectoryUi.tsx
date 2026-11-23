@@ -202,9 +202,11 @@ export function ListingResultCard({ listing, showCity = true }: { readonly listi
 }
 
 /** The dark band each directory page opens with, in the look of the in-page tools. */
-export function DirectoryBand({ children }: { readonly children: React.ReactNode }) {
+export function DirectoryBand({ children, compact = false }: { readonly children: React.ReactNode; readonly compact?: boolean }) {
+  // compact: the search page, where the band holds a title, a choice and a search row and should stay short.
+  const pad = compact ? "px-5 py-6 sm:px-8 sm:py-7" : "px-5 py-8 sm:px-10 sm:py-12";
   return (
-    <div className="relative overflow-hidden rounded-3xl border-t-2 border-[#C2A05A] bg-[#0d0f0c] px-5 py-8 text-[#f3ebdd] shadow-[0_40px_100px_-60px_rgba(28,25,23,0.75)] sm:px-10 sm:py-12">
+    <div className={`relative overflow-hidden rounded-3xl border-t-2 border-[#C2A05A] bg-[#0d0f0c] text-[#f3ebdd] shadow-[0_40px_100px_-60px_rgba(28,25,23,0.75)] ${pad}`}>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-[0.55]"

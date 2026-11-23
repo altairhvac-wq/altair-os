@@ -119,3 +119,33 @@ export function ListStrip({ listHref = DIRECTORY_LIST_PATH, mode = "pro" }: { re
     </Link>
   );
 }
+
+/**
+ * The same reasons as the bottom band, stacked down the left of the search
+ * results on wide screens (owner, 2026-11-23: the band sat in an odd spot
+ * while the sides of the page were empty). Below xl the band shows instead.
+ */
+export async function ListValueRail() {
+  const values = listingValue(await isDirectory214Installed());
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white px-4 py-5 shadow-[0_1px_2px_rgba(28,25,23,0.04)]">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">Why list here</p>
+      <ul className="mt-4 space-y-4">
+        {values.slice(0, 4).map((item) => (
+          <li key={item.title} className="flex gap-3">
+            <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FBF6EA] text-[#77591B] ring-1 ring-inset ring-[#C2A05A]/40">
+              <item.icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold leading-snug text-stone-900">{item.title}</span>
+              <span className="mt-0.5 block text-[12px] leading-relaxed text-stone-600">{item.text}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-5 border-t border-stone-100 pt-3 text-[11px] leading-relaxed text-stone-500">
+        Run your business on Altair Operating System? Link your listing and it shows “{DIRECTORY_MEMBER_LABEL}”.
+      </p>
+    </div>
+  );
+}

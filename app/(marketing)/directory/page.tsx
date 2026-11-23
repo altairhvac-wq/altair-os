@@ -20,7 +20,7 @@ import {
   breadcrumbJsonLd,
   itemListJsonLd,
 } from "@/shared/components/directory/DirectoryUi";
-import { ListFreeBand, ListSideCard, ListStrip } from "@/shared/components/directory/DirectoryPitch";
+import { ListFreeBand, ListSideCard, ListStrip, ListValueRail } from "@/shared/components/directory/DirectoryPitch";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -124,19 +124,19 @@ function AudienceCard({
       href={href}
       data-track={track}
       aria-current={active ? "true" : undefined}
-      className={`flex min-h-16 items-center gap-3.5 rounded-2xl px-4 py-3.5 transition-colors ${dirFocus} focus-visible:ring-offset-[#0d0f0c] ${
+      className={`flex min-h-14 items-center gap-3 rounded-xl px-3.5 py-2.5 transition-colors ${dirFocus} focus-visible:ring-offset-[#0d0f0c] ${
         active ? "border-2 border-[#C2A05A] bg-[#fff9ea] text-[#0d0f0c]" : "border border-white/15 bg-white/[0.04] text-[#fff9ea] hover:border-white/35"
       }`}
     >
       <span
         aria-hidden="true"
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#0d0f0c] text-[#C2A05A]" : "bg-[#C2A05A]/15 text-[#C2A05A]"}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${active ? "bg-[#0d0f0c] text-[#C2A05A]" : "bg-[#C2A05A]/15 text-[#C2A05A]"}`}
       >
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[15px] font-semibold leading-snug">{title}</span>
-        <span className={`mt-0.5 block text-[13px] ${active ? "text-stone-600" : "text-[#a99f8f]"}`}>{text}</span>
+        <span className="block text-sm font-semibold leading-snug">{title}</span>
+        <span className={`mt-0.5 block text-xs ${active ? "text-stone-600" : "text-[#a99f8f]"}`}>{text}</span>
       </span>
     </Link>
   );
@@ -164,40 +164,43 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
       {result.listings.length > 0 ? (
         <JsonLdScript data={itemListJsonLd(PUBLIC_SITE_ORIGIN, "Contractor directory", result.listings)} />
       ) : null}
-      <ResourceMain width="app">
-        <DirectoryBand>
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">Contractor directory</p>
-            <h1 className="mt-3 text-[2rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.75rem]">
-              {contractorMode ? "Find a sub or a referral partner." : "Find a trade pro near you."}
-            </h1>
-            <p className="mt-3 max-w-xl text-base leading-relaxed text-[#cfc6b6] sm:text-lg">
-              Every business here is listed by its owner or with its permission, and checked by a person. Free to search. No
-              account.
-            </p>
-          </div>
-
-          {/* Who is hiring. Two links, so each view is its own address someone can send. */}
-          <p id="directory-audience-label" className="mt-7 text-sm font-semibold text-[#fff9ea]">
-            Who are you hiring?
-          </p>
-          <div role="group" aria-labelledby="directory-audience-label" className="mt-3 grid gap-3 sm:grid-cols-2">
-            <AudienceCard
-              href={directorySearchHref({ ...search, subOnly: false, page: 1 })}
-              active={!contractorMode}
-              icon={Home}
-              title="A pro for my home or business"
-              text="Repairs, installs and projects"
-              track="dir-audience-pro"
-            />
-            <AudienceCard
-              href={directorySearchHref({ ...search, subOnly: true, page: 1 })}
-              active={contractorMode}
-              icon={HardHat}
-              title="A subcontractor"
-              text="For contractors with overflow work"
-              track="dir-audience-sub"
-            />
+      <ResourceMain width="directory">
+        <DirectoryBand compact>
+          {/* Title left, "who are you hiring" right; the search runs as one row under both (owner, 2026-11-23: less tall). */}
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">Contractor directory</p>
+              <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.125rem]">
+                {contractorMode ? "Find a sub or a referral partner." : "Find a trade pro near you."}
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-[#cfc6b6] sm:text-[15px]">
+                Listed by the owner or with permission, checked by a person. Free to search, no account.
+              </p>
+            </div>
+            <div>
+              {/* Two links, so each view is its own address someone can send. */}
+              <p id="directory-audience-label" className="text-[13px] font-semibold text-[#fff9ea]">
+                Who are you hiring?
+              </p>
+              <div role="group" aria-labelledby="directory-audience-label" className="mt-2 grid gap-2.5 sm:grid-cols-2">
+                <AudienceCard
+                  href={directorySearchHref({ ...search, subOnly: false, page: 1 })}
+                  active={!contractorMode}
+                  icon={Home}
+                  title="A pro for my home or business"
+                  text="Repairs, installs and projects"
+                  track="dir-audience-pro"
+                />
+                <AudienceCard
+                  href={directorySearchHref({ ...search, subOnly: true, page: 1 })}
+                  active={contractorMode}
+                  icon={HardHat}
+                  title="A subcontractor"
+                  text="For contractors with overflow work"
+                  track="dir-audience-sub"
+                />
+              </div>
+            </div>
           </div>
 
           <form
@@ -206,7 +209,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
             role="search"
             aria-label="Search the directory"
             data-track-submit="dir-search"
-            className="mt-7 rounded-2xl bg-white p-3 text-stone-900 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)] sm:p-4"
+            className="mt-5 rounded-2xl bg-white p-2.5 text-stone-900 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)] sm:p-3"
           >
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)_auto] lg:items-end">
               <div className="col-span-2 lg:col-span-1">
@@ -304,7 +307,10 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
           </section>
         ) : null}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start xl:grid-cols-[15.5rem_minmax(0,1fr)_17.5rem]">
+        <aside aria-label="Why list your business here" className="hidden xl:sticky xl:top-24 xl:block">
+          <ListValueRail />
+        </aside>
         <section aria-labelledby="directory-results-heading">
           {!result.available ? (
             <div role="status" className={`px-6 py-10 text-center ${dirPanel}`}>
@@ -352,7 +358,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                 </h2>
                 {showsMembers ? <p className="text-xs text-stone-500">{DIRECTORY_MEMBER_LABEL}s are listed first.</p> : null}
               </div>
-              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
                 {result.listings.map((listing, index) => (
                   <Fragment key={listing.slug}>
                     <ListingResultCard listing={listing} />
@@ -401,7 +407,10 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         </aside>
         </div>
 
-        <ListFreeBand />
+        {/* Below xl there is no left column: the reasons show as the band instead. */}
+        <div className="xl:hidden">
+          <ListFreeBand />
+        </div>
 
         <p className="mt-8 text-xs leading-relaxed text-stone-500">
           Listings come from the businesses themselves, or are added with their permission, and are checked by a person before they show. We do not verify

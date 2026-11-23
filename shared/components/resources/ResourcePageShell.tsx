@@ -29,12 +29,14 @@ export function ResourceMain({
   width = "default",
   children,
 }: {
-  readonly width?: "default" | "wide" | "app";
+  readonly width?: "default" | "wide" | "app" | "directory";
   readonly children: React.ReactNode;
 }) {
   // "app": the directory's search and listing screens, which carry a side
-  // column on wide screens.
-  const maxWidth = width === "app" ? "max-w-6xl" : width === "wide" ? "max-w-5xl" : "max-w-3xl";
+  // column on wide screens. "directory": the directory search, which carries
+  // a column on each side from xl up, so it uses more of a wide screen.
+  const maxWidth =
+    width === "directory" ? "max-w-6xl xl:max-w-[88rem]" : width === "app" ? "max-w-6xl" : width === "wide" ? "max-w-5xl" : "max-w-3xl";
   return (
     <main className={`relative mx-auto ${maxWidth} px-4 pb-16 pt-24 sm:px-8 sm:pt-28`}>
       {children}
