@@ -20,7 +20,7 @@ import {
   breadcrumbJsonLd,
   itemListJsonLd,
 } from "@/shared/components/directory/DirectoryUi";
-import { ListFreeBand, ListSideCard, ListStrip } from "@/shared/components/directory/DirectoryPitch";
+import { ListFreeBand, ListSideCard, ListStrip, ListValueRail } from "@/shared/components/directory/DirectoryPitch";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -164,7 +164,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
       {result.listings.length > 0 ? (
         <JsonLdScript data={itemListJsonLd(PUBLIC_SITE_ORIGIN, "Contractor directory", result.listings)} />
       ) : null}
-      <ResourceMain width="app">
+      <ResourceMain width="directory">
         <DirectoryBand>
           <div className="max-w-2xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C2A05A]">Contractor directory</p>
@@ -304,7 +304,10 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
           </section>
         ) : null}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start xl:grid-cols-[15.5rem_minmax(0,1fr)_17.5rem]">
+        <aside aria-label="Why list your business here" className="hidden xl:sticky xl:top-24 xl:block">
+          <ListValueRail />
+        </aside>
         <section aria-labelledby="directory-results-heading">
           {!result.available ? (
             <div role="status" className={`px-6 py-10 text-center ${dirPanel}`}>
@@ -352,7 +355,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                 </h2>
                 {showsMembers ? <p className="text-xs text-stone-500">{DIRECTORY_MEMBER_LABEL}s are listed first.</p> : null}
               </div>
-              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
                 {result.listings.map((listing, index) => (
                   <Fragment key={listing.slug}>
                     <ListingResultCard listing={listing} />
@@ -401,7 +404,10 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         </aside>
         </div>
 
-        <ListFreeBand />
+        {/* Below xl there is no left column: the reasons show as the band instead. */}
+        <div className="xl:hidden">
+          <ListFreeBand />
+        </div>
 
         <p className="mt-8 text-xs leading-relaxed text-stone-500">
           Listings come from the businesses themselves, or are added with their permission, and are checked by a person before they show. We do not verify
