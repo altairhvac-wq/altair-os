@@ -175,10 +175,13 @@ export function HomepageNav() {
     <header
       ref={headerRef}
       className={[
-        "ah-nav ah-hero-fade ah-hero-fade-0 fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-500 ease-out motion-reduce:transition-none",
+        // One solid color, no fade-in and no see-through (owner, 2026-11-23: on a phone the
+        // top of the screen looked faded and the bar was hard to read). Only a computer
+        // still gets the clear bar over the homepage hero until it scrolls.
+        "ah-nav fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,box-shadow] duration-500 ease-out motion-reduce:transition-none",
         solid
-          ? "border-b border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,7,0.94)] shadow-[0_1px_0_rgba(251,247,239,0.04)] backdrop-blur-md"
-          : "border-b border-transparent bg-transparent",
+          ? "border-b border-[rgba(251,247,239,0.08)] bg-[#080907] shadow-[0_1px_0_rgba(251,247,239,0.04)]"
+          : "border-b border-[rgba(251,247,239,0.08)] bg-[#080907] lg:border-transparent lg:bg-transparent",
       ].join(" ")}
       /* Installed on an iPhone (standalone, viewport-fit=cover) the page runs
          under the status bar, so a bar fixed at top:0 sat behind the clock
