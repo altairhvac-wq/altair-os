@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import {
   SAAS_TRIAL_CONFIG,
   describePlanAccounts,
@@ -39,7 +40,7 @@ export function HomepagePricingSection() {
           </p>
         </div>
 
-        <div className="mt-9 grid gap-4 lg:mt-11 lg:grid-cols-3">
+        <div className={`mt-9 grid gap-4 lg:mt-11 lg:grid-cols-3 ${swipeRow}`}>
           {plans.map((plan) => {
             const featured = plan.planKey === "growth";
 
@@ -47,6 +48,7 @@ export function HomepagePricingSection() {
               <article
                 key={plan.planKey}
                 className={[
+                  swipeItem,
                   "relative flex flex-col rounded-2xl border p-5 sm:p-6",
                   featured
                     ? "border-[rgba(194,160,90,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,17,13,0.96))] shadow-[0_24px_60px_-38px_rgba(194,160,90,0.55)]"

@@ -7,6 +7,8 @@ import { dirCard, dirEyebrow, dirLink, dirPrimaryButton } from "@/shared/compone
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
+import { ShowMore } from "@/shared/components/marketing/phone/PhoneLayout";
+import { showFirst, swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import type { EarningsPlan } from "@/shared/lib/site/affiliate-earnings";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildFaqPageStructuredData } from "@/shared/lib/site/structured-data";
@@ -205,9 +207,9 @@ export default function AffiliatesPage() {
           <h2 id="how-heading" className={sectionTitle}>
             How it works
           </h2>
-          <ol className="mt-5 grid gap-4 sm:grid-cols-3">
+          <ol className={`mt-5 grid gap-4 sm:grid-cols-3 ${swipeRow}`}>
             {STEPS.map((step, index) => (
-              <li key={step.title} className={`px-5 py-5 ${dirCard}`}>
+              <li key={step.title} className={`px-5 py-5 ${dirCard} ${swipeItem}`}>
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0A0A0A] font-mono text-xs font-semibold text-white">
                   {index + 1}
                 </span>
@@ -227,9 +229,9 @@ export default function AffiliatesPage() {
             send, the bigger the share, and a raise covers the shops you already sent.
           </p>
 
-          <ol className="mt-5 grid gap-4 sm:grid-cols-3">
+          <ol className={`mt-5 grid gap-4 sm:grid-cols-3 ${swipeRow}`}>
             {P.tiers.map((tier) => (
-              <li key={tier.key} className={`px-5 py-5 ${dirCard}`}>
+              <li key={tier.key} className={`px-5 py-5 ${dirCard} ${swipeItem}`}>
                 <p className={dirEyebrow}>{tier.label}</p>
                 <p className="mt-2 text-4xl font-semibold tracking-tight text-[#0A0A0A]">{tier.ratePercent}%</p>
                 <p className="mt-2 text-sm leading-relaxed text-stone-600">
@@ -319,7 +321,8 @@ export default function AffiliatesPage() {
             The rules, in plain words
           </h2>
           <p className={sectionIntro}>Four of them. They protect your name as much as ours.</p>
-          <ol className="mt-5 space-y-3">
+          <ShowMore hidden={Math.max(0, RULES.length - 3)} noun="more rules">
+          <ol className={`mt-5 space-y-3 ${showFirst[3]}`}>
             {RULES.map((rule, index) => (
               <li key={rule.title} className={`flex gap-4 px-5 py-4 ${dirCard}`}>
                 <span className="font-mono text-sm font-semibold text-[#77591B]">{index + 1}</span>
@@ -330,13 +333,15 @@ export default function AffiliatesPage() {
               </li>
             ))}
           </ol>
+          </ShowMore>
         </section>
 
         <section aria-labelledby="faq-heading" className="mt-14">
           <h2 id="faq-heading" className={sectionTitle}>
             Questions
           </h2>
-          <div className={`mt-5 divide-y divide-stone-200 ${dirCard}`}>
+          <ShowMore hidden={Math.max(0, FAQ.length - 4)} noun="more questions">
+          <div className={`mt-5 divide-y divide-stone-200 ${dirCard} ${showFirst[4]}`}>
             {FAQ.map((item) => (
               <details key={item.question} className="group px-5 py-1">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 rounded-sm text-base font-medium text-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C2A05A]/40 [&::-webkit-details-marker]:hidden">
@@ -349,6 +354,7 @@ export default function AffiliatesPage() {
               </details>
             ))}
           </div>
+          </ShowMore>
         </section>
 
         <section id="apply" aria-labelledby="apply-heading" className="mt-14 scroll-mt-24">

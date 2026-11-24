@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import { Check } from "lucide-react";
 import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HeroCommercialVideo } from "@/shared/components/auth/HeroCommercialVideo";
@@ -172,11 +173,11 @@ export function HomeLandingPage() {
               >
                 Dispatch, estimates and invoices on one record.
               </h2>
-              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <ul className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${swipeRow}`}>
                 {SOFTWARE_PAGE_ORDER.map((path) => {
                   const page = SOFTWARE_PAGES[path];
                   return (
-                    <li key={path}>
+                    <li key={path} className={swipeItem}>
                       <Link
                         href={page.href}
                         className={`group flex h-full flex-col p-5 transition-[border-color,box-shadow] hover:border-[#c2a05a] hover:shadow-[0_18px_40px_-22px_rgba(120,90,30,0.45)] ${lightCard} ${lightFocus}`}
@@ -224,8 +225,8 @@ export function HomeLandingPage() {
             >
               Priced for small shops. Set up with you. Built by one of you.
             </h2>
-            <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]">
-              <div className={`flex flex-col p-5 sm:p-6 ${lightCard}`}>
+            <div className={`mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)] ${swipeRow}`}>
+              <div className={`flex flex-col p-5 sm:p-6 ${lightCard} ${swipeItem}`}>
                 <p className="text-sm font-semibold text-[#14120e]">What a {comparison.users}-person shop pays each month</p>
                 <ul className="mt-3 space-y-1.5">
                   {comparison.rows.map((row) => (
@@ -260,7 +261,7 @@ export function HomeLandingPage() {
                 </p>
               </div>
 
-              <div id="onboarding" className={`flex scroll-mt-24 flex-col p-5 sm:p-6 ${lightCard}`}>
+              <div id="onboarding" className={`flex scroll-mt-24 flex-col p-5 sm:p-6 ${lightCard} ${swipeItem}`}>
                 <p className="text-sm font-semibold text-[#14120e]">A one-on-one setup call, included</p>
                 <p className="mt-3 text-sm leading-relaxed text-stone-600">
                   Every plan includes a free setup call on Zoom, booked at a time that suits you: setup, workflow
@@ -281,7 +282,7 @@ export function HomeLandingPage() {
                 </p>
               </div>
 
-              <div className={`flex flex-col p-5 sm:p-6 ${lightCard}`}>
+              <div className={`flex flex-col p-5 sm:p-6 ${lightCard} ${swipeItem}`}>
                 <p className="text-sm font-semibold text-[#14120e]">Built by an HVAC company owner</p>
                 <p className="mt-3 text-sm leading-relaxed text-stone-600">
                   Altair Operating System is built by {FOUNDER.name}, who owns an HVAC company. Support email and the

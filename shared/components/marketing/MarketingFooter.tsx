@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
+import { FooterColumn } from "@/shared/components/marketing/phone/PhoneLayout";
 import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 
 const focusRing =
@@ -109,11 +110,12 @@ export function MarketingFooter() {
           </ul>
         </div>
 
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
+        {/* On a phone each column folds into a tap-to-open row (owner, 2026-11-23: the
+            footer alone was over a screen long). The links stay in the page either way. */}
+        <nav aria-label="Footer" className="grid grid-cols-1 border-t border-white/10 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-8 sm:border-t-0 md:grid-cols-4">
           {FOOTER_COLUMNS.map((column) => (
-            <div key={column.title} className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8e826f]">{column.title}</p>
-              <ul className="mt-2">
+            <FooterColumn key={column.title} title={column.title}>
+              <ul className="sm:mt-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
                     <Link href={link.href} className={linkClass(link.accent)}>
@@ -122,7 +124,7 @@ export function MarketingFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </FooterColumn>
           ))}
         </nav>
       </div>
