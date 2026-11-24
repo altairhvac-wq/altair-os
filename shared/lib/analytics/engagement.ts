@@ -53,6 +53,7 @@ export const DIRECTORY_STEP_LABELS = {
   "dir-search": "Directory search sent",
   "dir-chip-trade": "Directory trade chip",
   "dir-chip-city": "Directory city chip",
+  "dir-tile-trade": "Directory phone: trade tile",
   "dir-audience-pro": "Directory: finding a pro",
   "dir-audience-sub": "Directory: finding a sub",
   "dir-empty-list": "Directory empty state: list free",
