@@ -50,7 +50,14 @@ export function ShowMore({
  * "On this page" links that stay under the site header on a phone, with the
  * section in view underlined. Plain anchors: the page works without it.
  */
-export function PhoneJumpBar({ items }: { readonly items: readonly { readonly id: string; readonly label: string }[] }) {
+export function PhoneJumpBar({
+  items,
+  className = "",
+}: {
+  readonly items: readonly { readonly id: string; readonly label: string }[];
+  /** Placement only (e.g. negative margins inside a padded page); it must stay a direct child of the long page so it can stick. */
+  readonly className?: string;
+}) {
   const [active, setActive] = useState(items[0]?.id ?? "");
   const bar = useRef<HTMLDivElement>(null);
 
@@ -70,12 +77,19 @@ export function PhoneJumpBar({ items }: { readonly items: readonly { readonly id
 
   useEffect(() => {
     // Keep the underlined link in view inside the sideways-scrolling bar.
-    const link = bar.current?.querySelector<HTMLElement>(`[data-jump="${active}"]`);
-    link?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    // Only the bar scrolls: scrollIntoView() would also scroll the PAGE to the
+    // sticky bar's resting place, throwing a phone back to the top while the
+    // reader scrolls down (owner, 2026-11-23, on /pricing).
+    const container = bar.current;
+    const link = container?.querySelector<HTMLElement>(`[data-jump="${active}"]`);
+    if (container && link) {
+      const left = link.offsetLeft - (container.clientWidth - link.offsetWidth) / 2;
+      container.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    }
   }, [active]);
 
   return (
-    <nav aria-label="On this page" className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-40 border-b border-white/10 bg-[#080907]/95 backdrop-blur sm:hidden">
+    <nav aria-label="On this page" className={`sticky top-[calc(4rem+env(safe-area-inset-top))] z-40 border-b border-white/10 bg-[#080907] sm:hidden ${className}`}>
       <div ref={bar} className="flex gap-1 overflow-x-auto px-3 [scrollbar-width:none]">
         {items.map((item) => (
           <a

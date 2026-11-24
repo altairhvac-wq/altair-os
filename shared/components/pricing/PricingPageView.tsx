@@ -95,8 +95,8 @@ export function PricingPageView() {
           </nav>
         </header>
 
-        <div className="-mx-4 mt-6">
-          <PhoneJumpBar
+        <PhoneJumpBar
+            className="-mx-4 mt-6"
             items={[
               { id: "plans", label: "Plans" },
               { id: "plan-finder", label: "Price my team" },
@@ -106,7 +106,6 @@ export function PricingPageView() {
               { id: "faq", label: "Questions" },
             ]}
           />
-        </div>
 
         {/* ---------- the three plans (they slide sideways on a phone) ---------- */}
         <div id="plans" className={`auth-panel-enter mx-auto mt-6 grid max-w-5xl gap-5 sm:mt-10 lg:grid-cols-3 lg:gap-6 ${jumpTarget} ${swipeRow}`}>
