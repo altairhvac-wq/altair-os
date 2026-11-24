@@ -54,3 +54,28 @@ export async function isDirectory214Installed(): Promise<boolean> {
     return false;
   }
 }
+
+let remembered216: { value: boolean; at: number } | null = null;
+
+/**
+ * Is migration 216 (quote requests) applied? Same pattern as 214: until it
+ * is, listing pages show no request form and the action refuses politely.
+ */
+export async function isDirectory216Installed(): Promise<boolean> {
+  if (remembered216 && Date.now() - remembered216.at < TTL_MS) return remembered216.value;
+  try {
+    const supabase = createServiceRoleClient();
+    const { error } = await supabase.from("directory_quote_requests").select("id").limit(1);
+    if (!error) {
+      remembered216 = { value: true, at: Date.now() };
+      return true;
+    }
+    if (isNotInstalled(error)) {
+      remembered216 = { value: false, at: Date.now() };
+      return false;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}

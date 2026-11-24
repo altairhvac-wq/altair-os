@@ -128,7 +128,16 @@ function ChipIcon({ trade, active, dark }: { readonly trade: string; readonly ac
 }
 
 /** One business in a list of results. */
-export function ListingResultCard({ listing, showCity = true }: { readonly listing: DirectoryPublicListing; readonly showCity?: boolean }) {
+export function ListingResultCard({
+  listing,
+  showCity = true,
+  quotes = false,
+}: {
+  readonly listing: DirectoryPublicListing;
+  readonly showCity?: boolean;
+  /** Migration 215 is applied: offer "Request a quote" on the card. */
+  readonly quotes?: boolean;
+}) {
   const href = directoryListingPath(listing.slug);
   const services = listing.details.services.slice(0, 3);
   const extra = listing.details.services.length - services.length;
@@ -190,6 +199,15 @@ export function ListingResultCard({ listing, showCity = true }: { readonly listi
             <Phone aria-hidden="true" className="h-4 w-4 text-[#A4823A]" />
             {formatPhone(listing.phone)}
           </a>
+          {quotes ? (
+            <Link
+              href={`${href}#request`}
+              data-track="dir-card-quote"
+              className={`ml-auto inline-flex min-h-10 items-center rounded-lg px-1 text-sm font-medium text-stone-600 hover:text-stone-900 ${dirFocus}`}
+            >
+              Request a quote<span className="sr-only">: {listing.businessName}</span>
+            </Link>
+          ) : null}
           <Link href={href} className={`inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-[#77591B] hover:text-[#5c4614] ${dirFocus}`}>
             View listing
             <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

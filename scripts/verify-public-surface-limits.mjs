@@ -138,6 +138,12 @@ const ENTRY_POINTS = [
     why: "report flooding against a business's listing",
   },
   {
+    file: "app/actions/directory-quote.ts",
+    fn: "sendQuoteRequestAction",
+    scope: "public.directory_quote",
+    why: "mail flooding against a listed business: each request emails that business and may add a lead to its workspace",
+  },
+  {
     file: "app/actions/affiliates.ts",
     fn: "submitAffiliateApplicationAction",
     scope: "public.affiliate_apply",

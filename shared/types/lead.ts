@@ -14,6 +14,7 @@ export type LeadSource =
   | "facebook"
   | "referral"
   | "network_referral"
+  | "directory"
   | "door_hanger"
   | "yard_sign"
   | "truck_wrap"
@@ -102,6 +103,7 @@ export const LEAD_SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
   { value: "facebook", label: "Facebook" },
   { value: "referral", label: "Referral" },
   { value: "network_referral", label: "Network Referral" },
+  { value: "directory", label: "Directory" },
   { value: "door_hanger", label: "Door hanger" },
   { value: "yard_sign", label: "Yard sign" },
   { value: "truck_wrap", label: "Truck wrap" },

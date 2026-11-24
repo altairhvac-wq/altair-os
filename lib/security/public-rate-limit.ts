@@ -51,6 +51,7 @@ export type PublicRateLimitScope =
   | "public.directory_submit"
   | "public.directory_manage_link"
   | "public.directory_report"
+  | "public.directory_quote"
   | "public.affiliate_apply";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
@@ -148,6 +149,15 @@ export const PUBLIC_RATE_LIMITS: Record<
   ],
   // "Report this listing": writes one row for the owner to read. No mail.
   "public.directory_report": [{ dimension: "ip", windowSeconds: 3600, limit: 10 }],
+  // A quote or sub-work request to one listing (migration 216). Each one
+  // emails that business, so: few per sender address (a person asks two or
+  // three businesses, not twenty), few per typed inbox, and a daily ceiling
+  // per listing ("token" = the listing id) so one business cannot be flooded.
+  "public.directory_quote": [
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+    { dimension: "email", windowSeconds: 86400, limit: 8 },
+    { dimension: "token", windowSeconds: 86400, limit: 25 },
+  ],
   // The affiliate program application (migration 213). Each submission
   // stores one row for the owner to read and sends one "we have it" email to
   // the address typed, so the inbox dimension stops the form being aimed at

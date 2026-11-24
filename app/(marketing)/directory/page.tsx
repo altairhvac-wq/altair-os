@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, HardHat, Home, Search, SearchX } from "lucide-react";
 import { searchPublicListings } from "@/lib/directory/listings";
+import { isDirectory216Installed } from "@/lib/directory/schema";
 import { citiesWithListings, listDirectoryFacets, tradesWithListings } from "@/lib/directory/places";
 import {
   dirBrassButton,
@@ -144,7 +145,7 @@ function AudienceCard({
 
 export default async function DirectoryPage({ searchParams }: PageProps) {
   const search = parseDirectorySearch(await searchParams);
-  const [result, facetData] = await Promise.all([searchPublicListings(search), listDirectoryFacets()]);
+  const [result, facetData, quotesOn] = await Promise.all([searchPublicListings(search), listDirectoryFacets(), isDirectory216Installed()]);
   const filtered = hasActiveSearch(search);
   const pages = Math.max(1, Math.ceil(result.total / DIRECTORY_PAGE_SIZE));
   const page = Math.min(search.page, pages);
@@ -361,7 +362,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
               <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
                 {result.listings.map((listing, index) => (
                   <Fragment key={listing.slug}>
-                    <ListingResultCard listing={listing} />
+                    <ListingResultCard listing={listing} quotes={quotesOn} />
                     {/* Phones have no sidebar: the card sits after the third business instead. */}
                     {index === 2 && result.listings.length > 3 ? (
                       <li className="md:col-span-2 lg:hidden">

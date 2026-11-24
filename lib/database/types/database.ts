@@ -1614,6 +1614,44 @@ export type Database = {
         }>;
         Relationships: [];
       };
+      // directory_quote_requests: migration 216 — a quote or sub-work request
+      // sent from a listing page. Visitor contact details: service role only.
+      directory_quote_requests: {
+        Row: {
+          id: string;
+          listing_id: string;
+          kind: "customer" | "sub";
+          sender_name: string;
+          sender_phone: string;
+          sender_email: string | null;
+          sender_company: string | null;
+          place: string;
+          timing: string;
+          details: string;
+          status: "sent" | "not_sent";
+          lead_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          kind: "customer" | "sub";
+          sender_name: string;
+          sender_phone: string;
+          sender_email?: string | null;
+          sender_company?: string | null;
+          place?: string;
+          timing?: string;
+          details: string;
+          status?: "sent" | "not_sent";
+          lead_id?: string | null;
+        };
+        Update: Partial<{
+          status: "sent" | "not_sent";
+          lead_id: string | null;
+        }>;
+        Relationships: [];
+      };
       // web_analytics_internal_visitors: migration 206 — the owner's own
       // browsers (HMAC of the analytics browser id), left out of every website
       // figure. Service role only.

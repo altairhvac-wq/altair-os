@@ -13,6 +13,7 @@ import {
   Navigation,
   Phone,
   Route,
+  Send,
   ShieldCheck,
   Siren,
   Wrench,
@@ -23,6 +24,8 @@ import { DirectoryMemberBadge } from "@/shared/components/directory/DirectoryMem
 import { DirectoryHubPage, hubMetadata, resolveHub } from "@/shared/components/directory/DirectoryHub";
 import { ListFreeBand } from "@/shared/components/directory/DirectoryPitch";
 import { ReportListingForm } from "@/shared/components/directory/DirectorySmallForms";
+import { QuoteRequestForm } from "@/shared/components/directory/QuoteRequestForm";
+import { isDirectory216Installed } from "@/lib/directory/schema";
 import { ListingStatsBeacon } from "@/shared/components/directory/ListingStatsBeacon";
 import {
   DirectoryBreadcrumbs,
@@ -223,10 +226,12 @@ export default async function DirectorySlugPage({ params }: PageProps) {
   const { listing } = found;
   const { details } = listing;
 
-  const [{ facets }, sameTrade, sameCity] = await Promise.all([
+  const [{ facets }, sameTrade, sameCity, quotesOn] = await Promise.all([
     listDirectoryFacets(),
     searchPublicListings({ trade: listing.tradeType, state: listing.state, place: null, subOnly: false, page: 1 }, 7),
     listingsForPlace({ state: listing.state, city: listing.city }),
+    // The request form shows once migration 216 is applied.
+    isDirectory216Installed(),
   ]);
   const moreInTrade = sameTrade.listings.filter((other) => other.slug !== listing.slug).slice(0, 5);
   const nearby = sameCity.based.filter((other) => other.slug !== listing.slug && other.tradeType !== listing.tradeType).slice(0, 5);
@@ -280,6 +285,13 @@ export default async function DirectorySlugPage({ params }: PageProps) {
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
       ) : null}
+      {/* On the phone bar, "Quote" takes the map's place: the form is far down the page there. */}
+      {layout === "row" && quotesOn ? (
+        <a href="#request" data-track="dir-bar-quote" className={`${dirSecondaryButton} gap-2 px-3`}>
+          <Send aria-hidden="true" className="h-4 w-4" />
+          Quote
+        </a>
+      ) : (
       <a
         href={mapsUrl(listing)}
         target="_blank"
@@ -292,6 +304,7 @@ export default async function DirectorySlugPage({ params }: PageProps) {
         {layout === "row" ? "Map" : "Find on a map"}
         <span className="sr-only"> (opens in a new tab)</span>
       </a>
+      )}
     </div>
   );
 
@@ -503,8 +516,17 @@ export default async function DirectorySlugPage({ params }: PageProps) {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Contact</p>
               <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-[#0A0A0A]">{formatPhone(listing.phone)}</p>
               <div className="mt-4">{contactButtons("stack")}</div>
-              <p className="mt-4 text-xs leading-relaxed text-stone-500">You call the business directly. Nobody takes a fee for connecting you.</p>
+              <p className="mt-4 text-xs leading-relaxed text-stone-500">You call the business directly.</p>
             </div>
+
+            {quotesOn ? (
+              <QuoteRequestForm
+                slug={listing.slug}
+                businessName={listing.businessName}
+                phoneDisplay={formatPhone(listing.phone)}
+                acceptsSubWork={listing.acceptsSubWork}
+              />
+            ) : null}
 
             {hoursLines.length > 0 ? (
               <div className={`px-5 py-5 ${dirPanel}`}>
