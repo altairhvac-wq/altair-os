@@ -217,6 +217,10 @@ const PLATFORM_ONLY_TABLES = new Set([
   // directory_listings, which has no workspace: service role only.
   "directory_listing_daily_stats",
   "directory_stats_emails",
+  // Migration 216: quote and sub-work requests sent to a listing. The sender
+  // has no account and every column is private contact data; a copy may
+  // become a lead in the listing's workspace, written by the service role.
+  "directory_quote_requests",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");

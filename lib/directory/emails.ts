@@ -40,7 +40,7 @@ const ABOUT_LINE =
   "The directory is run by Altair Operating System, software for HVAC and trade shops: scheduling, estimates, invoices and time tracking.";
 
 function paragraph(text: string): string {
-  return `<p style="margin:0 0 14px;color:#3f3f46;font-size:15px;line-height:1.55;">${esc(text)}</p>`;
+  return `<p style="margin:0 0 14px;color:#3f3f46;font-size:15px;line-height:1.55;">${esc(text).replace(/\n/g, "<br>")}</p>`;
 }
 
 function button(href: string, label: string): string {
@@ -366,4 +366,82 @@ export async function notifyOwnerOfReview(input: { businessName: string; tradeTy
   } catch {
     // The review screen shows the item either way.
   }
+}
+
+/**
+ * A quote or sub-work request from the business's listing page (migration
+ * 216). Everything in it was typed by the visitor, so all of it is escaped in
+ * the HTML part (compose does that per line). Replies go to the visitor when
+ * they left an email, otherwise to support, never to another business.
+ */
+export function buildQuoteRequestEmail(input: {
+  businessName: string;
+  kind: "customer" | "sub";
+  name: string;
+  phoneDigits: string;
+  email: string | null;
+  company: string | null;
+  place: string;
+  timing: string;
+  details: string;
+  isMember: boolean;
+  manageUrl: string;
+}): Message {
+  const phone = formatPhoneForEmail(input.phoneDigits);
+  const who = input.company ? `${input.name} (${input.company})` : input.name;
+  const sub = input.kind === "sub";
+  return compose(
+    sub ? `Sub work offered to ${input.businessName}: ${who}` : `New quote request for ${input.businessName}: ${input.name}`,
+    [
+      sub
+        ? `${who} found ${input.businessName} in the contractor directory and has sub work for you.`
+        : `${input.name} found ${input.businessName} in the contractor directory and asked for a quote.`,
+      `What they need: ${input.details}`,
+      [
+        `Phone: ${phone}`,
+        input.email ? `Email: ${input.email}` : "",
+        input.place ? `Where: ${input.place}` : "",
+        `${sub ? "Timing" : "Best time to call"}: ${input.timing}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      input.isMember
+        ? "It is also in your Altair Leads, marked Directory."
+        : "They are expecting a call from you. The directory does not contact them or share this request with anyone else.",
+    ],
+    { url: `tel:+1${input.phoneDigits}`, label: `Call ${input.name.split(/\s+/)[0]}` },
+    input.manageUrl,
+  );
+}
+
+function formatPhoneForEmail(digits: string): string {
+  return /^\d{10}$/.test(digits) ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : digits;
+}
+
+export function sendQuoteRequestEmail(
+  to: string,
+  listing: { id: string; businessName: string },
+  request: { kind: "customer" | "sub"; name: string; phone: string; email: string | null; company: string | null; place: string; timing: string; details: string },
+  isMember: boolean,
+): Promise<ResendSendResult> {
+  const message = buildQuoteRequestEmail({
+    businessName: listing.businessName,
+    kind: request.kind,
+    name: request.name,
+    phoneDigits: request.phone,
+    email: request.email,
+    company: request.company,
+    place: request.place,
+    timing: request.timing,
+    details: request.details,
+    isMember,
+    manageUrl: buildManageUrl(listing.id),
+  });
+  return sendViaResend({
+    to,
+    ...message,
+    logContext: "directory/quote-request",
+    fromDisplayName: "Altair contractor directory",
+    replyTo: request.email ?? SUPPORT_EMAIL,
+  });
 }

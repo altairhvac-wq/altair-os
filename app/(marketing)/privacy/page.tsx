@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      effectiveDate="November 12, 2026"
+      effectiveDate="November 23, 2026"
       intro="Altair Operating System is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
     >
       <LegalSection heading="What we collect">
@@ -134,6 +134,15 @@ export default function PrivacyPolicyPage() {
           off the site straight away. To have the record deleted from our
           systems as well, write to us. If you report a listing, we store the
           reason and any note you add, not who you are.
+        </p>
+        <p>
+          If you send a business a quote request or offer it sub work from its
+          listing, what you enter (your name, phone number, email if you give
+          one, company, city or ZIP, timing and your message) goes to that one
+          business by email, and into its Altair workspace if it uses Altair
+          Operating System. We keep a copy so we can stop abuse and tell the
+          business how many requests its listing brings. It is never shown
+          publicly or given to anyone else. To have it deleted, write to us.
         </p>
       </LegalSection>
 
