@@ -35,6 +35,9 @@ import {
 
 type Message = { subject: string; text: string; html: string };
 
+/** Every directory email comes from directory@ on the site's sending domain, not billing@ (owner, 2026-11-23). */
+const DIRECTORY_SENDER = "directory";
+
 const esc = escapeBillingEmailHtml;
 const ABOUT_LINE =
   "The directory is run by Altair Operating System, software for HVAC and trade shops: scheduling, estimates, invoices and time tracking.";
@@ -278,6 +281,7 @@ export function sendMonthlyStatsEmail(
     }),
     logContext: "directory/monthly-stats",
     fromDisplayName: "Altair Operating System",
+    fromLocalPart: DIRECTORY_SENDER,
     replyTo: SUPPORT_EMAIL,
     headers: { "List-Unsubscribe": `<${stopUrl}>` },
   });
@@ -310,6 +314,7 @@ function send(to: string, message: Message, logContext: string): Promise<ResendS
     ...message,
     logContext,
     fromDisplayName: "Altair Operating System",
+    fromLocalPart: DIRECTORY_SENDER,
     replyTo: SUPPORT_EMAIL,
   });
 }
@@ -442,6 +447,7 @@ export function sendQuoteRequestEmail(
     ...message,
     logContext: "directory/quote-request",
     fromDisplayName: "Altair contractor directory",
+    fromLocalPart: DIRECTORY_SENDER,
     replyTo: request.email ?? SUPPORT_EMAIL,
   });
 }

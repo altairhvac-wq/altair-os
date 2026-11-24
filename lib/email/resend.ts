@@ -53,6 +53,12 @@ type SendViaResendInput = {
   html: string;
   logContext: string;
   fromDisplayName?: string;
+  /**
+   * Send from another mailbox on the same verified domain as
+   * RESEND_FROM_EMAIL (e.g. "directory" -> directory@mail.altair-op.com).
+   * Resend verifies the domain, not each mailbox, so no new setting is needed.
+   */
+  fromLocalPart?: string;
   replyTo?: string;
   /** Extra message headers, e.g. List-Unsubscribe for a recurring email. */
   headers?: Record<string, string>;
@@ -73,15 +79,19 @@ function formatDisplayName(displayName: string): string {
   return `"${escapeDisplayName(trimmedName)}"`;
 }
 
-function buildFromAddress(from: string, displayName?: string): string {
+function buildFromAddress(from: string, displayName?: string, localPart?: string): string {
   const trimmedName = displayName?.trim();
+  const emailMatch = from.match(/<([^>]+)>/);
+  const configured = emailMatch?.[1]?.trim() || from.trim();
+  // Only a plain mailbox name is accepted; anything else keeps the configured address.
+  const email =
+    localPart && /^[a-z0-9][a-z0-9._-]{0,40}$/i.test(localPart) && configured.includes("@")
+      ? `${localPart}@${configured.split("@")[1]}`
+      : configured;
 
   if (!trimmedName) {
-    return from;
+    return email === configured ? from : email;
   }
-
-  const emailMatch = from.match(/<([^>]+)>/);
-  const email = emailMatch?.[1]?.trim() || from.trim();
 
   return `${formatDisplayName(trimmedName)} <${email}>`;
 }
@@ -135,7 +145,7 @@ export async function sendViaResend(
   }
 
   const resolved = resolveEmailRecipient(input.to);
-  const fromEmail = buildFromAddress(env.resend.from, input.fromDisplayName);
+  const fromEmail = buildFromAddress(env.resend.from, input.fromDisplayName, input.fromLocalPart);
 
   if (!resolved.ok) {
     console.error(`[${input.logContext}] recipient resolution failed before provider send:`, {
