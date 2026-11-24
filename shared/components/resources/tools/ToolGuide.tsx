@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PhoneFold } from "@/shared/components/marketing/phone/PhoneLayout";
+import { swipeItem, swipeRowInPanel } from "@/shared/components/marketing/phone/phone-classes";
 import { ArrowRight, Check } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
@@ -166,19 +168,15 @@ export function GuideSection({
   readonly aside?: React.ReactNode;
 }) {
   return (
+    // On a phone every section but the first folds under its title (owner, 2026-11-23:
+    // long pages should not scroll forever); from sm up it reads as before.
     <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-24 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-stone-900 text-xs font-semibold text-white">
-          {n}
-        </span>
-        <h2 id={`${id}-title`} className="text-xl font-semibold leading-snug tracking-tight text-[#0A0A0A] sm:text-[1.45rem]">
-          {title}
-        </h2>
-      </div>
-      <div className={aside ? "mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]" : "mt-5"}>
-        <div className="min-w-0 space-y-4 text-[15.5px] leading-7 text-stone-700 sm:text-base [&>p]:max-w-[46rem] [&>ul]:max-w-[46rem] [&_table]:leading-snug">{children}</div>
-        {aside ? <div className="min-w-0">{aside}</div> : null}
-      </div>
+      <PhoneFold headingId={`${id}-title`} n={n} title={title} defaultOpen={n === 1}>
+        <div className={aside ? "mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]" : "mt-5"}>
+          <div className="min-w-0 space-y-4 text-[15.5px] leading-7 text-stone-700 sm:text-base [&>p]:max-w-[46rem] [&>ul]:max-w-[46rem] [&_table]:leading-snug">{children}</div>
+          {aside ? <div className="min-w-0">{aside}</div> : null}
+        </div>
+      </PhoneFold>
     </section>
   );
 }
@@ -355,9 +353,9 @@ export function RelatedGrid({ title, links }: { readonly title: string; readonly
   return (
     <section aria-label={title} className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
       <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-stone-500">{title}</h2>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className={`mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${swipeRowInPanel}`}>
         {links.map((link) => (
-          <li key={link.href}>
+          <li key={link.href} className={swipeItem}>
             <Link
               href={link.href}
               className={`group flex h-full flex-col rounded-xl border border-stone-200 bg-white px-4 py-4 transition-colors hover:border-[#c2a05a] ${focusRing}`}

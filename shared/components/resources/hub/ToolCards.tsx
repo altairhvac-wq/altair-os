@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
@@ -320,9 +321,9 @@ export function ToolStrip({
           <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
         </Link>
       </div>
-      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${swipeRow}`}>
         {tools.map((tool) => (
-          <li key={tool.id} className="min-w-0">
+          <li key={tool.id} className={`min-w-0 ${swipeItem}`}>
             <ToolCard tool={tool} tone={tone} />
           </li>
         ))}

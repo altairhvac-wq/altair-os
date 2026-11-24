@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PhoneJumpBar, ShowMore } from "@/shared/components/marketing/phone/PhoneLayout";
+import { jumpTarget, showFirst, swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import { ArrowRight, Check, CircleSlash, PlayCircle } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
@@ -56,12 +58,12 @@ function WorkflowRail({ current }: { readonly current: SoftwarePagePath }) {
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#c9bfae] sm:text-base">
           Each part hands the same record to the next, so nothing is typed twice. Every stop has its own hands-on demo.
         </p>
-        <ol className="mt-8 grid gap-3 md:grid-cols-4">
+        <ol className={`mt-8 grid gap-3 md:grid-cols-4 ${swipeRow}`}>
           {WORKFLOW.map((stage, index) => {
             const lit = overview || stage.path === current;
             const here = stage.path === current && !overview;
             return (
-              <li key={stage.title} className="relative">
+              <li key={stage.title} className={`relative ${swipeItem}`}>
                 <Link
                   href={here ? stage.anchor : `${stage.path}${stage.anchor}`}
                   className={`group flex h-full flex-col rounded-2xl border p-5 transition-colors ${
@@ -176,8 +178,19 @@ export function SoftwareLandingPage({
           </div>
         </section>
 
+        {/* Phone only: jump links that stay under the header (owner, 2026-11-23: no scrolling forever). */}
+        <PhoneJumpBar
+          items={[
+            { id: "try-it", label: "Try it" },
+            { id: content.stepsId ?? "how-it-works", label: "How it works" },
+            { id: "features", label: "Features" },
+            { id: "price", label: "Price" },
+            { id: "faq", label: "Questions" },
+          ]}
+        />
+
         {/* ---------------- the demo ---------------- */}
-        <section aria-labelledby="demo-heading" className={`${BAND.light} px-3 py-14 sm:px-8 sm:py-20`}>
+        <section id="try-it" aria-labelledby="demo-heading" className={`${BAND.light} ${jumpTarget} px-3 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
             <div className="px-2 sm:px-0">
               <p className={eyebrow("light")}>{content.demo.eyebrow}</p>
@@ -196,21 +209,22 @@ export function SoftwareLandingPage({
         </div>
 
         {/* ---------------- how it works, with real screens ---------------- */}
-        <section id={content.stepsId ?? "how-it-works"} aria-labelledby="steps-heading" className={`${BAND.light} scroll-mt-24 px-5 py-14 sm:px-8 sm:py-20`}>
+        <section id={content.stepsId ?? "how-it-works"} aria-labelledby="steps-heading" className={`${BAND.light} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
             <p className={eyebrow("light")}>How it works</p>
             <h2 id="steps-heading" className={h2("light")}>
               {content.stepsHeading}
             </h2>
-            <ol className="mt-10 space-y-8 sm:space-y-12">
+            <p className="mt-2 text-xs text-stone-500 sm:hidden">Swipe through the steps.</p>
+            <ol className={`mt-6 space-y-8 sm:mt-10 sm:space-y-12 ${swipeRow}`}>
               {content.steps.map((step, index) => (
                 <li
                   key={step.title}
-                  className={
+                  className={`${swipeItem} ${
                     step.shot
                       ? `flex flex-col gap-5 lg:items-center lg:gap-12 ${index % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"}`
                       : `${TONE.light.card} p-5 sm:p-6 lg:mx-auto lg:max-w-3xl`
-                  }
+                  }`}
                 >
                   {step.shot ? (
                     <div className="min-w-0 flex-1 lg:flex-[1.5]">
@@ -235,13 +249,14 @@ export function SoftwareLandingPage({
         </section>
 
         {/* ---------------- feature by feature ---------------- */}
-        <section aria-labelledby="features-heading" className={`${BAND.dark} px-5 py-14 sm:px-8 sm:py-20`}>
+        <section id="features" aria-labelledby="features-heading" className={`${BAND.dark} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
             <p className={eyebrow("dark")}>Feature by feature</p>
             <h2 id="features-heading" className={h2("dark")}>
               {content.featuresHeading}
             </h2>
-            <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ShowMore hidden={Math.max(0, content.features.length - 4)} noun="more features" tone="dark">
+            <ul className={`mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${showFirst[4]}`}>
               {content.features.map((feature) => (
                 <li key={feature.title} className={`${TONE.dark.card} p-5`}>
                   <p className="flex items-start gap-2.5">
@@ -254,6 +269,7 @@ export function SoftwareLandingPage({
                 </li>
               ))}
             </ul>
+            </ShowMore>
 
             {content.notYet.length ? (
               <div className="mt-8 rounded-2xl border border-[rgba(230,227,220,0.14)] bg-[rgba(8,9,7,0.5)] p-5 sm:p-6">
@@ -281,8 +297,27 @@ export function SoftwareLandingPage({
         </section>
 
         {/* ---------------- the plans ---------------- */}
-        <section aria-labelledby="plans-heading" className={`${BAND.light} px-5 py-14 sm:px-8 sm:py-20`}>
+        <section id="price" aria-labelledby="plans-heading" className={`${BAND.light} ${jumpTarget} px-5 py-10 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
+            {/* Phone: the price in one card; the three plan cards are on /pricing. */}
+            <div className="sm:hidden">
+              <p className={eyebrow("light")}>Price</p>
+              <Link
+                href="/pricing"
+                className={`mt-3 flex items-center justify-between gap-3 p-4 ${TONE.light.card} ${focusRing}`}
+              >
+                <span>
+                  <span className="block text-base font-semibold text-[#14120e]">
+                    {fromPrice !== null ? `From ${formatUsd(fromPrice)}/month` : "See the plans"}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-stone-600">Every feature on every plan · {trialDays}-day free trial</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#77591B]">
+                  Plans <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </span>
+              </Link>
+            </div>
+            <div className="hidden sm:block">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className={eyebrow("light")}>Price</p>
@@ -327,6 +362,7 @@ export function SoftwareLandingPage({
                 The terms in plain words
               </Link>
             </p>
+            </div>
           </div>
         </section>
 
@@ -348,9 +384,9 @@ export function SoftwareLandingPage({
             <h2 id="tools-heading" className="mt-3 text-[1.4rem] font-semibold tracking-tight text-[#14120e] sm:text-[1.75rem]">
               {content.toolsHeading}
             </h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <ul className={`mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 ${swipeRow}`}>
               {content.tools.map((tool) => (
-                <li key={tool.href}>
+                <li key={tool.href} className={swipeItem}>
                   <Link
                     href={tool.href}
                     className={`group flex h-full flex-col p-5 transition-[border-color,box-shadow] ${TONE.light.card} ${TONE.light.cardHover} ${focusRing} ${TONE.light.ringOffset}`}

@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import {
   BarChart3,
   CalendarClock,
@@ -124,7 +125,7 @@ function ShowcaseRow({
   return (
     <article
       className={[
-        "group/row flex flex-col gap-4 sm:gap-5",
+        `group/row flex flex-col gap-4 sm:gap-5 ${swipeItem}`,
         // Picture first on phones for every row; alternate sides from lg up.
         isEven ? "lg:flex-row-reverse" : "lg:flex-row",
         compact ? "lg:gap-6" : "lg:items-center lg:gap-10",
@@ -222,7 +223,8 @@ export function SeeAltairInActionSection({
         </p>
       </div>
 
-      <div className={compact ? "flex flex-col gap-8" : "flex flex-col gap-10 sm:gap-12 lg:gap-14"}>
+      {/* On a phone the screens slide sideways instead of stacking (owner, 2026-11-23). */}
+      <div className={`${compact ? "flex flex-col gap-8" : "flex flex-col gap-10 sm:gap-12 lg:gap-14"} ${swipeRow}`}>
         {SHOWCASE_ITEMS.map((item, index) => (
           <ShowcaseRow
             key={item.id}

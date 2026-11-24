@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Check, Library, MapPin, Sigma, type LucideIcon } from "lucide-react";
 import { ToolCard } from "@/shared/components/resources/hub/ToolCards";
@@ -232,14 +233,14 @@ export default function ResourcesHubPage() {
                     <p className="mt-1 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-base">{job.text}</p>
                   </div>
                 </div>
-                <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${swipeRow}`}>
                   {tools.map((tool) => (
-                    <li key={tool.id} className="min-w-0">
+                    <li key={tool.id} className={`min-w-0 ${swipeItem}`}>
                       <ToolCard tool={tool} featured />
                     </li>
                   ))}
                   {guide ? (
-                    <li className="min-w-0">
+                    <li className={`min-w-0 ${swipeItem}`}>
                       <Link
                         href={guide.href}
                         data-track={`next-guide-${guide.id}`}
@@ -273,11 +274,11 @@ export default function ResourcesHubPage() {
           <h2 id="more-resources-heading" className="text-sm font-semibold uppercase tracking-[0.14em] text-stone-500">
             More free resources
           </h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className={`mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 ${swipeRow}`}>
             {MORE.map((item) => {
               const Icon = item.icon;
               return (
-                <li key={item.href}>
+                <li key={item.href} className={swipeItem}>
                   <Link
                     href={item.href}
                     className={`group flex h-full items-start gap-3 rounded-xl border border-stone-200 bg-white p-4 transition-colors hover:border-[#c2a05a] ${focusRing}`}

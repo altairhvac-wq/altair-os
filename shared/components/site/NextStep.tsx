@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { swipeItem, swipeRowInPanel } from "@/shared/components/marketing/phone/phone-classes";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, BookOpen, Calculator, LayoutGrid, MapPin, MonitorSmartphone, PlayCircle } from "lucide-react";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
@@ -115,12 +116,12 @@ export function NextStep({
       </Heading>
       {intro ? <p className={`mt-2 max-w-2xl text-sm leading-relaxed ${t.intro}`}>{intro}</p> : null}
 
-      <ul className={`mt-5 grid gap-3 ${columns}`}>
+      <ul className={`mt-5 grid gap-3 ${columns} ${swipeRowInPanel}`}>
         {steps.map((item) => {
           const kind = KIND[item.kind];
           const Icon = kind.icon;
           return (
-            <li key={`${item.kind}-${item.href}`} className="min-w-0">
+            <li key={`${item.kind}-${item.href}`} className={`min-w-0 ${swipeItem}`}>
               <Link
                 href={item.href}
                 data-track={trackLabel(item)}

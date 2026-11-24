@@ -1,3 +1,5 @@
+import { ShowMore } from "@/shared/components/marketing/phone/PhoneLayout";
+import { showFirst } from "@/shared/components/marketing/phone/phone-classes";
 import { SITE_FAQ } from "@/shared/lib/site/faq";
 
 type FaqEntry = { readonly id: string; readonly question: string; readonly answer: string };
@@ -64,7 +66,9 @@ export function MarketingFaqSection({
           {introText}
         </p>
 
-        <div className="mt-8 space-y-3">
+        {/* On a phone the first four questions show; the rest wait behind "Show more". */}
+        <ShowMore hidden={Math.max(0, items.length - 4)} noun="more questions" tone={dark ? "dark" : "light"}>
+        <div className={`mt-8 space-y-3 ${showFirst[4]}`}>
           {items.map((entry) => (
             <details
               key={entry.id}
@@ -87,6 +91,7 @@ export function MarketingFaqSection({
             </details>
           ))}
         </div>
+        </ShowMore>
       </div>
     </section>
   );

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PhoneJumpBar, ShowMore } from "@/shared/components/marketing/phone/PhoneLayout";
+import { jumpTarget, showFirst, swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import { ArrowRight, Calculator, Check, FileText, Minus, ShieldCheck, Sparkles } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
@@ -75,7 +77,7 @@ export function PricingPageView() {
             ))}{" "}
             a month. Start with a {trialDays}-day free trial, no credit card, and a one-on-one setup call.
           </p>
-          <nav aria-label="On this page" className="mt-6 flex flex-wrap justify-center gap-2">
+          <nav aria-label="On this page" className="mt-6 hidden flex-wrap justify-center gap-2 sm:flex">
             {[
               { href: "#plan-finder", label: "Price my team" },
               { href: "#compare-plans", label: "Compare plans" },
@@ -93,14 +95,28 @@ export function PricingPageView() {
           </nav>
         </header>
 
-        {/* ---------- the three plans ---------- */}
-        <div className="auth-panel-enter mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3 lg:gap-6">
+        <div className="-mx-4 mt-6">
+          <PhoneJumpBar
+            items={[
+              { id: "plans", label: "Plans" },
+              { id: "plan-finder", label: "Price my team" },
+              { id: "compare-plans", label: "Compare" },
+              { id: "terms", label: "Terms" },
+              { id: "not-yet", label: "Not yet" },
+              { id: "faq", label: "Questions" },
+            ]}
+          />
+        </div>
+
+        {/* ---------- the three plans (they slide sideways on a phone) ---------- */}
+        <div id="plans" className={`auth-panel-enter mx-auto mt-6 grid max-w-5xl gap-5 sm:mt-10 lg:grid-cols-3 lg:gap-6 ${jumpTarget} ${swipeRow}`}>
           {plans.map((plan) => {
             const featured = plan.planKey === "growth";
             return (
               <div
                 key={plan.planKey}
                 className={[
+                  swipeItem,
                   "relative flex flex-col overflow-hidden rounded-2xl border bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.08)] ring-1",
                   featured
                     ? "border-[#C2A05A]/45 border-t-[3px] border-t-[#C2A05A]/75 ring-[#C2A05A]/28 shadow-[0_8px_24px_rgba(10,10,10,0.1),0_24px_48px_rgba(119,89,27,0.14)] lg:-mt-2 lg:mb-2"
@@ -192,10 +208,11 @@ export function PricingPageView() {
           </h2>
           {/* phones: one card per plan, then the shared feature list once */}
           <div className="mt-6 space-y-3 sm:hidden">
+            <div className={swipeRow}>
             {plans.map((plan, planIndex) => (
               <div
                 key={plan.planKey}
-                className={`${panel} p-5 ${plan.planKey === "growth" ? "border-[#C2A05A]/50 ring-1 ring-[#C2A05A]/25" : ""}`}
+                className={`${panel} p-5 ${swipeItem} ${plan.planKey === "growth" ? "border-[#C2A05A]/50 ring-1 ring-[#C2A05A]/25" : ""}`}
               >
                 <p className="flex items-baseline justify-between gap-3">
                   <span className="text-base font-semibold text-[#0A0A0A]">{plan.label}</span>
@@ -217,9 +234,11 @@ export function PricingPageView() {
                 </dl>
               </div>
             ))}
+            </div>
             <div className={`${panel} p-5`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Included on every plan</p>
-              <ul className="mt-3 grid gap-2 text-sm text-stone-700">
+              <ShowMore hidden={Math.max(0, rows.features.length - 6)} noun="more">
+              <ul className={`mt-3 grid gap-2 text-sm text-stone-700 ${showFirst[6]}`}>
                 {rows.features.map((row) => (
                   <li key={row.label} className="flex items-start gap-2">
                     <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#77591B]" />
@@ -227,6 +246,7 @@ export function PricingPageView() {
                   </li>
                 ))}
               </ul>
+              </ShowMore>
             </div>
           </div>
           <div className={`mt-6 hidden overflow-x-auto sm:block ${panel}`}>
@@ -320,9 +340,9 @@ export function PricingPageView() {
               Read the full terms
             </Link>
           </div>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${swipeRow}`}>
             {CONTRACT_TERMS.map((term) => (
-              <li key={term.title} className={`${panel} p-5`}>
+              <li key={term.title} className={`${panel} p-5 ${swipeItem}`}>
                 <p className="flex items-center gap-2 text-[15px] font-semibold text-[#0A0A0A]">
                   <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-[#77591B]" />
                   {term.title}
@@ -347,7 +367,8 @@ export function PricingPageView() {
             Better you read it here than find it on day three of a trial. If one of these is a must for your shop
             today, Altair is not the right fit yet.
           </p>
-          <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+          <ShowMore hidden={Math.max(0, ALTAIR_NOT_YET.length - 3)} noun="more">
+          <ul className={`mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2 ${showFirst[3]}`}>
             {ALTAIR_NOT_YET.map((item) => (
               <li key={item.title} className="text-sm leading-relaxed">
                 <span className="block font-semibold text-[#0A0A0A]">{item.title}</span>
@@ -355,6 +376,7 @@ export function PricingPageView() {
               </li>
             ))}
           </ul>
+          </ShowMore>
         </section>
 
         <div className="auth-hero-enter mx-auto mt-16 max-w-5xl">

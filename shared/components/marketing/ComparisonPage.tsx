@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PhoneJumpBar, ShowMore } from "@/shared/components/marketing/phone/PhoneLayout";
+import { jumpTarget, showFirst, swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import { CalendarCheck, CheckCircle2 } from "lucide-react";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
@@ -118,7 +120,16 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
         </section>
 
         {/* at a glance */}
-        <section aria-labelledby="compare-table-heading" className={`${band("table")} px-5 py-14 sm:px-8 sm:py-20`}>
+        <PhoneJumpBar
+          items={[
+            { id: "compare", label: "Side by side" },
+            { id: "reasons", label: "Why switch" },
+            ...(page.alternatives ? [{ id: "in-detail", label: "In detail" }] : []),
+            { id: "switching", label: "Switching" },
+            { id: "questions", label: "Questions" },
+          ]}
+        />
+        <section id="compare" aria-labelledby="compare-table-heading" className={`${band("table")} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
             <p className={eyebrow(toneOf("table"))}>At a glance</p>
             <h2 id="compare-table-heading" className={h2(toneOf("table"))}>
@@ -172,12 +183,13 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
               </table>
             </div>
             {/* phone: one card per column */}
-            <div className="mt-8 space-y-4 md:hidden">
+            <p className={`mt-6 text-xs md:hidden ${TONE[toneOf("table")].muted}`}>Swipe to compare.</p>
+            <div className={`mt-3 space-y-4 md:hidden ${swipeRow}`}>
               {page.table.columns.map((column, columnIndex) => {
                 const ours = columnIndex === 0;
                 const tone: BandTone = ours ? "dark" : toneOf("table");
                 return (
-                  <div key={column} className={`p-5 ${ours ? TONE.light.cardLit : TONE[tone].card}`}>
+                  <div key={column} className={`p-5 ${swipeItem} ${ours ? TONE.light.cardLit : TONE[tone].card}`}>
                     <p className={`text-base font-semibold ${ours ? "text-[#e8d9ac]" : TONE[tone].heading}`}>{column}</p>
                     <dl className="mt-3 space-y-3 text-sm">
                       {page.table.rows.map((row) => (
@@ -200,15 +212,15 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
         </section>
 
         {/* reasons */}
-        <section aria-labelledby="compare-reasons-heading" className={`${band("reasons")} px-5 py-14 sm:px-8 sm:py-20`}>
+        <section id="reasons" aria-labelledby="compare-reasons-heading" className={`${band("reasons")} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
             <p className={eyebrow(toneOf("reasons"))}>{page.reasons.eyebrow}</p>
             <h2 id="compare-reasons-heading" className={h2(toneOf("reasons"))}>
               {page.reasons.heading}
             </h2>
-            <ol className="mt-8 grid gap-4 sm:grid-cols-2">
+            <ol className={`mt-8 grid gap-4 sm:grid-cols-2 ${swipeRow}`}>
               {page.reasons.items.map((reason, index) => (
-                <li key={reason.title} className={`${TONE[toneOf("reasons")].card} p-5`}>
+                <li key={reason.title} className={`${TONE[toneOf("reasons")].card} p-5 ${swipeItem}`}>
                   <p className={`font-mono text-[11px] font-semibold tracking-[0.14em] ${TONE[toneOf("reasons")].eyebrow}`}>
                     {String(index + 1).padStart(2, "0")}
                   </p>
@@ -221,20 +233,20 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
         </section>
 
         {page.alternatives ? (
-          <section aria-labelledby="compare-details-heading" className={`${band("alternatives")} px-5 py-14 sm:px-8 sm:py-20`}>
+          <section id="in-detail" aria-labelledby="compare-details-heading" className={`${band("alternatives")} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
             <div className="mx-auto max-w-5xl">
               <p className={eyebrow(toneOf("alternatives"))}>In detail</p>
               <h2 id="compare-details-heading" className={h2(toneOf("alternatives"))}>
                 {page.alternatives.heading}
               </h2>
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <div className={`mt-8 grid gap-4 md:grid-cols-2 ${swipeRow}`}>
                 {page.alternatives.items.map((alt) => {
                   const tone: BandTone = alt.highlight ? "dark" : toneOf("alternatives");
                   const lit = alt.highlight && toneOf("alternatives") === "light";
                   return (
                     <article
                       key={alt.name}
-                      className={`p-5 ${lit ? TONE.light.cardLit : TONE[tone].card} ${alt.highlight && !lit ? "border-[#c2a05a]/40" : ""}`}
+                      className={`p-5 ${swipeItem} ${lit ? TONE.light.cardLit : TONE[tone].card} ${alt.highlight && !lit ? "border-[#c2a05a]/40" : ""}`}
                     >
                       <h3 className={`text-lg font-semibold ${alt.highlight ? "text-[#e8d9ac]" : TONE[tone].heading}`}>{alt.name}</h3>
                       <p className={`mt-2 text-sm leading-relaxed ${lit ? "text-[#d6ccba]" : TONE[tone].body}`}>{alt.summary}</p>
@@ -289,7 +301,7 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
         </section>
 
         {/* moving over: customers, price book, open invoices, team */}
-        <section aria-labelledby="compare-switch-heading" className={`${band("switching")} px-5 py-14 sm:px-8 sm:py-20`}>
+        <section id="switching" aria-labelledby="compare-switch-heading" className={`${band("switching")} ${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-5xl">
             <p className={eyebrow(toneOf("switching"))}>Moving over</p>
             <h2 id="compare-switch-heading" className={h2(toneOf("switching"))}>
@@ -298,9 +310,9 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
             <p className={`mt-3 max-w-2xl text-sm leading-relaxed sm:text-base ${TONE[toneOf("switching")].body}`}>
               {page.switching.intro}
             </p>
-            <ol className="mt-8 grid gap-4 md:grid-cols-2">
+            <ol className={`mt-8 grid gap-4 md:grid-cols-2 ${swipeRow}`}>
               {page.switching.steps.map((step, index) => (
-                <li key={step.title} className={`${TONE[toneOf("switching")].card} p-5 sm:p-6`}>
+                <li key={step.title} className={`${TONE[toneOf("switching")].card} p-5 sm:p-6 ${swipeItem}`}>
                   <div className="flex items-center gap-3">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#a4823a] text-sm font-semibold text-[#080907]">
                       {index + 1}
@@ -342,13 +354,14 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
 
         {/* questions, where to look next, and the sources */}
         <div className={`${band("faq")} pb-12`}>
-          <section aria-labelledby="compare-faq-heading" className="px-5 py-14 sm:px-8 sm:py-20">
+          <section id="questions" aria-labelledby="compare-faq-heading" className={`${jumpTarget} px-5 py-14 sm:px-8 sm:py-20`}>
             <div className="mx-auto max-w-3xl">
               <p className={eyebrow(toneOf("faq"))}>Questions</p>
               <h2 id="compare-faq-heading" className={h2(toneOf("faq"))}>
                 {page.faq.heading}
               </h2>
-              <div className="mt-8 space-y-3">
+              <ShowMore hidden={Math.max(0, page.faq.items.length - 4)} noun="more questions" tone={toneOf("faq") === "light" ? "light" : "dark"}>
+              <div className={`mt-8 space-y-3 ${showFirst[4]}`}>
                 {page.faq.items.map((entry) => (
                   <details
                     key={entry.question}
@@ -369,6 +382,7 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
                   </details>
                 ))}
               </div>
+              </ShowMore>
             </div>
           </section>
 

@@ -146,10 +146,18 @@ function TemplateCard({
           </a>
           .
         </p>
+        {/* Phone: the big live preview is one tap away instead of a screen and a half of scrolling. */}
+        <button
+          type="button"
+          onClick={() => onOpen("example")}
+          className={`mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 text-[13px] font-semibold text-stone-800 sm:hidden ${focusRing}`}
+        >
+          <Expand aria-hidden="true" className="h-3.5 w-3.5" /> Preview the filled-in example
+        </button>
         <AltairFeatureNote featureKey={template.featureKey} compact />
       </div>
 
-      <div className="flex min-w-0 flex-col border-t border-stone-200 bg-stone-100/70 p-4 lg:border-l lg:border-t-0">
+      <div className="flex min-w-0 flex-col border-t border-stone-200 bg-stone-100/70 p-4 max-sm:hidden lg:border-l lg:border-t-0">
         <div className="flex items-center justify-between gap-2">
           <Segmented label={`${template.title} preview`} value={variant} options={VARIANTS} onChange={setVariant} />
           <button
