@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, HardHat, Home, Search, SearchX } from "lucide-react";
+import { ArrowRight, ChevronDown, HardHat, Home, Search, SearchX } from "lucide-react";
 import { searchPublicListings } from "@/lib/directory/listings";
 import { isDirectory216Installed } from "@/lib/directory/schema";
 import { citiesWithListings, listDirectoryFacets, tradesWithListings } from "@/lib/directory/places";
 import {
+  DIR_PHONE_FIRST,
   dirBrassButton,
   dirFocus,
   dirInput,
   dirLink,
   dirPanel,
   dirSecondaryButton,
+  dirShowMoreRest,
 } from "@/shared/components/directory/directory-styles";
 import {
   Chip,
@@ -22,6 +24,8 @@ import {
   itemListJsonLd,
 } from "@/shared/components/directory/DirectoryUi";
 import { ListFreeBand, ListSideCard, ListStrip, ListValueRail } from "@/shared/components/directory/DirectoryPitch";
+import { FilterSheet, ShowMoreList } from "@/shared/components/directory/DirectoryPhoneNav";
+import { TradeIcon } from "@/shared/components/directory/trade-icons";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
@@ -174,12 +178,12 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
               <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.1] tracking-tight text-[#fff9ea] sm:text-[2.125rem]">
                 {contractorMode ? "Find a sub or a referral partner." : "Find a trade pro near you."}
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-[#cfc6b6] sm:text-[15px]">
+              <p className="mt-2 hidden text-sm leading-relaxed text-[#cfc6b6] sm:block sm:text-[15px]">
                 Listed by the owner or with permission, checked by a person. Free to search, no account.
               </p>
             </div>
-            <div>
-              {/* Two links, so each view is its own address someone can send. */}
+            <div className="hidden sm:block">
+              {/* Two links, so each view is its own address someone can send. On a phone the sticky bar below does this. */}
               <p id="directory-audience-label" className="text-[13px] font-semibold text-[#fff9ea]">
                 Who are you hiring?
               </p>
@@ -210,7 +214,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
             role="search"
             aria-label="Search the directory"
             data-track-submit="dir-search"
-            className="mt-5 rounded-2xl bg-white p-2.5 text-stone-900 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)] sm:p-3"
+            className="mt-5 hidden rounded-2xl bg-white p-2.5 text-stone-900 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)] sm:block sm:p-3"
           >
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)_auto] lg:items-end">
               <div className="col-span-2 lg:col-span-1">
@@ -268,14 +272,160 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
               </div>
             ) : null}
           </form>
+
+          {/* Phone: one search box; trade and the rest live in the Filters sheet. */}
+          <form action={DIRECTORY_PATH} method="get" role="search" aria-label="Search by city" data-track-submit="dir-search" className="mt-4 flex gap-2 sm:hidden">
+            <label htmlFor="directory-place-phone" className="sr-only">
+              City or ZIP
+            </label>
+            <input
+              id="directory-place-phone"
+              name="place"
+              type="search"
+              defaultValue={search.place ?? ""}
+              maxLength={60}
+              autoComplete="off"
+              placeholder="City or ZIP"
+              className={`${dirInput} min-w-0 flex-1`}
+            />
+            {search.trade ? <input type="hidden" name="trade" value={search.trade} /> : null}
+            {search.state ? <input type="hidden" name="state" value={search.state} /> : null}
+            {search.subOnly ? <input type="hidden" name="sub" value="1" /> : null}
+            <button type="submit" aria-label="Search" className={`${dirBrassButton} shrink-0 px-4`}>
+              <Search aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </form>
         </DirectoryBand>
 
-        <div className="mt-4">
+        {/* Phone navigation: stays under the site header while scrolling. */}
+        <nav
+          aria-label="Directory"
+          className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-30 -mx-4 mt-3 border-b border-stone-200 bg-[#fbf8f3]/95 px-4 py-2 backdrop-blur sm:hidden"
+        >
+          <div className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white p-1">
+            <div className="grid flex-1 grid-cols-2 gap-1">
+              <Link
+                href={directorySearchHref({ ...search, subOnly: false, page: 1 })}
+                aria-current={!contractorMode ? "true" : undefined}
+                data-track="dir-audience-pro"
+                className={`inline-flex min-h-9 items-center justify-center rounded-lg text-[13px] font-semibold ${!contractorMode ? "bg-[#0d0f0c] text-[#fff9ea]" : "text-stone-600"}`}
+              >
+                Pros
+              </Link>
+              <Link
+                href={directorySearchHref({ ...search, subOnly: true, page: 1 })}
+                aria-current={contractorMode ? "true" : undefined}
+                data-track="dir-audience-sub"
+                className={`inline-flex min-h-9 items-center justify-center rounded-lg text-[13px] font-semibold ${contractorMode ? "bg-[#0d0f0c] text-[#fff9ea]" : "text-stone-600"}`}
+              >
+                Subs
+              </Link>
+            </div>
+            <span aria-hidden="true" className="h-6 w-px bg-stone-200" />
+            <FilterSheet label={search.trade || search.state ? [search.trade, search.state].filter(Boolean).join(", ") : "Filters"}>
+              <form action={DIRECTORY_PATH} method="get" className="space-y-3">
+                <div>
+                  <label htmlFor="sheet-trade" className="block text-[12px] font-semibold uppercase tracking-wide text-stone-500">
+                    Trade
+                  </label>
+                  <select id="sheet-trade" name="trade" defaultValue={search.trade ?? ""} className={`mt-1.5 ${dirInput}`}>
+                    <option value="">Any trade</option>
+                    {DIRECTORY_TRADES.map((trade) => (
+                      <option key={trade} value={trade}>
+                        {trade}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="sheet-place" className="block text-[12px] font-semibold uppercase tracking-wide text-stone-500">
+                      City or ZIP
+                    </label>
+                    <input id="sheet-place" name="place" type="text" defaultValue={search.place ?? ""} maxLength={60} autoComplete="off" className={`mt-1.5 ${dirInput}`} />
+                  </div>
+                  <div>
+                    <label htmlFor="sheet-state" className="block text-[12px] font-semibold uppercase tracking-wide text-stone-500">
+                      State
+                    </label>
+                    <select id="sheet-state" name="state" defaultValue={search.state ?? ""} className={`mt-1.5 ${dirInput}`}>
+                      <option value="">Any state</option>
+                      {US_STATES.map((state) => (
+                        <option key={state.code} value={state.code}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <label className="flex min-h-9 items-center gap-2.5 text-sm text-stone-800">
+                  <input type="checkbox" name="sub" value="1" defaultChecked={search.subOnly} className="h-4 w-4 rounded border-stone-400 accent-[#77591B]" />
+                  Only businesses that take sub work
+                </label>
+                <button type="submit" className={`w-full ${dirBrassButton}`}>
+                  <Search aria-hidden="true" className="h-4 w-4" /> Show results
+                </button>
+                {search.trade || search.place || search.state ? (
+                  <Link
+                    href={directorySearchHref({ ...search, trade: null, place: null, state: null, page: 1 })}
+                    className={`flex min-h-9 items-center justify-center text-sm ${dirLink}`}
+                  >
+                    Clear filters
+                  </Link>
+                ) : null}
+              </form>
+              {liveCities.length > 0 ? (
+                <div className="mt-5 border-t border-stone-100 pt-4">
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-stone-500">Cities with listings</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {liveCities.map((city) => (
+                      <Chip key={`sheet-${city.state}-${city.slug}`} href={directoryCityPath(city.state, city.label)} count={city.count} track="dir-chip-city">
+                        {city.label}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </FilterSheet>
+          </div>
+        </nav>
+
+        {/* Phone: browse by trade, as tiles in one row. */}
+        {liveTrades.length > 0 ? (
+          <div className="-mx-4 mt-3 sm:hidden">
+            <p className="px-4 text-[11px] font-semibold uppercase tracking-wide text-stone-500">Browse by trade</p>
+            <div className="mt-2 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+              {liveTrades.map(({ trade }) => {
+                const active = search.trade === trade;
+                return (
+                  <Link
+                    key={`tile-${trade}`}
+                    href={directorySearchHref({ ...search, trade: active ? null : trade, page: 1 })}
+                    data-track="dir-tile-trade"
+                    aria-current={active ? "true" : undefined}
+                    className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1 text-center"
+                  >
+                    <span
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-inset ${
+                        active ? "bg-[#0d0f0c] text-[#C2A05A] ring-[#0d0f0c]" : "bg-[#FBF6EA] text-[#77591B] ring-[#C2A05A]/45"
+                      }`}
+                    >
+                      <TradeIcon trade={trade} className="h-5 w-5" strokeWidth={1.75} />
+                    </span>
+                    <span className="line-clamp-2 text-[11px] font-medium leading-tight text-stone-700">{trade}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-4 hidden sm:block">
           <ListStrip listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
         </div>
 
         {liveTrades.length > 0 ? (
-          <section aria-label="Trades and cities with listings" className="mt-6 space-y-3">
+          <section aria-label="Trades and cities with listings" className="mt-6 hidden space-y-3 sm:block">
             <div className="flex items-center gap-3">
               <p className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-stone-500">Trades</p>
               <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible">
@@ -308,7 +458,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
           </section>
         ) : null}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start xl:grid-cols-[15.5rem_minmax(0,1fr)_17.5rem]">
+        <div className="mt-5 grid gap-8 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start xl:grid-cols-[15.5rem_minmax(0,1fr)_17.5rem]">
         <aside aria-label="Why list your business here" className="hidden xl:sticky xl:top-24 xl:block">
           <ListValueRail />
         </aside>
@@ -359,19 +509,22 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                 </h2>
                 {showsMembers ? <p className="text-xs text-stone-500">{DIRECTORY_MEMBER_LABEL}s are listed first.</p> : null}
               </div>
-              <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+              <ShowMoreList
+                restCount={Math.max(0, result.listings.length - DIR_PHONE_FIRST)}
+                className="mt-3 grid gap-2 sm:mt-4 sm:gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2"
+              >
                 {result.listings.map((listing, index) => (
                   <Fragment key={listing.slug}>
-                    <ListingResultCard listing={listing} quotes={quotesOn} />
-                    {/* Phones have no sidebar: the card sits after the third business instead. */}
+                    <ListingResultCard listing={listing} quotes={quotesOn} itemClassName={index >= DIR_PHONE_FIRST ? dirShowMoreRest : ""} />
+                    {/* Tablets have no sidebar: the card sits after the third business instead. Phones get the strip below. */}
                     {index === 2 && result.listings.length > 3 ? (
-                      <li className="md:col-span-2 lg:hidden">
+                      <li className="hidden sm:block md:col-span-2 lg:hidden">
                         <ListSideCard listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
                       </li>
                     ) : null}
                   </Fragment>
                 ))}
-              </ul>
+              </ShowMoreList>
               {pages > 1 ? (
                 <nav aria-label="Pages of results" className="mt-6 flex items-center justify-between gap-4">
                   {page > 1 ? (
@@ -408,8 +561,22 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         </aside>
         </div>
 
-        {/* Below xl there is no left column: the reasons show as the band instead. */}
-        <div className="xl:hidden">
+        {/* Phone: a slim strip, and the reasons folded away until asked for. */}
+        <div className="mt-6 space-y-2 sm:hidden">
+          <ListStrip listHref={listHrefFor(search)} mode={contractorMode ? "sub" : "pro"} />
+          <details className="group rounded-xl border border-stone-200 bg-white px-4">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-semibold text-stone-800">
+              Why list here
+              <ChevronDown aria-hidden="true" className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="pb-4">
+              <ListValueRail />
+            </div>
+          </details>
+        </div>
+
+        {/* Below xl there is no left column: the reasons show as the band instead (not on a phone). */}
+        <div className="hidden sm:block xl:hidden">
           <ListFreeBand />
         </div>
 

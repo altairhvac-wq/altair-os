@@ -42,7 +42,7 @@ export function ListingMark({
   /** Without a logo, the mark shows this trade's icon in brass; without a trade, the initials. */
   readonly trade?: string | null;
 }) {
-  const box = size === "lg" ? "h-20 w-20 rounded-2xl text-2xl sm:h-24 sm:w-24" : size === "sm" ? "h-10 w-10 rounded-lg text-sm" : "h-14 w-14 rounded-xl text-base";
+  const box = size === "lg" ? "h-20 w-20 rounded-2xl text-2xl sm:h-24 sm:w-24" : size === "sm" ? "h-10 w-10 rounded-lg text-sm" : "h-11 w-11 rounded-xl text-sm sm:h-14 sm:w-14 sm:text-base";
   if (logoUrl) {
     return (
       <span className={`flex shrink-0 items-center justify-center overflow-hidden border border-stone-200 bg-white ${box}`}>
@@ -132,9 +132,12 @@ export function ListingResultCard({
   listing,
   showCity = true,
   quotes = false,
+  itemClassName = "",
 }: {
   readonly listing: DirectoryPublicListing;
   readonly showCity?: boolean;
+  /** Extra classes on the list item (the phone "Show more" list hides some rows). */
+  readonly itemClassName?: string;
   /** Migration 215 is applied: offer "Request a quote" on the card. */
   readonly quotes?: boolean;
 }) {
@@ -142,9 +145,10 @@ export function ListingResultCard({
   const services = listing.details.services.slice(0, 3);
   const extra = listing.details.services.length - services.length;
   return (
-    <li className="flex">
-      <article className="group relative flex w-full flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-[0_1px_2px_rgba(28,25,23,0.04)] transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(28,25,23,0.45)] sm:p-5">
-        <div className="flex flex-1 gap-4">
+    <li className={`flex ${itemClassName}`}>
+      <article className="group relative flex w-full flex-col rounded-2xl border border-stone-200 bg-white p-3 shadow-[0_1px_2px_rgba(28,25,23,0.04)] transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(28,25,23,0.45)] sm:p-5">
+        {/* On a phone the card is one compact row: mark, name, trade and city, and a call button. */}
+        <div className="flex flex-1 items-center gap-3 sm:items-start sm:gap-4">
           <ListingMark name={listing.businessName} logoUrl={listing.logoUrl} trade={listing.tradeType} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
@@ -171,10 +175,10 @@ export function ListingResultCard({
               ) : null}
             </p>
             {listing.description ? (
-              <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone-700">{listing.description}</p>
+              <p className="mt-2 line-clamp-2 hidden text-sm leading-relaxed text-stone-700 sm:block">{listing.description}</p>
             ) : null}
             {services.length > 0 || listing.details.emergencyService || listing.acceptsSubWork ? (
-              <p className="mt-3 flex flex-wrap gap-1.5">
+              <p className="mt-3 hidden flex-wrap gap-1.5 sm:flex">
                 {listing.details.emergencyService ? (
                   <Tag tone="alert">
                     <Siren aria-hidden="true" className="h-3 w-3" />
@@ -189,8 +193,16 @@ export function ListingResultCard({
               </p>
             ) : null}
           </div>
+          <a
+            href={`tel:+1${listing.phone}`}
+            data-track="dir-listing-call"
+            aria-label={`Call ${listing.businessName}`}
+            className={`relative z-10 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#C2A05A]/50 bg-[#FBF6EA] text-[#77591B] sm:hidden ${dirFocus}`}
+          >
+            <Phone aria-hidden="true" className="h-4 w-4" />
+          </a>
         </div>
-        <div className="relative z-10 mt-4 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
+        <div className="relative z-10 mt-4 hidden items-center justify-between gap-3 border-t border-stone-100 pt-3 sm:flex">
           <a
             href={`tel:+1${listing.phone}`}
             data-track="dir-listing-call"

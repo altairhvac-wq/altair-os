@@ -43,3 +43,9 @@ export const dirDarkButton =
 
 /** The light panel: a section of a page. */
 export const dirPanel = "rounded-2xl border border-stone-200 bg-white shadow-[0_1px_2px_rgba(28,25,23,0.04)]";
+
+/** Rows after the first few in a ShowMoreList: on a phone they show only after "Show more". */
+export const dirShowMoreRest = "max-sm:group-data-[open=false]/list:hidden";
+
+/** How many results a phone shows before "Show more". */
+export const DIR_PHONE_FIRST = 8;
