@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check, Play } from "lucide-react";
+import { getLiveOnboardingInfo } from "@/lib/onboarding/live-onboarding";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { CommercialVideoPlayer } from "@/shared/components/marketing/CommercialVideoPlayer";
@@ -54,6 +55,8 @@ const TOOLS = ["labor-workspace", "invoice-builder", "break-even", "technician-p
  */
 export default function HowItWorksPage() {
   const trialDays = SAAS_TRIAL_CONFIG.durationDays;
+  // 2026-11-24 (owner): anyone watching the demo can also talk to the founder. Same booking page as /contact.
+  const bookingUrl = getLiveOnboardingInfo().joinUrl;
   return (
     <>
       <JsonLdScript
@@ -93,6 +96,18 @@ export default function HowItWorksPage() {
                   See everything it runs
                 </Link>
               </div>
+              <p className="mt-4 text-sm text-[#c9bfae]">
+                Rather talk it through?{" "}
+                {bookingUrl ? (
+                  <a href={bookingUrl} target="_blank" rel="noopener noreferrer" data-cta="how-it-works-demo" className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}>
+                    Book a demo call with the founder
+                  </a>
+                ) : (
+                  <Link href="/contact" data-cta="how-it-works-demo" className={`font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}>
+                    Ask for a demo
+                  </Link>
+                )}
+              </p>
               <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[#c9bfae]">
                 {[
                   "The real product, with sample data",

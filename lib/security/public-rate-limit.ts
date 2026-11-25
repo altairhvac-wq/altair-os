@@ -52,7 +52,8 @@ export type PublicRateLimitScope =
   | "public.directory_manage_link"
   | "public.directory_report"
   | "public.directory_quote"
-  | "public.affiliate_apply";
+  | "public.affiliate_apply"
+  | "public.contact_message";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -153,6 +154,13 @@ export const PUBLIC_RATE_LIMITS: Record<
   // emails that business, so: few per sender address (a person asks two or
   // three businesses, not twenty), few per typed inbox, and a daily ceiling
   // per listing ("token" = the listing id) so one business cannot be flooded.
+  // "Write to us" on /contact (2026-11-24): one email to the support inbox per
+  // message, nothing stored. The inbox dimension stops one address flooding
+  // the founder's inbox; the address dimension stops one client cycling addresses.
+  "public.contact_message": [
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+    { dimension: "email", windowSeconds: 86400, limit: 5 },
+  ],
   "public.directory_quote": [
     { dimension: "ip", windowSeconds: 3600, limit: 5 },
     { dimension: "email", windowSeconds: 86400, limit: 8 },
