@@ -1278,9 +1278,11 @@ export type Database = {
         Row: {
           id: number;
           occurred_at: string;
-          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
           /** Migration 209: which video / calculator / template / button. */
           event_label: string | null;
+          /** 217: page_engaged only, visible milliseconds. */
+          engaged_ms: number | null;
           path: string;
           referrer_host: string | null;
           channel: string;
@@ -1299,8 +1301,9 @@ export type Database = {
         Insert: {
           id?: never;
           occurred_at?: string;
-          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
           event_label?: string | null;
+          engaged_ms?: number | null;
           path: string;
           referrer_host?: string | null;
           channel?: string;
@@ -1317,7 +1320,7 @@ export type Database = {
           dedupe_key: string;
         };
         Update: Partial<{
-          event_name: "pageview" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
           path: string;
         }>;
         Relationships: [];

@@ -462,6 +462,16 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "214_directory_rich_listings_and_stats.sql",
     new Set(["directory_search_listings", "directory_public_listing", "directory_facets", "directory_record_listing_event"]),
   ],
+  // 217 replaces the two read-only web analytics aggregations (206 summary,
+  // 209 engagement) with versions that count visible time, engaged visits,
+  // returning visitors from visit history and days in the owner's time zone,
+  // and adds web_analytics_is_site_path (immutable: is a path a page of the
+  // public website). All security invoker, service_role only;
+  // scripts/verify-platform-analytics.mjs holds them to their rules.
+  [
+    "217_web_analytics_accuracy.sql",
+    new Set(["platform_web_analytics_summary", "platform_web_analytics_engagement", "web_analytics_is_site_path"]),
+  ],
 ]);
 
 for (const file of files) {

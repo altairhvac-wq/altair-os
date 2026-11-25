@@ -80,6 +80,8 @@ export type TrafficSession = {
   paths: string[];
   signupStarted: boolean;
   signupCompleted: boolean;
+  /** Stayed 10+ seconds, saw 2+ pages or did something (217); otherwise a bounce. */
+  engaged: boolean;
 };
 
 export type CampaignRow = {

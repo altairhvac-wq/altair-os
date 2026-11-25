@@ -51,9 +51,11 @@ First-party and cookieless. No third-party script is added.
 
 1. `FirstPartyAnalytics` (mounted once in `app/layout.tsx`) sends a beacon on
    every route change to `POST /api/analytics/collect`.
-2. The browser keeps a random visitor id in `localStorage` and a per-tab
-   session id in `sessionStorage`. First-touch and session attribution (UTM
-   tags, referrer host, landing path) are kept the same way. No cookies.
+2. The browser keeps a random visitor id and the current visit in
+   `localStorage` (since 217: one visit for all tabs, ended after 30 minutes
+   with no activity; before, one per tab in `sessionStorage` that never
+   ended). First-touch and visit attribution (UTM tags, referrer host,
+   landing path) are kept the same way. No cookies.
 3. The route refuses, silently with 204: non-production deployments, bots and
    headless browsers, cross-site origins, oversized or malformed bodies,
    unknown events, bad ids, more than 300 events per address per 15 minutes,
@@ -66,8 +68,10 @@ First-party and cookieless. No third-party script is added.
    new user (`user_metadata.signup_attribution`), so the source of every signup
    after deploy is known even if the visitor later clears storage.
 
-Events: `pageview`, `signup_started` (first focus in the signup form),
-`signup_completed` (server only).
+Events: `pageview` (when the path changes; query-string changes are the same
+page since 217), `page_engaged` (217: milliseconds the page was visible, sent
+when the tab is hidden, closed or left), `signup_started` (first focus in the
+signup form), `signup_completed` (server only).
 
 Channels: direct, search, social, email, paid, referral, internal, unknown.
 UTM medium and source win over the referrer. YouTube, Facebook, Instagram,
@@ -293,6 +297,55 @@ browser that does not announce itself as automated, one calculator change,
 one deliberate video play, one trial-button press, one template download and
 one "copy the message" each produced exactly one row with the expected label,
 and the muted preview loop produced none.
+
+## Migration 217
+
+`supabase/migrations/217_web_analytics_accuracy.sql` (2026-11-24, after the
+owner saw "time on site 9 seconds", "0 returning" and days that reset at
+5 pm). Same function signatures, so the app works before and after it runs.
+
+- **Time on site** is the visible time pages report (`page_engaged`,
+  `engaged_ms`, at most 30 minutes per row) over every visit. Before, it was
+  first-to-last pageview over visits of 2+ pages, so the last page and every
+  one-page visit counted as nothing. Visits from before 217 (no report) fall
+  back to first-to-last event.
+- **Bounce**: under 10 seconds, one page and no action. A one-page visit that
+  played the video or used a calculator is engaged.
+- **Returning**: a visit that started 30+ minutes after the visitor's first
+  visit we hold. Before, the period's first event decided it, so anyone whose
+  first visit fell in the period was "new". Phones and in-app browsers
+  (YouTube, Facebook, TikTok) often clear storage, so this is a lower bound.
+- **Days, "today" and daily charts** run in `p_tz` (the app passes
+  `ANALYTICS_TIME_ZONE`, default America/Denver). Before, midnight UTC
+  (5 pm in Denver).
+- **Website pages only**: `web_analytics_is_site_path` leaves out customer
+  estimate and invoice links, sign-in and password pages, setup, install,
+  subscription activation and the technician screens from every website
+  figure.
+- The engagement table (209) leaves out `page_engaged`.
+
+Code changes in the same release, no migration needed: the new-visitor burst
+limit counts only a browser's first-ever pageview (flag `firstVisit`) and runs
+after the owner checks (before, every pageview of a visitor's first UTC day
+counted, so a few readers on one office or phone-carrier address lost pages);
+a browser without storage keeps one in-memory id per page load instead of a
+new id per event.
+
+Run it in production after the release is merged (the app keeps working
+either way: until it runs, `page_engaged` rows are refused by the old check
+constraint and the old figures show). Probe:
+
+```sql
+select
+  to_regprocedure('public.web_analytics_is_site_path(text)') is not null as helper,
+  exists(select 1 from information_schema.columns where table_name = 'web_analytics_events' and column_name = 'engaged_ms') as engaged_ms,
+  has_function_privilege('anon', 'public.platform_web_analytics_summary(timestamptz, timestamptz, text)', 'execute') as anon_can_call;
+```
+
+Expected: `true, true, false`. Tested on the scratch project inside a rolled-back
+transaction (applied twice): an invoice-link visitor left out of every figure,
+a 3-hour return counted as returning, a one-page calculator visit not a
+bounce, median of visible times, Denver days, a time on a pageview refused.
 
 ## Tagging links
 

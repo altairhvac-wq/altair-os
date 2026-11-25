@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { trackEngagement, trackPageview } from "@/shared/lib/analytics/client";
 
 /**
@@ -9,15 +9,16 @@ import { trackEngagement, trackPageview } from "@/shared/lib/analytics/client";
  * layout so the marketing site, the auth pages and the product share one
  * count. Renders nothing. See shared/lib/analytics/client.ts for what is sent
  * and who is excluded.
+ *
+ * Keyed on the path only (217): calculators rewrite the query string as the
+ * visitor types, and each rewrite used to count as another page.
  */
 function PageviewTracker() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const search = searchParams.toString();
 
   useEffect(() => {
-    if (pathname) trackPageview(pathname, search);
-  }, [pathname, search]);
+    if (pathname) trackPageview(pathname);
+  }, [pathname]);
 
   return null;
 }
@@ -95,9 +96,7 @@ function EngagementTracker() {
 export function FirstPartyAnalytics() {
   return (
     <>
-      <Suspense fallback={null}>
-        <PageviewTracker />
-      </Suspense>
+      <PageviewTracker />
       <EngagementTracker />
     </>
   );
