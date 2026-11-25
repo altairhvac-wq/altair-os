@@ -61,6 +61,8 @@ export const DIRECTORY_STEP_LABELS = {
   "dir-side-list": "Directory side card: list your business",
   "dir-side-list-sub": "Directory side card (sub view): list your business",
   "dir-strip-list": "Directory phone strip: list free",
+  "dir-hero-list": "Directory phone top: get listed free",
+  "dir-list-start": "List page phone: start your listing",
   "dir-card-quote": "Directory card: request a quote",
   "dir-quote-submit": "Quote request sent",
   "dir-bar-quote": "Listing phone bar: quote",

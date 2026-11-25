@@ -70,8 +70,17 @@ export default async function DirectoryListPage({ searchParams }: PageProps) {
                 Homeowners look here for a pro, and contractors look here for subs and referral partners. Listing is
                 free, and the calls come straight to you.
               </p>
+              {/* Phones (2026-11-24): the form comes right after this line; the cards and steps below are for wider screens. */}
+              <p className="mt-3 text-[13px] font-semibold text-[#C2A05A] sm:hidden">Free to list · No account · About two minutes</p>
+              <a
+                href="#form"
+                data-track="dir-list-start"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#a4823a] px-5 text-sm font-semibold text-[#0d0f0c] sm:hidden"
+              >
+                Start your listing
+              </a>
             </div>
-            <ul className="grid gap-2.5 sm:grid-cols-2">
+            <ul className="hidden gap-2.5 sm:grid sm:grid-cols-2">
               {listingValue(v214).map((item) => (
                 <li key={item.title} className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5 last:sm:col-span-2">
                   <item.icon aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#C2A05A]" />
@@ -85,7 +94,8 @@ export default async function DirectoryListPage({ searchParams }: PageProps) {
           </div>
         </DirectoryBand>
 
-        <section aria-label="What happens next" className="mt-6">
+        {/* The form ends with the same steps, so phones skip this copy (2026-11-24: the form started almost two screens down). */}
+        <section aria-label="What happens next" className="mt-6 hidden sm:block">
           <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {timeline.map((item, index) => (
               <li key={item.title} className="relative flex gap-3 rounded-2xl border border-stone-200 bg-white p-4">
