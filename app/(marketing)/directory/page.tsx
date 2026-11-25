@@ -295,6 +295,17 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
               <Search aria-hidden="true" className="h-4 w-4" />
             </button>
           </form>
+          {/* Phones (2026-11-24): business owners saw "List free" only at the very bottom, under every listing. */}
+          <Link
+            href={listHrefFor(search)}
+            data-track="dir-hero-list"
+            className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[#C2A05A]/40 bg-white/[0.05] px-4 text-sm text-[#e8d9ac] sm:hidden"
+          >
+            <span>{contractorMode ? "Want sub work? Get found here." : "Own a trade business?"}</span>
+            <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-[#fff9ea]">
+              Get listed free <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </span>
+          </Link>
         </DirectoryBand>
 
         {/* Phone navigation: stays under the site header while scrolling. */}
