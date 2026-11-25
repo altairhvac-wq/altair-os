@@ -149,6 +149,12 @@ const ENTRY_POINTS = [
     scope: "public.affiliate_apply",
     why: "mail flooding and review-queue flooding: an application emails a receipt to the address typed and adds a row for the owner to read",
   },
+  {
+    file: "app/actions/contact.ts",
+    fn: "sendContactMessageAction",
+    scope: "public.contact_message",
+    why: "mail flooding against the founder's inbox: each message from /contact emails the support inbox",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */

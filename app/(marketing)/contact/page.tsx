@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, Mail } from "lucide-react";
+import { getLiveOnboardingInfo } from "@/lib/onboarding/live-onboarding";
 import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { ContactComposer } from "@/shared/components/marketing/ContactComposer";
@@ -18,7 +19,7 @@ import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 // 31 + " · Altair Operating System" = 57 characters; the description is 145.
 const TITLE = "Contact Us and Common Questions";
 const DESCRIPTION =
-  "Email the people behind Altair Operating System, book the free one-on-one setup call, and get straight answers to the questions asked most often.";
+  "Message the founder of Altair Operating System, book a demo call on Zoom, and get straight answers to the questions asked most often.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -53,15 +54,19 @@ function buildContactPageStructuredData(): Record<string, unknown> {
 }
 
 /**
- * Visitors type /contact (the analytics saw it land on the 404 page). The
- * ways to reach us are the ones every other page already states: the email
- * and the one-on-one setup call. Batch 5 added a helper that writes the
- * email in the visitor's own mail app (nothing is sent from the site), what
- * to expect (only the reply times the product already promises), the
- * questions asked most, and FAQPage + ContactPage data from the same lists.
+ * Visitors type /contact (the analytics saw it land on the 404 page).
+ *
+ * 2026-11-24 (owner: "they have every ability to reach out to our company"):
+ *   - "Write to us" SENDS the message from the site (app/actions/contact.ts);
+ *     before, it only opened the visitor's own email app;
+ *   - "Book a demo call" opens the same booking page as the customers' setup
+ *     call (ALTAIR_LIVE_ONBOARDING_URL), so anyone can talk to the founder
+ *     before signing up. Without that setting the card asks for a demo
+ *     through the form instead. No phone number, by the owner's choice.
  */
 export default function ContactPage() {
   const trialDays = SAAS_TRIAL_CONFIG.durationDays;
+  const bookingUrl = getLiveOnboardingInfo().joinUrl;
   return (
     <div className="mc-homepage relative flex min-h-dvh flex-col overflow-x-clip bg-[#080907] text-[#f3ebdd]">
       <JsonLdScript data={buildContactPageStructuredData()} />
@@ -77,8 +82,8 @@ export default function ContactPage() {
                 Talk to a person.
               </h1>
               <p className="mt-5 text-base leading-relaxed text-[#c9bfae] sm:text-lg sm:leading-[1.75]">
-                Questions about the product, the trial, or whether Altair fits the way your company runs: write to us,
-                and the founder reads it.
+                Questions about the product, the trial, or whether Altair fits the way your company runs: book a demo
+                call, or send a message. Either way you reach the founder.
               </p>
 
               <div className="mt-8 space-y-3">
@@ -104,12 +109,26 @@ export default function ContactPage() {
                     <CalendarClock aria-hidden="true" className="h-5 w-5" />
                   </span>
                   <div>
-                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8e826f]">Setup call</h2>
-                    <p className="mt-1 text-lg font-semibold text-[#fff9ea]">One-on-one, on Zoom</p>
+                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8e826f]">Demo call</h2>
+                    <p className="mt-1 text-lg font-semibold text-[#fff9ea]">One-on-one with the founder, on Zoom</p>
                     <p className="mt-1 text-sm leading-relaxed text-[#c9bfae]">
-                      Every customer can book a free call: setup help, workflow guidance and your questions. You book it
-                      from your workspace after you sign up.
+                      See Altair on the kind of jobs you run and ask anything, before you sign up. Customers book their free
+                      setup call the same way.
                     </p>
+                    {bookingUrl ? (
+                      <a
+                        href={bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-cta="contact-demo"
+                        className={`mt-3 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[rgba(194,160,90,0.55)] px-5 text-sm font-semibold text-[#fff9ea] transition-colors hover:border-[#c2a05a] hover:bg-[rgba(194,160,90,0.1)] ${focusRing}`}
+                      >
+                        Book a demo call
+                        <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <p className="mt-2 text-sm text-[#e8d9ac]">Pick &ldquo;I&apos;d like a demo&rdquo; in the form and we will set a time.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -142,7 +161,7 @@ export default function ContactPage() {
                 Say what you need, we take it from there
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[#c9bfae]">
-                Pick a topic and write a few lines. It opens in your own email app, addressed to {SUPPORT_EMAIL}.
+                Pick a topic and write a few lines. It goes straight to {SUPPORT_EMAIL}, and we reply to the email you give.
               </p>
               <div className="mt-6">
                 <ContactComposer />

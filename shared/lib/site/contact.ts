@@ -22,8 +22,8 @@ export const CONTACT_EXPECTATIONS: readonly { readonly title: string; readonly t
     text: `A person reads every message to ${SUPPORT_EMAIL}: the founder. Support, billing and sales all go to the same inbox.`,
   },
   {
-    title: "Setup call",
-    text: "A free one-on-one call on Zoom for every customer, booked from your workspace after you sign up, at a time that suits you.",
+    title: "Demo and setup calls",
+    text: "Book a one-on-one Zoom call with the founder from this page, before or after you sign up. Every customer also gets a free setup call.",
   },
   {
     title: "Directory listings",
@@ -56,7 +56,7 @@ export const CONTACT_FAQ: readonly SiteFaqItem[] = [
     id: "phone",
     question: "Can I talk to someone instead of writing?",
     answer:
-      "Yes. Every customer can book a free one-on-one setup call on Zoom from the workspace after signing up. Before that, email is the way to reach us.",
+      "Yes. Book a demo call on Zoom from this page, before you sign up. Every customer can also book a free one-on-one setup call from the workspace.",
   },
   {
     id: "see-first",
