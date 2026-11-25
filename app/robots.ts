@@ -4,6 +4,7 @@ import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
+import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
 
 /**
  * Crawl policy for the public origin.
@@ -43,6 +44,8 @@ export default function robots(): MetadataRoute.Robots {
           "/login",
           ...COMPANY_PAGE_PATHS,
           ...LANDING_PAGE_PATHS,
+          // The Utah pages, each by its exact path (shared/lib/site/utah-pages.ts).
+          ...UTAH_PAGE_PATHS,
           // The commercial's watch page (it is in the sitemap; without this
           // line Search Console rejects it as blocked by robots.txt).
           VIDEO_PAGE_PATH,
