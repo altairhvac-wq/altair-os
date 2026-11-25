@@ -3,9 +3,10 @@ import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-c
 import { Check } from "lucide-react";
 import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HeroCommercialVideo } from "@/shared/components/auth/HeroCommercialVideo";
-import { LOGIN_HERO_SUBCOPY, LOGIN_HERO_TITLE } from "@/shared/components/auth/LoginMarketingPanel";
+import { LOGIN_HERO_SUBCOPY } from "@/shared/components/auth/LoginMarketingPanel";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
+import { HomeStickyTrialBar } from "@/shared/components/homepage/HomeStickyTrialBar";
 import { HomeTryItSection } from "@/shared/components/homepage/HomeTryItSection";
 import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
@@ -88,6 +89,15 @@ function trustPoints(fromPrice: number | null): string[] {
   ];
 }
 
+/**
+ * The home page's own headline (owner picked option A, 2026-11-24): what an owner gets back, then what the
+ * product is. The sign-in page keeps LOGIN_HERO_TITLE.
+ */
+const HOME_HERO_TITLE = "Get your evenings back. Every job, from first call to paid, in one place.";
+
+/** The phone trial bar shows once the first of these has scrolled past, and hides while any is on screen. */
+const STICKY_WATCH_IDS = ["home-hero-cta", "home-closing-cta"] as const;
+
 /** The tools shown on the homepage strip; the hub has the rest. */
 const HOME_TOOLS = ["labor-workspace", "invoice-builder", "technician-pay", "break-even"].map(hubTool);
 
@@ -106,19 +116,40 @@ export function HomeLandingPage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_65%_at_72%_42%,rgba(194,160,90,0.22)_0%,rgba(194,160,90,0.06)_45%,transparent_75%),linear-gradient(180deg,#0d110c_0%,#080907_100%)]"
           />
-          <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:gap-12">
-            <div className="text-center lg:text-left">
+          <div className="mx-auto grid max-w-6xl items-center gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:gap-y-0">
+            <div className="text-center lg:col-start-1 lg:row-start-1 lg:self-end lg:text-left">
               <p className="inline-flex items-center rounded-full border border-[rgba(194,160,90,0.35)] bg-[rgba(164,130,58,0.12)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e8d9ac]">
                 HVAC and field service software
               </p>
               <h1 className="ah-hero-display mt-5 text-[2.2rem] font-normal leading-[1.12] tracking-[-0.015em] text-[#fff9ea] sm:text-[3rem] sm:leading-[1.08] lg:text-[3.3rem]">
-                {LOGIN_HERO_TITLE}
+                {HOME_HERO_TITLE}
               </h1>
-              <p className="mx-auto mt-5 max-w-[620px] text-[0.95rem] leading-[1.75] text-[#d6ccba] sm:text-lg sm:leading-[1.8] lg:mx-0">
+              <p className="mt-4 text-[13px] text-[#c9bfae] sm:text-sm">
+                Built by {FOUNDER.name}, who owns an HVAC company.
+              </p>
+            </div>
+            {/* "Before Dawn", the brand film. It loops muted; "Watch" plays it with sound. The step-by-step demo lives on VIDEO_PAGE_PATH. */}
+            <section aria-labelledby="home-video-heading" className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+              <h2 id="home-video-heading" className="sr-only">
+                Before Dawn: the Altair Operating System film
+              </h2>
+              <figure className="relative overflow-hidden rounded-[1.4rem] border border-[rgba(194,160,90,0.28)] bg-[#131712] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.95),0_0_80px_-30px_rgba(194,160,90,0.45)]">
+                <HeroCommercialVideo />
+              </figure>
+              <p className="mt-3 text-center text-xs text-[#8e826f] lg:text-left">
+                Film scenes are AI-generated; every app screen is the real product with sample data.{" "}
+                <Link href={VIDEO_PAGE_PATH} className={textLink}>
+                  Watch one job from first call to paid (2:27)
+                </Link>
+              </p>
+            </section>
+
+            <div className="text-center lg:col-start-1 lg:row-start-2 lg:self-start lg:text-left">
+              <p className="mx-auto mt-0 max-w-[620px] lg:mt-5 text-[0.95rem] leading-[1.75] text-[#d6ccba] sm:text-lg sm:leading-[1.8] lg:mx-0">
                 {LOGIN_HERO_SUBCOPY}
               </p>
               <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center lg:justify-start">
-                <Link href="/signup" data-cta="home-hero" className={primaryButton}>
+                <Link id="home-hero-cta" href="/signup" data-cta="home-hero" className={primaryButton}>
                   Start Your {trialDays}-Day Free Trial
                 </Link>
                 <Link href="#home-try-heading" data-track="home-hero-try" className={secondaryButton}>
@@ -141,21 +172,6 @@ export function HomeLandingPage() {
               </p>
             </div>
 
-            {/* "Before Dawn", the brand film. It loops muted; "Watch" plays it with sound. The step-by-step demo lives on VIDEO_PAGE_PATH. */}
-            <section aria-labelledby="home-video-heading">
-              <h2 id="home-video-heading" className="sr-only">
-                Before Dawn: the Altair Operating System film
-              </h2>
-              <figure className="relative overflow-hidden rounded-[1.4rem] border border-[rgba(194,160,90,0.28)] bg-[#131712] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.95),0_0_80px_-30px_rgba(194,160,90,0.45)]">
-                <HeroCommercialVideo />
-              </figure>
-              <p className="mt-3 text-center text-xs text-[#8e826f] lg:text-left">
-                Film scenes are AI-generated; every app screen is the real product with sample data.{" "}
-                <Link href={VIDEO_PAGE_PATH} className={textLink}>
-                  Watch one job from first call to paid (2:27)
-                </Link>
-              </p>
-            </section>
           </div>
         </section>
 
@@ -343,6 +359,7 @@ export function HomeLandingPage() {
               it end.
             </p>
             <Link
+              id="home-closing-cta"
               href="/signup"
               data-cta="home-closing"
               className="mt-7 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#14120e] px-8 py-3.5 text-sm font-semibold text-[#fff9ea] shadow-[0_18px_40px_-18px_rgba(20,18,14,0.7)] transition-colors hover:bg-[#2a2620] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14120e]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#c9a65c]"
@@ -353,6 +370,7 @@ export function HomeLandingPage() {
         </section>
       </main>
       <MarketingFooter />
+      <HomeStickyTrialBar trialDays={trialDays} watchIds={STICKY_WATCH_IDS} />
     </div>
   );
 }
