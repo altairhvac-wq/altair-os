@@ -60,7 +60,9 @@ export const runtime = "nodejs";
 
 const NO_CONTENT = () => new Response(null, { status: 204 });
 const INTERNAL = () => new Response(null, { status: 204, headers: { "x-altair-analytics": "internal" } });
-const CLIENT_EVENTS = new Set<string>(["pageview", "signup_started", "exclude_device", ...ENGAGEMENT_EVENT_NAMES]);
+const CLIENT_EVENTS = new Set<string>(["pageview", "page_engaged", "signup_started", "exclude_device", ...ENGAGEMENT_EVENT_NAMES]);
+/** page_engaged (217): visible milliseconds since the page's last report; the database refuses more than 30 minutes. */
+const MAX_ENGAGED_MS = 30 * 60 * 1000;
 const CHANNELS = new Set<AnalyticsChannel>([
   "direct", "search", "social", "email", "paid", "referral", "internal", "unknown",
 ]);
@@ -128,10 +130,12 @@ export async function POST(request: Request): Promise<Response> {
     const limit = await enforcePublicRateLimit("public.analytics_collect", { ip: address });
     if (!limit.allowed) return NO_CONTENT();
 
-    // A burst of never-seen browsers from one address is a tool, not a crowd
-    // (lib/analytics/new-visitor-burst.ts). Their first pageview is dropped.
-    if (event === "pageview" && body.isReturning === false) {
-      if (!(await enforceNewVisitorBurstLimit(address))) return NO_CONTENT();
+    // page_engaged carries a whole number of visible milliseconds and nothing else.
+    let engagedMs: number | null = null;
+    if (event === "page_engaged") {
+      if (typeof body.engagedMs !== "number" || !Number.isInteger(body.engagedMs)) return NO_CONTENT();
+      if (body.engagedMs < 1 || body.engagedMs > MAX_ENGAGED_MS) return NO_CONTENT();
+      engagedMs = body.engagedMs;
     }
 
     // Signed-in visitors: product usage is attributed to the user; the owner's
@@ -161,6 +165,15 @@ export async function POST(request: Request): Promise<Response> {
       return INTERNAL();
     }
 
+    // A burst of never-seen browsers from one address is a tool, not a crowd
+    // (lib/analytics/new-visitor-burst.ts). Only a browser's very first
+    // pageview counts (217: it used to be every pageview of its first day, so
+    // a few real readers on one office or phone-carrier address used the
+    // allowance up and lost pages), and only after the owner checks above.
+    if (event === "pageview" && body.firstVisit === true) {
+      if (!(await enforceNewVisitorBurstLimit(address))) return NO_CONTENT();
+    }
+
     const referrerHost = normalizeHost(str(body.referrerHost, 255));
     const utm = {
       source: str(body.utmSource, 100)?.toLowerCase() ?? null,
@@ -178,8 +191,9 @@ export async function POST(request: Request): Promise<Response> {
     });
 
     await recordAnalyticsEvent({
-      event: event as "pageview" | "signup_started" | EngagementEventName,
+      event: event as "pageview" | "page_engaged" | "signup_started" | EngagementEventName,
       label: label as string | null,
+      engagedMs,
       path,
       visitorId: body.visitorId as string,
       sessionId: typeof body.sessionId === "string" ? body.sessionId : null,

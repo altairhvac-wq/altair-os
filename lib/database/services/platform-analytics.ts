@@ -169,6 +169,8 @@ type SummaryJson = {
     paths: string[] | null;
     signup_started: boolean;
     signup_completed: boolean;
+    /** 217: 10+ seconds, 2+ pages or an action. Absent before 217 is applied. */
+    engaged?: boolean;
   }[];
   app?: {
     dau?: number;
@@ -709,6 +711,7 @@ export async function getPlatformAnalytics(rangeKey: string | null | undefined):
         paths: row.paths ?? [],
         signupStarted: Boolean(row.signup_started),
         signupCompleted: Boolean(row.signup_completed),
+        engaged: typeof row.engaged === "boolean" ? row.engaged : num(row.pages) > 1,
       })),
     };
   }

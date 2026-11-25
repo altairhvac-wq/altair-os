@@ -31,7 +31,9 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
  */
 
 export type ServerAnalyticsEvent = {
-  event: "pageview" | "signup_started" | "signup_completed" | EngagementEventName;
+  event: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | EngagementEventName;
+  /** Migration 217: page_engaged only, visible milliseconds (1 to 30 minutes). */
+  engagedMs?: number | null;
   /** Migration 209: which video / calculator / template / button. A slug, never visitor input. */
   label?: string | null;
   path: string;
@@ -93,6 +95,8 @@ export async function recordAnalyticsEvent(input: ServerAnalyticsEvent): Promise
     // column, so recording keeps working on a database that has not had
     // migration 209 applied yet.
     ...(isValidEngagementLabel(input.label) ? { event_label: input.label } : {}),
+    // Named only on page_engaged rows, for the same reason (migration 217).
+    ...(input.event === "page_engaged" && input.engagedMs ? { engaged_ms: input.engagedMs } : {}),
   };
 
   try {
