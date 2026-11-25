@@ -3,7 +3,7 @@ import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-c
 import { Check } from "lucide-react";
 import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HeroCommercialVideo } from "@/shared/components/auth/HeroCommercialVideo";
-import { LOGIN_HERO_SUBCOPY, LOGIN_HERO_TITLE } from "@/shared/components/auth/LoginMarketingPanel";
+import { LOGIN_HERO_SUBCOPY } from "@/shared/components/auth/LoginMarketingPanel";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
 import { HomeStickyTrialBar } from "@/shared/components/homepage/HomeStickyTrialBar";
@@ -89,6 +89,12 @@ function trustPoints(fromPrice: number | null): string[] {
   ];
 }
 
+/**
+ * The home page's own headline (owner picked option A, 2026-11-24): what an owner gets back, then what the
+ * product is. The sign-in page keeps LOGIN_HERO_TITLE.
+ */
+const HOME_HERO_TITLE = "Get your evenings back. Every job, from first call to paid, in one place.";
+
 /** The phone trial bar shows once the first of these has scrolled past, and hides while any is on screen. */
 const STICKY_WATCH_IDS = ["home-hero-cta", "home-closing-cta"] as const;
 
@@ -116,7 +122,7 @@ export function HomeLandingPage() {
                 HVAC and field service software
               </p>
               <h1 className="ah-hero-display mt-5 text-[2.2rem] font-normal leading-[1.12] tracking-[-0.015em] text-[#fff9ea] sm:text-[3rem] sm:leading-[1.08] lg:text-[3.3rem]">
-                {LOGIN_HERO_TITLE}
+                {HOME_HERO_TITLE}
               </h1>
               <p className="mt-4 text-[13px] text-[#c9bfae] sm:text-sm">
                 Built by {FOUNDER.name}, who owns an HVAC company.
