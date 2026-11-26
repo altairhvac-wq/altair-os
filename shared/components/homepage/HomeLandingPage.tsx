@@ -3,6 +3,7 @@ import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-c
 import { Check } from "lucide-react";
 import { listPublicSaasCatalogPlans, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HeroCommercialVideo } from "@/shared/components/auth/HeroCommercialVideo";
+import { PRODUCT_TOUR_VIDEO } from "@/shared/lib/site/product-tour-video";
 import { LOGIN_HERO_SUBCOPY } from "@/shared/components/auth/LoginMarketingPanel";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { HomepagePricingSection } from "@/shared/components/homepage/HomepagePricingSection";
@@ -116,7 +117,7 @@ export function HomeLandingPage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_65%_at_72%_42%,rgba(194,160,90,0.22)_0%,rgba(194,160,90,0.06)_45%,transparent_75%),linear-gradient(180deg,#0d110c_0%,#080907_100%)]"
           />
-          <div className="mx-auto grid max-w-6xl items-center gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:gap-y-0">
+          <div className="mx-auto grid max-w-7xl items-center gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.38fr)] lg:gap-y-0">
             <div className="text-center lg:col-start-1 lg:row-start-1 lg:self-end lg:text-left">
               <p className="inline-flex items-center rounded-full border border-[rgba(194,160,90,0.35)] bg-[rgba(164,130,58,0.12)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e8d9ac]">
                 HVAC and field service software
@@ -128,16 +129,28 @@ export function HomeLandingPage() {
                 Built by {FOUNDER.name}, who owns an HVAC company.
               </p>
             </div>
-            {/* "Before Dawn", the brand film. It loops muted; "Watch" plays it with sound. The step-by-step demo lives on VIDEO_PAGE_PATH. */}
+            {/* The product tour (owner 2026-11-25: "I want it on our homepage ... a little bit better of a presence"):
+                every feature, one by one, on the real app. A short preview loops muted; "Watch" plays the full tour with
+                sound. The step-by-step one-job demo lives on VIDEO_PAGE_PATH. */}
             <section aria-labelledby="home-video-heading" className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-              <h2 id="home-video-heading" className="sr-only">
-                Before Dawn: the Altair Operating System film
+              <h2 id="home-video-heading" className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#e8d9ac] lg:text-left">
+                Everything you get, in {PRODUCT_TOUR_VIDEO.durationLabel}
               </h2>
-              <figure className="relative overflow-hidden rounded-[1.4rem] border border-[rgba(194,160,90,0.28)] bg-[#131712] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.95),0_0_80px_-30px_rgba(194,160,90,0.45)]">
-                <HeroCommercialVideo />
+              <figure className="relative overflow-hidden rounded-[1.4rem] border border-[rgba(194,160,90,0.32)] bg-[#131712] shadow-[0_50px_120px_-40px_rgba(0,0,0,0.95),0_0_110px_-30px_rgba(194,160,90,0.55)]">
+                <HeroCommercialVideo
+                  video={{
+                    preview: PRODUCT_TOUR_VIDEO.preview,
+                    full: PRODUCT_TOUR_VIDEO.file,
+                    poster: PRODUCT_TOUR_VIDEO.poster,
+                    watchLabel: "Watch the product tour",
+                    watchDetail: `${PRODUCT_TOUR_VIDEO.durationLabel} · with sound`,
+                    ariaLabel: "The Altair Operating System product tour: every feature on the real app, with sample data.",
+                    button: "center",
+                  }}
+                />
               </figure>
               <p className="mt-3 text-center text-xs text-[#8e826f] lg:text-left">
-                Film scenes are AI-generated; every app screen is the real product with sample data.{" "}
+                Every screen is the real product with a made-up sample company.{" "}
                 <Link href={VIDEO_PAGE_PATH} className={textLink}>
                   Watch one job from first call to paid (2:27)
                 </Link>

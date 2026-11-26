@@ -9,6 +9,7 @@ import {
   PUBLIC_SITE_TITLE,
 } from "@/shared/lib/site/public-site";
 import { VIDEO_PAGE_PATH, buildCommercialVideoStructuredData } from "@/shared/lib/site/commercial-video";
+import { buildProductTourStructuredData } from "@/shared/lib/site/product-tour-video";
 import {
   buildOrganizationStructuredData,
   buildSoftwareApplicationStructuredData,
@@ -39,7 +40,15 @@ export default function WelcomePage() {
           catalog and site constants the visible page renders. */}
       <JsonLdScript data={buildOrganizationStructuredData()} />
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
-      {/* The commercial under the hero; its watch page is /how-it-works. */}
+      {/* The product tour in the hero; this page is its watch page. */}
+      <JsonLdScript
+        data={buildProductTourStructuredData({
+          origin: PUBLIC_SITE_ORIGIN,
+          pageUrl: `${PUBLIC_SITE_ORIGIN}/`,
+          publisherName: PUBLIC_SITE_NAME,
+        })}
+      />
+      {/* The one-job commercial; its watch page is /how-it-works. */}
       <JsonLdScript
         data={buildCommercialVideoStructuredData({
           origin: PUBLIC_SITE_ORIGIN,
