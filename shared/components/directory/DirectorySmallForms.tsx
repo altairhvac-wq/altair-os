@@ -14,7 +14,7 @@ import {
   dirPrimaryButton,
   dirSecondaryButton,
 } from "@/shared/components/directory/directory-styles";
-import { DIRECTORY_LIMITS, DIRECTORY_REPORT_REASONS } from "@/shared/types/directory";
+import { DIRECTORY_JUNK_HINT, DIRECTORY_LIMITS, DIRECTORY_REPORT_REASONS } from "@/shared/types/directory";
 
 /** The two small forms of the public directory: "email me my manage link" and "report this listing". */
 
@@ -47,7 +47,14 @@ const LINK_INITIAL: DirectoryFormState = { status: "idle" };
 export function ManageLinkRequestForm() {
   const [state, action, pending] = useActionState(requestManageLinkAction, LINK_INITIAL);
   const id = useId();
-  if (state.status === "done") return <Notice state={state} />;
+  if (state.status === "done") {
+    return (
+      <div className="space-y-2">
+        <Notice state={state} />
+        <p className="text-sm leading-relaxed text-stone-600">{DIRECTORY_JUNK_HINT}</p>
+      </div>
+    );
+  }
   return (
     <form action={action} noValidate className="space-y-3">
       <div>

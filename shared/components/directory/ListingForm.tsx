@@ -20,6 +20,7 @@ import {
   DIRECTORY_CONSENT_TEXT,
   DIRECTORY_DAYS,
   DIRECTORY_DETAIL_LIMITS,
+  DIRECTORY_JUNK_HINT,
   DIRECTORY_LANGUAGES,
   DIRECTORY_LIMITS,
   DIRECTORY_TRADES,
@@ -925,6 +926,9 @@ function SuccessScreen({ message }: { readonly message: string }) {
         </span>
         <p className="mt-4 text-2xl font-semibold tracking-tight text-[#fff9ea]">Check your email.</p>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#cfc6b6]">{message}</p>
+        <p className="mx-auto mt-4 max-w-md rounded-xl bg-white/[0.06] px-4 py-3 text-sm leading-relaxed text-[#e8d9ac] ring-1 ring-inset ring-[#C2A05A]/30">
+          {DIRECTORY_JUNK_HINT}
+        </p>
       </div>
       <div className="grid gap-6 px-6 py-7 sm:px-10 md:grid-cols-2">
         <div>

@@ -329,7 +329,7 @@ export async function removeListingAction(formData: FormData): Promise<void> {
 export async function requestManageLinkAction(_previous: DirectoryFormState, formData: FormData): Promise<DirectoryFormState> {
   const done: DirectoryFormState = {
     status: "done",
-    message: "If there is a listing for that address, we have sent its manage link. Check your inbox in a minute.",
+    message: "If there is a listing for that address, we have sent its manage link.",
   };
   if (isTrapped(formData)) return done;
 
