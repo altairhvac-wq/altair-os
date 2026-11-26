@@ -48,8 +48,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "The day on one board",
     imageAlt: "Altair Operating System dispatch board: a map of today's jobs above a timeline with one row per technician",
     imageLabel: "Dispatch board",
-    imageSrc: "/marketing/screenshots/tour/dispatch-board.png",
-    imageSrcMobile: "/marketing/screenshots/tour/dispatch-board-phone.png",
+    imageSrc: "/marketing/screenshots/tour/dispatch-board.webp",
+    imageSrcMobile: "/marketing/screenshots/tour/dispatch-board-phone.webp",
     icon: CalendarClock,
   },
   {
@@ -58,10 +58,10 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Open a customer and see contact details, every job, estimates, invoices, payments, and the equipment on site together. Your team gets the full picture before they pick up the phone or roll a truck.",
     badge: "Single customer view",
-    imageAlt: "Altair Operating System customer record with job history, totals and equipment",
+    imageAlt: "Altair Operating System customer record with contact details, totals, job history and tabs for estimates, invoices, payments and equipment",
     imageLabel: "Customer record",
-    imageSrc: "/marketing/screenshots/tour/customer-record.png",
-    imageSrcMobile: "/marketing/screenshots/tour/customer-record-phone.png",
+    imageSrc: "/marketing/screenshots/tour/customer-record.webp",
+    imageSrcMobile: "/marketing/screenshots/tour/customer-record-phone.webp",
     icon: Users,
   },
   {
@@ -72,8 +72,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Customer approvals built in",
     imageAlt: "An approved estimate in Altair Operating System with line items and the total",
     imageLabel: "Estimates & approvals",
-    imageSrc: "/marketing/screenshots/tour/estimate-approved.png",
-    imageSrcMobile: "/marketing/screenshots/tour/estimate-approved-phone.png",
+    imageSrc: "/marketing/screenshots/tour/estimate-approved.webp",
+    imageSrcMobile: "/marketing/screenshots/tour/estimate-approved-phone.webp",
     icon: FileCheck,
   },
   {
@@ -84,8 +84,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "From finished job to paid",
     imageAlt: "A paid invoice in Altair Operating System showing the invoice total and the amount paid",
     imageLabel: "Invoicing & payments",
-    imageSrc: "/marketing/screenshots/tour/invoice-paid.png",
-    imageSrcMobile: "/marketing/screenshots/tour/invoice-paid-phone.png",
+    imageSrc: "/marketing/screenshots/tour/invoice-paid.webp",
+    imageSrcMobile: "/marketing/screenshots/tour/invoice-paid-phone.webp",
     icon: Receipt,
   },
   {
@@ -94,10 +94,10 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     description:
       "Collected, outstanding and overdue money, average ticket, estimate close rate and jobs completed for the last 7, 30 or 90 days or the year to date, from the same records your team works in.",
     badge: "The numbers at a glance",
-    imageAlt: "Altair Operating System reports page with collected, outstanding and overdue totals and key metrics",
+    imageAlt: "Altair Operating System reports page with money collected, average ticket, estimates approved and money owed, above a chart of payments by day",
     imageLabel: "Reports",
-    imageSrc: "/marketing/screenshots/tour/reports.png",
-    imageSrcMobile: "/marketing/screenshots/tour/reports-phone.png",
+    imageSrc: "/marketing/screenshots/tour/reports.webp",
+    imageSrcMobile: "/marketing/screenshots/tour/reports-phone.webp",
     icon: BarChart3,
   },
 ];

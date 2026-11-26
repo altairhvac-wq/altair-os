@@ -7,8 +7,10 @@ import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
  * public/marketing/screenshots/technician/ holds three captures of the real
  * technician view, signed in as the sample company's technician (Wasatch
  * Valley Mechanical, a scratch company loaded with sample data; the same
- * company and people the commercial shows). Taken 2026-11-10 and 2026-11-13
- * at 360 x 640 CSS pixels for the promo videos, saved here at 540 x 960.
+ * company and people the commercial shows). Re-captured 2026-11-25 at
+ * 393 x 699 CSS pixels (a current iPhone width) at 3x, saved at 1179 x 2097,
+ * because the old 540 x 960 copies looked blurry (owner). Street addresses are
+ * removed in the page before each capture.
  * No real customer appears in them. Replace them only with captures of the
  * same sample company.
  *
@@ -30,19 +32,19 @@ export type TechScreen = {
 export const TECH_SCREENS: readonly TechScreen[] = [
   {
     src: "/marketing/screenshots/technician/tech-home.webp",
-    alt: "The technician's Home screen on a phone: the next job with the customer, the time and the address, an Open job button, two jobs left today and the time clock showing clocked in since 7:31 AM.",
+    alt: "The technician's Home screen on a phone: the next job with the customer, the time and the address, an Open job button, three jobs left today and the time clock showing clocked in since 7:31 AM.",
     title: "Home",
     caption: "Your next job, how many are left today, and whether you are clocked in.",
   },
   {
     src: "/marketing/screenshots/technician/tech-schedule.webp",
-    alt: "The technician's Schedule screen on a phone: a week strip with Friday selected, today's job with the customer, the address and a Start Route button, and the next job below it.",
+    alt: "The technician's Schedule screen on a phone: a week strip with today selected, today's job with the customer, the town and a Start Route button, and the next job below it.",
     title: "Schedule",
     caption: "Today's work and the week ahead. Start Route marks you en route and opens maps.",
   },
   {
     src: "/marketing/screenshots/technician/tech-complete-work.webp",
-    alt: "The Complete work sheet on a phone: completion notes describing a water heater replacement, an optional follow-up recommendation and a Complete work button.",
+    alt: "The Complete work sheet on a phone: completion notes describing a furnace tune-up, an optional follow-up recommendation and a Complete work button.",
     title: "Complete work",
     caption: "Say what you did in a few lines. Photos, equipment and a follow-up are optional.",
   },
