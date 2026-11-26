@@ -271,7 +271,7 @@ const INVOICING: SoftwarePageContent = {
       id: "quickbooks",
       question: "Does it sync with QuickBooks?",
       answer:
-        "Not today. Invoices, payments and expenses are recorded in Altair, and a customer list exported from QuickBooks can be imported. If QuickBooks sync is a must for you, make sure the system you choose has it.",
+        "Not today. Invoices, payments and expenses are recorded in Altair, and customers, products and open invoices exported from QuickBooks can be imported. If QuickBooks sync is a must for you, make sure the system you choose has it.",
     },
     {
       id: "pdf",
@@ -572,7 +572,7 @@ const BUSINESS: SoftwarePageContent = {
       id: "import",
       question: "Can I bring my customers over?",
       answer:
-        "Yes. Import your customer list as a CSV file exported from your current software, QuickBooks or a spreadsheet. It brings over names, phone numbers, emails and addresses. Equipment and job history do not come across.",
+        "Yes. Customers, the price book and unpaid invoices import from the CSV or Excel files your current software, QuickBooks or a spreadsheet exports. Past jobs and equipment do not come across. The export steps for each app are at altair-op.com/switch.",
     },
     {
       id: "sample-data",

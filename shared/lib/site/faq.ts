@@ -62,13 +62,13 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     id: "import",
     question: "Can I bring my customers over from another system?",
     answer:
-      "Yes. Import your customer list as a CSV file exported from ServiceTitan, Housecall Pro, Jobber, QuickBooks or a spreadsheet. It brings over names, phone numbers, emails and addresses. Equipment and job history do not come across.",
+      "Yes. Customers, the price book and unpaid invoices import from the CSV or Excel files that ServiceTitan, Housecall Pro, Jobber, Service Fusion, QuickBooks or a spreadsheet export. Unpaid invoices come in as drafts for the balance still owed. Past jobs and equipment do not come across. The export steps for each app are at altair-op.com/switch.",
   },
   {
     id: "quickbooks",
     question: "Does it work with QuickBooks?",
     answer:
-      "Not yet. Altair does not sync with QuickBooks today. Invoices, payments and expenses are recorded in Altair, and you can import a customer list exported from QuickBooks.",
+      "Not yet. Altair does not sync with QuickBooks today. Invoices, payments and expenses are recorded in Altair, and you can import your customers, products and services, and open invoices exported from QuickBooks.",
   },
   {
     id: "sample-data",

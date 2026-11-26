@@ -147,7 +147,9 @@ export function describeInvoiceMappingGaps(mapping: InvoiceImportMapping): strin
   const warnings: string[] = [];
   if (!mapping.invoice_number) warnings.push("No column is matched to Invoice number. It is how each invoice is recognized and kept from coming in twice.");
   if (!mapping.customer_email && !mapping.customer_phone && !mapping.customer_name) {
-    warnings.push("No customer column is matched. Pick the customer's email, phone or name.");
+    warnings.push(
+      "No customer column is matched. Pick the customer's email, phone or name. (A report that puts each customer's name on its own row above their invoices, as QuickBooks does, works without one.)",
+    );
   }
   if (!mapping.balance_due && !mapping.total) warnings.push("No amount column is matched. Pick the balance still owed, or the invoice total.");
   if (!mapping.balance_due && mapping.total && !mapping.amount_paid && !mapping.status) {
@@ -315,11 +317,29 @@ export function buildInvoiceImportPreview(
   alreadyImported: Iterable<string>,
 ): InvoiceImportPreviewRow[] {
   const seen = new Set([...alreadyImported].map((number) => number.toLowerCase()));
-  return records.map((record, index) => {
+
+  // Accounting reports (QuickBooks' Open Invoices, for one) list a customer's
+  // name on a row of its own, then that customer's invoices with the name
+  // column blank, then a "Total for ..." row. A row with one filled cell is
+  // such a group heading: it names the customer for the rows under it and is
+  // not an invoice itself. Total rows without an invoice number are dropped.
+  let groupName = "";
+  const rows: { record: string[]; rowNumber: number; groupName: string }[] = [];
+  records.forEach((record, index) => {
+    const filled = record.filter((value) => value.trim());
+    if (filled.length === 1) {
+      groupName = /^total\b/i.test(filled[0]!.trim()) ? "" : filled[0]!.trim();
+      return;
+    }
+    const number = getValueForHeader(record, headers, mapping.invoice_number);
+    if (!number && /^total\b/i.test((record.find((value) => value.trim()) ?? "").trim())) return;
+    rows.push({ record, rowNumber: index + 2, groupName });
+  });
+
+  return rows.map(({ record, rowNumber, groupName: rowGroup }) => {
     const get = (field: InvoiceImportField) => getValueForHeader(record, headers, mapping[field]);
-    const rowNumber = index + 2;
     const oldNumber = normalizeOldInvoiceNumber(get("invoice_number"));
-    const contact = { name: get("customer_name"), email: get("customer_email"), phone: get("customer_phone") };
+    const contact = { name: get("customer_name") || rowGroup, email: get("customer_email"), phone: get("customer_phone") };
     const total = parseImportMoney(get("total"));
     const paid = parseImportMoney(get("amount_paid"));
     const balance = parseImportMoney(get("balance_due"));
@@ -338,7 +358,7 @@ export function buildInvoiceImportPreview(
       oldNumber: oldNumber || "—",
       customerLabel: contact.name || contact.email || contact.phone || "—",
       owedText: owed === null || Number.isNaN(owed) ? get("balance_due") || get("total") : money(Math.max(owed, 0)),
-      dueText: dueDate ?? get("due_date"),
+      dueText: dueDate ? formatLongDate(dueDate) : get("due_date"),
     };
 
     if (!oldNumber) return { ...base, status: "error" as const, message: "No invoice number." };

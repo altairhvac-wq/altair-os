@@ -29,6 +29,7 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
       { href: "/pricing", label: "Pricing" },
       { href: "/servicetitan-alternative", label: "vs ServiceTitan" },
       { href: "/jobber-housecall-pro-alternatives", label: "vs Jobber & Housecall Pro" },
+      { href: "/switch", label: "Switch From Another App" },
     ],
   },
   {

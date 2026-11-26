@@ -9,7 +9,7 @@ import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invit
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
-import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
+import { COMPETITOR_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
@@ -327,9 +327,9 @@ function isVideoPageRoute(pathname: string) {
   return pathname === VIDEO_PAGE_ROUTE;
 }
 
-/** Competitor comparison pages (shared/lib/site/comparison-paths.ts). */
+/** Competitor comparison pages and /switch (shared/lib/site/comparison-paths.ts). */
 function isComparisonRoute(pathname: string) {
-  return (COMPARISON_PAGE_PATHS as readonly string[]).includes(pathname);
+  return COMPETITOR_PAGE_PATHS.includes(pathname);
 }
 
 function isMarketingHomepageRoute(pathname: string) {

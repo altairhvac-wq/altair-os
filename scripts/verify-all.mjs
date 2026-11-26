@@ -171,6 +171,8 @@ steps.push(
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
   { name: "article-markdown", script: "scripts/verify-article-markdown.mjs" },
   { name: "site-menu", script: "scripts/verify-site-menu.mjs" },
+  // The switching imports (CSV/Excel price book and unpaid invoices) and /switch content.
+  { name: "switch-imports", script: "scripts/verify-switch-imports.mjs" },
   { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
   { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
   // Behavioural, not static: the two above read these modules as text and
