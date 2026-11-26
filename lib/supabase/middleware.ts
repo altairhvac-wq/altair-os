@@ -12,6 +12,7 @@ import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
+import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = [
@@ -61,6 +62,8 @@ const INSTALL_ROUTE = "/install";
 const CONTACT_ROUTE = "/contact";
 /** The About page and the page for technicians (shared/lib/site/about.ts). Static, no data. */
 const COMPANY_PAGE_ROUTES: readonly string[] = COMPANY_PAGE_PATHS;
+/** The Utah pages (shared/lib/site/utah-pages.ts): static, sourced figures, no data reads. */
+const UTAH_PAGE_ROUTES: readonly string[] = UTAH_PAGE_PATHS;
 /** Search landing pages: static marketing, one per way an owner searches. */
 const LANDING_ROUTES: readonly string[] = LANDING_PAGE_PATHS;
 /** The commercial's watch page (shared/lib/site/commercial-video.ts). */
@@ -312,6 +315,10 @@ function isCompanyPageRoute(pathname: string) {
   return COMPANY_PAGE_ROUTES.includes(pathname);
 }
 
+function isUtahPageRoute(pathname: string) {
+  return UTAH_PAGE_ROUTES.includes(pathname);
+}
+
 function isLandingRoute(pathname: string) {
   return LANDING_ROUTES.includes(pathname);
 }
@@ -366,6 +373,7 @@ function isMarketingRoute(pathname: string) {
     isContactRoute(pathname) ||
     isCompanyPageRoute(pathname) ||
     isLandingRoute(pathname) ||
+    isUtahPageRoute(pathname) ||
     isVideoPageRoute(pathname) ||
     isComparisonRoute(pathname)
   );
@@ -385,6 +393,7 @@ function isPublicRoute(pathname: string) {
     isContactRoute(pathname) ||
     isCompanyPageRoute(pathname) ||
     isLandingRoute(pathname) ||
+    isUtahPageRoute(pathname) ||
     isVideoPageRoute(pathname) ||
     isComparisonRoute(pathname) ||
     isMarketingHomepageRoute(pathname) ||

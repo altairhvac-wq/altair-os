@@ -10,6 +10,7 @@ import { COMPARISON_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
+import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
 
 /**
  * The sitemap — the only place a published page announces itself.
@@ -71,6 +72,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${origin}${path}`,
       changeFrequency: "monthly" as const,
       priority: path === RESOURCES_PATH ? 0.7 : 0.6,
+    })),
+    ...UTAH_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
     ...COMPANY_PAGE_PATHS.map((path) => ({
       url: `${origin}${path}`,
