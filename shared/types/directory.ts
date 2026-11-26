@@ -24,6 +24,18 @@ export const DIRECTORY_MANAGE_PATH = "/directory/manage";
 /** Where the stop link in the monthly numbers email lands. */
 export const DIRECTORY_STATS_EMAIL_PATH = "/directory/manage/monthly-email";
 
+/**
+ * The address directory emails come from, as people see it in their inbox
+ * (lib/directory/emails.ts sends from "directory" on the RESEND_FROM_EMAIL
+ * domain). Shown on the "check your email" screens so a lister knows what to
+ * search for, including in Junk: Outlook junked the owner's own confirmation
+ * on 2026-11-25 while the sending domain was new.
+ */
+export const DIRECTORY_EMAIL_FROM = "directory@mail.altair-op.com";
+
+/** One line for every screen that says an email is on its way. */
+export const DIRECTORY_JUNK_HINT = `Not in your inbox within a minute? Check your Junk or Spam folder for an email from ${DIRECTORY_EMAIL_FROM}, and mark it "Not junk" so the next ones arrive.`;
+
 export function directoryListingPath(slug: string): string {
   return `${DIRECTORY_PATH}/${slug}`;
 }
