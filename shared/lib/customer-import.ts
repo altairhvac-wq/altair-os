@@ -50,6 +50,7 @@ export type {
 } from "@/shared/lib/customer-import-mapping";
 export {
   CUSTOMER_IMPORT_ALTAIR_FIELDS,
+  CUSTOMER_IMPORT_FILE_MAX_ROWS,
   CUSTOMER_IMPORT_FIELD_LABELS,
   CUSTOMER_IMPORT_PRESET_OPTIONS,
   createEmptyCustomerImportFieldMapping,
@@ -121,6 +122,20 @@ export function getCustomerImportFileSizeError(byteLength: number): string | nul
   if (byteLength > CUSTOMER_IMPORT_MAX_FILE_BYTES) {
     const maxKb = Math.round(CUSTOMER_IMPORT_MAX_FILE_BYTES / 1024);
     return `This file is too large. Keep imports under ${maxKb} KB.`;
+  }
+
+  return null;
+}
+
+/**
+ * Size cap for the file an owner uploads. The cap above applies to each batch
+ * the screen sends, and batches carry only the matched columns.
+ */
+export const CUSTOMER_IMPORT_UPLOAD_MAX_BYTES = 20 * 1024 * 1024;
+
+export function getCustomerImportUploadSizeError(byteLength: number): string | null {
+  if (byteLength > CUSTOMER_IMPORT_UPLOAD_MAX_BYTES) {
+    return "This file is larger than 20 MB. Export only the customer columns, or split the list into two files.";
   }
 
   return null;
@@ -342,6 +357,7 @@ export function summarizeCustomerImportPreview(
 export function mapCustomerImportCsvWithMapping(
   csvText: string,
   mapping: CustomerImportFieldMapping,
+  maxRows: number = CUSTOMER_IMPORT_MAX_ROWS,
 ): {
   error?: string;
   rows?: CustomerImportRowInput[];
@@ -359,6 +375,7 @@ export function mapCustomerImportCsvWithMapping(
   const mapped = mapCsvRecordsToImportRowsWithCompany(
     parsedResult.parsed,
     sanitizedMapping,
+    maxRows,
   );
 
   if (mapped.error || !mapped.rows) {
@@ -439,4 +456,75 @@ export function parseCustomerImportCsv(text: string): {
   });
 
   return { rows };
+}
+
+export type CustomerImportBatch = {
+  /** CSV text with only the matched columns, under the server's per-call limits. */
+  csv: string;
+  /** Add this to a row number the server reports to get the row number in the uploaded file. */
+  rowOffset: number;
+  rowCount: number;
+};
+
+function csvCell(value: string): string {
+  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+/**
+ * Splits an uploaded file into the batches the import action accepts.
+ *
+ * Only the matched columns travel, so a wide report export (a ServiceTitan
+ * customer list has dozens of columns) stays far under the per-call size cap.
+ * Header names are unchanged, so the same mapping applies to every batch. A
+ * batch is closed at CUSTOMER_IMPORT_MAX_ROWS rows or when it would pass the
+ * byte cap, whichever comes first.
+ */
+export function buildCustomerImportBatches(
+  csvText: string,
+  mapping: CustomerImportFieldMapping,
+): { batches?: CustomerImportBatch[]; error?: string } {
+  const parsedResult = parseCustomerImportCsvRaw(csvText);
+  if (parsedResult.error || !parsedResult.parsed) {
+    return { error: parsedResult.error ?? "Could not read this CSV file." };
+  }
+
+  const { headers, dataRecords } = parsedResult.parsed;
+  const sanitized = sanitizeCustomerImportFieldMapping(mapping, headers);
+  const keptHeaders = [
+    ...new Set(Object.values(sanitized).filter((value): value is string => Boolean(value))),
+  ];
+  const keptIndexes = keptHeaders.map((header) => headers.indexOf(header));
+  const headerLine = keptHeaders.map(csvCell).join(",");
+  const byteCap = CUSTOMER_IMPORT_MAX_FILE_BYTES - 4 * 1024;
+  const encoder = new TextEncoder();
+
+  const batches: CustomerImportBatch[] = [];
+  let lines: string[] = [];
+  let bytes = encoder.encode(headerLine).length;
+  let batchStart = 0;
+
+  const close = (nextStart: number) => {
+    if (lines.length === 0) return;
+    batches.push({
+      csv: [headerLine, ...lines].join("\n"),
+      rowOffset: batchStart,
+      rowCount: lines.length,
+    });
+    lines = [];
+    bytes = encoder.encode(headerLine).length;
+    batchStart = nextStart;
+  };
+
+  dataRecords.forEach((record, index) => {
+    const line = keptIndexes.map((i) => csvCell((record[i] ?? "").trim())).join(",");
+    const lineBytes = encoder.encode(line).length + 1;
+    if (lines.length >= CUSTOMER_IMPORT_MAX_ROWS || bytes + lineBytes > byteCap) {
+      close(index);
+    }
+    lines.push(line);
+    bytes += lineBytes;
+  });
+  close(dataRecords.length);
+
+  return { batches };
 }

@@ -5,10 +5,11 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   createCustomer,
-  findCustomerByContact,
+  createCustomersBulk,
   listCustomerImportContacts,
 } from "@/lib/database/queries/customers";
-import { recordCustomerCreatedActivity } from "@/lib/database/services/customer-activity";
+import { recordCustomerActivities } from "@/lib/database/queries/customer-activities";
+import type { Customer } from "@/shared/types/customer";
 import {
   classifyCustomerImportRows,
   getCustomerImportFileSizeError,
@@ -107,6 +108,14 @@ async function importCustomersFromCsvRows(
   const skippedRows: CustomerImportResultRow[] = [];
   const errorRows: CustomerImportResultRow[] = [];
 
+  // ============================== ONE INSERT PER BATCH ==============================
+  // Every row was already checked against the company's full contact list
+  // (listCustomerImportContacts) and against the rows above it in this file,
+  // so ready rows go in with one INSERT and their activity rows with a second.
+  // Row by row this took about four database round trips per customer: 5.4
+  // minutes for 1,200 customers from a local machine (2026-11-26).
+  const readyRows: { rowNumber: number; name: string; formData: NonNullable<(typeof classifiedRows)[number]["formData"]> }[] = [];
+
   for (const row of classifiedRows) {
     if (row.status === "error") {
       errorRows.push({
@@ -135,66 +144,56 @@ async function importCustomersFromCsvRows(
       continue;
     }
 
-    const {
-      customer: existingMatch,
-      conflict,
-      error: contactLookupError,
-    } = await findCustomerByContact(context.company.id, {
-      email: row.formData.email,
-      phone: row.formData.phone,
+    readyRows.push({ rowNumber: row.rowNumber, name: row.name, formData: row.formData });
+  }
+
+  const created: { rowNumber: number; customer: Customer }[] = [];
+  const bulk = await createCustomersBulk(
+    context.company.id,
+    readyRows.map((row) => row.formData),
+  );
+
+  if (!bulk.error && bulk.customers.length === readyRows.length) {
+    bulk.customers.forEach((customer, index) => {
+      created.push({ rowNumber: readyRows[index]!.rowNumber, customer });
     });
-
-    if (contactLookupError) {
-      errorRows.push({
-        rowNumber: row.rowNumber,
-        customerName: row.name,
-        message: contactLookupError,
-      });
-      continue;
+  } else {
+    // One bad row fails the whole statement. Fall back to one insert per row
+    // so the good rows still come in and the bad one is named.
+    for (const row of readyRows) {
+      const { customer, error } = await createCustomer(context.company.id, row.formData);
+      if (error || !customer) {
+        errorRows.push({
+          rowNumber: row.rowNumber,
+          customerName: row.name,
+          message: error ?? "Could not create customer.",
+        });
+        continue;
+      }
+      created.push({ rowNumber: row.rowNumber, customer });
     }
+  }
 
-    if (conflict) {
-      errorRows.push({
-        rowNumber: row.rowNumber,
-        customerName: row.name,
-        message: conflict,
-      });
-      continue;
-    }
-
-    if (existingMatch) {
-      skippedRows.push({
-        rowNumber: row.rowNumber,
-        customerName: row.name,
-        message: "Matches an existing customer.",
-      });
-      continue;
-    }
-
-    const { customer, error } = await createCustomer(
-      context.company.id,
-      row.formData,
-    );
-
-    if (error || !customer) {
-      errorRows.push({
-        rowNumber: row.rowNumber,
-        customerName: row.name,
-        message: error ?? "Could not create customer.",
-      });
-      continue;
-    }
-
-    await recordCustomerCreatedActivity({
+  const { error: activityError } = await recordCustomerActivities(
+    created.map(({ customer }) => ({
+      company_id: context.company.id,
+      customer_id: customer.id,
+      actor_id: context.user.id,
+      event_type: "customer_created" as const,
+      metadata: { customer_name: customer.name, status: customer.status },
+    })),
+  );
+  if (activityError) {
+    // The customers are saved; only their "created" timeline entries are missing.
+    console.error("[importCustomersFromCsvRows] activity rows not recorded", {
       companyId: context.company.id,
-      customerId: customer.id,
-      actorId: context.user.id,
-      customerName: customer.name,
-      status: customer.status,
+      count: created.length,
     });
+  }
 
+  for (const { rowNumber, customer } of created) {
     importedRows.push({
-      rowNumber: row.rowNumber,
+      rowNumber,
       customerName: customer.name,
       customerId: customer.id,
     });

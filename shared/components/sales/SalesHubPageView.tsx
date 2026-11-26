@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import type { RecentInvoicePayment } from "@/lib/database/queries/invoice-payments";
 import type { PagedListSnapshot } from "@/shared/components/lists/usePagedList";
 import type { EstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
@@ -190,6 +190,20 @@ export function SalesHubPageView({
       </Button>
     ) : undefined;
 
+  // Unpaid invoices from a previous app (switch page, 2026-11-26).
+  const secondaryAction =
+    activeTab === "invoices" && canManageBilling ? (
+      <Button
+        href="/invoices/import"
+        size="sm"
+        variant="secondary"
+        leadingIcon={<Upload className="h-3.5 w-3.5" />}
+      >
+        <span className="hidden sm:inline">Import Unpaid</span>
+        <span className="sm:hidden">Import</span>
+      </Button>
+    ) : undefined;
+
   return (
     <MasterListPageLayout
       title="Sales"
@@ -204,6 +218,7 @@ export function SalesHubPageView({
         <SalesHubTabs activeTab={activeTab} onTabChange={syncTabToUrl} />
       }
       primaryAction={primaryAction}
+      secondaryAction={secondaryAction}
     >
       {activeTab === "estimates" ? (
         <EstimatesPageView

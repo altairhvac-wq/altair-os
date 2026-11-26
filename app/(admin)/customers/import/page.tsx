@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomerImportContacts } from "@/lib/database/queries/customers";
+import { CUSTOMER_IMPORT_PRESET_OPTIONS } from "@/shared/lib/customer-import-mapping";
 import { CustomerImportPageView } from "@/shared/components/customers/CustomerImportPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
@@ -12,7 +13,17 @@ export const metadata: Metadata = {
   title: "Import customers",
 };
 
-export default async function CustomerImportPage() {
+type CustomerImportPageProps = {
+  searchParams: Promise<{ from?: string | string[] }>;
+};
+
+export default async function CustomerImportPage({
+  searchParams,
+}: CustomerImportPageProps) {
+  const { from } = await searchParams;
+  const initialPreset = CUSTOMER_IMPORT_PRESET_OPTIONS.find(
+    (option) => option.value === (Array.isArray(from) ? from[0] : from),
+  )?.value;
   const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
@@ -45,5 +56,10 @@ export default async function CustomerImportPage() {
     );
   }
 
-  return <CustomerImportPageView existingContacts={existingContacts} />;
+  return (
+    <CustomerImportPageView
+      existingContacts={existingContacts}
+      initialPreset={initialPreset}
+    />
+  );
 }

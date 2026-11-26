@@ -926,3 +926,77 @@ export async function deleteCustomer(
 
   return { success: true, error: null };
 }
+
+/**
+ * Inserts many customers in one statement (the import). Rows come back in
+ * the order they were sent, so the caller can pair each new customer with
+ * its import row. On failure nothing from the call is saved: an INSERT of
+ * many rows is one statement.
+ */
+export async function createCustomersBulk(
+  companyId: string,
+  rows: CustomerFormData[],
+): Promise<{ customers: Customer[]; error: string | null }> {
+  if (rows.length === 0) return { customers: [], error: null };
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("customers")
+    .insert(rows.map((row) => mapCustomerFormDataToInsert(companyId, row)))
+    .select("*");
+
+  if (error) {
+    console.error("[createCustomersBulk] insert failed:", {
+      companyId,
+      count: rows.length,
+      code: error.code,
+      message: error.message,
+    });
+    return { customers: [], error: mapDatabaseError(error) };
+  }
+
+  return {
+    customers: ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer),
+    error: null,
+  };
+}
+
+/**
+ * Every active customer's id, name, email and phone, for matching rows in an
+ * import file (the unpaid invoice import). Read in pages: PostgREST caps one
+ * response at 1,000 rows.
+ */
+export async function listCustomersForImportMatching(
+  companyId: string,
+): Promise<{ customers: { id: string; name: string; email: string; phone: string }[]; error: string | null }> {
+  const supabase = await createClient();
+  const PAGE = 1000;
+  const customers: { id: string; name: string; email: string; phone: string }[] = [];
+
+  for (let from = 0; from < 200_000; from += PAGE) {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("id, name, email, phone")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      console.error("[listCustomersForImportMatching] query failed:", {
+        companyId,
+        code: error.code,
+        message: error.message,
+      });
+      return { customers: [], error: mapDatabaseError(error) };
+    }
+
+    const rows = (data ?? []) as { id: string; name: string | null; email: string | null; phone: string | null }[];
+    customers.push(
+      ...rows.map((row) => ({ id: row.id, name: row.name ?? "", email: row.email ?? "", phone: row.phone ?? "" })),
+    );
+    if (rows.length < PAGE) break;
+  }
+
+  return { customers, error: null };
+}
