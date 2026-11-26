@@ -49,8 +49,8 @@ function PhoneShot({ src, alt, priority }: { src: string; alt: string; priority?
         <Image
           src={src}
           alt={alt}
-          width={540}
-          height={960}
+          width={1179}
+          height={2097}
           sizes="(min-width: 768px) 260px, 220px"
           priority={priority}
           className="block h-auto w-full"
