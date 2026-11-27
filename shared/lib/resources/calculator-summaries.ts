@@ -23,6 +23,7 @@ import { calculateMaintenanceAgreement } from "./maintenance-agreement";
 import { calculateNewHire } from "./new-hire";
 import { calculateServiceCallFee } from "./service-call-fee";
 import { calculateTechnicianPay, type PayPlan } from "./technician-pay";
+import { calculateTruckCost } from "./truck-cost";
 
 export type CalculatorSlug = ResourceCalculatorEntry["slug"];
 
@@ -87,6 +88,16 @@ export const CALCULATOR_FIELD_KEYS: Record<CalculatorSlug, readonly string[]> = 
     "currentFee",
     "callsPerMonth",
     "noRepairPercent",
+  ],
+  "truck-cost": [
+    "paymentPerMonth",
+    "insurancePerMonth",
+    "fuelPerMonth",
+    "maintenancePerMonth",
+    "otherPerYear",
+    "workingDaysPerMonth",
+    "billedHoursPerDay",
+    "jobsPerDay",
   ],
   "hiring-a-technician": [
     "hourlyWage",
@@ -305,6 +316,30 @@ export function summarizeCalculator(
           { label: "Cost per callback", value: usd(r.costPerCallback) },
           { label: "Technician hours lost per month", value: r.hoursLostPerMonth.toFixed(1) },
           { label: "Revenue those hours would bill", value: usd(r.revenueNotBilledPerMonth) },
+        ],
+      };
+    }
+    case "truck-cost": {
+      const r = calculateTruckCost({
+        paymentPerMonth: num(values.paymentPerMonth),
+        insurancePerMonth: num(values.insurancePerMonth),
+        fuelPerMonth: num(values.fuelPerMonth),
+        maintenancePerMonth: num(values.maintenancePerMonth),
+        otherPerYear: num(values.otherPerYear),
+        workingDaysPerMonth: num(values.workingDaysPerMonth),
+        billedHoursPerDay: num(values.billedHoursPerDay),
+        jobsPerDay: num(values.jobsPerDay),
+      });
+      if (!r) return null;
+      return {
+        headlineLabel: "Truck cost per working day",
+        headlineValue: usd(r.perWorkingDay),
+        headlineNote: `${usd(r.perMonth)} a month, ${usd(r.perYear)} a year.`,
+        lines: [
+          { label: "Cost per month", value: usd(r.perMonth), emphasis: true },
+          { label: "Cost per billed hour", value: r.perBilledHour === null ? "—" : usd(r.perBilledHour) },
+          { label: "Cost per job", value: r.perJob === null ? "—" : usd(r.perJob) },
+          { label: "A working day with the truck parked", value: usd(r.parkedDay) },
         ],
       };
     }

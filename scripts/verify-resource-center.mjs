@@ -49,6 +49,7 @@ const FILES = {
   callback: `${LIB}/callback-cost.ts`,
   serviceCall: `${LIB}/service-call-fee.ts`,
   newHire: `${LIB}/new-hire.ts`,
+  truck: `${LIB}/truck-cost.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -254,13 +255,35 @@ const hire = await loadPureModule(FILES.newHire, "res-hire");
   check("a negative truck cost counts as 0", near(hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, truckPerMonth: -500 }).weeklyCost, 1400));
 }
 
+console.log("\nTruck cost");
+const truck = await loadPureModule(FILES.truck, "res-truck");
+{
+  // 650 + 180 + 450 + 150 + 600 / 12 = 1,480 a month, 17,760 a year. Over 21 days: 70.48 a day,
+  //   11.75 a billed hour at 6 hours, 23.49 a job at 3 jobs. Parked: (650 + 180 + 50) / 21 = 41.90.
+  const r = truck.calculateTruckCost(truck.TRUCK_COST_DEFAULTS);
+  check("cost per month 1,480.00", near(r.perMonth, 1480));
+  check("cost per year 17,760.00", near(r.perYear, 17760));
+  check("cost per working day 70.48", near(r.perWorkingDay, 70.476, 0.001));
+  check("cost per billed hour 11.75", near(r.perBilledHour, 11.746, 0.001));
+  check("cost per job 23.49", near(r.perJob, 23.492, 0.001));
+  check("a parked day 41.90", near(r.parkedDay, 41.905, 0.001));
+  const paidOff = truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, paymentPerMonth: 0 });
+  check("a paid-off truck: 830 a month, parked day 10.95", near(paidOff.perMonth, 830) && near(paidOff.parkedDay, 10.952, 0.001));
+  const noUse = truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, billedHoursPerDay: 0, jobsPerDay: 0 });
+  check("no hours or jobs -> those two are null, the day still has a cost", noUse.perBilledHour === null && noUse.perJob === null && near(noUse.perWorkingDay, 70.476, 0.001));
+  check("no working days -> null", truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, workingDaysPerMonth: 0 }) === null);
+  check("more than 31 working days -> null", truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, workingDaysPerMonth: 40 }) === null);
+  check("no costs at all -> null", truck.calculateTruckCost({ paymentPerMonth: 0, insurancePerMonth: 0, fuelPerMonth: 0, maintenancePerMonth: 0, otherPerYear: 0, workingDaysPerMonth: 21, billedHoursPerDay: 6, jobsPerDay: 3 }) === null);
+  check("a negative cost counts as 0", near(truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, fuelPerMonth: -450 }).perMonth, 1030));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
 const list = await loadPureModule(FILES.emailList, "res-list");
 {
   const slugs = Object.keys(sums.CALCULATOR_FIELD_KEYS);
-  check("a summary exists for all eight calculators", slugs.length === 8, slugs);
+  check("a summary exists for all nine calculators", slugs.length === 9, slugs);
   const example = {
     "labor-rate": { hourlyWage: "30", burdenPercent: "25", billableHoursPerWeek: "30", nonBillableHoursPerWeek: "10", monthlyOverhead: "6000", targetMarginPercent: "20" },
     "job-profitability": { revenue: "2500", laborHours: "6", loadedLaborRate: "45", materialsCost: "900", subcontractCost: "0", overheadPercent: "25" },
@@ -270,6 +293,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "callback-cost": { callbacksPerMonth: "6", jobsPerMonth: "120", hoursPerCallback: "1.5", costPerBillableHour: "96", partsPerCallback: "25", billableRate: "121" },
     "service-call-fee": { billableRate: "121", costPerBillableHour: "96.15", hoursCovered: "1", currentFee: "49", callsPerMonth: "80", noRepairPercent: "25" },
     "hiring-a-technician": { hourlyWage: "28", burdenPercent: "25", paidHoursPerWeek: "40", truckPerMonth: "1200", billableRate: "121", billedHoursPerWeek: "28", rampWeeks: "8" },
+    "truck-cost": { paymentPerMonth: "650", insurancePerMonth: "180", fuelPerMonth: "450", maintenancePerMonth: "150", otherPerYear: "600", workingDaysPerMonth: "21", billedHoursPerDay: "6", jobsPerDay: "3" },
   };
   const headline = {
     "labor-rate": "$120.19",
@@ -280,6 +304,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "callback-cost": "$1,014.00",
     "service-call-fee": "$121.00",
     "hiring-a-technician": "13.9",
+    "truck-cost": "$70.48",
   };
   for (const slug of slugs) {
     const picked = sums.pickCalculatorValues(slug, example[slug]);
@@ -419,7 +444,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 8 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 13, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 9 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 14, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);

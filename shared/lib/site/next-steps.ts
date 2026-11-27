@@ -320,6 +320,11 @@ export const NEXT_STEPS = {
 
 /** Each calculator's next tool, guide and software page. */
 export const CALCULATOR_NEXT_STEPS: Record<CalculatorSlug, readonly NextStepItem[]> = {
+  "truck-cost": [
+    { ...TOOLS.laborWorkspace, text: "Put the truck in your labor rate once: it has its own line there, with the wage, payroll costs and overhead." },
+    GUIDES.serviceCall,
+    SOFTWARE.dispatch,
+  ],
   "hiring-a-technician": [
     { ...TOOLS.techPay, text: "Decide how to pay them: one real week on hourly, flat rate and commission, side by side." },
     GUIDES.startAndGrow,

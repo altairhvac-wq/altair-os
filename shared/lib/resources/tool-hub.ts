@@ -15,6 +15,7 @@ import {
   calculateMaintenanceAgreement,
 } from "@/shared/lib/resources/maintenance-agreement";
 import { TECHNICIAN_PAY_DEFAULTS, calculateTechnicianPay } from "@/shared/lib/resources/technician-pay";
+import { TRUCK_COST_DEFAULTS, calculateTruckCost } from "@/shared/lib/resources/truck-cost";
 
 /**
  * Every free tool on the site, in one list: the /resources hub, the homepage
@@ -114,6 +115,7 @@ const JOB = calculateJobProfitability(JOB_PROFITABILITY_DEFAULTS);
 const INVOICE = calculateInvoiceTotals(SAMPLE_INVOICE);
 const SERVICE_CALL = calculateServiceCallFee(SERVICE_CALL_FEE_DEFAULTS)!;
 const NEW_HIRE = calculateNewHire(NEW_HIRE_DEFAULTS)!;
+const TRUCK = calculateTruckCost(TRUCK_COST_DEFAULTS)!;
 
 export const HUB_TOOLS: readonly HubTool[] = [
   {
@@ -302,6 +304,24 @@ export const HUB_TOOLS: readonly HubTool[] = [
     },
   },
   {
+    id: "truck-cost",
+    title: "Service truck cost calculator",
+    shortTitle: "Truck cost",
+    href: calculatorPath("truck-cost"),
+    job: "plan",
+    solves: "What does one truck cost me a day, and is my rate covering it?",
+    youGet: "The cost per working day, per billed hour and per job, and what a parked day still costs.",
+    minutes: 3,
+    inputs: Object.keys(TRUCK_COST_DEFAULTS).length,
+    workspace: false,
+    preview: {
+      kind: "figure",
+      figure: usd(TRUCK.perWorkingDay),
+      unit: "every working day",
+      detail: `${usd(TRUCK.perBilledHour ?? 0)} of every billed hour`,
+    },
+  },
+  {
     id: "job-profitability",
     title: "Job profitability calculator",
     shortTitle: "Job profit",
@@ -343,6 +363,12 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
  * here before it is live.
  */
 export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "New: the truck cost calculator. What one service truck costs per day, per billed hour and per job.",
+    href: "/resources/calculators/truck-cost",
+  },
   {
     iso: "2026-11-27",
     label: "Nov 27",
