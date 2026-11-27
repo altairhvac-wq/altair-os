@@ -9,6 +9,8 @@
 export const RESOURCES_PATH = "/resources";
 export const RESOURCES_CALCULATORS_PATH = "/resources/calculators";
 export const RESOURCES_TEMPLATES_PATH = "/resources/templates";
+/** The flat-rate price list builder: a list tool, not one of the fixed-form calculators. */
+export const RESOURCES_FLAT_RATE_PATH = "/resources/flat-rate-price-list";
 export const RESOURCES_GUIDES_PATH = "/resources/guides";
 export const RESOURCES_LIBRARY_PATH = "/resources/library";
 
@@ -121,6 +123,7 @@ export const RESOURCE_STATIC_PATHS: readonly string[] = [
   RESOURCES_CALCULATORS_PATH,
   ...RESOURCE_CALCULATORS.map((calculator) => calculatorPath(calculator.slug)),
   RESOURCES_TEMPLATES_PATH,
+  RESOURCES_FLAT_RATE_PATH,
   RESOURCES_GUIDES_PATH,
   RESOURCES_LIBRARY_PATH,
 ];

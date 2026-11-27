@@ -1,7 +1,8 @@
 import { SAMPLE_INVOICE } from "@/shared/components/resources/invoice/invoice-state";
 import { BREAK_EVEN_DEFAULTS, calculateBreakEven } from "@/shared/lib/resources/break-even";
 import { CALLBACK_COST_DEFAULTS, calculateCallbackCost } from "@/shared/lib/resources/callback-cost";
-import { calculatorPath, RESOURCES_TEMPLATES_PATH } from "@/shared/lib/resources/catalog";
+import { calculatorPath, RESOURCES_FLAT_RATE_PATH, RESOURCES_TEMPLATES_PATH } from "@/shared/lib/resources/catalog";
+import { FLAT_RATE_SAMPLE_AFTER_HOURS, FLAT_RATE_SAMPLE_RATE, FLAT_RATE_SAMPLE_TASKS, priceListLine } from "@/shared/lib/resources/flat-rate-list";
 import { calculateInvoiceTotals, formatCents } from "@/shared/lib/resources/invoice-builder";
 import {
   JOB_PROFITABILITY_DEFAULTS,
@@ -116,6 +117,10 @@ const INVOICE = calculateInvoiceTotals(SAMPLE_INVOICE);
 const SERVICE_CALL = calculateServiceCallFee(SERVICE_CALL_FEE_DEFAULTS)!;
 const NEW_HIRE = calculateNewHire(NEW_HIRE_DEFAULTS)!;
 const TRUCK = calculateTruckCost(TRUCK_COST_DEFAULTS)!;
+const FLAT_RATE_LINES = FLAT_RATE_SAMPLE_TASKS.slice(0, 3).map((task) => ({
+  description: task.name,
+  amount: usd0(priceListLine(task, FLAT_RATE_SAMPLE_RATE, FLAT_RATE_SAMPLE_AFTER_HOURS, "dollar").standard),
+}));
 
 export const HUB_TOOLS: readonly HubTool[] = [
   {
@@ -152,6 +157,23 @@ export const HUB_TOOLS: readonly HubTool[] = [
       figure: usd0(LABOR.billableHourlyRateRounded),
       unit: "per billable hour",
       detail: `Break-even ${usd(LABOR.costPerBillableHour)}`,
+    },
+  },
+  {
+    id: "flat-rate-price-list",
+    title: "Flat-rate price list builder",
+    shortTitle: "Flat-rate price list",
+    href: RESOURCES_FLAT_RATE_PATH,
+    job: "price",
+    solves: "What should each common repair cost, as one price the customer hears up front?",
+    youGet: "A price per task from your own labor rate, with after-hours prices, printed as a sheet for the truck.",
+    minutes: 10,
+    inputs: null,
+    workspace: false,
+    preview: {
+      kind: "invoice",
+      lines: FLAT_RATE_LINES,
+      total: `at $${FLAT_RATE_SAMPLE_RATE}/hr`,
     },
   },
   {
@@ -363,6 +385,12 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
  * here before it is live.
  */
 export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "New: the flat-rate price list builder. One price per task from your own labor rate, printed as a sheet for the truck.",
+    href: "/resources/flat-rate-price-list",
+  },
   {
     iso: "2026-11-27",
     label: "Nov 27",

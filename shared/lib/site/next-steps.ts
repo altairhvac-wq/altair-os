@@ -281,6 +281,19 @@ export const NEXT_STEPS = {
     { ...PRICING, href: "/pricing#plan-finder", text: "The plans your shops would choose from, and what each one costs a month." },
     SOFTWARE.business,
   ],
+  /** After the price list: the fee charged at the door, the guide that prices it, and estimates built from a price book. */
+  flatRateList: [
+    {
+      kind: "tool",
+      id: "service-call-fee",
+      href: calculatorPath("service-call-fee"),
+      title: "Service call fee calculator",
+      text: "Price the visit itself: what to charge at the door, and what a low or free call costs a year.",
+      meta: "Free · about 2 min",
+    },
+    GUIDES.serviceCall,
+    { ...SOFTWARE.estimating, text: "The same price list inside the software: estimates built from it that customers approve on their phone." },
+  ],
   /** The comparison pages already show the video; a reader who is comparing wants to know how the move works, then the price. */
   comparison: [SWITCH, PRICING, SOFTWARE.business],
   /** The switch page ends on the trial; this is for the owner who is not moving this week. */

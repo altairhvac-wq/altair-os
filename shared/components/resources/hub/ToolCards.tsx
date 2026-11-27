@@ -13,6 +13,7 @@ import {
   PiggyBank,
   ReceiptText,
   DoorOpen,
+  ListChecks,
   Repeat2,
   Truck,
   UserPlus,
@@ -42,6 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   "service-call-fee": DoorOpen,
   "hiring-a-technician": UserPlus,
   "truck-cost": Truck,
+  "flat-rate-price-list": ListChecks,
   "invoice-builder": ReceiptText,
   templates: FileSpreadsheet,
   "break-even": BarChart3,
@@ -240,7 +242,8 @@ export function ToolCard({
   const t = TONE[tone];
   const Icon = ICONS[tool.id] ?? Wrench;
   const Heading = headingLevel === 2 ? "h2" : headingLevel === 3 ? "h3" : "h4";
-  const action = tool.id === "templates" ? "See the templates" : tool.workspace ? "Open the workspace" : "Open the calculator";
+  const action =
+    tool.id === "templates" ? "See the templates" : tool.id === "flat-rate-price-list" ? "Open the builder" : tool.workspace ? "Open the workspace" : "Open the calculator";
 
   return (
     <Link
