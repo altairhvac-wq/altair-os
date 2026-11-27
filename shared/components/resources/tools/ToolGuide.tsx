@@ -41,7 +41,7 @@ export function ToolHero({
   updated,
   facts,
   jumpLinks,
-  trail = [{ label: "Insights", href: "/insights" }],
+  trail = [{ label: "Free tools", href: "/resources" }],
 }: {
   /** The links before the current page in the breadcrumb. */
   readonly trail?: readonly { readonly label: string; readonly href: string }[];

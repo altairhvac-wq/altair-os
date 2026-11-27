@@ -74,13 +74,13 @@ const MORE: readonly { href: string; title: string; text: string; icon: LucideIc
   },
   {
     href: RESOURCES_GUIDES_PATH,
-    title: "Guides",
-    text: "Articles on pricing, invoicing and running the office.",
+    title: "New owner? Start here",
+    text: "The guides and tools a new owner needs, in order.",
     icon: BookOpen,
   },
   {
     href: RESOURCES_LIBRARY_PATH,
-    title: "Video and article library",
+    title: "Videos and articles",
     text: "Search the guides and both YouTube channels at once.",
     icon: Library,
   },

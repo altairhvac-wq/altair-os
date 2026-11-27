@@ -22,7 +22,13 @@ import {
  * "we can't find any of the other pages from it." Now four menus (Software,
  * Free tools, Learn, Company) and Pricing open a panel naming every page with
  * one line on what it is for (shared/lib/site/site-menu.ts), from 1024 px up.
- * On phones the menu button opens the same groups, all visible.
+ *
+ * ============ PHONE: GROUPS THAT OPEN (2026-11-27) ============
+ * On phones the menu button used to show all 27 links at once, about three
+ * screens of scrolling with the free tools on the second and About at the
+ * bottom of the third. Now it shows Pricing and the four groups on one
+ * screen; a tap unfolds one, and the group the current page belongs to is
+ * already open with that page marked.
  *
  * A menu opens on click, Enter or Space, and on mouse hover; Escape, a click
  * outside, or moving to another page closes it. It is a disclosure (a button
@@ -133,14 +139,14 @@ function Panel({ group, onNavigate }: { readonly group: SiteMenuGroup; readonly 
             href={group.feature.href}
             onClick={onNavigate}
             data-track={`menu-${group.id}-feature`}
-            className={`flex flex-col justify-end border-t border-[rgba(230,227,220,0.1)] bg-[linear-gradient(160deg,rgba(164,130,58,0.24)_0%,rgba(15,18,14,0.95)_75%)] p-5 transition-colors hover:bg-[linear-gradient(160deg,rgba(164,130,58,0.34)_0%,rgba(15,18,14,0.95)_75%)] lg:border-l lg:border-t-0 ${focusRing}`}
+            className={`flex flex-col border-t border-[rgba(230,227,220,0.1)] bg-[linear-gradient(160deg,rgba(164,130,58,0.24)_0%,rgba(15,18,14,0.95)_75%)] p-5 transition-colors hover:bg-[linear-gradient(160deg,rgba(164,130,58,0.34)_0%,rgba(15,18,14,0.95)_75%)] lg:border-l lg:border-t-0 ${focusRing}`}
           >
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
               {group.feature.eyebrow}
             </span>
             <span className="mt-2 text-base font-semibold text-[#fff9ea]">{group.feature.title}</span>
             <span className="mt-1.5 text-[13px] leading-relaxed text-[#c9bfae]">{group.feature.text}</span>
-            <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#e8d9ac]">
+            <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold text-[#e8d9ac]">
               Open
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
             </span>
@@ -328,17 +334,20 @@ export function HomepageNav() {
         </button>
       </div>
 
-      {/* Desktop panel: one at a time, under the bar. */}
+      {/* Desktop panel: one at a time, under the bar. All four are in the page's HTML (the
+          closed ones hidden), so a search engine reads every menu link without opening anything. */}
       <div id={panelId} className={`absolute inset-x-0 top-full hidden px-5 pt-2 lg:px-10 ${openPanel ? "lg:block" : ""}`}>
-        {openPanel ? (
+        {SITE_MENU.map((group) => (
           <div
+            key={group.id}
+            hidden={openGroup !== group.id}
             onPointerEnter={(event) => {
-              if (event.pointerType === "mouse") hover(openPanel.id, 0);
+              if (event.pointerType === "mouse") hover(group.id, 0);
             }}
           >
-            <Panel group={openPanel} onNavigate={closeAll} />
+            <Panel group={group} onNavigate={closeAll} />
           </div>
-        ) : null}
+        ))}
       </div>
 
       {/* Phone and tablet: the four groups on one screen; a tap unfolds one. */}

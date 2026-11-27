@@ -107,12 +107,21 @@ export default function ResourceCalculatorsIndexPage() {
             which report or bill the number comes from, and every result says in plain words what it means for your shop.
           </p>
         </div>
-        <Link
-          href={calculatorPath("labor-rate")}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-[#0A0A0A] px-5 text-sm font-semibold text-[#fff9ea] hover:bg-stone-800"
-        >
-          Start with the labor rate →
-        </Link>
+        {/* The same first step as the free tools page: the full labor rate tool, with the short one beside it. */}
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          <Link
+            href={LABOR_WORKSPACE_PATH}
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0A0A0A] px-5 text-sm font-semibold text-[#fff9ea] hover:bg-stone-800"
+          >
+            Start with the labor rate →
+          </Link>
+          <Link
+            href={calculatorPath("labor-rate")}
+            className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-[#77591B] underline decoration-[#C2A05A]/60 underline-offset-4 sm:min-h-0"
+          >
+            Short on time? One tech, two minutes
+          </Link>
+        </div>
       </div>
 
       <ul className="mt-8 grid gap-4 md:grid-cols-3">

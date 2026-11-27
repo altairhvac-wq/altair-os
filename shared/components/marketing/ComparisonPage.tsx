@@ -310,6 +310,15 @@ export function ComparisonPage({ page }: { page: ComparisonPageContent }) {
             <p className={`mt-3 max-w-2xl text-sm leading-relaxed sm:text-base ${TONE[toneOf("switching")].body}`}>
               {page.switching.intro}
             </p>
+            <p className="mt-3 text-sm sm:text-base">
+              <Link
+                href="/switch"
+                data-track="compare-switch-steps"
+                className={`inline-flex min-h-11 items-center gap-1 font-semibold underline decoration-[#c2a05a]/60 underline-offset-4 ${TONE[toneOf("switching")].eyebrow}`}
+              >
+                See the exact export menus, app by app, on the switching page →
+              </Link>
+            </p>
             <ol className={`mt-8 grid gap-4 md:grid-cols-2 ${swipeRow}`}>
               {page.switching.steps.map((step, index) => (
                 <li key={step.title} className={`${TONE[toneOf("switching")].card} p-5 sm:p-6 ${swipeItem}`}>
