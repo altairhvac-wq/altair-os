@@ -222,15 +222,18 @@ export function ToolCard({
   tone = "light",
   featured = false,
   headingLevel = 3,
+  needs,
 }: {
   readonly tool: HubTool;
   readonly tone?: CardTone;
   readonly featured?: boolean;
-  readonly headingLevel?: 3 | 4;
+  readonly headingLevel?: 2 | 3 | 4;
+  /** What to have open before starting, shown under the question (the calculators list). */
+  readonly needs?: string;
 }) {
   const t = TONE[tone];
   const Icon = ICONS[tool.id] ?? Wrench;
-  const Heading = headingLevel === 3 ? "h3" : "h4";
+  const Heading = headingLevel === 2 ? "h2" : headingLevel === 3 ? "h3" : "h4";
   const action = tool.id === "templates" ? "See the templates" : tool.workspace ? "Open the workspace" : "Open the calculator";
 
   return (
@@ -256,6 +259,12 @@ export function ToolCard({
         </div>
         <p className={`mt-2.5 text-sm font-medium leading-relaxed ${t.solves}`}>{tool.solves}</p>
         {featured ? <p className={`mt-1.5 text-sm leading-relaxed ${t.meta}`}>{tool.youGet}</p> : null}
+        {needs ? (
+          <p className={`mt-2.5 text-[13px] leading-relaxed ${t.meta}`}>
+            <span className={`font-semibold ${t.solves}`}>Have on hand: </span>
+            {needs}
+          </p>
+        ) : null}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-4">
           <span className={`inline-flex items-center gap-1 text-[13px] font-semibold ${t.cta}`}>
             {action}
