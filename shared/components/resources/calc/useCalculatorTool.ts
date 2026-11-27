@@ -28,7 +28,9 @@ export type CalcPreset<K extends string> = {
   readonly values: Readonly<Record<K, string>>;
 };
 
-const STORAGE_PREFIX = "altair-calculator:";
+/** Each calculator's saved numbers live under this prefix plus its slug. "Your numbers" on the tools pages reads the same keys. */
+export const CALCULATOR_STORAGE_PREFIX = "altair-calculator:";
+const STORAGE_PREFIX = CALCULATOR_STORAGE_PREFIX;
 const NUMBER_TEXT = /^-?\d{0,9}(\.\d{0,4})?$/;
 
 /** Only this calculator's keys, only number-looking text; missing keys come from the fallback. */

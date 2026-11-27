@@ -6,6 +6,7 @@ import {
   resourceLinkClass,
 } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { YourNumbers } from "@/shared/components/resources/hub/YourNumbers";
 import {
   RESOURCES_CALCULATORS_PATH,
   RESOURCE_CALCULATORS,
@@ -78,7 +79,8 @@ export default function ResourceCalculatorsIndexPage() {
         intro={<p>{DESCRIPTION}</p>}
         crumbs={[{ label: "Calculators" }]}
       />
-      <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-[#C2A05A]/50 bg-amber-50/60 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <YourNumbers className="mt-8" />
+      <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">Start here</p>
           <p className="mt-1 text-base font-semibold text-[#0A0A0A]">Work out your labor rate first. The other calculators use it.</p>

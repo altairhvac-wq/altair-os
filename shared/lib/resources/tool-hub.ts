@@ -294,6 +294,35 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
   return HUB_TOOLS.filter((tool) => tool.job === job);
 }
 
+/**
+ * "New in the tools": what changed lately, newest first, shown on the free
+ * tools page so a returning owner sees there is something new to open.
+ *
+ * Copy rule: one line saying what the visitor can now do, dated the day it
+ * went live. Add to the top; the page shows the first three. Nothing goes
+ * here before it is live.
+ */
+export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "The labor rate calculator now tells you where the rate you charge today stands, and what the gap is worth in a year.",
+    href: LABOR_WORKSPACE_PATH,
+  },
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "Every box in every calculator says which report, pay stub or bill has the number.",
+    href: "/resources/calculators",
+  },
+  {
+    iso: "2026-11-25",
+    label: "Nov 25",
+    text: "Utah HVAC labor rates: what technicians earn in each area, and what a shop there has to charge.",
+    href: "/utah/hvac-labor-rates",
+  },
+];
+
 /** Tools you open and use (templates are downloads, not a tool). */
 export const INTERACTIVE_TOOL_COUNT = HUB_TOOLS.filter((tool) => tool.id !== "templates").length;
 
