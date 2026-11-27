@@ -58,6 +58,8 @@ export default function robots(): MetadataRoute.Robots {
           // The sitemap itself: with `disallow: "/"` below, an unlisted
           // /sitemap.xml is blocked and Search Console reports "Couldn't fetch".
           "/sitemap.xml",
+          // The description of the company written for AI assistants (app/llms.txt/route.ts).
+          "/llms.txt",
           "/og.png",
           "/icons/",
           "/favicon.svg",

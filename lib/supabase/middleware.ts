@@ -132,6 +132,8 @@ const DIRECTORY_MEDIA_ROUTE = "/api/directory/media";
  */
 const PUBLIC_WEB_ASSET_ROUTES = [
   "/robots.txt",
+  // The plain description of the company for AI assistants (app/llms.txt/route.ts): public facts only.
+  "/llms.txt",
   "/manifest.webmanifest",
   "/sw.js",
   "/opengraph-image",
