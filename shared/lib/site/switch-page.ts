@@ -67,7 +67,7 @@ export const SWITCH_PAGE = {
   eyebrow: "Switch to Altair Operating System",
   headline: "Switch tonight. Keep your old app until you’re sure.",
   intro:
-    "Pick the app you use now. Each tab shows the exact menus to export from it, a short video of that file coming into Altair, and what does and doesn’t come over. Run both side by side through the trial, and cancel the old one when the last old invoice is paid.",
+    "Pick the app you use now. Each tab shows the exact menus to export from it, a video with sound that walks through every click in Altair, and what does and doesn’t come over. Run both side by side through the trial, and cancel the old one when the last old invoice is paid.",
   facts: [
     "CSV or Excel, the file as it comes out of your app",
     "Duplicates caught before anything is saved",
@@ -75,7 +75,7 @@ export const SWITCH_PAGE = {
   ],
 } as const;
 
-const ALTAIR_STEPS_NOTE = "Each import shows you a preview of every row before anything is saved, and skips anything already in Altair, so running the same file twice never makes doubles.";
+const ALTAIR_STEPS_NOTE = "The video above shows these steps click by click. Each import shows you a preview of every row before anything is saved, and skips anything already in Altair, so running the same file twice never makes doubles.";
 
 /** Part 2 is the same for every app; the preset in each link changes. */
 export function buildAltairSteps(app: SwitchApp): readonly SwitchStep[] {
@@ -121,7 +121,7 @@ const JOBBER: SwitchApp = {
   video: {
     src: "/marketing/switch/jobber.mp4",
     poster: "/marketing/switch/jobber-poster.webp",
-    caption: "A Jobber client export, price list and invoice report coming into Altair. Sample data.",
+    caption: "Every click, with sound: Jobber clients, products & services and unpaid invoices coming into Altair. 2 min 20 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Clients and their addresses", text: "Phones, emails and notes. Jobber splits a big list into files of 1,500; upload each one." },
@@ -173,7 +173,7 @@ const HOUSECALL_PRO: SwitchApp = {
   video: {
     src: "/marketing/switch/housecall-pro.mp4",
     poster: "/marketing/switch/housecall-pro-poster.webp",
-    caption: "A Housecall Pro customer export and price book coming into Altair. Sample data.",
+    caption: "Every click, with sound: Housecall Pro customers and price book coming into Altair. 1 min 56 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Customers and their addresses", text: "Phones, emails and notes, whether the file arrives as CSV or Excel." },
@@ -226,7 +226,7 @@ const SERVICETITAN: SwitchApp = {
   video: {
     src: "/marketing/switch/servicetitan.mp4",
     poster: "/marketing/switch/servicetitan-poster.webp",
-    caption: "ServiceTitan Excel exports coming into Altair as they are, no conversion. Sample data.",
+    caption: "Every click, with sound: ServiceTitan Excel files coming into Altair as they are. 2 min 47 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Customers and their addresses", text: "The Excel file as ServiceTitan saves it. No converting to CSV." },
@@ -279,7 +279,7 @@ const SERVICE_FUSION: SwitchApp = {
   video: {
     src: "/marketing/switch/service-fusion.mp4",
     poster: "/marketing/switch/service-fusion-poster.webp",
-    caption: "A Service Fusion customer list and product catalog coming into Altair. Sample data.",
+    caption: "Every click, with sound: Service Fusion customers, product catalog and unpaid invoices coming into Altair. 2 min 30 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Customers and their addresses", text: "From the Customer List report, saved as Excel." },
@@ -325,7 +325,7 @@ const QUICKBOOKS: SwitchApp = {
   video: {
     src: "/marketing/switch/quickbooks.mp4",
     poster: "/marketing/switch/quickbooks-poster.webp",
-    caption: "A QuickBooks customer list and open invoices report coming into Altair. Sample data.",
+    caption: "Every click, with sound: QuickBooks customers, products & services and open invoices coming into Altair. 2 min 39 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Customers and their addresses", text: "Name, company, phone, email and billing address." },
@@ -372,7 +372,7 @@ const OTHER: SwitchApp = {
   video: {
     src: "/marketing/switch/spreadsheet.mp4",
     poster: "/marketing/switch/spreadsheet-poster.webp",
-    caption: "A plain spreadsheet coming into Altair, columns matched by name. Sample data.",
+    caption: "Every click, with sound: a plain spreadsheet coming into Altair, columns matched by name. 2 min 29 s. Sample data.",
   },
   carry: [
     { state: "yes", title: "Customers", text: "Any CSV or Excel list with a name and a phone or email per row." },

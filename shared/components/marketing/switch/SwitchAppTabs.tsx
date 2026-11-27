@@ -136,7 +136,6 @@ function AppPanel({ app, hidden }: { app: SwitchApp; hidden: boolean }) {
               className="aspect-video w-full"
               controls
               playsInline
-              muted
               preload="none"
               poster={app.video.poster}
               onPlay={() => trackEngagement("video_play", `switch-${app.id}`)}
