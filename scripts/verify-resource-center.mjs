@@ -51,6 +51,7 @@ const FILES = {
   newHire: `${LIB}/new-hire.ts`,
   truck: `${LIB}/truck-cost.ts`,
   flatRate: `${LIB}/flat-rate-list.ts`,
+  invoiceMath: `${LIB}/invoice-builder.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -303,6 +304,29 @@ const flat = await loadPureModule(FILES.flatRate, "res-flat");
   check("the builder page exists", existsSync("app/(marketing)/resources/flat-rate-price-list/page.tsx"));
 }
 
+console.log("\nEstimate builder");
+{
+  // The sample estimate (shared/components/resources/invoice/doc-words.ts): 1.5 h and 0.5 h of labor at $121
+  //   (181.50 + 60.50, not taxed), a $224 motor and a $36 capacitor (taxed at 7%): subtotal 502.00, tax 18.20, total 520.20.
+  const inv = await loadPureModule(FILES.invoiceMath, "res-inv");
+  const words = read("shared/components/resources/invoice/doc-words.ts");
+  const lines = [
+    { id: "l1", kind: "labor", description: "Labor", partNumber: "", qty: "1.5", price: "121", taxable: false },
+    { id: "l2", kind: "part", description: "Motor", partNumber: "", qty: "1", price: "224", taxable: true },
+    { id: "l3", kind: "part", description: "Capacitor", partNumber: "", qty: "1", price: "36", taxable: true },
+    { id: "l4", kind: "labor", description: "Labor", partNumber: "", qty: "0.5", price: "121", taxable: false },
+  ];
+  const t = inv.calculateInvoiceTotals({ lines, taxRate: "7", discountMode: "amount", discount: "", discountReducesTax: false, amountPaid: "" });
+  check("sample estimate subtotal 502.00", t.subtotalCents === 50200, t.subtotalCents);
+  check("sample estimate tax 18.20 on 260.00 of parts", t.taxCents === 1820 && t.taxBaseCents === 26000, [t.taxCents, t.taxBaseCents]);
+  check("sample estimate total 520.20", t.totalCents === 52020, t.totalCents);
+  check("a 50% deposit on it is 260.10", inv.depositRequestCents(t.totalCents, "50") === 26010);
+  check("the sample in doc-words.ts uses those four lines", ['qty: "1.5", price: "121"', 'qty: "1", price: "224"', 'qty: "1", price: "36"', 'qty: "0.5", price: "121"'].every((part) => words.includes(part)));
+  check("an estimate never counts a payment", /amountPaid: doc === "estimate" \? "" : state\.amountPaid/.test(read("shared/components/resources/invoice/InvoicePaper.tsx")));
+  check("the invoice builder still defaults to an invoice", /doc = "invoice"/.test(read("shared/components/resources/invoice/InvoiceBuilder.tsx")));
+  check("the estimate page exists", existsSync("app/(marketing)/resources/estimate-builder/page.tsx"));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
@@ -470,7 +494,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 9 calculators, templates, the price list, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 15, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 9 calculators, templates, the price list, the estimate builder, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 16, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);

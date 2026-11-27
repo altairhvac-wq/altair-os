@@ -32,17 +32,15 @@ import {
   writeStorage,
 } from "@/shared/components/resources/tools/ToolControls";
 import {
-  BLANK_INVOICE,
-  BLANK_TEMPLATE_TEXT,
   COMPANY_KEYS,
   LINE_KIND_LABEL,
   QTY_UNIT,
-  SAMPLE_INVOICE,
   STORAGE_KEY_COMPANY,
   type InvoiceKind,
   type InvoiceState,
   type TextKey,
 } from "@/shared/components/resources/invoice/invoice-state";
+import { BLANK_BY_DOC, BLANK_TEXT_BY_DOC, DOC_WORDS, SAMPLE_BY_DOC, type DocKind } from "@/shared/components/resources/invoice/doc-words";
 import { InvoicePaper, computeInvoice } from "@/shared/components/resources/invoice/InvoicePaper";
 import { formatCents, type InvoiceLine } from "@/shared/lib/resources/invoice-builder";
 
@@ -62,11 +60,14 @@ function todayIso(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** Analytics label for this tool: a slug written here, never anything typed. */
-const TOOL_ID = "invoice-builder";
-
-export function InvoiceBuilder() {
-  const [state, setState] = useState<InvoiceState>(BLANK_INVOICE);
+/**
+ * `doc` picks the document: "invoice" (the default, unchanged) or "estimate",
+ * the same builder with an estimate's words, sample and totals
+ * (shared/components/resources/invoice/doc-words.ts).
+ */
+export function InvoiceBuilder({ doc = "invoice" }: { readonly doc?: DocKind } = {}) {
+  const w = DOC_WORDS[doc];
+  const [state, setState] = useState<InvoiceState>(BLANK_BY_DOC[doc]);
   const [view, setView] = useState<"form" | "preview">("form");
   const [blankPrint, setBlankPrint] = useState(false);
   const [rememberCompany, setRememberCompany] = useState(false);
@@ -80,10 +81,10 @@ export function InvoiceBuilder() {
     interacted.current = true;
   };
   useEffect(() => {
-    if (interacted.current) trackEngagement("calculator_used", TOOL_ID);
-  }, [state]);
+    if (interacted.current) trackEngagement("calculator_used", w.toolId);
+  }, [state, w.toolId]);
   const trackAction = (action: "print" | "print-blank" | "copy-blank") =>
-    trackEngagement("cta_click", `tool-${TOOL_ID}-${action}`, { repeat: true });
+    trackEngagement("cta_click", `tool-${w.toolId}-${action}`, { repeat: true });
   const printInvoice = () => {
     trackAction("print");
     window.print();
@@ -154,16 +155,16 @@ export function InvoiceBuilder() {
   };
 
   const loadSample = () => {
-    setState(SAMPLE_INVOICE);
-    toast.show("Sample invoice loaded. Every name and price is made up.");
+    setState(SAMPLE_BY_DOC[doc]);
+    toast.show(w.sampleToast);
   };
   const clear = () => {
-    setState(keepCompany({ ...BLANK_INVOICE, date: todayIso() }));
+    setState(keepCompany({ ...BLANK_BY_DOC[doc], date: todayIso() }));
     toast.show(rememberCompany ? "Cleared. Your company details were kept." : "Cleared.");
   };
   const copyBlank = async () => {
     trackAction("copy-blank");
-    const ok = await copyText(BLANK_TEMPLATE_TEXT);
+    const ok = await copyText(BLANK_TEXT_BY_DOC[doc]);
     toast.show(ok ? "Blank template copied. Paste it into any document." : "Could not copy. Your browser blocked the clipboard.");
   };
 
@@ -191,7 +192,7 @@ export function InvoiceBuilder() {
           },
     );
 
-  const computed = useMemo(() => computeInvoice(state), [state]);
+  const computed = useMemo(() => computeInvoice(state, doc), [state, doc]);
   const printBlank = () => {
     trackAction("print-blank");
     setBlankPrint(true);
@@ -206,7 +207,7 @@ export function InvoiceBuilder() {
   };
 
   return (
-    <div id="invoice-builder" className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
+    <div id={w.toolId} className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
         {/* A phone shows one row: the name and "Load sample". The PDF button is in the bar at the bottom of
@@ -217,7 +218,7 @@ export function InvoiceBuilder() {
               <FileText aria-hidden="true" className="h-4.5 w-4.5 text-[#e8d9ac]" />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#fff9ea]">Invoice Builder</p>
+              <p className="truncate text-sm font-semibold text-[#fff9ea]">{w.toolName}</p>
               <p className="hidden text-[11px] text-[#a99f8f] sm:block">Customer details stay on this device. Nothing is uploaded.</p>
             </div>
           </div>
@@ -258,7 +259,7 @@ export function InvoiceBuilder() {
                 aria-selected={active}
                 onClick={() => {
                   setView(tab.id);
-                  document.getElementById("invoice-builder")?.scrollIntoView({ block: "start" });
+                  document.getElementById(w.toolId)?.scrollIntoView({ block: "start" });
                 }}
                 className={`relative flex min-h-12 flex-1 items-center justify-center gap-2 text-sm font-semibold ${
                   active ? "text-stone-900" : "text-stone-500"
@@ -277,35 +278,26 @@ export function InvoiceBuilder() {
           <div className={`min-w-0 border-stone-200 lg:block lg:border-r print:hidden ${view === "form" ? "block" : "hidden"}`}>
             <div className="divide-y divide-stone-200">
               <p className="bg-stone-50 px-4 py-2.5 text-[13px] leading-snug text-stone-700 sm:px-6">
-                <strong className="font-semibold text-stone-900">Four parts make a complete invoice</strong>
+                <strong className="font-semibold text-stone-900">{w.intro}</strong>
                 <span className="hidden sm:inline">: the details, your company, the customer and the lines</span>. The folded sections are there
                 when the job needs them.
               </p>
-              <FormSection n={1} title="Invoice details">
+              <FormSection n={1} title={w.detailsTitle}>
                 <div className="mb-4">
-                  <Segmented
-                    label="Invoice type"
-                    value={state.kind}
-                    onChange={(value: InvoiceKind) => patch({ kind: value })}
-                    options={[
-                      { value: "standard", label: "Standard" },
-                      { value: "deposit", label: "Deposit" },
-                      { value: "progress", label: "Progress" },
-                    ]}
-                  />
+                  <Segmented label={w.kindLabel} value={state.kind} onChange={(value: InvoiceKind) => patch({ kind: value })} options={[...w.kinds]} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Invoice number">{({ id }) => <TextInput id={id} value={state.number} onChange={(v) => set("number", v)} placeholder="1001" maxLength={20} />}</Field>
+                  <Field label={w.numberLabel}>{({ id }) => <TextInput id={id} value={state.number} onChange={(v) => set("number", v)} placeholder="1001" maxLength={20} />}</Field>
                   <Field label="Customer PO (optional)">{({ id }) => <TextInput id={id} value={state.poNumber} onChange={(v) => set("poNumber", v)} placeholder="PO number" maxLength={30} />}</Field>
-                  <Field label="Invoice date">{({ id }) => <TextInput id={id} type="date" value={state.date} onChange={(v) => set("date", v)} />}</Field>
-                  <Field label="Due date">{({ id }) => <TextInput id={id} type="date" value={state.dueDate} onChange={(v) => set("dueDate", v)} />}</Field>
-                  <Field label="Payment terms" className="sm:col-span-2">
+                  <Field label={w.dateLabel}>{({ id }) => <TextInput id={id} type="date" value={state.date} onChange={(v) => set("date", v)} />}</Field>
+                  <Field label={w.dueDateLabel}>{({ id }) => <TextInput id={id} type="date" value={state.dueDate} onChange={(v) => set("dueDate", v)} />}</Field>
+                  <Field label={w.termsLabel} className="sm:col-span-2">
                     {({ id }) => (
                       <div className="flex flex-wrap gap-2">
                         <div className="min-w-0 flex-1 basis-48">
-                          <TextInput id={id} value={state.terms} onChange={(v) => set("terms", v)} placeholder="Due on receipt" maxLength={60} />
+                          <TextInput id={id} value={state.terms} onChange={(v) => set("terms", v)} placeholder={w.termsPlaceholder} maxLength={60} />
                         </div>
-                        {["Due on receipt", "Net 15", "Net 30"].map((term) => (
+                        {w.termsChoices.map((term) => (
                           <button
                             key={term}
                             type="button"
@@ -380,11 +372,11 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={5} title="Work performed" tag="For service work" filled={filled.work}>
+              <FormSection n={5} title={w.workTitle} tag="For service work" filled={filled.work}>
                 <div className="grid gap-4">
-                  <Field label="Complaint" hint="What the customer said was wrong.">{({ id }) => <TextArea id={id} value={state.complaint} onChange={(v) => set("complaint", v)} placeholder="e.g. No heat upstairs" />}</Field>
-                  <Field label="Cause" hint="What the technician found.">{({ id }) => <TextArea id={id} value={state.cause} onChange={(v) => set("cause", v)} placeholder="e.g. Flame sensor coated, furnace locking out" />}</Field>
-                  <Field label="Correction" hint="What was done, in words the customer understands.">{({ id }) => <TextArea id={id} value={state.correction} onChange={(v) => set("correction", v)} placeholder="e.g. Cleaned flame sensor, tested three full cycles" rows={3} />}</Field>
+                  <Field label={w.work[0].label} hint={w.work[0].hint}>{({ id }) => <TextArea id={id} value={state.complaint} onChange={(v) => set("complaint", v)} placeholder={w.work[0].placeholder} />}</Field>
+                  <Field label={w.work[1].label} hint={w.work[1].hint}>{({ id }) => <TextArea id={id} value={state.cause} onChange={(v) => set("cause", v)} placeholder={w.work[1].placeholder} />}</Field>
+                  <Field label={w.work[2].label} hint={w.work[2].hint}>{({ id }) => <TextArea id={id} value={state.correction} onChange={(v) => set("correction", v)} placeholder={w.work[2].placeholder} rows={3} />}</Field>
                 </div>
               </FormSection>
 
@@ -417,7 +409,7 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={7} title="Tax, discount and payments" tag="If it applies" filled={filled.tax}>
+              <FormSection n={7} title={w.moneyTitle} tag="If it applies" filled={filled.tax}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Sales tax rate" hint="Applied to lines marked taxable. Check your state's rules for parts and labor.">
                     {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.taxRate} onChange={(v) => set("taxRate", v)} suffix="%" placeholder="0" />}
@@ -453,15 +445,18 @@ export function InvoiceBuilder() {
                       {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.depositPct} onChange={(v) => set("depositPct", v)} suffix="% of total" />}
                     </Field>
                   ) : null}
-                  <Field label={state.kind === "standard" ? "Already paid (deposit received)" : "Previously paid"}>
-                    {({ id }) => <NumberInput id={id} value={state.amountPaid} onChange={(v) => set("amountPaid", v)} prefix="$" placeholder="0.00" />}
-                  </Field>
+                  {/* Nothing has been paid on an estimate. */}
+                  {doc === "invoice" ? (
+                    <Field label={state.kind === "standard" ? "Already paid (deposit received)" : "Previously paid"}>
+                      {({ id }) => <NumberInput id={id} value={state.amountPaid} onChange={(v) => set("amountPaid", v)} prefix="$" placeholder="0.00" />}
+                    </Field>
+                  ) : null}
                 </div>
               </FormSection>
 
-              <FormSection n={8} title="Payment, warranty and permits" tag="If it applies" filled={filled.terms}>
+              <FormSection n={8} title={w.termsTitle} tag="If it applies" filled={filled.terms}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="How to pay" className="sm:col-span-2">{({ id }) => <TextArea id={id} value={state.paymentInstructions} onChange={(v) => set("paymentInstructions", v)} placeholder="Payment link, card, check payable to..., ACH" />}</Field>
+                  <Field label={w.payLabel} className="sm:col-span-2">{({ id }) => <TextArea id={id} value={state.paymentInstructions} onChange={(v) => set("paymentInstructions", v)} placeholder={w.payPlaceholder} />}</Field>
                   <Field label="Warranty" className="sm:col-span-2">{({ id }) => <TextInput id={id} value={state.warranty} onChange={(v) => set("warranty", v)} placeholder="e.g. 1 year labor; parts per manufacturer" maxLength={200} />}</Field>
                   <Field label="Permit number">{({ id }) => <TextInput id={id} value={state.permit} onChange={(v) => set("permit", v)} placeholder="For installs" maxLength={40} />}</Field>
                   <Field label="Inspection status">{({ id }) => <TextInput id={id} value={state.inspection} onChange={(v) => set("inspection", v)} placeholder="Scheduled, passed" maxLength={60} />}</Field>
@@ -491,7 +486,7 @@ export function InvoiceBuilder() {
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Live preview</p>
                 <p className="text-xs text-stone-500">Prints on one page, letter or A4</p>
               </div>
-              <InvoicePaper state={state} computed={computed} blank={blankPrint} />
+              <InvoicePaper state={state} computed={computed} blank={blankPrint} doc={doc} />
             </div>
           </div>
         </div>

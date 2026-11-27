@@ -1,4 +1,4 @@
-import { calculatorPath, RESOURCES_PATH, type ResourceCalculatorEntry } from "@/shared/lib/resources/catalog";
+import { calculatorPath, RESOURCES_FLAT_RATE_PATH, RESOURCES_PATH, type ResourceCalculatorEntry } from "@/shared/lib/resources/catalog";
 import { INVOICE_BUILDER_PATH, LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
 import { COMMERCIAL_JOB_START, VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
 
@@ -280,6 +280,19 @@ export const NEXT_STEPS = {
     { ...VIDEO, text: "Two and a half minutes: one job from the first call to paid, in the real product with sample data." },
     { ...PRICING, href: "/pricing#plan-finder", text: "The plans your shops would choose from, and what each one costs a month." },
     SOFTWARE.business,
+  ],
+  /** After an estimate: the price list its lines come from, the invoice it becomes, and estimates customers approve on their phone. */
+  estimateBuilder: [
+    {
+      kind: "tool",
+      id: "flat-rate-price-list",
+      href: RESOURCES_FLAT_RATE_PATH,
+      title: "Flat-rate price list builder",
+      text: "Price each common task once from your labor rate, so every estimate uses the same numbers.",
+      meta: "Free · about 10 min",
+    },
+    { ...TOOLS.invoiceBuilder, text: "When the work is done, the same lines become the invoice. Same form, same totals." },
+    SOFTWARE.estimating,
   ],
   /** After the price list: the fee charged at the door, the guide that prices it, and estimates built from a price book. */
   flatRateList: [
