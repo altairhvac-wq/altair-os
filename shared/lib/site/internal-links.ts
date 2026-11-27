@@ -77,6 +77,7 @@ export const CALCULATOR_SOFTWARE: Record<CalculatorSlug, readonly SoftwarePagePa
   "technician-pay": ["/hvac-software", "/hvac-dispatch-software"],
   "callback-cost": ["/hvac-dispatch-software", "/hvac-software"],
   "service-call-fee": ["/hvac-estimating-software", "/hvac-dispatch-software"],
+  "hiring-a-technician": ["/hvac-dispatch-software", "/hvac-software"],
 };
 
 export type ArticleLinks = {

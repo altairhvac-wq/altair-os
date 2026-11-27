@@ -48,6 +48,7 @@ const FILES = {
   techPay: `${LIB}/technician-pay.ts`,
   callback: `${LIB}/callback-cost.ts`,
   serviceCall: `${LIB}/service-call-fee.ts`,
+  newHire: `${LIB}/new-hire.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -223,13 +224,43 @@ const scf = await loadPureModule(FILES.serviceCall, "res-scf");
   check("a negative fee counts as 0", near(scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: -20 }).shortOfCostPerVisit, 96.15));
 }
 
+console.log("\nHiring a technician");
+const hire = await loadPureModule(FILES.newHire, "res-hire");
+{
+  // $28 x 1.25 x 40 = 1,400 a week of pay, plus a $1,200 truck x 12 / 52 = 276.92: 1,676.92 a week, 7,266.67 a month.
+  //   Break-even 1,676.92 / 121 = 13.86 billed hours. At 28 billed: 3,388 a week, 1,711.08 left, 7,414.67 a month.
+  //   8-week ramp bills 423.50 more each week: weeks 1-3 are short 1,253.42 + 829.92 + 406.42 = 2,489.77; week 4 is the first above cost.
+  const r = hire.calculateNewHire(hire.NEW_HIRE_DEFAULTS);
+  check("cost a week 1,676.92", near(r.weeklyCost, 1676.92, 0.005));
+  check("cost a month 7,266.67", near(r.monthlyCost, 7266.67, 0.005));
+  check("cost a year 87,200.00", near(r.yearlyCost, 87200, 0.005));
+  check("break-even 13.86 billed hours", near(r.breakEvenHoursPerWeek, 13.859, 0.001));
+  check("break-even is 34.6% of paid hours", near(r.breakEvenShare, 0.3465, 0.0001));
+  check("bills 3,388 a week", near(r.weeklyRevenue, 3388));
+  check("left over 7,414.67 a month", near(r.monthlyLeftOver, 7414.67, 0.005));
+  check("left over 88,976 a year", near(r.yearlyLeftOver, 88976, 0.01));
+  check("the hire pays", r.pays === true);
+  check("cash to carry 2,489.77", near(r.cashToCarry, 2489.77, 0.005));
+  check("first week in the black is week 4", r.firstWeekInTheBlack === 4);
+  const slow = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billedHoursPerWeek: 10 });
+  check("10 billed hours loses money every week of the ramp", slow.pays === false && slow.monthlyLeftOver < 0 && slow.firstWeekInTheBlack === null);
+  const noRamp = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, rampWeeks: 0 });
+  check("no ramp -> no cash to carry", noRamp.cashToCarry === 0 && noRamp.firstWeekInTheBlack === null);
+  const helper = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, hourlyWage: 18, truckPerMonth: 0, billedHoursPerWeek: 15 });
+  check("an $18 helper with no truck: 900 a week, 7.44 hours to break even", near(helper.weeklyCost, 900) && near(helper.breakEvenHoursPerWeek, 7.438, 0.001));
+  check("no wage -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, hourlyWage: 0 }) === null);
+  check("no rate -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billableRate: 0 }) === null);
+  check("more billed than paid hours -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billedHoursPerWeek: 45 }) === null);
+  check("a negative truck cost counts as 0", near(hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, truckPerMonth: -500 }).weeklyCost, 1400));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
 const list = await loadPureModule(FILES.emailList, "res-list");
 {
   const slugs = Object.keys(sums.CALCULATOR_FIELD_KEYS);
-  check("a summary exists for all seven calculators", slugs.length === 7, slugs);
+  check("a summary exists for all eight calculators", slugs.length === 8, slugs);
   const example = {
     "labor-rate": { hourlyWage: "30", burdenPercent: "25", billableHoursPerWeek: "30", nonBillableHoursPerWeek: "10", monthlyOverhead: "6000", targetMarginPercent: "20" },
     "job-profitability": { revenue: "2500", laborHours: "6", loadedLaborRate: "45", materialsCost: "900", subcontractCost: "0", overheadPercent: "25" },
@@ -238,6 +269,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "technician-pay": { hourlyWage: "30", hoursOnClock: "45", bookHours: "38", payPerBookHour: "34", revenueProduced: "7500", commissionPercent: "12" },
     "callback-cost": { callbacksPerMonth: "6", jobsPerMonth: "120", hoursPerCallback: "1.5", costPerBillableHour: "96", partsPerCallback: "25", billableRate: "121" },
     "service-call-fee": { billableRate: "121", costPerBillableHour: "96.15", hoursCovered: "1", currentFee: "49", callsPerMonth: "80", noRepairPercent: "25" },
+    "hiring-a-technician": { hourlyWage: "28", burdenPercent: "25", paidHoursPerWeek: "40", truckPerMonth: "1200", billableRate: "121", billedHoursPerWeek: "28", rampWeeks: "8" },
   };
   const headline = {
     "labor-rate": "$120.19",
@@ -247,6 +279,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "technician-pay": "Hourly: $1,425.00",
     "callback-cost": "$1,014.00",
     "service-call-fee": "$121.00",
+    "hiring-a-technician": "13.9",
   };
   for (const slug of slugs) {
     const picked = sums.pickCalculatorValues(slug, example[slug]);
@@ -386,7 +419,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 7 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 12, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 8 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 13, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);

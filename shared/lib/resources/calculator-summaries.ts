@@ -20,6 +20,7 @@ import type { ResourceCalculatorEntry } from "./catalog";
 import { calculateJobProfitability } from "./job-profitability";
 import { calculateLaborRate } from "./labor-rate";
 import { calculateMaintenanceAgreement } from "./maintenance-agreement";
+import { calculateNewHire } from "./new-hire";
 import { calculateServiceCallFee } from "./service-call-fee";
 import { calculateTechnicianPay, type PayPlan } from "./technician-pay";
 
@@ -86,6 +87,15 @@ export const CALCULATOR_FIELD_KEYS: Record<CalculatorSlug, readonly string[]> = 
     "currentFee",
     "callsPerMonth",
     "noRepairPercent",
+  ],
+  "hiring-a-technician": [
+    "hourlyWage",
+    "burdenPercent",
+    "paidHoursPerWeek",
+    "truckPerMonth",
+    "billableRate",
+    "billedHoursPerWeek",
+    "rampWeeks",
   ],
 };
 
@@ -295,6 +305,32 @@ export function summarizeCalculator(
           { label: "Cost per callback", value: usd(r.costPerCallback) },
           { label: "Technician hours lost per month", value: r.hoursLostPerMonth.toFixed(1) },
           { label: "Revenue those hours would bill", value: usd(r.revenueNotBilledPerMonth) },
+        ],
+      };
+    }
+    case "hiring-a-technician": {
+      const r = calculateNewHire({
+        hourlyWage: num(values.hourlyWage),
+        burdenPercent: num(values.burdenPercent),
+        paidHoursPerWeek: num(values.paidHoursPerWeek),
+        truckPerMonth: num(values.truckPerMonth),
+        billableRate: num(values.billableRate),
+        billedHoursPerWeek: num(values.billedHoursPerWeek),
+        rampWeeks: num(values.rampWeeks),
+      });
+      if (!r) return null;
+      return {
+        headlineLabel: "Billed hours a week that pay for the hire",
+        headlineValue: r.breakEvenHoursPerWeek.toFixed(1),
+        headlineNote: r.pays
+          ? `At the hours you expect, the hire leaves ${usd(r.monthlyLeftOver)} a month before parts margin.`
+          : `At the hours you expect, the hire loses ${usd(-r.monthlyLeftOver)} a month.`,
+        lines: [
+          { label: "Cost of the hire per month", value: usd(r.monthlyCost), emphasis: true },
+          { label: "Cost of the hire per year", value: usd(r.yearlyCost) },
+          { label: "Billed per week, once busy", value: usd(r.weeklyRevenue) },
+          { label: "Left over per month, once busy", value: usd(r.monthlyLeftOver) },
+          { label: "Cash to carry the first weeks", value: usd(r.cashToCarry) },
         ],
       };
     }

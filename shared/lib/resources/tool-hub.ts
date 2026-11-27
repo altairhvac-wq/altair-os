@@ -8,6 +8,7 @@ import {
   calculateJobProfitability,
 } from "@/shared/lib/resources/job-profitability";
 import { LABOR_RATE_DEFAULTS, calculateLaborRate } from "@/shared/lib/resources/labor-rate";
+import { NEW_HIRE_DEFAULTS, calculateNewHire } from "@/shared/lib/resources/new-hire";
 import { SERVICE_CALL_FEE_DEFAULTS, calculateServiceCallFee } from "@/shared/lib/resources/service-call-fee";
 import {
   MAINTENANCE_AGREEMENT_DEFAULTS,
@@ -112,6 +113,7 @@ const BREAK_EVEN = calculateBreakEven(BREAK_EVEN_DEFAULTS)!;
 const JOB = calculateJobProfitability(JOB_PROFITABILITY_DEFAULTS);
 const INVOICE = calculateInvoiceTotals(SAMPLE_INVOICE);
 const SERVICE_CALL = calculateServiceCallFee(SERVICE_CALL_FEE_DEFAULTS)!;
+const NEW_HIRE = calculateNewHire(NEW_HIRE_DEFAULTS)!;
 
 export const HUB_TOOLS: readonly HubTool[] = [
   {
@@ -207,6 +209,24 @@ export const HUB_TOOLS: readonly HubTool[] = [
         { label: "Flat rate", value: PAY.flatRatePay, display: usd0(PAY.flatRatePay) },
         { label: "Commission", value: PAY.commissionPay, display: usd0(PAY.commissionPay) },
       ],
+    },
+  },
+  {
+    id: "hiring-a-technician",
+    title: "Hiring calculator",
+    shortTitle: "Hiring a technician",
+    href: calculatorPath("hiring-a-technician"),
+    job: "team",
+    solves: "Can I afford another technician, and how many hours do they have to bill?",
+    youGet: "The billed hours that pay for the hire, what is left once busy, and the cash the first weeks take.",
+    minutes: 3,
+    inputs: Object.keys(NEW_HIRE_DEFAULTS).length,
+    workspace: false,
+    preview: {
+      kind: "figure",
+      figure: `${NEW_HIRE.breakEvenHoursPerWeek.toFixed(1)} hrs`,
+      unit: "billed a week to pay for the hire",
+      detail: `Costs ${usd0(NEW_HIRE.monthlyCost)} a month`,
     },
   },
   {
@@ -323,6 +343,12 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
  * here before it is live.
  */
 export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "New: the hiring calculator. What another technician costs a month, and the billed hours a week that pay for them.",
+    href: "/resources/calculators/hiring-a-technician",
+  },
   {
     iso: "2026-11-27",
     label: "Nov 27",

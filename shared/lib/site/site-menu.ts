@@ -72,6 +72,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
       { section: "Price your work", href: "/resources/calculators/service-call-fee", label: "Service call fee", text: "What to charge at the door, and what a low or free call costs a year." },
       { section: "Price your work", href: "/resources/calculators/maintenance-agreement", label: "Maintenance agreement pricing", text: "What a plan should cost so the visits and discount are paid for." },
       { section: "Pay your team", href: "/resources/calculators/technician-pay", label: "Technician pay", text: "Would a week pay more hourly, flat rate or commission?" },
+      { section: "Pay your team", href: "/resources/calculators/hiring-a-technician", label: "Hiring a technician", text: "What another tech costs a month, and the billed hours that pay for them." },
       { section: "Pay your team", href: "/resources/calculators/callback-cost", label: "Callback cost", text: "What free return trips are costing you every month." },
       { section: "Get paid", href: "/insights/hvac-invoice-template", label: "Invoice builder", text: "A complete HVAC invoice you can print or save as a PDF." },
       { section: "Get paid", href: "/resources/templates", label: "Templates", text: "Estimate, pricing worksheet, agreement and checklist: PDF, Excel, Word." },
