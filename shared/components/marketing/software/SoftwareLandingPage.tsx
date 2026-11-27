@@ -299,69 +299,37 @@ export function SoftwareLandingPage({
         {/* ---------------- the plans ---------------- */}
         <section id="price" aria-labelledby="plans-heading" className={`${BAND.light} ${jumpTarget} px-5 py-10 sm:px-8 sm:py-20`}>
           <div className="mx-auto max-w-6xl">
-            {/* Phone: the price in one card; the three plan cards are on /pricing. */}
-            <div className="sm:hidden">
-              <p className={eyebrow("light")}>Price</p>
-              <Link
-                href="/pricing"
-                className={`mt-3 flex items-center justify-between gap-3 p-4 ${TONE.light.card} ${focusRing}`}
-              >
-                <span>
-                  <span className="block text-base font-semibold text-[#14120e]">
-                    {fromPrice !== null ? `From ${formatUsd(fromPrice)}/month` : "See the plans"}
-                  </span>
-                  <span className="mt-0.5 block text-sm text-stone-600">Every feature on every plan · {trialDays}-day free trial</span>
-                </span>
-                <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#77591B]">
-                  Plans <ArrowRight aria-hidden="true" className="h-4 w-4" />
-                </span>
-              </Link>
-            </div>
-            <div className="hidden sm:block">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            {/* The price in one line, on every screen size. The three plan cards used to repeat here on all
+                four software pages; they live on /pricing, one click away (2026-11-27: each page ran 9 to 10 screens). */}
+            <p className={eyebrow("light")}>Price</p>
+            <h2 id="plans-heading" className="sr-only">
+              Price
+            </h2>
+            <div className={`mt-3 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 ${TONE.light.card}`}>
               <div>
-                <p className={eyebrow("light")}>Price</p>
-                <h2 id="plans-heading" className={h2("light")}>
-                  Every feature on every plan. You pay by team size.
-                </h2>
+                <p className="text-base font-semibold text-[#14120e] sm:text-xl">
+                  {fromPrice !== null ? `From ${formatUsd(fromPrice)}/month` : "See the plans"}
+                  <span className="hidden font-normal text-stone-600 sm:inline">
+                    {" "}
+                    · {plans.map((plan) => `${plan.label} ${formatUsd(plan.monthlyPriceUsd)}`).join(", ")}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm text-stone-600">
+                  Every feature on every plan · {trialDays}-day free trial with up to {PRICING_FACTS.trialUsers} users, no credit card.{" "}
+                  <Link href="/pricing#terms" className={link("light")}>
+                    The terms in plain words
+                  </Link>
+                </p>
               </div>
-              <Link href="/pricing#plan-finder" className={LIGHT_SECONDARY_BUTTON}>
-                Price it for my team
-                <ArrowRight aria-hidden="true" className="h-4 w-4" />
-              </Link>
-            </div>
-            <ul className="mt-8 grid gap-3 md:grid-cols-3">
-              {plans.map((plan) => (
-                <li key={plan.planKey} className={`p-5 ${plan.planKey === "growth" ? TONE.light.cardLit : TONE.light.card}`}>
-                  <p className={`text-base font-semibold ${plan.planKey === "growth" ? "text-[#fff9ea]" : "text-[#14120e]"}`}>
-                    {plan.label}
-                  </p>
-                  <p className="mt-2">
-                    <span className={`font-mono text-3xl font-semibold ${plan.planKey === "growth" ? "text-[#e8d9ac]" : "text-[#14120e]"}`}>
-                      {formatUsd(plan.monthlyPriceUsd)}
-                    </span>
-                    <span className={`text-sm ${plan.planKey === "growth" ? "text-[#c9bfae]" : "text-stone-500"}`}> / month</span>
-                  </p>
-                  <p className={`mt-1 text-sm ${plan.planKey === "growth" ? "text-[#c9bfae]" : "text-stone-500"}`}>
-                    or {formatUsd(plan.annualPriceUsd)}/year, save {formatUsd(plan.annualSavingsUsd)}
-                  </p>
-                  <p className={`mt-3 text-sm font-semibold ${plan.planKey === "growth" ? "text-[#f3ebdd]" : "text-stone-800"}`}>
-                    {plan.extraUserMonthlyUsd !== null
-                      ? `${plan.includedUsers} users, then ${formatUsd(plan.extraUserMonthlyUsd)}/month each`
-                      : plan.includedUsers === 1
-                        ? "1 user"
-                        : `Up to ${plan.includedUsers} users`}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-sm text-stone-500">
-              {trialDays}-day free trial with up to {PRICING_FACTS.trialUsers} users, no credit card. Cancel from Settings any
-              time.{" "}
-              <Link href="/pricing#terms" className={link("light")}>
-                The terms in plain words
-              </Link>
-            </p>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Link href="/pricing" className={LIGHT_SECONDARY_BUTTON}>
+                  See the plans
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </Link>
+                <Link href="/pricing#plan-finder" className={`${LIGHT_SECONDARY_BUTTON} max-sm:hidden`}>
+                  Price it for my team
+                </Link>
+              </div>
             </div>
           </div>
         </section>

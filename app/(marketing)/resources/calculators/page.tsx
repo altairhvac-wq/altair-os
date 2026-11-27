@@ -6,6 +6,7 @@ import {
   resourceLinkClass,
 } from "@/shared/components/resources/ResourcePageShell";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { ToolCard } from "@/shared/components/resources/hub/ToolCards";
 import { YourNumbers } from "@/shared/components/resources/hub/YourNumbers";
 import {
   RESOURCES_CALCULATORS_PATH,
@@ -14,7 +15,7 @@ import {
 } from "@/shared/lib/resources/catalog";
 import { buildResourceCollectionStructuredData } from "@/shared/lib/resources/structured-data";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
-import { LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
+import { LABOR_WORKSPACE_PATH, hubTool } from "@/shared/lib/resources/tool-hub";
 
 const TITLE = "HVAC Business Calculators";
 const H1 = "Business calculators for HVAC contractors";
@@ -106,34 +107,11 @@ export default function ResourceCalculatorsIndexPage() {
         </div>
       </div>
 
-      <ul className="mt-8 grid gap-4 md:grid-cols-3">
+      {/* The same worked-example cards as the free tools page, so the two lists look like one site. */}
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {RESOURCE_CALCULATORS.map((calculator) => (
           <li key={calculator.slug}>
-            <ResourceCard className="h-full">
-              <h2 className="text-lg font-semibold tracking-tight text-[#0A0A0A]">
-                <Link href={calculatorPath(calculator.slug)} className={resourceLinkClass}>
-                  {calculator.title}
-                </Link>
-              </h2>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-stone-800">
-                {calculator.question}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-stone-600">
-                {calculator.description}
-              </p>
-              <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-[13px] leading-relaxed text-stone-600">
-                <span className="font-semibold text-stone-800">You&apos;ll need: </span>
-                {calculator.needs}
-              </p>
-              <Link
-                href={calculatorPath(calculator.slug)}
-                className={`mt-4 inline-block text-sm font-semibold text-[#77591B] ${resourceLinkClass}`}
-                aria-hidden="true"
-                tabIndex={-1}
-              >
-                Open the calculator →
-              </Link>
-            </ResourceCard>
+            <ToolCard tool={hubTool(calculator.slug)} headingLevel={2} needs={calculator.needs} />
           </li>
         ))}
       </ul>
