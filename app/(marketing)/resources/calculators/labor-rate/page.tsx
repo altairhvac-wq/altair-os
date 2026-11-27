@@ -114,7 +114,7 @@ export default function LaborRateCalculatorPage() {
                 <Link href={calculatorPath("maintenance-agreement")} className={link}>maintenance agreement</Link>,{" "}
                 <Link href={calculatorPath("callback-cost")} className={link}>callback cost</Link> and{" "}
                 <Link href={calculatorPath("job-profitability")} className={link}>job profitability</Link> calculators in this browser, with a
-                &ldquo;Use my labor rate&rdquo; button on each. Nothing is sent anywhere.
+                &ldquo;Use my labor rate&rdquo; button on each. It stays in your browser.
               </p>
             </>
           ),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -33,7 +33,7 @@ import {
   type CarriedNumbers,
   type CarryKey,
 } from "@/shared/components/resources/calc/carry";
-import type { CalculatorTool as Tool } from "@/shared/components/resources/calc/useCalculatorTool";
+import { num, type CalculatorTool as Tool } from "@/shared/components/resources/calc/useCalculatorTool";
 
 /**
  * The application frame every calculator under /resources/calculators
@@ -86,8 +86,13 @@ export function CalculatorTool<K extends string>({
     };
   }, [presetsOpen]);
 
+  const blank = tool.presets.find((preset) => preset.id === "blank");
   const emailValues: Record<string, string> = {};
-  for (const key of CALCULATOR_FIELD_KEYS[tool.slug]) emailValues[key] = (tool.values as Record<string, string>)[key] ?? "";
+  // A blank field counts as 0 on the page, so it does in the email too.
+  for (const key of CALCULATOR_FIELD_KEYS[tool.slug]) {
+    const raw = ((tool.values as Record<string, string>)[key] ?? "").trim();
+    emailValues[key] = raw === "" || raw === "-" || raw === "." ? "0" : raw.replace(/\.$/, "");
+  }
 
   return (
     <div id="calculator" className="scroll-mt-24" onPointerDownCapture={tool.markInteracted} onKeyDownCapture={tool.markInteracted}>
@@ -100,7 +105,7 @@ export function CalculatorTool<K extends string>({
             </span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#fff9ea]">{name}</p>
-              <p className="text-[11px] text-[#a99f8f]">Runs in your browser. Nothing you type is sent anywhere.</p>
+              <p className="text-[11px] text-[#a99f8f]">Runs in your browser. Your numbers stay here unless you email them to yourself.</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -153,6 +158,24 @@ export function CalculatorTool<K extends string>({
             {tool.hasSaved ? (
               <button type="button" onClick={tool.forget} className={`inline-flex items-center gap-1 rounded font-semibold text-[#77591B] hover:underline ${focusRing}`}>
                 <X aria-hidden="true" className="h-3.5 w-3.5" /> Forget saved numbers
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {tool.isExample && !tool.restored ? (
+          <div className="flex flex-col gap-2 border-b border-stone-200 bg-stone-50 px-4 py-2.5 text-[13px] text-stone-700 sm:flex-row sm:items-center sm:justify-between sm:px-5 print:hidden">
+            <span>
+              <strong className="font-semibold text-stone-900">These are sample numbers.</strong> Type over them with yours; under each field,
+              &ldquo;Where do I find this?&rdquo; says which report or bill has the number.
+            </span>
+            {blank ? (
+              <button
+                type="button"
+                onClick={() => tool.loadPreset(blank)}
+                className={`inline-flex shrink-0 items-center gap-1 self-start rounded font-semibold text-[#77591B] hover:underline sm:self-auto ${focusRing}`}
+              >
+                <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /> Clear and enter mine
               </button>
             ) : null}
           </div>
@@ -264,6 +287,7 @@ export function NumField<K extends string>({
   k,
   label,
   hint,
+  find,
   prefix,
   suffix,
   badge,
@@ -274,6 +298,8 @@ export function NumField<K extends string>({
   readonly k: K;
   readonly label: string;
   readonly hint?: React.ReactNode;
+  /** Where a shop owner gets this number (a report, a pay stub, a P&L line). */
+  readonly find?: React.ReactNode;
   readonly prefix?: string;
   readonly suffix?: string;
   readonly badge?: React.ReactNode;
@@ -281,7 +307,7 @@ export function NumField<K extends string>({
   readonly placeholder?: string;
 }) {
   return (
-    <Field label={label} hint={hint} badge={badge}>
+    <Field label={label} hint={hint} find={find} badge={badge}>
       {({ id, hintId }) => (
         <NumberInput
           id={id}
@@ -295,6 +321,69 @@ export function NumField<K extends string>({
         />
       )}
     </Field>
+  );
+}
+
+/**
+ * "Work it out for me": two numbers the owner already has (from a P&L, a
+ * payroll report) turned into the percent or rate the field asks for, then
+ * put in the field with one press. Lives inside a field's "Where do I find
+ * this?" box.
+ */
+export function WorkItOut<K extends string>({
+  tool,
+  k,
+  a,
+  b,
+  compute,
+  unit,
+}: {
+  readonly tool: Tool<K>;
+  readonly k: K;
+  readonly a: { readonly label: string; readonly prefix?: string; readonly suffix?: string };
+  readonly b: { readonly label: string; readonly prefix?: string; readonly suffix?: string };
+  /** The field's value from the two numbers, or null when they give none. */
+  readonly compute: (a: number, b: number) => number | null;
+  readonly unit: "%" | "$";
+}) {
+  const [first, setFirst] = useState("");
+  const [second, setSecond] = useState("");
+  const idA = useId();
+  const idB = useId();
+  const value = first.trim() !== "" && second.trim() !== "" ? compute(num(first), num(second)) : null;
+  const usable = value !== null && Number.isFinite(value) && value >= 0;
+  const text = usable ? (unit === "%" ? `${Math.round(value * 10) / 10}` : `${Math.round(value * 100) / 100}`) : "";
+  return (
+    <div className="mt-2.5 border-t border-amber-200/70 pt-2.5">
+      <p className="font-semibold text-stone-900">Work it out for me</p>
+      <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+        <div>
+          <label htmlFor={idA} className="block text-[11px] font-medium text-stone-600">
+            {a.label}
+          </label>
+          <NumberInput id={idA} value={first} onChange={setFirst} prefix={a.prefix} suffix={a.suffix} placeholder="0" />
+        </div>
+        <div>
+          <label htmlFor={idB} className="block text-[11px] font-medium text-stone-600">
+            {b.label}
+          </label>
+          <NumberInput id={idB} value={second} onChange={setSecond} prefix={b.prefix} suffix={b.suffix} placeholder="0" />
+        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <ToolButton
+          variant="primary"
+          size="sm"
+          disabled={!usable}
+          onClick={() => {
+            tool.set(k, text);
+            tool.toast.show("Filled in.");
+          }}
+        >
+          {usable ? `Use ${unit === "$" ? money(value) : `${text}%`}` : "Enter both numbers"}
+        </ToolButton>
+      </div>
+    </div>
   );
 }
 
@@ -446,6 +535,38 @@ export function ResultHero({
         {unit ? <span className="text-sm text-[#a99f8f]">{unit}</span> : null}
       </p>
       {note ? <div className="mt-2 text-[13px] leading-relaxed text-[#c9bfae]">{note}</div> : null}
+    </div>
+  );
+}
+
+/**
+ * "What this means": the result read back in plain words, with a verdict the
+ * owner can act on. Tone sets the color: good (green), watch (amber), bad (red).
+ */
+export function ResultReading({
+  tone,
+  title,
+  children,
+}: {
+  readonly tone: "good" | "watch" | "bad";
+  readonly title: string;
+  readonly children: React.ReactNode;
+}) {
+  const styles =
+    tone === "good"
+      ? "border-emerald-200 bg-emerald-50/70"
+      : tone === "watch"
+        ? "border-amber-200 bg-amber-50/80"
+        : "border-red-200 bg-red-50/70";
+  const dot = tone === "good" ? "bg-emerald-500" : tone === "watch" ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className={`rounded-xl border p-4 ${styles}`} role="status">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">What this means</p>
+      <p className="mt-1 flex items-start gap-2 text-sm font-semibold text-stone-900">
+        <span aria-hidden="true" className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
+        {title}
+      </p>
+      <div className="mt-1.5 space-y-1.5 text-[13px] leading-relaxed text-stone-700">{children}</div>
     </div>
   );
 }

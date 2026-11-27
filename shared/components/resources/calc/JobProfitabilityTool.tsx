@@ -13,6 +13,8 @@ import {
   NumField,
   Panel,
   ResultHero,
+  ResultReading,
+  WorkItOut,
   ResultTile,
   ResultTiles,
   WhatIfTable,
@@ -90,7 +92,7 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
   const target = num(v.targetMarginPercent) / 100;
   const billedRate = num(v.billedRate);
   const targetPrice = priceForMargin(r.directCost, input.overheadAllocationRate, target);
-  const laborBilled = input.laborHours > 0 ? (input.revenue - input.materialsCost - input.subcontractCost) / input.laborHours : null;
+  const profitPerHour = result && input.laborHours > 0 ? result.netProfit / input.laborHours : null;
 
   if (compact) {
     return (
@@ -184,16 +186,44 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
       inputs={
         <>
           <InputGroup title="The job" text="Pick a recent, finished job so the numbers are real, not estimated.">
-            <NumField tool={tool} k="revenue" label="Job revenue" prefix="$" invalid={input.revenue <= 0 && v.revenue !== ""} hint="What the customer paid, before sales tax." />
-            <NumField tool={tool} k="laborHours" label="Labor hours" suffix="hrs" hint="Every paid hour on the job: drive time and return trips included." />
-            <NumField tool={tool} k="loadedLaborRate" label="Loaded labor cost" prefix="$" suffix="/hr" hint="Wage plus payroll taxes, insurance and benefits: your cost, not your billed rate." />
-            <NumField tool={tool} k="materialsCost" label="Materials" prefix="$" hint="Parts and supplies at what you paid." />
-            <NumField tool={tool} k="subcontractCost" label="Subcontract" prefix="$" hint="Anything you paid someone else to do on this job." />
-            <NumField tool={tool} k="overheadPercent" label="Overhead allocation" suffix="% of revenue" hint="Last year's overhead divided by last year's revenue." />
+            <NumField tool={tool} k="revenue" label="Job revenue" prefix="$" invalid={input.revenue <= 0 && v.revenue !== ""} hint="What the customer paid, before sales tax." find="The invoice for the job. Use the total before sales tax, and leave out any tax line." />
+            <NumField tool={tool} k="laborHours" label="Labor hours" suffix="hrs" hint="Every paid hour on the job: drive time and return trips included." find="The technicians' timesheets or the job's clock-in and clock-out times. Add every technician on the job, the drive there, and any trip back to finish it." />
+            <NumField
+              tool={tool}
+              k="loadedLaborRate"
+              label="Loaded labor cost"
+              prefix="$"
+              suffix="/hr"
+              hint="Wage plus payroll taxes, insurance and benefits: your cost, not your billed rate."
+              find="The technician's hourly wage plus labor burden. A $30 wage with 25% burden is $37.50. The labor rate calculator works it out as “Loaded hourly cost”."
+            />
+            <NumField tool={tool} k="materialsCost" label="Materials" prefix="$" hint="Parts and supplies at what you paid." find="Your supply house invoices or purchase orders for this job, at what you paid, not what you charged." />
+            <NumField tool={tool} k="subcontractCost" label="Subcontract" prefix="$" hint="Anything you paid someone else to do on this job." find="The bill from the electrician, crane, duct shop or anyone else you paid on this job. Leave 0 if none." />
+            <NumField
+              tool={tool}
+              k="overheadPercent"
+              label="Overhead allocation"
+              suffix="% of revenue"
+              hint="Last year's overhead divided by last year's revenue."
+              find={
+                <>
+                  From your Profit and Loss report for last year (in QuickBooks: Reports, then Profit and Loss). Overhead is total expenses minus technician
+                  wages, materials and subcontractors: rent, trucks, fuel, insurance, office pay, software. Divide it by total income.
+                  <WorkItOut
+                    tool={tool}
+                    k="overheadPercent"
+                    unit="%"
+                    a={{ label: "Overhead last year", prefix: "$" }}
+                    b={{ label: "Total income last year", prefix: "$" }}
+                    compute={(over, income) => (income > 0 ? (over / income) * 100 : null)}
+                  />
+                </>
+              }
+            />
           </InputGroup>
           <InputGroup title="Your targets" text="Optional. For the price check below." badge={<SampleTag />}>
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" hint="The net margin you want on every job." />
-            <NumField tool={tool} k="billedRate" label="Your labor rate" prefix="$" suffix="/hr" hint="What you bill per hour, to compare with what this job billed." />
+            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" hint="The net margin you want on every job." find="Your choice. 20% means $20 of every $100 the customer pays is profit after labor, materials and overhead." />
+            <NumField tool={tool} k="billedRate" label="Your labor rate" prefix="$" suffix="/hr" hint="What you bill per hour, to compare with this job." find="The hourly labor rate in your price book, or the result of the labor rate calculator." />
           </InputGroup>
         </>
       }
@@ -224,6 +254,7 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
                 ]}
               />
             </Panel>
+            <Reading input={input} result={result} target={target} targetPrice={targetPrice} />
             <ResultTiles>
               <ResultTile label="Gross profit" value={money(result.grossProfit)} note={`${pct(result.grossMargin)} of revenue`} tone={result.grossProfit < 0 ? "negative" : "neutral"} />
               <ResultTile label="Direct cost" value={money(result.directCost)} note="labor, materials, subcontract" />
@@ -234,10 +265,15 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
                 strong
               />
               <ResultTile
-                label="Labor billed at"
-                value={laborBilled === null ? "–" : `${money(laborBilled)}/hr`}
-                note={billedRate > 0 && laborBilled !== null ? `your rate is ${money(billedRate, 0)}/hr` : "revenue less parts, per hour"}
-                tone={billedRate > 0 && laborBilled !== null && laborBilled < billedRate ? "negative" : "neutral"}
+                label="Profit per labor hour"
+                value={profitPerHour === null ? "–" : `${money(profitPerHour)}/hr`}
+                note="net profit ÷ labor hours"
+                tone={profitPerHour !== null && profitPerHour < 0 ? "negative" : "neutral"}
+              />
+              <ResultTile
+                label="Labor share of the price"
+                value={input.revenue > 0 ? pct(result.laborCost / input.revenue) : "–"}
+                note={billedRate > 0 && input.laborHours > 0 ? `${hours(input.laborHours)} at your ${money(billedRate, 0)}/hr = ${money(billedRate * input.laborHours, 0)}` : "loaded labor ÷ revenue"}
               />
             </ResultTiles>
           </>
@@ -247,6 +283,53 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
       }
       analysis={<Analysis input={input} result={result} target={target} targetPrice={targetPrice} />}
     />
+  );
+}
+
+/** The job read back in plain words, against the target margin. */
+function Reading({
+  input,
+  result,
+  target,
+  targetPrice,
+}: {
+  readonly input: JobProfitabilityInput;
+  readonly result: JobProfitabilityResult;
+  readonly target: number;
+  readonly targetPrice: number | null;
+}) {
+  const net = result.netMargin ?? 0;
+  const priceLine =
+    targetPrice !== null && target > 0 && targetPrice > input.revenue
+      ? `To make ${pct(target, 0)} on a job like this, price it at ${money(targetPrice, 0)}, ${money(targetPrice - input.revenue, 0)} more than it billed.`
+      : null;
+  if (result.grossProfit < 0) {
+    return (
+      <ResultReading tone="bad" title="This job didn't cover its own labor and materials.">
+        <p>It lost {money(-result.grossProfit, 0)} before any overhead. Check the hours: a second trip or a long install is the usual cause.</p>
+        {priceLine ? <p>{priceLine}</p> : null}
+      </ResultReading>
+    );
+  }
+  if (result.netProfit < 0) {
+    return (
+      <ResultReading tone="bad" title={`It covered labor and materials, but lost ${money(-result.netProfit, 0)} once overhead is counted.`}>
+        <p>Rent, trucks, insurance and the office are paid out of every job. This one didn&apos;t carry its share of {money(result.overheadAllocated, 0)}.</p>
+        {priceLine ? <p>{priceLine}</p> : null}
+      </ResultReading>
+    );
+  }
+  if (target > 0 && net < target) {
+    return (
+      <ResultReading tone="watch" title={`It made money: ${pct(net)} net, below your ${pct(target, 0)} target.`}>
+        {priceLine ? <p>{priceLine}</p> : <p>Fewer hours or a higher price closes the gap.</p>}
+      </ResultReading>
+    );
+  }
+  return (
+    <ResultReading tone="good" title={`A good job: ${pct(net)} net${target > 0 ? `, at or above your ${pct(target, 0)} target` : ""}.`}>
+      <p>After labor, materials and its share of overhead, {money(result.netProfit, 0)} is left. Price similar jobs the same way.</p>
+    </ResultReading>
   );
 }
 

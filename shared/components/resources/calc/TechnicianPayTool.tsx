@@ -13,6 +13,7 @@ import {
   NumField,
   Panel,
   ResultHero,
+  ResultReading,
   ResultTile,
   ResultTiles,
   WhatIfTable,
@@ -31,7 +32,7 @@ import {
   type TechnicianPayResult,
 } from "@/shared/lib/resources/technician-pay";
 
-const KEYS = ["hourlyWage", "hoursOnClock", "bookHours", "payPerBookHour", "revenueProduced", "commissionPercent"] as const;
+const KEYS = ["hourlyWage", "hoursOnClock", "bookHours", "payPerBookHour", "revenueProduced", "commissionPercent", "burdenPercent"] as const;
 type K = (typeof KEYS)[number];
 
 const PRESETS: readonly CalcPreset<K>[] = [
@@ -46,25 +47,26 @@ const PRESETS: readonly CalcPreset<K>[] = [
       payPerBookHour: String(D.payPerBookHour),
       revenueProduced: String(D.revenueProduced),
       commissionPercent: String(D.commissionRate * 100),
+      burdenPercent: "25",
     },
   },
   {
     id: "slow",
     label: "Slow week",
     text: "40 hours on the clock, 24 book hours, $4,700 produced. Made-up numbers.",
-    values: { hourlyWage: "30", hoursOnClock: "40", bookHours: "24", payPerBookHour: "34", revenueProduced: "4700", commissionPercent: "12" },
+    values: { hourlyWage: "30", hoursOnClock: "40", bookHours: "24", payPerBookHour: "34", revenueProduced: "4700", commissionPercent: "12", burdenPercent: "25" },
   },
   {
     id: "busy",
     label: "Busy week",
     text: "50 hours on the clock, 52 book hours, $10,200 produced. Made-up numbers.",
-    values: { hourlyWage: "30", hoursOnClock: "50", bookHours: "52", payPerBookHour: "34", revenueProduced: "10200", commissionPercent: "12" },
+    values: { hourlyWage: "30", hoursOnClock: "50", bookHours: "52", payPerBookHour: "34", revenueProduced: "10200", commissionPercent: "12", burdenPercent: "25" },
   },
   {
     id: "blank",
     label: "Start blank",
     text: "Empty fields for one real week of your own.",
-    values: { hourlyWage: "", hoursOnClock: "", bookHours: "", payPerBookHour: "", revenueProduced: "", commissionPercent: "" },
+    values: { hourlyWage: "", hoursOnClock: "", bookHours: "", payPerBookHour: "", revenueProduced: "", commissionPercent: "", burdenPercent: "" },
   },
 ];
 
@@ -88,6 +90,7 @@ export function TechnicianPayTool() {
     commissionRate: num(v.commissionPercent) / 100,
   };
   const r = calculateTechnicianPay(input);
+  const burden = Math.max(0, num(v.burdenPercent) / 100);
   const empty = r !== null && r.hourlyPay === 0 && r.flatRatePay === 0 && r.commissionPay === 0;
   const result = r && !empty ? r : null;
   const problem =
@@ -135,16 +138,32 @@ export function TechnicianPayTool() {
               suffix="hrs"
               invalid={input.hoursOnClock > 168}
               hint={`All paid time: jobs, driving, shop time. Hours past ${OVERTIME_THRESHOLD_HOURS} are overtime on the hourly plan.`}
+              find="The technician's timesheet for the week, or the hours on their pay stub, overtime included."
             />
-            <NumField tool={tool} k="revenueProduced" label="Revenue produced" prefix="$" hint="What the technician's completed jobs billed, before sales tax." />
+            <NumField
+              tool={tool}
+              k="revenueProduced"
+              label="Revenue produced"
+              prefix="$"
+              hint="What the technician's completed jobs billed, before sales tax."
+              find="In your job software, total the invoices for jobs this technician finished that week, before sales tax. Most have a sales-by-technician report."
+            />
+            <NumField
+              tool={tool}
+              k="burdenPercent"
+              label="Labor burden"
+              suffix="% of pay"
+              hint="Payroll taxes, workers' comp and benefits on top of pay, for the full cost to you."
+              find="Social Security and Medicare are 7.65% of pay. Add unemployment insurance, your workers' comp rate (on the policy, per $100 of payroll) and benefits you pay, as a percent of pay. Your payroll provider's employer-cost report adds most of it up."
+            />
           </InputGroup>
           <div className="grid gap-3 xl:grid-cols-3">
             <PlanCard plan="hourly" pay={result ? money(result.hourlyPay, 0) : "–"}>
-              <NumField tool={tool} k="hourlyWage" label="Hourly wage" prefix="$" suffix="/hr" hint="Time and a half past 40 hours." />
+              <NumField tool={tool} k="hourlyWage" label="Hourly wage" prefix="$" suffix="/hr" hint="Time and a half past 40 hours." find="The technician's regular hourly rate from the pay stub or your payroll provider." />
             </PlanCard>
             <PlanCard plan="flat-rate" pay={result ? money(result.flatRatePay, 0) : "–"}>
-              <NumField tool={tool} k="bookHours" label="Book hours turned" suffix="hrs" hint="From your price book, whatever the jobs took." />
-              <NumField tool={tool} k="payPerBookHour" label="Pay per book hour" prefix="$" />
+              <NumField tool={tool} k="bookHours" label="Book hours turned" suffix="hrs" hint="From your price book, whatever the jobs took." find="Each flat-rate task in your price book has set hours. Add them up for every job the technician finished that week, however long the jobs really took." />
+              <NumField tool={tool} k="payPerBookHour" label="Pay per book hour" prefix="$" hint="What the technician earns for each book hour." find="Your flat-rate pay plan, or the rate on a flat-rate technician's pay stub. Leave the flat-rate fields blank if you don't pay this way." />
             </PlanCard>
             <PlanCard plan="commission" pay={result ? money(result.commissionPay, 0) : "–"}>
               <NumField
@@ -154,6 +173,7 @@ export function TechnicianPayTool() {
                 suffix="% of revenue"
                 invalid={input.commissionRate < 0 || input.commissionRate > 1}
                 hint="Paid on the revenue produced above."
+                find="Your commission pay plan. If you pay commission after parts, enter the rate that gives the same dollars on total revenue."
               />
             </PlanCard>
           </div>
@@ -190,6 +210,7 @@ export function TechnicianPayTool() {
                 }))}
               />
             </Panel>
+            <Reading result={result} revenue={input.revenueProduced} burden={burden} />
             <ResultTiles>
               <ResultTile label="Flat rate matches hourly at" value={result.bookHoursToMatchHourly === null ? "–" : hours(result.bookHoursToMatchHourly)} note="book hours this week" strong />
               <ResultTile label="Commission matches hourly at" value={result.revenueToMatchHourly === null ? "–" : money(result.revenueToMatchHourly, 0)} note="revenue produced" strong />
@@ -199,6 +220,16 @@ export function TechnicianPayTool() {
                 value={input.hoursOnClock > 0 ? pct(input.bookHours / input.hoursOnClock) : "–"}
                 note="flat-rate productivity"
               />
+              <ResultTile
+                label="Full cost to you"
+                value={money(payOf(result, result.highest) * (1 + burden), 0)}
+                note={`${PLAN_NAME[result.highest].toLowerCase()} pay plus ${pct(burden, 0)} burden`}
+              />
+              <ResultTile
+                label="Labor cost of revenue"
+                value={input.revenueProduced > 0 ? pct((payOf(result, result.highest) * (1 + burden)) / input.revenueProduced) : "–"}
+                note="full cost ÷ revenue produced"
+              />
             </ResultTiles>
           </>
         ) : (
@@ -207,6 +238,32 @@ export function TechnicianPayTool() {
       }
       analysis={<Analysis input={input} result={result} />}
     />
+  );
+}
+
+/** The week read back in plain words: who comes out ahead, and what it costs the shop in full. */
+function Reading({ result, revenue, burden }: { readonly result: TechnicianPayResult; readonly revenue: number; readonly burden: number }) {
+  const top = payOf(result, result.highest);
+  const full = top * (1 + burden);
+  const low = Math.min(result.hourlyPay, result.flatRatePay > 0 ? result.flatRatePay : Infinity, result.commissionPay > 0 ? result.commissionPay : Infinity);
+  const swing = Number.isFinite(low) && low > 0 ? (top - low) / low : 0;
+  const matches = [
+    result.bookHoursToMatchHourly !== null ? `flat rate pays the same as hourly at ${hours(result.bookHoursToMatchHourly)} of book time` : null,
+    result.revenueToMatchHourly !== null ? `commission pays the same at ${money(result.revenueToMatchHourly, 0)} produced` : null,
+  ].filter(Boolean);
+  return (
+    <ResultReading tone={swing > 0.2 ? "watch" : "good"} title={`${PLAN_NAME[result.highest]} pays the technician most this week: ${money(top, 0)}.`}>
+      <p>
+        With {pct(burden, 0)} for payroll taxes, workers&apos; comp and benefits, that week costs you {money(full, 0)}
+        {revenue > 0 ? `, ${pct(full / revenue, 0)} of the ${money(revenue, 0)} the technician produced` : ""}.
+      </p>
+      {matches.length ? (
+        <p>
+          This week, {matches.join(", and ")}. Busier weeks than that favor the technician on those plans; slower weeks favor hourly.
+        </p>
+      ) : null}
+      {swing > 0.2 ? <p>The plans differ by {pct(swing, 0)} on the same week, so switching a technician between them changes their pay a lot. Try a slow and a busy week before deciding.</p> : null}
+    </ResultReading>
   );
 }
 

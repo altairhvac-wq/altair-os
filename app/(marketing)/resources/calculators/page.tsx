@@ -40,6 +40,16 @@ const ANSWERS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
   "callback-cost": "What are free return trips really costing me every month?",
 };
 
+/** What to have open before starting each one. */
+const NEEDS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
+  "labor-rate": "A pay stub, your payroll provider's employer-cost report, and last year's Profit and Loss.",
+  "job-profitability": "One finished job's invoice, timesheets and parts receipts.",
+  "break-even": "Last year's Profit and Loss and your number of jobs a month.",
+  "maintenance-agreement": "Your labor rate result and what a tune-up uses in time and parts.",
+  "technician-pay": "One week's timesheet and the revenue that technician produced.",
+  "callback-cost": "Last month's callbacks, jobs finished, and your labor rate result.",
+};
+
 /** A sensible order to run them in. */
 const STEPS: readonly { title: string; text: string }[] = [
   {
@@ -88,7 +98,24 @@ export default function ResourceCalculatorsIndexPage() {
         intro={<p>{DESCRIPTION}</p>}
         crumbs={[{ label: "Calculators" }]}
       />
-      <ul className="mt-10 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-[#C2A05A]/50 bg-amber-50/60 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">Start here</p>
+          <p className="mt-1 text-base font-semibold text-[#0A0A0A]">Work out your labor rate first. The other calculators use it.</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-stone-700">
+            Have last year&apos;s Profit and Loss report and a recent pay stub open. Every field has a &ldquo;Where do I find this?&rdquo; link that says
+            which report or bill the number comes from, and every result says in plain words what it means for your shop.
+          </p>
+        </div>
+        <Link
+          href={calculatorPath("labor-rate")}
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-[#0A0A0A] px-5 text-sm font-semibold text-[#fff9ea] hover:bg-stone-800"
+        >
+          Start with the labor rate →
+        </Link>
+      </div>
+
+      <ul className="mt-8 grid gap-4 md:grid-cols-3">
         {RESOURCE_CALCULATORS.map((calculator) => (
           <li key={calculator.slug}>
             <ResourceCard className="h-full">
@@ -102,6 +129,10 @@ export default function ResourceCalculatorsIndexPage() {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-stone-600">
                 {calculator.description}
+              </p>
+              <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-[13px] leading-relaxed text-stone-600">
+                <span className="font-semibold text-stone-800">You&apos;ll need: </span>
+                {NEEDS[calculator.slug]}
               </p>
               <Link
                 href={calculatorPath(calculator.slug)}
@@ -137,7 +168,7 @@ export default function ResourceCalculatorsIndexPage() {
           <Link href={LABOR_WORKSPACE_PATH} className={resourceLinkClass}>
             Labor Cost Workspace
           </Link>{" "}
-          carries into the others with one button, and nothing is sent anywhere. Need the paperwork side?{" "}
+          carries into the others with one button. Your numbers stay in your browser unless you email a result to yourself. Need the paperwork side?{" "}
           <Link href="/resources/templates" className={resourceLinkClass}>
             Free templates
           </Link>{" "}
