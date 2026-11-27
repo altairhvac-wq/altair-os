@@ -22,11 +22,15 @@ export type SiteMenuLink = {
   readonly href: string;
   readonly label: string;
   readonly text: string;
+  /** The job this page helps with; links that share one are shown under it as a heading. */
+  readonly section?: string;
 };
 
 export type SiteMenuGroup = {
   readonly id: "software" | "tools" | "learn" | "company";
   readonly label: string;
+  /** One line under the group's name in the phone menu, where the groups open with a tap. */
+  readonly summary: string;
   readonly links: readonly SiteMenuLink[];
   /** Smaller links under the main list (comparisons, "see all"). */
   readonly more?: readonly { readonly href: string; readonly label: string }[];
@@ -38,6 +42,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
   {
     id: "software",
     label: "Software",
+    summary: "Dispatch, estimates, invoicing and the technician's phone.",
     links: [
       { href: "/hvac-software", label: "HVAC business software", text: "Calls, jobs, estimates, invoices and payments on one record." },
       { href: "/hvac-dispatch-software", label: "Dispatch", text: "Today's board, the job map and the technician's phone." },
@@ -61,36 +66,34 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
   {
     id: "tools",
     label: "Free tools",
+    summary: "Calculators, an invoice builder and templates. No account.",
     links: [
-      { href: "/insights/how-to-calculate-hvac-labor-rate", label: "Labor Cost Workspace", text: "What a billed hour has to cover for your whole crew." },
-      { href: "/insights/hvac-invoice-template", label: "Invoice Builder", text: "A complete HVAC invoice you can print or save as a PDF." },
-      { href: "/resources/calculators/technician-pay", label: "Technician pay", text: "Would a week pay more hourly, flat rate or commission?" },
-      { href: "/resources/calculators/break-even", label: "Break-even", text: "How many jobs a month before the business stops losing money." },
-      { href: "/resources/calculators/job-profitability", label: "Job profitability", text: "Did a job make money once labor, parts and overhead count?" },
-      { href: "/resources/calculators/maintenance-agreement", label: "Maintenance agreements", text: "What a plan should cost so the visits and discount are paid for." },
-      { href: "/resources/calculators/callback-cost", label: "Callback cost", text: "What free return trips are costing you every month." },
-      { href: "/resources/templates", label: "Templates", text: "Estimate, pricing worksheet, agreement and checklist: PDF, Excel, Word." },
+      { section: "Price your work", href: "/insights/how-to-calculate-hvac-labor-rate", label: "Labor rate calculator", text: "What a billed hour has to cover for your whole crew." },
+      { section: "Price your work", href: "/resources/calculators/maintenance-agreement", label: "Maintenance agreement pricing", text: "What a plan should cost so the visits and discount are paid for." },
+      { section: "Pay your team", href: "/resources/calculators/technician-pay", label: "Technician pay", text: "Would a week pay more hourly, flat rate or commission?" },
+      { section: "Pay your team", href: "/resources/calculators/callback-cost", label: "Callback cost", text: "What free return trips are costing you every month." },
+      { section: "Get paid", href: "/insights/hvac-invoice-template", label: "Invoice builder", text: "A complete HVAC invoice you can print or save as a PDF." },
+      { section: "Get paid", href: "/resources/templates", label: "Templates", text: "Estimate, pricing worksheet, agreement and checklist: PDF, Excel, Word." },
+      { section: "Plan the business", href: "/resources/calculators/break-even", label: "Break-even", text: "How many jobs a month before the business stops losing money." },
+      { section: "Plan the business", href: "/resources/calculators/job-profitability", label: "Job profitability", text: "Did a job make money once labor, parts and overhead count?" },
     ],
-    more: [
-      { href: "/resources/calculators", label: "All calculators" },
-      { href: "/resources", label: "All free tools" },
-    ],
+    more: [{ href: "/resources", label: "All free tools" }],
     feature: {
       href: "/insights/how-to-calculate-hvac-labor-rate",
-      eyebrow: "Most used",
+      eyebrow: "Start here",
       title: "Find your real labor rate",
-      text: "Break-even and recommended rates, a flat-rate price builder and an after-hours rate card. About 10 minutes.",
+      text: "Every other tool is priced from it. About 10 minutes with a pay stub and last year's Profit and Loss.",
     },
   },
   {
     id: "learn",
     label: "Learn",
+    summary: "Guides with worked numbers, videos and Utah wage data.",
     links: [
-      { href: "/insights", label: "Articles", text: "Pricing, invoicing and running an HVAC shop, with worked numbers." },
-      { href: "/resources/guides", label: "Learning path", text: "The guides and tools a new owner needs, in order." },
-      { href: "/resources/library", label: "Resource library", text: "Search every article and video from both Altair channels." },
-      { href: "/directory", label: "Contractor directory", text: "Find HVAC and trade companies near you." },
-      { href: "/directory/list", label: "List your business free", text: "A link to your website. A person checks every listing." },
+      { href: "/insights", label: "Guides", text: "Pricing, invoicing and running an HVAC shop, with worked numbers." },
+      { href: "/resources/guides", label: "New owner? Start here", text: "The guides and tools a new owner needs, in order." },
+      { href: "/resources/library", label: "Videos and articles", text: "Search every article and video from both Altair channels." },
+      { href: "/utah/hvac-labor-rates", label: "Utah HVAC labor rates", text: "What techs earn across Utah, and what a shop has to charge." },
     ],
     feature: {
       href: "/how-it-works",
@@ -102,9 +105,12 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
   {
     id: "company",
     label: "Company",
+    summary: "Who builds it, how to reach us, and the contractor directory.",
     links: [
       { href: "/about", label: "About", text: "Who builds it, and why: an HVAC company owner." },
       { href: "/contact", label: "Contact", text: "Questions before you try it, answered by the founder." },
+      { href: "/directory", label: "Contractor directory", text: "Find HVAC and trade companies near you." },
+      { href: "/directory/list", label: "List your business free", text: "A link to your website. A person checks every listing." },
       { href: "/affiliates", label: "Affiliate program", text: "A share of what each shop you refer pays, for 12 months." },
     ],
   },

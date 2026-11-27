@@ -10,6 +10,7 @@ import {
   SITE_MENU_PRICING,
   siteMenuGroupForPath,
   type SiteMenuGroup,
+  type SiteMenuLink,
 } from "@/shared/lib/site/site-menu";
 
 /**
@@ -36,33 +37,80 @@ function isHomepagePath(pathname: string) {
   return pathname === "/" || pathname === "/welcome";
 }
 
+/** Links in menu order, gathered under their job heading; one untitled set when a group has none. */
+function linkSections(group: SiteMenuGroup) {
+  const sections: { title: string | null; links: SiteMenuLink[] }[] = [];
+  for (const link of group.links) {
+    const title = link.section ?? null;
+    const last = sections[sections.length - 1];
+    if (last && last.title === title) last.links.push(link);
+    else sections.push({ title, links: [link] });
+  }
+  return sections;
+}
+
+function PanelLink({
+  link,
+  groupId,
+  onNavigate,
+}: {
+  readonly link: SiteMenuLink;
+  readonly groupId: SiteMenuGroup["id"];
+  readonly onNavigate: () => void;
+}) {
+  return (
+    <Link
+      href={link.href}
+      onClick={onNavigate}
+      data-track={`menu-${groupId}`}
+      className={`group block rounded-xl px-3.5 py-3 transition-colors hover:bg-white/[0.05] ${focusRing}`}
+    >
+      <span className="flex items-center gap-1.5 text-sm font-semibold text-[#fff9ea]">
+        {link.label}
+        <ArrowRight
+          aria-hidden="true"
+          className="h-3.5 w-3.5 -translate-x-1 text-[#c2a05a] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
+        />
+      </span>
+      <span className="mt-0.5 block text-[13px] leading-snug text-[#a89c88]">{link.text}</span>
+    </Link>
+  );
+}
+
 function Panel({ group, onNavigate }: { readonly group: SiteMenuGroup; readonly onNavigate: () => void }) {
   const wide = group.links.length > 4;
+  const sections = linkSections(group);
+  const titled = sections.some((section) => section.title);
   return (
     <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[rgba(230,227,220,0.14)] bg-[#0f120e] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.95)]">
       <div className={`grid gap-0 ${group.feature ? "lg:grid-cols-[minmax(0,1fr)_17rem]" : ""}`}>
         <div className="p-4 sm:p-5">
-          <ul className={`grid gap-1 ${wide ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-            {group.links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={onNavigate}
-                  data-track={`menu-${group.id}`}
-                  className={`group block rounded-xl px-3.5 py-3 transition-colors hover:bg-white/[0.05] ${focusRing}`}
-                >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-[#fff9ea]">
-                    {link.label}
-                    <ArrowRight
-                      aria-hidden="true"
-                      className="h-3.5 w-3.5 -translate-x-1 text-[#c2a05a] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
-                    />
-                  </span>
-                  <span className="mt-0.5 block text-[13px] leading-snug text-[#a89c88]">{link.text}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {titled ? (
+            <div className="grid gap-x-2 gap-y-4 sm:grid-cols-2">
+              {sections.map((section) => (
+                <section key={section.title} aria-label={section.title ?? undefined}>
+                  <h3 className="px-3.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
+                    {section.title}
+                  </h3>
+                  <ul className="grid gap-0.5">
+                    {section.links.map((link) => (
+                      <li key={link.href}>
+                        <PanelLink link={link} groupId={group.id} onNavigate={onNavigate} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <ul className={`grid gap-1 ${wide ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+              {group.links.map((link) => (
+                <li key={link.href}>
+                  <PanelLink link={link} groupId={group.id} onNavigate={onNavigate} />
+                </li>
+              ))}
+            </ul>
+          )}
           {group.more?.length ? (
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 border-t border-[rgba(230,227,220,0.08)] px-3.5 pt-3">
               {group.more.map((link) => (
@@ -108,6 +156,8 @@ export function HomepageNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<SiteMenuGroup["id"] | null>(null);
+  // Phone menu: which group is unfolded. Opening the menu unfolds the group this page is in.
+  const [phoneGroup, setPhoneGroup] = useState<SiteMenuGroup["id"] | null>(null);
   const menuId = useId();
   const panelId = useId();
   const headerRef = useRef<HTMLElement>(null);
@@ -266,7 +316,10 @@ export function HomepageNav() {
           aria-expanded={menuOpen}
           aria-controls={menuId}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => {
+            setPhoneGroup(activeGroup);
+            setMenuOpen((open) => !open);
+          }}
         >
           {menuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           <span className="text-sm font-medium" aria-hidden="true">
@@ -288,7 +341,7 @@ export function HomepageNav() {
         ) : null}
       </div>
 
-      {/* Phone and tablet: every group, all visible. */}
+      {/* Phone and tablet: the four groups on one screen; a tap unfolds one. */}
       {menuOpen ? (
         <div
           id={menuId}
@@ -320,46 +373,79 @@ export function HomepageNav() {
               Pricing
               <ArrowRight aria-hidden="true" className="h-4 w-4 text-[#c2a05a]" />
             </Link>
-            {SITE_MENU.map((group) => (
-              <section key={group.id} aria-labelledby={`${menuId}-${group.id}`} className="mt-6">
-                <h2
-                  id={`${menuId}-${group.id}`}
-                  className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]"
-                >
-                  {group.label}
-                </h2>
-                <ul className="mt-2 grid gap-1 sm:grid-cols-2">
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={closeAll}
-                        data-track={`menu-${group.id}`}
-                        aria-current={pathname === link.href ? "page" : undefined}
-                        className={`block rounded-lg px-3 py-2.5 hover:bg-[rgba(24,28,22,0.85)] ${focusRing}`}
-                      >
-                        <span className="block text-[15px] font-semibold text-[#fbf7ef]">{link.label}</span>
-                        <span className="mt-0.5 block text-[13px] leading-snug text-[#a89c88]">{link.text}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-                {group.more?.length ? (
-                  <p className="mt-1 flex flex-wrap gap-x-5 px-3">
-                    {group.more.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={closeAll}
-                        className={`inline-flex min-h-10 items-center text-[13px] font-semibold text-[#c2a05a] ${focusRing}`}
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                  </p>
-                ) : null}
-              </section>
-            ))}
+            <ul className="mt-3 grid gap-2">
+              {SITE_MENU.map((group) => {
+                const open = phoneGroup === group.id;
+                const sectionId = `${menuId}-${group.id}`;
+                return (
+                  <li
+                    key={group.id}
+                    className={`overflow-hidden rounded-xl border ${open ? "border-[#c2a05a]/45 bg-[rgba(24,28,22,0.75)]" : "border-[rgba(230,227,220,0.12)] bg-[rgba(24,28,22,0.6)]"}`}
+                  >
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls={sectionId}
+                      onClick={() => setPhoneGroup(open ? null : group.id)}
+                      className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left ${focusRing}`}
+                    >
+                      <span>
+                        <span className="block text-base font-semibold text-[#fff9ea]">{group.label}</span>
+                        <span className="mt-0.5 block text-[13px] leading-snug text-[#a89c88]">{group.summary}</span>
+                      </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`h-5 w-5 shrink-0 text-[#c2a05a] transition-transform motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {open ? (
+                      <div id={sectionId} className="border-t border-[rgba(230,227,220,0.1)] px-1.5 pb-2 pt-1">
+                        {linkSections(group).map((section) => (
+                          <div key={section.title ?? group.id}>
+                            {section.title ? (
+                              <p className="px-2.5 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
+                                {section.title}
+                              </p>
+                            ) : null}
+                            <ul className="grid sm:grid-cols-2">
+                              {section.links.map((link) => (
+                                <li key={link.href}>
+                                  <Link
+                                    href={link.href}
+                                    onClick={closeAll}
+                                    data-track={`menu-${group.id}`}
+                                    aria-current={pathname === link.href ? "page" : undefined}
+                                    className={`block rounded-lg px-2.5 py-2.5 hover:bg-[rgba(8,9,7,0.6)] aria-[current=page]:bg-[rgba(164,130,58,0.14)] ${focusRing}`}
+                                  >
+                                    <span className="block text-[15px] font-semibold text-[#fbf7ef]">{link.label}</span>
+                                    <span className="mt-0.5 block text-[13px] leading-snug text-[#a89c88]">{link.text}</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                        {group.more?.length ? (
+                          <p className="mt-1 flex flex-wrap gap-x-5 border-t border-[rgba(230,227,220,0.08)] px-2.5 pt-1">
+                            {group.more.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={closeAll}
+                                className={`inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-[#c2a05a] ${focusRing}`}
+                              >
+                                {link.label}
+                                <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+                              </Link>
+                            ))}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
         </div>
       ) : null}
