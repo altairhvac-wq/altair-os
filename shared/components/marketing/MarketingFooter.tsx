@@ -48,6 +48,7 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
       { href: "/resources/calculators/hiring-a-technician", label: "Hiring Calculator" },
       { href: "/resources/calculators/truck-cost", label: "Truck Cost Calculator" },
       { href: "/resources/templates", label: "Templates" },
+      { href: "/resources/embed", label: "Embed a Calculator" },
       { href: "/resources", label: "All Free Tools" },
     ],
   },

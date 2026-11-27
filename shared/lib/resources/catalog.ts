@@ -13,6 +13,8 @@ export const RESOURCES_TEMPLATES_PATH = "/resources/templates";
 export const RESOURCES_FLAT_RATE_PATH = "/resources/flat-rate-price-list";
 /** The estimate builder: the Invoice Builder with an estimate's words. */
 export const RESOURCES_ESTIMATE_PATH = "/resources/estimate-builder";
+/** The code other websites paste to show one of the calculators (shared/lib/resources/embeds.ts). */
+export const RESOURCES_EMBED_PATH = "/resources/embed";
 export const RESOURCES_GUIDES_PATH = "/resources/guides";
 export const RESOURCES_LIBRARY_PATH = "/resources/library";
 
@@ -127,6 +129,7 @@ export const RESOURCE_STATIC_PATHS: readonly string[] = [
   RESOURCES_TEMPLATES_PATH,
   RESOURCES_FLAT_RATE_PATH,
   RESOURCES_ESTIMATE_PATH,
+  RESOURCES_EMBED_PATH,
   RESOURCES_GUIDES_PATH,
   RESOURCES_LIBRARY_PATH,
 ];

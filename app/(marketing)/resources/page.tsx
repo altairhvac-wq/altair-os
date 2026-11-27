@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, Library, MapPin, Sigma, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Code2, Library, MapPin, Sigma, type LucideIcon } from "lucide-react";
 import { ToolCard } from "@/shared/components/resources/hub/ToolCards";
 import { YourNumbers } from "@/shared/components/resources/hub/YourNumbers";
 import { ResourceChrome } from "@/shared/components/resources/ResourcePageShell";
@@ -11,6 +11,7 @@ import {
   RESOURCE_CALCULATORS,
   CALCULATOR_DISCLAIMER,
   RESOURCES_CALCULATORS_PATH,
+  RESOURCES_EMBED_PATH,
   RESOURCES_GUIDES_PATH,
   RESOURCES_HUB_DESCRIPTION,
   RESOURCES_LIBRARY_PATH,
@@ -69,6 +70,12 @@ const JOB_GUIDE: Partial<Record<ToolJob, NextStepItem>> = {
 };
 
 const MORE: readonly { href: string; title: string; text: string; icon: LucideIcon }[] = [
+  {
+    href: RESOURCES_EMBED_PATH,
+    title: "Put a calculator on your website",
+    text: "For suppliers, schools and blogs: one line of code, with a link back.",
+    icon: Code2,
+  },
   {
     href: RESOURCES_CALCULATORS_PATH,
     title: `All ${RESOURCE_CALCULATORS.length} calculators`,

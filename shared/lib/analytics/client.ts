@@ -97,6 +97,10 @@ function applyOptOutParam(): void {
 
 export function isAnalyticsAllowed(): boolean {
   if (typeof window === "undefined") return false;
+  // Inside a frame this is an embedded calculator on someone else's website
+  // (the only pages that can be framed). Their visitors are not ours to count:
+  // no pageview, no "tool used", nothing stored.
+  if (window.self !== window.top) return false;
   applyOptOutParam();
   if (navigator.webdriver === true) return false;
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };

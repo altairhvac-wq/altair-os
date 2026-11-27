@@ -2,7 +2,8 @@ import os from "os";
 import type { NextConfig } from "next";
 // Relative import on purpose: next.config.ts is evaluated by the config loader
 // before the tsconfig path alias is available.
-import { buildSecurityHeaders } from "./lib/security/response-headers";
+import { buildEmbedHeaderOverrides, buildEmbedHeaderSource, buildSecurityHeaders } from "./lib/security/response-headers";
+import { EMBED_TOOLS } from "./shared/lib/resources/embeds";
 
 function getLocalDevOrigins(): string[] {
   const origins = new Set<string>();
@@ -62,11 +63,12 @@ const nextConfig: NextConfig = {
    * see lib/security/response-headers.ts for each directive's justification.
    */
   async headers() {
-    const securityHeaders = buildSecurityHeaders({
+    const headerOptions = {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
       sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       isDevelopment: process.env.NODE_ENV !== "production",
-    });
+    };
+    const securityHeaders = buildSecurityHeaders(headerOptions);
     // Files under /public ship with `max-age=0, must-revalidate`, so every
     // repeat visit re-checks each screenshot, icon and the link-preview
     // image. A day in the browser (a week stale-while-revalidate) is safe:
@@ -77,6 +79,11 @@ const nextConfig: NextConfig = {
     };
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The embeddable calculators: the full set above still applies; these two
+      // keys replace theirs so another website may frame the listed embed
+      // pages and nothing else, not even an unknown address under /embed
+      // (a later entry wins for the same key on the same path).
+      { source: buildEmbedHeaderSource(EMBED_TOOLS.map((tool) => tool.id)), headers: buildEmbedHeaderOverrides(headerOptions) },
       { source: "/marketing/:path*", headers: [marketingAssetCache] },
       { source: "/icons/:path*", headers: [marketingAssetCache] },
       { source: "/og.png", headers: [marketingAssetCache] },

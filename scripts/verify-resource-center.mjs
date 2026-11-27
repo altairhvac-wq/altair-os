@@ -52,6 +52,7 @@ const FILES = {
   truck: `${LIB}/truck-cost.ts`,
   flatRate: `${LIB}/flat-rate-list.ts`,
   invoiceMath: `${LIB}/invoice-builder.ts`,
+  embeds: `${LIB}/embeds.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -327,6 +328,21 @@ console.log("\nEstimate builder");
   check("the estimate page exists", existsSync("app/(marketing)/resources/estimate-builder/page.tsx"));
 }
 
+console.log("\nEmbeddable calculators");
+{
+  const emb = await loadPureModule(FILES.embeds, "res-emb");
+  check("three calculators can be embedded", emb.EMBED_TOOLS.length === 3, emb.EMBED_TOOLS.map((t) => t.id));
+  check("every embed lives under /embed/", emb.EMBED_TOOLS.every((t) => emb.embedPath(t.id) === `/embed/${t.id}`));
+  check("every embed links back to a full tool that has a page", emb.EMBED_TOOLS.every((t) => existsSync(`app/(marketing)${t.fullPath}/page.tsx`)));
+  const snippet = emb.embedSnippet(emb.EMBED_TOOLS[0], "https://www.altair-op.com");
+  check("the snippet frames the embed page", snippet.includes('<iframe src="https://www.altair-op.com/embed/labor-rate"'));
+  check("the snippet carries a plain link back to the full tool", snippet.includes('<a href="https://www.altair-op.com/resources/calculators/labor-rate">HVAC labor rate calculator</a> by Altair Operating System'));
+  check("the snippet has no script in it", !/<script|javascript:|onload=/i.test(snippet));
+  check("an unknown tool is not found", emb.findEmbedTool("../login") === null && emb.findEmbedTool("pricing") === null);
+  check("the embed route and the code page exist", existsSync("app/embed/[tool]/page.tsx") && existsSync("app/(marketing)/resources/embed/page.tsx"));
+  check("analytics is off inside a frame", /if \(window\.self !== window\.top\) return false;/.test(read("shared/lib/analytics/client.ts")));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
@@ -494,7 +510,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 9 calculators, templates, the price list, the estimate builder, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 16, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 9 calculators, templates, the price list, the estimate builder, the embed page, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 17, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
@@ -530,8 +546,18 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   const sources = roots.flatMap(walk).filter((p) => /\.(ts|tsx)$/.test(p));
   const offenders = sources.filter((p) => read(p).includes("dangerouslySetInnerHTML"));
   check("no dangerouslySetInnerHTML in Resource Center sources", offenders.length === 0, offenders);
-  const iframes = sources.filter((p) => /<iframe/i.test(read(p)));
+  // Two files may mention a frame, and only for this site's own embed pages: the "put a calculator on
+  // your website" page previews /embed/<id>, and embeds.ts holds the code other sites paste.
+  const OWN_EMBED_FILES = ["app/(marketing)/resources/embed/page.tsx", "shared/lib/resources/embeds.ts"];
+  const iframes = sources.filter((p) => /<iframe/i.test(read(p)) && !OWN_EMBED_FILES.includes(p.split("\\").join("/")));
   check("no iframes (videos are links to YouTube)", iframes.length === 0, iframes);
+  check(
+    "the only frames are this site's own embed pages",
+    /<iframe src=\{embedPath\(tool\.id\)\}/.test(read(OWN_EMBED_FILES[0])) &&
+      (read(OWN_EMBED_FILES[0]).match(/<iframe/g) ?? []).length === 1 &&
+      /<iframe src="\$\{origin\}\$\{embedPath\(tool\.id\)\}"/.test(read(OWN_EMBED_FILES[1])) &&
+      !/youtube|ytimg|vimeo/i.test(read(OWN_EMBED_FILES[0]) + read(OWN_EMBED_FILES[1])),
+  );
 }
 
 // ------------------------------------------- batch 2: files, carry, metadata

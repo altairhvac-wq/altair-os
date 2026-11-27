@@ -35,6 +35,7 @@
 @source "../app/(marketing)";
 @source "../app/(articles)";
 @source "../app/(auth)";
+@source "../app/embed";
 @source "../app/layout.tsx";
 
 /* Components the public pages use. */
@@ -49,6 +50,7 @@
 @source "../shared/components/directory";
 @source "../shared/components/affiliates";
 @source "../shared/components/resources";
+@source "../shared/components/security";
 @source "../shared/components/site";
 /* The sign-in error screen only; the rest of support/ is admin-only. */
 @source "../shared/components/support/RouteErrorScreen.tsx";
