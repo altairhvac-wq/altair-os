@@ -8,6 +8,7 @@ import { ResourceChrome } from "@/shared/components/resources/ResourcePageShell"
 import { NextStep } from "@/shared/components/site/NextStep";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import {
+  RESOURCE_CALCULATORS,
   CALCULATOR_DISCLAIMER,
   RESOURCES_CALCULATORS_PATH,
   RESOURCES_GUIDES_PATH,
@@ -70,7 +71,7 @@ const JOB_GUIDE: Partial<Record<ToolJob, NextStepItem>> = {
 const MORE: readonly { href: string; title: string; text: string; icon: LucideIcon }[] = [
   {
     href: RESOURCES_CALCULATORS_PATH,
-    title: "All six calculators",
+    title: `All ${RESOURCE_CALCULATORS.length} calculators`,
     text: "Side by side, with the order to run them in.",
     icon: Sigma,
   },

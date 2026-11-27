@@ -69,6 +69,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
     summary: "Calculators, an invoice builder and templates. No account.",
     links: [
       { section: "Price your work", href: "/insights/how-to-calculate-hvac-labor-rate", label: "Labor rate calculator", text: "What a billed hour has to cover for your whole crew." },
+      { section: "Price your work", href: "/resources/calculators/service-call-fee", label: "Service call fee", text: "What to charge at the door, and what a low or free call costs a year." },
       { section: "Price your work", href: "/resources/calculators/maintenance-agreement", label: "Maintenance agreement pricing", text: "What a plan should cost so the visits and discount are paid for." },
       { section: "Pay your team", href: "/resources/calculators/technician-pay", label: "Technician pay", text: "Would a week pay more hourly, flat rate or commission?" },
       { section: "Pay your team", href: "/resources/calculators/callback-cost", label: "Callback cost", text: "What free return trips are costing you every month." },

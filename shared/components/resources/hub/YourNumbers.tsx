@@ -33,6 +33,7 @@ type Slug = ResourceCalculatorEntry["slug"];
 const TOOLS: readonly { readonly id: Slug | "workspace"; readonly name: string; readonly href: string; readonly why: string }[] = [
   { id: "workspace", name: "Labor rate calculator", href: "/insights/how-to-calculate-hvac-labor-rate", why: "Every other tool is priced from your labor rate." },
   { id: "break-even", name: "Break-even", href: calculatorPath("break-even"), why: "See how many jobs a month cover your costs at that rate." },
+  { id: "service-call-fee", name: "Service call fee", href: calculatorPath("service-call-fee"), why: "Check the fee you charge at the door against that rate." },
   { id: "job-profitability", name: "Job profitability", href: calculatorPath("job-profitability"), why: "Check whether a finished job really made money." },
   { id: "maintenance-agreement", name: "Maintenance agreement pricing", href: calculatorPath("maintenance-agreement"), why: "Price an agreement from what the visits cost you." },
   { id: "technician-pay", name: "Technician pay", href: calculatorPath("technician-pay"), why: "Compare hourly, flat rate and commission on one real week." },
@@ -70,7 +71,7 @@ export function YourNumbers({ className = "" }: { readonly className?: string })
 
   const hasRate = Boolean(carried);
   // The next tool worth opening: the labor rate first, then the first tool in order with nothing saved yet.
-  const next = !hasRate && !saved.includes("workspace") ? TOOLS[0] : TOOLS.slice(1, 6).find((tool) => !saved.includes(tool.id)) ?? null;
+  const next = !hasRate && !saved.includes("workspace") ? TOOLS[0] : TOOLS.slice(1, 7).find((tool) => !saved.includes(tool.id)) ?? null;
   const savedTools = TOOLS.filter((tool) => saved.includes(tool.id));
   const stale = carried && now !== null ? now - carried.savedAt > YEAR_MS : false;
   const savedOn = carried ? new Date(carried.savedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null;

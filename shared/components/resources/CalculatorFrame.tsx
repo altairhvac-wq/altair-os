@@ -47,7 +47,7 @@ export type CalculatorWorkedExample = {
 export type CalculatorGuideSection = { readonly id: string; readonly label: string; readonly title: string; readonly body: React.ReactNode };
 
 /** When the calculator pages were last reviewed against their math and copy. */
-export const CALCULATORS_UPDATED = { iso: "2026-11-21", label: "November 21, 2026" } as const;
+export const CALCULATORS_UPDATED = { iso: "2026-11-27", label: "November 27, 2026" } as const;
 
 /**
  * The calculator page, built like the Labor Cost Workspace page: a hero with
