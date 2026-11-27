@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import { FirstPartyAnalytics } from "@/shared/components/analytics/FirstPartyAnalytics";
+import { FrameGuard } from "@/shared/components/security/FrameGuard";
 import { ToastViewport } from "@/shared/design-system/feedback";
 import { NavigationProgress } from "@/shared/components/feedback/NavigationProgress";
 import { Suspense } from "react";
@@ -126,6 +127,7 @@ export default function RootLayout({
         <PwaServiceWorkerRegistration />
         {/* First-party, cookieless analytics (migration 202). Root-level so
             marketing, auth and product pages share one count. */}
+        <FrameGuard />
         <FirstPartyAnalytics />
         {/* The Meta Pixel is mounted in app/(marketing)/layout.tsx only. It
             must never load on authenticated routes or on the public

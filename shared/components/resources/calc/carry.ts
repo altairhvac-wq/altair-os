@@ -96,6 +96,9 @@ export function writeCarried(input: Omit<CarriedNumbers, "savedAt">): boolean {
   };
   if (!parseCarried(value)) return false;
   try {
+    // Inside another website's frame (an embedded calculator) nothing is kept:
+    // that page could have opened the calculator with numbers of its choosing.
+    if (window.self !== window.top) return false;
     const before = window.localStorage.getItem(CARRY_STORAGE_KEY);
     const next = JSON.stringify(value);
     // Skip the write (and the event) when only the time changed.

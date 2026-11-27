@@ -89,6 +89,12 @@ export function buildContentSecurityPolicy(options: {
   /** NEXT_PUBLIC_SENTRY_DSN; only its origin is used. */
   sentryDsn?: string;
   isDevelopment: boolean;
+  /**
+   * Who may show the page in a frame. "none" (the default) for everything;
+   * "any" only for the embeddable calculators under /embed/, through
+   * `buildEmbedHeaderOverrides` below. Nothing else may pass "any".
+   */
+  frameAncestors?: "none" | "any";
 }): string {
   const supabaseOrigin = originOf(options.supabaseUrl);
   const sentryIngestOrigin = originOf(options.sentryDsn);
@@ -142,8 +148,9 @@ export function buildContentSecurityPolicy(options: {
     ["base-uri", ["'self'"]],
     ["form-action", ["'self'"]],
     // The clickjacking control. Nothing in this application is meant to be
-    // embedded, least of all the public invoice payment page.
-    ["frame-ancestors", ["'none'"]],
+    // embedded, least of all the public invoice payment page. The one
+    // exception is the embeddable calculators (see buildEmbedHeaderOverrides).
+    ["frame-ancestors", [options.frameAncestors === "any" ? "*" : "'none'"]],
     // Turnstile renders its challenge in an iframe.
     ["frame-src", ["'self'", TURNSTILE_HOST]],
     ["manifest-src", ["'self'"]],
@@ -212,4 +219,60 @@ export function buildSecurityHeaders(options: {
   }
 
   return headers;
+}
+
+/**
+ * The header source for the embeddable calculators: the ONLY paths another
+ * website may show in a frame.
+ *
+ * It names each page (/embed/labor-rate, ...), never the folder. A source of
+ * "/embed/:path*" would also relax the headers on /embed itself and on every
+ * unknown address under it, which answer with the page-not-found screen and
+ * its links to the rest of the site. Ids are checked so a typo or a pattern
+ * character can never widen the match.
+ *
+ * Next.js matches sources without regard to case, so /EMBED/labor-rate also
+ * gets these headers. That address is a page-not-found screen; FrameGuard
+ * blanks it inside a frame without relying on the headers.
+ */
+export function buildEmbedHeaderSource(ids: readonly string[]): string {
+  if (ids.length === 0) throw new Error("No embeddable pages listed.");
+  for (const id of ids) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) throw new Error(`Not a plain embed id: ${id}`);
+  }
+  return `/embed/:tool(${ids.join("|")})`;
+}
+
+/**
+ * The two headers that differ on the embed pages, applied in next.config.ts AFTER
+ * the full set, so they replace the same two keys there and nothing else.
+ *
+ * ============ WHY THIS EXCEPTION EXISTS ============
+ * Other websites (a supplier, a trade school, an affiliate) can put a free
+ * calculator on their own page, with a link back. That needs a page a third
+ * party may frame; every other response keeps frame-ancestors 'none' and
+ * X-Frame-Options DENY.
+ *
+ * ============ WHAT KEEPS IT HARMLESS ============
+ * An embed page holds one calculator: no sign-in, no account data, no form
+ * that posts anywhere, no payment. There is nothing on it for a hostile
+ * frame to trick a visitor into pressing. Links inside it open a new tab
+ * (shared/components/resources/embed/EmbedFrame.tsx), and any other page
+ * that finds itself in a frame blanks itself
+ * (shared/components/security/FrameGuard.tsx).
+ *
+ * X-Frame-Options has no "allow" value and a header set for "/:path*" cannot
+ * be removed for a sub-path, only replaced. Browsers that support
+ * frame-ancestors ignore X-Frame-Options when both are present; "ALLOWALL" is
+ * the long-standing value older browsers treat as "no restriction".
+ */
+export function buildEmbedHeaderOverrides(options: {
+  supabaseUrl?: string;
+  sentryDsn?: string;
+  isDevelopment: boolean;
+}): SecurityHeader[] {
+  return [
+    { key: "Content-Security-Policy", value: buildContentSecurityPolicy({ ...options, frameAncestors: "any" }) },
+    { key: "X-Frame-Options", value: "ALLOWALL" },
+  ];
 }

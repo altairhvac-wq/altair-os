@@ -17,7 +17,8 @@ function PageviewTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname) trackPageview(pathname);
+    // An embed shown on someone else's website is not a visit to this one.
+    if (pathname && !pathname.startsWith("/embed/")) trackPageview(pathname);
   }, [pathname]);
 
   return null;

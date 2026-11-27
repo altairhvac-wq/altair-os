@@ -94,8 +94,10 @@ export function CompactCalculator({
 
         <div className="flex flex-col gap-2 border-t border-stone-200 bg-white px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           {footnote ? <p className="text-xs leading-relaxed text-stone-500">{footnote}</p> : <span />}
+          {/* prefetch off: this address carries the typed numbers, and a preload would send them to the server before the visitor chose to open it. */}
           <Link
             href={fullHref}
+            prefetch={false}
             data-track={fullTrack.slice(0, 64)}
             className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#0d0f0c] px-4 text-[13px] font-semibold text-[#f3ebdd] transition-colors hover:bg-[#1b1e18] ${focusRing}`}
           >

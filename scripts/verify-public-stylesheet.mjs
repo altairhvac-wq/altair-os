@@ -85,7 +85,8 @@ function walk(dir) {
   return out;
 }
 
-const PUBLIC_GROUPS = ["(marketing)", "(articles)", "(auth)"];
+// "embed" is the calculators other websites show in a frame (shared/lib/resources/embeds.ts): public pages, public stylesheet.
+const PUBLIC_GROUPS = ["(marketing)", "(articles)", "(auth)", "embed"];
 const ROOT_PUBLIC_FILES = ["layout.tsx"];
 const entries = [
   ...PUBLIC_GROUPS.flatMap((group) => walk(path.join(APP, group))),

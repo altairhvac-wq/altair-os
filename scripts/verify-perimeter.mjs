@@ -144,6 +144,121 @@ if (headersModule?.buildSecurityHeaders) {
       .buildContentSecurityPolicy({ supabaseUrl: "not a url", isDevelopment: false })
       .includes("not a url"),
   );
+
+  // ---- the one framing exception: the embeddable calculators under /embed/
+  const embed = headersModule.buildEmbedHeaderOverrides({
+    supabaseUrl: "https://example-project.supabase.co",
+    isDevelopment: false,
+  });
+  const embedCsp = byKey(embed, "Content-Security-Policy");
+  const embedIds = ["labor-rate", "break-even", "job-profitability"];
+  const embedSource = headersModule.buildEmbedHeaderSource(embedIds);
+  check(
+    "the framing exception names each embed page, never the /embed folder",
+    embedSource === "/embed/:tool(labor-rate|break-even|job-profitability)" && !/:path|\*/.test(embedSource),
+    embedSource,
+  );
+  const refuses = (ids) => {
+    try {
+      headersModule.buildEmbedHeaderSource(ids);
+      return false;
+    } catch {
+      return true;
+    }
+  };
+  check(
+    "an embed id that could widen the exception is refused (pattern characters, slashes, capitals, none)",
+    [[":path*"], ["a|.*"], ["a/b"], ["(.*)"], ["Labor"], [""], []].every(refuses),
+  );
+  const embedsSource = loadTs("shared/lib/resources/embeds.ts");
+  check(
+    "the embed pages listed in the app are the three the exception is checked against",
+    embedIds.every((id) => new RegExp(`id: "${id}"`).test(embedsSource)) && (embedsSource.match(/^    id: "/gm) ?? []).length === embedIds.length,
+    (embedsSource.match(/^    id: "[^"]+"/gm) ?? []).join(", "),
+  );
+  check(
+    "the embed override replaces exactly two headers (CSP and X-Frame-Options)",
+    embed.length === 2 && embed.map((h) => h.key).sort().join() === "Content-Security-Policy,X-Frame-Options",
+    embed.map((h) => h.key),
+  );
+  check(
+    "the embed CSP is the site CSP with only frame-ancestors changed",
+    embedCsp === prodCsp.replace("frame-ancestors 'none'", "frame-ancestors *") && embedCsp !== prodCsp,
+  );
+  check(
+    "the embed CSP keeps object-src, base-uri and form-action locked",
+    /object-src 'none'/.test(embedCsp) && /base-uri 'self'/.test(embedCsp) && /form-action 'self'/.test(embedCsp),
+  );
+  check(
+    "the embed override does not send X-Frame-Options DENY or SAMEORIGIN",
+    !/^(DENY|SAMEORIGIN)$/i.test(byKey(embed, "X-Frame-Options")),
+  );
+  check(
+    "asking for no frame option still forbids framing",
+    /frame-ancestors 'none'/.test(headersModule.buildContentSecurityPolicy({ isDevelopment: false })),
+  );
+  check(
+    "next.config applies the embed override once, after the full set, on the listed embed pages",
+    (nextConfig.match(/buildEmbedHeaderOverrides\(/g) ?? []).length === 1 &&
+      nextConfig.indexOf('source: "/:path*", headers: securityHeaders') > -1 &&
+      nextConfig.indexOf('source: "/:path*", headers: securityHeaders') <
+        nextConfig.indexOf("source: buildEmbedHeaderSource(EMBED_TOOLS.map((tool) => tool.id)), headers: buildEmbedHeaderOverrides("),
+  );
+  const embedPage = loadTs("app/embed/[tool]/page.tsx");
+  const embedFrame = loadTs("shared/components/resources/embed/EmbedFrame.tsx");
+  check(
+    "an embed page has no server action, no database client and no form that posts",
+    ![embedPage, embedFrame].some((source) => /use server|@\/app\/actions|supabase|<form[^>]*action=/.test(source)),
+  );
+  check("embed pages are built for the listed tools only", /dynamicParams = false/.test(embedPage));
+  check("embed pages are not indexed", /robots:\s*\{\s*index:\s*false/.test(embedPage));
+  check(
+    "links inside an embed open a new tab instead of navigating the frame",
+    /onClickCapture/.test(embedFrame) && /preventDefault\(\)/.test(embedFrame) && /window\.open\(/.test(embedFrame),
+  );
+  const embedLayout = loadTs("app/embed/layout.tsx");
+  check(
+    "links inside an embed open a new tab before the script loads too (<base target>, no href)",
+    /<base target="_blank" \/>/.test(embedLayout) && !/<base[^>]*href/.test(embedLayout),
+  );
+  const embedError = loadTs("app/embed/error.tsx");
+  check(
+    "the embed error screen has no link that could walk the frame to the rest of the site",
+    !/<a|<Link|next\/link|href=/.test(embedError) && /retry\(\)/.test(embedError),
+  );
+  const frameGuard = loadTs("shared/components/security/FrameGuard.tsx");
+  check(
+    "a page that is not a listed embed blanks itself inside a frame (FrameGuard, mounted in the root layout)",
+    /window\.self === window\.top/.test(frameGuard) &&
+      /if \(isEmbedPath\(pathname\)\) return;/.test(frameGuard) &&
+      /location\.replace\("about:blank"\)/.test(frameGuard) &&
+      /<FrameGuard \/>/.test(loadTs("app/layout.tsx")),
+  );
+  check(
+    "FrameGuard does not rely on a reload being refused (no loop on an address the headers allow)",
+    !/location\.reload\(|location\.replace\(window\.location\.href\)|startsWith\(/.test(frameGuard.replace(/\/\*[\s\S]*?\*\//g, "")),
+  );
+  check(
+    "the embed-path test is an exact match against the listed pages",
+    /export function isEmbedPath\(pathname: string\): boolean \{\s*return EMBED_TOOLS\.some\(\(tool\) => embedPath\(tool\.id\) === pathname\);/.test(embedsSource),
+  );
+  check(
+    "the compact calculator's link, which carries the typed numbers, is never preloaded",
+    /<Link\s+href=\{fullHref\}\s+prefetch=\{false\}/.test(loadTs("shared/components/resources/calc/CompactCalculator.tsx")),
+  );
+  check(
+    "nothing is kept for the other calculators from inside a frame",
+    /if \(window\.self !== window\.top\) return false;/.test(loadTs("shared/components/resources/calc/carry.ts")),
+  );
+  check(
+    "the middleware opens /embed/ as a public prefix and nothing wider",
+    /function isEmbedRoute\(pathname: string\) \{\s*return pathname\.startsWith\(`\$\{EMBED_ROUTE_PREFIX\}\/`\);/.test(loadTs("lib/supabase/middleware.ts")),
+  );
+  check(
+    "the embed pages are public (no sign-in) and served on the marketing host",
+    /function isPublicRoute[\s\S]*?isEmbedRoute\(pathname\)/.test(loadTs("lib/supabase/middleware.ts")) &&
+      /function isMarketingRoute[\s\S]*?isEmbedRoute\(pathname\)[\s\S]*?function isPublicRoute/.test(loadTs("lib/supabase/middleware.ts")),
+  );
 } else {
   console.log("  (module import unavailable — falling back to source assertions)");
   check("CSP forbids framing", /frame-ancestors.*'none'/.test(headersSource));

@@ -49,6 +49,11 @@ const SITE_PAGE_ROUTE_PREFIX = "/insights";
  */
 const RESOURCES_ROUTE_PREFIX = "/resources";
 /**
+ * The embeddable calculators (shared/lib/resources/embeds.ts): one free
+ * calculator per page, shown inside other websites. No account, no data.
+ */
+const EMBED_ROUTE_PREFIX = "/embed";
+/**
  * The public contractor directory (migration 210): search, a page per
  * published listing, the "list your business" form and the manage page a
  * lister reaches from their email. Visitors have no account. The pages read
@@ -294,6 +299,10 @@ function isResourcesRoute(pathname: string) {
   );
 }
 
+function isEmbedRoute(pathname: string) {
+  return pathname.startsWith(`${EMBED_ROUTE_PREFIX}/`);
+}
+
 function isDirectoryRoute(pathname: string) {
   return (
     pathname === DIRECTORY_ROUTE_PREFIX ||
@@ -370,6 +379,7 @@ function isMarketingRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isEmbedRoute(pathname) ||
     isDirectoryRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
@@ -389,6 +399,7 @@ function isPublicRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isEmbedRoute(pathname) ||
     isDirectoryRoute(pathname) ||
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
