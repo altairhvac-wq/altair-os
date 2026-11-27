@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PhoneFold } from "@/shared/components/marketing/phone/PhoneLayout";
 import { swipeItem, swipeRowInPanel } from "@/shared/components/marketing/phone/phone-classes";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, ClipboardList } from "lucide-react";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
@@ -41,8 +41,19 @@ export function ToolHero({
   updated,
   facts,
   jumpLinks,
+  question,
+  needs,
   trail = [{ label: "Free tools", href: "/resources" }],
 }: {
+  /**
+   * The question the tool answers, in the owner's words. When given, a phone
+   * shows it in place of the longer lead, the check-mark facts and the jump
+   * buttons, so the first box to type in is on the first screen (2026-11-27:
+   * it was 1.3 to 1.5 screens down on every tool). Wider screens are unchanged.
+   */
+  readonly question?: string;
+  /** What to have open before starting: shown on every screen size, right above the tool. */
+  readonly needs?: string;
   /** The links before the current page in the breadcrumb. */
   readonly trail?: readonly { readonly label: string; readonly href: string }[];
   readonly crumb: string;
@@ -54,30 +65,33 @@ export function ToolHero({
   readonly jumpLinks: readonly { readonly href: string; readonly label: string }[];
 }) {
   return (
-    <header className="mx-auto max-w-[90rem] px-4 pb-6 pt-24 sm:px-8 sm:pt-28 lg:px-12 print:hidden">
+    <header className={`mx-auto max-w-[90rem] px-4 pt-24 sm:px-8 sm:pb-6 sm:pt-28 lg:px-12 print:hidden ${question ? "pb-4" : "pb-6"}`}>
       <nav aria-label="Breadcrumb" className="text-xs text-stone-500">
         <ol className="flex flex-wrap items-center gap-1.5">
-          {trail.map((item) => (
+          {trail.map((item, index) => (
             <li key={item.href} className="flex items-center gap-1.5">
               <Link href={item.href} className={`rounded-sm hover:text-[#77591B] ${focusRing}`}>
                 {item.label}
               </Link>
-              <span aria-hidden="true">/</span>
+              <span aria-hidden="true" className={index === trail.length - 1 ? "max-sm:hidden" : undefined}>
+                /
+              </span>
             </li>
           ))}
-          <li aria-current="page" className="text-stone-600">
+          <li aria-current="page" className="text-stone-600 max-sm:hidden">
             {crumb}
           </li>
         </ol>
       </nav>
-      <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+      <div className={`mt-4 grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end ${question ? "gap-3 sm:gap-6" : "gap-6"}`}>
         <div className="max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">{eyebrow}</p>
           <h1 className="mt-2 text-[2rem] font-semibold leading-[1.1] tracking-tight text-[#0A0A0A] sm:text-[2.75rem]">
             {title}
           </h1>
-          <div className="mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">{lead}</div>
-          <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-stone-600">
+          {question ? <p className="mt-3 text-[15px] font-medium leading-snug text-stone-800 sm:hidden">{question}</p> : null}
+          <div className={`mt-4 text-base leading-relaxed text-stone-600 sm:text-lg ${question ? "hidden sm:block" : ""}`}>{lead}</div>
+          <ul className={`mt-4 flex-wrap gap-x-5 gap-y-2 text-[13px] text-stone-600 ${question ? "hidden sm:flex" : "flex"}`}>
             {facts.map((fact) => (
               <li key={fact} className="flex items-center gap-1.5">
                 <Check aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" />
@@ -89,7 +103,19 @@ export function ToolHero({
             </li>
           </ul>
         </div>
-        <nav aria-label="On this page" className="flex flex-wrap gap-2 lg:justify-end">
+        {/* What to have on hand sits beside the title on a wide screen (no extra height above the tool) and
+            directly above the tool on a phone. */}
+        <div className="flex min-w-0 flex-col gap-3 lg:max-w-[34rem] lg:items-end">
+          {needs ? (
+            <p className="flex gap-2 rounded-xl border border-[#C2A05A]/45 bg-amber-50/70 px-3 py-2 text-[13px] leading-snug text-stone-700">
+              <ClipboardList aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#77591B]" />
+              <span>
+                <span className="font-semibold text-stone-900">Have on hand: </span>
+                {needs}
+              </span>
+            </p>
+          ) : null}
+        <nav aria-label="On this page" className={`flex-wrap gap-2 lg:justify-end ${question ? "hidden sm:flex" : "flex"}`}>
           {jumpLinks.map((link) => (
             <a
               key={link.href}
@@ -100,6 +126,7 @@ export function ToolHero({
             </a>
           ))}
         </nav>
+        </div>
       </div>
     </header>
   );

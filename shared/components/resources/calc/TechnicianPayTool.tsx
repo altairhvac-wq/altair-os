@@ -151,7 +151,7 @@ export function TechnicianPayTool() {
             <NumField
               tool={tool}
               k="burdenPercent"
-              label="Labor burden"
+              label="Payroll costs (labor burden)"
               suffix="% of pay"
               hint="Payroll taxes, workers' comp and benefits on top of pay, for the full cost to you."
               find="Social Security and Medicare are 7.65% of pay. Add unemployment insurance, your workers' comp rate (on the policy, per $100 of payroll) and benefits you pay, as a percent of pay. Your payroll provider's employer-cost report adds most of it up."

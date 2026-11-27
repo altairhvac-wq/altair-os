@@ -106,11 +106,11 @@ export function LaborRateTool({ compact = false }: { readonly compact?: boolean 
         inputs={
           <>
             <NumField tool={tool} k="hourlyWage" label="Technician wage" prefix="$" suffix="/hr" />
-            <NumField tool={tool} k="burdenPercent" label="Labor burden" suffix="% of wage" hint="Payroll taxes, workers' comp, insurance, benefits." />
-            <NumField tool={tool} k="billableHoursPerWeek" label="Billable hours" suffix="hrs/wk" invalid={input.billableHoursPerWeek <= 0 && tool.values.billableHoursPerWeek !== ""} />
-            <NumField tool={tool} k="nonBillableHoursPerWeek" label="Paid, not billable" suffix="hrs/wk" hint="Drive, shop, training, free callbacks." />
-            <NumField tool={tool} k="monthlyOverhead" label="Overhead for this tech" prefix="$" suffix="/mo" hint="Monthly overhead ÷ field technicians." />
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} />
+            <NumField tool={tool} k="burdenPercent" label="Payroll costs (labor burden)" suffix="% of wage" hint="Payroll taxes, workers' comp, insurance, benefits." />
+            <NumField tool={tool} k="billableHoursPerWeek" label="Hours billed to customers" suffix="hrs/wk" invalid={input.billableHoursPerWeek <= 0 && tool.values.billableHoursPerWeek !== ""} />
+            <NumField tool={tool} k="nonBillableHoursPerWeek" label="Paid hours you can't bill" suffix="hrs/wk" hint="Drive, shop, training, free callbacks." />
+            <NumField tool={tool} k="monthlyOverhead" label="Shop costs for this tech" prefix="$" suffix="/mo" hint="Monthly overhead ÷ field technicians." />
+            <NumField tool={tool} k="targetMarginPercent" label="Profit to keep (net margin)" suffix="%" invalid={marginBad} />
           </>
         }
         results={
@@ -186,15 +186,15 @@ export function LaborRateTool({ compact = false }: { readonly compact?: boolean 
         <>
           <InputGroup title="The technician">
             <NumField tool={tool} k="hourlyWage" label="Technician wage" prefix="$" suffix="/hr" hint="Base hourly pay from the pay stub." find={FIND.hourlyWage} />
-            <NumField tool={tool} k="burdenPercent" label="Labor burden" suffix="% of wage" hint="Payroll taxes, workers' comp, insurance and benefits, as a share of the wage." find={FIND.burdenPercent} />
+            <NumField tool={tool} k="burdenPercent" label="Payroll costs (labor burden)" suffix="% of wage" hint="Payroll taxes, workers' comp, insurance and benefits, as a share of the wage." find={FIND.burdenPercent} />
           </InputGroup>
           <InputGroup title="The week">
-            <NumField tool={tool} k="billableHoursPerWeek" label="Billable hours" suffix="hrs/wk" invalid={input.billableHoursPerWeek <= 0 && tool.values.billableHoursPerWeek !== ""} hint="Hours that end up on an invoice. The input that moves the rate most." find={FIND.billableHoursPerWeek} />
-            <NumField tool={tool} k="nonBillableHoursPerWeek" label="Paid, not billable" suffix="hrs/wk" hint="Drive, shop, training, free callbacks." find={FIND.nonBillableHoursPerWeek} />
+            <NumField tool={tool} k="billableHoursPerWeek" label="Hours billed to customers" suffix="hrs/wk" invalid={input.billableHoursPerWeek <= 0 && tool.values.billableHoursPerWeek !== ""} hint="Hours that end up on an invoice. The input that moves the rate most." find={FIND.billableHoursPerWeek} />
+            <NumField tool={tool} k="nonBillableHoursPerWeek" label="Paid hours you can't bill" suffix="hrs/wk" hint="Drive, shop, training, free callbacks." find={FIND.nonBillableHoursPerWeek} />
           </InputGroup>
           <InputGroup title="Overhead and margin">
-            <NumField tool={tool} k="monthlyOverhead" label="Overhead for this technician" prefix="$" suffix="/mo" hint="Your monthly overhead divided by the number of field technicians." find={FIND.monthlyOverhead} />
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} hint="Profit as a share of the billed rate, after every cost." find={FIND.targetMarginPercent} />
+            <NumField tool={tool} k="monthlyOverhead" label="Shop costs for this technician (overhead)" prefix="$" suffix="/mo" hint="Your monthly overhead divided by the number of field technicians." find={FIND.monthlyOverhead} />
+            <NumField tool={tool} k="targetMarginPercent" label="Profit to keep (net margin)" suffix="%" invalid={marginBad} hint="Profit as a share of the billed rate, after every cost." find={FIND.targetMarginPercent} />
             <div className="sm:col-span-2">
               <Chips tool={tool} k="targetMarginPercent" options={["10", "15", "20", "25", "30"]} suffix="%" />
             </div>
@@ -222,7 +222,7 @@ export function LaborRateTool({ compact = false }: { readonly compact?: boolean 
               <ResultTile label="Break-even rate" value={money(result.costPerBillableHour)} note="cost per billed hour" strong />
               <ResultTile label="Loaded hourly cost" value={money(result.loadedHourlyCost)} note="wage plus burden, per paid hour" />
               <ResultTile label="Weekly cost" value={money(result.weeklyTotalCost, 0)} note="labor plus overhead share" />
-              <ResultTile label="Billable efficiency" value={result.paidHoursPerWeek > 0 ? pct(input.billableHoursPerWeek / result.paidHoursPerWeek) : "–"} note={`of ${hours(result.paidHoursPerWeek)} paid`} />
+              <ResultTile label="Share of paid hours billed" value={result.paidHoursPerWeek > 0 ? pct(input.billableHoursPerWeek / result.paidHoursPerWeek) : "–"} note={`of ${hours(result.paidHoursPerWeek)} paid`} />
               <ResultTile label="Markup on cost" value={result.costPerBillableHour > 0 ? pct(result.billableHourlyRate / result.costPerBillableHour - 1) : "–"} note={`the same as a ${pct(input.targetNetMargin)} margin`} />
               <ResultTile label="Billed per year" value={money(result.billableHourlyRate * input.billableHoursPerWeek * 52, 0)} note="this tech, 52 working weeks" />
             </ResultTiles>

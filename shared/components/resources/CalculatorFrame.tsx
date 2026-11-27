@@ -144,6 +144,8 @@ export function CalculatorFrame({
         crumb={entry.title}
         eyebrow="Free calculator"
         title={entry.title}
+        question={entry.question}
+        needs={entry.needs}
         lead={lead}
         updated={CALCULATORS_UPDATED}
         facts={facts}

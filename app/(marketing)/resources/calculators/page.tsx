@@ -30,26 +30,6 @@ export const metadata: Metadata = {
   }),
 };
 
-/** The question each calculator answers, in the owner's words. */
-const ANSWERS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
-  "labor-rate": "What do I have to charge per billable hour so a technician's time actually pays for itself?",
-  "job-profitability": "Did that job make money once labor, materials and overhead are counted?",
-  "break-even": "How many jobs a month does it take before the business stops losing money?",
-  "maintenance-agreement": "What should a maintenance agreement cost so the visits and the member discount are paid for?",
-  "technician-pay": "Would this week have paid more on hourly, flat rate or commission?",
-  "callback-cost": "What are free return trips really costing me every month?",
-};
-
-/** What to have open before starting each one. */
-const NEEDS: Record<(typeof RESOURCE_CALCULATORS)[number]["slug"], string> = {
-  "labor-rate": "A pay stub, your payroll provider's employer-cost report, and last year's Profit and Loss.",
-  "job-profitability": "One finished job's invoice, timesheets and parts receipts.",
-  "break-even": "Last year's Profit and Loss and your number of jobs a month.",
-  "maintenance-agreement": "Your labor rate result and what a tune-up uses in time and parts.",
-  "technician-pay": "One week's timesheet and the revenue that technician produced.",
-  "callback-cost": "Last month's callbacks, jobs finished, and your labor rate result.",
-};
-
 /** A sensible order to run them in. */
 const STEPS: readonly { title: string; text: string }[] = [
   {
@@ -134,14 +114,14 @@ export default function ResourceCalculatorsIndexPage() {
                 </Link>
               </h2>
               <p className="mt-2 text-sm font-medium leading-relaxed text-stone-800">
-                {ANSWERS[calculator.slug]}
+                {calculator.question}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-stone-600">
                 {calculator.description}
               </p>
               <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-[13px] leading-relaxed text-stone-600">
                 <span className="font-semibold text-stone-800">You&apos;ll need: </span>
-                {NEEDS[calculator.slug]}
+                {calculator.needs}
               </p>
               <Link
                 href={calculatorPath(calculator.slug)}
