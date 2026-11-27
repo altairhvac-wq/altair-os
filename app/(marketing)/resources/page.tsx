@@ -3,6 +3,7 @@ import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-c
 import Link from "next/link";
 import { ArrowRight, BookOpen, Check, Library, MapPin, Sigma, type LucideIcon } from "lucide-react";
 import { ToolCard } from "@/shared/components/resources/hub/ToolCards";
+import { YourNumbers } from "@/shared/components/resources/hub/YourNumbers";
 import { ResourceChrome } from "@/shared/components/resources/ResourcePageShell";
 import { NextStep } from "@/shared/components/site/NextStep";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
@@ -20,6 +21,7 @@ import {
   HUB_TOOLS,
   INTERACTIVE_TOOL_COUNT,
   TOOL_JOBS,
+  TOOL_UPDATES,
   hubTool,
   toolsForJob,
   type ToolJob,
@@ -126,7 +128,7 @@ export default function ResourcesHubPage() {
               keeps your numbers in your own browser.
             </p>
             <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-stone-600">
-              {["No sign-up, no email", "Formulas shown", "Print or save as PDF"].map((fact) => (
+              {["No sign-up, no email, no phone number", "Your numbers carry from one tool to the next", "Save, share a link or print as PDF"].map((fact) => (
                 <li key={fact} className="flex items-center gap-1.5">
                   <Check aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" />
                   {fact}
@@ -159,6 +161,29 @@ export default function ResourcesHubPage() {
             </ul>
           </nav>
         </header>
+
+        {/* ---------- returning owner: what is already saved in this browser (renders nothing for a first visit) ---------- */}
+        <YourNumbers className="mt-10" />
+
+        {/* ---------- what changed lately ---------- */}
+        <section aria-labelledby="tool-updates-heading" className="mt-8 rounded-2xl border border-stone-200 bg-white/80 px-5 py-4 sm:px-6">
+          <h2 id="tool-updates-heading" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#77591B]">
+            New in the tools
+          </h2>
+          <ul className="mt-2 divide-y divide-stone-100">
+            {TOOL_UPDATES.slice(0, 3).map((update) => (
+              <li key={update.text}>
+                <Link href={update.href} data-track="tools-new" className={`group flex items-start gap-3 rounded-lg py-2.5 ${focusRing}`}>
+                  <time dateTime={update.iso} className="w-14 shrink-0 pt-0.5 font-mono text-[11px] text-stone-500">
+                    {update.label}
+                  </time>
+                  <span className="min-w-0 flex-1 text-sm leading-relaxed text-stone-700 group-hover:text-stone-900">{update.text}</span>
+                  <ArrowRight aria-hidden="true" className="mt-1 h-3.5 w-3.5 shrink-0 text-[#77591B] transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {/* ---------- first-time owner path ---------- */}
         <section
