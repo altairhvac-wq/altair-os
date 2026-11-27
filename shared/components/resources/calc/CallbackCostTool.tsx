@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { useCarried } from "@/shared/components/resources/calc/carry";
 import {
   AnalysisCard,
@@ -12,6 +14,7 @@ import {
   NumField,
   Panel,
   ResultHero,
+  ResultReading,
   ResultTile,
   ResultTiles,
   WhatIfTable,
@@ -108,14 +111,46 @@ export function CallbackCostTool() {
       inputs={
         <>
           <InputGroup title="Last month" text="Count return trips to a finished job that nobody paid for, and every job completed in the same month.">
-            <NumField tool={tool} k="callbacksPerMonth" label="Callbacks" suffix="callbacks" invalid={tooMany} hint="Unpaid return trips to finished jobs." />
-            <NumField tool={tool} k="jobsPerMonth" label="Jobs completed" suffix="jobs" invalid={tooMany} hint="All jobs in the same month, for the callback rate." />
-            <NumField tool={tool} k="hoursPerCallback" label="Hours per callback" suffix="hrs" hint="Time on site plus the drive there and back." />
-            <NumField tool={tool} k="partsPerCallback" label="Parts given away per callback" prefix="$" hint="At your cost, on a typical callback." />
+            <NumField
+              tool={tool}
+              k="callbacksPerMonth"
+              label="Callbacks"
+              suffix="callbacks"
+              invalid={tooMany}
+              hint="Unpaid return trips to finished jobs."
+              find="In your job software, count last month's jobs that went back to a job you'd already finished and billed $0: recalls, warranty or callback jobs. If you don't tag them, ask your dispatcher; they usually know."
+            />
+            <NumField tool={tool} k="jobsPerMonth" label="Jobs completed" suffix="jobs" invalid={tooMany} hint="All jobs in the same month, for the callback rate." find="Your job software's list of finished jobs for the same month, or the number of invoices you sent." />
+            <NumField tool={tool} k="hoursPerCallback" label="Hours per callback" suffix="hrs" hint="Time on site plus the drive to it." find="The timesheets for a few recent callbacks: from leaving the previous job to finishing the callback. Use the average." />
+            <NumField
+              tool={tool}
+              k="partsPerCallback"
+              label="Parts given away per callback"
+              prefix="$"
+              hint="At your cost, on a typical callback. Add fuel for the trip if you want it counted."
+              find="Supply house prices for the parts used on recent callbacks, at what you paid. Add about what a trip costs in fuel if you want the truck counted too."
+            />
           </InputGroup>
           <InputGroup title="Your hourly numbers">
-            <NumField tool={tool} k="costPerBillableHour" label="Cost per billable hour" prefix="$" suffix="/hr" hint="Wage, burden, unbilled time and overhead for one hour: your break-even rate." />
-            <NumField tool={tool} k="billableRate" label="Your billable rate" prefix="$" suffix="/hr" hint="What an hour bills on paying work." />
+            <NumField
+              tool={tool}
+              k="costPerBillableHour"
+              label="Cost per billable hour"
+              prefix="$"
+              suffix="/hr"
+              invalid={input.costPerBillableHour <= 0}
+              hint="Wage, burden, unbilled time and overhead for one hour: your break-even rate."
+              find={
+                <>
+                  The &ldquo;Break-even rate&rdquo; from the{" "}
+                  <Link href={calculatorPath("labor-rate")} className="font-semibold text-[#77591B] underline underline-offset-2">
+                    labor rate calculator
+                  </Link>
+                  . Work it out there once; after that, the bar at the top of this calculator offers to fill it in.
+                </>
+              }
+            />
+            <NumField tool={tool} k="billableRate" label="Your billable rate" prefix="$" suffix="/hr" hint="What an hour bills on paying work." find="The hourly labor rate in your price book, or the result of the labor rate calculator." />
           </InputGroup>
         </>
       }
@@ -132,6 +167,13 @@ export function CallbackCostTool() {
                 </>
               }
             />
+            <ResultReading tone="watch" title={`Each callback costs you about ${money(result.costPerCallback, 0)}, and ${money(result.costPerYear, 0)} a year at this pace.`}>
+              <p>
+                That counts the technician&apos;s time at cost and the parts. In a busy month, when those {hours(result.hoursLostPerMonth)} could have been paying work, the loss is
+                closer to {money((result.revenueNotBilledPerMonth + input.callbacksPerMonth * input.partsPerCallback) * 12, 0)} a year.
+              </p>
+              <p>Cutting callbacks in half saves about {money(result.costPerYear / 2, 0)} a year. A short checklist before a technician leaves a job is the usual place to start.</p>
+            </ResultReading>
             <Panel title="What a month of callbacks uses up">
               <SplitBar
                 ariaLabel="Monthly callback cost split into technician time and parts"
@@ -147,8 +189,18 @@ export function CallbackCostTool() {
               <ResultTile label="Cost per callback" value={money(result.costPerCallback)} note="time plus parts" />
               <ResultTile label="Hours lost" value={hours(result.hoursLostPerMonth)} note="per month" />
               <ResultTile label="Those hours would bill" value={money(result.revenueNotBilledPerMonth, 0)} note="a month, on paying work" />
+              <ResultTile
+                label="On a full board"
+                value={money(result.revenueNotBilledPerMonth + input.callbacksPerMonth * input.partsPerCallback, 0)}
+                note="a month: lost billing plus parts, when the hours could have gone to paying work"
+              />
+              <ResultTile label="Callbacks a year" value={String(Math.round(input.callbacksPerMonth * 12))} note={`${hours(result.hoursLostPerMonth * 12)} of technician time`} />
             </ResultTiles>
           </>
+        ) : !tooMany && tool.values.callbacksPerMonth.trim() === "0" ? (
+          <ResultReading tone="good" title="No callbacks last month: nothing lost to return trips.">
+            <p>Try a busier month too. Callbacks usually rise with the workload.</p>
+          </ResultReading>
         ) : tooMany ? (
           <NoResult title="Check the two counts" text="Callbacks cannot be more than the jobs completed in the same month. Check that both numbers are for the same month." />
         ) : (

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { SampleTag } from "@/shared/components/resources/tools/ToolControls";
 import { useCarried } from "@/shared/components/resources/calc/carry";
 import {
@@ -14,6 +16,7 @@ import {
   NumField,
   Panel,
   ResultHero,
+  ResultReading,
   ResultTile,
   ResultTiles,
   WhatIfTable,
@@ -42,6 +45,7 @@ const KEYS = [
   "targetMarginPercent",
   "members",
   "regularRate",
+  "renewalPercent",
 ] as const;
 type K = (typeof KEYS)[number];
 
@@ -56,6 +60,7 @@ const EXAMPLE: Record<K, string> = {
   targetMarginPercent: String(D.targetNetMargin * 100),
   members: "150",
   regularRate: "121",
+  renewalPercent: "80",
 };
 
 const PRESETS: readonly CalcPreset<K>[] = [
@@ -70,7 +75,7 @@ const PRESETS: readonly CalcPreset<K>[] = [
     id: "blank",
     label: "Start blank",
     text: "Empty fields for your own agreement.",
-    values: { visitsPerYear: "", hoursPerVisit: "", costPerBillableHour: "", materialsPerVisit: "", officeCostPerYear: "", expectedRepairSpendPerYear: "", repairDiscountPercent: "", targetMarginPercent: "", members: "", regularRate: "" },
+    values: { visitsPerYear: "", hoursPerVisit: "", costPerBillableHour: "", materialsPerVisit: "", officeCostPerYear: "", expectedRepairSpendPerYear: "", repairDiscountPercent: "", targetMarginPercent: "", members: "", regularRate: "", renewalPercent: "" },
   },
 ];
 
@@ -103,6 +108,7 @@ export function MaintenanceAgreementTool() {
         ? "Set a target margin from 0% to 99%."
         : "Enter a member discount from 0% to 100%.";
   const regularRate = num(v.regularRate);
+  const renewal = v.renewalPercent.trim() === "" ? null : Math.min(0.99, Math.max(0, num(v.renewalPercent) / 100));
 
   return (
     <CalculatorTool
@@ -138,21 +144,39 @@ export function MaintenanceAgreementTool() {
       inputs={
         <>
           <InputGroup title="The visits" text="What it costs you to keep the promise to show up.">
-            <NumField tool={tool} k="visitsPerYear" label="Visits per year" suffix="visits" invalid={input.visitsPerYear <= 0} hint="Scheduled maintenance visits the agreement includes." />
-            <NumField tool={tool} k="hoursPerVisit" label="Hours per visit" suffix="hrs" hint="Time on site plus the drive there." />
+            <NumField tool={tool} k="visitsPerYear" label="Visits per year" suffix="visits" invalid={input.visitsPerYear <= 0} hint="Scheduled maintenance visits the agreement includes." find="What your agreement promises. Most plans are one cooling and one heating tune-up a year: 2 visits." />
+            <NumField tool={tool} k="hoursPerVisit" label="Hours per visit" suffix="hrs" hint="Time on site plus the drive to it." find="Look at the timesheets for your last ten tune-ups: from leaving the previous job to finishing this one. Use the average." />
             <NumField
               tool={tool}
               k="costPerBillableHour"
               label="Cost per billable hour"
               prefix="$"
               suffix="/hr"
+              invalid={input.costPerBillableHour <= 0}
               hint="Wage, burden, unbilled time and overhead for one hour: your break-even rate, not the wage."
+              find={
+                <>
+                  This is the &ldquo;Break-even rate&rdquo; from the{" "}
+                  <Link href={calculatorPath("labor-rate")} className="font-semibold text-[#77591B] underline underline-offset-2">
+                    labor rate calculator
+                  </Link>
+                  . Work it out there once; after that, the bar at the top of this calculator offers to fill it in.
+                </>
+              }
             />
-            <NumField tool={tool} k="materialsPerVisit" label="Materials per visit" prefix="$" hint="Filters, coil cleaner, anything used every time, at your cost." />
+            <NumField tool={tool} k="materialsPerVisit" label="Materials per visit" prefix="$" hint="Filters, coil cleaner, anything used every time, at your cost." find="Your supply house prices for what a tune-up uses every time: the filter, coil cleaner, condensate tablets, at what you pay." />
           </InputGroup>
           <InputGroup title="Running the plan and member perks" badge={<SampleTag />}>
-            <NumField tool={tool} k="officeCostPerYear" label="Office cost per agreement" prefix="$" suffix="/yr" hint="Booking, reminders and billing for one agreement over a year." />
-            <NumField tool={tool} k="expectedRepairSpendPerYear" label="Repairs a member buys" prefix="$" suffix="/yr" hint="What a typical member spends on repairs in a year, before the discount." />
+            <NumField
+              tool={tool}
+              k="officeCostPerYear"
+              label="Extra cost to run each agreement"
+              prefix="$"
+              suffix="/yr"
+              hint="Only what agreements add: reminders, booking the visits, card fees on monthly billing."
+              find="Your cost per billable hour already covers general overhead, so count only what agreements add: an office person's time booking the visits and sending renewals, card fees on the monthly charge (about 3% of the price), and any plan software. Divide by the number of members."
+            />
+            <NumField tool={tool} k="expectedRepairSpendPerYear" label="Repairs a member buys" prefix="$" suffix="/yr" hint="What a typical member spends on repairs in a year, before the discount." find="In your job software, total the repair invoices for members over the last year and divide by the number of members. New program? Use your average repair ticket times how many repairs a customer buys a year." />
             <NumField
               tool={tool}
               k="repairDiscountPercent"
@@ -160,15 +184,17 @@ export function MaintenanceAgreementTool() {
               suffix="%"
               invalid={discountBad}
               hint="Enter 0 if members get no discount. The discount is a cost of the agreement."
+              find="What your agreement promises on repairs, often 10% or 15%. Enter 0 if members get no discount."
             />
           </InputGroup>
           <InputGroup title="Margin">
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} hint="Profit left from the price after its costs. A margin, not a markup." />
+            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} hint="Profit left from the price after its costs. A margin, not a markup." find="Your choice. 20% means $20 of every $100 a member pays is profit after the visits, materials and perks." />
             <Chips tool={tool} k="targetMarginPercent" options={["10", "15", "20", "25", "30"]} suffix="%" />
           </InputGroup>
           <InputGroup title="Optional: your program" text="For the program view below the results. Leave blank to skip." badge={<SampleTag />}>
-            <NumField tool={tool} k="members" label="Members" suffix="agreements" hint="How many agreements you have, or want to have." />
-            <NumField tool={tool} k="regularRate" label="Your regular labor rate" prefix="$" suffix="/hr" hint="To show what the same visits cost a customer without an agreement." />
+            <NumField tool={tool} k="members" label="Members" suffix="agreements" hint="How many agreements you have, or want to have." find="Your active agreements today, from your job software's agreement or membership list." />
+            <NumField tool={tool} k="renewalPercent" label="Members who renew each year" suffix="%" hint="Out of every 100 members, how many sign up again." find="Members at the start of last year who are still members today, divided by members at the start of last year. New program? Leave it blank until you have a year of renewals." />
+            <NumField tool={tool} k="regularRate" label="Your regular labor rate" prefix="$" suffix="/hr" hint="To show what the same visits cost a customer without an agreement." find="The hourly labor rate in your price book, or the result of the labor rate calculator." />
           </InputGroup>
         </>
       }
@@ -185,6 +211,7 @@ export function MaintenanceAgreementTool() {
                 </>
               }
             />
+            <Reading input={input} result={result} regularRate={regularRate} />
             <Panel title="Where the yearly price goes">
               <SplitBar ariaLabel="The yearly price split by cost" format={(n) => money(n)} slices={slices(input, result)} />
             </Panel>
@@ -193,6 +220,12 @@ export function MaintenanceAgreementTool() {
               <ResultTile label="Left per agreement" value={money(result.profitPerAgreement)} note="per year" tone="positive" />
               <ResultTile label="Cost per visit" value={money(result.costPerVisit)} note="labor plus materials" />
               <ResultTile label="Repair discount given" value={money(result.repairDiscountGiven)} note="per member per year" />
+              <ResultTile label="Price per visit" value={money(result.annualPrice / input.visitsPerYear)} note="what a member pays for each visit" />
+              <ResultTile
+                label="Profit over a member's life"
+                value={renewal !== null && renewal < 1 ? money(result.profitPerAgreement / (1 - renewal), 0) : "–"}
+                note={renewal !== null && renewal < 1 ? `about ${(1 / (1 - renewal)).toFixed(1)} years at ${pct(renewal, 0)} renewing` : "enter your renewal rate"}
+              />
             </ResultTiles>
           </>
         ) : (
@@ -201,6 +234,44 @@ export function MaintenanceAgreementTool() {
       }
       analysis={<Analysis v={v} input={input} result={result} members={num(v.members)} regularRate={regularRate} />}
     />
+  );
+}
+
+/** The price read back in plain words, against what the same visits cost a customer without an agreement. */
+function Reading({ input, result, regularRate }: { readonly input: MaintenanceAgreementInput; readonly result: MaintenanceAgreementResult; readonly regularRate: number }) {
+  const nonMember = input.visitsPerYear * (input.hoursPerVisit * regularRate + input.materialsPerVisit);
+  const head = `Charge ${money(result.monthlyPrice)} a month (${money(result.annualPrice, 0)} a year) to keep ${money(result.profitPerAgreement, 0)} per member.`;
+  if (input.costPerBillableHour <= 0) {
+    return (
+      <ResultReading tone="bad" title="Enter your cost per billable hour first.">
+        <p>Without it the technician&apos;s time counts as free, and the price comes out far too low.</p>
+      </ResultReading>
+    );
+  }
+  if (regularRate <= 0) {
+    return (
+      <ResultReading tone="good" title={head}>
+        <p>Enter your regular labor rate to see whether members save money against paying for the visits one at a time.</p>
+      </ResultReading>
+    );
+  }
+  if (result.annualPrice >= nonMember) {
+    return (
+      <ResultReading tone="watch" title={head}>
+        <p>
+          The same {input.visitsPerYear} visits cost a non-member about {money(nonMember, 0)} at your rate, so the agreement costs more than paying as they go. Sell it on priority
+          service and the repair discount, or trim the visit time or the perks.
+        </p>
+      </ResultReading>
+    );
+  }
+  return (
+    <ResultReading tone="good" title={head}>
+      <p>
+        Members save about {money(nonMember - result.annualPrice, 0)} a year against paying {money(nonMember, 0)} for the same visits at your regular rate. That saving is the easy
+        part of the sale.
+      </p>
+    </ResultReading>
   );
 }
 

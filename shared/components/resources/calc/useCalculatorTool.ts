@@ -153,9 +153,13 @@ export function useCalculatorTool<K extends string>({
     window.print();
   };
 
+  /** Still showing the worked example the page opened with. */
+  const isExample = keys.every((key) => values[key] === example[key]);
+
   return {
     slug,
     values,
+    isExample,
     set,
     patch,
     presets,

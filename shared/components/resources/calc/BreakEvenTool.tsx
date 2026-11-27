@@ -12,6 +12,8 @@ import {
   NoResult,
   NumField,
   ResultHero,
+  ResultReading,
+  WorkItOut,
   ResultTile,
   ResultTiles,
   WhatIfTable,
@@ -25,7 +27,7 @@ import { CompactCalculator, CompactStat, withNumbers } from "@/shared/components
 import { calculatorPath } from "@/shared/lib/resources/catalog";
 import { BREAK_EVEN_DEFAULTS as D, calculateBreakEven, type BreakEvenResult } from "@/shared/lib/resources/break-even";
 
-const KEYS = ["fixedMonthlyCosts", "averageJobRevenue", "variableCostPercent", "targetProfit", "techs", "jobsPerTechPerDay", "workDays"] as const;
+const KEYS = ["fixedMonthlyCosts", "averageJobRevenue", "variableCostPercent", "targetProfit", "techs", "jobsPerTechPerDay", "workDays", "currentJobs"] as const;
 type K = (typeof KEYS)[number];
 
 const EXAMPLE: Record<K, string> = {
@@ -36,6 +38,7 @@ const EXAMPLE: Record<K, string> = {
   techs: "3",
   jobsPerTechPerDay: "2",
   workDays: "21",
+  currentJobs: "50",
 };
 
 const PRESETS: readonly CalcPreset<K>[] = [
@@ -44,13 +47,13 @@ const PRESETS: readonly CalcPreset<K>[] = [
     id: "solo",
     label: "Owner-operator",
     text: "One truck: $6,500 fixed, $480 average job, 40% variable. Made-up numbers.",
-    values: { fixedMonthlyCosts: "6500", averageJobRevenue: "480", variableCostPercent: "40", targetProfit: "4000", techs: "1", jobsPerTechPerDay: "3", workDays: "21" },
+    values: { fixedMonthlyCosts: "6500", averageJobRevenue: "480", variableCostPercent: "40", targetProfit: "4000", techs: "1", jobsPerTechPerDay: "3", workDays: "21", currentJobs: "" },
   },
   {
     id: "blank",
     label: "Start blank",
     text: "Empty fields for your own month.",
-    values: { fixedMonthlyCosts: "", averageJobRevenue: "", variableCostPercent: "", targetProfit: "", techs: "", jobsPerTechPerDay: "", workDays: "" },
+    values: { fixedMonthlyCosts: "", averageJobRevenue: "", variableCostPercent: "", targetProfit: "", techs: "", jobsPerTechPerDay: "", workDays: "", currentJobs: "" },
   },
 ];
 
@@ -62,13 +65,16 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
   const tool = useCalculatorTool<K>({ slug: "break-even", keys: KEYS, presets: PRESETS });
   const carried = useCarried();
   const v = tool.values;
-  const fixed = num(v.fixedMonthlyCosts);
+  const fixed = Math.max(0, num(v.fixedMonthlyCosts));
   const avg = num(v.averageJobRevenue);
   const variableRate = num(v.variableCostPercent) / 100;
   const target = Math.max(0, num(v.targetProfit));
   const capacity = Math.max(0, num(v.techs)) * Math.max(0, num(v.jobsPerTechPerDay)) * Math.max(0, num(v.workDays));
   const result = calculateBreakEven({ fixedMonthlyCosts: fixed, averageJobRevenue: avg, variableCostRate: variableRate });
   const targetJobs = result ? Math.ceil((fixed + target) / result.contributionPerJob) : null;
+  const currentJobs = v.currentJobs.trim() === "" ? null : Math.max(0, num(v.currentJobs));
+  const workDays = Math.max(0, num(v.workDays));
+  const techs = Math.max(0, num(v.techs));
   const problem = avg <= 0 ? "Enter an average job revenue above $0." : "Set variable costs from 0% to 99% of revenue.";
 
   if (compact) {
@@ -147,6 +153,7 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
         { label: "Average job revenue", value: money(avg, 0) },
         { label: "Variable costs", value: pct(variableRate) },
         { label: "Target monthly profit", value: money(target, 0) },
+        ...(currentJobs !== null ? [{ label: "Jobs a month now", value: int(currentJobs) }] : []),
         { label: "Crew capacity", value: `${v.techs || 0} techs × ${v.jobsPerTechPerDay || 0} jobs a day × ${v.workDays || 0} days = ${int(capacity)} jobs` },
       ]}
       carry={
@@ -170,23 +177,66 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
               label="Fixed monthly costs"
               prefix="$"
               suffix="/mo"
-              hint="Rent, insurance, office pay, truck and loan payments, software. Field wages paid per job go in variable costs."
+              hint="Rent, insurance, office pay, truck and loan payments, software, and technicians you pay by the hour however busy it is."
+              find={
+                <>
+                  Your Profit and Loss report for the last 12 months (in QuickBooks: Reports, then Profit and Loss). Add every expense that doesn&apos;t
+                  change with the number of jobs: rent, insurance, office wages, truck and loan payments, phones, software, advertising, and hourly
+                  technicians&apos; wages if they get paid on slow days too. Divide by 12. Loan payments are on your bank statement.
+                </>
+              }
             />
-            <NumField tool={tool} k="averageJobRevenue" label="Average job revenue" prefix="$" invalid={avg <= 0} hint="Revenue divided by jobs over the last three to six months." />
+            <NumField
+              tool={tool}
+              k="averageJobRevenue"
+              label="Average job revenue"
+              prefix="$"
+              invalid={avg <= 0}
+              hint="Revenue divided by jobs over the last three to six months."
+              find={
+                <>
+                  Total income for the last three to six months from your Profit and Loss report, divided by the number of jobs you finished in the same
+                  months (your job software&apos;s job list or the number of invoices).
+                  <WorkItOut
+                    tool={tool}
+                    k="averageJobRevenue"
+                    unit="$"
+                    a={{ label: "Income for those months", prefix: "$" }}
+                    b={{ label: "Jobs finished", suffix: "jobs" }}
+                    compute={(income, jobs) => (jobs > 0 ? income / jobs : null)}
+                  />
+                </>
+              }
+            />
             <NumField
               tool={tool}
               k="variableCostPercent"
               label="Variable costs"
               suffix="% of revenue"
               invalid={variableRate >= 1 || variableRate < 0}
-              hint="Parts, field labor for the job, permits and card fees. A $1,000 job that uses $350 of these is 35%."
+              hint="Parts, permits, card fees, and pay that comes per job (commission, flat rate). A $1,000 job that uses $350 of these is 35%."
+              find={
+                <>
+                  On the same Profit and Loss report: add the cost of goods sold (parts and materials), subcontractors, card processing fees, and
+                  commission or flat-rate pay. Divide by total income for the same months.
+                  <WorkItOut
+                    tool={tool}
+                    k="variableCostPercent"
+                    unit="%"
+                    a={{ label: "Variable costs for those months", prefix: "$" }}
+                    b={{ label: "Income for the same months", prefix: "$" }}
+                    compute={(costs, income) => (income > 0 ? (costs / income) * 100 : null)}
+                  />
+                </>
+              }
             />
           </InputGroup>
           <InputGroup title="Goal and capacity" text="Optional. How far past break-even you want to be, and how many jobs your crew can run." badge={<SampleTag />}>
-            <NumField tool={tool} k="targetProfit" label="Monthly profit you want" prefix="$" hint="After every fixed cost, including your own pay if it is in fixed costs." />
-            <NumField tool={tool} k="techs" label="Technicians running calls" suffix="techs" />
-            <NumField tool={tool} k="jobsPerTechPerDay" label="Jobs per technician per day" suffix="jobs" hint="A realistic average, not your best day." />
-            <NumField tool={tool} k="workDays" label="Working days in the month" suffix="days" />
+            <NumField tool={tool} k="targetProfit" label="Monthly profit you want" prefix="$" hint="After every fixed cost, including your own pay if it is in fixed costs." find="Your choice. Think of what the business should leave you each month on top of any salary you already put in fixed costs." />
+            <NumField tool={tool} k="currentJobs" label="Jobs you run a month now" suffix="jobs" placeholder="Leave blank to skip" hint="To see how far above or below break-even you are." find="Your job software's list of finished jobs, or the number of invoices you sent last month. Use a normal month, not your busiest." />
+            <NumField tool={tool} k="techs" label="Technicians running calls" suffix="techs" find="Count the people who run service calls on a normal day, owner included if you do." />
+            <NumField tool={tool} k="jobsPerTechPerDay" label="Jobs per technician per day" suffix="jobs" hint="A realistic average, not your best day." find="Last month's finished jobs divided by working days, then by technicians. Installs that take all day count as one." />
+            <NumField tool={tool} k="workDays" label="Working days in the month" suffix="days" find="Weekdays in the month, about 21 or 22, plus any Saturdays you run calls." />
           </InputGroup>
         </>
       }
@@ -204,6 +254,7 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
                 </>
               }
             />
+            <Reading result={result} capacity={capacity} currentJobs={currentJobs} avg={avg} />
             <ResultTiles>
               <ResultTile label="Each job leaves" value={money(result.contributionPerJob)} note="toward fixed costs" strong />
               <ResultTile label="Contribution margin" value={pct(result.contributionMarginRate)} note="of every dollar billed" />
@@ -214,10 +265,18 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
                 note={capacity > 0 ? `of ${int(capacity)} jobs a month` : "enter crew capacity"}
                 tone={capacity > 0 && result.breakEvenJobs > capacity ? "negative" : "neutral"}
               />
+              <ResultTile
+                label="Jobs a working day"
+                value={workDays > 0 ? (result.breakEvenJobsExact / workDays).toFixed(1) : "–"}
+                note={workDays > 0 && techs > 0 ? `${(result.breakEvenJobsExact / workDays / techs).toFixed(1)} per technician` : "to break even"}
+              />
+              <ResultTile
+                label="Margin of safety"
+                value={currentJobs === null ? "–" : `${currentJobs - result.breakEvenJobs >= 0 ? "" : "−"}${int(Math.abs(currentJobs - result.breakEvenJobs))} jobs`}
+                note={currentJobs === null ? "enter jobs you run now" : currentJobs > 0 ? `${pct((currentJobs - result.breakEvenJobsExact) / currentJobs, 0)} of your month` : "above break-even"}
+                tone={currentJobs !== null && currentJobs < result.breakEvenJobs ? "negative" : "neutral"}
+              />
             </ResultTiles>
-            {capacity > 0 && result.breakEvenJobs > capacity ? (
-              <NoResult title="Past your crew's capacity" text="Break-even needs more jobs than the crew can run. Raise the average ticket, lower variable costs or fixed costs, or add capacity." />
-            ) : null}
           </>
         ) : (
           <NoResult title="No break-even yet" text={problem} />
@@ -225,6 +284,61 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
       }
       analysis={<Analysis fixed={fixed} avg={avg} variableRate={variableRate} target={target} targetJobs={targetJobs} capacity={capacity} result={result} />}
     />
+  );
+}
+
+/** The break-even read back in plain words: against the crew's capacity and the jobs run today. */
+function Reading({
+  result,
+  capacity,
+  currentJobs,
+  avg,
+}: {
+  readonly result: BreakEvenResult;
+  readonly capacity: number;
+  readonly currentJobs: number | null;
+  readonly avg: number;
+}) {
+  const used = capacity > 0 ? result.breakEvenJobs / capacity : null;
+  if (used !== null && used > 1) {
+    return (
+      <ResultReading tone="bad" title={`Break-even needs ${result.breakEvenJobs} jobs, more than the ${int(capacity)} your crew can run.`}>
+        <p>Even a full board loses money. Raise the average ticket, lower variable or fixed costs, or add a technician.</p>
+      </ResultReading>
+    );
+  }
+  if (currentJobs !== null && currentJobs < result.breakEvenJobs) {
+    return (
+      <ResultReading tone="bad" title={`At ${int(currentJobs)} jobs a month you are ${int(result.breakEvenJobs - currentJobs)} short of break-even.`}>
+        <p>
+          That is about {money((result.breakEvenJobs - currentJobs) * result.contributionPerJob, 0)} a month the business is not covering. Each extra job adds {money(result.contributionPerJob, 0)}
+          ; a higher average ticket than {money(avg, 0)} closes the gap with the same work.
+        </p>
+      </ResultReading>
+    );
+  }
+  if (currentJobs !== null) {
+    const spare = currentJobs - result.breakEvenJobsExact;
+    const safety = currentJobs > 0 ? spare / currentJobs : 0;
+    return (
+      <ResultReading
+        tone={safety < 0.15 ? "watch" : "good"}
+        title={`You run ${int(currentJobs)} jobs: ${int(spare)} above break-even, about ${money(spare * result.contributionPerJob, 0)} of profit a month.`}
+      >
+        <p>
+          {safety < 0.15
+            ? `That cushion is thin: a slow month that loses ${int(Math.max(1, spare))} jobs puts you at break-even.`
+            : `A slow month can lose ${pct(safety, 0)} of its jobs before the business stops covering its costs.`}
+        </p>
+        {used !== null ? <p>Break-even uses {pct(used, 0)} of what your crew can run.</p> : null}
+      </ResultReading>
+    );
+  }
+  return (
+    <ResultReading tone={used !== null && used > 0.8 ? "watch" : "good"} title={`The first ${result.breakEvenJobs} jobs each month pay the bills. Every job after that adds ${money(result.contributionPerJob, 0)} of profit.`}>
+      {used !== null ? <p>Break-even uses {pct(used, 0)} of what your crew can run{used > 0.8 ? ", which leaves little room for a slow month" : ""}.</p> : null}
+      <p>Enter the jobs you run a month now to see how far above break-even you are.</p>
+    </ResultReading>
   );
 }
 

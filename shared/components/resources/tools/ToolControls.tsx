@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronDown, type LucideIcon } from "lucide-react";
 
 /**
  * Controls for the two in-page tools (Labor Cost Workspace, Invoice Builder).
@@ -232,12 +232,15 @@ export function TextArea({
 export function Field({
   label,
   hint,
+  find,
   badge,
   children,
   className = "",
 }: {
   readonly label: React.ReactNode;
   readonly hint?: React.ReactNode;
+  /** "Where do I find this?": where a shop owner gets the number, opened on demand. */
+  readonly find?: React.ReactNode;
   readonly badge?: React.ReactNode;
   readonly children: (ids: { id: string; hintId?: string }) => React.ReactNode;
   readonly className?: string;
@@ -254,6 +257,17 @@ export function Field({
         <p id={hintId} className="mt-1 text-xs leading-relaxed text-stone-500">
           {hint}
         </p>
+      ) : null}
+      {find ? (
+        <details className="group mt-1">
+          <summary
+            className={`inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-semibold text-[#77591B] hover:underline [&::-webkit-details-marker]:hidden ${focusRing}`}
+          >
+            Where do I find this?
+            <ChevronDown aria-hidden="true" className="h-3 w-3 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/60 px-3 py-2 text-xs leading-relaxed text-stone-700">{find}</div>
+        </details>
       ) : null}
     </div>
   );
