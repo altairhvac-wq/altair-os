@@ -55,7 +55,7 @@ export function ResourcePageHeader({
   readonly intro: React.ReactNode;
   readonly crumbs?: readonly ResourceCrumb[];
 }) {
-  const trail: ResourceCrumb[] = [{ label: "Resources", href: RESOURCES_PATH }, ...crumbs];
+  const trail: ResourceCrumb[] = [{ label: "Free tools", href: RESOURCES_PATH }, ...crumbs];
   const centered = crumbs.length === 0;
 
   return (

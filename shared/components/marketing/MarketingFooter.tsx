@@ -35,12 +35,13 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
   {
     title: "Free tools",
     links: [
-      { href: "/insights/how-to-calculate-hvac-labor-rate", label: "HVAC Labor Rate Calculator" },
-      { href: "/insights/hvac-invoice-template", label: "HVAC Invoice Template" },
+      { href: "/insights/how-to-calculate-hvac-labor-rate", label: "Labor Rate Calculator" },
+      { href: "/insights/hvac-invoice-template", label: "Invoice Builder" },
       { href: "/resources/calculators/technician-pay", label: "Technician Pay Calculator" },
       { href: "/resources/calculators/break-even", label: "Break-Even Calculator" },
       { href: "/resources/calculators/maintenance-agreement", label: "Maintenance Agreement Pricing" },
-      { href: "/resources/calculators", label: "All Calculators" },
+      { href: "/resources/calculators/job-profitability", label: "Job Profitability Calculator" },
+      { href: "/resources/calculators/callback-cost", label: "Callback Cost Calculator" },
       { href: "/resources/templates", label: "Templates" },
       { href: "/resources", label: "All Free Tools" },
     ],
@@ -48,11 +49,11 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
   {
     title: "Learn",
     links: [
-      { href: "/insights", label: "Insights" },
-      { href: "/resources/guides", label: "Guides" },
-      { href: "/resources/library", label: "Video Library" },
-      { href: "/directory", label: "Contractor Directory" },
-      { href: "/for-techs", label: "For Techs" },
+      { href: "/insights", label: "Guides" },
+      { href: "/resources/guides", label: "New Owner? Start Here" },
+      { href: "/resources/library", label: "Videos and Articles" },
+      { href: "/utah/hvac-labor-rates", label: "Utah HVAC Labor Rates" },
+      { href: "/for-techs", label: "For Technicians" },
     ],
   },
   {
@@ -60,6 +61,8 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
     links: [
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
+      { href: "/directory", label: "Contractor Directory" },
+      { href: "/directory/list", label: "List Your Business" },
       { href: "/affiliates", label: "Affiliates" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },

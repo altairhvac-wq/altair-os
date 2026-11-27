@@ -212,6 +212,23 @@ const DIRECTORY = {
   meta: "Free",
 } as const satisfies NextStepItem;
 
+const DIRECTORY_BROWSE = {
+  kind: "directory",
+  id: "directory-browse",
+  href: "/directory",
+  title: "See the directory your listing joins",
+  text: "Search by trade and city, the way a homeowner or a contractor looking for a sub will.",
+} as const satisfies NextStepItem;
+
+const SWITCH = {
+  kind: "software",
+  id: "switch",
+  href: "/switch",
+  title: "Switch from another app",
+  text: "The exact export menus for Jobber, Housecall Pro, ServiceTitan, Service Fusion and QuickBooks, with a video of the import.",
+  cta: "See the steps",
+} as const satisfies NextStepItem;
+
 const PRICING = {
   kind: "software",
   id: "pricing",
@@ -264,8 +281,16 @@ export const NEXT_STEPS = {
     { ...PRICING, href: "/pricing#plan-finder", text: "The plans your shops would choose from, and what each one costs a month." },
     SOFTWARE.business,
   ],
-  /** The comparison pages already show the video. */
-  comparison: [SOFTWARE.business, PRICING, HUB],
+  /** The comparison pages already show the video; a reader who is comparing wants to know how the move works, then the price. */
+  comparison: [SWITCH, PRICING, SOFTWARE.business],
+  /** The switch page ends on the trial; this is for the owner who is not moving this week. */
+  switchPage: [
+    VIDEO,
+    { ...PRICING, href: "/pricing#plan-finder", text: "Answer three questions and see the plan and monthly cost for your team." },
+    HUB,
+  ],
+  /** After the listing form: what the directory looks like, and what else is here for a trade business. */
+  directoryList: [DIRECTORY_BROWSE, HUB, SOFTWARE.business],
   /**
    * The four software pages list their free tools and guides just above
    * this module, so it points along the job instead: the next part of the

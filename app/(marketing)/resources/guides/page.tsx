@@ -105,9 +105,9 @@ export default async function LearningPathPage() {
       />
       <ResourceMain width="wide">
         <ResourcePageHeader
-          eyebrow="Learning path"
+          eyebrow="For new owners"
           title="New HVAC owner? Start here."
-          crumbs={[{ label: "Learning path" }]}
+          crumbs={[{ label: "New owner? Start here" }]}
           intro={
             <p>
               {steps.length} steps, in the order you will need them: the basics, then pricing, then the month, then getting paid, then

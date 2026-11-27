@@ -4,6 +4,8 @@ import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { SwitchAppTabs } from "@/shared/components/marketing/switch/SwitchAppTabs";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { BAND, GOLD_BUTTON, GOLD_SECONDARY_BUTTON, TONE } from "@/shared/lib/site/bands";
 import { SWITCH_FACTS_CHECKED, SWITCH_FACTS_CHECKED_ISO, SWITCH_FAQ, SWITCH_PAGE } from "@/shared/lib/site/switch-page";
 
@@ -149,6 +151,15 @@ export function SwitchPage({ bookingUrl }: { bookingUrl: string | null }) {
                 by any company named on this page.
               </span>
             </p>
+          </div>
+          <div className="mx-auto mt-12 max-w-5xl">
+            <NextStep
+              steps={NEXT_STEPS.switchPage}
+              placement="next-switch"
+              eyebrow="Not moving this week?"
+              heading="Look closer first"
+              intro="Watch one job run from the first call to paid, price it for your team, or use the free tools while you decide."
+            />
           </div>
         </section>
 

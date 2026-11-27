@@ -196,7 +196,7 @@ export default function LaborCostWorkspacePage() {
             {
               "@type": "BreadcrumbList",
               itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Insights", item: `${PUBLIC_SITE_ORIGIN}/insights` },
+                { "@type": "ListItem", position: 1, name: "Free tools", item: `${PUBLIC_SITE_ORIGIN}/resources` },
                 { "@type": "ListItem", position: 2, name: "HVAC labor rate calculator", item: url },
               ],
             },

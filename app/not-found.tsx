@@ -35,7 +35,19 @@ export default function NotFound() {
           href="/resources"
           className="status-page__button status-page__button--outline"
         >
-          Resources
+          Free tools
+        </Link>
+        <Link
+          href="/insights"
+          className="status-page__button status-page__button--outline"
+        >
+          Guides
+        </Link>
+        <Link
+          href="/contact"
+          className="status-page__button status-page__button--outline"
+        >
+          Contact
         </Link>
       </div>
     </main>

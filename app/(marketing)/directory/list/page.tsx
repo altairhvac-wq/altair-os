@@ -7,6 +7,8 @@ import { isDirectory214Installed } from "@/lib/directory/schema";
 import { DirectoryBand, DirectoryBreadcrumbs } from "@/shared/components/directory/DirectoryUi";
 import { dirLink } from "@/shared/components/directory/directory-styles";
 import { ResourceChrome, ResourceMain } from "@/shared/components/resources/ResourcePageShell";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import {
   DIRECTORY_LIMITS,
@@ -127,6 +129,15 @@ export default async function DirectoryListPage({ searchParams }: PageProps) {
           </Link>
           .
         </p>
+
+        <NextStep
+          className="mt-10"
+          steps={NEXT_STEPS.directoryList}
+          placement="next-directory-list"
+          eyebrow="While you are here"
+          heading="More for a trade business"
+          intro="See the directory your listing joins, or put the free calculators and templates to work."
+        />
       </ResourceMain>
     </ResourceChrome>
   );

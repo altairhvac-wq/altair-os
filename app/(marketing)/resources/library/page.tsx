@@ -16,7 +16,7 @@ import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 
-const TITLE = "Resource library";
+const TITLE = "Videos and articles";
 const DESCRIPTION =
   "Search Altair Insights articles and public videos from the Altair HVAC Exploration and Altair Operating System YouTube channels in one place.";
 
@@ -72,7 +72,7 @@ export default async function ResourceLibraryPage() {
     <ResourcePageShell
       eyebrow="Library"
       title={TITLE}
-      crumbs={[{ label: "Library" }]}
+      crumbs={[{ label: "Videos and articles" }]}
       intro={<p>{DESCRIPTION} Videos open on YouTube.</p>}
     >
       <JsonLdScript
