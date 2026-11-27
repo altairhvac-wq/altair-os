@@ -19,7 +19,8 @@ export type ResourceCalculatorEntry = {
     | "break-even"
     | "maintenance-agreement"
     | "technician-pay"
-    | "callback-cost";
+    | "callback-cost"
+    | "service-call-fee";
   title: string;
   /** One sentence for cards and meta descriptions. */
   description: string;
@@ -77,6 +78,14 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
       "See what unpaid return trips cost a month and a year, your callback rate, and the billable hours they take off the board.",
     question: "What are free return trips really costing me every month?",
     needs: "Last month's callbacks, jobs finished, and your labor rate result.",
+  },
+  {
+    slug: "service-call-fee",
+    title: "HVAC service call fee calculator",
+    description:
+      "Work out a service call fee from your own labor rate, see whether today's fee covers the visit, and what a low or free call costs a year.",
+    question: "What should a service call cost, and is the fee I charge now losing money?",
+    needs: "Your labor rate result, the fee you charge now, and last month's service calls.",
   },
 ];
 

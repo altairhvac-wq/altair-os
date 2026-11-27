@@ -20,6 +20,7 @@ import type { ResourceCalculatorEntry } from "./catalog";
 import { calculateJobProfitability } from "./job-profitability";
 import { calculateLaborRate } from "./labor-rate";
 import { calculateMaintenanceAgreement } from "./maintenance-agreement";
+import { calculateServiceCallFee } from "./service-call-fee";
 import { calculateTechnicianPay, type PayPlan } from "./technician-pay";
 
 export type CalculatorSlug = ResourceCalculatorEntry["slug"];
@@ -77,6 +78,14 @@ export const CALCULATOR_FIELD_KEYS: Record<CalculatorSlug, readonly string[]> = 
     "costPerBillableHour",
     "partsPerCallback",
     "billableRate",
+  ],
+  "service-call-fee": [
+    "billableRate",
+    "costPerBillableHour",
+    "hoursCovered",
+    "currentFee",
+    "callsPerMonth",
+    "noRepairPercent",
   ],
 };
 
@@ -286,6 +295,36 @@ export function summarizeCalculator(
           { label: "Cost per callback", value: usd(r.costPerCallback) },
           { label: "Technician hours lost per month", value: r.hoursLostPerMonth.toFixed(1) },
           { label: "Revenue those hours would bill", value: usd(r.revenueNotBilledPerMonth) },
+        ],
+      };
+    }
+    case "service-call-fee": {
+      const fee = num(values.currentFee);
+      const r = calculateServiceCallFee({
+        billableRate: num(values.billableRate),
+        costPerBillableHour: num(values.costPerBillableHour),
+        hoursCovered: num(values.hoursCovered),
+        currentFee: fee,
+        callsPerMonth: num(values.callsPerMonth),
+        noRepairPercent: num(values.noRepairPercent),
+      });
+      if (!r) return null;
+      return {
+        headlineLabel: "Service call fee at your rate",
+        headlineValue: usd(r.feeAtRate),
+        headlineNote:
+          r.status === "below-cost"
+            ? `Your fee of ${usd(fee)} is ${usd(r.shortOfCostPerVisit)} under what the visit costs.`
+            : r.status === "below-rate"
+              ? `Your fee of ${usd(fee)} covers the visit but is ${usd(r.shortOfRatePerVisit)} under your rate.`
+              : `Your fee of ${usd(fee)} covers the visit and your profit.`,
+        lines: [
+          { label: "Cost floor for the visit", value: usd(r.costFloor), emphasis: true },
+          { label: "Your fee today", value: usd(fee) },
+          { label: "Short of cost on each visit with no repair", value: usd(r.shortOfCostPerVisit) },
+          { label: "Visits with no repair per month", value: r.noRepairVisitsPerMonth.toFixed(1) },
+          { label: "Lost per month on those visits", value: usd(r.lostPerMonth) },
+          { label: "Lost per year at this pace", value: usd(r.lostPerYear) },
         ],
       };
     }

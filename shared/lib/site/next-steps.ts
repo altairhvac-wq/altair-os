@@ -320,6 +320,11 @@ export const NEXT_STEPS = {
 
 /** Each calculator's next tool, guide and software page. */
 export const CALCULATOR_NEXT_STEPS: Record<CalculatorSlug, readonly NextStepItem[]> = {
+  "service-call-fee": [
+    { ...TOOLS.jobProfit, text: "Check a finished job: did the repair make up the fee you charged at the door?" },
+    GUIDES.serviceCall,
+    SOFTWARE.estimating,
+  ],
   "labor-rate": [
     { ...TOOLS.laborWorkspace, text: "The full version: the whole crew, itemized burden, a flat-rate price book and an after-hours rate card." },
     GUIDES.serviceCall,

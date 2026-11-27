@@ -47,6 +47,7 @@ const FILES = {
   agreement: `${LIB}/maintenance-agreement.ts`,
   techPay: `${LIB}/technician-pay.ts`,
   callback: `${LIB}/callback-cost.ts`,
+  serviceCall: `${LIB}/service-call-fee.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -196,13 +197,39 @@ const cb = await loadPureModule(FILES.callback, "res-cb");
   check("0 jobs -> rate null, not NaN", cb.calculateCallbackCost({ ...cb.CALLBACK_COST_DEFAULTS, callbacksPerMonth: 0, jobsPerMonth: 0 })?.callbackRate === null);
 }
 
+console.log("\nService call fee");
+const scf = await loadPureModule(FILES.serviceCall, "res-scf");
+{
+  // $121 rate, $96.15 of cost, 1 hour, a $49 fee, 80 calls with 25% ending in no repair.
+  //   fee at rate 121.00; floor 96.15; short 47.15; 20 visits; 943.00 a month, 11,316.00 a year.
+  const r = scf.calculateServiceCallFee(scf.SERVICE_CALL_FEE_DEFAULTS);
+  check("fee at rate 121.00", near(r.feeAtRate, 121));
+  check("cost floor 96.15", near(r.costFloor, 96.15));
+  check("a $49 fee is below cost", r.status === "below-cost");
+  check("short of cost 47.15", near(r.shortOfCostPerVisit, 47.15));
+  check("short of rate 72.00", near(r.shortOfRatePerVisit, 72));
+  check("20 visits with no repair", near(r.noRepairVisitsPerMonth, 20));
+  check("lost per month 943.00", near(r.lostPerMonth, 943));
+  check("lost per year 11,316.00", near(r.lostPerYear, 11316));
+  const covers = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 100 });
+  check("a $100 fee covers cost but is under the rate, and loses nothing", covers.status === "below-rate" && covers.lostPerMonth === 0 && near(covers.shortOfRatePerVisit, 21));
+  const atRate = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 121 });
+  check("a fee equal to the rate is at rate", atRate.status === "at-rate" && atRate.shortOfRatePerVisit === 0);
+  const free = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 0 });
+  check("a free call loses the whole floor per visit", near(free.shortOfCostPerVisit, 96.15) && near(free.lostPerMonth, 1923));
+  check("no rate -> null", scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, billableRate: 0 }) === null);
+  check("no hours -> null", scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, hoursCovered: 0 }) === null);
+  check("a share over 100% is capped", near(scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, noRepairPercent: 250 }).noRepairVisitsPerMonth, 80));
+  check("a negative fee counts as 0", near(scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: -20 }).shortOfCostPerVisit, 96.15));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
 const list = await loadPureModule(FILES.emailList, "res-list");
 {
   const slugs = Object.keys(sums.CALCULATOR_FIELD_KEYS);
-  check("a summary exists for all six calculators", slugs.length === 6, slugs);
+  check("a summary exists for all seven calculators", slugs.length === 7, slugs);
   const example = {
     "labor-rate": { hourlyWage: "30", burdenPercent: "25", billableHoursPerWeek: "30", nonBillableHoursPerWeek: "10", monthlyOverhead: "6000", targetMarginPercent: "20" },
     "job-profitability": { revenue: "2500", laborHours: "6", loadedLaborRate: "45", materialsCost: "900", subcontractCost: "0", overheadPercent: "25" },
@@ -210,6 +237,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "maintenance-agreement": { visitsPerYear: "2", hoursPerVisit: "1.5", costPerBillableHour: "96", materialsPerVisit: "15", officeCostPerYear: "20", expectedRepairSpendPerYear: "300", repairDiscountPercent: "15", targetMarginPercent: "20" },
     "technician-pay": { hourlyWage: "30", hoursOnClock: "45", bookHours: "38", payPerBookHour: "34", revenueProduced: "7500", commissionPercent: "12" },
     "callback-cost": { callbacksPerMonth: "6", jobsPerMonth: "120", hoursPerCallback: "1.5", costPerBillableHour: "96", partsPerCallback: "25", billableRate: "121" },
+    "service-call-fee": { billableRate: "121", costPerBillableHour: "96.15", hoursCovered: "1", currentFee: "49", callsPerMonth: "80", noRepairPercent: "25" },
   };
   const headline = {
     "labor-rate": "$120.19",
@@ -218,6 +246,7 @@ const list = await loadPureModule(FILES.emailList, "res-list");
     "maintenance-agreement": "$39.90",
     "technician-pay": "Hourly: $1,425.00",
     "callback-cost": "$1,014.00",
+    "service-call-fee": "$121.00",
   };
   for (const slug of slugs) {
     const picked = sums.pickCalculatorValues(slug, example[slug]);
@@ -357,7 +386,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 6 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 11, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 7 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 12, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);

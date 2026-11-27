@@ -8,6 +8,7 @@ import {
   calculateJobProfitability,
 } from "@/shared/lib/resources/job-profitability";
 import { LABOR_RATE_DEFAULTS, calculateLaborRate } from "@/shared/lib/resources/labor-rate";
+import { SERVICE_CALL_FEE_DEFAULTS, calculateServiceCallFee } from "@/shared/lib/resources/service-call-fee";
 import {
   MAINTENANCE_AGREEMENT_DEFAULTS,
   calculateMaintenanceAgreement,
@@ -110,6 +111,7 @@ const CALLBACK = calculateCallbackCost(CALLBACK_COST_DEFAULTS)!;
 const BREAK_EVEN = calculateBreakEven(BREAK_EVEN_DEFAULTS)!;
 const JOB = calculateJobProfitability(JOB_PROFITABILITY_DEFAULTS);
 const INVOICE = calculateInvoiceTotals(SAMPLE_INVOICE);
+const SERVICE_CALL = calculateServiceCallFee(SERVICE_CALL_FEE_DEFAULTS)!;
 
 export const HUB_TOOLS: readonly HubTool[] = [
   {
@@ -146,6 +148,24 @@ export const HUB_TOOLS: readonly HubTool[] = [
       figure: usd0(LABOR.billableHourlyRateRounded),
       unit: "per billable hour",
       detail: `Break-even ${usd(LABOR.costPerBillableHour)}`,
+    },
+  },
+  {
+    id: "service-call-fee",
+    title: "HVAC service call fee calculator",
+    shortTitle: "Service call fee",
+    href: calculatorPath("service-call-fee"),
+    job: "price",
+    solves: "What should a service call cost, and is my fee losing money?",
+    youGet: "The fee at your rate, the cost floor, and what a low or free call costs a year.",
+    minutes: 2,
+    inputs: Object.keys(SERVICE_CALL_FEE_DEFAULTS).length,
+    workspace: false,
+    preview: {
+      kind: "figure",
+      figure: usd0(SERVICE_CALL.feeAtRate),
+      unit: "fee at your rate",
+      detail: `A ${usd0(SERVICE_CALL_FEE_DEFAULTS.currentFee)} fee loses ${usd0(SERVICE_CALL.lostPerYear)} a year`,
     },
   },
   {
@@ -303,6 +323,12 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
  * here before it is live.
  */
 export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "New: the service call fee calculator. What to charge at the door, and what a low or free call costs a year.",
+    href: "/resources/calculators/service-call-fee",
+  },
   {
     iso: "2026-11-27",
     label: "Nov 27",
