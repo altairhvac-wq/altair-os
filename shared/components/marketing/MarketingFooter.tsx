@@ -37,6 +37,7 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
     links: [
       { href: "/insights/how-to-calculate-hvac-labor-rate", label: "Labor Rate Calculator" },
       { href: "/insights/hvac-invoice-template", label: "Invoice Builder" },
+      { href: "/resources/flat-rate-price-list", label: "Flat-Rate Price List" },
       { href: "/resources/calculators/technician-pay", label: "Technician Pay Calculator" },
       { href: "/resources/calculators/break-even", label: "Break-Even Calculator" },
       { href: "/resources/calculators/maintenance-agreement", label: "Maintenance Agreement Pricing" },

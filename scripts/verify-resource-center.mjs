@@ -50,6 +50,7 @@ const FILES = {
   serviceCall: `${LIB}/service-call-fee.ts`,
   newHire: `${LIB}/new-hire.ts`,
   truck: `${LIB}/truck-cost.ts`,
+  flatRate: `${LIB}/flat-rate-list.ts`,
   summaries: `${LIB}/calculator-summaries.ts`,
   emailList: `${LIB}/email-list.ts`,
   emailRoute: "app/api/resources/email-results/route.ts",
@@ -277,6 +278,31 @@ const truck = await loadPureModule(FILES.truck, "res-truck");
   check("a negative cost counts as 0", near(truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, fuelPerMonth: -450 }).perMonth, 1030));
 }
 
+console.log("\nFlat-rate price list");
+const flat = await loadPureModule(FILES.flatRate, "res-flat");
+{
+  // Replace run capacitor: 0.75 h x $121 = 90.75 labor; $18 part doubled = 36.00; 126.75.
+  //   Listed at $127 ($1 steps) or $130 ($5 steps). After hours: 90.75 x 1.5 + 36 = 172.125 -> 172.13, $173, $175.
+  const task = flat.FLAT_RATE_SAMPLE_TASKS[0];
+  const exact = flat.priceListLine(task, 121, 1.5, "exact");
+  check("capacitor labor 90.75", near(exact.labor, 90.75));
+  check("capacitor part 36.00", near(exact.part, 36));
+  check("capacitor price 126.75", near(exact.standard, 126.75));
+  check("capacitor after hours 172.13", near(exact.afterHours, 172.13, 0.005));
+  check("rounds up to the next dollar: 127 and 173", flat.priceListLine(task, 121, 1.5, "dollar").standard === 127 && flat.priceListLine(task, 121, 1.5, "dollar").afterHours === 173);
+  check("rounds up to the next $5: 130 and 175", flat.priceListLine(task, 121, 1.5, "five").standard === 130 && flat.priceListLine(task, 121, 1.5, "five").afterHours === 175);
+  check("a whole-dollar price is not pushed up a step", flat.roundPriceUp(127, "dollar") === 127 && flat.roundPriceUp(130, "five") === 130);
+  check("0.1 + 0.2 style sums do not round 127 up to 128", flat.roundPriceUp(126.99999999999, "dollar") === 127 && flat.roundPriceUp(100.00000000001, "dollar") === 100);
+  check("never rounds down", flat.roundPriceUp(126.01, "dollar") === 127 && flat.roundPriceUp(125.01, "five") === 130);
+  check("a multiplier under 1 is treated as 1", near(flat.priceListLine(task, 121, 0.5, "exact").afterHours, 126.75));
+  check("the after-hours multiplier leaves the part alone", near(flat.priceListLine({ bookHours: 0, partCost: 50, markupPercent: 100 }, 121, 2, "exact").afterHours, 100));
+  check("negative hours and costs count as 0", flat.priceListLine({ bookHours: -1, partCost: -5, markupPercent: -10 }, 121, 1.5, "exact").standard === 0);
+  check("100% markup is a 50% margin", near(flat.markupToMargin(100), 0.5));
+  check("50% markup is a 33.3% margin", near(flat.markupToMargin(50), 1 / 3, 1e-9));
+  check("the sample list has eight named tasks", flat.FLAT_RATE_SAMPLE_TASKS.length === 8 && flat.FLAT_RATE_SAMPLE_TASKS.every((t) => t.name.length > 3));
+  check("the builder page exists", existsSync("app/(marketing)/resources/flat-rate-price-list/page.tsx"));
+}
+
 // ------------------------------------------------- summaries + email results
 console.log("\nResult summaries (page and email share them)");
 const sums = await loadPureModule(FILES.summaries, "res-sum");
@@ -444,7 +470,7 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 9 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 14, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 9 calculators, templates, the price list, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 15, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);

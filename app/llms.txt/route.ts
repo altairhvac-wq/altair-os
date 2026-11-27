@@ -1,5 +1,5 @@
 import { SAAS_SUBSCRIPTION_CATALOG, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
-import { RESOURCE_CALCULATORS, calculatorPath } from "@/shared/lib/resources/catalog";
+import { RESOURCE_CALCULATORS, RESOURCES_FLAT_RATE_PATH, calculatorPath } from "@/shared/lib/resources/catalog";
 import { INVOICE_BUILDER_PATH, LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
 import { COMPANY_FACTS, FOUNDER } from "@/shared/lib/site/about";
 import { GUIDES } from "@/shared/lib/site/next-steps";
@@ -85,6 +85,7 @@ function buildLlmsText(): string {
     "",
     `- [Labor rate calculator](${url(LABOR_WORKSPACE_PATH)}): what a billed hour has to cover for a whole crew (wages, payroll costs, unbilled hours, overhead and profit), with a break-even rate, a recommended rate, a flat-rate price builder and an after-hours rate card.`,
     `- [Invoice builder](${url(INVOICE_BUILDER_PATH)}): a complete HVAC invoice with equipment, refrigerant, labor and parts, printed or saved as a PDF.`,
+    `- [Flat-rate price list builder](${url(RESOURCES_FLAT_RATE_PATH)}): one price per task from the shop's own labor rate (book hours, part cost and markup), with after-hours prices, printed as a price sheet.`,
     ...RESOURCE_CALCULATORS.map((calculator) => `- [${calculator.title}](${url(calculatorPath(calculator.slug))}): ${calculator.question}`),
     `- [Templates](${url("/resources/templates")}): estimate, pricing worksheet, maintenance agreement outline and daily checklist, as PDF, Excel and Word.`,
     `- [All free tools](${url("/resources")})`,
