@@ -107,3 +107,32 @@ export async function listCustomerActivitiesForCustomer(
     mapCustomerActivityRow,
   );
 }
+
+/** Inserts many activity rows in one statement (the customer import). */
+export async function recordCustomerActivities(
+  inputs: CustomerActivityInsert[],
+): Promise<{ error: string | null }> {
+  if (inputs.length === 0) return { error: null };
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("customer_activities").insert(
+    inputs.map((input) => ({
+      company_id: input.company_id,
+      customer_id: input.customer_id,
+      actor_id: input.actor_id ?? null,
+      event_type: input.event_type,
+      metadata: input.metadata ?? {},
+    })),
+  );
+
+  if (error) {
+    console.error("[recordCustomerActivities] insert failed:", {
+      count: inputs.length,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  return { error: null };
+}

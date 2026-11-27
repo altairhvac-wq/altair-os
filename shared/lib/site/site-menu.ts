@@ -49,6 +49,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
     more: [
       { href: "/servicetitan-alternative", label: "Compare: ServiceTitan" },
       { href: "/jobber-housecall-pro-alternatives", label: "Compare: Jobber and Housecall Pro" },
+      { href: "/switch", label: "Switch from another app" },
     ],
     feature: {
       href: "/#home-try-heading",

@@ -163,7 +163,7 @@ const ALTAIR_PRICE_NOTE = `Plans from ${monthly(STARTER)} · ${TRIAL_DAYS} days 
 const ALTAIR_TRIAL = `${TRIAL_DAYS}-day free trial with the whole system. No credit card.`;
 const ALTAIR_CONTRACT = "Monthly or annual billing, no long-term contract. Cancel from Settings.";
 const ALTAIR_IMPORT_LIMITS =
-  "The import brings over customer names, phone numbers, emails and addresses. Equipment and job history don't come across, so plan to add equipment as you visit each site.";
+  "Customers, the price book and unpaid invoices import from CSV or Excel files. Past jobs and equipment don't come across, so keep your old job export as your history and add equipment as you visit each site. Step-by-step export menus: altair-op.com/switch.";
 
 const SHARED_TRADEMARK_NOTE = "Altair Operating System is not affiliated with or endorsed by any company named on this page.";
 
@@ -173,11 +173,11 @@ export const COMPARISON_METHOD_NOTE =
 
 // ---------- Moving over ----------
 // Every step is what the product does today: the customer import and its
-// presets (shared/lib/customer-import-mapping.ts, up to
-// CUSTOMER_IMPORT_MAX_ROWS rows a file), the price book (added item by
-// item; there is no price-book import), invoices created for a customer and
-// paid from a link or recorded by hand (there is no invoice import), and
-// team invitations from Settings.
+// presets (shared/lib/customer-import-mapping.ts, CSV or Excel, big files
+// sent in batches), the price book import (shared/lib/price-book-import.ts),
+// the unpaid invoice import, which creates draft invoices for balances still
+// owed (shared/lib/invoice-import.ts), and team invitations from Settings.
+// The full per-app export menus live on /switch (shared/lib/site/switch-page.ts).
 
 export type SwitchingChecklist = {
   readonly heading: string;
@@ -193,24 +193,24 @@ function buildSwitchingChecklist(from: string): SwitchingChecklist {
       {
         title: "Customers",
         items: [
-          `Export your customer list from ${from} as a CSV file.`,
+          `Export your customer list from ${from}. CSV or Excel both work, as the file comes out.`,
           `In Altair, open Customers and choose Import. A preset for ${from} matches the columns; check the preview before you import.`,
-          `Up to ${CUSTOMER_IMPORT_MAX_ROWS} customers per file. Names, phone numbers, emails and addresses come across; equipment and job history do not.`,
+          `A big list goes in one upload, ${CUSTOMER_IMPORT_MAX_ROWS} at a time behind the scenes. Names, phone numbers, emails, addresses and notes come across; equipment and job history do not.`,
         ],
       },
       {
         title: "Price book",
         items: [
-          "Print or export your current services and prices before you start.",
-          "Add them to the Altair price book: services, parts and labor, each with its price and whether it is taxable. There is no price-book import today, so start with the jobs you run most.",
+          `Export your services and materials from ${from}.`,
+          "In Altair, open Price Book and choose Import. Name, description, price, cost, taxable and category come across; items you already have are skipped.",
           "Need to check your flat-rate prices on the way? The free Labor Cost Workspace builds them from your own costs.",
         ],
       },
       {
         title: "Open invoices",
         items: [
-          `There is no invoice import. List every unpaid invoice in ${from} before you move.`,
-          `Either collect them in ${from} until they are paid, or create each one in Altair for that customer and send the payment link (once Stripe is connected).`,
+          `Export your invoice list from ${from}, with the balance still owed.`,
+          "In Altair, open Sales, then Invoices, and choose Import Unpaid. Each invoice with money owed becomes a draft for that balance on the right customer; you send it with its payment link (once Stripe is connected).",
           `Payments that arrive by check or cash are recorded on the invoice with Record payment. Keep ${from} open until the last old invoice is paid.`,
         ],
       },
@@ -231,7 +231,7 @@ function switchingFaq(from: string): readonly { readonly question: string; reado
   return [
     {
       question: `Can I bring my price book and open invoices over from ${from}?`,
-      answer: `Not by import. You add price-book items in Altair by hand, and an invoice still owed is either collected in ${from} or created again in Altair for that customer, then paid from its link or recorded when the check arrives.`,
+      answer: `Yes. Both import from the CSV or Excel files ${from} exports. Price-book items you already have are skipped, and every invoice with money still owed becomes a draft invoice for that balance, which you send with its payment link. The menus to export each file are on our switching page.`,
     },
     {
       question: `Can I run Altair and ${from} side by side while I switch?`,
@@ -346,7 +346,7 @@ const SERVICETITAN: ComparisonPageContent = {
     items: [
       {
         question: "Can I bring my customers over from ServiceTitan?",
-        answer: `Yes. Export your customers from ServiceTitan as a CSV and upload it in Altair. A ServiceTitan preset matches the columns for you. ${ALTAIR_IMPORT_LIMITS}`,
+        answer: `Yes. Export your customers from ServiceTitan and upload the Excel file in Altair as it is. A ServiceTitan preset matches the columns for you. ${ALTAIR_IMPORT_LIMITS}`,
       },
       {
         question: "What does ServiceTitan cost?",
@@ -566,7 +566,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     items: [
       {
         question: "Can I import my customers from Jobber or Housecall Pro?",
-        answer: `Yes. Export your customer list as a CSV and upload it in Altair. Presets for Jobber and Housecall Pro exports match the columns for you. ${ALTAIR_IMPORT_LIMITS}`,
+        answer: `Yes. Export your customer list and upload it in Altair, CSV or Excel. Presets for Jobber and Housecall Pro exports match the columns for you. ${ALTAIR_IMPORT_LIMITS}`,
       },
       {
         question: "Is Altair cheaper than Jobber or Housecall Pro?",

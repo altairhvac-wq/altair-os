@@ -4,7 +4,16 @@ import {
   type ParsedCustomerImportCsv,
 } from "@/shared/lib/customer-import-parser";
 
+/** Rows the server takes in one import call (one batch). */
 export const CUSTOMER_IMPORT_MAX_ROWS = 500;
+
+/**
+ * Rows one uploaded file may hold. The screen splits a bigger file into
+ * CUSTOMER_IMPORT_MAX_ROWS batches and sends them one after another, so a
+ * Jobber export split at 1,500 rows or a ServiceTitan list of several
+ * thousand customers comes in from one upload (switch page audit 2026-11-26).
+ */
+export const CUSTOMER_IMPORT_FILE_MAX_ROWS = 10_000;
 
 export const CUSTOMER_IMPORT_ALTAIR_FIELDS = [
   "name",
@@ -35,6 +44,9 @@ export type CustomerImportPreset =
   | "servicetitan"
   | "housecall_pro"
   | "jobber"
+  | "fieldedge"
+  | "service_fusion"
+  | "workiz"
   | "quickbooks"
   | "other";
 
@@ -44,11 +56,14 @@ export const CUSTOMER_IMPORT_PRESET_OPTIONS: {
 }[] = [
   { value: "altair", label: "Altair template" },
   { value: "google_sheets", label: "Google Sheets / Excel" },
-  { value: "servicetitan", label: "ServiceTitan CSV export" },
-  { value: "housecall_pro", label: "Housecall Pro CSV export" },
-  { value: "jobber", label: "Jobber CSV export" },
-  { value: "quickbooks", label: "QuickBooks customer CSV" },
-  { value: "other", label: "Other CSV" },
+  { value: "servicetitan", label: "ServiceTitan customer export" },
+  { value: "housecall_pro", label: "Housecall Pro customer export" },
+  { value: "jobber", label: "Jobber client export" },
+  { value: "fieldedge", label: "FieldEdge customer export" },
+  { value: "service_fusion", label: "Service Fusion customer list" },
+  { value: "workiz", label: "Workiz client report" },
+  { value: "quickbooks", label: "QuickBooks customer list" },
+  { value: "other", label: "Other file" },
 ];
 
 export const CUSTOMER_IMPORT_FIELD_LABELS: Record<
@@ -105,6 +120,9 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "client name",
     "customer full name",
     "client",
+    "account name",
+    "customer display name",
+    "client display name",
   ],
   first_name: ["first name", "first", "fname", "given name", "contact first name"],
   last_name: ["last name", "last", "lname", "surname", "family name", "contact last name"],
@@ -145,6 +163,12 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "contact phone",
     "phone #",
     "mobile #",
+    "main phone #",
+    "client phone",
+    "customer phone",
+    "customer phone number",
+    "client phone number",
+    "phone number 1",
   ],
   email: [
     "email",
@@ -158,6 +182,9 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "main email",
     "contact email",
     "e mail address",
+    "client email",
+    "customer email",
+    "customer email address",
   ],
   address: [
     "address",
@@ -175,6 +202,11 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "property address",
     "service street",
     "billing street",
+    "customer address",
+    "client address",
+    "location address",
+    "service location",
+    "street address line 1",
   ],
   address_line2: [
     "address 2",
@@ -263,6 +295,25 @@ const PRESET_FIELD_ALIASES: Partial<
     email: ["email", "email address"],
     address: ["property address", "street 1", "street address"],
   },
+  fieldedge: {
+    name: ["customer name", "customer", "display name"],
+    phone: ["primary phone", "phone", "mobile phone"],
+    email: ["email", "email address"],
+    address: ["address", "service address", "address 1"],
+  },
+  service_fusion: {
+    name: ["customer name", "customer", "account name"],
+    phone: ["phone 1", "phone", "mobile"],
+    email: ["email 1", "email"],
+    address: ["street 1", "address 1", "address"],
+    address_line2: ["street 2", "address 2"],
+  },
+  workiz: {
+    name: ["client name", "client", "name"],
+    phone: ["client phone", "phone"],
+    email: ["client email", "email"],
+    address: ["address", "client address"],
+  },
   quickbooks: {
     name: ["customer", "customer name", "display name"],
     phone: ["phone", "phone number", "mobile"],
@@ -287,9 +338,12 @@ export type CustomerImportRowInput = {
   company: string;
 };
 
-function getCustomerImportRowLimitError(rowCount: number): string | null {
-  if (rowCount > CUSTOMER_IMPORT_MAX_ROWS) {
-    return `This file has ${rowCount} rows. Import up to ${CUSTOMER_IMPORT_MAX_ROWS} customers at a time.`;
+function getCustomerImportRowLimitError(
+  rowCount: number,
+  maxRows: number,
+): string | null {
+  if (rowCount > maxRows) {
+    return `This file has ${rowCount.toLocaleString("en-US")} rows. Import up to ${maxRows.toLocaleString("en-US")} customers at a time.`;
   }
 
   return null;
@@ -427,11 +481,15 @@ export function buildCustomerNameFromMappedValues(values: MappedImportRowValues)
 export function mapCsvRecordsToImportRowsWithCompany(
   parsed: ParsedCustomerImportCsv,
   mapping: CustomerImportFieldMapping,
+  maxRows: number = CUSTOMER_IMPORT_MAX_ROWS,
 ): {
   error?: string;
   rows?: CustomerImportRowInput[];
 } {
-  const rowLimitError = getCustomerImportRowLimitError(parsed.dataRecords.length);
+  const rowLimitError = getCustomerImportRowLimitError(
+    parsed.dataRecords.length,
+    maxRows,
+  );
   if (rowLimitError) {
     return { error: rowLimitError };
   }

@@ -24,7 +24,7 @@ export type NotYetItem = {
 export const ALTAIR_NOT_YET: readonly NotYetItem[] = [
   {
     title: "QuickBooks or other accounting sync",
-    today: "Invoices, payments and expenses are recorded in Altair. A customer list exported from QuickBooks can be imported.",
+    today: "Invoices, payments and expenses are recorded in Altair. Customers, products and open invoices exported from QuickBooks can be imported.",
   },
   {
     title: "A built-in phone system",
@@ -52,6 +52,6 @@ export const ALTAIR_NOT_YET: readonly NotYetItem[] = [
   },
   {
     title: "Importing equipment or job history",
-    today: "The import brings over customer names, phone numbers, emails and addresses.",
+    today: "Customers, the price book and unpaid invoices import; past jobs and equipment are added as you go.",
   },
 ];

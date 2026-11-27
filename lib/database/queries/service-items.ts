@@ -514,3 +514,66 @@ export async function setServiceItemActive(
     error: null,
   };
 }
+
+/**
+ * Every non-deleted price book name in the company (archived included), for
+ * the import's duplicate check. Read in pages: PostgREST caps one response at
+ * 1,000 rows and a partial list would let duplicates through.
+ */
+export async function listServiceItemNamesForImport(
+  companyId: string,
+): Promise<{ names: string[]; error: string | null }> {
+  const supabase = await createClient();
+  const PAGE = 1000;
+  const names: string[] = [];
+
+  for (let from = 0; from < 100_000; from += PAGE) {
+    const { data, error } = await supabase
+      .from("service_items")
+      .select("name")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      console.error("[listServiceItemNamesForImport] query failed:", {
+        companyId,
+        code: error.code,
+        message: error.message,
+      });
+      return { names: [], error: mapDatabaseError(error) };
+    }
+
+    const rows = (data ?? []) as { name: string }[];
+    names.push(...rows.map((row) => row.name));
+    if (rows.length < PAGE) break;
+  }
+
+  return { names, error: null };
+}
+
+/** Inserts many price book items in one statement (the import). */
+export async function createServiceItemsBulk(
+  companyId: string,
+  items: ServiceItemFormData[],
+): Promise<{ count: number; error: string | null }> {
+  if (items.length === 0) return { count: 0, error: null };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("service_items")
+    .insert(items.map((item) => mapServiceItemFormDataToInsert(companyId, item)))
+    .select("id");
+
+  if (error) {
+    console.error("[createServiceItemsBulk] insert failed:", {
+      companyId,
+      count: items.length,
+      code: error.code,
+      message: error.message,
+    });
+    return { count: 0, error: mapDatabaseError(error) };
+  }
+
+  return { count: data?.length ?? 0, error: null };
+}

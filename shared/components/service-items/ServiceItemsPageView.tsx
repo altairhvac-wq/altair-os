@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   createServiceItemAction,
@@ -358,6 +359,19 @@ export function ServiceItemsPageView({
             <Plus className="h-3.5 w-3.5" />
             New Service Item
           </button>
+        ) : undefined
+      }
+      secondaryAction={
+        canManagePriceBook ? (
+          <Button
+            href="/price-book/import"
+            size="sm"
+            variant="secondary"
+            leadingIcon={<Upload className="h-3.5 w-3.5" />}
+          >
+            <span className="hidden sm:inline">Import Price Book</span>
+            <span className="sm:hidden">Import</span>
+          </Button>
         ) : undefined
       }
       className={northStar ? lt.pageCanvas : undefined}
