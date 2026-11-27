@@ -119,7 +119,7 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
             <NumField tool={tool} k="laborHours" label="Labor hours" suffix="hrs" hint="Every paid hour, return trips included." />
             <NumField tool={tool} k="loadedLaborRate" label="Loaded labor cost" prefix="$" suffix="/hr" hint="Wage plus burden: your cost, not your rate." />
             <div className="sm:col-span-2">
-              <NumField tool={tool} k="overheadPercent" label="Overhead share" suffix="% of revenue" hint="Last year's overhead ÷ last year's revenue." />
+              <NumField tool={tool} k="overheadPercent" label="Shop costs share (overhead)" suffix="% of revenue" hint="Last year's overhead ÷ last year's revenue." />
             </div>
           </>
         }
@@ -139,7 +139,7 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
               <dl className="space-y-2 rounded-xl border border-stone-200 bg-white p-3.5">
                 <CompactStat label="Direct cost" value={money(result.directCost)} note="labor, materials, subcontract" />
                 <CompactStat label="Gross profit" value={money(result.grossProfit)} tone={result.grossProfit < 0 ? "negative" : "neutral"} />
-                <CompactStat label="Overhead share" value={money(result.overheadAllocated)} />
+                <CompactStat label="Shop costs share (overhead)" value={money(result.overheadAllocated)} />
               </dl>
             </>
           ) : (
@@ -222,7 +222,7 @@ export function JobProfitabilityTool({ compact = false }: { readonly compact?: b
             />
           </InputGroup>
           <InputGroup title="Your targets" text="Optional. For the price check below." badge={<SampleTag />}>
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" hint="The net margin you want on every job." find="Your choice. 20% means $20 of every $100 the customer pays is profit after labor, materials and overhead." />
+            <NumField tool={tool} k="targetMarginPercent" label="Profit to keep (net margin)" suffix="%" hint="The net margin you want on every job." find="Your choice. 20% means $20 of every $100 the customer pays is profit after labor, materials and overhead." />
             <NumField tool={tool} k="billedRate" label="Your labor rate" prefix="$" suffix="/hr" hint="What you bill per hour, to compare with this job." find="The hourly labor rate in your price book, or the result of the labor rate calculator." />
           </InputGroup>
         </>

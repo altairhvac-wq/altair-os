@@ -188,7 +188,7 @@ export function MaintenanceAgreementTool() {
             />
           </InputGroup>
           <InputGroup title="Margin">
-            <NumField tool={tool} k="targetMarginPercent" label="Target net margin" suffix="%" invalid={marginBad} hint="Profit left from the price after its costs. A margin, not a markup." find="Your choice. 20% means $20 of every $100 a member pays is profit after the visits, materials and perks." />
+            <NumField tool={tool} k="targetMarginPercent" label="Profit to keep (net margin)" suffix="%" invalid={marginBad} hint="Profit left from the price after its costs. A margin, not a markup." find="Your choice. 20% means $20 of every $100 a member pays is profit after the visits, materials and perks." />
             <Chips tool={tool} k="targetMarginPercent" options={["10", "15", "20", "25", "30"]} suffix="%" />
           </InputGroup>
           <InputGroup title="Optional: your program" text="For the program view below the results. Leave blank to skip." badge={<SampleTag />}>

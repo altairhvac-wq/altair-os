@@ -216,6 +216,8 @@ export default function LaborCostWorkspacePage() {
         crumb="HVAC labor rate calculator"
         eyebrow="Free tool · Labor Cost Workspace"
         title={H1}
+        question="What does a billed hour have to cover for your whole crew? Five short steps, about 10 minutes."
+        needs="A pay stub for each technician and last year's Profit and Loss report."
         lead={
           <p>
             Find exactly what a billed hour has to cover: every technician&apos;s wage, the burden on top of it, the

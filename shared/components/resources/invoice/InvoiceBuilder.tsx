@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { trackEngagement } from "@/shared/lib/analytics/client";
 import {
+  ChevronDown,
   ClipboardCopy,
   Eye,
   FileText,
@@ -191,43 +192,49 @@ export function InvoiceBuilder() {
     );
 
   const computed = useMemo(() => computeInvoice(state), [state]);
+  const printBlank = () => {
+    trackAction("print-blank");
+    setBlankPrint(true);
+  };
+  // Which of the folded sections already hold something (a loaded sample, or the owner's own entries).
+  const has = (...keys: (keyof InvoiceState)[]) => keys.some((key) => String(state[key] ?? "").trim() !== "");
+  const filled = {
+    equipment: has("equipmentType", "make", "model", "serial", "location", "refrigerantType", "lbsAdded", "lbsRecovered"),
+    work: has("complaint", "cause", "correction"),
+    tax: state.kind !== "standard" || [state.taxRate, state.discount, state.amountPaid].some((value) => Number.parseFloat(value) > 0),
+    terms: has("paymentInstructions", "warranty", "permit", "inspection", "technician", "notes"),
+  };
 
   return (
     <div id="invoice-builder" className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
-        <div className="flex flex-col gap-3 bg-[#0d0f0c] px-4 py-3 sm:px-5 xl:flex-row xl:items-center xl:justify-between print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30">
+        {/* A phone shows one row: the name and "Load sample". The PDF button is in the bar at the bottom of
+            the screen there, and Clear and the blank copies are under the form. */}
+        <div className="flex items-center justify-between gap-3 bg-[#0d0f0c] px-4 py-2.5 sm:flex-col sm:items-stretch sm:px-5 sm:py-3 xl:flex-row xl:items-center print:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30 max-sm:hidden">
               <FileText aria-hidden="true" className="h-4.5 w-4.5 text-[#e8d9ac]" />
             </span>
-            <div>
-              <p className="text-sm font-semibold text-[#fff9ea]">Invoice Builder</p>
-              <p className="text-[11px] text-[#a99f8f]">Customer details stay on this device. Nothing is uploaded.</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#fff9ea]">Invoice Builder</p>
+              <p className="hidden text-[11px] text-[#a99f8f] sm:block">Customer details stay on this device. Nothing is uploaded.</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <ToolButton variant="dark" size="sm" icon={Sparkles} onClick={loadSample}>
               Load sample
             </ToolButton>
-            <ToolButton variant="dark" size="sm" icon={RotateCcw} onClick={clear}>
+            <ToolButton variant="dark" size="sm" icon={RotateCcw} onClick={clear} className="max-sm:hidden">
               Clear
             </ToolButton>
-            <ToolButton variant="dark" size="sm" icon={ClipboardCopy} onClick={copyBlank}>
+            <ToolButton variant="dark" size="sm" icon={ClipboardCopy} onClick={copyBlank} className="max-sm:hidden">
               Copy blank template
             </ToolButton>
-            <ToolButton
-              variant="dark"
-              size="sm"
-              icon={FileText}
-              onClick={() => {
-                trackAction("print-blank");
-                setBlankPrint(true);
-              }}
-            >
+            <ToolButton variant="dark" size="sm" icon={FileText} onClick={printBlank} className="max-sm:hidden">
               Print blank
             </ToolButton>
-            <ToolButton variant="primary" size="sm" icon={Printer} onClick={printInvoice}>
+            <ToolButton variant="primary" size="sm" icon={Printer} onClick={printInvoice} className="max-sm:hidden">
               Print / Save PDF
             </ToolButton>
           </div>
@@ -269,6 +276,11 @@ export function InvoiceBuilder() {
           {/* ---------- form ---------- */}
           <div className={`min-w-0 border-stone-200 lg:block lg:border-r print:hidden ${view === "form" ? "block" : "hidden"}`}>
             <div className="divide-y divide-stone-200">
+              <p className="bg-stone-50 px-4 py-2.5 text-[13px] leading-snug text-stone-700 sm:px-6">
+                <strong className="font-semibold text-stone-900">Four parts make a complete invoice</strong>
+                <span className="hidden sm:inline">: the details, your company, the customer and the lines</span>. The folded sections are there
+                when the job needs them.
+              </p>
               <FormSection n={1} title="Invoice details">
                 <div className="mb-4">
                   <Segmented
@@ -335,7 +347,7 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={4} title="Equipment and refrigerant">
+              <FormSection n={4} title="Equipment and refrigerant" tag="For service work" filled={filled.equipment}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Equipment" className="sm:col-span-2">{({ id }) => <TextInput id={id} value={state.equipmentType} onChange={(v) => set("equipmentType", v)} placeholder="e.g. Gas furnace, heat pump outdoor unit" />}</Field>
                   <Field label="Make">{({ id }) => <TextInput id={id} value={state.make} onChange={(v) => set("make", v)} placeholder="From the data plate" />}</Field>
@@ -368,7 +380,7 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={5} title="Work performed">
+              <FormSection n={5} title="Work performed" tag="For service work" filled={filled.work}>
                 <div className="grid gap-4">
                   <Field label="Complaint" hint="What the customer said was wrong.">{({ id }) => <TextArea id={id} value={state.complaint} onChange={(v) => set("complaint", v)} placeholder="e.g. No heat upstairs" />}</Field>
                   <Field label="Cause" hint="What the technician found.">{({ id }) => <TextArea id={id} value={state.cause} onChange={(v) => set("cause", v)} placeholder="e.g. Flame sensor coated, furnace locking out" />}</Field>
@@ -405,7 +417,7 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={7} title="Tax, discount and payments">
+              <FormSection n={7} title="Tax, discount and payments" tag="If it applies" filled={filled.tax}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Sales tax rate" hint="Applied to lines marked taxable. Check your state's rules for parts and labor.">
                     {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.taxRate} onChange={(v) => set("taxRate", v)} suffix="%" placeholder="0" />}
@@ -447,7 +459,7 @@ export function InvoiceBuilder() {
                 </div>
               </FormSection>
 
-              <FormSection n={8} title="Payment, warranty and permits">
+              <FormSection n={8} title="Payment, warranty and permits" tag="If it applies" filled={filled.terms}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="How to pay" className="sm:col-span-2">{({ id }) => <TextArea id={id} value={state.paymentInstructions} onChange={(v) => set("paymentInstructions", v)} placeholder="Payment link, card, check payable to..., ACH" />}</Field>
                   <Field label="Warranty" className="sm:col-span-2">{({ id }) => <TextInput id={id} value={state.warranty} onChange={(v) => set("warranty", v)} placeholder="e.g. 1 year labor; parts per manufacturer" maxLength={200} />}</Field>
@@ -457,6 +469,18 @@ export function InvoiceBuilder() {
                   <Field label="Note to customer" className="sm:col-span-2">{({ id }) => <TextArea id={id} value={state.notes} onChange={(v) => set("notes", v)} placeholder="Recommendations, thank-you note" />}</Field>
                 </div>
               </FormSection>
+              {/* phone: the toolbar's other buttons */}
+              <div className="flex flex-wrap gap-2 px-4 py-4 sm:hidden">
+                <ToolButton size="sm" icon={RotateCcw} onClick={clear}>
+                  Clear
+                </ToolButton>
+                <ToolButton size="sm" icon={ClipboardCopy} onClick={copyBlank}>
+                  Copy blank template
+                </ToolButton>
+                <ToolButton size="sm" icon={FileText} onClick={printBlank}>
+                  Print blank
+                </ToolButton>
+              </div>
             </div>
           </div>
 
@@ -504,14 +528,63 @@ export function InvoiceBuilder() {
   );
 }
 
-function FormSection({ n, title, children }: { readonly n: number; readonly title: string; readonly children: React.ReactNode }) {
+/**
+ * One numbered part of the form. With a `tag` the section folds: it starts
+ * closed while it is empty, so a first-time visitor sees the four parts every
+ * invoice needs and not 46 boxes (2026-11-27 audit), and opens by itself when
+ * it holds something (a loaded sample, a deposit invoice). A press on the
+ * heading always wins.
+ */
+function FormSection({
+  n,
+  title,
+  children,
+  tag,
+  filled = false,
+}: {
+  readonly n: number;
+  readonly title: string;
+  readonly children: React.ReactNode;
+  /** Short note beside the title, e.g. "If it applies". Makes the section foldable. */
+  readonly tag?: string;
+  readonly filled?: boolean;
+}) {
+  const [pressed, setPressed] = useState<boolean | null>(null);
+  const bodyId = useId();
+  const badge = (
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold text-white">{n}</span>
+  );
+  if (!tag) {
+    return (
+      <section className="px-4 py-5 sm:px-6">
+        <h3 className="mb-4 flex items-center gap-2.5 text-[15px] font-semibold text-stone-900">
+          {badge}
+          {title}
+        </h3>
+        {children}
+      </section>
+    );
+  }
+  const open = pressed ?? filled;
   return (
-    <section className="px-4 py-5 sm:px-6">
-      <h3 className="mb-4 flex items-center gap-2.5 text-[15px] font-semibold text-stone-900">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-900 text-[11px] font-semibold text-white">{n}</span>
-        {title}
+    <section className="px-4 sm:px-6">
+      <h3 className="text-[15px] font-semibold text-stone-900">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          onClick={() => setPressed(!open)}
+          className={`flex min-h-14 w-full items-center gap-2.5 rounded-lg text-left ${focusRing}`}
+        >
+          {badge}
+          <span className="min-w-0 flex-1">{title}</span>
+          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-600">{!open && filled ? "Filled in" : tag}</span>
+          <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 text-stone-500 transition-transform motion-reduce:transition-none ${open ? "rotate-180" : ""}`} />
+        </button>
       </h3>
-      {children}
+      <div id={bodyId} hidden={!open} className="pb-5 pt-1">
+        {children}
+      </div>
     </section>
   );
 }

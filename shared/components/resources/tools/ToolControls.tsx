@@ -254,22 +254,39 @@ export function Field({
       </FieldLabel>
       <div className="mt-1.5">{children({ id, hintId })}</div>
       {hint ? (
-        <p id={hintId} className="mt-1 text-xs leading-relaxed text-stone-500">
+        <p id={hintId} className="mt-1 text-[13px] leading-relaxed text-stone-500 sm:text-xs">
           {hint}
         </p>
       ) : null}
-      {find ? (
-        <details className="group mt-1">
-          <summary
-            className={`inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs font-semibold text-[#77591B] hover:underline [&::-webkit-details-marker]:hidden ${focusRing}`}
-          >
-            Where do I find this?
-            <ChevronDown aria-hidden="true" className="h-3 w-3 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/60 px-3 py-2 text-xs leading-relaxed text-stone-700">{find}</div>
-        </details>
-      ) : null}
+      {find ? <FindHelp>{find}</FindHelp> : null}
     </div>
+  );
+}
+
+/**
+ * "Where do I find this?": where a shop owner gets a number (a report, a pay
+ * stub, a P&L line), opened on demand. Under one field, or under a group of
+ * fields that come from the same paper.
+ */
+export function FindHelp({
+  children,
+  label = "Where do I find this?",
+  className = "mt-1",
+}: {
+  readonly children: React.ReactNode;
+  readonly label?: string;
+  readonly className?: string;
+}) {
+  return (
+    <details className={`group ${className}`}>
+      <summary
+        className={`inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded text-[13px] font-semibold text-[#77591B] hover:underline sm:min-h-0 sm:text-xs [&::-webkit-details-marker]:hidden ${focusRing}`}
+      >
+        {label}
+        <ChevronDown aria-hidden="true" className="h-3 w-3 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="mt-1.5 max-w-2xl rounded-lg border border-amber-200/70 bg-amber-50/60 px-3 py-2 text-[13px] leading-relaxed text-stone-700 sm:text-xs">{children}</div>
+    </details>
   );
 }
 

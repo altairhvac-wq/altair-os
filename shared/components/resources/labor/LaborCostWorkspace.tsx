@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import {
   Field,
+  FindHelp,
   NumberInput,
   SampleTag,
   Segmented,
@@ -35,6 +36,7 @@ import {
   useToast,
   writeStorage,
 } from "@/shared/components/resources/tools/ToolControls";
+import { ResultReading } from "@/shared/components/resources/calc/CalculatorTool";
 import {
   FICA_LABEL,
   RateBar,
@@ -85,11 +87,13 @@ import Link from "next/link";
  */
 
 const STEPS = [
-  { id: "team", label: "Team", title: "Technicians and wages" },
-  { id: "burden", label: "Burden", title: "Labor burden" },
-  { id: "time", label: "Time", title: "Billable and unbillable time" },
-  { id: "overhead", label: "Overhead", title: "Monthly overhead" },
-  { id: "margin", label: "Margin", title: "Target net margin" },
+  // Labels in the owner's words (2026-11-27 audit: "Burden", "Overhead" and "Margin" stopped people). The
+  // trade word stays in the title, so the owner meets it with its meaning beside it.
+  { id: "team", label: "Your techs", title: "Technicians and wages" },
+  { id: "burden", label: "Payroll costs", title: "Payroll costs on top of the wage (labor burden)" },
+  { id: "time", label: "Billed hours", title: "Hours you can bill, and hours you can't" },
+  { id: "overhead", label: "Shop costs", title: "What the shop costs each month (overhead)" },
+  { id: "margin", label: "Profit", title: "The profit you keep (net margin)" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -213,23 +217,28 @@ export function LaborCostWorkspace() {
   };
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
+  const print = () => {
+    trackAction("print");
+    window.print();
+  };
   const marginInvalid = num(state.marginPct) >= 100 || num(state.marginPct) < 0;
 
   return (
     <div id="workspace" className="scroll-mt-24" onPointerDownCapture={markInteracted} onKeyDownCapture={markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
-        <div className="flex flex-col gap-3 bg-[#0d0f0c] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30">
+        {/* A phone shows one row: the name and "Load sample". Save, share and print sit beside the result there. */}
+        <div className="flex items-center justify-between gap-3 bg-[#0d0f0c] px-4 py-2.5 sm:px-5 lg:py-3 print:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30 max-sm:hidden">
               <Calculator aria-hidden="true" className="h-4.5 w-4.5 text-[#e8d9ac]" />
             </span>
-            <div>
-              <p className="text-sm font-semibold text-[#fff9ea]">Labor Cost Workspace</p>
-              <p className="text-[11px] text-[#a99f8f]">Runs in your browser. Nothing you type is sent anywhere.</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#fff9ea]">Labor Cost Workspace</p>
+              <p className="hidden text-[11px] text-[#a99f8f] sm:block">Runs in your browser. Nothing you type is sent anywhere.</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <div ref={presetsRef} className="relative">
               <ToolButton
                 variant="dark"
@@ -244,7 +253,7 @@ export function LaborCostWorkspace() {
               {presetsOpen ? (
                 <div
                   role="menu"
-                  className="absolute left-0 z-30 mt-2 w-72 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl sm:left-auto sm:right-0"
+                  className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl"
                 >
                   {[
                     {
@@ -280,21 +289,13 @@ export function LaborCostWorkspace() {
                 </div>
               ) : null}
             </div>
-            <ToolButton variant="dark" size="sm" icon={Link2} onClick={copyLink}>
+            <ToolButton variant="dark" size="sm" icon={Link2} onClick={copyLink} className="max-lg:hidden">
               Copy share link
             </ToolButton>
-            <ToolButton variant="dark" size="sm" icon={Save} onClick={save}>
+            <ToolButton variant="dark" size="sm" icon={Save} onClick={save} className="max-lg:hidden">
               Save in this browser
             </ToolButton>
-            <ToolButton
-              variant="primary"
-              size="sm"
-              icon={Printer}
-              onClick={() => {
-                trackAction("print");
-                window.print();
-              }}
-            >
+            <ToolButton variant="primary" size="sm" icon={Printer} onClick={print} className="max-lg:hidden">
               Print / PDF
             </ToolButton>
           </div>
@@ -337,7 +338,7 @@ export function LaborCostWorkspace() {
                         type="button"
                         onClick={() => setStep(s.id)}
                         aria-current={active ? "step" : undefined}
-                        className={`relative flex min-h-12 items-center gap-2 px-3 text-[13px] font-semibold transition-colors sm:px-4 ${
+                        className={`relative flex min-h-12 items-center gap-1.5 whitespace-nowrap px-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:px-4 ${
                           active ? "text-stone-900" : "text-stone-500 hover:text-stone-800"
                         } ${focusRing}`}
                       >
@@ -348,7 +349,7 @@ export function LaborCostWorkspace() {
                         >
                           {index < stepIndex ? <Check aria-hidden="true" className="h-3 w-3" /> : index + 1}
                         </span>
-                        <span className={active ? "" : "hidden sm:inline"}>{s.label}</span>
+                        <span>{s.label}</span>
                         {active ? <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-[#A4823A]" /> : null}
                       </button>
                     </li>
@@ -406,7 +407,29 @@ export function LaborCostWorkspace() {
           {/* ---------- results ---------- */}
           <aside id="results" aria-label="Results" className="scroll-mt-24 bg-stone-50/60 px-4 py-5 sm:px-6 print:bg-white print:px-0">
             <div className="lg:sticky lg:top-24">
-              <ResultsPanel result={result} problem={outcome.ok ? null : PROBLEM_TEXT[outcome.problem]} margin={num(state.marginPct)} />
+              <ResultsPanel
+                result={result}
+                problem={outcome.ok ? null : PROBLEM_TEXT[outcome.problem]}
+                margin={num(state.marginPct)}
+                currentRate={state.currentRate.trim() === "" ? null : num(state.currentRate)}
+                techCount={state.techs.length}
+                onAskCurrentRate={() => setStep("margin")}
+              />
+              <div className="mt-4 rounded-xl border border-stone-200 bg-white p-3 lg:hidden print:hidden">
+                <p className="text-[13px] font-semibold text-stone-900">Keep this result</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-stone-600">Nothing you type is sent anywhere. Save it in this browser, or send yourself the link.</p>
+                <div className="mt-2.5 grid grid-cols-3 gap-2">
+                  <ToolButton size="sm" icon={Save} onClick={save} className="px-2">
+                    Save
+                  </ToolButton>
+                  <ToolButton size="sm" icon={Link2} onClick={copyLink} className="px-2">
+                    Share link
+                  </ToolButton>
+                  <ToolButton size="sm" variant="primary" icon={Printer} onClick={print} className="px-2">
+                    PDF
+                  </ToolButton>
+                </div>
+              </div>
             </div>
           </aside>
         </div>
@@ -484,10 +507,16 @@ function TeamStep({
   return (
     <div>
       <StepIntro>
-        One row per field technician on the payroll. Use the base hourly wage from the pay stub, before taxes and
-        benefits, and the hours a week you pay them for. Owners who run calls count too, at what you would pay
-        someone to replace you.
+        One row per field technician on the payroll: the base hourly wage from the pay stub, before taxes and benefits, and the hours a week
+        you pay them for.
       </StepIntro>
+      <FindHelp label="Where do I find these?" className="-mt-3 mb-5">
+        <strong className="font-semibold text-stone-900">Wage:</strong> the hourly rate on the technician&apos;s pay stub or in your payroll
+        software, before any taxes. Paid a salary? Divide the yearly salary by 2,080.{" "}
+        <strong className="font-semibold text-stone-900">Paid hours:</strong> the hours a week you pay for, drive and shop time included.
+        For most full-time technicians that is 40. <strong className="font-semibold text-stone-900">Owners who run calls</strong> count
+        too, at what you would pay someone to replace you.
+      </FindHelp>
 
       <div className="hidden grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_40px] gap-3 px-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500 md:grid">
         <span>Technician</span>
@@ -581,10 +610,11 @@ function BurdenStep({
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-sm leading-relaxed text-stone-600">
-          What it costs to employ a technician on top of the wage. Use one percentage, or itemize it line by line.
+          What it costs to employ a technician on top of the wage: payroll taxes, workers&apos; comp, insurance and benefits. The trade calls it
+          labor burden. Use one percentage, or itemize it line by line.
         </p>
         <Segmented
-          label="Burden detail"
+          label="How much detail"
           value={state.burdenMode}
           onChange={(value) => patch({ burdenMode: value })}
           options={[
@@ -597,8 +627,15 @@ function BurdenStep({
       {state.burdenMode === "simple" ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Labor burden"
-            hint="Payroll taxes, workers' comp, insurance and benefits, as a share of wages. Your payroll provider or accountant can give you this number."
+            label="Payroll costs (labor burden)"
+            hint="Payroll taxes, workers' comp, insurance and benefits, as a share of wages."
+            find={
+              <>
+                Ask your payroll provider (Gusto, ADP, QuickBooks Payroll) for last year&apos;s employer-cost or total-cost-of-payroll report. Add up
+                employer taxes, workers&apos; comp and benefits, then divide by gross wages for the same year. $13,000 of those costs on $52,000 of
+                wages is 25%. No report? Switch to Advanced and build it line by line.
+              </>
+            }
           >
             {({ id, hintId }) => (
               <NumberInput id={id} describedBy={hintId} value={state.burdenPct} onChange={(v) => set("burdenPct", v)} suffix="% of wages" />
@@ -634,26 +671,27 @@ function BurdenStep({
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="State unemployment (SUTA)" badge={<SampleTag />} hint="Your rate from the state's annual notice.">
+            <Field label="State unemployment (SUTA)" badge={<SampleTag />} hint="Your rate from the state's annual notice." find="The unemployment tax rate notice your state mails each year, or the state unemployment line in your payroll software's tax settings.">
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.sutaPct} onChange={(v) => set("sutaPct", v)} suffix="%" />}
             </Field>
-            <Field label="SUTA wage base" badge={<SampleTag />} hint="Wages taxed per employee each year. Varies by state.">
+            <Field label="SUTA wage base" badge={<SampleTag />} hint="Wages taxed per employee each year. Varies by state." find="Printed on the same state notice as your rate, and on your state workforce agency's website under the taxable wage base.">
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.sutaBase} onChange={(v) => set("sutaBase", v)} prefix="$" suffix="/yr" />}
             </Field>
-            <Field label="Workers' comp" badge={<SampleTag />} hint="From your policy: rate for your HVAC class code, as a % of wages.">
+            <Field label="Workers' comp" badge={<SampleTag />} hint="From your policy: rate for your HVAC class code, as a % of wages." find="The declarations page of your workers' comp policy lists a rate per $100 of payroll for each class code. $4.00 per $100 is 4%.">
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.wcPct} onChange={(v) => set("wcPct", v)} suffix="% of wages" />}
             </Field>
             <Field
               label="Health insurance, employer share"
               badge={<SourceTag>KFF 2025 average</SourceTag>}
               hint="Per technician per year. $7,885 is the 2025 average employer share for single coverage. Use your plan's number."
+              find="Your health insurance invoice: the part the company pays for one technician for a month, times 12. No health plan? Enter 0."
             >
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.health} onChange={(v) => set("health", v)} prefix="$" suffix="/yr" />}
             </Field>
-            <Field label="Paid days off and holidays" badge={<SampleTag />} hint="Paid days not worked a year. Sample: 10 vacation days plus 6 holidays.">
+            <Field label="Paid days off and holidays" badge={<SampleTag />} hint="Paid days not worked a year. Sample: 10 vacation days plus 6 holidays." find="Your employee handbook or offer letters: vacation days plus the holidays you pay for.">
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.ptoDays} onChange={(v) => set("ptoDays", v)} suffix="days/yr" />}
             </Field>
-            <Field label="Vehicle and tools per technician" badge={<SampleTag />} hint="Truck payment, fuel, insurance, tools and phone for each technician.">
+            <Field label="Vehicle and tools per technician" badge={<SampleTag />} hint="Truck payment, fuel, insurance, tools and phone for each technician." find="Last month's statements for one truck: the payment, the fuel card, that truck's share of the vehicle insurance, plus tools and the phone.">
               {({ id, hintId }) => <NumberInput id={id} describedBy={hintId} value={state.vehicle} onChange={(v) => set("vehicle", v)} prefix="$" suffix="/mo" />}
             </Field>
           </div>
@@ -677,7 +715,7 @@ function BurdenStep({
                     </tr>
                   ))}
                   <tr className="bg-stone-50 font-semibold">
-                    <td className="px-4 py-2.5 text-stone-900">Effective burden on worked wages</td>
+                    <td className="px-4 py-2.5 text-stone-900">All of it, as a share of worked wages</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-[#77591B]">{formatPct(result.effectiveBurdenRate)}</td>
                   </tr>
                 </tbody>
@@ -716,7 +754,7 @@ function TimeStep({
           Billable hours are hours that end up on an invoice. This is the input that moves the rate the most.
         </p>
         <Segmented
-          label="How to count billable time"
+          label="How to count billed hours"
           value={state.billableMode}
           onChange={(value) => patch({ billableMode: value })}
           options={[
@@ -737,11 +775,16 @@ function TimeStep({
               </Field>
             ))}
           </div>
-          <p className="mt-3 text-xs text-stone-500">Per technician, per week. Taken off each technician&apos;s paid hours.</p>
+          <p className="mt-3 text-[13px] text-stone-500 sm:text-xs">Per technician, per week. Taken off each technician&apos;s paid hours.</p>
+          <FindHelp label="Where do I find these?" className="mt-2">
+            Take one normal week. Hours on that week&apos;s timesheets, minus the hours that ended up on that week&apos;s invoices, is the time
+            nobody paid for. Split it across these boxes as best you can; the total matters more than the split. In the sample, 10 of 40 paid
+            hours are not billed.
+          </FindHelp>
         </>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Billable efficiency" hint="The share of paid hours that is billed to a customer. 30 billed out of 40 paid is 75%.">
+          <Field label="Share of paid hours you bill (billable efficiency)" hint="30 billed out of 40 paid is 75%." find="Hours on last month's invoices divided by hours on the same month's timesheets.">
             {({ id, hintId }) => (
               <NumberInput id={id} describedBy={hintId} value={state.efficiencyPct} onChange={(v) => set("efficiencyPct", v)} suffix="% of paid hours" />
             )}
@@ -752,7 +795,7 @@ function TimeStep({
       {result ? (
         <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl bg-stone-50 p-3 ring-1 ring-inset ring-stone-200 sm:gap-3 sm:p-4">
           <Stat label={state.billableMode === "hours" ? "Unbillable / tech / wk" : "Billable / tech / wk"} value={state.billableMode === "hours" ? formatHours(unbillable) : formatHours(result.techs[0]?.billableHoursPerWeek ?? 0)} />
-          <Stat label="Billable efficiency" value={formatPct(result.billableEfficiency)} />
+          <Stat label="Share billed" value={formatPct(result.billableEfficiency)} />
           <Stat label="Billable hours / yr" value={Math.round(result.billableHoursPerYear).toLocaleString("en-US")} />
         </div>
       ) : null}
@@ -774,9 +817,14 @@ function OverheadStep({ state, set, result }: { readonly state: LaborState; read
   return (
     <div>
       <StepIntro>
-        Every monthly cost that is not field labor or materials, for the whole company. It is spread across the
-        billable hours of every technician on the Team step.
+        Every monthly cost that is not field labor or materials, for the whole company. The trade calls it overhead. It is spread across
+        the billed hours of every technician on the first step.
       </StepIntro>
+      <FindHelp label="Where do I find these?" className="-mt-3 mb-4">
+        Last year&apos;s Profit and Loss report from your accounting software, each expense line divided by 12. Leave out technician pay and
+        parts: those are counted elsewhere. An owner who runs calls goes on the first step as a technician; only the part of the owner&apos;s pay
+        for running the office belongs here.
+      </FindHelp>
       <div className="mb-3 flex justify-end">
         <SampleTag>sample values · use your own</SampleTag>
       </div>
@@ -790,9 +838,9 @@ function OverheadStep({ state, set, result }: { readonly state: LaborState; read
         ))}
       </div>
       <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl bg-stone-50 p-3 ring-1 ring-inset ring-stone-200 sm:gap-3 sm:p-4">
-        <Stat label="Overhead / month" value={formatMoney(total, 0)} />
-        <Stat label="Overhead / year" value={formatMoney(total * 12, 0)} />
-        <Stat label="Per billable hour" value={result ? formatMoney(result.overheadPerBillableHour) : "–"} />
+        <Stat label="Shop costs / month" value={formatMoney(total, 0)} />
+        <Stat label="Shop costs / year" value={formatMoney(total * 12, 0)} />
+        <Stat label="Per billed hour" value={result ? formatMoney(result.overheadPerBillableHour) : "–"} />
       </div>
     </div>
   );
@@ -816,7 +864,11 @@ function MarginStep({
         means $20 of every $100 billed is profit, which is a 25% markup on cost.
       </StepIntro>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Target net margin" hint={invalid ? "Enter a margin from 0% to 99%." : "Profit as a share of the billed rate."}>
+        <Field
+          label="Profit you want to keep (net margin)"
+          hint={invalid ? "Enter a margin from 0% to 99%." : "Profit as a share of the billed rate."}
+          find="This one is a choice, not a lookup. For a starting point, last year's net profit divided by revenue (the bottom line of your Profit and Loss) is what you kept. The sample uses 20%."
+        >
           {({ id, hintId }) => (
             <NumberInput id={id} describedBy={hintId} value={state.marginPct} onChange={(v) => set("marginPct", v)} suffix="%" invalid={invalid} />
           )}
@@ -836,6 +888,18 @@ function MarginStep({
             </button>
           ))}
         </div>
+      </div>
+      <div className="mt-5 grid gap-4 border-t border-stone-200 pt-5 sm:grid-cols-2">
+        <Field
+          label="Your hourly rate today"
+          badge={<span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-stone-500">Optional</span>}
+          hint="What you charge per hour now. The result then says whether it is enough, and what the gap is worth in a year."
+          find="The labor line on a recent invoice. On flat-rate work, divide the labor part of the price by the book hours for the task."
+        >
+          {({ id, hintId }) => (
+            <NumberInput id={id} describedBy={hintId} value={state.currentRate} onChange={(v) => set("currentRate", v)} prefix="$" suffix="/hr" placeholder="Leave blank to skip" />
+          )}
+        </Field>
       </div>
       {result ? (
         <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl bg-stone-50 p-3 ring-1 ring-inset ring-stone-200 sm:gap-3 sm:p-4">
@@ -877,10 +941,17 @@ function ResultsPanel({
   result,
   problem,
   margin,
+  currentRate,
+  techCount,
+  onAskCurrentRate,
 }: {
   readonly result: WorkspaceResult | null;
   readonly problem: string | null;
   readonly margin: number;
+  /** What the shop charges today, when the owner typed it on the last step. */
+  readonly currentRate: number | null;
+  readonly techCount: number;
+  readonly onAskCurrentRate: () => void;
 }) {
   if (!result) {
     return (
@@ -911,11 +982,13 @@ function ResultsPanel({
         </p>
       </div>
 
+      <RateReading result={result} currentRate={currentRate} techCount={techCount} onAskCurrentRate={onAskCurrentRate} />
+
       <dl className="grid grid-cols-2 gap-2.5">
-        <ResultTile label="Break-even rate" value={formatMoney(result.breakEvenRate)} note="per billed hour" strong />
-        <ResultTile label="Loaded labor cost" value={formatMoney(result.loadedCostPerPaidHour)} note="per paid hour" />
-        <ResultTile label="Labor-only rate" value={formatMoney(result.laborPerBillableHour)} note="per billed hour" />
-        <ResultTile label="Overhead-only rate" value={formatMoney(result.overheadPerBillableHour)} note="per billed hour" />
+        <ResultTile label="Break-even rate" value={formatMoney(result.breakEvenRate)} note="per billed hour · below it you lose money" strong />
+        <ResultTile label="What a paid hour costs you" value={formatMoney(result.loadedCostPerPaidHour)} note="wage plus payroll costs" />
+        <ResultTile label="Labor share" value={formatMoney(result.laborPerBillableHour)} note="of each billed hour" />
+        <ResultTile label="Shop-cost share" value={formatMoney(result.overheadPerBillableHour)} note="of each billed hour" />
         <ResultTile label="Profit" value={formatMoney(result.profitPerBillableHour)} note="per billed hour" positive />
         <ResultTile label="Revenue at this rate" value={formatMoney(result.annualRevenueAtRate, 0)} note={`${Math.round(result.billableHoursPerYear).toLocaleString("en-US")} billed hrs / yr`} />
       </dl>
@@ -936,6 +1009,80 @@ function ResultsPanel({
         </span>
       </p>
     </div>
+  );
+}
+
+/**
+ * "What this means": the rate read back in plain words. With the owner's own
+ * hourly rate (optional, last step) it says where they stand and what the gap
+ * is worth over a year of billed hours; without it, what each billed hour pays for.
+ */
+function RateReading({
+  result,
+  currentRate,
+  techCount,
+  onAskCurrentRate,
+}: {
+  readonly result: WorkspaceResult;
+  readonly currentRate: number | null;
+  readonly techCount: number;
+  readonly onAskCurrentRate: () => void;
+}) {
+  const hoursPerYear = result.billableHoursPerYear;
+  const crew = techCount === 1 ? "on this one technician" : `across these ${techCount} technicians`;
+  const perYear = (perHour: number) => formatMoney(perHour * hoursPerYear, 0);
+  const split = (
+    <p>
+      Of every billed hour, {formatMoney(result.laborPerBillableHour)} pays the technician, {formatMoney(result.overheadPerBillableHour)} keeps
+      the shop open and {formatMoney(result.profitPerBillableHour)} is profit.
+    </p>
+  );
+
+  if (currentRate === null || currentRate <= 0) {
+    return (
+      <ResultReading tone="good" title={`Charge ${formatMoney(result.recommendedRateRounded, 0)} an hour and every cost is covered, with your profit on top.`}>
+        {split}
+        <p>
+          Below {formatMoney(result.breakEvenRate)} an hour, every billed hour loses money.{" "}
+          <button type="button" onClick={onAskCurrentRate} className={`rounded font-semibold text-[#77591B] underline underline-offset-2 print:hidden ${focusRing}`}>
+            Add the rate you charge today
+          </button>{" "}
+          to see where you stand.
+        </p>
+      </ResultReading>
+    );
+  }
+  if (currentRate < result.breakEvenRate) {
+    const short = result.breakEvenRate - currentRate;
+    return (
+      <ResultReading tone="bad" title={`At ${formatMoney(currentRate, 0)} an hour you lose ${formatMoney(short)} on every billed hour.`}>
+        <p>
+          That is about {perYear(short)} a year {crew}. Break-even is {formatMoney(result.breakEvenRate)}; the rate that also leaves your
+          profit is {formatMoney(result.recommendedRateRounded, 0)}.
+        </p>
+      </ResultReading>
+    );
+  }
+  if (currentRate < result.recommendedRate) {
+    const gap = result.recommendedRate - currentRate;
+    const kept = (currentRate - result.breakEvenRate) / currentRate;
+    return (
+      <ResultReading tone="watch" title={`${formatMoney(currentRate, 0)} an hour covers your costs, but keeps only ${formatPct(kept)} as profit.`}>
+        <p>
+          Raising it {formatMoney(result.recommendedRateRounded - currentRate, 0)}, to {formatMoney(result.recommendedRateRounded, 0)}, reaches
+          your target. The gap is worth about {perYear(gap)} a year {crew}.
+        </p>
+      </ResultReading>
+    );
+  }
+  return (
+    <ResultReading tone="good" title={`${formatMoney(currentRate, 0)} an hour is at or above the rate your numbers call for.`}>
+      <p>
+        You are {formatMoney(currentRate - result.recommendedRate)} an hour over the recommended {formatMoney(result.recommendedRate)}, about{" "}
+        {perYear(currentRate - result.recommendedRate)} a year of extra profit {crew}.
+      </p>
+      {split}
+    </ResultReading>
   );
 }
 

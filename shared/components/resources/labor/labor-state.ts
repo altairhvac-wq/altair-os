@@ -34,6 +34,7 @@ export const NUMERIC_KEYS = [
   "customRate",
   "afterHoursMult",
   "diagnosticFee",
+  "currentRate",
 ] as const;
 
 export type NumericKey = (typeof NUMERIC_KEYS)[number];
@@ -88,6 +89,8 @@ export const WORKED_EXAMPLE: LaborState = {
   customRate: "",
   afterHoursMult: "1.5",
   diagnosticFee: "0",
+  // Optional: what the shop charges per hour today. Blank in every preset, so a result never claims a gap the owner did not ask about.
+  currentRate: "",
   creditDiagnostic: true,
   tasks: SAMPLE_TASKS,
 };

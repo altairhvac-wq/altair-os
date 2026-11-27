@@ -158,6 +158,8 @@ export default function InvoiceTemplatePage() {
         crumb="HVAC invoice template"
         eyebrow="Free tool · Invoice Builder"
         title={H1}
+        question="A complete HVAC invoice, built as you type. Print it or save it as a PDF."
+        needs="The job in front of you: the customer, the hours and the parts used. The equipment data plate if it is service work."
         lead={
           <p>
             Fill in the job on the left and watch a professional HVAC invoice build itself on the right: equipment and

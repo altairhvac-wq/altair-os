@@ -257,7 +257,7 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
             <Reading result={result} capacity={capacity} currentJobs={currentJobs} avg={avg} />
             <ResultTiles>
               <ResultTile label="Each job leaves" value={money(result.contributionPerJob)} note="toward fixed costs" strong />
-              <ResultTile label="Contribution margin" value={pct(result.contributionMarginRate)} note="of every dollar billed" />
+              <ResultTile label="Left from each dollar" value={pct(result.contributionMarginRate)} note="after the job's own costs (contribution margin)" />
               <ResultTile label={`Jobs for ${money(target, 0)} profit`} value={targetJobs === null ? "–" : String(targetJobs)} note={targetJobs === null ? "" : `${money(targetJobs * avg, 0)} of revenue`} />
               <ResultTile
                 label="Capacity used at break-even"
@@ -271,7 +271,7 @@ export function BreakEvenTool({ compact = false }: { readonly compact?: boolean 
                 note={workDays > 0 && techs > 0 ? `${(result.breakEvenJobsExact / workDays / techs).toFixed(1)} per technician` : "to break even"}
               />
               <ResultTile
-                label="Margin of safety"
+                label="Cushion above break-even"
                 value={currentJobs === null ? "–" : `${currentJobs - result.breakEvenJobs >= 0 ? "" : "−"}${int(Math.abs(currentJobs - result.breakEvenJobs))} jobs`}
                 note={currentJobs === null ? "enter jobs you run now" : currentJobs > 0 ? `${pct((currentJobs - result.breakEvenJobsExact) / currentJobs, 0)} of your month` : "above break-even"}
                 tone={currentJobs !== null && currentJobs < result.breakEvenJobs ? "negative" : "neutral"}

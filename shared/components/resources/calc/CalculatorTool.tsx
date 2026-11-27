@@ -98,24 +98,26 @@ export function CalculatorTool<K extends string>({
     <div id="calculator" className="scroll-mt-24" onPointerDownCapture={tool.markInteracted} onKeyDownCapture={tool.markInteracted}>
       <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_40px_100px_-60px_rgba(28,25,23,0.55)] print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
         {/* ---------- toolbar ---------- */}
-        <div className="flex flex-col gap-3 bg-[#0d0f0c] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30">
+        {/* A phone shows one row: the name and "Load sample". Save, share and print sit beside the
+            result there ("Keep this result"), so the first box is not pushed down by four buttons. */}
+        <div className="flex items-center justify-between gap-3 bg-[#0d0f0c] px-4 py-2.5 sm:px-5 lg:py-3 print:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#A4823A]/15 ring-1 ring-inset ring-[#C2A05A]/30 max-sm:hidden">
               <Calculator aria-hidden="true" className="h-4.5 w-4.5 text-[#e8d9ac]" />
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#fff9ea]">{name}</p>
-              <p className="text-[11px] text-[#a99f8f]">Runs in your browser. Your numbers stay here unless you email them to yourself.</p>
+              <p className="truncate text-sm font-semibold text-[#fff9ea]">{name}</p>
+              <p className="hidden text-[11px] text-[#a99f8f] sm:block">Runs in your browser. Your numbers stay here unless you email them to yourself.</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <div ref={presetsRef} className="relative">
               <ToolButton variant="dark" size="sm" icon={RotateCcw} onClick={() => setPresetsOpen((open) => !open)}>
                 Load sample
                 <ChevronDown aria-hidden="true" className="h-3.5 w-3.5" />
               </ToolButton>
               {presetsOpen ? (
-                <div role="menu" className="absolute left-0 z-30 mt-2 w-72 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl lg:left-auto lg:right-0">
+                <div role="menu" className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl">
                   {tool.presets.map((preset) => (
                     <button
                       key={preset.id}
@@ -134,13 +136,13 @@ export function CalculatorTool<K extends string>({
                 </div>
               ) : null}
             </div>
-            <ToolButton variant="dark" size="sm" icon={Link2} onClick={tool.copyLink}>
+            <ToolButton variant="dark" size="sm" icon={Link2} onClick={tool.copyLink} className="max-lg:hidden">
               Copy share link
             </ToolButton>
-            <ToolButton variant="dark" size="sm" icon={Save} onClick={tool.save}>
+            <ToolButton variant="dark" size="sm" icon={Save} onClick={tool.save} className="max-lg:hidden">
               Save in this browser
             </ToolButton>
-            <ToolButton variant="primary" size="sm" icon={Printer} onClick={tool.print}>
+            <ToolButton variant="primary" size="sm" icon={Printer} onClick={tool.print} className="max-lg:hidden">
               Print / PDF
             </ToolButton>
           </div>
@@ -164,18 +166,26 @@ export function CalculatorTool<K extends string>({
         ) : null}
 
         {tool.isExample && !tool.restored ? (
-          <div className="flex flex-col gap-2 border-b border-stone-200 bg-stone-50 px-4 py-2.5 text-[13px] text-stone-700 sm:flex-row sm:items-center sm:justify-between sm:px-5 print:hidden">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-stone-200 bg-stone-50 px-4 py-2.5 text-[13px] text-stone-700 sm:px-5 print:hidden">
             <span>
-              <strong className="font-semibold text-stone-900">These are sample numbers.</strong> Type over them with yours; under each field,
-              &ldquo;Where do I find this?&rdquo; says which report or bill has the number.
+              <strong className="font-semibold text-stone-900">
+                <span className="sm:hidden">Sample numbers.</span>
+                <span className="hidden sm:inline">These are sample numbers.</span>
+              </strong>{" "}
+              Type over them
+              <span className="hidden sm:inline">
+                {" "}
+                with yours; under each field, &ldquo;Where do I find this?&rdquo; says which report or bill has the number
+              </span>
+              .
             </span>
             {blank ? (
               <button
                 type="button"
                 onClick={() => tool.loadPreset(blank)}
-                className={`inline-flex shrink-0 items-center gap-1 self-start rounded font-semibold text-[#77591B] hover:underline sm:self-auto ${focusRing}`}
+                className={`inline-flex min-h-8 shrink-0 items-center gap-1 rounded font-semibold text-[#77591B] hover:underline ${focusRing}`}
               >
-                <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /> Clear and enter mine
+                <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /> Clear<span className="hidden sm:inline"> and enter mine</span>
               </button>
             ) : null}
           </div>
@@ -201,8 +211,8 @@ export function CalculatorTool<K extends string>({
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] print:block">
           {/* ---------- inputs ---------- */}
-          <div className="min-w-0 border-stone-200 lg:border-r print:hidden">
-            {carry ? <div className="border-b border-stone-200">{carry}</div> : null}
+          <div className="flex min-w-0 flex-col border-stone-200 lg:border-r print:hidden">
+            {carry ? <div className="order-last border-t border-stone-200 lg:order-first lg:border-b lg:border-t-0">{carry}</div> : null}
             <form className="space-y-6 px-4 py-5 sm:px-6 sm:py-6" onSubmit={(event) => event.preventDefault()} aria-label="Calculator inputs">
               {inputs}
             </form>
@@ -212,6 +222,21 @@ export function CalculatorTool<K extends string>({
           <aside id="results" aria-label="Results" className="scroll-mt-24 bg-stone-50/60 px-4 py-5 sm:px-6 print:bg-white print:px-0">
             <div className="space-y-4 lg:sticky lg:top-24">
               {results}
+              <div className="rounded-xl border border-stone-200 bg-white p-3 lg:hidden print:hidden">
+                <p className="text-[13px] font-semibold text-stone-900">Keep this result</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-stone-600">Your numbers stay in this browser unless you email them to yourself.</p>
+                <div className="mt-2.5 grid grid-cols-3 gap-2">
+                  <ToolButton size="sm" icon={Save} onClick={tool.save} className="px-2">
+                    Save
+                  </ToolButton>
+                  <ToolButton size="sm" icon={Link2} onClick={tool.copyLink} className="px-2">
+                    Share link
+                  </ToolButton>
+                  <ToolButton size="sm" variant="primary" icon={Printer} onClick={tool.print} className="px-2">
+                    PDF
+                  </ToolButton>
+                </div>
+              </div>
               <details className="group rounded-xl border border-stone-200 bg-white print:hidden">
                 <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-[13px] font-semibold text-stone-800 [&::-webkit-details-marker]:hidden ${focusRing}`}>
                   <span className="flex items-center gap-2">

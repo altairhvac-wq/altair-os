@@ -23,6 +23,10 @@ export type ResourceCalculatorEntry = {
   title: string;
   /** One sentence for cards and meta descriptions. */
   description: string;
+  /** The question it answers, in the owner's words. Shown on the calculators list and at the top of the tool on a phone. */
+  question: string;
+  /** What to have open before starting. Shown on the list and above the tool itself. */
+  needs: string;
 };
 
 export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
@@ -31,36 +35,48 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
     title: "Quick HVAC labor rate calculator",
     description:
       "The quick version: one technician's billable rate from wage, burden, unbillable hours, overhead and your target margin.",
+    question: "What do I have to charge per billable hour so a technician's time actually pays for itself?",
+    needs: "A pay stub, your payroll provider's employer-cost report, and last year's Profit and Loss.",
   },
   {
     slug: "job-profitability",
     title: "Job profitability calculator",
     description:
       "See the gross profit, net profit and margin on a single job from its revenue, labor, materials, subcontract and overhead share.",
+    question: "Did that job make money once labor, materials and overhead are counted?",
+    needs: "One finished job's invoice, timesheets and parts receipts.",
   },
   {
     slug: "break-even",
     title: "HVAC break-even calculator",
     description:
       "Find how many jobs and how much revenue a month it takes to cover your fixed costs.",
+    question: "How many jobs a month does it take before the business stops losing money?",
+    needs: "Last year's Profit and Loss and your number of jobs a month.",
   },
   {
     slug: "maintenance-agreement",
     title: "Maintenance agreement pricing calculator",
     description:
       "Price a maintenance agreement from what it costs to serve: the visits, the materials, the office time and the repair discount members get.",
+    question: "What should a maintenance agreement cost so the visits and the member discount are paid for?",
+    needs: "Your labor rate result and what a tune-up uses in time and parts.",
   },
   {
     slug: "technician-pay",
     title: "Technician pay calculator: hourly, flat rate or commission",
     description:
       "Compare one week of technician pay three ways: hourly with overtime, flat rate by book hours, and commission on revenue.",
+    question: "Would this week have paid more on hourly, flat rate or commission?",
+    needs: "One week's timesheet and the revenue that technician produced.",
   },
   {
     slug: "callback-cost",
     title: "Callback cost calculator",
     description:
       "See what unpaid return trips cost a month and a year, your callback rate, and the billable hours they take off the board.",
+    question: "What are free return trips really costing me every month?",
+    needs: "Last month's callbacks, jobs finished, and your labor rate result.",
   },
 ];
 
