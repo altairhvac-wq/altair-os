@@ -21,7 +21,8 @@ export type ResourceCalculatorEntry = {
     | "technician-pay"
     | "callback-cost"
     | "service-call-fee"
-    | "hiring-a-technician";
+    | "hiring-a-technician"
+    | "truck-cost";
   title: string;
   /** One sentence for cards and meta descriptions. */
   description: string;
@@ -95,6 +96,14 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
       "What another technician costs a month, the billed hours a week that pay for them, and the cash the first weeks take while their schedule fills.",
     question: "Can I afford another technician, and how many hours do they have to bill?",
     needs: "The wage you would offer, what one truck costs you a month, and your labor rate result.",
+  },
+  {
+    slug: "truck-cost",
+    title: "Service truck cost calculator",
+    description:
+      "What one service truck costs a month, per working day, per billed hour and per job, and what a day with it parked still costs.",
+    question: "What does one truck cost me a day, and is my rate covering it?",
+    needs: "The truck's loan and insurance statements, a month of fuel, and last year's repair bills.",
   },
 ];
 

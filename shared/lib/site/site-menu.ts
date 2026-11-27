@@ -78,6 +78,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
       { section: "Get paid", href: "/resources/templates", label: "Templates", text: "Estimate, pricing worksheet, agreement and checklist: PDF, Excel, Word." },
       { section: "Plan the business", href: "/resources/calculators/break-even", label: "Break-even", text: "How many jobs a month before the business stops losing money." },
       { section: "Plan the business", href: "/resources/calculators/job-profitability", label: "Job profitability", text: "Did a job make money once labor, parts and overhead count?" },
+      { section: "Plan the business", href: "/resources/calculators/truck-cost", label: "Truck cost", text: "What one service truck costs per day, per billed hour and per job." },
     ],
     more: [{ href: "/resources", label: "All free tools" }],
     feature: {

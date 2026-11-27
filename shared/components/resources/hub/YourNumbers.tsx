@@ -39,6 +39,7 @@ const TOOLS: readonly { readonly id: Slug | "workspace"; readonly name: string; 
   { id: "technician-pay", name: "Technician pay", href: calculatorPath("technician-pay"), why: "Compare hourly, flat rate and commission on one real week." },
   { id: "hiring-a-technician", name: "Hiring a technician", href: calculatorPath("hiring-a-technician"), why: "See how many billed hours a week another technician needs to pay for themselves." },
   { id: "callback-cost", name: "Callback cost", href: calculatorPath("callback-cost"), why: "Put a number on free return trips." },
+  { id: "truck-cost", name: "Truck cost", href: calculatorPath("truck-cost"), why: "See what one truck costs per working day and per billed hour." },
   { id: "labor-rate", name: "Quick labor rate", href: calculatorPath("labor-rate"), why: "One technician's rate from six numbers." },
 ];
 
@@ -164,7 +165,7 @@ export function YourNumbers({ className = "" }: { readonly className?: string })
                 {next.name}
               </Link>
               . {next.why}
-              {hasRate && next.id !== "technician-pay" ? " Your labor rate is offered there with one press." : ""}
+              {hasRate && next.id !== "technician-pay" && next.id !== "truck-cost" ? " Your labor rate is offered there with one press." : ""}
             </p>
           ) : null}
         </div>
