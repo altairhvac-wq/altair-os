@@ -43,6 +43,7 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
       { href: "/resources/calculators/job-profitability", label: "Job Profitability Calculator" },
       { href: "/resources/calculators/callback-cost", label: "Callback Cost Calculator" },
       { href: "/resources/calculators/service-call-fee", label: "Service Call Fee Calculator" },
+      { href: "/resources/calculators/hiring-a-technician", label: "Hiring Calculator" },
       { href: "/resources/templates", label: "Templates" },
       { href: "/resources", label: "All Free Tools" },
     ],

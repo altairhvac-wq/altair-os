@@ -14,6 +14,7 @@ import {
   ReceiptText,
   DoorOpen,
   Repeat2,
+  UserPlus,
   Users,
   Wrench,
 } from "lucide-react";
@@ -38,6 +39,7 @@ const ICONS: Record<string, LucideIcon> = {
   "technician-pay": Users,
   "callback-cost": Repeat2,
   "service-call-fee": DoorOpen,
+  "hiring-a-technician": UserPlus,
   "invoice-builder": ReceiptText,
   templates: FileSpreadsheet,
   "break-even": BarChart3,

@@ -20,7 +20,8 @@ export type ResourceCalculatorEntry = {
     | "maintenance-agreement"
     | "technician-pay"
     | "callback-cost"
-    | "service-call-fee";
+    | "service-call-fee"
+    | "hiring-a-technician";
   title: string;
   /** One sentence for cards and meta descriptions. */
   description: string;
@@ -86,6 +87,14 @@ export const RESOURCE_CALCULATORS: readonly ResourceCalculatorEntry[] = [
       "Work out a service call fee from your own labor rate, see whether today's fee covers the visit, and what a low or free call costs a year.",
     question: "What should a service call cost, and is the fee I charge now losing money?",
     needs: "Your labor rate result, the fee you charge now, and last month's service calls.",
+  },
+  {
+    slug: "hiring-a-technician",
+    title: "Hiring calculator: can I afford another technician?",
+    description:
+      "What another technician costs a month, the billed hours a week that pay for them, and the cash the first weeks take while their schedule fills.",
+    question: "Can I afford another technician, and how many hours do they have to bill?",
+    needs: "The wage you would offer, what one truck costs you a month, and your labor rate result.",
   },
 ];
 
