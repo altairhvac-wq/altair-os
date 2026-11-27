@@ -373,6 +373,14 @@ export default function LaborCostWorkspacePage() {
             costlier technician, more overhead or fewer billable hours could need more than $150 and still be priced
             honestly. The workspace plots your own rate against this range.
           </p>
+          <p>
+            These are national figures. For one state broken out by area, see{" "}
+            <Link href="/utah/hvac-labor-rates" className="font-medium text-[#77591B] underline-offset-4 hover:underline">
+              Utah HVAC labor rates
+            </Link>
+            : what technicians earn in Salt Lake City, Ogden, Provo, St. George and Logan, and the rate a shop in each
+            needs to break even.
+          </p>
         </GuideSection>
 
         <GuideSection id="commercial" n={5} title="Residential vs commercial HVAC labor rates">
