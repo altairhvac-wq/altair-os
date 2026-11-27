@@ -76,6 +76,7 @@ export const SITE_MENU: readonly SiteMenuGroup[] = [
       { section: "Pay your team", href: "/resources/calculators/hiring-a-technician", label: "Hiring a technician", text: "What another tech costs a month, and the billed hours that pay for them." },
       { section: "Pay your team", href: "/resources/calculators/callback-cost", label: "Callback cost", text: "What free return trips are costing you every month." },
       { section: "Get paid", href: "/insights/hvac-invoice-template", label: "Invoice builder", text: "A complete HVAC invoice you can print or save as a PDF." },
+      { section: "Get paid", href: "/resources/estimate-builder", label: "Estimate builder", text: "A complete HVAC estimate with a scope of work, a deposit and a valid-until date." },
       { section: "Get paid", href: "/resources/templates", label: "Templates", text: "Estimate, pricing worksheet, agreement and checklist: PDF, Excel, Word." },
       { section: "Plan the business", href: "/resources/calculators/break-even", label: "Break-even", text: "How many jobs a month before the business stops losing money." },
       { section: "Plan the business", href: "/resources/calculators/job-profitability", label: "Job profitability", text: "Did a job make money once labor, parts and overhead count?" },

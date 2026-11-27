@@ -1,7 +1,7 @@
 import { SAMPLE_INVOICE } from "@/shared/components/resources/invoice/invoice-state";
 import { BREAK_EVEN_DEFAULTS, calculateBreakEven } from "@/shared/lib/resources/break-even";
 import { CALLBACK_COST_DEFAULTS, calculateCallbackCost } from "@/shared/lib/resources/callback-cost";
-import { calculatorPath, RESOURCES_FLAT_RATE_PATH, RESOURCES_TEMPLATES_PATH } from "@/shared/lib/resources/catalog";
+import { calculatorPath, RESOURCES_ESTIMATE_PATH, RESOURCES_FLAT_RATE_PATH, RESOURCES_TEMPLATES_PATH } from "@/shared/lib/resources/catalog";
 import { FLAT_RATE_SAMPLE_AFTER_HOURS, FLAT_RATE_SAMPLE_RATE, FLAT_RATE_SAMPLE_TASKS, priceListLine } from "@/shared/lib/resources/flat-rate-list";
 import { calculateInvoiceTotals, formatCents } from "@/shared/lib/resources/invoice-builder";
 import {
@@ -292,6 +292,22 @@ export const HUB_TOOLS: readonly HubTool[] = [
     },
   },
   {
+    id: "estimate-builder",
+    title: "HVAC Estimate Builder",
+    shortTitle: "Estimate Builder",
+    href: RESOURCES_ESTIMATE_PATH,
+    job: "paid",
+    solves: "How do I send a clear estimate the customer can say yes to?",
+    youGet: "A printable estimate with the scope of work, labor, parts, tax, a deposit and a valid-until date.",
+    minutes: 5,
+    inputs: null,
+    workspace: true,
+    preview: {
+      kind: "files",
+      files: ["Scope of work", "Labor and parts", "Deposit to start", "Valid until"],
+    },
+  },
+  {
     id: "templates",
     title: "Free templates",
     shortTitle: "Templates",
@@ -385,6 +401,12 @@ export function toolsForJob(job: ToolJob): readonly HubTool[] {
  * here before it is live.
  */
 export const TOOL_UPDATES: readonly { readonly iso: string; readonly label: string; readonly text: string; readonly href: string }[] = [
+  {
+    iso: "2026-11-27",
+    label: "Nov 27",
+    text: "New: the estimate builder. A complete HVAC estimate with a scope of work, a deposit and a valid-until date, printed or saved as a PDF.",
+    href: "/resources/estimate-builder",
+  },
   {
     iso: "2026-11-27",
     label: "Nov 27",

@@ -7,6 +7,7 @@ import {
   Calculator,
   CalendarRange,
   Clock3,
+  FileSignature,
   FileSpreadsheet,
   FileText,
   Gauge,
@@ -44,6 +45,7 @@ const ICONS: Record<string, LucideIcon> = {
   "hiring-a-technician": UserPlus,
   "truck-cost": Truck,
   "flat-rate-price-list": ListChecks,
+  "estimate-builder": FileSignature,
   "invoice-builder": ReceiptText,
   templates: FileSpreadsheet,
   "break-even": BarChart3,
@@ -254,7 +256,7 @@ export function ToolCard({
       {/* One height for every preview, so the titles below line up across a row. */}
       <div className={`m-2 min-h-[10.5rem] rounded-xl p-4 ${t.preview}`}>
         <p className={`mb-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.14em] ${t.label}`}>
-          <span>{tool.id === "templates" ? "What you get" : "Worked example"}</span>
+          <span>{tool.id === "templates" || tool.id === "estimate-builder" ? "What you get" : "Worked example"}</span>
           {tool.workspace ? <span className={`rounded-full px-2 py-0.5 normal-case tracking-normal ${t.badge}`}>Workspace</span> : null}
         </p>
         <ToolPreviewView preview={tool.preview} tone={tone} />

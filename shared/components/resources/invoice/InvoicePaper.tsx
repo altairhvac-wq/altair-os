@@ -6,6 +6,7 @@ import {
   parseCents,
   type InvoiceTotals,
 } from "@/shared/lib/resources/invoice-builder";
+import { DOC_WORDS, type DocKind } from "@/shared/components/resources/invoice/doc-words";
 import { LINE_KIND_LABEL, QTY_UNIT, type InvoiceState } from "@/shared/components/resources/invoice/invoice-state";
 
 /**
@@ -23,16 +24,24 @@ export type ComputedInvoice = {
   readonly remainingAfterCents: number;
 };
 
-export function computeInvoice(state: InvoiceState): ComputedInvoice {
+export function computeInvoice(state: InvoiceState, doc: DocKind = "invoice"): ComputedInvoice {
   const totals = calculateInvoiceTotals({
     lines: state.lines,
     taxRate: state.taxRate,
     discountMode: state.discountMode,
     discount: state.discount,
     discountReducesTax: state.discountReducesTax,
-    amountPaid: state.amountPaid,
+    // Nothing has been paid on an estimate, whatever an old field holds.
+    amountPaid: doc === "estimate" ? "" : state.amountPaid,
   });
   const open = Math.max(0, totals.totalCents - totals.paidCents);
+  if (doc === "estimate") {
+    if (state.kind !== "deposit") {
+      return { totals, dueNowCents: totals.totalCents, dueLabel: "Estimate total", requestCents: totals.totalCents, remainingAfterCents: 0 };
+    }
+    const deposit = Math.min(depositRequestCents(totals.totalCents, state.depositPct), totals.totalCents);
+    return { totals, dueNowCents: deposit, dueLabel: "Deposit to start", requestCents: deposit, remainingAfterCents: totals.totalCents - deposit };
+  }
   if (state.kind === "standard") {
     return {
       totals,
@@ -75,22 +84,21 @@ function V({ value, hint, blank, wide }: { readonly value: string; readonly hint
   return <span className="text-stone-400 print:text-transparent">{hint}</span>;
 }
 
-const TITLE: Record<InvoiceState["kind"], string> = {
-  standard: "Invoice",
-  deposit: "Deposit invoice",
-  progress: "Progress invoice",
-};
-
 export function InvoicePaper({
   state,
   computed,
   blank = false,
+  doc = "invoice",
 }: {
   readonly state: InvoiceState;
   readonly computed: ComputedInvoice;
   readonly blank?: boolean;
+  /** Which document the paper is: the words change, the layout and the math do not. */
+  readonly doc?: DocKind;
 }) {
   const { totals } = computed;
+  const w = DOC_WORDS[doc];
+  const estimate = doc === "estimate";
   const lines = blank ? [] : state.lines.filter((line) => line.description.trim() || parseCents(line.price) !== 0);
   const hasEquipment = blank || [state.equipmentType, state.make, state.model, state.serial, state.location, state.refrigerantType, state.lbsAdded, state.lbsRecovered].some((v) => v.trim());
   const hasWork = blank || [state.complaint, state.cause, state.correction].some((v) => v.trim());
@@ -98,7 +106,7 @@ export function InvoicePaper({
 
   return (
     <article
-      aria-label="Invoice preview"
+      aria-label={estimate ? "Estimate preview" : "Invoice preview"}
       className="mx-auto w-full max-w-[720px] rounded-md bg-white px-6 py-7 text-[12px] leading-relaxed text-stone-800 shadow-[0_20px_50px_-28px_rgba(28,25,23,0.45)] ring-1 ring-stone-200 sm:px-9 sm:py-9 print:max-w-none print:rounded-none print:px-0 print:py-0 print:text-[11px] print:shadow-none print:ring-0"
     >
       {/* header */}
@@ -118,13 +126,13 @@ export function InvoicePaper({
           ) : null}
         </div>
         <div className="shrink-0 sm:text-right print:text-right">
-          <p className="text-[22px] font-semibold uppercase tracking-[0.12em] text-[#77591B] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">{TITLE[state.kind]}</p>
+          <p className="text-[22px] font-semibold uppercase tracking-[0.12em] text-[#77591B] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">{w.paperTitle[state.kind]}</p>
           <dl className="mt-2 grid grid-cols-[auto_auto] justify-start gap-x-4 gap-y-0.5 sm:justify-end print:justify-end">
-            <dt className="text-stone-500">Invoice no.</dt>
+            <dt className="text-stone-500">{w.paperNumber}</dt>
             <dd className="font-semibold text-stone-900"><V value={state.number} hint="—" blank={blank} /></dd>
             <dt className="text-stone-500">Date</dt>
             <dd className="text-stone-900"><V value={formatDate(state.date)} hint="—" blank={blank} /></dd>
-            <dt className="text-stone-500">Due</dt>
+            <dt className="text-stone-500">{w.paperDue}</dt>
             <dd className="text-stone-900"><V value={formatDate(state.dueDate)} hint="—" blank={blank} /></dd>
             {blank || state.poNumber ? (
               <>
@@ -139,7 +147,7 @@ export function InvoicePaper({
       {/* parties */}
       <section className="grid gap-5 border-b border-stone-200 py-5 sm:grid-cols-2 print:grid-cols-2">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">Bill to</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">{w.paperParty}</p>
           <p className="mt-1 font-semibold text-stone-900"><V value={state.customerName} hint="Customer name" blank={blank} wide /></p>
           <p><V value={state.customerAddress} hint="Billing address" blank={blank} wide /></p>
           <p>
@@ -159,7 +167,7 @@ export function InvoicePaper({
       {/* equipment */}
       {hasEquipment ? (
         <section className="border-b border-stone-200 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">Equipment serviced</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">{w.paperEquipment}</p>
           <p className="mt-1 font-medium text-stone-900"><V value={state.equipmentType} hint="Equipment" blank={blank} wide /></p>
           <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-4 print:grid-cols-4">
             {[
@@ -187,14 +195,15 @@ export function InvoicePaper({
       {/* work performed */}
       {hasWork ? (
         <section className="border-b border-stone-200 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">Work performed</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">{w.paperWork}</p>
           <dl className="mt-1.5 space-y-1">
             {[
-              ["Complaint", state.complaint],
-              ["Cause", state.cause],
-              ["Correction", state.correction],
+              [w.work[0].label, state.complaint],
+              [w.work[1].label, state.cause],
+              [w.work[2].label, state.correction],
             ].map(([label, value]) => (
-              <div key={label} className="grid grid-cols-[84px_minmax(0,1fr)] gap-2">
+              // The estimate's labels are longer, so each sits above its text instead of beside it.
+              <div key={label} className={estimate ? "grid gap-0.5" : "grid grid-cols-[84px_minmax(0,1fr)] gap-2"}>
                 <dt className="font-semibold text-stone-900">{label}</dt>
                 <dd className="whitespace-pre-line"><V value={value} hint="—" blank={blank} wide /></dd>
               </div>
@@ -270,19 +279,19 @@ export function InvoicePaper({
               value={blank ? "" : formatCents(totals.taxCents)}
             />
             <TotalRow label="Total" value={blank ? "" : formatCents(totals.totalCents)} strong />
-            {blank || totals.paidCents > 0 ? (
+            {!estimate && (blank || totals.paidCents > 0) ? (
               <TotalRow label={state.kind === "standard" ? "Paid" : "Previously paid"} value={blank ? "" : `-${formatCents(totals.paidCents)}`} />
             ) : null}
             {!blank && state.kind !== "standard" ? (
               <TotalRow label={`${state.kind === "deposit" ? "Deposit" : "This invoice"} (${state.depositPct || 0}% of total)`} value={formatCents(computed.requestCents)} />
             ) : null}
             <div className="mt-2 flex items-center justify-between rounded-md bg-stone-900 px-3 py-2 text-white [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.12em]">{blank ? "Balance due" : computed.dueLabel}</dt>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.12em]">{blank ? w.blankDueLabel : computed.dueLabel}</dt>
               <dd className="text-[15px] font-semibold">{blank ? "" : formatCents(computed.dueNowCents)}</dd>
             </div>
             {!blank && state.kind !== "standard" ? (
               <div className="pt-1 text-right text-[10px] text-stone-500">
-                <dt className="inline">Remaining after this payment: </dt>
+                <dt className="inline">{estimate ? "Balance when the work is done: " : "Remaining after this payment: "}</dt>
                 <dd className="inline">{formatCents(computed.remainingAfterCents)}</dd>
               </div>
             ) : null}
@@ -294,12 +303,12 @@ export function InvoicePaper({
       <footer className="grid gap-4 border-t border-stone-200 pt-4 sm:grid-cols-2 print:grid-cols-2">
         <div className="min-w-0 space-y-2">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">How to pay</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">{w.paperPay}</p>
             <p className="whitespace-pre-line"><V value={state.paymentInstructions} hint="Methods" blank={blank} wide /></p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">Terms</p>
-            <p><V value={state.terms} hint="Due in (days)" blank={blank} /></p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">{w.paperTerms}</p>
+            <p><V value={state.terms} hint={w.paperTermsHint} blank={blank} /></p>
           </div>
         </div>
         <div className="min-w-0 space-y-2">
@@ -319,10 +328,10 @@ export function InvoicePaper({
         </div>
         {!blank && state.notes.trim() ? <p className="whitespace-pre-line text-stone-700 sm:col-span-2 print:col-span-2">{state.notes}</p> : null}
         <div className="mt-2 grid grid-cols-2 gap-6 sm:col-span-2 print:col-span-2">
-          <p className="border-t border-stone-400 pt-1 text-[10px] text-stone-500">Customer signature</p>
+          <p className="border-t border-stone-400 pt-1 text-[10px] text-stone-500">{w.paperSignature}</p>
           <p className="border-t border-stone-400 pt-1 text-[10px] text-stone-500">Date</p>
         </div>
-        <p className="text-center text-stone-600 sm:col-span-2 print:col-span-2">Thank you for your business.</p>
+        <p className="text-center text-stone-600 sm:col-span-2 print:col-span-2">{w.paperClosing}</p>
       </footer>
     </article>
   );
