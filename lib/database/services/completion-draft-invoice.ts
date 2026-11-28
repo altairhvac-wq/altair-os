@@ -1,6 +1,9 @@
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { loadResolvedCompanyTimeZone } from "@/lib/database/queries/company-timezone";
-import { listEstimatesForJob } from "@/lib/database/queries/estimates";
+import {
+  getEstimateById,
+  listEstimatesForJob,
+} from "@/lib/database/queries/estimates";
 import {
   convertEstimateToInvoice,
   getInvoiceByEstimateId,
@@ -217,9 +220,22 @@ export async function maybeAutoCreateDraftInvoiceForCompletedJob(input: {
       input.jobId,
       privilegedDb,
     );
-    const approvedEstimate = selectApprovedEstimateForConversion(estimates);
+    const approvedEstimateSummary = selectApprovedEstimateForConversion(estimates);
 
-    if (!approvedEstimate) {
+    if (!approvedEstimateSummary) {
+      return skipped("no_approved_estimate", logContext);
+    }
+
+    // The job list query only loads line-item ids (kept lean for list views),
+    // so reload the chosen estimate with its full line items before checking
+    // whether it has anything billable.
+    const approvedEstimate = await getEstimateById(
+      input.companyId,
+      approvedEstimateSummary.id,
+      privilegedDb,
+    );
+
+    if (!approvedEstimate || approvedEstimate.status !== "approved") {
       return skipped("no_approved_estimate", logContext);
     }
 

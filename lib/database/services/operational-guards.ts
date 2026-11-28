@@ -1,3 +1,5 @@
+import type { DbClient } from "@/lib/database/db-client";
+
 export type OperationalEventName =
   | "job_assigned"
   | "work_completed"
@@ -67,6 +69,8 @@ export type OperationalAutomationEvent =
       customerId?: string;
       jobId?: string;
       approvalSource?: "public_link" | "technician_device" | "admin_manual";
+      /** Public-link only: service-role client created after token verification. */
+      serviceRoleDb?: DbClient;
     }
   | {
       type: "job_material_added";
