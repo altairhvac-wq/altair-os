@@ -194,6 +194,9 @@ steps.push(
   // The how-to library: every quoted button label is still on its screen,
   // every "take me there" link is a real page. Executes the shipped catalog.
   { name: "help-notes", script: "scripts/verify-help-notes.mjs", typescript: true },
+  // The assistant's engine and ability list: executes the shipped engine with
+  // a scripted model and checks the rules in docs/product/ALTAIR_ASSISTANT.md.
+  { name: "assistant", script: "scripts/verify-assistant.mjs", typescript: true },
 );
 
 const results = [];
