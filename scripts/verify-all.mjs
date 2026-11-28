@@ -127,6 +127,9 @@ steps.push(
   },
   // The free calculators, templates and library (pure modules + wiring).
   { name: "resource-center", script: "scripts/verify-resource-center.mjs" },
+  // A company's business numbers (migration 218): the math is the public
+  // calculators', code limits match the database's, owner/admin only.
+  { name: "business-numbers", script: "scripts/verify-business-numbers.mjs" },
   // The public contractor directory: listing rules, migration 210, wiring.
   { name: "public-directory", script: "scripts/verify-directory.mjs" },
   // The pricing plan finder and the software pages' metadata (batch 3).

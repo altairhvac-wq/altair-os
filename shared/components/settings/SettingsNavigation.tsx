@@ -5,12 +5,15 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   Building2,
+  Calculator,
   CreditCard,
   LayoutDashboard,
   Plug,
   Users,
   type LucideIcon,
 } from "lucide-react";
+
+const BUSINESS_NUMBERS_HREF = "/settings/business-numbers";
 
 type SettingsNavigationItem = {
   label: string;
@@ -50,6 +53,14 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
     icon: Building2,
   },
   {
+    // "Numbers", not "Business numbers": on a phone this is one of five or six
+    // tabs across the screen and the longer name is cut off.
+    label: "Numbers",
+    description: "Your rate, your fees and what an hour costs you.",
+    href: BUSINESS_NUMBERS_HREF,
+    icon: Calculator,
+  },
+  {
     label: "Billing",
     description: "Your Altair plan and taking card payments.",
     href: "/settings/billing",
@@ -79,6 +90,11 @@ type SettingsNavigationProps = {
    * shown to platform admins only.
    */
   showIntegrations?: boolean;
+  /**
+   * Business numbers needs migration 218. Until a database has it the section
+   * is left out of the list rather than shown and unable to save.
+   */
+  showBusinessNumbers?: boolean;
 };
 
 function isSettingsItemActive(
@@ -94,13 +110,14 @@ function isSettingsItemActive(
 
 export function SettingsNavigation({
   showIntegrations = false,
+  showBusinessNumbers = false,
 }: SettingsNavigationProps) {
   const pathname = usePathname();
-  const items = showIntegrations
-    ? SETTINGS_NAVIGATION_ITEMS
-    : SETTINGS_NAVIGATION_ITEMS.filter(
-        (item) => item.href !== "/settings/integrations",
-      );
+  const items = SETTINGS_NAVIGATION_ITEMS.filter(
+    (item) =>
+      (showIntegrations || item.href !== "/settings/integrations") &&
+      (showBusinessNumbers || item.href !== BUSINESS_NUMBERS_HREF),
+  );
 
   return (
     <nav aria-label="Settings categories" className="min-w-0 lg:sticky lg:top-2">
@@ -113,7 +130,9 @@ export function SettingsNavigation({
        */}
       <ul
         className={`grid gap-1 rounded-[var(--radius-panel)] border border-altair-border/40 bg-altair-paper p-1 shadow-[var(--elev-hairline),var(--elev-2)] lg:grid-cols-1 lg:gap-0.5 lg:p-1.5 ${
-          items.length >= 5 ? "grid-cols-5" : "grid-cols-4"
+          // Six tabs across a phone leave no room for the words, so they sit in
+          // two rows of three. Five and four fit in one row.
+          items.length >= 6 ? "grid-cols-3" : items.length === 5 ? "grid-cols-5" : "grid-cols-4"
         }`}
       >
         {items.map((item) => {
@@ -125,7 +144,7 @@ export function SettingsNavigation({
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-12 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-[calc(var(--radius-panel)-4px)] px-1.5 py-1.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] lg:min-h-0 lg:flex-row lg:items-start lg:justify-start lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left ${
+                className={`flex min-h-12 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-[calc(var(--radius-panel)-4px)] px-0.5 py-1.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] lg:min-h-0 lg:flex-row lg:items-start lg:justify-start lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left ${
                   active
                     ? "bg-altair-brass/15 text-altair-ink-on-paper"
                     : "text-altair-ink-on-paper-secondary hover:bg-altair-paper-subtle"

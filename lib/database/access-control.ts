@@ -161,6 +161,27 @@ export function assertCompanySettingsAccess(
   return null;
 }
 
+/**
+ * Business numbers (migration 218) hold wages, costs and margins: owner and
+ * admin only, to read as well as to change. The database enforces the same
+ * rule for reads (RLS); writes go through the service role after this check.
+ */
+export function canManageBusinessNumbers(
+  context: ActiveCompanyContext,
+): boolean {
+  return context.permissions.manageCompany;
+}
+
+export function assertBusinessNumbersAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canManageBusinessNumbers(context)) {
+    return "Only an owner or admin can see or change business numbers.";
+  }
+
+  return null;
+}
+
 const DEMO_DATA_MANAGER_ROLES = ["owner", "admin"] as const satisfies readonly CompanyRole[];
 
 export function canManageDemoData(context: ActiveCompanyContext): boolean {
