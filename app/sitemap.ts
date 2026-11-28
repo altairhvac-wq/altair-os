@@ -11,6 +11,8 @@ import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
+import { HELP_NOTES } from "@/shared/lib/help/all-notes";
+import { HOW_TO_PATH, howToNotePath } from "@/shared/lib/help/paths";
 
 /**
  * The sitemap — the only place a published page announces itself.
@@ -80,6 +82,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...COMPANY_PAGE_PATHS.map((path) => ({
       url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+    // The how-to library: its index and one page per note in the catalog.
+    { url: `${origin}${HOW_TO_PATH}`, changeFrequency: "monthly", priority: 0.6 },
+    ...HELP_NOTES.map((note) => ({
+      url: `${origin}${howToNotePath(note.slug)}`,
       changeFrequency: "monthly" as const,
       priority: 0.5,
     })),

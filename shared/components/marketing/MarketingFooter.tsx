@@ -60,6 +60,7 @@ const FOOTER_COLUMNS: readonly { readonly title: string; readonly links: readonl
       { href: "/resources/library", label: "Videos and Articles" },
       { href: "/utah/hvac-labor-rates", label: "Utah HVAC Labor Rates" },
       { href: "/for-techs", label: "For Technicians" },
+      { href: "/how-to", label: "Product How-To" },
     ],
   },
   {

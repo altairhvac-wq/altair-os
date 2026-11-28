@@ -19,9 +19,17 @@ import {
   MasterPageSurface,
   MasterShellPage,
 } from "@/shared/design-system/shell";
+import {
+  HelpLibrary,
+  type HelpLibraryArea,
+  type HelpLibraryNote,
+} from "@/shared/components/support/HelpLibrary";
 import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
 
 type HelpPageViewProps = {
+  /** The how-to notes this person can follow, and the areas to group them by. */
+  notes: readonly HelpLibraryNote[];
+  areas: readonly HelpLibraryArea[];
   info: LiveOnboardingInfo;
   companyName: string;
   /** Owners and admins get the setup shortcuts; everyone gets the contacts. */
@@ -102,6 +110,8 @@ function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
  * button was the only in-app channel (retention audit 2026-11-12).
  */
 export function HelpPageView({
+  notes,
+  areas,
   info,
   companyName,
   showSetupShortcuts,
@@ -113,9 +123,27 @@ export function HelpPageView({
         <MasterContentStack density="compact">
           <MasterPageHeader
             title="Help & support"
-            subtitle="Talk to a person, book a setup call, or get set up."
+            subtitle="Find how to do something, talk to a person, or book a setup call."
             density="compact"
           />
+
+          {notes.length > 0 ? (
+            <MasterPageSurface variant="card" className="p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <IconBadge icon={BookOpen} />
+                <div className="min-w-0">
+                  <h2 className={cardTitleClass}>How do I...?</h2>
+                  <p className={cardBodyClass}>
+                    Short steps for the things you do most, with the buttons named as they
+                    appear on your screen.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <HelpLibrary notes={notes} areas={areas} />
+              </div>
+            </MasterPageSurface>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             <MasterPageSurface variant="card" className="p-4 sm:p-5">
