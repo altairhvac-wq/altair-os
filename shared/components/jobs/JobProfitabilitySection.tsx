@@ -349,6 +349,65 @@ export function JobProfitabilitySection({
         shown; open entries are not counted.
       </p>
 
+      {snapshot.afterLabor ? (
+        <div
+          className="mt-4 rounded-xl border border-slate-200 bg-white p-4"
+          role="group"
+          aria-labelledby={`job-profit-after-labor-${jobId}`}
+        >
+          <p id={`job-profit-after-labor-${jobId}`} className="text-xs font-bold uppercase tracking-wide text-slate-500">
+            After labor and shop costs (an estimate)
+          </p>
+          {snapshot.afterLabor.status === "ready" ? (
+            <>
+              <dl className="mt-2 divide-y divide-slate-100 text-sm">
+                <div className="flex items-baseline justify-between gap-3 py-1.5">
+                  <dt className="text-slate-600">Gross profit (above)</dt>
+                  <dd className="tabular-nums text-slate-900">{formatJobProfitabilityCurrency(grossProfit)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 py-1.5">
+                  <dt className="text-slate-600">
+                    Labor, {formatJobProfitabilityLaborHours(snapshot.afterLabor.hours)} at {formatJobProfitabilityCurrency(snapshot.afterLabor.laborPerHour)}
+                  </dt>
+                  <dd className="tabular-nums text-slate-900">−{formatJobProfitabilityCurrency(snapshot.afterLabor.laborCost)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 py-1.5">
+                  <dt className="text-slate-600">
+                    Shop costs, {formatJobProfitabilityLaborHours(snapshot.afterLabor.hours)} at {formatJobProfitabilityCurrency(snapshot.afterLabor.overheadPerHour)}
+                  </dt>
+                  <dd className="tabular-nums text-slate-900">−{formatJobProfitabilityCurrency(snapshot.afterLabor.overheadCost)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 py-2">
+                  <dt className="font-semibold text-slate-900">Profit after labor and shop costs</dt>
+                  <dd className={`text-base font-black tabular-nums ${snapshot.afterLabor.profit < 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                    {formatJobProfitabilityCurrency(snapshot.afterLabor.profit)}
+                    {snapshot.afterLabor.marginPercent !== null ? ` · ${snapshot.afterLabor.marginPercent}%` : ""}
+                  </dd>
+                </div>
+              </dl>
+              {revenue.collected === 0 ? (
+                <p className="mt-2 text-xs text-slate-600">Nothing has been collected on this job yet, so for now this is all cost.</p>
+              ) : null}
+              <p className="mt-2 text-xs text-slate-500">
+                An estimate, from Settings, Numbers. Every hour clocked on this job is priced at what a billed hour costs your shop: the wage and payroll costs, the paid time nobody is billed for, and the hour&apos;s share of shop costs. That is why the labor here is more than hours times a technician&apos;s own cost rate, shown elsewhere on this job. If you put fuel or vehicle receipts on jobs, leave them out of your monthly shop costs or they are counted twice. Only owners and admins see this.
+              </p>
+            </>
+          ) : snapshot.afterLabor.status === "no-hours" ? (
+            <p className="mt-2 text-sm text-slate-600">
+              No closed labor time on this job yet, so there is no labor or shop cost to take off. It shows here once a technician has clocked time on the job.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-slate-600">
+              Fill in what an hour of work costs you in{" "}
+              <a href="/settings/business-numbers#cost" className="font-semibold underline underline-offset-2">
+                Settings, Numbers
+              </a>{" "}
+              and every job shows its profit after labor and shop costs here.
+            </p>
+          )}
+        </div>
+      ) : null}
+
       {warnings.length > 0 ? (
         <div
           className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 px-4 py-3"

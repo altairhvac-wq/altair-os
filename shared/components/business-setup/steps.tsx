@@ -298,7 +298,7 @@ export function RateStep({ companyId, number, numbers, onSaved, onBack, onSkip, 
         ) : null}
 
         <p className="mt-3 text-[13px] text-altair-ink-on-paper-secondary">
-          Where this goes: every price on your price list (the step after next), and Settings, Numbers, where you can change it.
+          Where this goes: a Labor item in your price book, so labor at your rate is one pick away on every estimate and invoice (the hours are the quantity), and every price on your price list. The Labor item starts as not taxed. Whether labor is taxed differs by state; if yours taxes it, tick Taxable on that item in your price book.
         </p>
         <button
           type="button"
@@ -388,7 +388,7 @@ export function ServiceCallStep({ companyId, number, numbers, onSaved, onBack, o
             <ReadingLine reading={reading} />
           </div>
         ) : null}
-        <p className="mt-3 text-[13px] text-altair-ink-on-paper-secondary">Where this goes: a &quot;Service call&quot; item in your price book, one press away on every estimate.</p>
+        <p className="mt-3 text-[13px] text-altair-ink-on-paper-secondary">Where this goes: a &quot;Service call&quot; item in your price book, one pick away on every estimate. It starts as not taxed; tick Taxable on it in your price book if your state taxes service calls.</p>
       </div>
     </StepFrame>
   );
@@ -755,7 +755,7 @@ export function TargetStep({ companyId, number, numbers, onSaved, onBack, onSkip
         <div className="mt-3">
           <ReadingLine reading={readMonthlyTarget(live, derived)} />
         </div>
-        <p className="mt-3 text-[13px] text-altair-ink-on-paper-secondary">Where this goes: your monthly target, kept in Settings, Numbers.</p>
+        <p className="mt-3 text-[13px] text-altair-ink-on-paper-secondary">Where this goes: your dashboard, which counts each month&apos;s finished jobs against it. It needs all three boxes.</p>
       </div>
     </StepFrame>
   );

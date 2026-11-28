@@ -8,6 +8,7 @@ import {
   calculateLineItemTotal,
   type EstimateLineItemFormData,
 } from "@/shared/types/estimate";
+import { DecimalDraftInput } from "@/shared/components/ui/DecimalDraftInput";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
   adminFormInputClass,
@@ -120,8 +121,12 @@ export function LineItemsEditor({
         return { ...item, taxable: Boolean(value) };
       }
 
+      // A quantity may be part of one: 1.5 hours of labor, half a roll of
+      // tape. The database keeps two decimals (numeric(10, 2)); so does this.
       const numericValue =
-        field === "quantity" ? parseInt(String(value), 10) : parseFloat(String(value));
+        field === "quantity"
+          ? Math.round(parseFloat(String(value)) * 100) / 100
+          : parseFloat(String(value));
       return {
         ...item,
         [field]: Number.isNaN(numericValue) ? 0 : numericValue,
@@ -269,30 +274,24 @@ export function LineItemsEditor({
                     </div>
                     <div className="sm:col-span-2">
                       <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-qty`}>Qty</label>
-                      <input
-                    id={`${uid}-${index}-qty`}
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={item.quantity || ""}
-                        onChange={(e) =>
-                          handleItemChange(index, "quantity", e.target.value)
-                        }
+                      <DecimalDraftInput
+                        id={`${uid}-${index}-qty`}
+                        min="0.01"
+                        step="0.01"
+                        value={item.quantity}
+                        onValueChange={(text) => handleItemChange(index, "quantity", text)}
                         className={adminFormInputClass}
                         required
                       />
                     </div>
                     <div className="sm:col-span-3">
                       <label className={adminFormLabelClass} htmlFor={`${uid}-${index}-unit`}>Unit $</label>
-                      <input
-                    id={`${uid}-${index}-unit`}
-                        type="number"
+                      <DecimalDraftInput
+                        id={`${uid}-${index}-unit`}
                         min="0"
                         step="0.01"
-                        value={item.unitPrice || ""}
-                        onChange={(e) =>
-                          handleItemChange(index, "unitPrice", e.target.value)
-                        }
+                        value={item.unitPrice}
+                        onValueChange={(text) => handleItemChange(index, "unitPrice", text)}
                         className={adminFormInputClass}
                         required
                       />

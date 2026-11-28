@@ -13,6 +13,7 @@ import {
 import {
   getGuidedSetupAvailability,
   listSetupPriceBookItems,
+  saveLaborItems,
   saveServiceCallItem,
   saveSetupPriceList,
   updateCompanyShopContact,
@@ -208,7 +209,19 @@ export async function saveRateStepAction(input: BusinessNumbersInput, expectedCo
     return { error: "Type the rate you will charge for an hour, or skip this step for now.", field: "laborRate" };
   }
 
-  return finishStep(required.context, "rate", validation.data);
+  // Labor goes into the price book at this rate, so it can be picked on any
+  // estimate or invoice with the hours as the quantity.
+  const { context } = required;
+  const { record: stored } = await getCompanyBusinessNumbers(context);
+  const labor = await saveLaborItems(
+    context.company.id,
+    context,
+    { laborRate: validation.data.laborRate, afterHoursMultiplier: validation.data.afterHoursMultiplier ?? stored.numbers.afterHoursMultiplier },
+    { createIfMissing: true, previous: { laborRate: stored.numbers.laborRate, afterHoursMultiplier: stored.numbers.afterHoursMultiplier } },
+  );
+  if (labor.error) return { error: labor.error };
+
+  return finishStep(context, "rate", validation.data);
 }
 
 /* ------------------------------------------------ 3. your service call fee */
@@ -225,7 +238,8 @@ export async function saveServiceCallStepAction(input: BusinessNumbersInput, exp
     return { error: "Type your service call fee, or skip this step for now.", field: "serviceCallFee" };
   }
 
-  const item = await saveServiceCallItem(context.company.id, context, fee, { createIfMissing: true });
+  const { record: stored } = await getCompanyBusinessNumbers(context);
+  const item = await saveServiceCallItem(context.company.id, context, fee, { createIfMissing: true, previous: { serviceCallFee: stored.numbers.serviceCallFee } });
   if (item.error) return { error: item.error };
 
   return finishStep(context, "service-call", validation.data);
@@ -276,6 +290,15 @@ export async function saveTargetStepAction(input: BusinessNumbersInput, expected
   if (validation.error !== undefined) return { error: validation.error, field: validation.field };
   if (!validation.data.averageJobRevenue || validation.data.averageJobRevenue <= 0) {
     return { error: "Type what an average job brings in, or skip this step for now.", field: "averageJobRevenue" };
+  }
+  // A target needs all three: without the shop's costs or what a job uses up
+  // there is no number of jobs to count against, and the step would be
+  // marked done with nothing on the dashboard to show for it.
+  if (!validation.data.monthlyOverhead || validation.data.monthlyOverhead <= 0) {
+    return { error: "Type your shop costs each month, or skip this step for now. Without them there is no target to count against.", field: "monthlyOverhead" };
+  }
+  if (validation.data.jobVariableCostPercent === null || validation.data.jobVariableCostPercent === undefined) {
+    return { error: "Type what a job uses up (0 if nothing), or skip this step for now.", field: "jobVariableCostPercent" };
   }
 
   return finishStep(required.context, "target", validation.data);

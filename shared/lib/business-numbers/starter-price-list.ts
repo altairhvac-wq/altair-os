@@ -42,6 +42,25 @@ export type StarterTask = {
 export const SERVICE_CALL_SETUP_KEY = "service_call";
 export const SERVICE_CALL_ITEM_NAME = "Service call";
 
+/**
+ * Labor, as a price book item. Estimates, invoices and the technician's
+ * estimate form all pick their lines from the price book, so the way to put
+ * "labor at your rate" on every one of them is to keep it there: one item at
+ * the labor rate, picked with the hours as the quantity. A second one at the
+ * after-hours rate exists once the company has an after-hours multiplier.
+ */
+export const LABOR_SETUP_KEY = "labor_hour";
+export const LABOR_ITEM_NAME = "Labor (per hour)";
+export const AFTER_HOURS_LABOR_SETUP_KEY = "labor_hour_after";
+export const AFTER_HOURS_LABOR_ITEM_NAME = "After-hours labor (per hour)";
+
+/**
+ * Items that mirror one of the company's numbers exactly (the fee, the rate)
+ * rather than being a job on the price list. They follow the number by
+ * themselves; the price list step never lists them and never counts them.
+ */
+export const NUMBER_ITEM_KEYS: ReadonlySet<string> = new Set([SERVICE_CALL_SETUP_KEY, LABOR_SETUP_KEY, AFTER_HOURS_LABOR_SETUP_KEY]);
+
 /** The category every setup-made price book item is filed under. */
 export const STARTER_CATEGORY = "Flat rate";
 
@@ -80,6 +99,35 @@ export function starterTasksForTrade(trade: string | null | undefined): readonly
 
 /** Every key a starter list can hand out. A key from a form that is not in here is refused. */
 export const STARTER_TASK_KEYS: ReadonlySet<string> = new Set([...HVAC_TASKS, ...GENERAL_TASKS].map((task) => task.key));
+
+function toCents(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+/**
+ * What a price book item priced from the labor rate should cost at the
+ * company's numbers as they stand.
+ *
+ *   - the labor items are the rate itself, to the cent (never rounded up to
+ *     a dollar: an hour of labor costs what the rate says);
+ *   - every other item is a job: book hours x rate + part cost x (1 +
+ *     markup), rounded up to a whole dollar, exactly as the price list step
+ *     priced it.
+ *
+ * Null when it cannot be priced (no rate, or a job with no hours recorded).
+ */
+export function priceRateItem(
+  item: { readonly setupKey: string | null; readonly bookHours: number | null; readonly partCost: number | null; readonly markupPercent: number | null },
+  laborRate: number | null,
+  afterHoursMultiplier: number | null,
+): number | null {
+  if (laborRate === null || !Number.isFinite(laborRate) || laborRate <= 0) return null;
+  const multiplier = afterHoursMultiplier !== null && Number.isFinite(afterHoursMultiplier) && afterHoursMultiplier >= 1 ? afterHoursMultiplier : STARTER_AFTER_HOURS_MULTIPLIER;
+  if (item.setupKey === LABOR_SETUP_KEY) return toCents(laborRate);
+  if (item.setupKey === AFTER_HOURS_LABOR_SETUP_KEY) return toCents(laborRate * multiplier);
+  if (item.bookHours === null || !Number.isFinite(item.bookHours)) return null;
+  return priceStarterLine({ bookHours: item.bookHours, partCost: item.partCost ?? 0 }, laborRate, item.markupPercent ?? 0, multiplier).standard;
+}
 
 /** One line of the list, priced. Whole dollars, rounded up, like the website's price sheet. */
 export function priceStarterLine(
