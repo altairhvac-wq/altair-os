@@ -1,6 +1,7 @@
 import "server-only";
 
 import { revalidatePath } from "next/cache";
+import { scheduleAccountingSync } from "@/lib/accounting/run";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import type Stripe from "stripe";
@@ -1037,6 +1038,9 @@ async function processCheckoutSessionCompletedEvent(
 
   await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
   await markProviderEventProcessed(supabase, providerEventId, companyId);
+  // QuickBooks Online: the card payment is already queued (migration 222);
+  // send it after this response so Stripe is answered first.
+  scheduleAccountingSync(companyId);
   revalidateInvoiceOperationalPages(invoiceId);
   revalidatePath("/invoice-payment", "layout");
   revalidatePath("/reports");

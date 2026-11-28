@@ -1,5 +1,6 @@
 "use server";
 
+import { scheduleAccountingSync } from "@/lib/accounting/run";
 import { revalidatePath } from "next/cache";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -518,6 +519,9 @@ export async function sendInvoiceAction(
     jobNumber: invoice.jobNumber,
   });
 
+  // QuickBooks Online: the change is already queued (migration 222); send it now.
+  scheduleAccountingSync(context.company.id);
+
   revalidatePath("/invoices");
   revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
@@ -809,6 +813,9 @@ export async function voidInvoiceAction(
     jobNumber: invoice.jobNumber,
   });
 
+  // QuickBooks Online: the change is already queued (migration 222); send it now.
+  scheduleAccountingSync(context.company.id);
+
   revalidatePath("/invoices");
   revalidatePath("/sales");
   revalidatePath(`/invoices/${invoiceId}`);
@@ -862,6 +869,9 @@ export async function updateInvoiceAction(
     jobId: invoice.jobId,
     jobNumber: invoice.jobNumber,
   });
+
+  // QuickBooks Online: the change is already queued (migration 222); send it now.
+  scheduleAccountingSync(context.company.id);
 
   revalidatePath("/invoices");
   revalidatePath("/sales");
