@@ -510,6 +510,16 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "221_reports_summary_time_zone.sql",
     new Set(["get_company_reports_summary"]),
   ],
+  // 222 adds one trigger function, accounting_enqueue_on_change: security
+  // definer with a pinned search_path, EXECUTE revoked from public, anon and
+  // authenticated (a trigger needs none). It only queues a row in
+  // accounting_sync_records for a company with an active connection; it
+  // sends nothing and reads no secret. scripts/verify-quickbooks.mjs holds
+  // it to those rules.
+  [
+    "222_quickbooks_online_connection.sql",
+    new Set(["accounting_enqueue_on_change"]),
+  ],
 ]);
 
 for (const file of files) {

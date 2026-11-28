@@ -288,3 +288,192 @@ on public.accounting_sync_records
 for select
 to authenticated
 using (public.can_manage_billing(company_id));
+
+-- ======================================================================
+-- Queueing a change: one trigger on the four tables that are sent
+-- ======================================================================
+--
+-- Invoices change in many places: the office's edit and send, a payment
+-- (which moves the balance and status), the Stripe webhook, the nightly
+-- overdue sweep, the job-completion draft. No application function is
+-- crossed by all of them, so the queue is filled here, where every one of
+-- them ends up. The application only has to SEND (lib/accounting/run.ts);
+-- it cannot forget to queue.
+--
+-- What is queued, and only while the company has an active connection:
+--   invoice   inserted or updated, not a draft, not demo data, and either
+--             made since the connection started, leaving draft right now,
+--             or already queued (setup queues the open ones it was told to).
+--   payment   inserted, not demo data, unless its invoice is from before the
+--             start and was never sent.
+--   customer  updated, only if it was sent before. A customer is first sent
+--   item      when an invoice uses it, by the engine, not here.
+--
+-- Queuing is cheap and safe to over-do: the engine compares what it would
+-- send with what it last sent and makes no QuickBooks call when they match
+-- (a payment moving an invoice's balance changes nothing that is sent).
+--
+-- A record somebody set aside (state 'skipped') stays set aside.
+--
+-- security definer because the triggering session (a technician completing
+-- a job, the anonymous Stripe webhook's service role, a cron) has no write
+-- on accounting_sync_records; set search_path pins every name it uses.
+
+create or replace function public.accounting_enqueue_on_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  v_company uuid;
+  v_entity text;
+  v_local uuid;
+  v_connection_id uuid;
+  v_started_at timestamptz;
+  v_invoice_created timestamptz;
+  v_invoice_status text;
+begin
+  if tg_table_name = 'invoices' then
+    if new.is_demo or new.status = 'draft' then
+      return new;
+    end if;
+    v_company := new.company_id;
+    v_entity := 'invoice';
+    v_local := new.id;
+  elsif tg_table_name = 'invoice_payments' then
+    if new.is_demo then
+      return new;
+    end if;
+    v_company := new.company_id;
+    v_entity := 'payment';
+    v_local := new.id;
+  elsif tg_table_name = 'customers' then
+    v_company := new.company_id;
+    v_entity := 'customer';
+    v_local := new.id;
+  elsif tg_table_name = 'service_items' then
+    v_company := new.company_id;
+    v_entity := 'item';
+    v_local := new.id;
+  else
+    return new;
+  end if;
+
+  select c.id, c.started_at
+    into v_connection_id, v_started_at
+    from public.accounting_connections c
+   where c.company_id = v_company
+     and c.status = 'active'
+   limit 1;
+
+  if v_connection_id is null then
+    return new;
+  end if;
+
+  if v_entity in ('customer', 'item') then
+    update public.accounting_sync_records r
+       set state = 'pending',
+           next_attempt_at = now(),
+           attempts = 0,
+           attention_code = null,
+           attention_detail = '{}'::jsonb,
+           attention_at = null,
+           handled_at = null
+     where r.connection_id = v_connection_id
+       and r.entity_type = v_entity
+       and r.local_id = v_local
+       and r.state <> 'skipped';
+    return new;
+  end if;
+
+  if v_entity = 'invoice' then
+    if not (
+      new.created_at >= v_started_at
+      or (tg_op = 'UPDATE' and old.status = 'draft')
+      or exists (
+        select 1 from public.accounting_sync_records r
+         where r.connection_id = v_connection_id
+           and r.entity_type = 'invoice'
+           and r.local_id = v_local
+      )
+    ) then
+      return new;
+    end if;
+  else
+    select i.created_at, i.status::text
+      into v_invoice_created, v_invoice_status
+      from public.invoices i
+     where i.id = new.invoice_id;
+
+    if exists (
+      select 1 from public.accounting_sync_records r
+       where r.connection_id = v_connection_id
+         and r.entity_type = 'invoice'
+         and r.local_id = new.invoice_id
+         and r.state = 'skipped'
+    ) then
+      return new;
+    end if;
+
+    -- A payment can take a draft invoice straight to paid: the invoice
+    -- leaves draft in the same statement, so it counts as current work.
+    if not (
+      v_invoice_created >= v_started_at
+      or v_invoice_status = 'draft'
+      or exists (
+        select 1 from public.accounting_sync_records r
+         where r.connection_id = v_connection_id
+           and r.entity_type = 'invoice'
+           and r.local_id = new.invoice_id
+      )
+    ) then
+      return new;
+    end if;
+  end if;
+
+  insert into public.accounting_sync_records as r
+    (company_id, connection_id, entity_type, local_id, state, next_attempt_at)
+  values
+    (v_company, v_connection_id, v_entity, v_local, 'pending', now())
+  on conflict (connection_id, entity_type, local_id) do update
+    set state = 'pending',
+        next_attempt_at = now(),
+        attempts = 0,
+        attention_code = null,
+        attention_detail = '{}'::jsonb,
+        attention_at = null,
+        handled_at = null
+    where r.state <> 'skipped';
+
+  return new;
+end;
+$function$;
+
+comment on function public.accounting_enqueue_on_change() is
+  'Trigger: queues an invoice, payment, customer or price book item for the company''s active accounting connection (migration 222). Sends nothing itself.';
+
+-- A trigger function is not called by users; nobody needs EXECUTE on it.
+revoke all on function public.accounting_enqueue_on_change() from public;
+revoke all on function public.accounting_enqueue_on_change() from anon;
+revoke all on function public.accounting_enqueue_on_change() from authenticated;
+
+drop trigger if exists invoices_accounting_enqueue on public.invoices;
+create trigger invoices_accounting_enqueue
+  after insert or update on public.invoices
+  for each row execute function public.accounting_enqueue_on_change();
+
+drop trigger if exists invoice_payments_accounting_enqueue on public.invoice_payments;
+create trigger invoice_payments_accounting_enqueue
+  after insert on public.invoice_payments
+  for each row execute function public.accounting_enqueue_on_change();
+
+drop trigger if exists customers_accounting_enqueue on public.customers;
+create trigger customers_accounting_enqueue
+  after update on public.customers
+  for each row execute function public.accounting_enqueue_on_change();
+
+drop trigger if exists service_items_accounting_enqueue on public.service_items;
+create trigger service_items_accounting_enqueue
+  after update on public.service_items
+  for each row execute function public.accounting_enqueue_on_change();
