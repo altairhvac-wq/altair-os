@@ -1,6 +1,7 @@
 import { selectInChunks } from "@/lib/database/queries/chunked-in";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import type { DbClient } from "@/lib/database/db-client";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers";
 import type {
@@ -106,9 +107,18 @@ export const EXPENSE_SELECT = `
  *
  * Both are gone. Allocation is atomic and monotonic, and failure throws rather
  * than fabricating a number.
+ *
+ * `db` is the client the number is drawn with. The allocator (migration 149)
+ * lets billing and dispatch roles draw an expense number as themselves and
+ * expects a technician's to arrive through the service role, after the
+ * application has authorized the receipt. Without it a technician's own
+ * client is refused with insufficient_permission and no receipt can be saved.
  */
-async function generateExpenseNumber(companyId: string): Promise<string> {
-  return allocateDocumentNumber(companyId, "expense");
+async function generateExpenseNumber(
+  companyId: string,
+  db?: DbClient,
+): Promise<string> {
+  return allocateDocumentNumber(companyId, "expense", db);
 }
 
 export type ListExpensesOptions = {
@@ -339,6 +349,13 @@ export async function createExpense(
     customerId?: string | null;
     receiptFileName?: string;
     receiptStoragePath?: string;
+    /**
+     * Client used ONLY to draw the expense number. Pass the service-role
+     * client for a caller the action has authorized but the allocator does
+     * not recognize (an assigned technician). The row itself is always
+     * inserted with the caller's own client, so RLS still decides the insert.
+     */
+    numberAllocationDb?: DbClient;
   },
 ): Promise<{ expense: Expense | null; error: string | null }> {
   const supabase = await createClient();
@@ -348,7 +365,10 @@ export async function createExpense(
   // whole of, which reliably duplicated an existing expense number.
   let expenseNumber: string;
   try {
-    expenseNumber = await generateExpenseNumber(companyId);
+    expenseNumber = await generateExpenseNumber(
+      companyId,
+      options?.numberAllocationDb,
+    );
   } catch (allocationError) {
     console.error("[createExpense] expense number allocation failed:", {
       companyId,
