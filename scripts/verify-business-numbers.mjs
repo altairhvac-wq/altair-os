@@ -541,5 +541,97 @@ console.log("\nProfit after labor and shop costs, and the month against the targ
   check("the setup's target step now says where the target goes, and the product does it", /which counts each month&apos;s finished jobs against it/.test(read(FILES.setupSteps)) && /<MonthlyTargetCard/.test(dashboard));
 }
 
+/* ------------------------------------------------------------------ planning */
+console.log("\nPlanning starts from the saved numbers and uses the public calculators' math");
+{
+  const planning = await loadPureModule("shared/lib/business-numbers/planning.ts", "bn-planning");
+  const newHire = await loadPureModule("shared/lib/resources/new-hire.ts", "bn-new-hire");
+  const truckCost = await loadPureModule("shared/lib/resources/truck-cost.ts", "bn-truck");
+  const techPay = await loadPureModule("shared/lib/resources/technician-pay.ts", "bn-pay");
+  const asText = (object) => Object.fromEntries(Object.entries(object).map(([key, value]) => [key, String(value)]));
+  const formatMoney = (value) => value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+  // ---- what each plan starts with
+  const hireStart = planning.hirePlanStart(SHOP);
+  check("the hiring plan starts from the saved wage, payroll costs, hours and rate", hireStart.values.hourlyWage === "30" && hireStart.values.burdenPercent === "25" && hireStart.values.paidHoursPerWeek === "40" && hireStart.values.billableRate === "121" && hireStart.values.billedHoursPerWeek === "30", hireStart.values);
+  check("what has no saved number behind it starts empty, never as an example", hireStart.values.truckPerMonth === "" && hireStart.values.rampWeeks === "" && !hireStart.fromNumbers.includes("truckPerMonth") && hireStart.fromNumbers.length === 5, hireStart);
+  const emptyStarts = [planning.hirePlanStart(EMPTY), planning.truckPlanStart(EMPTY), planning.payPlanStart(EMPTY)];
+  check("a company with no numbers gets three empty plans", emptyStarts.every((start) => start.fromNumbers.length === 0 && Object.values(start.values).every((value) => value === "")), emptyStarts);
+  check("the truck plan starts billed hours a day at a fifth of the week", planning.truckPlanStart(SHOP).values.billedHoursPerDay === "6" && planning.truckPlanStart(SHOP).fromNumbers.join() === "billedHoursPerDay");
+  const payStart = planning.payPlanStart(SHOP);
+  check("the pay plan starts from the wage, the paid hours, the billed hours and a labor-only week (30 x $121)", payStart.values.hourlyWage === "30" && payStart.values.hoursOnClock === "40" && payStart.values.bookHours === "30" && payStart.values.revenueProduced === "3630" && payStart.values.payPerBookHour === "" && payStart.values.commissionPercent === "", payStart.values);
+  check("paid hours need billed hours; unbilled alone is not a week", planning.hirePlanStart({ ...EMPTY, unbilledHoursPerWeek: 10 }).values.paidHoursPerWeek === "");
+
+  // ---- the same answer as the website
+  const hire = planning.answerHirePlan(asText(newHire.NEW_HIRE_DEFAULTS));
+  const hireSite = newHire.calculateNewHire(newHire.NEW_HIRE_DEFAULTS);
+  check("hiring: the website's example gives the website's answer", hire.result !== null && JSON.stringify(hire.result) === JSON.stringify(hireSite), hire.result);
+  check("hiring: it pays, and the sentence says the break-even hours and what is left", hire.reading.tone === "good" && /Billing 28 hours a week, this hire pays for itself and leaves about \$7,415 a month\. It breaks even at 13\.9 billed hours a week\./.test(hire.reading.text), hire.reading.text);
+  check("hiring: the first weeks' cash is listed when there is a ramp", hire.lines.some((line) => line.label === "Cash to carry the first 8 weeks" && line.value === formatMoney(hireSite.cashToCarry)) && hire.lines.some((line) => line.label === "First week that pays for itself"), hire.lines);
+  const slow = planning.answerHirePlan({ ...asText(newHire.NEW_HIRE_DEFAULTS), billedHoursPerWeek: "10", rampWeeks: "" });
+  check("hiring: a hire that loses money says how much a month, and what it needs", slow.reading.tone === "bad" && /costs about \$2,023 a month more than it brings in\. It needs 13\.9 billed hours a week/.test(slow.reading.text) && slow.lines.some((line) => line.label === "Short a month, once busy") && !slow.lines.some((line) => /Cash to carry/.test(line.label)), slow);
+  const hopeless = planning.answerHirePlan({ ...asText(newHire.NEW_HIRE_DEFAULTS), billableRate: "30" });
+  check("hiring: a break-even past the paid hours says the hire cannot pay for itself", hopeless.reading.tone === "bad" && /To pay for itself this hire would have to bill 55\.9 hours a week, and they are paid for 40\. At these numbers it cannot\./.test(hopeless.reading.text), hopeless.reading.text);
+  // ---- sentences are true of the figures as they are shown
+  const hireWith = (changes) => planning.answerHirePlan({ ...asText(newHire.NEW_HIRE_DEFAULTS), truckPerMonth: "", rampWeeks: "", ...changes });
+  const barely = hireWith({ hourlyWage: "30", burdenPercent: "", billableRate: "29.98", billedHoursPerWeek: "40" });
+  check("hiring: a break-even a hair past the paid hours never reads '40 ... paid for 40'", barely.reading.tone === "bad" && /would have to bill 40\.03 hours a week, and they are paid for 40\./.test(barely.reading.text), barely.reading.text);
+  const exact = hireWith({ burdenPercent: "25", billableRate: "100", billedHoursPerWeek: "14" });
+  check("hiring: exactly break-even says so; never 'pays for itself and leaves $0'", exact.reading.tone === "note" && /Billing 14 hours a week, this hire breaks even: it brings in what it costs, and nothing more\./.test(exact.reading.text) && !/\$0/.test(exact.reading.text), exact.reading.text);
+  const hair = hireWith({ burdenPercent: "25", billableRate: "100", billedHoursPerWeek: "13.996" });
+  check("hiring: a hair short never reads 'billing 14 ... needs 14'", hair.reading.tone === "bad" && /Billing 13\.996 hours a week, this hire costs about \$2 a month more than it brings in\. It needs 14 billed hours a week/.test(hair.reading.text), hair.reading.text);
+  check("hiring: a few cents short is break-even, never 'costs about $0'", !/\$0 /.test(hireWith({ burdenPercent: "25", billableRate: "100", billedHoursPerWeek: "13.9999" }).reading.text) && /breaks even/.test(hireWith({ burdenPercent: "25", billableRate: "100", billedHoursPerWeek: "13.9999" }).reading.text), hireWith({ burdenPercent: "25", billableRate: "100", billedHoursPerWeek: "13.9999" }).reading.text);
+  const long = hireWith({ hourlyWage: "30", burdenPercent: "25", paidHoursPerWeek: "50", billedHoursPerWeek: "38" });
+  check("hiring: more than 40 paid hours carries an overtime caution with the amount ($188 a week)", long.cautions.length === 1 && /price all 50 paid hours at the plain wage\. Hours past 40 a week are usually owed time and a half, which adds about \$188 a week/.test(long.cautions[0]) && long.reading.tone === "good", long);
+  check("hiring: 40 paid hours or fewer carries no caution", hire.cautions.length === 0 && hireWith({ paidHoursPerWeek: "40" }).cautions.length === 0);
+  const flipped = hireWith({ hourlyWage: "30", burdenPercent: "25", paidHoursPerWeek: "60", billableRate: "60", billedHoursPerWeek: "40" });
+  check("hiring: when overtime would turn a paying hire into a losing one, it is not shown in green and the caution says so", flipped.result.pays === true && flipped.reading.tone === "warn" && /With that added, this hire no longer pays for itself\./.test(flipped.cautions[0]), flipped);
+  check("a figure past its box's limit is refused with a sentence, never an answer (no 40-digit results)", (() => { const wild = planning.answerHirePlan({ ...hireStart.values, hourlyWage: "9".repeat(30) }); const pct = planning.answerHirePlan({ ...hireStart.values, burdenPercent: "5000" }); const hours = planning.answerTruckPlan({ ...asText(truckCost.TRUCK_COST_DEFAULTS), billedHoursPerDay: "30" }); return wild.result === null && wild.badField === "hourlyWage" && /Hourly wage can be 1,000 at most/.test(wild.reading.text) && pct.badField === "burdenPercent" && hours.badField === "billedHoursPerDay" && /A day has 24 hours/.test(hours.reading.text); })());
+  check("truck: more days than a month has is caught even before any cost is typed", planning.answerTruckPlan({ ...planning.truckPlanStart(SHOP).values, workingDaysPerMonth: "45" }).badField === "workingDaysPerMonth");
+  check("hiring: missing boxes are asked for by name, not answered with a guess", /Add truck/.test(planning.answerHirePlan(hireStart.values).reading.text) === false && planning.answerHirePlan(hireStart.values).result !== null && /Add hourly wage, paid hours a week, rate you bill and hours billed a week/.test(planning.answerHirePlan(planning.hirePlanStart(EMPTY).values).reading.text), planning.answerHirePlan(planning.hirePlanStart(EMPTY).values).reading.text);
+  check("hiring: billing more hours than are paid is caught on its box", planning.answerHirePlan({ ...hireStart.values, billedHoursPerWeek: "50" }).badField === "billedHoursPerWeek" && planning.answerHirePlan({ ...hireStart.values, billedHoursPerWeek: "50" }).result === null);
+  check("hiring: half a week of ramp, or more than a year, is refused", planning.answerHirePlan({ ...hireStart.values, rampWeeks: "2.5" }).badField === "rampWeeks" && planning.answerHirePlan({ ...hireStart.values, rampWeeks: "60" }).badField === "rampWeeks");
+  check("text that is not a number, or a negative, names its box and gives no answer", ["abc", "-5", "1.250,50", "$"].every((bad) => { const answer = planning.answerHirePlan({ ...hireStart.values, hourlyWage: bad }); return answer.badField === "hourlyWage" && answer.result === null && answer.reading.tone === "bad" && /Hourly wage is not a number/.test(answer.reading.text); }));
+
+  const truck = planning.answerTruckPlan(asText(truckCost.TRUCK_COST_DEFAULTS));
+  const truckSite = truckCost.calculateTruckCost(truckCost.TRUCK_COST_DEFAULTS);
+  check("truck: the website's example gives the website's answer ($1,480 a month)", truck.result !== null && JSON.stringify(truck.result) === JSON.stringify(truckSite) && truckSite.perMonth === 1480 && /This truck costs \$1,480\.00 a month, which is \$70\.48 every working day\. Every billed hour carries \$11\.75 of it\./.test(truck.reading.text), truck.reading.text);
+  check("truck: a day, an hour, a job and a parked day are listed", ["A month", "A year", "A working day", "A billed hour", "A job", "A day it sits parked"].every((label) => truck.lines.some((line) => line.label === label)), truck.lines);
+  check("truck: with no hours or jobs those two lines are left out, not shown as $0", (() => { const answer = planning.answerTruckPlan({ ...asText(truckCost.TRUCK_COST_DEFAULTS), billedHoursPerDay: "", jobsPerDay: "" }); return answer.result !== null && !answer.lines.some((line) => line.label === "A billed hour" || line.label === "A job") && !/Every billed hour/.test(answer.reading.text); })());
+  check("truck: no costs asks for them; costs with no days asks for the days; 32 days is refused", /Type what the truck costs you/.test(planning.answerTruckPlan(planning.truckPlanStart(SHOP).values).reading.text) && /Add the working days a month/.test(planning.answerTruckPlan({ ...planning.truckPlanStart(SHOP).values, paymentPerMonth: "650" }).reading.text) && planning.answerTruckPlan({ ...planning.truckPlanStart(SHOP).values, paymentPerMonth: "650", workingDaysPerMonth: "32" }).badField === "workingDaysPerMonth");
+
+  const payDefaults = { ...techPay.TECHNICIAN_PAY_DEFAULTS, commissionPercent: techPay.TECHNICIAN_PAY_DEFAULTS.commissionRate * 100 };
+  delete payDefaults.commissionRate;
+  const pay = planning.answerPayPlan(asText(payDefaults));
+  const paySite = techPay.calculateTechnicianPay(techPay.TECHNICIAN_PAY_DEFAULTS);
+  check("pay: the website's example gives the website's answer", pay.result !== null && JSON.stringify(pay.result) === JSON.stringify(paySite), [pay.result, paySite]);
+  check("pay: the sentence compares the other plans with hourly and names the highest", /For this week, hourly pays \$1,425\.00, with 5 hours at time and a half; flat rate pays \$133\.00 less and commission pays \$525\.00 less\. Hourly pays the most\./.test(pay.reading.text), pay.reading.text);
+  check("pay: only the plans that were filled in are listed", (() => { const answer = planning.answerPayPlan(payStart.values); return answer.result !== null && answer.lines.length === 1 && answer.lines[0].label === "Hourly" && /Hourly, this week pays \$1,200\.00\. Add a pay per book hour or a commission/.test(answer.reading.text); })(), planning.answerPayPlan(payStart.values));
+  check("pay: plans that pay the same are not ranked", (() => { const answer = planning.answerPayPlan({ ...payStart.values, payPerBookHour: "40" }); return /flat rate pays the same\.$/.test(answer.reading.text) && !/pays the most/.test(answer.reading.text); })(), planning.answerPayPlan({ ...payStart.values, payPerBookHour: "40" }).reading.text);
+  const payWith = (changes) => planning.answerPayPlan({ ...payStart.values, ...changes });
+  const tieLow = payWith({ payPerBookHour: "40", commissionPercent: "10" });
+  check("pay: hourly and flat rate tied at the top share it; a lower plan does not make one of them 'the most'", /flat rate pays the same and commission pays \$837\.00 less\. Hourly and flat rate pay the most, the same amount\./.test(tieLow.reading.text) && tieLow.lines.filter((line) => line.strong).map((line) => line.label).join() === "Hourly,Flat rate", tieLow);
+  const tieHigh = payWith({ payPerBookHour: "50", revenueProduced: "3000", commissionPercent: "50" });
+  check("pay: flat rate and commission tied above hourly share it too", /Flat rate and commission pay the most, the same amount\./.test(tieHigh.reading.text), tieHigh.reading.text);
+  check("pay: a plan a hundredth of a cent ahead is 'the same', not 'the most'", (() => { const answer = payWith({ payPerBookHour: "40.0001" }); return /flat rate pays the same\.$/.test(answer.reading.text) && !answer.lines.some((line) => line.strong); })(), payWith({ payPerBookHour: "40.0001" }).reading.text);
+  check("pay: a plan typed halfway is asked for its other half, by name", /Add the book hours turned to see what flat rate pays\./.test(payWith({ bookHours: "", payPerBookHour: "34" }).reading.text) && !/Add a pay per book hour/.test(payWith({ bookHours: "", payPerBookHour: "34" }).reading.text) && /commission pays .* Add the book hours turned/.test(payWith({ bookHours: "", payPerBookHour: "34", commissionPercent: "30" }).reading.text) && /Add the revenue produced to see what commission pays\./.test(payWith({ revenueProduced: "", commissionPercent: "12" }).reading.text), payWith({ bookHours: "", payPerBookHour: "34" }).reading.text);
+  check("pay: a sliver of overtime is never '0 hours at time and a half'; one hour is 'hour'", !/time and a half/.test(payWith({ hoursOnClock: "40.04" }).reading.text) && /\$1,201\.80/.test(payWith({ hoursOnClock: "40.04" }).reading.text) && /with 1 hour at time and a half/.test(payWith({ hoursOnClock: "41" }).reading.text), payWith({ hoursOnClock: "40.04" }).reading.text);
+  check("pay: a commission typed as a fraction is questioned (0.12 is probably 12)", payWith({ commissionPercent: "0.12" }).cautions.length === 1 && /If you meant 12%, type 12\./.test(payWith({ commissionPercent: "0.12" }).cautions[0]) && payWith({ commissionPercent: "12" }).cautions.length === 0, payWith({ commissionPercent: "0.12" }).cautions);
+  check("pay: a commission above 100% and a week past 168 hours are refused on their boxes", planning.answerPayPlan({ ...payStart.values, commissionPercent: "120" }).badField === "commissionPercent" && planning.answerPayPlan({ ...payStart.values, hoursOnClock: "200" }).badField === "hoursOnClock");
+
+  // ---- the page
+  const planningPage = read("app/(admin)/settings/business-numbers/planning/page.tsx");
+  const planningView = read("shared/components/settings/business-numbers/PlanningView.tsx");
+  check("the planning page does not exist where business numbers do not (migration 218)", /if \(!load\.available\) \{\s*notFound\(\);/.test(planningPage));
+  check("the planning page reads and never writes: no action, no save", !/app\/actions|"use server"|saveCompanyBusinessNumbers|updateBusinessNumbersAction/.test(planningPage + planningView) && !/localStorage|sessionStorage/.test(planningView));
+  check("it says nothing is saved, and carries the overtime caution", /Nothing you type here is saved, and nothing here changes them/.test(planningView) && /most technicians are owed overtime however they are paid, and at least minimum wage for every hour worked/.test(planningView) && /some states also count daily overtime/.test(planningView) && /Check with your payroll provider/.test(planningView));
+  check("cautions are shown with the answer, where a screen reader hears them", /answer\.cautions\.map\(\(caution\) => \(\s*<ReadingLine key=\{caution\} reading=\{\{ tone: "warn", text: caution \}\} \/>/.test(planningView));
+  check("the truck offer compares amounts, so '1,480' is not offered $1,480 again", /typeof hireTruck === "number" && Math\.abs\(hireTruck - Number\(truckPerMonth\)\) < 0\.005/.test(planningView));
+  check("it warns against counting the truck twice", /Count it once/.test(planningView));
+  check("'From your numbers' is said only until the owner types over the box", /fromNumbers\.includes\(box\.key\) && !touched\.has\(box\.key\)/.test(planningView));
+  check("Settings > Numbers links to it", /href="\/settings\/business-numbers\/planning"/.test(read(FILES.view)));
+  check("the planning math is not copied: it calls the three public calculators", /calculateNewHire\(/.test(read("shared/lib/business-numbers/planning.ts")) && /calculateTruckCost\(/.test(read("shared/lib/business-numbers/planning.ts")) && /calculateTechnicianPay\(/.test(read("shared/lib/business-numbers/planning.ts")));
+}
+
 console.log(`\n${passed}/${passed + failed} checks passed`);
 process.exit(failed === 0 ? 0 : 1);

@@ -214,6 +214,14 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError, guid
         </p>
       ) : null}
 
+      <p className="text-sm text-altair-ink-on-paper-secondary">
+        Thinking about a truck, a hire or a pay plan?{" "}
+        <Link href="/settings/business-numbers/planning" className="font-semibold text-[var(--brand-metal-text)] underline underline-offset-2">
+          Plan with your numbers
+        </Link>
+        . It starts from what you have saved here.
+      </p>
+
       {/* The list itself sits under the Save button, where the owner is when a
        * save makes it appear. Someone arriving with a list already waiting
        * is told at the top and taken to it. */}
