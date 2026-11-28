@@ -30,13 +30,16 @@ import {
   jobScheduledInReportRange,
   resolveReportChartBucketSize,
   resolveReportChartBucketStart,
+  reportDayBasisReferenceDate,
   resolveReportChartDateBounds,
   resolveReportDateBounds,
+  withReportDayBasis,
   type ProfitabilityReportDateBounds,
   type ProfitabilityReportDateRange,
   type ReportChartPoint,
   type ReportChartSeries,
   type ReportChartSeriesBundle,
+  type ReportDayBasis,
   type ReportOperationalChart,
 } from "@/shared/types/reports";
 import {
@@ -51,6 +54,11 @@ const EXCLUDED_INVOICE_STATUSES: ReadonlySet<InvoiceStatus> = new Set([
 
 type ReportChartSeriesOptions = {
   dateRange?: ProfitabilityReportDateRange;
+  /**
+   * Whose calendar the axis is on (see ReportDayBasis). Left out: the server's
+   * own today and UTC days, as before.
+   */
+  dayBasis?: ReportDayBasis;
 };
 
 function isActiveInvoice(invoice: Invoice): boolean {
@@ -112,7 +120,11 @@ function addToBucket(
     return;
   }
 
-  const bucketStart = resolveReportChartBucketStart(dateValue, bucketSize);
+  const bucketStart = resolveReportChartBucketStart(
+    dateValue,
+    bucketSize,
+    dateBounds.timeZone,
+  );
   const current = accumulator.values.get(bucketStart);
   if (current == null) {
     return;
@@ -162,8 +174,20 @@ export function buildReportChartSeriesBundle(
 ): ReportChartSeriesBundle {
   const dateRange = options.dateRange ?? "30d";
   const bucketSize = resolveReportChartBucketSize(dateRange);
-  const chartBounds = resolveReportChartDateBounds(dateRange);
-  const reportDateBounds = resolveReportDateBounds(dateRange);
+  // One "today" for both sets of bounds, on the basis's calendar when there
+  // is one, and the zone carried on the bounds so every timestamp below is
+  // tested and bucketed on that same calendar.
+  const referenceDate = options.dayBasis
+    ? reportDayBasisReferenceDate(options.dayBasis)
+    : new Date();
+  const chartBounds = withReportDayBasis(
+    resolveReportChartDateBounds(dateRange, referenceDate),
+    options.dayBasis,
+  );
+  const reportDateBounds = withReportDayBasis(
+    resolveReportDateBounds(dateRange, referenceDate),
+    options.dayBasis,
+  );
   const buckets = buildReportChartBuckets(chartBounds, bucketSize);
   const bucketKeys = new Set(buckets.map((bucket) => bucket.bucketStart));
 
@@ -364,7 +388,11 @@ export function buildReportChartSeriesBundle(
       continue;
     }
 
-    const bucketStart = resolveReportChartBucketStart(entry.startedAt, bucketSize);
+    const bucketStart = resolveReportChartBucketStart(
+      entry.startedAt,
+      bucketSize,
+      chartBounds.timeZone,
+    );
     if (!bucketKeys.has(bucketStart)) {
       continue;
     }

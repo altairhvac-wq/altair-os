@@ -5,7 +5,8 @@ import type { ReportDailySeries } from "@/shared/lib/reports/chart-series-aggreg
 import type { ProfitabilityReportDateBounds } from "@/shared/types/reports";
 
 /**
- * The two reports aggregates (migrations 169 and 170).
+ * The two reports aggregates (migrations 169 and 170, given the company's
+ * time zone by 221 and 220).
  *
  * Both are SECURITY DEFINER and re-check membership and the reports permission
  * themselves, so these wrappers do not become the security boundary: the RPC is
@@ -23,7 +24,17 @@ type AggregateResult<T> = {
   data: T | null;
   ok: boolean;
   errorCode?: string;
+  /**
+   * True when a time zone was asked for and the database function does not
+   * take one yet: its migration has not run. Not a fault and not reported
+   * as one. The caller asks again on the old calendar (UTC days), for BOTH
+   * functions, so the two never count different days.
+   */
+  timeZoneUnsupported?: boolean;
 };
+
+/** PostgREST's "no function with these arguments". */
+const NO_SUCH_FUNCTION = "PGRST202";
 
 function reportFailure(
   event: string,
@@ -58,11 +69,22 @@ export async function getCompanyReportsSummary(
     today: string;
     followUpCutoff: string;
     limit?: number;
+    /**
+     * The zone a timestamp is turned into a calendar day in (migration 221).
+     * The bounds and `today` must be dates on that same calendar. Left out:
+     * UTC days, as before.
+     *
+     * Before migration 221 the function does not take a zone and the call is
+     * answered "no such function". That comes back as timeZoneUnsupported
+     * and is NOT retried here: the dates this was called with are the
+     * company's, and the old calendar has its own.
+     */
+    timeZone?: string;
   },
 ): Promise<AggregateResult<ReportsSummaryAggregate>> {
   const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("get_company_reports_summary", {
+  const timeZone = input.timeZone?.trim();
+  const args = {
     p_company_id: companyId,
     p_start_date: input.dateBounds.startDate,
     p_end_date: input.dateBounds.endDate,
@@ -71,7 +93,21 @@ export async function getCompanyReportsSummary(
     p_today: input.today,
     p_follow_up_cutoff: input.followUpCutoff,
     p_limit: input.limit ?? 5,
-  });
+  };
+
+  const { data, error } = await supabase.rpc(
+    "get_company_reports_summary",
+    timeZone ? { ...args, p_time_zone: timeZone } : args,
+  );
+
+  if (error && timeZone && error.code === NO_SUCH_FUNCTION) {
+    return {
+      data: null,
+      ok: false,
+      errorCode: error.code,
+      timeZoneUnsupported: true,
+    };
+  }
 
   if (error) {
     reportFailure("reports.summary_rpc_failed", companyId, error);
@@ -100,11 +136,17 @@ export async function getCompanyReportsSummary(
  *   answered "no such function" (PGRST202), is made again without it, and
  *   the caller gets UTC days, exactly what it got before. That is expected
  *   while a migration is pending, so it is not reported as a failure.
+ *
+ * @param options.fallBackToUtcDays false: do not make that second call;
+ *   answer timeZoneUnsupported instead. The Reports page asks this way,
+ *   because it reads this series next to the summary and must put both on
+ *   the same calendar, with that calendar's own dates, when either cannot
+ *   take a zone. Left out (the dashboard): fall back here, as before.
  */
 export async function getCompanyReportDailySeries(
   companyId: string,
   bounds: ProfitabilityReportDateBounds,
-  options: { timeZone?: string } = {},
+  options: { timeZone?: string; fallBackToUtcDays?: boolean } = {},
 ): Promise<AggregateResult<ReportDailySeries>> {
   const supabase = await createClient();
   const args = {
@@ -119,7 +161,16 @@ export async function getCompanyReportDailySeries(
     timeZone ? { ...args, p_time_zone: timeZone } : args,
   );
 
-  if (error && timeZone && error.code === "PGRST202") {
+  if (error && timeZone && error.code === NO_SUCH_FUNCTION) {
+    if (options.fallBackToUtcDays === false) {
+      return {
+        data: null,
+        ok: false,
+        errorCode: error.code,
+        timeZoneUnsupported: true,
+      };
+    }
+
     ({ data, error } = await supabase.rpc(
       "get_company_report_daily_series",
       args,

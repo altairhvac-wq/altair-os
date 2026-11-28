@@ -34,10 +34,13 @@ import { formatCurrency, formatCurrencyExact } from "@/shared/types/customer";
 import { formatPercent } from "@/shared/types/analytics";
 import {
   isDateWithinReportBounds,
+  reportDayBasisReferenceDate,
   resolveProfitabilityReportDateBounds,
   resolveReportDateBounds,
+  withReportDayBasis,
   type ProfitabilityReportDateBounds,
   type ReportChartSeriesBundle,
+  type ReportDayBasis,
 } from "@/shared/types/reports";
 
 const EXCLUDED_ESTIMATE_STATUSES = new Set(["cancelled", "draft"]);
@@ -85,6 +88,8 @@ export function resolvePreviousReportDateBounds(
   return {
     startDate: toDateOnly(previousStart),
     endDate: toDateOnly(previousEnd),
+    // The period before is counted on the same calendar as the period itself.
+    ...(bounds.timeZone ? { timeZone: bounds.timeZone } : {}),
   };
 }
 
@@ -803,7 +808,7 @@ function daysBetweenDates(startDate: string, endDate: string): number {
  * (Current / 1–30 / 31–60 / 61–90 / 90+). Current holds not-yet-due
  * balances separately from invoices that are actually 1–30 days overdue.
  */
-function buildInvoiceAging(invoices: Invoice[]) {
+function buildInvoiceAging(invoices: Invoice[], today: string) {
   const buckets = [
     { label: "Current", count: 0, amount: 0 },
     { label: "1-30 Days", count: 0, amount: 0 },
@@ -811,8 +816,6 @@ function buildInvoiceAging(invoices: Invoice[]) {
     { label: "61-90 Days", count: 0, amount: 0 },
     { label: "90+ Days", count: 0, amount: 0 },
   ];
-
-  const today = toDateOnly(new Date());
 
   for (const invoice of invoices) {
     if (!isActiveInvoice(invoice) || invoice.balanceDue <= 0) {
@@ -910,6 +913,7 @@ function buildAccountantSummary(
   dateRange: ReportsPageDateRange,
   dateBounds: ProfitabilityReportDateBounds,
   datasets: ReportRawDatasets,
+  today: string,
 ): AccountantSummaryData {
   const { invoices, payments, expenses } = datasets;
   const activeInvoices = invoices.filter(isActiveInvoice);
@@ -989,7 +993,7 @@ function buildAccountantSummary(
       invoices,
       dateBounds,
     ),
-    invoiceAging: buildInvoiceAging(activeInvoices),
+    invoiceAging: buildInvoiceAging(activeInvoices, today),
   };
 }
 
@@ -1043,10 +1047,21 @@ export function buildReportsPageData(input: {
   showLeadPipeline?: boolean;
   timeZone?: string;
   totalCustomerCount?: number;
+  /**
+   * Whose calendar the period, the aging reference date and every timestamp
+   * are read on (see ReportDayBasis). Left out: the server's own today and UTC
+   * days, as before.
+   */
+  dayBasis?: ReportDayBasis;
 }): ReportsPageData {
-  const dateBounds =
-    resolveReportDateBounds(input.dateRange) ??
-    resolveProfitabilityReportDateBounds(input.dateRange);
+  const referenceDate = input.dayBasis
+    ? reportDayBasisReferenceDate(input.dayBasis)
+    : new Date();
+  const dateBounds = withReportDayBasis(
+    resolveReportDateBounds(input.dateRange, referenceDate) ??
+      resolveProfitabilityReportDateBounds(input.dateRange, referenceDate),
+    input.dayBasis,
+  );
   const previousBounds = resolvePreviousReportDateBounds(dateBounds);
   const totalCustomerCount = input.totalCustomerCount ?? 0;
 
@@ -1085,6 +1100,7 @@ export function buildReportsPageData(input: {
       input.dateRange,
       dateBounds,
       input.datasets,
+      input.dayBasis?.today ?? toDateOnly(referenceDate),
     ),
     customerHealth: buildCustomerHealth(
       input.datasets.jobs,

@@ -2174,6 +2174,9 @@ export type Database = {
       // on next gen types run. Every scalar, group and top-N the reports page
       // needs, with the aging reference date and the follow-up cutoff passed in
       // so the time-zone rules stay defined once, in TypeScript.
+      // Migration 221 adds p_time_zone (default 'UTC'): the zone a timestamp
+      // is turned into a calendar day in. Before 221 the function has eight
+      // arguments and a nine-argument call is answered PGRST202.
       get_company_reports_summary: {
         Args: {
           p_company_id: string;
@@ -2184,6 +2187,7 @@ export type Database = {
           p_today: string;
           p_follow_up_cutoff: string;
           p_limit: number;
+          p_time_zone?: string;
         };
         Returns: Json;
       };
