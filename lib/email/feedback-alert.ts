@@ -23,6 +23,12 @@ import type { BetaFeedbackSeverity } from "@/shared/types/beta-feedback";
  */
 
 export type FeedbackAlertEmailInput = {
+  /**
+   * "integration_request" is a request sent from Settings > Integrations. It
+   * is stored and delivered exactly like a Feedback report; only the subject
+   * line differs, so it is not mistaken for a bug in the inbox.
+   */
+  kind?: "feedback" | "integration_request";
   severity: BetaFeedbackSeverity | string;
   message: string;
   expectedBehavior?: string | null;
@@ -70,7 +76,10 @@ export function buildFeedbackAlertEmail(input: FeedbackAlertEmailInput): {
     ? `${appBaseUrl.replace(/\/$/, "")}/platform/bugs`
     : null;
 
-  const subject = `Altair feedback (${severity}) from ${company}`;
+  const subject =
+    input.kind === "integration_request"
+      ? `Altair integration request from ${company}`
+      : `Altair feedback (${severity}) from ${company}`;
 
   const text = [
     `Severity: ${severity}`,

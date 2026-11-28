@@ -637,7 +637,12 @@ no third-party credential).
   publisher credential so connections survive days when nothing publishes.
   The Integrations card shows "self-refresh proven <date>" vs "not yet
   proven" so a reconnect cannot masquerade as a repair.
-- Settings → Integrations (`/settings/integrations`): read-only cards per
+- Settings → Integrations (`/settings/integrations`): for every owner and
+  admin, what Altair connects to today (card payments through Stripe with its
+  stored status, file imports, export, tax summary), what is built in, and a
+  "Not available yet" list with a request form (requests are rows in
+  `beta_feedback_reports`; nothing on the list is connected). Below that, for
+  platform admins only, the marketing channels: read-only cards per
   provider across three sections. Facebook and YouTube connect hops are
   wired (YouTube: `/api/marketing/connected-accounts/youtube/authorize` +
   callback, `access_type=offline&prompt=consent`, per-channel rows, granted

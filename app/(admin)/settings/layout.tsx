@@ -31,7 +31,6 @@ export default async function SettingsLayout({
   return (
     <SettingsShell
       showSystemCheck={canAccessSystemCheck(companyContext)}
-      showIntegrations={companyContext.isPlatformAdmin}
       showBusinessNumbers={showBusinessNumbers}
     >
       {children}

@@ -25,10 +25,7 @@ import {
   altairMcListClass,
   altairMcListRowClass,
 } from "@/shared/design-system/components/mc-surface";
-import {
-  SettingsWorkspacePage,
-  SettingsWorkspaceSection,
-} from "@/shared/components/settings/SettingsWorkspacePage";
+import { SettingsWorkspaceSection } from "@/shared/components/settings/SettingsWorkspacePage";
 import {
   INTEGRATION_SECTIONS,
   rowsForSection,
@@ -59,18 +56,23 @@ const SECTION_ICON: Record<string, LucideIcon> = {
   first_party: Building2,
 };
 
-type IntegrationsSettingsViewProps = {
+type MarketingChannelIntegrationsProps = {
   rows: readonly IntegrationRow[];
   /** Owner/admin. The Server Action re-checks regardless. */
   canManage: boolean;
-  flash: { tone: "success" | "error"; message: string } | null;
 };
 
 /**
- * Settings → Integrations.
+ * Altair's own marketing channels, on Settings > Integrations.
+ *
+ * ====================== PLATFORM ADMINS ONLY ======================
+ * Every row here is a publishing channel or creative source for the
+ * founder's Marketing Hub. A customer company can use none of them, so the
+ * page renders this block only for a platform admin (the page decides, not
+ * this component). What a customer sees is IntegrationsPageView.
  *
  * ====================== READ-ONLY, DELIBERATELY ======================
- * This page reports what is actually stored and offers exactly one wired
+ * This block reports what is actually stored and offers exactly one wired
  * action per row where one exists today. It never claims a connection that
  * has not happened: a provider with no credentials on this deployment shows
  * "Not available" and no button, because a Connect button that cannot
@@ -80,65 +82,46 @@ type IntegrationsSettingsViewProps = {
  * — including the ones only a third party can put us in — is testable without
  * a browser. This component paints; it does not decide.
  */
-export function IntegrationsSettingsView({
+export function MarketingChannelIntegrations({
   rows,
   canManage,
-  flash,
-}: IntegrationsSettingsViewProps) {
+}: MarketingChannelIntegrationsProps) {
   return (
-    <SettingsWorkspacePage
-      title="Integrations"
-      description="Publishing channels, creative sources, and the state of each connection."
-    >
-      <div data-testid="page-settings-integrations">
-        {flash ? (
-          <div
-            role="status"
-            className={`mb-3 rounded-none border px-3 py-2 text-xs font-medium ${
-              flash.tone === "success"
-                ? "border-altair-success/35 bg-altair-success/10 text-altair-ink"
-                : "border-altair-danger/35 bg-altair-danger/10 text-altair-ink"
-            }`}
+    <div data-testid="page-settings-integrations" className="min-w-0">
+      {INTEGRATION_SECTIONS.map((section) => {
+        const sectionRows = rowsForSection(rows, section.kind);
+        const SectionIcon = SECTION_ICON[section.kind] ?? Plug;
+
+        return (
+          <SettingsWorkspaceSection
+            key={section.kind}
+            title={section.title}
+            description={section.description}
+            card={false}
+            className="mb-3"
           >
-            {flash.message}
-          </div>
-        ) : null}
-
-        {INTEGRATION_SECTIONS.map((section) => {
-          const sectionRows = rowsForSection(rows, section.kind);
-          const SectionIcon = SECTION_ICON[section.kind] ?? Plug;
-
-          return (
-            <SettingsWorkspaceSection
-              key={section.kind}
-              title={section.title}
-              description={section.description}
-              card={false}
-              className="mb-3"
-            >
-              {sectionRows.length === 0 ? (
-                <EmptyState
-                  title={section.emptyTitle}
-                  tone="neutral"
-                  icon={<SectionIcon className="h-5 w-5" aria-hidden="true" />}
-                />
-              ) : (
-                <ul className={altairMcListClass}>
-                  {sectionRows.map((row, index) => (
-                    <IntegrationRowItem
-                      key={row.provider}
-                      row={row}
-                      canManage={canManage}
-                      first={index === 0}
-                    />
-                  ))}
-                </ul>
-              )}
-            </SettingsWorkspaceSection>
-          );
-        })}
-      </div>
-    </SettingsWorkspacePage>
+            {sectionRows.length === 0 ? (
+              <EmptyState
+                title={section.emptyTitle}
+                tone="neutral"
+                icon={<SectionIcon className="h-5 w-5" aria-hidden="true" />}
+              />
+            ) : (
+              <ul className={altairMcListClass}>
+                {sectionRows.map((row, index) => (
+                  <IntegrationRowItem
+                    key={row.provider}
+                    row={row}
+                    canManage={canManage}
+                    first={index === 0}
+                  />
+                ))}
+              </ul>
+            )}
+          </SettingsWorkspaceSection>
+        );
+      })}
+    </div>
   );
 }
 

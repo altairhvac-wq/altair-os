@@ -1,66 +1,66 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { canManageIntegrations, canViewIntegrations } from "@/lib/database/access-control";
+import {
+  canAccessCompanySettings,
+  canManageIntegrations,
+  canViewOperationalReports,
+  getCompanyAccessScope,
+} from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
+import { listCompanyIntegrationRequests } from "@/lib/database/queries/integration-requests";
 import { listMarketingConnectedAccounts } from "@/lib/database/queries/marketing-connected-accounts";
+import { getResendEmailEnv } from "@/lib/email/env";
 import { getConfiguredIntegrationProviders } from "@/lib/integrations/configuration";
-import { IntegrationsSettingsView } from "@/shared/components/settings/IntegrationsSettingsView";
+import { IntegrationsPageView } from "@/shared/components/settings/integrations/IntegrationsPageView";
+import { MarketingChannelIntegrations } from "@/shared/components/settings/integrations/MarketingChannelIntegrations";
+import { getBillingCompanyReplyTo } from "@/shared/lib/billing-company-contact";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import {
+  describeCardPaymentsConnection,
+  type CardPaymentsAccountFacts,
+} from "@/shared/types/customer-integrations";
 import { toMarketingChannelAccountFacts } from "@/shared/types/marketing-channel-connection";
 import {
   buildIntegrationRows,
   formatIntegrationConnectFlash,
   type IntegrationAccountFacts,
 } from "@/shared/types/integration-row";
+import {
+  buildStripePaymentSettingsSummary,
+  getCardPaymentsDisplayStatus,
+} from "@/shared/types/settings/payment-settings";
 
 /**
  * Settings → Integrations.
  *
- * This route existed as a six-line redirect to /settings/company#connections
- * ("settings IA v2 merged Integrations into Company"). That merge was correct
- * when the only integration was Facebook and its whole state was "connected
- * or not". It stops being correct with nine providers across three kinds,
- * each carrying configuration, connection health, granted scopes and a
- * provider-side capability that no token reflects — the Company page's
- * Connections rows cannot express any of that without becoming this page.
+ * ============ WHO SEES WHAT ============
+ * Every owner and admin sees the customer page: what Altair connects to
+ * today (with this company's real status), what it does not connect to yet,
+ * and a way to ask. Until 2026-11-27 a customer was redirected away from
+ * this route, because the only thing on it was the founder's marketing
+ * channels with developer variable names.
  *
- * The Company page keeps its Connections summary and links here for detail,
- * so there is still one home for the capability rather than two.
+ * Those channels are still here, below the customer page, and still for
+ * platform admins only: `isPlatformAdmin` is checked on this page, and the
+ * data for that block is not even loaded for anyone else.
+ *
+ * The settings layout has already turned away anyone who may not open
+ * company settings; the check is repeated here because the read-back of this
+ * company's requests uses the service role and must never run for someone
+ * the layout would have refused.
  */
 export const metadata: Metadata = {
   title: "Integrations",
 };
 
-export default async function IntegrationsSettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    connected?: string;
-    connect_error?: string;
-    provider?: string;
-  }>;
-}) {
-  const companyContext = await getActiveCompanyContext();
+type ActiveContext = NonNullable<
+  Awaited<ReturnType<typeof getActiveCompanyContext>>
+>;
 
-  if (!companyContext) {
-    return null;
-  }
-
-  // Reading connection status is a dispatcher-level operational question;
-  // changing it is not. This mirrors the SELECT policy migration 089 put on
-  // marketing_connected_accounts, so the page and the database agree.
-  if (!canViewIntegrations(companyContext)) {
-    return null;
-  }
-
-  // Every row on this page is a marketing channel or creative source for the
-  // founder's own publishing (Marketing Hub is platform-admin only). A customer
-  // company saw nine "Not available" rows with developer variable names and
-  // could connect none of them; its connections live on Settings > Company.
-  if (!companyContext.isPlatformAdmin) {
-    redirect("/settings/company#connections");
-  }
-
-  const params = await searchParams;
+async function loadMarketingChannels(
+  companyContext: ActiveContext,
+  params: { connected?: string; connect_error?: string; provider?: string },
+) {
   const accounts = await listMarketingConnectedAccounts(
     companyContext.company.id,
   );
@@ -90,15 +90,134 @@ export default async function IntegrationsSettingsPage({
     nowIso: new Date().toISOString(),
   });
 
+  return {
+    slot: (
+      <MarketingChannelIntegrations
+        rows={rows}
+        canManage={canManageIntegrations(companyContext)}
+      />
+    ),
+    // The result of a connect hop ("YouTube connected"). Read from the query
+    // string for a platform admin only, and shown at the top of the page.
+    notice: formatIntegrationConnectFlash({
+      connected: params.connected ?? null,
+      connectError: params.connect_error ?? null,
+      provider: params.provider ?? null,
+    }),
+  };
+}
+
+/**
+ * The facts the card-payments row is written from. `readyToCharge` repeats
+ * the checkout's own test (lib/payments/stripe-checkout.ts) through the
+ * Billing page's helpers, so the two pages cannot disagree.
+ */
+function toCardPaymentsFacts(
+  account: NonNullable<Awaited<ReturnType<typeof getCompanyPaymentAccount>>>,
+): CardPaymentsAccountFacts {
+  const summary = buildStripePaymentSettingsSummary({
+    provider: account.provider,
+    status: account.status,
+    chargesEnabled: account.chargesEnabled,
+    payoutsEnabled: account.payoutsEnabled,
+    onlinePaymentsEnabled: account.onlinePaymentsEnabled,
+    providerAccountId: account.providerAccountId,
+    onboardingCompletedAt: account.onboardingCompletedAt,
+    disabledAt: account.disabledAt,
+    lastSyncedAt: account.lastSyncedAt,
+    providerMetadata: account.providerMetadata,
+  });
+
+  return {
+    status: summary.status,
+    onlinePaymentsEnabled: summary.onlinePaymentsEnabled,
+    readyToCharge:
+      summary.chargesEnabled &&
+      summary.payoutsEnabled &&
+      summary.hasProviderAccountId &&
+      summary.onboardingCompletedAt !== null &&
+      summary.disabledAt === null &&
+      getCardPaymentsDisplayStatus(summary) === "active",
+  };
+}
+
+export default async function IntegrationsSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    connected?: string;
+    connect_error?: string;
+    provider?: string;
+  }>;
+}) {
+  const companyContext = await getActiveCompanyContext();
+
+  if (!companyContext) {
+    return null;
+  }
+
+  if (!canAccessCompanySettings(companyContext)) {
+    return null;
+  }
+
+  const company = companyContext.company;
+  const nowIso = new Date().toISOString();
+  const canSeePayments = companyContext.permissions.manageBilling;
+
+  const [paymentAccount, requests, marketingChannels] = await Promise.all([
+    canSeePayments
+      ? getCompanyPaymentAccount(company.id, "stripe")
+      : Promise.resolve(null),
+    listCompanyIntegrationRequests(company.id, nowIso),
+    companyContext.isPlatformAdmin
+      ? searchParams.then((params) =>
+          loadMarketingChannels(companyContext, params),
+        )
+      : Promise.resolve(null),
+  ]);
+
+  const access = getCompanyAccessScope(companyContext);
+  const importLinks = [
+    ...(access.canManageCustomers
+      ? [{ label: "Import customers", href: "/customers/import" }]
+      : []),
+    ...(companyContext.permissions.manageBilling
+      ? [
+          { label: "Import a price book", href: "/price-book/import" },
+          { label: "Import unpaid invoices", href: "/invoices/import" },
+        ]
+      : []),
+  ];
+
+  const requestedOn: Record<string, string> = {};
+  for (const [key, askedAt] of Object.entries(requests.requestedAt)) {
+    requestedOn[key] = formatDateInTimeZone(askedAt, company.timezone, {
+      month: "short",
+      day: "numeric",
+    });
+  }
+
   return (
-    <IntegrationsSettingsView
-      rows={rows}
-      canManage={canManageIntegrations(companyContext)}
-      flash={formatIntegrationConnectFlash({
-        connected: params.connected ?? null,
-        connectError: params.connect_error ?? null,
-        provider: params.provider ?? null,
-      })}
+    <IntegrationsPageView
+      cardPayments={describeCardPaymentsConnection(
+        canSeePayments
+          ? paymentAccount
+            ? toCardPaymentsFacts(paymentAccount)
+            : null
+          : "hidden",
+      )}
+      importLinks={importLinks}
+      canExport={companyContext.permissions.manageCompany}
+      canOpenTaxSummary={canViewOperationalReports(companyContext)}
+      emailEnabled={getResendEmailEnv().configured}
+      // The same rule the sender uses for Reply-To, so the page never names
+      // an address a customer's reply would not actually go to.
+      companyEmail={getBillingCompanyReplyTo({ email: company.email }) ?? null}
+      companyName={company.name}
+      companyId={company.id}
+      requestedOn={requestedOn}
+      platformAdminSlot={marketingChannels?.slot}
+      platformAdminNotice={marketingChannels?.notice ?? null}
     />
   );
 }

@@ -30,13 +30,12 @@ type SettingsNavigationItem = {
  * server-redirect, so plain prefix matching covers every pathname a user can
  * sit on.
  *
- * Integrations was merged into Company too, and has been un-merged. That was
- * the right call while the only integration was Facebook and its entire state
- * was "connected or not". It stops being right with nine providers across
- * three kinds, each carrying configuration, connection health, granted scopes
- * and a provider-side capability no token reflects — Company's Connections
- * rows cannot express that without becoming this page. Company keeps a
- * summary and links here, so there is still one home for the detail.
+ * Integrations was merged into Company too, and has been un-merged twice
+ * over: first for the founder's marketing channels (nine providers, each
+ * with its own connection health), then on 2026-11-27 for every company. It
+ * is now the one place an owner reads what Altair connects to today, what it
+ * does not yet, and asks for what they need. Altair's own marketing channels
+ * sit at the bottom of that page, for platform admins only.
  */
 const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
   {
@@ -68,7 +67,7 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
   },
   {
     label: "Integrations",
-    description: "Publishing channels, creative sources, and their status.",
+    description: "What Altair connects to, and what to ask for.",
     href: "/settings/integrations",
     icon: Plug,
   },
@@ -83,13 +82,6 @@ const SETTINGS_NAVIGATION_ITEMS: readonly SettingsNavigationItem[] = [
 type SettingsNavigationProps = {
   /** Kept for call-site compatibility; System Check now lives on Overview. */
   showSystemCheck?: boolean;
-  /**
-   * Integrations lists the founder's marketing channels (Facebook, TikTok,
-   * Higgsfield...) with developer variable names. A customer company cannot
-   * use any of them (Marketing Hub is platform-admin only), so the tab is
-   * shown to platform admins only.
-   */
-  showIntegrations?: boolean;
   /**
    * Business numbers needs migration 218. Until a database has it the section
    * is left out of the list rather than shown and unable to save.
@@ -109,14 +101,11 @@ function isSettingsItemActive(
 }
 
 export function SettingsNavigation({
-  showIntegrations = false,
   showBusinessNumbers = false,
 }: SettingsNavigationProps) {
   const pathname = usePathname();
   const items = SETTINGS_NAVIGATION_ITEMS.filter(
-    (item) =>
-      (showIntegrations || item.href !== "/settings/integrations") &&
-      (showBusinessNumbers || item.href !== BUSINESS_NUMBERS_HREF),
+    (item) => showBusinessNumbers || item.href !== BUSINESS_NUMBERS_HREF,
   );
 
   return (
@@ -131,8 +120,10 @@ export function SettingsNavigation({
       <ul
         className={`grid gap-1 rounded-[var(--radius-panel)] border border-altair-border/40 bg-altair-paper p-1 shadow-[var(--elev-hairline),var(--elev-2)] lg:grid-cols-1 lg:gap-0.5 lg:p-1.5 ${
           // Six tabs across a phone leave no room for the words, so they sit in
-          // two rows of three. Five and four fit in one row.
-          items.length >= 6 ? "grid-cols-3" : items.length === 5 ? "grid-cols-5" : "grid-cols-4"
+          // two rows of three. Five fit in one row (checked at 360px wide,
+          // where "Integrations" is the longest word). There are always five
+          // or six: only Numbers comes and goes.
+          items.length >= 6 ? "grid-cols-3" : "grid-cols-5"
         }`}
       >
         {items.map((item) => {
