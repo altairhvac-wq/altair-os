@@ -7,6 +7,10 @@ import {
 } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getGuidedSetupAvailabilityFor } from "@/lib/database/queries/business-setup";
+import {
+  readDetectedTimeZone,
+  recordDetectedTimeZoneForNewCompany,
+} from "@/lib/database/queries/company-timezone";
 import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/services/network-invite-acceptance";
 import {
   RESET_PASSWORD_PATH,
@@ -71,6 +75,13 @@ export async function resolveAuthCallbackDestination(
 
       if (!bootstrapResult.error && bootstrapResult.companyId) {
         createdCompany = true;
+        // The zone their browser reported on the sign-up form, kept on the
+        // user until the company exists. Recorded before the context is
+        // read, so the context already has it.
+        await recordDetectedTimeZoneForNewCompany({
+          companyId: bootstrapResult.companyId,
+          detectedTimeZone: readDetectedTimeZone(user.user_metadata?.time_zone),
+        });
         companyContext = await getActiveCompanyContext({
           companyId: bootstrapResult.companyId,
         });

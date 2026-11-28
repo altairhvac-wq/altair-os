@@ -13,10 +13,13 @@ import {
 import { NumberBox, ReadingLine } from "@/shared/components/business-numbers/fields";
 import { StepFrame, useStepSave } from "@/shared/components/business-setup/StepFrame";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
-import { fieldControlClass } from "@/shared/design-system/components/field-styles";
+import { fieldControlClass, fieldLabelClass, fieldSelectClass } from "@/shared/design-system/components/field-styles";
 import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
 import { formatCount, formatDollarsShort, numberToFieldText } from "@/shared/lib/business-numbers/format";
 import { readHourCost, readLaborRate, readMonthlyTarget, readServiceCall, usableSuggestedRate } from "@/shared/lib/business-numbers/readings";
+import { getCompanyTimezoneSelectOptions } from "@/shared/lib/company-timezones";
+import type { CompanyTimeZoneChoice } from "@/shared/lib/datetime";
+import { useBrowserTimeZone } from "@/shared/lib/use-browser-time-zone";
 import type { SetupPriceBookItem } from "@/lib/database/queries/business-setup";
 import {
   SERVICE_CALL_SETUP_KEY,
@@ -36,7 +39,7 @@ import {
   type BusinessNumberKey,
   type BusinessNumbers,
 } from "@/shared/types/business-numbers";
-import { CUSTOM_SETUP_KEY_PATTERN, roundPriceListNumber } from "@/shared/types/business-setup";
+import { CUSTOM_SETUP_KEY_PATTERN, roundPriceListNumber, type ShopStepInput } from "@/shared/types/business-setup";
 
 /**
  * The five steps of the guided setup. Each asks one question, opens with the
@@ -69,10 +72,10 @@ function num(text: string): number | null {
 
 const EXAMPLE_NOTE_CLASS = "mb-3 rounded-xl border border-dashed border-altair-border-strong bg-altair-paper-subtle px-3 py-2 text-[13px] leading-relaxed text-altair-ink-on-paper-secondary";
 
-/** Finds the box a message is about, puts the cursor in it and brings it on screen. */
+/** Finds the box (or list) a message is about, puts the cursor in it and brings it on screen. */
 function focusField(form: HTMLElement | null, name: string | null) {
   if (!form || !name) return;
-  const input = form.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+  const input = form.querySelector<HTMLInputElement | HTMLSelectElement>(`input[name="${name}"], select[name="${name}"]`);
   if (input) {
     input.focus({ preventScroll: true });
     input.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -89,6 +92,15 @@ export type ShopStepValues = {
   readonly postalCode: string;
   /** The saved sales tax as text, or "" when the company has never set one. */
   readonly defaultTaxRate: string;
+  /** The time zone the company runs on now (already resolved). */
+  readonly timeZone: string;
+  /**
+   * Whether anyone has chosen that zone. "unconfirmed": the list opens on
+   * this browser's zone instead, and saving the step is the choice.
+   * "unavailable" (migration 220 pending): the list is not shown and no
+   * zone is sent.
+   */
+  readonly timeZoneChoice: CompanyTimeZoneChoice;
 };
 
 export function ShopStep({
@@ -103,11 +115,22 @@ export function ShopStep({
 }: Omit<StepCommonProps, "numbers"> & { readonly initial: ShopStepValues; /** What was just saved, so coming back to this step shows it. */ readonly onValuesSaved: (values: ShopStepValues) => void }) {
   const [values, setValues] = useState(initial);
   const problemId = useId();
+  const zoneId = useId();
   const body = useRef<HTMLDivElement>(null);
   const save = useStepSave(onSaved);
   const busy = save.isPending || skipping;
 
-  function set(key: keyof ShopStepValues, value: string) {
+  // The time zone list. A company that has chosen sees its choice. One that
+  // has not is offered the zone this browser is in (known only after the
+  // page has loaded), until the owner picks something else.
+  const browserZone = useBrowserTimeZone();
+  const [zonePicked, setZonePicked] = useState(false);
+  const asksZone = values.timeZoneChoice !== "unavailable";
+  const offersBrowserZone = values.timeZoneChoice === "unconfirmed" && !zonePicked && browserZone !== null;
+  const shownZone = offersBrowserZone ? browserZone : values.timeZone;
+  const zoneOptions = useMemo(() => getCompanyTimezoneSelectOptions(shownZone), [shownZone]);
+
+  function set(key: Exclude<keyof ShopStepValues, "timeZoneChoice">, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
     save.clearProblem();
   }
@@ -126,9 +149,11 @@ export function ShopStep({
       onSkip={onSkip}
       onSubmit={() =>
         save.run(async () => {
-          const result = await saveShopStepAction(values, companyId);
+          const contact: ShopStepInput = { phone: values.phone, addressLine1: values.addressLine1, city: values.city, state: values.state, postalCode: values.postalCode, defaultTaxRate: values.defaultTaxRate };
+          const result = await saveShopStepAction(asksZone ? { ...contact, timezone: shownZone } : contact, companyId);
           if (result.error) focusField(body.current, result.field ?? null);
-          else onValuesSaved(values);
+          // What was on screen is now the company's chosen zone.
+          else onValuesSaved(asksZone ? { ...values, timeZone: shownZone, timeZoneChoice: "chosen" } : values);
           return result;
         })
       }
@@ -144,6 +169,38 @@ export function ShopStep({
           <NumberBox text name="state" label="State" autoComplete="address-level1" maxLength={100} value={values.state} busy={busy} errorId={errorFor("state")} onChange={(v) => set("state", v)} />
           <NumberBox text name="postalCode" label="ZIP code" autoComplete="postal-code" maxLength={30} value={values.postalCode} busy={busy} errorId={errorFor("postalCode")} onChange={(v) => set("postalCode", v)} />
         </div>
+        {asksZone ? (
+          <div className="min-w-0 sm:col-span-2">
+            <label htmlFor={zoneId} className={fieldLabelClass}>
+              Time zone
+            </label>
+            <select
+              id={zoneId}
+              name="timezone"
+              value={shownZone}
+              aria-invalid={errorFor("timezone") ? true : undefined}
+              aria-describedby={[`${zoneId}-hint`, errorFor("timezone")].filter(Boolean).join(" ")}
+              onChange={(event) => {
+                // A save is running: the list keeps its value (and its focus) instead of going disabled.
+                if (busy) return;
+                setZonePicked(true);
+                set("timeZone", event.target.value);
+              }}
+              className={`${fieldSelectClass} mt-1`}
+            >
+              {zoneOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p id={`${zoneId}-hint`} className="mt-1 text-xs leading-snug text-altair-ink-on-paper-muted">
+              {offersBrowserZone
+                ? "Taken from this computer. Change it if your shop is somewhere else. Your schedule, reminders and due dates all use it."
+                : "Your schedule, reminders and due dates all use it."}
+            </p>
+          </div>
+        ) : null}
       </div>
     </StepFrame>
   );

@@ -130,6 +130,9 @@ steps.push(
   // A company's business numbers (migration 218): the math is the public
   // calculators', code limits match the database's, owner/admin only.
   { name: "business-numbers", script: "scripts/verify-business-numbers.mjs" },
+  // A company's time zone (migration 220): chosen is a column, not a zone
+  // name; resolved once from the row; nothing moves before the migration.
+  { name: "company-timezone", script: "scripts/verify-company-timezone.mjs" },
   // Settings > Integrations for every company: it never claims a connection,
   // a request is remembered, and the marketing channels stay platform-admin only.
   {

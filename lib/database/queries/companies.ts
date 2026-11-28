@@ -3,7 +3,7 @@ import {
   assertCompanySettingsAccess,
   assertMatchingCompanyScope,
 } from "@/lib/database/access-control";
-import { mapDatabaseError } from "@/lib/database/errors";
+import { isMissingDatabaseColumnError, mapDatabaseError } from "@/lib/database/errors";
 import type { ActiveCompanyContext, CompanyRow } from "@/lib/database/types/core-tables";
 import type { Json } from "@/lib/database/types/enums";
 import {
@@ -12,6 +12,7 @@ import {
   type CompanyBillingDefaults,
 } from "@/shared/lib/company-billing-defaults";
 import type { CompanyProfileEditableFields } from "@/shared/lib/company-profile";
+import { companyTimeZoneColumnsForProfileSave } from "@/shared/lib/datetime";
 
 function isRecord(value: unknown): value is Record<string, Json> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -103,7 +104,7 @@ export async function updateCompanyProfile(
     .update({
       name: profile.name,
       trade: profile.trade,
-      timezone: profile.timezone,
+      ...companyTimeZoneColumnsForProfileSave(context.company, profile.timezone),
       phone: profile.phone,
       email: profile.email,
       address_line1: profile.addressLine1,
@@ -132,6 +133,14 @@ export async function updateCompanyProfile(
   return { company: data, error: null };
 }
 
+/**
+ * Saves the time zone an owner or admin has picked, and marks it as their
+ * choice (migration 220). This is what makes a zone "chosen": from here on
+ * it is used exactly as stored, Eastern included.
+ *
+ * Before migration 220 there is nowhere to record the choice. The zone is
+ * still stored, as it always was, and resolves by the old rule.
+ */
 export async function updateCompanyTimezone(
   companyId: string,
   context: ActiveCompanyContext,
@@ -148,12 +157,22 @@ export async function updateCompanyTimezone(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("companies")
-    .update({ timezone })
-    .eq("id", companyId)
-    .select("timezone")
-    .single();
+  const write = (columns: { timezone: string; timezone_set_at?: string }) =>
+    supabase
+      .from("companies")
+      .update(columns)
+      .eq("id", companyId)
+      .select("timezone")
+      .single();
+
+  let { data, error } = await write({
+    timezone,
+    timezone_set_at: new Date().toISOString(),
+  });
+
+  if (error && isMissingDatabaseColumnError(error)) {
+    ({ data, error } = await write({ timezone }));
+  }
 
   if (error || !data) {
     console.error("[updateCompanyTimezone] update failed:", {

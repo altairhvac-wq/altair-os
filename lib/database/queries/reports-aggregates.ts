@@ -90,20 +90,41 @@ export async function getCompanyReportsSummary(
   return { data: aggregate, ok: true };
 }
 
+/**
+ * @param options.timeZone the zone a timestamp is turned into a calendar day
+ *   in (migration 220). Left out, days are UTC days, as the Reports page has
+ *   always counted them. The dashboard passes the company's resolved zone,
+ *   so a job finished on the evening of the 31st counts in that month.
+ *
+ *   Before migration 220 the function does not take a zone: the call is
+ *   answered "no such function" (PGRST202), is made again without it, and
+ *   the caller gets UTC days, exactly what it got before. That is expected
+ *   while a migration is pending, so it is not reported as a failure.
+ */
 export async function getCompanyReportDailySeries(
   companyId: string,
   bounds: ProfitabilityReportDateBounds,
+  options: { timeZone?: string } = {},
 ): Promise<AggregateResult<ReportDailySeries>> {
   const supabase = await createClient();
+  const args = {
+    p_company_id: companyId,
+    p_start_date: bounds.startDate,
+    p_end_date: bounds.endDate,
+  };
+  const timeZone = options.timeZone?.trim();
 
-  const { data, error } = await supabase.rpc(
+  let { data, error } = await supabase.rpc(
     "get_company_report_daily_series",
-    {
-      p_company_id: companyId,
-      p_start_date: bounds.startDate,
-      p_end_date: bounds.endDate,
-    },
+    timeZone ? { ...args, p_time_zone: timeZone } : args,
   );
+
+  if (error && timeZone && error.code === "PGRST202") {
+    ({ data, error } = await supabase.rpc(
+      "get_company_report_daily_series",
+      args,
+    ));
+  }
 
   if (error) {
     reportFailure("reports.daily_series_rpc_failed", companyId, error);

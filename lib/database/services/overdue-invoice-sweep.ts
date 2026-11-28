@@ -7,6 +7,11 @@ import {
 } from "@/lib/automation/tenant-sweep";
 import { syncOverdueInvoiceStatuses } from "@/lib/database/queries/invoices";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { isMissingDatabaseColumnError } from "@/lib/database/errors";
+import {
+  COMPANY_TIMEZONE_COLUMNS,
+  COMPANY_TIMEZONE_COLUMNS_LEGACY,
+} from "@/lib/database/queries/company-timezone";
 import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
 
 /**
@@ -57,7 +62,11 @@ export type OverdueInvoiceSweepResult = {
   errors: { companyId: string; message: string }[];
 };
 
-type CompanyRow = TenantSweepCompany & { timezone: string | null };
+type CompanyRow = TenantSweepCompany & {
+  timezone: string | null;
+  /** Undefined until migration 220 has added the column. */
+  timezone_set_at?: string | null;
+};
 
 /**
  * One page of companies in (created_at, id) order.
@@ -70,26 +79,37 @@ async function listCompanyPage(
   cursor: TenantSweepCursor | null,
   limit: number,
 ): Promise<CompanyRow[]> {
-  let query = client
-    .from("companies")
-    .select("id, created_at, timezone")
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true })
-    .limit(limit);
+  const readPage = async (timeZoneColumns: string) => {
+    let query = client
+      .from("companies")
+      .select(`id, created_at, ${timeZoneColumns}`)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(limit);
 
-  if (cursor) {
-    query = query.or(
-      `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.companyId})`,
-    );
+    if (cursor) {
+      query = query.or(
+        `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.companyId})`,
+      );
+    }
+
+    return query;
+  };
+
+  // Both time zone columns. Before migration 220 the second one does not
+  // exist: the same page is read without it, and every company resolves the
+  // way it always has.
+  let { data, error } = await readPage(COMPANY_TIMEZONE_COLUMNS);
+
+  if (error && isMissingDatabaseColumnError(error)) {
+    ({ data, error } = await readPage(COMPANY_TIMEZONE_COLUMNS_LEGACY));
   }
-
-  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as CompanyRow[];
+  return (data ?? []) as unknown as CompanyRow[];
 }
 
 export async function runOverdueInvoiceSweep(options?: {
@@ -110,7 +130,7 @@ export async function runOverdueInvoiceSweep(options?: {
     listCompanies: async (cursor, limit) => {
       const page = await listCompanyPage(client, cursor, limit);
       for (const row of page) {
-        timeZoneByCompany.set(row.id, resolveCompanyTimeZone(row.timezone));
+        timeZoneByCompany.set(row.id, resolveCompanyTimeZone(row));
       }
       return page.map((row) => ({ id: row.id, created_at: row.created_at }));
     },

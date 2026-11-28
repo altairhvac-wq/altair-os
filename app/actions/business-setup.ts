@@ -27,6 +27,8 @@ import {
   STARTER_TASK_KEYS,
 } from "@/shared/lib/business-numbers/starter-price-list";
 import { hasSavedCompanyBillingDefaults, validateCompanyBillingDefaultsInput } from "@/shared/lib/company-billing-defaults";
+import { validateCompanyTimezoneInput } from "@/shared/lib/company-profile";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import {
   BUSINESS_SETUP_STEPS,
   validateBusinessNumbersInput,
@@ -88,7 +90,9 @@ async function requireSetupContext(expectedCompanyId: string): Promise<{ context
   return { context };
 }
 
-function revalidateSetupPaths() {
+function revalidateSetupPaths(options: { timeZoneChanged?: boolean } = {}) {
+  // A new time zone moves every date and time in the product, on every page.
+  if (options.timeZoneChanged) revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/get-started");
   revalidatePath("/settings");
@@ -119,10 +123,13 @@ async function finishStep(
   step: BusinessSetupStepId,
   patch: BusinessNumbersPatch,
   extra: Pick<SetupActionResult, "created" | "updated" | "removed" | "items"> = {},
+  options: { timeZoneChanged?: boolean } = {},
 ): Promise<SetupActionResult> {
   const { record, error } = await saveCompanyBusinessNumbers(context.company.id, context, patch, await stepMark(context, step, "done"));
+  // Revalidated even when the step's mark did not save: the shop's details
+  // (and its time zone) were written before this.
+  if (options.timeZoneChanged || !error) revalidateSetupPaths(options);
   if (error || !record) return { error: error ?? "This step could not be saved. Try again." };
-  revalidateSetupPaths();
   return { record, ...extra };
 }
 
@@ -149,6 +156,17 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
   const contact = validateShopContact(input);
   if (contact.error || !contact.data) return { error: contact.error ?? "Your shop's details could not be read.", field: contact.field ?? null };
 
+  // Time zone. Asked, and saved, only where the choice can be recorded
+  // (migration 220); before that the step does not show the box and a value
+  // sent anyway is ignored. Checked by the rule Settings > Company uses: any
+  // zone this server knows.
+  let chosenTimeZone: string | null = null;
+  if ("timezone" in input && getCompanyTimeZoneChoice(context.company) !== "unavailable") {
+    const zone = validateCompanyTimezoneInput(input.timezone);
+    if (zone.error || !zone.timezone) return { error: "Pick your time zone from the list.", field: "timezone" };
+    chosenTimeZone = zone.timezone;
+  }
+
   // Sales tax. A number replaces the default and keeps the other document
   // defaults. A blank box means "we do not charge it": for a company that
   // had a rate saved, that is 0%; for one that never set a rate there is
@@ -174,7 +192,7 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
     : { data: {} as BusinessNumbersPatch };
   if (numbers.error !== undefined) return { error: numbers.error, field: numbers.field };
 
-  const contactResult = await updateCompanyShopContact(context.company.id, context, contact.data);
+  const contactResult = await updateCompanyShopContact(context.company.id, context, contact.data, chosenTimeZone);
   if (contactResult.error) return { error: contactResult.error };
 
   if (defaults) {
@@ -182,7 +200,7 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
     if (taxResult.error) return { error: taxResult.error, field: "defaultTaxRate" };
   }
 
-  return finishStep(context, "shop", numbers.data);
+  return finishStep(context, "shop", numbers.data, {}, { timeZoneChanged: chosenTimeZone !== null });
 }
 
 /* ------------------------------------------------------ 2. your labor rate */

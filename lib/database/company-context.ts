@@ -56,9 +56,13 @@ function toActiveCompanyContext(
     user,
     profile,
     membership: { ...membership, role },
+    // The one place a signed-in request decides what the stored zone means.
+    // `timezone` leaves here RESOLVED and is used as it is from then on;
+    // `timezone_set_at` rides along untouched, so a page can still ask
+    // whether the zone was chosen (getCompanyTimeZoneChoice).
     company: {
       ...company,
-      timezone: resolveCompanyTimeZone(company.timezone),
+      timezone: resolveCompanyTimeZone(company),
     },
     role,
     // Resolved here so client-safe guards can read it off the context instead

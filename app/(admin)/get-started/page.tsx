@@ -9,6 +9,7 @@ import { GuidedSetup, type SetupView } from "@/shared/components/business-setup/
 import { numberToFieldText } from "@/shared/lib/business-numbers/format";
 import { starterTasksForTrade } from "@/shared/lib/business-numbers/starter-price-list";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import { BUSINESS_SETUP_STEPS, type BusinessSetupStepId } from "@/shared/types/business-numbers";
 
 /**
@@ -62,6 +63,11 @@ export default async function GetStartedPage({ searchParams }: PageProps) {
         city: company.city ?? "",
         state: company.state ?? "",
         postalCode: company.postal_code ?? "",
+        // The zone the company runs on now, and whether anyone chose it. A
+        // company that has not chosen is offered its browser's zone instead.
+        // "unavailable" (migration 220 pending) hides the box.
+        timeZone: company.timezone,
+        timeZoneChoice: getCompanyTimeZoneChoice(company),
         // A company that has never set a tax rate sees an empty box, not "0".
         defaultTaxRate: hasSavedCompanyBillingDefaults(company.settings) ? numberToFieldText(defaults.defaultTaxRate) : "",
       }}

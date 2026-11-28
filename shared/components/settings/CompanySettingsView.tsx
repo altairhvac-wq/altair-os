@@ -7,6 +7,7 @@ import { normalizeTradeKey } from "@/shared/lib/trades/trade-options";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { CompanyProfileForm } from "./CompanyProfileForm";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
+import { TimeZoneConfirmPrompt } from "./TimeZoneConfirmPrompt";
 import {
   SettingsWorkspacePage,
   SettingsWorkspaceSection,
@@ -24,6 +25,7 @@ import { WorkspaceExportCard } from "./WorkspaceExportCard";
 export function CompanySettingsView({
   companyProfile,
   canManage,
+  askToConfirmTimeZone = false,
   billingDefaults,
   showBillingDefaultsSetupHint,
   demoDataStatus,
@@ -31,6 +33,11 @@ export function CompanySettingsView({
 }: {
   companyProfile: CompanyProfileSummary;
   canManage: boolean;
+  /**
+   * True for an owner or admin of a company nobody has chosen a time zone
+   * for (and only once migration 220 is in). The page decides.
+   */
+  askToConfirmTimeZone?: boolean;
   billingDefaults: ComponentProps<
     typeof BillingDocumentDefaultsCard
   >["initialDefaults"];
@@ -46,12 +53,22 @@ export function CompanySettingsView({
       {/* Timezone merged into the profile form (it saves the same field);
        * the empty #preferences anchor keeps the legacy redirect landing here. */}
       <div id="preferences" aria-hidden="true" />
+      {askToConfirmTimeZone ? (
+        <TimeZoneConfirmPrompt
+          companyId={companyProfile.id}
+          currentTimeZone={companyProfile.timezone}
+          dismissible={false}
+        />
+      ) : null}
       <div id="profile" className="scroll-mt-24">
         <SettingsWorkspaceSection
           title="Company profile"
           description="Identity, contact, address, and timezone — appears on invoices and estimates."
         >
+          {/* Remounted when the zone changes under it (the confirm card above
+           * saves it), so the form never holds, and later saves, the old zone. */}
           <CompanyProfileForm
+            key={`zone:${companyProfile.timezone}`}
             canManage={canManage}
             initialProfile={{
               name: companyProfile.name,

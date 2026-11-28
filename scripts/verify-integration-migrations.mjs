@@ -472,6 +472,16 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "217_web_analytics_accuracy.sql",
     new Set(["platform_web_analytics_summary", "platform_web_analytics_engagement", "web_analytics_is_site_path"]),
   ],
+  // 220 gives the 170 per-day series a fourth argument, the time zone a
+  // timestamp is turned into a calendar day in (default 'UTC', so a
+  // three-argument call is unchanged). Still security definer with the same
+  // membership and permission checks and the same grants;
+  // scripts/verify-company-timezone.mjs proves the body is 170's with only
+  // the zone swapped in.
+  [
+    "220_company_timezone_choice.sql",
+    new Set(["get_company_report_daily_series"]),
+  ],
 ]);
 
 for (const file of files) {

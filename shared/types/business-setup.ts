@@ -4,8 +4,9 @@
  *
  * The numbers themselves (labor rate, fee, shop costs...) are checked by
  * validateBusinessNumbersInput in ./business-numbers. This file adds the two
- * steps that write somewhere else as well: "Your shop" (the company profile
- * and the default sales tax) and "Your price list" (price book items).
+ * steps that write somewhere else as well: "Your shop" (the company profile,
+ * its time zone and the default sales tax) and "Your price list" (price book
+ * items).
  *
  * Pure: no imports but its sibling, safe on the server and in the browser.
  */
@@ -21,6 +22,15 @@ export type ShopStepInput = {
   city?: string | null;
   state?: string | null;
   postalCode?: string | null;
+  /**
+   * The company's time zone, an IANA name ("America/Chicago"). Sent only
+   * where the choice can be recorded (migration 220); saving it marks the
+   * zone as chosen. It is checked by the same rule Settings > Company uses
+   * (validateCompanyTimezoneInput, shared/lib/company-profile.ts), in the
+   * action: that check needs the runtime's zone list, and this file stays
+   * pure.
+   */
+  timezone?: string | null;
   /** Sales tax, percent. Blank leaves the current default alone. */
   defaultTaxRate?: string | number | null;
   technicianCount?: string | number | null;

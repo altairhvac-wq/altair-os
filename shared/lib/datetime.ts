@@ -1,9 +1,47 @@
-/** Legacy SQL/app default before Mountain-first fallback. */
+/**
+ * What `companies.timezone` holds for a company nobody has set a time zone
+ * for: the column's own default (migration 001). It is only ever read
+ * together with `timezone_set_at`; by itself it says nothing.
+ */
 export const LEGACY_DEFAULT_COMPANY_TIMEZONE = "America/New_York";
 
+/** The zone a company runs on until someone chooses one. */
 export const DEFAULT_COMPANY_TIMEZONE = "America/Denver";
 
 let activeCompanyTimeZone = DEFAULT_COMPANY_TIMEZONE;
+
+/**
+ * The two columns that say what time zone a company is in, as a row of
+ * `companies` carries them.
+ *
+ * `timezone_set_at` (migration 220) is the one source of truth for "has this
+ * company chosen its time zone":
+ *   - a time: an owner or admin chose the zone in `timezone`, on that day;
+ *   - null: nobody has chosen;
+ *   - undefined: the column is not in this database yet (migration pending).
+ */
+export type CompanyTimeZoneFields = {
+  timezone?: string | null;
+  timezone_set_at?: string | null;
+};
+
+export type CompanyTimeZoneChoice =
+  /** An owner or admin picked the zone. It is used exactly as stored. */
+  | "chosen"
+  /** Nobody has picked one. The company runs on the fallback and is asked to confirm. */
+  | "unconfirmed"
+  /** Migration 220 has not run here: nothing can be recorded, nothing is asked. */
+  | "unavailable";
+
+export function getCompanyTimeZoneChoice(
+  company?: CompanyTimeZoneFields | null,
+): CompanyTimeZoneChoice {
+  if (!company || company.timezone_set_at === undefined) {
+    return "unavailable";
+  }
+
+  return company.timezone_set_at ? "chosen" : "unconfirmed";
+}
 
 export function getBrowserTimeZone(): string | undefined {
   // Only meaningful in a real browser. On the server this resolves to the
@@ -22,28 +60,86 @@ export function getBrowserTimeZone(): string | undefined {
 }
 
 /**
- * Prefer an explicit company timezone; treat the legacy Eastern default as
- * unset and fall back to Mountain Time.
+ * The time zone a company runs on, from its row in `companies`.
+ *
+ * ============ THE RULE ============
+ *   - Chosen (`timezone_set_at` is a time): the stored zone, whatever it is.
+ *     Eastern is an ordinary choice.
+ *   - Never chosen: what the company has always run on. A row still holding
+ *     the column default runs on Mountain Time; a row holding anything else
+ *     runs on that.
+ *   - Column not here yet: the same as "never chosen", so nothing changes
+ *     for anyone until migration 220 has run.
+ *
+ * ============ CALL IT ONCE, ON A ROW ============
+ * This takes the ROW (both columns), never a bare zone name: a name alone
+ * cannot say whether it was chosen. Resolve once where the row is read (the
+ * company context, or a background job's own lookup) and pass the answer
+ * on. Code that already holds a resolved zone uses it as it is; resolving a
+ * second time is how "picked Eastern, got Mountain" happened.
  *
  * IMPORTANT: this must resolve IDENTICALLY on the server and the client for
- * the same inputs — rendered dates/times feed server-rendered HTML that React
- * hydrates in the browser. Never consult the environment's local timezone
- * here. Companies should get their real timezone written at signup and can
- * change it in Settings → Company.
+ * the same inputs: rendered dates and times feed server-rendered HTML that
+ * React hydrates in the browser. Never consult the environment's local
+ * timezone here.
  */
 export function resolveCompanyTimeZone(
-  companyTimeZone?: string | null,
+  company?: CompanyTimeZoneFields | null,
 ): string {
-  const trimmed = companyTimeZone?.trim();
-  if (trimmed && trimmed !== LEGACY_DEFAULT_COMPANY_TIMEZONE) {
-    return trimmed;
+  const stored = company?.timezone?.trim();
+  if (!stored) {
+    return DEFAULT_COMPANY_TIMEZONE;
   }
 
-  return DEFAULT_COMPANY_TIMEZONE;
+  if (company?.timezone_set_at) {
+    return stored;
+  }
+
+  return stored === LEGACY_DEFAULT_COMPANY_TIMEZONE
+    ? DEFAULT_COMPANY_TIMEZONE
+    : stored;
 }
 
+/**
+ * What a save of the company profile should write for the time zone.
+ *
+ * The profile form always sends its time zone box, whether or not the person
+ * touched it. For a company that has never chosen a zone the box shows the
+ * fallback (Mountain), so "the form came back with Mountain" is not a choice:
+ * someone fixing their phone number must not quietly confirm a zone they
+ * never looked at. So:
+ *
+ *   - the zone sent differs from the one the company runs on: that is a
+ *     choice. Store it and mark it chosen.
+ *   - it is the same, and was chosen before: nothing to write.
+ *   - it is the same, and was never chosen: nothing to write. The company
+ *     carries on as it was and is still asked to confirm.
+ *   - migration 220 has not run: write the zone alone, as this always did.
+ */
+export function companyTimeZoneColumnsForProfileSave(
+  company: CompanyTimeZoneFields,
+  submittedTimeZone: string,
+  now: Date = new Date(),
+): { timezone?: string; timezone_set_at?: string } {
+  if (getCompanyTimeZoneChoice(company) === "unavailable") {
+    return { timezone: submittedTimeZone };
+  }
+
+  // `company.timezone` comes from the company context: already resolved.
+  if (submittedTimeZone === company.timezone) {
+    return {};
+  }
+
+  return { timezone: submittedTimeZone, timezone_set_at: now.toISOString() };
+}
+
+/**
+ * Sets the zone the date helpers in this file default to. Takes a zone that
+ * has ALREADY been resolved (the company context's `company.timezone`) and
+ * uses it as it is.
+ */
 export function setCompanyTimeZone(timeZone: string): void {
-  activeCompanyTimeZone = resolveCompanyTimeZone(timeZone);
+  activeCompanyTimeZone = timeZone?.trim() || DEFAULT_COMPANY_TIMEZONE;
 }
 
 export function getCompanyTimeZone(): string {

@@ -8,7 +8,7 @@ import {
   altairMcMetricLabelClass,
 } from "@/shared/design-system/components/mc-surface";
 import { StatusPill } from "@/shared/design-system/components/StatusPill";
-import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
+import { DEFAULT_COMPANY_TIMEZONE, formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatCurrencyExact } from "@/shared/types/customer";
 
 export type PaymentCardFailureListViewItem = {
@@ -40,7 +40,8 @@ function formatFailureWhen(
 
   return formatDateTimeInTimeZone(
     value,
-    resolveCompanyTimeZone(companyTimezone),
+    // Already resolved by the company context; used as it is.
+    companyTimezone?.trim() || DEFAULT_COMPANY_TIMEZONE,
     {
       month: "short",
       day: "numeric",
