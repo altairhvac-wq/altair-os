@@ -12,6 +12,8 @@ type SettingsShellProps = {
   showSystemCheck: boolean;
   /** The marketing-channel Integrations tab (platform admins only). */
   showIntegrations?: boolean;
+  /** Business numbers, once migration 218 is in this database. */
+  showBusinessNumbers?: boolean;
 };
 
 /**
@@ -28,6 +30,7 @@ export function SettingsShell({
   children,
   showSystemCheck,
   showIntegrations = false,
+  showBusinessNumbers = false,
 }: SettingsShellProps) {
   return (
     <section
@@ -46,6 +49,7 @@ export function SettingsShell({
         <SettingsNavigation
           showSystemCheck={showSystemCheck}
           showIntegrations={showIntegrations}
+          showBusinessNumbers={showBusinessNumbers}
         />
         <SettingsRouteContent>{children}</SettingsRouteContent>
       </div>

@@ -1528,6 +1528,76 @@ export type Database = {
         Update: Partial<{ outcome: "claimed" | "sent" | "skipped" | "failed" }>;
         Relationships: [];
       };
+      // company_business_numbers: migration 218 — one row per company with the
+      // numbers the owner prices from. Owner/admin read (RLS); written by the
+      // service role after an application check. Cents and percent.
+      company_business_numbers: {
+        Row: {
+          company_id: string;
+          labor_rate_cents: number | null;
+          after_hours_multiplier: number | null;
+          service_call_fee_cents: number | null;
+          service_call_credited: boolean;
+          parts_markup_percent: number | null;
+          average_wage_cents: number | null;
+          payroll_burden_percent: number | null;
+          billed_hours_per_week: number | null;
+          unbilled_hours_per_week: number | null;
+          technician_count: number | null;
+          monthly_overhead_cents: number | null;
+          target_net_margin_percent: number | null;
+          average_job_revenue_cents: number | null;
+          job_variable_cost_percent: number | null;
+          setup_steps: Json;
+          setup_completed_at: string | null;
+          setup_dismissed_at: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          company_id: string;
+          labor_rate_cents?: number | null;
+          after_hours_multiplier?: number | null;
+          service_call_fee_cents?: number | null;
+          service_call_credited?: boolean;
+          parts_markup_percent?: number | null;
+          average_wage_cents?: number | null;
+          payroll_burden_percent?: number | null;
+          billed_hours_per_week?: number | null;
+          unbilled_hours_per_week?: number | null;
+          technician_count?: number | null;
+          monthly_overhead_cents?: number | null;
+          target_net_margin_percent?: number | null;
+          average_job_revenue_cents?: number | null;
+          job_variable_cost_percent?: number | null;
+          setup_steps?: Json;
+          setup_completed_at?: string | null;
+          setup_dismissed_at?: string | null;
+          updated_by?: string | null;
+        };
+        Update: Partial<{
+          labor_rate_cents: number | null;
+          after_hours_multiplier: number | null;
+          service_call_fee_cents: number | null;
+          service_call_credited: boolean;
+          parts_markup_percent: number | null;
+          average_wage_cents: number | null;
+          payroll_burden_percent: number | null;
+          billed_hours_per_week: number | null;
+          unbilled_hours_per_week: number | null;
+          technician_count: number | null;
+          monthly_overhead_cents: number | null;
+          target_net_margin_percent: number | null;
+          average_job_revenue_cents: number | null;
+          job_variable_cost_percent: number | null;
+          setup_steps: Json;
+          setup_completed_at: string | null;
+          setup_dismissed_at: string | null;
+          updated_by: string | null;
+        }>;
+        Relationships: [];
+      };
       // affiliate_applications: migration 213 — applications to the affiliate
       // program and the owner's decision on each. Service role only; every
       // column is private.
