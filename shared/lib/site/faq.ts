@@ -68,7 +68,7 @@ export const SITE_FAQ: readonly SiteFaqItem[] = [
     id: "quickbooks",
     question: "Does it work with QuickBooks?",
     answer:
-      "Not yet. Altair does not sync with QuickBooks today. Invoices, payments and expenses are recorded in Altair, and you can import your customers, products and services, and open invoices exported from QuickBooks.",
+      "Yes, with QuickBooks Online, on every plan. An owner or admin connects it from Settings, Integrations. From then on, customers, price book items, invoices and payments recorded in Altair are sent to your QuickBooks company, so nobody types them twice. QuickBooks Desktop is not supported yet. Your customers, products and services, and open invoices can also be imported from QuickBooks when you start.",
   },
   {
     id: "sample-data",

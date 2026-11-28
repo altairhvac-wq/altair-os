@@ -338,7 +338,7 @@ const QUICKBOOKS: SwitchApp = {
     COMMON_NOT_CARRIED,
   ],
   exportIntro:
-    "These are QuickBooks Online menus. Altair doesn’t sync with QuickBooks; this moves your lists over once.",
+    "These are QuickBooks Online menus. This moves your lists over once. After that, Altair can send new invoices and payments to QuickBooks Online from Settings, Integrations.",
   exportSteps: [
     {
       title: "Customers",

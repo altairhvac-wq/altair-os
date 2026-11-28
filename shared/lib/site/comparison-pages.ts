@@ -12,9 +12,10 @@ import { CUSTOMER_IMPORT_MAX_ROWS } from "@/shared/lib/customer-import-mapping";
  * 1. Altair facts come from the product. Prices, user allowances and the
  *    trial length are read from the plan catalog below, so a price change in
  *    the catalog changes these pages too. Feature claims are limited to what
- *    ships today (see shared/lib/site/landing-pages.ts). Altair has no
- *    QuickBooks sync, phone system, drag-and-drop scheduling, automatic
- *    routing or live GPS, and the pages say so where it matters.
+ *    ships today (see shared/lib/site/landing-pages.ts). Altair sends
+ *    records to QuickBooks Online (not QuickBooks Desktop) and has no phone
+ *    system, drag-and-drop scheduling, automatic routing or live GPS, and
+ *    the pages say so where it matters.
  *
  * 2. Competitor facts come from that company's own website or filings,
  *    checked on COMPETITOR_FACTS_CHECKED. No third-party price estimates, no
@@ -329,7 +330,7 @@ const SERVICETITAN: ComparisonPageContent = {
     them: [
       "You run a large operation, with many trucks, several locations or a call center, and want one vendor for all of it.",
       "You have someone on staff whose job includes configuring and running the software.",
-      "You need features Altair doesn't offer today, such as a built-in phone system, drag-and-drop scheduling, automatic routing, live technician GPS or QuickBooks sync. Confirm that whichever system you choose has them.",
+      "You need features Altair doesn't offer today, such as a built-in phone system, drag-and-drop scheduling, automatic routing, live technician GPS or QuickBooks Desktop sync. Confirm that whichever system you choose has them.",
       "A contract of a year or more and separate onboarding fees fit your budget.",
     ],
     usTitle: "Altair is likely the better fit if:",
@@ -453,7 +454,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       {
         label: "QuickBooks sync",
         cells: [
-          "Not offered. You can import a customer list from a QuickBooks CSV.",
+          "QuickBooks Online on every plan: customers, items, invoices and payments. Not QuickBooks Desktop.",
           "From Connect ($139/mo for 1 user).",
           "From Essentials ($189/mo).",
         ],
@@ -505,7 +506,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
           "One connected system for HVAC and field service companies: leads, customers and their equipment, estimates customers approve from their phone, dispatch, a technician phone view, invoices with Stripe payment links, time clock, timesheet approval, expenses and reports. Built by an HVAC company owner.",
         goodFor: `Small and growing shops that want public prices (${monthly(STARTER)} for 1 user, ${monthly(GROWTH)} for 5, ${monthly(PRO)} for 10), one record per job and no contract.`,
         worthKnowing:
-          "It's a newer system. It has no QuickBooks sync, built-in phone system, drag-and-drop scheduling, automatic routing or live GPS today, and customer imports bring over contacts and addresses but not equipment or job history.",
+          "It's a newer system. It connects to QuickBooks Online but not QuickBooks Desktop, has no built-in phone system, drag-and-drop scheduling, automatic routing or live GPS today, and customer imports bring over contacts and addresses but not equipment or job history.",
       },
       {
         name: "Jobber",
@@ -549,7 +550,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
     heading: "Which one should you pick?",
     themTitle: "Jobber or Housecall Pro may be the better fit if:",
     them: [
-      "You need QuickBooks sync, a phone system, route optimization or GPS tracking today. Altair doesn't have those yet.",
+      "You need QuickBooks Desktop sync, a phone system, route optimization or GPS tracking today. Altair doesn't have those yet.",
       "You want add-ons and integrations, such as Jobber's Marketing Suite or Housecall Pro's Zapier and open API on MAX.",
       "You're already set up on one and it works. Switching has a cost too.",
     ],
@@ -575,7 +576,7 @@ const JOBBER_HOUSECALL: ComparisonPageContent = {
       {
         question: "Does Altair connect to QuickBooks?",
         answer:
-          "Not today. Altair keeps invoices, payments, expenses and approved timesheets together, but it doesn't sync with QuickBooks. If QuickBooks sync is a must, Jobber (from Connect), Housecall Pro (from Essentials), Workiz and Kickserv all list it.",
+          "Yes, to QuickBooks Online, on every plan. Customers, price book items, invoices and payments recorded in Altair are sent to your QuickBooks company. QuickBooks Desktop isn't supported yet; if you need it, Jobber, Housecall Pro, Workiz and Kickserv all list a QuickBooks connection, so check which version each one supports.",
       },
       {
         question: "Does Altair work for HVAC specifically?",

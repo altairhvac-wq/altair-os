@@ -66,18 +66,11 @@ export const PLANNED_INTEGRATION_GROUPS: readonly {
 
 export const PLANNED_INTEGRATIONS: readonly PlannedIntegration[] = [
   {
-    key: "quickbooks_online",
-    group: "accounting",
-    label: "QuickBooks Online",
-    wouldDo:
-      "Invoices, payments and customers would go to your books without anyone typing them twice.",
-  },
-  {
     key: "quickbooks_desktop",
     group: "accounting",
     label: "QuickBooks Desktop",
     wouldDo:
-      "The same, for the QuickBooks that is installed on an office computer.",
+      "Invoices, payments and customers would go to the QuickBooks that is installed on an office computer, the way they already go to QuickBooks Online.",
   },
   {
     key: "xero",

@@ -231,7 +231,7 @@ const INVOICING: SoftwarePageContent = {
     { title: "Print or save as PDF", text: "Every invoice has a Print / Save PDF button for customers who want paper." },
     { title: "The customer's full history", text: "Each customer record shows their jobs, estimates, invoices, payments and the equipment on site." },
   ],
-  notYet: notYet("QuickBooks or other accounting sync", "Automatic payment-reminder emails"),
+  notYet: notYet("QuickBooks Desktop, Xero or other accounting sync", "Automatic payment-reminder emails"),
   scopeNote:
     "Card payments run through your own Stripe account; Altair never stores card numbers. The overdue list is the reminder today, and resending an invoice is one click.",
   faqHeading: "What owners ask about invoicing in Altair.",
@@ -271,7 +271,7 @@ const INVOICING: SoftwarePageContent = {
       id: "quickbooks",
       question: "Does it sync with QuickBooks?",
       answer:
-        "Not today. Invoices, payments and expenses are recorded in Altair, and customers, products and open invoices exported from QuickBooks can be imported. If QuickBooks sync is a must for you, make sure the system you choose has it.",
+        "With QuickBooks Online, yes, on every plan. Once an owner connects it in Settings, customers, price book items, invoices and payments go to your QuickBooks company as they are recorded. Expenses stay in Altair. QuickBooks Desktop is not supported yet.",
     },
     {
       id: "pdf",
@@ -551,7 +551,7 @@ const BUSINESS: SoftwarePageContent = {
     { title: "Reports", text: "Revenue, job activity and team performance from the same records your team works in, not a spreadsheet export." },
     { title: "A one-on-one setup call", text: "Every plan includes a setup call on Zoom, booked from your workspace." },
   ],
-  notYet: notYet("QuickBooks or other accounting sync", "A built-in phone system", "Automatic routing or live GPS", "Importing equipment or job history"),
+  notYet: notYet("QuickBooks Desktop, Xero or other accounting sync", "A built-in phone system", "Automatic routing or live GPS", "Importing equipment or job history"),
   scopeNote:
     "Built by an HVAC company owner, for HVAC companies first. Plumbing, electrical and other field service trades run on the same workflow.",
   faqHeading: "What owners ask before they switch.",
