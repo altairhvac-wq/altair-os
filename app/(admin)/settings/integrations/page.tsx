@@ -5,6 +5,7 @@ import {
   canViewOperationalReports,
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
+import { loadQuickBooksPanel, type QuickBooksPanelState } from "@/lib/accounting/panel";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
 import { listCompanyIntegrationRequests } from "@/lib/database/queries/integration-requests";
@@ -13,8 +14,13 @@ import { getResendEmailEnv } from "@/lib/email/env";
 import { getConfiguredIntegrationProviders } from "@/lib/integrations/configuration";
 import { IntegrationsPageView } from "@/shared/components/settings/integrations/IntegrationsPageView";
 import { MarketingChannelIntegrations } from "@/shared/components/settings/integrations/MarketingChannelIntegrations";
+import { QuickBooksPanel, type QuickBooksPanelView } from "@/shared/components/settings/integrations/QuickBooksPanel";
 import { getBillingCompanyReplyTo } from "@/shared/lib/billing-company-contact";
-import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import {
+  formatDateInTimeZone,
+  formatTimeInTimeZone,
+  isSameCalendarDayInTimeZone,
+} from "@/shared/lib/datetime";
 import {
   describeCardPaymentsConnection,
   type CardPaymentsAccountFacts,
@@ -141,6 +147,50 @@ function toCardPaymentsFacts(
   };
 }
 
+/** The word the QuickBooks sign-in leaves in the address, as a sentence. */
+const QUICKBOOKS_FLASH: Record<string, { tone: "success" | "error" | "info"; message: string }> = {
+  reconnected: { tone: "success", message: "QuickBooks is connected again. Waiting changes are on their way." },
+  cancelled: { tone: "info", message: "QuickBooks was not connected. Nothing changed." },
+  expired: { tone: "error", message: "That sign-in took too long or was started in another window. Press Connect QuickBooks again." },
+  denied: { tone: "error", message: "Only the owner or admin who pressed Connect, in this company, can finish connecting QuickBooks." },
+  failed: { tone: "error", message: "QuickBooks did not finish connecting. Try again in a minute." },
+  unavailable: { tone: "error", message: "QuickBooks is not available yet." },
+};
+
+function toQuickBooksView(state: QuickBooksPanelState, timeZone: string): QuickBooksPanelView | null {
+  switch (state.kind) {
+    case "unavailable":
+      return null;
+    case "not_connected":
+      return { kind: "not_connected" };
+    case "setup":
+      return { kind: "setup", companyName: state.companyName };
+    case "reauth_required":
+      return { kind: "reauth_required", companyName: state.companyName };
+    case "active": {
+      const now = new Date();
+      const last = state.lastSyncAt
+        ? `Last sent ${formatTimeInTimeZone(state.lastSyncAt, timeZone)}${isSameCalendarDayInTimeZone(state.lastSyncAt, now, timeZone) ? " today" : ` on ${formatDateInTimeZone(state.lastSyncAt, timeZone, { month: "short", day: "numeric" })}`}.`
+        : "Nothing sent yet.";
+      const by = `Connected${state.connectedByName ? ` by ${state.connectedByName}` : ""} on ${formatDateInTimeZone(state.connectedAt, timeZone, { month: "short", day: "numeric" })}.`;
+      const accounts = [
+        state.incomeAccountName ? `Work counts toward ${state.incomeAccountName}.` : null,
+        `Payments land in ${state.depositAccountName ?? "Undeposited Funds"}.`,
+      ].filter(Boolean).join(" ");
+      return {
+        kind: "active",
+        companyName: state.companyName,
+        summary: `${last} ${by}`,
+        sent: state.sent,
+        waiting: state.waiting,
+        attention: state.attention,
+        attentionTotal: state.attentionTotal,
+        accountsLine: accounts,
+      };
+    }
+  }
+}
+
 export default async function IntegrationsSettingsPage({
   searchParams,
 }: {
@@ -148,6 +198,7 @@ export default async function IntegrationsSettingsPage({
     connected?: string;
     connect_error?: string;
     provider?: string;
+    quickbooks?: string;
   }>;
 }) {
   const companyContext = await getActiveCompanyContext();
@@ -164,7 +215,8 @@ export default async function IntegrationsSettingsPage({
   const nowIso = new Date().toISOString();
   const canSeePayments = companyContext.permissions.manageBilling;
 
-  const [paymentAccount, requests, marketingChannels] = await Promise.all([
+  const canManageQuickBooks = canManageIntegrations(companyContext);
+  const [paymentAccount, requests, marketingChannels, quickBooks, params] = await Promise.all([
     canSeePayments
       ? getCompanyPaymentAccount(company.id, "stripe")
       : Promise.resolve(null),
@@ -174,7 +226,13 @@ export default async function IntegrationsSettingsPage({
           loadMarketingChannels(companyContext, params),
         )
       : Promise.resolve(null),
+    canManageQuickBooks
+      ? loadQuickBooksPanel(company.id).catch(() => ({ kind: "unavailable" }) as const)
+      : Promise.resolve({ kind: "unavailable" } as const),
+    searchParams,
   ]);
+  const quickBooksView = toQuickBooksView(quickBooks, company.timezone);
+  const quickBooksFlash = params.quickbooks ? (QUICKBOOKS_FLASH[params.quickbooks] ?? null) : null;
 
   const access = getCompanyAccessScope(companyContext);
   const importLinks = [
@@ -218,6 +276,9 @@ export default async function IntegrationsSettingsPage({
       requestedOn={requestedOn}
       platformAdminSlot={marketingChannels?.slot}
       platformAdminNotice={marketingChannels?.notice ?? null}
+      quickBooksSlot={
+        quickBooksView ? <QuickBooksPanel view={quickBooksView} flash={quickBooksFlash} /> : undefined
+      }
     />
   );
 }

@@ -359,7 +359,7 @@ class SyncRun {
         // Renamed in Altair to a name QuickBooks already has: keep the old
         // name there and send everything else.
         if (!isQboError(error) || error.kind !== "duplicate_name") throw error;
-        const { DisplayName: _unused, ...rest } = body;
+        const rest = withoutKey(body, "DisplayName");
         const result = await this.updateOwned("Customer", record, rest, requestIdFor(record.id, fingerprint, "keepname"));
         await this.sent(record, { remoteId: result.ref.id, remoteSyncToken: result.ref.syncToken, fingerprint, intuitTid: result.intuitTid });
       }
@@ -435,7 +435,7 @@ class SyncRun {
         await this.sent(record, { remoteId: result.ref.id, remoteSyncToken: result.ref.syncToken, fingerprint, intuitTid: result.intuitTid });
       } catch (error) {
         if (!isQboError(error) || error.kind !== "duplicate_name") throw error;
-        const { Name: _unused, ...rest } = body;
+        const rest = withoutKey(body, "Name");
         const result = await this.updateOwned("Item", record, rest, requestIdFor(record.id, fingerprint, "keepname"));
         await this.sent(record, { remoteId: result.ref.id, remoteSyncToken: result.ref.syncToken, fingerprint, intuitTid: result.intuitTid });
       }
@@ -673,6 +673,12 @@ class SyncRun {
     const result = await this.api.create("Payment", body, requestIdFor(record.id, fingerprint));
     await this.sent(record, { remoteId: result.ref.id, remoteSyncToken: result.ref.syncToken, fingerprint, intuitTid: result.intuitTid });
   }
+}
+
+function withoutKey(body: Record<string, unknown>, key: string): Record<string, unknown> {
+  const copy = { ...body };
+  delete copy[key];
+  return copy;
 }
 
 function formatAddress(address: LocalAddress): string {

@@ -186,7 +186,9 @@ class PracticeQuickBooks {
       const taken = [...this.customers.values()].some((c) => c.Id !== current.Id && c.DisplayName === body.DisplayName) || this.vendorNames.has(body.DisplayName);
       if (taken) this.raise({ kind: "rejected", code: "6240" });
     }
-    const { sparse: _s, SyncToken: _t, ...rest } = body;
+    const rest = { ...body };
+    delete rest.sparse;
+    delete rest.SyncToken;
     Object.assign(current, rest);
     current.SyncToken = String(Number(current.SyncToken) + 1);
     if (entity === "Invoice") {

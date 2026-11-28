@@ -14,6 +14,9 @@ import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-sig
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
 import { isSmsSendingConfigured } from "@/lib/sms/env";
+import { loadInvoiceQuickBooksStatus } from "@/lib/accounting/panel";
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
+import { InvoiceQuickBooksLabel } from "./InvoiceQuickBooksLabel";
 import { InvoiceDetailHeaderActions } from "./InvoiceDetailHeaderActions";
 import { InvoiceDetailOverlayShell } from "./InvoiceDetailOverlayShell";
 import { InvoiceDetailPageView } from "./InvoiceDetailPageView";
@@ -34,7 +37,8 @@ export async function InvoiceDetailRoute({
     notFound();
   }
 
-  const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled, smsSendingConfigured] =
+  const canManageBilling = companyContext.permissions.manageBilling;
+  const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled, smsSendingConfigured, quickBooks] =
     await Promise.all([
     getInvoiceById(companyContext.company.id, invoiceId),
     listInvoiceActivitiesForInvoice(companyContext.company.id, invoiceId),
@@ -47,13 +51,17 @@ export async function InvoiceDetailRoute({
     getInvoiceDeleteDependencies(companyContext.company.id, invoiceId),
     isCompanyOnlineCheckoutAvailable(companyContext.company.id),
     Promise.resolve(isSmsSendingConfigured()),
+    // QuickBooks Online status, for billing roles only (the same people the
+    // sync records table lets read it). Never blocks the page.
+    canManageBilling
+      ? loadInvoiceQuickBooksStatus(companyContext.company.id, invoiceId).catch(() => ({ kind: "none" }) as const)
+      : Promise.resolve({ kind: "none" } as const),
   ]);
 
   if (!invoice) {
     notFound();
   }
 
-  const canManageBilling = companyContext.permissions.manageBilling;
   const canCaptureSignature = canCaptureBillingSignature(
     companyContext,
     "invoice",
@@ -64,7 +72,21 @@ export async function InvoiceDetailRoute({
     shouldHideDemoPrefixesForDisplay(companyContext.user),
   );
 
+  const quickBooksLabel =
+    quickBooks.kind === "sent" ? (
+      <InvoiceQuickBooksLabel
+        kind="sent"
+        sentAtLabel={quickBooks.sentAt ? formatDateTimeInTimeZone(quickBooks.sentAt, companyContext.company.timezone) : null}
+      />
+    ) : quickBooks.kind === "waiting" ? (
+      <InvoiceQuickBooksLabel kind="waiting" />
+    ) : quickBooks.kind === "attention" ? (
+      <InvoiceQuickBooksLabel kind="attention" sentence={quickBooks.sentence} />
+    ) : null;
+
   const detailView = (
+    <>
+    {quickBooksLabel}
     <InvoiceDetailPageView
       invoice={invoice}
       activities={activities}
@@ -81,6 +103,7 @@ export async function InvoiceDetailRoute({
       onlinePaymentsEnabled={onlinePaymentsEnabled}
       smsSendingConfigured={smsSendingConfigured}
     />
+    </>
   );
 
   if (presentation === "overlay") {

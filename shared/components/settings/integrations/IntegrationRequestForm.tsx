@@ -32,11 +32,17 @@ import {
 export function IntegrationRequestForm({
   companyId,
   requestedOn,
+  hiddenKeys = [],
 }: {
   /** The company this page was loaded for; the action refuses a mismatch. */
   companyId: string;
   /** Integration key to the day this company asked for it. */
   requestedOn: Readonly<Record<string, string>>;
+  /**
+   * Keys that are available on this deployment (QuickBooks Online once its
+   * keys are set), so they are not offered as "not available yet".
+   */
+  hiddenKeys?: readonly string[];
 }) {
   const noteId = useId();
   const [checked, setChecked] = useState<readonly string[]>([]);
@@ -99,7 +105,7 @@ export function IntegrationRequestForm({
       <div className="space-y-4">
         {PLANNED_INTEGRATION_GROUPS.map((group) => {
           const items = PLANNED_INTEGRATIONS.filter(
-            (item) => item.group === group.id,
+            (item) => item.group === group.id && !hiddenKeys.includes(item.key),
           );
 
           if (items.length === 0) {
