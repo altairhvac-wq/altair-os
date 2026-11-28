@@ -21,7 +21,12 @@ import {
   emailHasPendingTeamInvite,
   userHasPendingTeamInvites,
 } from "@/lib/auth/pending-team-invites";
-import { resolvePostLoginRedirect, sanitizeNextPath } from "@/lib/auth/redirects";
+import {
+  NEW_COMPANY_START_PATH,
+  resolvePostLoginRedirect,
+  sanitizeNextPath,
+} from "@/lib/auth/redirects";
+import { getGuidedSetupAvailabilityFor } from "@/lib/database/queries/business-setup";
 import {
   clearSignupNetworkInviteCookie,
   readSignupNetworkInviteCookie,
@@ -63,22 +68,43 @@ export type AuthActionState = {
   needsEmailConfirmation?: boolean;
 };
 
-async function redirectAfterAuth(next?: string | null): Promise<never> {
+/**
+ * @param createdCompany true when this request has just created the person's
+ *   company. They open on the guided setup, unless they were already heading
+ *   somewhere (`next`).
+ */
+async function redirectAfterAuth(
+  next?: string | null,
+  createdCompany = false,
+): Promise<never> {
   const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
     redirect("/setup");
   }
 
-  redirect(resolvePostLoginRedirect(companyContext, next));
+  // Asked only for a company made this moment: in a database that cannot run
+  // the setup yet, a new owner goes straight to the dashboard, as before.
+  const startOnSetup =
+    createdCompany &&
+    !next &&
+    (await getGuidedSetupAvailabilityFor(companyContext));
+
+  redirect(
+    resolvePostLoginRedirect(
+      companyContext,
+      startOnSetup ? NEW_COMPANY_START_PATH : next,
+    ),
+  );
 }
 
 async function ensureCompanyAfterAuth(
   user: User,
   companyName?: string,
   trade?: TradeKey | null,
-): Promise<AuthActionState | null> {
+): Promise<(AuthActionState & { createdCompany?: boolean }) | null> {
   let context = await getActiveCompanyContext();
+  let createdCompany = false;
 
   if (!context) {
     if (await userHasPendingTeamInvites(user)) {
@@ -96,6 +122,7 @@ async function ensureCompanyAfterAuth(
       }
 
       if (bootstrapResult.companyId) {
+        createdCompany = true;
         await queueWelcomeEmailForNewCompany({
           user,
           companyId: bootstrapResult.companyId,
@@ -116,7 +143,7 @@ async function ensureCompanyAfterAuth(
     });
   }
 
-  return null;
+  return createdCompany ? { createdCompany } : null;
 }
 
 export async function loginAction(
@@ -199,10 +226,10 @@ export async function loginAction(
     : null;
 
   if (setupResult?.error) {
-    return setupResult;
+    return { error: setupResult.error };
   }
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, setupResult?.createdCompany === true);
 }
 
 export async function signupAction(
@@ -426,6 +453,8 @@ export async function signupAction(
     return redirectAfterAuth(next);
   }
 
+  let createdCompany = false;
+
   if (companyName) {
     const bootstrapResult = await bootstrapCompanyForNewUser(
       companyName,
@@ -437,6 +466,7 @@ export async function signupAction(
     }
 
     if (bootstrapResult.companyId && data.user) {
+      createdCompany = true;
       await queueWelcomeEmailForNewCompany({
         user: data.user,
         companyId: bootstrapResult.companyId,
@@ -451,7 +481,7 @@ export async function signupAction(
 
   await clearSignupNetworkInviteCookie();
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, createdCompany);
 }
 
 export async function setupCompanyAction(
@@ -532,7 +562,7 @@ export async function setupCompanyAction(
     };
   }
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, Boolean(bootstrapResult.companyId));
 }
 
 export async function logoutAction() {

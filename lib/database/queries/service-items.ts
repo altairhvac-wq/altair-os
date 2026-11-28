@@ -32,6 +32,28 @@ function mapServiceItemRow(row: ServiceItemRow): ServiceItem {
     archivedAt: row.archived_at ?? undefined,
     deletedAt: row.deleted_at ?? undefined,
     deleteAfter: row.delete_after ?? undefined,
+    pricing: mapServiceItemPricing(row),
+  };
+}
+
+/**
+ * How the price was worked out (migration 219), or undefined for an item
+ * with nothing recorded: priced by hand, or read from a database that does
+ * not have the columns yet.
+ */
+function mapServiceItemPricing(row: ServiceItemRow): ServiceItem["pricing"] {
+  const source = row.price_source === "rate" ? "rate" : "manual";
+  const bookHours = row.book_hours == null ? null : Number(row.book_hours);
+  const markup = row.parts_markup_percent == null ? null : Number(row.parts_markup_percent);
+  const setupKey = row.setup_key ?? null;
+  if (source === "manual" && bookHours === null && markup === null && setupKey === null) {
+    return undefined;
+  }
+  return {
+    source,
+    bookHours: bookHours !== null && Number.isFinite(bookHours) ? bookHours : null,
+    partsMarkupPercent: markup !== null && Number.isFinite(markup) ? markup : null,
+    setupKey,
   };
 }
 
@@ -249,6 +271,25 @@ export async function updateServiceItem(
 ): Promise<{ serviceItem: ServiceItem | null; error: string | null }> {
   const supabase = await createClient();
   const update = mapServiceItemFormDataToUpdate(data);
+
+  // An item the guided setup priced from the labor rate (migration 219)
+  // belongs to the owner the moment they type a different price for it here:
+  // it becomes "manual", so nothing re-prices it from the rate again. The
+  // read is of the whole row, so it works whether or not 219 has run, and the
+  // column is only written when the row shows it exists.
+  const { data: current } = await supabase
+    .from("service_items")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .maybeSingle();
+  const currentRow = current as ServiceItemRow | null;
+  if (
+    currentRow?.price_source === "rate" &&
+    Number(currentRow.unit_price) !== update.unit_price
+  ) {
+    update.price_source = "manual";
+  }
 
   const { data: row, error } = await supabase
     .from("service_items")

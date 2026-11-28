@@ -5,6 +5,7 @@ import { assertBusinessNumbersAccess } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { saveCompanyBusinessNumbers } from "@/lib/database/queries/business-numbers";
+import { saveServiceCallItem } from "@/lib/database/queries/business-setup";
 import {
   validateBusinessNumbersInput,
   type BusinessNumberKey,
@@ -27,12 +28,15 @@ export type UpdateBusinessNumbersActionResult = {
   field?: BusinessNumberKey | null;
   numbers?: BusinessNumbers;
   updatedAt?: string | null;
+  /** The numbers were saved, but something that follows from them was not. Shown as a warning, not a failure. */
+  notice?: string;
 };
 
 /** Pages that show something worked out from these numbers. */
 function revalidateBusinessNumbersPaths() {
   revalidatePath("/settings");
   revalidatePath("/settings/business-numbers");
+  revalidatePath("/price-book");
 }
 
 /**
@@ -70,7 +74,19 @@ export async function updateBusinessNumbersAction(
     return { error: error ?? "The numbers could not be saved. Try again." };
   }
 
+  // The guided setup keeps a "Service call" item in the price book at the
+  // company's fee. A fee changed here has to reach that item too, or the
+  // estimate would go on charging the old one. (Only an item that exists is
+  // updated; this page never adds to the price book.)
+  let notice: string | undefined;
+  if (validation.data.serviceCallFee !== undefined && validation.data.serviceCallFee !== null) {
+    const item = await saveServiceCallItem(context.company.id, context, validation.data.serviceCallFee, { createIfMissing: false });
+    if (item.error) {
+      notice = "Your numbers were saved, but the Service call item in your price book could not be updated. Change its price in your price book.";
+    }
+  }
+
   revalidateBusinessNumbersPaths();
 
-  return { numbers: record.numbers, updatedAt: record.updatedAt };
+  return { numbers: record.numbers, updatedAt: record.updatedAt, notice };
 }

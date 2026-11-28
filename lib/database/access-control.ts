@@ -690,6 +690,11 @@ export function canAccessAppRedirectPath(
     return canViewCompanyTimeEntries(context);
   }
 
+  // The guided setup. The page itself sends anyone else to the dashboard.
+  if (path === "/get-started") {
+    return canManageBusinessNumbers(context);
+  }
+
   if (path === "/team") {
     return (
       canManageTeamMembers(context) || canViewCompanyTimeEntries(context)

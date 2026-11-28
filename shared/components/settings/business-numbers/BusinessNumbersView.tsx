@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useMemo, useRef, useState, useTransition } from "react";
 import { updateBusinessNumbersAction } from "@/app/actions/business-numbers";
+import { NumberBox, ReadingLine } from "@/shared/components/business-numbers/fields";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsWorkspacePage, SettingsWorkspaceSection } from "@/shared/components/settings/SettingsWorkspacePage";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
-import { fieldControlClass, fieldLabelClass } from "@/shared/design-system/components/field-styles";
 import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
 import { formatDollarsShort, numberToFieldText } from "@/shared/lib/business-numbers/format";
 import {
@@ -15,8 +16,6 @@ import {
   readMonthlyTarget,
   readServiceCall,
   usableSuggestedRate,
-  type Reading,
-  type ReadingTone,
 } from "@/shared/lib/business-numbers/readings";
 import {
   BUSINESS_NUMBER_FIELDS,
@@ -48,6 +47,8 @@ type BusinessNumbersViewProps = {
   readonly companyId: string;
   readonly initialNumbers: BusinessNumbers;
   readonly loadError?: string | null;
+  /** True when the guided setup can run here; the page then links to it. */
+  readonly guidedSetup?: boolean;
 };
 
 const SAVE_FAILED_MESSAGE = "The numbers could not be saved. Check your connection and try again. Nothing you typed was lost.";
@@ -76,87 +77,11 @@ function sameNumber(typed: string, saved: string): boolean {
   return a !== "invalid" && b !== "invalid" && a === b;
 }
 
-const TONE_CLASS: Record<ReadingTone, string> = {
-  good: "border-[rgba(5,150,105,0.22)] bg-[rgba(236,253,245,0.92)] text-[#065F46]",
-  warn: "border-[rgba(180,120,20,0.3)] bg-[rgba(255,248,230,0.95)] text-[#6B4A0B]",
-  bad: "border-[rgba(185,28,28,0.28)] bg-[rgba(254,242,242,0.92)] text-[#991B1B]",
-  note: "border-altair-border bg-altair-paper-subtle text-altair-ink-on-paper-secondary",
-};
-
-function ReadingLine({ reading, children }: { readonly reading: Reading; readonly children?: React.ReactNode }) {
-  return (
-    <div className={`flex flex-col gap-2 rounded-xl border px-3 py-2.5 text-[13px] leading-relaxed sm:flex-row sm:items-center sm:justify-between ${TONE_CLASS[reading.tone]}`}>
-      <p className="min-w-0">{reading.text}</p>
-      {children}
-    </div>
-  );
-}
-
-type NumberBoxProps = {
-  readonly field: BusinessNumberKey;
-  readonly label: string;
-  readonly hint?: string;
-  readonly prefix?: string;
-  readonly suffix?: string;
-  readonly value: string;
-  /** The id of the message that explains what is wrong with this box, when something is. */
-  readonly errorId: string | null;
-  readonly busy: boolean;
-  readonly onChange: (field: BusinessNumberKey, value: string) => void;
-};
-
-function NumberBox({ field, label, hint, prefix, suffix, value, errorId, busy, onChange }: NumberBoxProps) {
-  const id = useId();
-  const whole = BUSINESS_NUMBER_FIELDS[field].decimals === 0;
-  const describedBy = [hint ? `${id}-hint` : null, errorId].filter(Boolean).join(" ") || undefined;
-  return (
-    <div className="min-w-0">
-      <label htmlFor={id} className={fieldLabelClass}>
-        {label}
-      </label>
-      <div className="relative mt-1">
-        {prefix ? (
-          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-altair-ink-on-paper-muted">
-            {prefix}
-          </span>
-        ) : null}
-        {/* Read-only, not disabled, while a save is running: a disabled box
-         * drops keyboard focus, and the person pressing Enter in a box would
-         * be thrown to the top of the page on every save. */}
-        <input
-          id={id}
-          name={field}
-          type="text"
-          inputMode={whole ? "numeric" : "decimal"}
-          autoComplete="off"
-          maxLength={40}
-          value={value}
-          readOnly={busy}
-          aria-invalid={errorId ? true : undefined}
-          aria-describedby={describedBy}
-          onChange={(event) => onChange(field, event.target.value)}
-          className={`${fieldControlClass} ${prefix ? "pl-7" : ""} ${suffix ? "pr-16" : ""}`}
-        />
-        {suffix ? (
-          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-altair-ink-on-paper-muted">
-            {suffix}
-          </span>
-        ) : null}
-      </div>
-      {hint ? (
-        <p id={`${id}-hint`} className="mt-1 text-xs leading-snug text-altair-ink-on-paper-muted">
-          {hint}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-export function BusinessNumbersView({ companyId, initialNumbers, loadError }: BusinessNumbersViewProps) {
+export function BusinessNumbersView({ companyId, initialNumbers, loadError, guidedSetup = false }: BusinessNumbersViewProps) {
   const [saved, setSaved] = useState<BusinessNumbers>(initialNumbers);
   const [text, setText] = useState<FieldText>(() => toFieldText(initialNumbers));
   const [credited, setCredited] = useState(initialNumbers.serviceCallCredited);
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error" | "warning"; message: string } | null>(null);
   const [badField, setBadField] = useState<BusinessNumberKey | null>(null);
   const [isPending, startTransition] = useTransition();
   const formId = useId();
@@ -179,15 +104,16 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError }: Bu
   function box(field: BusinessNumberKey, props: { label?: string; hint?: string; prefix?: string; suffix?: string } = {}) {
     return (
       <NumberBox
-        field={field}
+        name={field}
         label={props.label ?? BUSINESS_NUMBER_FIELDS[field].label}
         hint={props.hint}
         prefix={props.prefix}
         suffix={props.suffix}
         value={text[field]}
+        whole={BUSINESS_NUMBER_FIELDS[field].decimals === 0}
         errorId={badField === field ? feedbackId : null}
         busy={isPending}
-        onChange={change}
+        onChange={(value) => change(field, value)}
       />
     );
   }
@@ -197,7 +123,7 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError }: Bu
     const input = formRef.current?.elements.namedItem(field);
     if (input instanceof HTMLInputElement) {
       input.focus({ preventScroll: true });
-      input.scrollIntoView({ block: "center", behavior: "smooth" });
+      input.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     }
   }
 
@@ -228,7 +154,7 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError }: Bu
       setText(toFieldText(result.numbers));
       setCredited(result.numbers.serviceCallCredited);
       setBadField(null);
-      setFeedback({ tone: "success", message: "Saved." });
+      setFeedback(result.notice ? { tone: "warning", message: result.notice } : { tone: "success", message: "Saved." });
     });
   }
 
@@ -251,6 +177,16 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError }: Bu
       description="What you charge, what an hour of work costs you, and your monthly target, kept in one place. Change any of them here at any time."
     >
       {loadError ? <SettingsAlertBanner tone="error">{loadError}</SettingsAlertBanner> : null}
+
+      {guidedSetup ? (
+        <p className="text-sm text-altair-ink-on-paper-secondary">
+          Rather be walked through it?{" "}
+          <Link href="/get-started" className="font-semibold text-[var(--brand-metal-text)] underline underline-offset-2">
+            Open the guided setup
+          </Link>
+          . It works these numbers out with you and builds a priced price book.
+        </p>
+      ) : null}
 
       <form id={formId} ref={formRef} onSubmit={save} noValidate className="flex flex-col gap-4">
         <SettingsWorkspaceSection id="charge" title="What you charge" description="Your prices. Leave a box empty if you have not decided yet.">
