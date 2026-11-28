@@ -75,10 +75,23 @@ export type AiRateLimitCheck =
   | { ok: true; monthlyTokensUsed: number; monthlyTokenCeiling: number | null }
   | { ok: false; code: "rate_limited" | "monthly_ceiling_reached" };
 
+/**
+ * The short-window settings for one feature. The drafting buttons use the
+ * defaults above; a feature with a different rhythm (a conversation) passes
+ * its own. The monthly ceiling is not part of this: it stays one bound per
+ * company whatever the feature.
+ */
+export type AiRequestWindow = {
+  cooldownSeconds: number;
+  windowSeconds: number;
+  windowLimit: number;
+};
+
 type CheckInput = {
   companyId: string;
   userId: string;
   feature: AiFeatureName;
+  window?: AiRequestWindow;
 };
 
 type AdmissionPayload = {
@@ -127,9 +140,9 @@ export async function checkAiRateLimit(
   const { data, error } = await supabase.rpc("check_and_record_ai_request", {
     p_company_id: params.companyId,
     p_feature: params.feature,
-    p_cooldown_seconds: COOLDOWN_SECONDS,
-    p_window_seconds: WINDOW_SECONDS,
-    p_window_limit: MAX_REQUESTS_PER_WINDOW,
+    p_cooldown_seconds: params.window?.cooldownSeconds ?? COOLDOWN_SECONDS,
+    p_window_seconds: params.window?.windowSeconds ?? WINDOW_SECONDS,
+    p_window_limit: params.window?.windowLimit ?? MAX_REQUESTS_PER_WINDOW,
     p_default_monthly_token_ceiling: ceiling,
   });
 

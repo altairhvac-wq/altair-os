@@ -1,8 +1,10 @@
 # Altair Assistant: architecture and rules
 
-Status: **under construction**. Piece 1 (the how-to library) is built. Nothing
-else in this document exists in code yet; it is the shape every later piece
-must fit. Owner direction, 2026-11-27: build it so it can keep growing until it
+Status: **under construction**. Pieces 1 (the how-to library) and 2 (the
+engine and the list of abilities) are built. Nothing calls a model yet: no
+provider adapter, no screen and no server action exist, so the assistant is
+not reachable by anyone. This document is the shape every later piece must
+fit. Owner direction, 2026-11-27: build it so it can keep growing until it
 can do nearly everything in the product, by typing or by voice.
 
 Owner-facing design and decisions: `reports/AI assistant design - 2026-11-27/`
@@ -50,9 +52,11 @@ assistant's "read a how-to note" capability.
   screen cannot change its words without its note being found.
 - Changing a screen includes changing its note. That is part of done.
 
-### 2. Capabilities: one registry (next)
+### 2. Capabilities: one registry (built)
 
-`lib/assistant/capabilities/`. A capability is a single entry:
+`lib/assistant/capabilities/registry.ts` is the list; the types are in
+`lib/assistant/types.ts`. Today it holds `help.search` and `help.read`. A
+capability is a single entry:
 
 | Field | Meaning |
 | --- | --- |
@@ -67,13 +71,34 @@ The menu of capabilities offered to the model is built per person from
 `allowed(context)`. A technician's assistant does not contain the invoices or
 business-numbers capabilities at all.
 
-### 3. Engine: one conversation loop (next)
+### 3. Engine: one conversation loop (built)
 
-`lib/assistant/engine/`. Takes messages and a per-person capability menu,
-talks to a model through a provider-neutral adapter (`lib/ai/provider.ts` is
-the seam), runs the capabilities the model asks for, and returns text plus
-structured blocks (tables, source lines, proposal cards). It does not know
-whether the question was typed or spoken.
+`lib/assistant/engine/run.ts` (`runAssistantTurn`). It is handed the person's
+context, the question, the capability list and a model, and returns text,
+blocks the app draws, sources and a trace. It imports no database, Supabase
+or Next module, so it can answer for nobody but the person it was handed and
+runs in the verifier with a scripted model.
+
+Whatever the model does, the engine: offers and runs only read capabilities
+this person is allowed; validates input strictly before a capability sees it
+(`engine/input.ts`); wraps every result as data with markers a record cannot
+close (`engine/text.ts`); strips links, images and markup from the reply;
+withholds any dollar amount no capability returned; and stops after three
+rounds of lookups, three lookups a round.
+
+The model is one function behind `AssistantModel` in `types.ts`. Adapters go
+in `lib/assistant/providers/`, one per provider; none exists yet, because it
+should be written against a live key and proven on the test list.
+
+Switch and limits: `lib/assistant/env.ts` (`AI_ASSISTANT_ENABLED`, off by
+default, and off whenever `AI_FEATURES_ENABLED` is off) and
+`lib/assistant/admission.ts` (a 2-second pause, 40 questions a person a day,
+through the existing `check_and_record_ai_request`). The company's monthly
+token ceiling is still shared with the drafting features; a separate
+assistant allowance needs a migration and is not built.
+
+`npm run verify:assistant` checks the registry and executes the engine
+against every rule above.
 
 ### 4. Surfaces
 
@@ -134,7 +159,8 @@ not the rules.
 | Piece | What | State |
 | --- | --- | --- |
 | 1 | How-to library, Help page, public `/how-to` pages, verifier | Built |
-| 2 | Capability registry and engine, limits, switches, no-service-role verifier | Not started |
+| 2 | Capability registry and engine, limits, switch, verifier (`verify:assistant`) | Built |
+| 2b | A provider adapter, written against a live key | Not started |
 | 3 | Read capabilities (records) with sources | Not started |
 | 4 | Panel, office and technician | Not started |
 | 5 | Test list, per role, on scratch | Not started |

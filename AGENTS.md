@@ -43,6 +43,7 @@ Typical request flow:
 - `lib/supabase/`: browser, server-cookie, request-boundary, and service-role Supabase clients.
 - `lib/auth/`: authentication operations, callback routing, invitations, and safe redirects.
 - `lib/ai/`, `lib/email/`, `lib/payments/`, `lib/sms/`, `lib/integrations/`: server-side external-service integrations.
+- `lib/assistant/`: the in-app assistant's engine and its one list of abilities. Read `docs/product/ALTAIR_ASSISTANT.md` before changing it. Nothing under it may import the service-role client, and the engine may not import a database or Next module; `npm run verify:assistant` enforces both.
 - `shared/components/`: reusable UI grouped by product domain. North Star variants are colocated in domain-specific `north-star-*` folders.
 - `shared/design-system/`: tokens, shell, signature, components, and design-system documentation.
 - `shared/lib/help/`: the how-to library. One typed catalog of short notes read by the signed-in Help page (`/help`), the public pages (`/how-to`) and, later, the assistant (`docs/product/ALTAIR_ASSISTANT.md`). Every on-screen label a note quotes is anchored to its source file and checked by `npm run verify:help-notes`.

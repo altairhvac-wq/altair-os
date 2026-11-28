@@ -49,6 +49,7 @@
     "verify:integration-rows": "node scripts/verify-integration-rows.mjs",
     "verify:customer-integrations": "node scripts/verify-customer-integrations.mjs",
     "verify:help-notes": "node --experimental-strip-types --import ./scripts/lib/ts-alias-loader-register.mjs scripts/verify-help-notes.mjs",
+    "verify:assistant": "node --experimental-strip-types --import ./scripts/lib/ts-alias-loader-register.mjs scripts/verify-assistant.mjs",
     "verify:integration-credentials": "node scripts/verify-integration-credentials.mjs",
     "verify:publishing-package": "node scripts/verify-publishing-package.mjs",
     "verify:publish-job": "node scripts/verify-publish-job-machine.mjs",
