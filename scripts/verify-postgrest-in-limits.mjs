@@ -47,6 +47,12 @@ const ALLOWED = new Map([
     "lib/marketing/store.ts:options.statuses",
     "A caller-supplied subset of the marketing post status enum — bounded by the enum, not by rows.",
   ],
+  // The QuickBooks "Needs attention" list reads at most ATTENTION_LIMIT (25)
+  // rows; these four look up names for those rows only.
+  ["lib/accounting/panel.ts:customerIds", "At most 25: the rows on one Needs attention list (ATTENTION_LIMIT)."],
+  ["lib/accounting/panel.ts:itemIds", "At most 25: the rows on one Needs attention list (ATTENTION_LIMIT)."],
+  ["lib/accounting/panel.ts:invoiceIds", "At most 25: the rows on one Needs attention list (ATTENTION_LIMIT)."],
+  ["lib/accounting/panel.ts:paymentIds", "At most 25: the rows on one Needs attention list (ATTENTION_LIMIT)."],
 ]);
 
 let failures = 0;

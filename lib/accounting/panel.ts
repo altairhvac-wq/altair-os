@@ -143,7 +143,7 @@ async function lookUpNames(
   const paymentIds = ids("payment");
   if (paymentIds.length > 0) {
     const { data } = await client.from("invoice_payments").select("id, invoice_id, amount").eq("company_id", companyId).in("id", paymentIds);
-    for (const row of data ?? []) out.set(row.id, { title: `Payment of $${Number(row.amount).toFixed(2)}`, href: `/invoices/${row.invoice_id}` });
+    for (const row of data ?? []) out.set(row.id, { title: `Payment of $${Number(row.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, href: `/invoices/${row.invoice_id}` });
   }
   return out;
 }

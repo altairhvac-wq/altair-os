@@ -514,7 +514,7 @@ class SyncRun {
     }
 
     const customer = await this.store.loadCustomer(invoice.customerId);
-    const label = `Invoice ${invoice.number}${customer ? `, ${customer.name}` : ""}, $${invoice.total.toFixed(2)}`;
+    const label = `Invoice ${invoice.number}${customer ? `, ${customer.name}` : ""}, ${formatMoney(invoice.total)}`;
     if (!customer) {
       await this.attention(record, "customer_not_sent", { label, blockedBy: "a deleted customer" }, null);
       return;
@@ -612,7 +612,7 @@ class SyncRun {
     }
     const invoice = await this.store.loadInvoice(payment.invoiceId);
     const customer = invoice ? await this.store.loadCustomer(invoice.customerId) : null;
-    const label = `Payment of $${payment.amount.toFixed(2)}${invoice ? ` on ${invoice.number}` : ""}${customer ? `, ${customer.name}` : ""}`;
+    const label = `Payment of ${formatMoney(payment.amount)}${invoice ? ` on ${invoice.number}` : ""}${customer ? `, ${customer.name}` : ""}`;
 
     const invoiceRecord = await this.store.ensureRecord("invoice", payment.invoiceId);
     if (invoiceRecord.state === "skipped") {
@@ -673,6 +673,11 @@ class SyncRun {
     const result = await this.api.create("Payment", body, requestIdFor(record.id, fingerprint));
     await this.sent(record, { remoteId: result.ref.id, remoteSyncToken: result.ref.syncToken, fingerprint, intuitTid: result.intuitTid });
   }
+}
+
+/** "$6,030.13": the same money format the rest of the product shows. */
+function formatMoney(value: number): string {
+  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function withoutKey(body: Record<string, unknown>, key: string): Record<string, unknown> {
