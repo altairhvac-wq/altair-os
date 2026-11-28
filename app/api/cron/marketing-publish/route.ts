@@ -9,9 +9,13 @@ import {
 import { listDeliveriesForPost } from "@/lib/database/queries/marketing-channel-deliveries";
 import { getMediaAssetById } from "@/lib/database/queries/marketing-media-assets";
 import {
+  AGENT_DAILY_REEL_SOURCE,
   getMarketingPostByIdAdmin,
+  createAgentDraftMarketingPost,
   createHqSocialDraftPostAdmin,
+  findAgentDraftPost,
   listAutoApproveCandidatePosts,
+  listRecentlyPostedAgentVideoPostsAdmin,
   markMarketingPostPostedAdmin,
   scheduleDraftMarketingPostAdmin,
 } from "@/lib/database/queries/marketing-posts";
@@ -383,6 +387,8 @@ type AutoApproveSummary = {
   promoted: number;
   /** Marketing HQ social ideas turned into Facebook drafts this run. */
   hqConverted: number;
+  /** Product videos already on YouTube copied into Instagram Reel drafts this run. */
+  instagramMirrored: number;
   timing: string;
   skipped: { postId: string; reason: string }[];
 };
@@ -425,6 +431,49 @@ async function convertFreshHqIdeas(sinceIso: string): Promise<number> {
   return converted;
 }
 
+/**
+ * Copy the newest product video that already went out on YouTube into an
+ * Instagram Reel draft (owner decision 2026-10-27: Instagram posts on its own
+ * too). Instagram needs media, and until now nothing ever wrote an Instagram
+ * row, so the channel stayed silent. One per company per run; the draft then
+ * meets the same policy as every other post below (source, QA PASS, School
+ * exclusion, pinned destination, per-channel cap).
+ *
+ * Idempotent through migration 147's (company, video, channel) key: a video
+ * that already has an Instagram row is skipped here, and a race comes back
+ * ALREADY_EXISTS from the insert. School (hvac-) videos are never copied.
+ */
+async function mirrorPostedVideosToInstagram(sinceIso: string): Promise<number> {
+  const posted = await listRecentlyPostedAgentVideoPostsAdmin({
+    postedSinceIso: sinceIso,
+    limit: MAX_AUTO_APPROVALS_PER_RUN,
+  });
+  const doneCompanies = new Set<string>();
+  let mirrored = 0;
+  for (const post of posted) {
+    if (doneCompanies.has(post.companyId) || !post.videoMediaAssetId || !post.renderQa) continue;
+    const existing = await findAgentDraftPost(post.companyId, post.videoMediaAssetId, "instagram");
+    if (existing) continue;
+    const asset = await getMediaAssetById(post.companyId, post.videoMediaAssetId);
+    if (!asset || asset.sourceJobId.startsWith("hvac-")) continue;
+    const created = await createAgentDraftMarketingPost({
+      companyId: post.companyId,
+      title: post.title,
+      channelTarget: "instagram",
+      postText: post.postText,
+      callToAction: post.callToAction ?? null,
+      suggestedHashtags: post.suggestedHashtags,
+      sourceId: post.sourceId ?? null,
+      videoMediaAssetId: post.videoMediaAssetId,
+      renderQa: post.renderQa,
+    });
+    if (created.outcome !== "CREATED") continue;
+    doneCompanies.add(post.companyId);
+    mirrored += 1;
+  }
+  return mirrored;
+}
+
 async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary> {
   const parsed = parseAutoApproveSources();
   const channels = parseAutoApproveChannels();
@@ -437,6 +486,7 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
     considered: 0,
     promoted: 0,
     hqConverted: 0,
+    instagramMirrored: 0,
     timing: parseAutoApproveTiming(),
     skipped: [],
   };
@@ -447,6 +497,9 @@ async function runAutoApprovePolicy(nowIso: string): Promise<AutoApproveSummary>
   ).toISOString();
   if (parsed.sources.includes("product_update") && channels.channels.includes("facebook")) {
     summary.hqConverted = await convertFreshHqIdeas(sinceIso);
+  }
+  if (parsed.sources.includes(AGENT_DAILY_REEL_SOURCE) && channels.channels.includes("instagram")) {
+    summary.instagramMirrored = await mirrorPostedVideosToInstagram(sinceIso);
   }
 
   const candidates = await listAutoApproveCandidatePosts({
