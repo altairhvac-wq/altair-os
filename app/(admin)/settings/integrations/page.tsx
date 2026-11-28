@@ -5,6 +5,7 @@ import {
   canViewOperationalReports,
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
+import { confirmQuickBooksStillConnected } from "@/lib/accounting/connection";
 import { loadQuickBooksPanel, type QuickBooksPanelState } from "@/lib/accounting/panel";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
@@ -155,6 +156,14 @@ const QUICKBOOKS_FLASH: Record<string, { tone: "success" | "error" | "info"; mes
   denied: { tone: "error", message: "Only the owner or admin who pressed Connect, in this company, can finish connecting QuickBooks." },
   failed: { tone: "error", message: "QuickBooks did not finish connecting. Try again in a minute." },
   unavailable: { tone: "error", message: "QuickBooks is not available yet." },
+  // Intuit's "Disconnect URL": where QuickBooks sends someone who removed
+  // Altair from inside QuickBooks. Altair notices on its next send (Intuit
+  // refuses the keys) and shows "Connect again"; this says so up front.
+  // Informational only: a link cannot change the connection.
+  disconnected: {
+    tone: "info",
+    message: "Altair was disconnected from inside QuickBooks, so nothing more is sent. Your records in QuickBooks stay there. Connect again here whenever you like.",
+  },
 };
 
 function toQuickBooksView(state: QuickBooksPanelState, timeZone: string): QuickBooksPanelView | null {
@@ -218,6 +227,11 @@ export default async function IntegrationsSettingsPage({
   const canSeePayments = companyContext.permissions.manageBilling;
 
   const canManageQuickBooks = canManageIntegrations(companyContext);
+  // Arriving from Intuit's Disconnect URL: ask Intuit once, before the panel
+  // is read, so it shows "Connect again" rather than "Connected".
+  if (canManageQuickBooks && (await searchParams).quickbooks === "disconnected") {
+    await confirmQuickBooksStillConnected(company.id).catch(() => undefined);
+  }
   const [paymentAccount, requests, marketingChannels, quickBooks, params] = await Promise.all([
     canSeePayments
       ? getCompanyPaymentAccount(company.id, "stripe")
@@ -234,7 +248,13 @@ export default async function IntegrationsSettingsPage({
     searchParams,
   ]);
   const quickBooksView = toQuickBooksView(quickBooks, company.timezone);
-  const quickBooksFlash = params.quickbooks ? (QUICKBOOKS_FLASH[params.quickbooks] ?? null) : null;
+  // "disconnected" is said only when Intuit confirmed it; a stray or forged
+  // link to a working connection shows nothing.
+  const disconnectConfirmed = quickBooks.kind === "reauth_required" || quickBooks.kind === "not_connected";
+  const quickBooksFlash =
+    params.quickbooks && (params.quickbooks !== "disconnected" || disconnectConfirmed)
+      ? (QUICKBOOKS_FLASH[params.quickbooks] ?? null)
+      : null;
 
   const access = getCompanyAccessScope(companyContext);
   const importLinks = [

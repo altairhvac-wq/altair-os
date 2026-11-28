@@ -237,6 +237,23 @@ export function apiForConnection(connection: AccountingConnectionRow): HttpQboAp
   });
 }
 
+/**
+ * Ask Intuit whether an active connection still works (one token refresh).
+ * Used when someone arrives from Intuit's "Disconnect URL": if Intuit refuses
+ * the keys, getValidAccessToken marks the connection "connect again". A
+ * link alone never changes anything; only Intuit's answer does.
+ */
+export async function confirmQuickBooksStillConnected(companyId: string): Promise<void> {
+  const connection = await getAccountingConnection(companyId);
+  if (!connection || connection.status !== "active") return;
+  try {
+    await getValidAccessToken(connection, { force: true });
+  } catch {
+    // An auth refusal has already been recorded; anything else is left for
+    // the next send to find.
+  }
+}
+
 /** True when the keys have not been refreshed for KEEPALIVE_AFTER_DAYS. */
 export async function needsKeepalive(connectionId: string): Promise<boolean> {
   const secrets = await readSecrets(connectionId);
