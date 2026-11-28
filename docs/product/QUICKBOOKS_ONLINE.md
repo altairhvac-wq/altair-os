@@ -31,7 +31,7 @@ One way, Altair to QuickBooks: customers (on first use), price book items (on fi
 ## Before real customers
 
 1. The owner opens the Intuit developer account and app (legal terms are his).
-2. Sandbox keys into the environment; connect Intuit's free test company and run every case: new and existing customers, edits, voids, partial payments, Automated Sales Tax (Intuit's documents contradict each other on whether it keeps the tax an app sends), disconnect and reconnect.
+2. Sandbox test (done 2026-11-28, on "Sandbox Company US 31bb", manual sales tax): connect and setup read the company's accounts and tax codes; 21 customers, 11 items, 27 open invoices and 2 payments sent with every customer balance matching Altair to the cent; no duplicate customers; a payment recorded in the Altair UI arrived within seconds; an edit updated the same invoice; a void zeroed the balance; an expired access token refreshed; disconnect revoked at Intuit (consent was asked again) and deleted keys and records; reconnecting the same company offered "From today only" and queued nothing. Fixed on the way: `select *` queries (Intuit error 4001 on field lists), duplicate open invoices on reconnect (`previous_realm_id`). **Still untested:** Automated Sales Tax, because this sandbox company uses manual tax. The engine flags any total difference either way.
 3. Production questionnaire (the owner submits), production keys, then the website and FAQ say "works with QuickBooks Online" and `quickbooks_online` leaves `PLANNED_INTEGRATIONS` and `shared/lib/site/not-yet.ts`.
 
 ## Not in version 1
