@@ -31,6 +31,14 @@ export type ShopStepInput = {
    * pure.
    */
   timezone?: string | null;
+  /**
+   * How the zone got into the form. "picked": the owner chose it from the
+   * list. "suggested": the list opened on the browser's zone for a company
+   * that had not chosen, and the owner left it. A suggestion is saved only
+   * if the company still has not chosen when the save arrives: it never
+   * replaces a zone someone confirmed in the meantime.
+   */
+  timezoneSource?: "picked" | "suggested";
   /** Sales tax, percent. Blank leaves the current default alone. */
   defaultTaxRate?: string | number | null;
   technicianCount?: string | number | null;

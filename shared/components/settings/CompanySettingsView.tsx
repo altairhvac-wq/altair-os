@@ -65,10 +65,7 @@ export function CompanySettingsView({
           title="Company profile"
           description="Identity, contact, address, and timezone — appears on invoices and estimates."
         >
-          {/* Remounted when the zone changes under it (the confirm card above
-           * saves it), so the form never holds, and later saves, the old zone. */}
           <CompanyProfileForm
-            key={`zone:${companyProfile.timezone}`}
             canManage={canManage}
             initialProfile={{
               name: companyProfile.name,

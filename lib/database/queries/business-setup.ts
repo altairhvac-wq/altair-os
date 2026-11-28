@@ -175,9 +175,9 @@ export async function updateCompanyShopContact(
   context: ActiveCompanyContext,
   patch: ShopContactPatch,
   chosenTimeZone: string | null = null,
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; /** True when this call stored a time zone. */ timeZoneWritten: boolean }> {
   const accessError = assertBusinessNumbersAccess(context) ?? assertMatchingCompanyScope(context, companyId);
-  if (accessError) return { error: accessError };
+  if (accessError) return { error: accessError, timeZoneWritten: false };
 
   const columns: { phone?: string | null; address_line1?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; timezone?: string; timezone_set_at?: string } = {};
   const choice = getCompanyTimeZoneChoice(context.company);
@@ -193,16 +193,16 @@ export async function updateCompanyShopContact(
   if (patch.city !== undefined) columns.city = patch.city;
   if (patch.state !== undefined) columns.state = patch.state;
   if (patch.postalCode !== undefined) columns.postal_code = patch.postalCode;
-  if (Object.keys(columns).length === 0) return { error: null };
+  if (Object.keys(columns).length === 0) return { error: null, timeZoneWritten: false };
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("companies").update(columns).eq("id", companyId).select("id").maybeSingle();
 
   if (error || !data) {
     console.error("[updateCompanyShopContact] update failed:", { companyId, code: error?.code });
-    return { error: error ? mapDatabaseError(error) : "Your shop's details could not be saved. Try again." };
+    return { error: error ? mapDatabaseError(error) : "Your shop's details could not be saved. Try again.", timeZoneWritten: false };
   }
-  return { error: null };
+  return { error: null, timeZoneWritten: columns.timezone !== undefined };
 }
 
 /**

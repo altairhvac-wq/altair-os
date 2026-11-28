@@ -5,6 +5,7 @@ import { isMissingDatabaseColumnError } from "@/lib/database/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isValidIanaTimeZone } from "@/shared/lib/company-timezones";
 import {
+  isPlaceTimeZone,
   resolveCompanyTimeZone,
   type CompanyTimeZoneFields,
 } from "@/shared/lib/datetime";
@@ -109,7 +110,10 @@ const NEW_COMPANY_WINDOW_MS = 10 * 60 * 1000;
  * company bootstrap, with the owner's own session.
  *
  * Deliberately narrow:
- *   - only a zone this server recognises is written;
+ *   - only a zone this server recognises is written, and never UTC or one
+ *     of its aliases (a browser hiding its zone reports those; such a
+ *     company starts on the fallback and is asked to confirm, like any
+ *     other that has not chosen);
  *   - only a company made in the last few minutes, that nobody has chosen a
  *     zone for (the update is filtered on both, so it can never replace a
  *     choice, and never touch an older company);
@@ -123,12 +127,10 @@ export async function recordDetectedTimeZoneForNewCompany(input: {
   companyId: string;
   detectedTimeZone: string | null | undefined;
 }): Promise<void> {
-  const detected =
-    typeof input.detectedTimeZone === "string"
-      ? input.detectedTimeZone.trim()
-      : "";
+  // Checked here as well as where the value was read: this is the write.
+  const detected = readDetectedTimeZone(input.detectedTimeZone);
 
-  if (!detected || detected.length > 64 || !isValidIanaTimeZone(detected)) {
+  if (!detected) {
     return;
   }
 
@@ -158,14 +160,21 @@ export async function recordDetectedTimeZoneForNewCompany(input: {
   }
 }
 
-/** The zone a browser reported at sign-up, kept on the user until their company exists. */
+/**
+ * A zone a browser reported (a hidden form field, or what sign-up kept on
+ * the user), if it can be used: a zone this server knows, that names a
+ * place. Anything else, including UTC, reads as "not known".
+ */
 export function readDetectedTimeZone(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
   }
 
   const trimmed = value.trim();
-  return trimmed && trimmed.length <= 64 && isValidIanaTimeZone(trimmed)
+  return trimmed &&
+    trimmed.length <= 64 &&
+    isPlaceTimeZone(trimmed) &&
+    isValidIanaTimeZone(trimmed)
     ? trimmed
     : null;
 }

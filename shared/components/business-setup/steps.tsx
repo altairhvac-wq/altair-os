@@ -17,7 +17,7 @@ import { fieldControlClass, fieldLabelClass, fieldSelectClass } from "@/shared/d
 import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
 import { formatCount, formatDollarsShort, numberToFieldText } from "@/shared/lib/business-numbers/format";
 import { readHourCost, readLaborRate, readMonthlyTarget, readServiceCall, usableSuggestedRate } from "@/shared/lib/business-numbers/readings";
-import { getCompanyTimezoneSelectOptions } from "@/shared/lib/company-timezones";
+import { companyTimeZoneLabel, getCompanyTimezoneSelectOptions } from "@/shared/lib/company-timezones";
 import type { CompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import { useBrowserTimeZone } from "@/shared/lib/use-browser-time-zone";
 import type { SetupPriceBookItem } from "@/lib/database/queries/business-setup";
@@ -128,7 +128,19 @@ export function ShopStep({
   const asksZone = values.timeZoneChoice !== "unavailable";
   const offersBrowserZone = values.timeZoneChoice === "unconfirmed" && !zonePicked && browserZone !== null;
   const shownZone = offersBrowserZone ? browserZone : values.timeZone;
-  const zoneOptions = useMemo(() => getCompanyTimezoneSelectOptions(shownZone), [shownZone]);
+  // The saved zone and the suggested one both stay on the list, whatever is picked.
+  const zoneOptions = useMemo(() => getCompanyTimezoneSelectOptions(browserZone, initial.timeZone, shownZone), [browserZone, initial.timeZone, shownZone]);
+  // Saving a suggestion that differs from the zone the company runs on moves
+  // every time in the product. The owner is told so before pressing the button.
+  const suggestionMovesTimes = offersBrowserZone && browserZone !== values.timeZone;
+  const zoneHint = suggestionMovesTimes
+    ? `This computer is on ${companyTimeZoneLabel(browserZone)}, so that is picked. Your account has been running on ${companyTimeZoneLabel(values.timeZone)}: saving this step moves your schedule, reminders and due dates to the zone picked here. Change it if your shop is somewhere else.`
+    : offersBrowserZone
+      ? "Taken from this computer. Change it if your shop is somewhere else. Your schedule, reminders and due dates all use it."
+      : "Your schedule, reminders and due dates all use it.";
+  // What the save says about the zone: nothing when it is the choice already
+  // on record and was not touched; otherwise the zone and how it got here.
+  const zoneToSend: Pick<ShopStepInput, "timezone" | "timezoneSource"> = !asksZone || (values.timeZoneChoice === "chosen" && !zonePicked) ? {} : { timezone: shownZone, timezoneSource: zonePicked ? "picked" : "suggested" };
 
   function set(key: Exclude<keyof ShopStepValues, "timeZoneChoice">, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -150,10 +162,10 @@ export function ShopStep({
       onSubmit={() =>
         save.run(async () => {
           const contact: ShopStepInput = { phone: values.phone, addressLine1: values.addressLine1, city: values.city, state: values.state, postalCode: values.postalCode, defaultTaxRate: values.defaultTaxRate };
-          const result = await saveShopStepAction(asksZone ? { ...contact, timezone: shownZone } : contact, companyId);
+          const result = await saveShopStepAction({ ...contact, ...zoneToSend }, companyId);
           if (result.error) focusField(body.current, result.field ?? null);
           // What was on screen is now the company's chosen zone.
-          else onValuesSaved(asksZone ? { ...values, timeZone: shownZone, timeZoneChoice: "chosen" } : values);
+          else onValuesSaved(zoneToSend.timezone ? { ...values, timeZone: shownZone, timeZoneChoice: "chosen" } : values);
           return result;
         })
       }
@@ -195,9 +207,7 @@ export function ShopStep({
               ))}
             </select>
             <p id={`${zoneId}-hint`} className="mt-1 text-xs leading-snug text-altair-ink-on-paper-muted">
-              {offersBrowserZone
-                ? "Taken from this computer. Change it if your shop is somewhere else. Your schedule, reminders and due dates all use it."
-                : "Your schedule, reminders and due dates all use it."}
+              {zoneHint}
             </p>
           </div>
         ) : null}

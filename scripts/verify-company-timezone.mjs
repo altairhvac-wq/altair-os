@@ -25,13 +25,27 @@
  *   5. THE WALL. Only an owner or admin changes it, through actions that
  *      check for themselves.
  *
+ * ===================== EXECUTED, AND ONLY READ =====================
+ * The rule, the profile form's save rule, the "is this a place" test and the
+ * row reads' behaviour when the column is missing are EXECUTED against the
+ * shipped code (the reads with a stand-in database that answers the way
+ * PostgREST does before migration 220). The wiring (which file calls what,
+ * what the migration says) is checked by reading the source; those checks
+ * say "the code is written this way", not "it was run". The run-through in
+ * a browser against a real database is in the pull request.
+ *
  * Offline and side-effect free.
  *
  * Run: node scripts/verify-company-timezone.mjs
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { register } from "node:module";
 import { join } from "node:path";
 import { loadPureModule } from "./lib/load-pure-module.mjs";
+
+// The row reads live in a server module that imports through the "@/" alias.
+// Registered here (not on the command line) so the script runs by itself.
+register("./lib/ts-alias-loader.mjs", import.meta.url);
 
 let passed = 0;
 let failed = 0;
@@ -72,6 +86,9 @@ const FILES = {
   postAuth: "lib/auth/post-auth.ts",
   signUpForm: "shared/components/auth/SignUpForm.tsx",
   companySetupForm: "shared/components/auth/CompanySetupForm.tsx",
+  profileForm: "shared/components/settings/CompanyProfileForm.tsx",
+  browserZoneHook: "shared/lib/use-browser-time-zone.ts",
+  zoneList: "shared/lib/company-timezones.ts",
   reminders: "lib/database/services/evaluate-workflow-reminders.ts",
   approvalRouting: "lib/database/services/estimate-approval-routing.ts",
   overdueSweep: "lib/database/services/overdue-invoice-sweep.ts",
@@ -144,6 +161,10 @@ check(
   "Eastern and Mountain disagree about the day late in the evening (why the zone matters)",
   dt.getDateOnlyInTimeZone(justAfterMidnightEastern, NY) === "2026-12-01" && dt.getDateOnlyInTimeZone(justAfterMidnightEastern, DENVER) === "2026-11-30",
 );
+
+console.log("\nA browser that only reports UTC is not telling us where the shop is");
+check("real places count", ["America/Chicago", "America/Phoenix", "Europe/London", "Pacific/Auckland", " America/Denver "].every((zone) => dt.isPlaceTimeZone(zone)));
+check("UTC and its aliases do not", ["UTC", "utc", "Etc/UTC", "Etc/GMT+5", "GMT", "GMT0", "Universal", "Zulu", "Greenwich", "UCT", "", "   ", null, undefined].every((zone) => !dt.isPlaceTimeZone(zone)));
 
 /* ---------------------------------------------- 3. the profile form's save */
 console.log("\nThe company profile form cannot confirm a zone nobody looked at");
@@ -224,13 +245,18 @@ const setter = datetime.slice(datetime.indexOf("export function setCompanyTimeZo
 check("setCompanyTimeZone does not resolve again", !setter.includes("resolveCompanyTimeZone") && !setter.includes("LEGACY_DEFAULT"));
 check("shared/lib/datetime.ts stays pure (no imports)", !/^\s*import\s/m.test(datetime));
 
-// Every read of the stored zone outside the context goes through the helper
-// that knows about the missing column.
+// A query that names the timezone column must go through the helper that
+// knows about the missing column. (Whole-row reads, select("*"), are the
+// company context's: it resolves them. getUserCompanies also returns whole
+// rows, unresolved; nothing may read a zone off those, which the next check
+// holds.)
 const rawReaders = sources.filter((path) => {
   if (path === FILES.timezoneQueries || path === FILES.companies) return false;
   return /\.select\(\s*["'`][^"'`]*\btimezone\b/.test(code(path));
 });
-check("no query selects companies.timezone by itself", rawReaders.length === 0, rawReaders);
+check("no query names the timezone column outside the time zone helper", rawReaders.length === 0, rawReaders);
+const membershipZoneReaders = sources.filter((path) => /getUserCompanies\(/.test(code(path)) && path !== FILES.context && /\.company\.timezone\b|company\??\.timezone\b/.test(code(path).replace(/(companyContext|context)\.company\.timezone/g, "")));
+check("nothing reads a zone off the unresolved membership list", membershipZoneReaders.length === 0, membershipZoneReaders);
 for (const [key, label] of [
   ["reminders", "reminders"],
   ["approvalRouting", "estimate approval routing"],
@@ -244,12 +270,80 @@ check("the overdue sweep reads both columns, and falls back when one is missing"
 /* -------------------------------------------- 4. before the migration runs */
 console.log("\nHarmless before migration 220");
 const tzq = code(FILES.timezoneQueries);
-check("the row read asks again without the column when it is missing", tzq.includes("isMissingDatabaseColumnError(withChoice.error)") && tzq.includes(".select(COMPANY_TIMEZONE_COLUMNS_LEGACY)"));
-check("a failed lookup still resolves (to the fallback), it never throws", tzq.includes("return resolveCompanyTimeZone(fields);"));
 check("server-only", read(FILES.timezoneQueries).startsWith('import "server-only";'));
 
+// The row reads, executed. The stand-in answers a select the way PostgREST
+// does: an error for a column it does not have, a row otherwise.
+const zoneQueries = await import("@/lib/database/queries/company-timezone");
+function standInDatabase({ row, missingColumnError = null, failure = null }) {
+  const asked = [];
+  return {
+    asked,
+    from(table) {
+      return {
+        select(columns) {
+          asked.push(`${table}: ${columns}`);
+          const answer = failure
+            ? { data: null, error: failure }
+            : missingColumnError && columns.includes("timezone_set_at")
+              ? { data: null, error: missingColumnError }
+              : { data: row ? Object.fromEntries(columns.split(",").map((c) => c.trim()).filter((c) => c in row).map((c) => [c, row[c]])) : null, error: null };
+          const chain = { eq: () => chain, maybeSingle: async () => answer };
+          return chain;
+        },
+      };
+    },
+  };
+}
+const quiet = async (run) => {
+  const original = console.error;
+  console.error = () => {};
+  try {
+    return await run();
+  } finally {
+    console.error = original;
+  }
+};
+
+{
+  const db = standInDatabase({ row: { timezone: NY, timezone_set_at: SET } });
+  const read1 = await zoneQueries.readCompanyTimeZoneFields(db, "c1");
+  check("migration in, zone chosen: both columns are read and Eastern is Eastern", db.asked.length === 1 && read1.fields?.timezone_set_at === SET && (await zoneQueries.loadResolvedCompanyTimeZone(db, "c1", "test")) === NY);
+}
+{
+  const db = standInDatabase({ row: { timezone: NY, timezone_set_at: null } });
+  check("migration in, never chosen: Mountain, as before", (await zoneQueries.loadResolvedCompanyTimeZone(db, "c1", "test")) === DENVER);
+}
+for (const [label, error] of [
+  ["Postgres says no such column (42703)", { code: "42703", message: 'column companies.timezone_set_at does not exist' }],
+  ["the API does not know the column (PGRST204)", { code: "PGRST204", message: "Could not find the 'timezone_set_at' column of 'companies' in the schema cache" }],
+]) {
+  const db = standInDatabase({ row: { timezone: NY }, missingColumnError: error });
+  const fields = (await zoneQueries.readCompanyTimeZoneFields(db, "c1")).fields;
+  check(`migration pending, ${label}: asked again without it, resolves as before`, db.asked.length === 2 && db.asked[1] === "companies: timezone" && fields?.timezone === NY && fields.timezone_set_at === undefined && dt.getCompanyTimeZoneChoice(fields) === "unavailable" && dt.resolveCompanyTimeZone(fields) === DENVER);
+  const other = standInDatabase({ row: { timezone: "America/Chicago" }, missingColumnError: error });
+  check(`migration pending, ${label}: a zone saved in Settings before is still used`, (await zoneQueries.loadResolvedCompanyTimeZone(other, "c1", "test")) === "America/Chicago");
+}
+{
+  const db = standInDatabase({ failure: { code: "57014", message: "canceling statement due to statement timeout" } });
+  const outcome = await quiet(async () => ({ read: await zoneQueries.readCompanyTimeZoneFields(db, "c1"), zone: await zoneQueries.loadResolvedCompanyTimeZone(db, "c1", "test") }));
+  check("any other failure: asked once, reported, and the job carries on in the fallback zone", outcome.read.fields === null && outcome.read.error?.code === "57014" && outcome.zone === DENVER);
+}
+{
+  const db = standInDatabase({ row: null });
+  check("no such company: the fallback zone", (await zoneQueries.loadResolvedCompanyTimeZone(db, "c1", "test")) === DENVER);
+}
+
+console.log("\nA zone a browser reported is checked before it is used");
+check("a real zone is kept", zoneQueries.readDetectedTimeZone("America/Phoenix") === "America/Phoenix" && zoneQueries.readDetectedTimeZone("  America/Chicago ") === "America/Chicago");
+check("UTC is 'not known'", zoneQueries.readDetectedTimeZone("UTC") === null && zoneQueries.readDetectedTimeZone("Etc/UTC") === null);
+check("nonsense, the wrong type and an over-long value are dropped", [ "Mars/Olympus", "", "   ", 42, null, undefined, {}, "America/" + "x".repeat(80) ].every((value) => zoneQueries.readDetectedTimeZone(value) === null));
+check("the browser hook drops a UTC-only browser too", code(FILES.browserZoneHook).includes("zone && isPlaceTimeZone(zone) ? zone : null"));
+
+console.log("\nHarmless before migration 220 (wiring)");
+
 const record = tzq.slice(tzq.indexOf("export async function recordDetectedTimeZoneForNewCompany"), tzq.indexOf("export function readDetectedTimeZone"));
-check("the sign-up zone is checked before it is written", record.includes("isValidIanaTimeZone(detected)"));
+check("the sign-up zone is checked again at the write", record.includes("const detected = readDetectedTimeZone(input.detectedTimeZone);") && /if \(!detected\) \{\s*return;/.test(record));
 check("it can only land on a company nobody has chosen for", record.includes('.is("timezone_set_at", null)'));
 check("and only on one made in the last few minutes", record.includes('.gte(\n        "created_at"') || record.includes('.gte("created_at"'));
 check("a missing column is not an error, and nothing here throws", record.includes("!isMissingDatabaseColumnError(error)") && record.includes("catch (recordError)"));
@@ -264,11 +358,18 @@ const home = code(FILES.home);
 check("the dashboard asks only an owner or admin of a company that has not chosen", home.includes("canAccessCompanySettings(companyContext) &&") && home.includes('getCompanyTimeZoneChoice(companyContext.company) === "unconfirmed"') && home.includes("{askToConfirmTimeZone ? ("));
 const settingsPage = code(FILES.settingsPage);
 check("Settings > Company asks under the same condition", settingsPage.includes("canAccessCompanySettings(companyContext) &&") && settingsPage.includes('getCompanyTimeZoneChoice(company) === "unconfirmed"'));
-check("the profile form remounts when the zone changes under it", code(FILES.settingsView).includes("key={`zone:${companyProfile.timezone}`}"));
+check(
+  "the profile form's zone box follows a zone saved elsewhere on the page, and keeps everything else typed",
+  code(FILES.profileForm).includes("if (zoneOnRecord !== initialProfile.timezone) {") && code(FILES.profileForm).includes("setValues((previous) => ({ ...previous, timezone: initialProfile.timezone }));") && !code(FILES.settingsView).includes("key={`zone:"),
+);
 
 const steps = code(FILES.setupSteps);
 check("step 1 shows the list only where the choice can be recorded", steps.includes('const asksZone = values.timeZoneChoice !== "unavailable";') && steps.includes("{asksZone ? ("));
-check("step 1 sends a zone only when it asked for one", steps.includes("asksZone ? { ...contact, timezone: shownZone } : contact"));
+check(
+  "step 1 sends no zone where it did not ask, or when the choice on record was not touched",
+  steps.includes('!asksZone || (values.timeZoneChoice === "chosen" && !zonePicked) ? {} : { timezone: shownZone, timezoneSource: zonePicked ? "picked" : "suggested" }') && steps.includes("saveShopStepAction({ ...contact, ...zoneToSend }, companyId)"),
+);
+check("step 1 says so when saving its suggestion would move the company's times", steps.includes("const suggestionMovesTimes = offersBrowserZone && browserZone !== values.timeZone;") && steps.includes("saving this step moves your schedule, reminders and due dates"));
 check("step 1 offers the browser's zone only to a company that has not chosen", steps.includes('values.timeZoneChoice === "unconfirmed" && !zonePicked && browserZone !== null'));
 check("the setup page passes the resolved zone and its choice", code(FILES.setupPage).includes("timeZone: company.timezone,") && code(FILES.setupPage).includes("timeZoneChoice: getCompanyTimeZoneChoice(company),"));
 
@@ -280,19 +381,36 @@ check("the confirm action resolves the caller itself and checks settings access"
 check("it refuses a card drawn for another company", tzAction.includes("expectedCompanyId !== contextResult.context.company.id"));
 check("it checks the zone", tzAction.includes("validateCompanyTimezoneInput(timezone)"));
 check("the query checks access and company again", tzWrite.includes("assertCompanySettingsAccess(context)") && tzWrite.includes("assertMatchingCompanyScope(context, companyId)"));
-check("a new zone redraws every page", settingsAction.includes('revalidatePath("/", "layout")'));
+const settingsRevalidate = settingsAction.slice(settingsAction.indexOf("function revalidateCompanySettingsPaths"), settingsAction.indexOf("export async function updateCompanyBillingDefaultsAction"));
+check("a confirmed zone redraws every page", settingsRevalidate.includes('revalidatePath("/", "layout")') && /updateCompanyTimezone\([\s\S]*revalidateCompanySettingsPaths\(\);\s*return \{ timezone: savedTimezone \};/.test(tzAction));
 
 const setupAction = code(FILES.setupAction);
 const shopAction = setupAction.slice(setupAction.indexOf("export async function saveShopStepAction"), setupAction.indexOf("export async function saveRateStepAction"));
 check("step 1 goes through the setup's own gate (owner or admin, this company)", shopAction.includes("requireSetupContext(expectedCompanyId)"));
-check("step 1 ignores a zone where the choice cannot be recorded", shopAction.includes('"timezone" in input && getCompanyTimeZoneChoice(context.company) !== "unavailable"'));
+check("step 1 ignores a zone where the choice cannot be recorded", shopAction.includes("const zoneChoice = getCompanyTimeZoneChoice(context.company);") && shopAction.includes('"timezone" in input && zoneChoice !== "unavailable"'));
+check("a suggestion never replaces a zone that was confirmed in the meantime", shopAction.includes('if (input.timezoneSource === "picked" || zoneChoice === "unconfirmed") chosenTimeZone = zone.timezone;'));
 check("step 1 checks the zone by the rule Settings > Company uses", shopAction.includes("validateCompanyTimezoneInput(input.timezone)") && shopAction.includes('field: "timezone"'));
-check("a zone saved in step 1 redraws every page", setupAction.includes('if (options.timeZoneChanged) revalidatePath("/", "layout");'));
+check(
+  "a zone saved in step 1 redraws every page at once, before anything later in the step can fail",
+  /const contactResult = await updateCompanyShopContact\(context\.company\.id, context, contact\.data, chosenTimeZone\);\s*if \(contactResult\.error\) return \{ error: contactResult\.error \};\s*if \(contactResult\.timeZoneWritten\) revalidatePath\("\/", "layout"\);/.test(shopAction) &&
+    shopAction.indexOf('revalidatePath("/", "layout")') < shopAction.indexOf("updateCompanyBillingDefaults(context.company.id"),
+);
 
 const setupQueries = code(FILES.setupQueries);
 const shopWrite = setupQueries.slice(setupQueries.indexOf("export async function updateCompanyShopContact"), setupQueries.indexOf("async function releaseTrashedSetupKeys"));
 check("the step 1 write checks access and company", shopWrite.includes("assertBusinessNumbersAccess(context) ?? assertMatchingCompanyScope(context, companyId)"));
-check("it writes the zone only together with its mark, and only where the column exists", shopWrite.includes('choice !== "unavailable"') && shopWrite.includes("columns.timezone = chosenTimeZone;") && shopWrite.includes("columns.timezone_set_at = new Date().toISOString();"));
+check("it writes the zone only together with its mark, and only where the column exists", shopWrite.includes('choice !== "unavailable"') && /columns\.timezone = chosenTimeZone;\s*columns\.timezone_set_at = new Date\(\)\.toISOString\(\);/.test(shopWrite) && (shopWrite.match(/columns\.timezone = /g) ?? []).length === 1);
+check("it reports whether a zone was stored", shopWrite.includes("timeZoneWritten: columns.timezone !== undefined"));
+
+console.log("\nZones outside the short list are named, and stay on the list");
+const zoneList = await import("@/shared/lib/company-timezones");
+check("a short-list zone keeps its plain name", zoneList.companyTimeZoneLabel("America/New_York") === "Eastern Time (US)");
+check("any other is named by its city", zoneList.companyTimeZoneLabel("America/Detroit") === "Detroit (America/Detroit)" && zoneList.companyTimeZoneLabel("America/Indiana/Indianapolis") === "Indianapolis (America/Indiana/Indianapolis)" && zoneList.companyTimeZoneLabel("America/Puerto_Rico") === "Puerto Rico (America/Puerto_Rico)");
+{
+  const options = zoneList.getCompanyTimezoneSelectOptions("America/Detroit", "America/Denver", "America/Chicago", null, "America/Detroit");
+  check("every zone passed in stays selectable, once", options.filter((o) => o.value === "America/Detroit").length === 1 && options.filter((o) => o.value === "America/Denver").length === 1 && options.length === zoneList.COMPANY_TIMEZONE_OPTIONS.length + 1);
+}
+check("both new lists keep the suggested and the current zone on the list", steps.includes("getCompanyTimezoneSelectOptions(browserZone, initial.timeZone, shownZone)") && code(FILES.prompt).includes("getCompanyTimezoneSelectOptions(browserZone, currentTimeZone, zone)"));
 
 /* ----------------------------------------------------- new companies' zone */
 console.log("\nA new company starts in its owner's zone");

@@ -90,9 +90,7 @@ async function requireSetupContext(expectedCompanyId: string): Promise<{ context
   return { context };
 }
 
-function revalidateSetupPaths(options: { timeZoneChanged?: boolean } = {}) {
-  // A new time zone moves every date and time in the product, on every page.
-  if (options.timeZoneChanged) revalidatePath("/", "layout");
+function revalidateSetupPaths() {
   revalidatePath("/");
   revalidatePath("/get-started");
   revalidatePath("/settings");
@@ -123,13 +121,10 @@ async function finishStep(
   step: BusinessSetupStepId,
   patch: BusinessNumbersPatch,
   extra: Pick<SetupActionResult, "created" | "updated" | "removed" | "items"> = {},
-  options: { timeZoneChanged?: boolean } = {},
 ): Promise<SetupActionResult> {
   const { record, error } = await saveCompanyBusinessNumbers(context.company.id, context, patch, await stepMark(context, step, "done"));
-  // Revalidated even when the step's mark did not save: the shop's details
-  // (and its time zone) were written before this.
-  if (options.timeZoneChanged || !error) revalidateSetupPaths(options);
   if (error || !record) return { error: error ?? "This step could not be saved. Try again." };
+  revalidateSetupPaths();
   return { record, ...extra };
 }
 
@@ -160,11 +155,17 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
   // (migration 220); before that the step does not show the box and a value
   // sent anyway is ignored. Checked by the rule Settings > Company uses: any
   // zone this server knows.
+  //
+  // A zone the owner picked from the list is always theirs to save. One the
+  // list only suggested (the browser's zone, left as it was) is saved only
+  // while the company still has not chosen: if someone confirmed a zone
+  // after this page was opened, the suggestion does not replace it.
   let chosenTimeZone: string | null = null;
-  if ("timezone" in input && getCompanyTimeZoneChoice(context.company) !== "unavailable") {
+  const zoneChoice = getCompanyTimeZoneChoice(context.company);
+  if ("timezone" in input && zoneChoice !== "unavailable") {
     const zone = validateCompanyTimezoneInput(input.timezone);
     if (zone.error || !zone.timezone) return { error: "Pick your time zone from the list.", field: "timezone" };
-    chosenTimeZone = zone.timezone;
+    if (input.timezoneSource === "picked" || zoneChoice === "unconfirmed") chosenTimeZone = zone.timezone;
   }
 
   // Sales tax. A number replaces the default and keeps the other document
@@ -194,13 +195,17 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
 
   const contactResult = await updateCompanyShopContact(context.company.id, context, contact.data, chosenTimeZone);
   if (contactResult.error) return { error: contactResult.error };
+  // A new zone is stored from this line on, whatever happens to the rest of
+  // the step: every page is drawn again in it now, not only if the step
+  // finishes.
+  if (contactResult.timeZoneWritten) revalidatePath("/", "layout");
 
   if (defaults) {
     const taxResult = await updateCompanyBillingDefaults(context.company.id, context, defaults);
     if (taxResult.error) return { error: taxResult.error, field: "defaultTaxRate" };
   }
 
-  return finishStep(context, "shop", numbers.data, {}, { timeZoneChanged: chosenTimeZone !== null });
+  return finishStep(context, "shop", numbers.data);
 }
 
 /* ------------------------------------------------------ 2. your labor rate */

@@ -5,7 +5,7 @@ import { useId, useMemo, useState, useSyncExternalStore, useTransition } from "r
 import { updateCompanyTimezoneAction } from "@/app/actions/company-settings";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import { fieldLabelClass, fieldSelectClass } from "@/shared/design-system/components/field-styles";
-import { COMPANY_TIMEZONE_OPTIONS, getCompanyTimezoneSelectOptions } from "@/shared/lib/company-timezones";
+import { companyTimeZoneLabel, getCompanyTimezoneSelectOptions } from "@/shared/lib/company-timezones";
 import { useBrowserTimeZone } from "@/shared/lib/use-browser-time-zone";
 
 /**
@@ -38,10 +38,6 @@ type TimeZoneConfirmPromptProps = {
 
 const DISMISSED_KEY_PREFIX = "altair:timezone-confirm-dismissed:";
 const DISMISS_EVENT = "altair:timezone-confirm-dismissed";
-
-function zoneLabel(zone: string): string {
-  return COMPANY_TIMEZONE_OPTIONS.find((option) => option.value === zone)?.label ?? zone;
-}
 
 function subscribeToDismissal(onChange: () => void): () => void {
   window.addEventListener(DISMISS_EVENT, onChange);
@@ -84,7 +80,8 @@ export function TimeZoneConfirmPrompt({ companyId, currentTimeZone, dismissible 
 
   // What the owner picked, else where this browser is, else what the company runs on.
   const zone = picked ?? browserZone ?? currentTimeZone;
-  const options = useMemo(() => getCompanyTimezoneSelectOptions(zone), [zone]);
+  // The suggested zone and the current one both stay on the list, whatever is picked.
+  const options = useMemo(() => getCompanyTimezoneSelectOptions(browserZone, currentTimeZone, zone), [browserZone, currentTimeZone, zone]);
 
   if (hiddenNow) return null;
   if (dismissible && dismissal !== "shown") return null;
@@ -122,7 +119,7 @@ export function TimeZoneConfirmPrompt({ companyId, currentTimeZone, dismissible 
     <section aria-label="Confirm your time zone" className={`rounded-2xl border border-[rgba(180,120,20,0.3)] bg-[rgba(255,248,230,0.95)] p-4 ${className}`}>
       <h2 className="text-[15px] font-bold tracking-tight text-[#2b1f06]">Confirm your time zone</h2>
       <p className="mt-0.5 text-[13px] leading-relaxed text-[#4a3408]">
-        Your schedule, reminders and invoice due dates are running on {zoneLabel(currentTimeZone)}. Pick the time zone your shop is in and confirm it, so every time you see is the right one.
+        Your schedule, reminders and invoice due dates are running on {companyTimeZoneLabel(currentTimeZone)}. Pick the time zone your shop is in and confirm it, so every time you see is the right one.
         {dismissible ? " You can also change it later in Settings, under Company." : null}
       </p>
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -151,7 +148,7 @@ export function TimeZoneConfirmPrompt({ companyId, currentTimeZone, dismissible 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={isPending} onClick={confirm} className={buttonClassName("primary", "md")}>
-            {isPending ? "Saving…" : `Use ${zoneLabel(zone)}`}
+            {isPending ? "Saving…" : `Use ${companyTimeZoneLabel(zone)}`}
           </button>
           {dismissible ? (
             <button type="button" disabled={isPending} onClick={dismiss} className={buttonClassName("secondary", "md")}>

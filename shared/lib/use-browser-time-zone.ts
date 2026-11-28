@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getBrowserTimeZone } from "@/shared/lib/datetime";
+import { getBrowserTimeZone, isPlaceTimeZone } from "@/shared/lib/datetime";
 
 function subscribe(): () => void {
   // A browser's time zone does not change while a page is open.
@@ -9,7 +9,9 @@ function subscribe(): () => void {
 }
 
 function readBrowserTimeZone(): string | null {
-  return getBrowserTimeZone() ?? null;
+  const zone = getBrowserTimeZone();
+  // A browser that reports UTC is hiding its zone, not sitting in Greenwich.
+  return zone && isPlaceTimeZone(zone) ? zone : null;
 }
 
 function readOnServer(): null {
@@ -18,7 +20,8 @@ function readOnServer(): null {
 
 /**
  * The time zone this browser is set to ("America/Chicago"), or null on the
- * server and until the page has hydrated.
+ * server, until the page has hydrated, and for a browser that only reports
+ * UTC (isPlaceTimeZone).
  *
  * It is a suggestion to put in front of the person, or to record once when a
  * company is created. It is never what a company's dates are worked out in:

@@ -43,6 +43,23 @@ export function getCompanyTimeZoneChoice(
   return company.timezone_set_at ? "chosen" : "unconfirmed";
 }
 
+/**
+ * Whether a zone a browser reported is worth offering as "where this shop
+ * is". UTC and its aliases are not: a browser reports them when it hides its
+ * real zone (privacy settings, some locked-down work computers), not because
+ * a service company keeps its day in Greenwich. Offering one, or recording
+ * it at sign-up, would move a company's whole day by hours with nobody
+ * having picked it. Such a browser is treated as "zone not known".
+ */
+export function isPlaceTimeZone(zone: string | null | undefined): boolean {
+  const trimmed = zone?.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  return !/^(utc|gmt|uct|universal|zulu|greenwich|etc\/.*|gmt[+-]?\d*)$/i.test(trimmed);
+}
+
 export function getBrowserTimeZone(): string | undefined {
   // Only meaningful in a real browser. On the server this resolves to the
   // HOST's timezone (UTC on Vercel), which made SSR output disagree with the
