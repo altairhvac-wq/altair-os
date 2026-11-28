@@ -26,10 +26,26 @@ import {
   fieldLabelClass,
 } from "@/shared/design-system/components/field-styles";
 
+/** One of the technician's own open jobs, offered when no job is fixed. */
+export type TechnicianExpenseJobOption = {
+  id: string;
+  jobNumber: string;
+  label: string;
+};
+
 type TechnicianExpenseFormProps = {
+  /** Fixed job (opened from a job screen). When set, no job picker is shown. */
   jobId?: string;
   jobNumber?: string;
-  onSuccess?: () => void;
+  /**
+   * Jobs to choose from when no job is fixed (opened from the Receipts tab).
+   * The server decides what is allowed; this only saves the technician from
+   * filling in a receipt it would then refuse.
+   */
+  jobOptions?: TechnicianExpenseJobOption[];
+  /** True when the server will refuse a receipt with no job for this person. */
+  requireJob?: boolean;
+  onSuccess?: (saved?: { jobNumber?: string }) => void;
   onCancel: () => void;
   onSubmittingChange?: (isSubmitting: boolean) => void;
 };
@@ -50,12 +66,21 @@ const labelClass = fieldLabelClass;
 export function TechnicianExpenseForm({
   jobId,
   jobNumber,
+  jobOptions,
+  requireJob = false,
   onSuccess,
   onCancel,
   onSubmittingChange,
 }: TechnicianExpenseFormProps) {
   const router = useRouter();
+  const showJobPicker = !jobId && (jobOptions?.length ?? 0) > 0;
+  // One open job: it is the only possible answer, so it is already chosen.
+  const [pickedJobId, setPickedJobId] = useState<string>(() =>
+    !jobId && jobOptions?.length === 1 ? jobOptions[0].id : "",
+  );
   const submitLockRef = useRef(false);
+  const jobSelectRef = useRef<HTMLSelectElement>(null);
+  const [jobMissing, setJobMissing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -88,6 +113,20 @@ export function TechnicianExpenseForm({
         const form = new FormData(formEl);
         const amountValue = String(form.get("amount") ?? "").trim();
         const merchant = String(form.get("merchant") ?? "").trim();
+        const pickedJob = showJobPicker
+          ? jobOptions?.find((option) => option.id === pickedJobId)
+          : undefined;
+        const submitJobId = jobId ?? pickedJob?.id;
+
+        if (!submitJobId && requireJob) {
+          // The picker is the first field and Save is below the fold on a
+          // phone, so bring the picker back into view with the message.
+          setJobMissing(true);
+          setError("Choose the job this receipt is for.");
+          jobSelectRef.current?.scrollIntoView({ block: "center" });
+          jobSelectRef.current?.focus({ preventScroll: true });
+          return;
+        }
 
         if (!receiptFile && !amountValue) {
           setError("Add a receipt photo or enter an amount.");
@@ -108,7 +147,7 @@ export function TechnicianExpenseForm({
           merchant: merchant || undefined,
           category,
           paymentMethod: parseExpensePaymentMethod(form.get("paymentMethod")),
-          jobId,
+          jobId: submitJobId,
         };
 
         const result = await submitExpenseWithReceipt({ data, receiptFile });
@@ -125,7 +164,7 @@ export function TechnicianExpenseForm({
           return;
         }
 
-        onSuccess?.();
+        onSuccess?.({ jobNumber: jobNumber ?? pickedJob?.jobNumber });
         router.refresh();
       } catch {
         setError(
@@ -152,6 +191,55 @@ export function TechnicianExpenseForm({
         <div className="rounded-xl bg-white px-3.5 py-2.5 text-sm text-slate-600">
           Linked to{" "}
           <span className="font-semibold text-slate-900">{jobNumber}</span>
+        </div>
+      ) : null}
+
+      {showJobPicker ? (
+        <div>
+          <label htmlFor="tech-expense-job" className={labelClass}>
+            Job
+            {requireJob ? null : (
+              <span className="font-normal text-slate-400"> (optional)</span>
+            )}
+          </label>
+          <select
+            id="tech-expense-job"
+            ref={jobSelectRef}
+            value={pickedJobId}
+            onChange={(event) => {
+              setPickedJobId(event.target.value);
+              if (jobMissing) {
+                setJobMissing(false);
+                setError(null);
+              }
+            }}
+            disabled={isPending}
+            aria-invalid={jobMissing || undefined}
+            aria-describedby={jobMissing ? "tech-expense-job-error" : undefined}
+            className={inputClass}
+          >
+            <option value="">
+              {requireJob ? "Choose a job" : "No job"}
+            </option>
+            {jobOptions?.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {jobMissing ? (
+            <p
+              id="tech-expense-job-error"
+              className="mt-1.5 text-sm text-red-600"
+              role="alert"
+            >
+              Choose the job this receipt is for.
+            </p>
+          ) : requireJob ? (
+            <p className="mt-1.5 text-xs text-slate-500">
+              Every receipt goes on one of your open jobs.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -269,7 +357,7 @@ export function TechnicianExpenseForm({
         </div>
       ) : null}
 
-      {error ? (
+      {error && !jobMissing ? (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">
           {error}
         </p>

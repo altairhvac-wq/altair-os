@@ -13,6 +13,7 @@ import { ExpenseReceiptPreview } from "@/shared/components/expenses/ExpenseRecei
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { ExpenseWorkflowActions } from "@/shared/components/expenses/ExpenseWorkflowActions";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
+import type { TechnicianExpenseJobOption } from "./TechnicianExpenseForm";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 
 type TechnicianReceiptsViewProps = {
@@ -20,6 +21,8 @@ type TechnicianReceiptsViewProps = {
   currentUserId: string;
   canManageBilling: boolean;
   canDispatchJobs: boolean;
+  /** The signed-in person's own open jobs, to attach a new receipt to. */
+  jobOptions: TechnicianExpenseJobOption[];
   initialSelectedId?: string | null;
 };
 
@@ -28,8 +31,14 @@ export function TechnicianReceiptsView({
   currentUserId,
   canManageBilling,
   canDispatchJobs,
+  jobOptions,
   initialSelectedId = null,
 }: TechnicianReceiptsViewProps) {
+  // Mirrors createExpenseAction: only billing or dispatch may save a receipt
+  // with no job. Everyone else needs one of their own open jobs to put it on,
+  // so Add is offered only when there is one to choose.
+  const requireJob = !canManageBilling && !canDispatchJobs;
+  const canAdd = !requireJob || jobOptions.length > 0;
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(
     initialSelectedId,
@@ -83,15 +92,33 @@ export function TechnicianReceiptsView({
               </p>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={() => setShowCreateSheet(true)}
-            className={buttonClassName("primary", "sm", "touch-manipulation")}
-          >
-            <Plus className="h-4 w-4" />
-            Add
-          </button>
+          {canAdd ? (
+            <button
+              type="button"
+              onClick={() => setShowCreateSheet(true)}
+              className={buttonClassName("primary", "sm", "touch-manipulation")}
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+          ) : null}
         </div>
+
+        {canAdd ? null : (
+          <section
+            className="rounded-xl bg-amber-50 px-3.5 py-3 ring-1 ring-amber-600/15"
+            role="note"
+          >
+            <p className="text-sm font-bold text-slate-900">
+              No open job to add a receipt to
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Every receipt goes on one of your open jobs, and you have none on
+              your schedule this week. If you bought something for work, let the
+              office know.
+            </p>
+          </section>
+        )}
 
         {localExpenses.length === 0 ? (
           <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
@@ -100,20 +127,24 @@ export function TechnicianReceiptsView({
             </div>
             <h3 className="mt-5 text-lg font-bold text-slate-900">No receipts yet</h3>
             <p className="mx-auto mt-2 max-w-xs text-sm text-slate-500">
-              Snap a receipt from a job or tap Add to log a purchase.
+              {canAdd
+                ? "Snap a receipt from a job or tap Add to log a purchase."
+                : "Receipts you add from a job show up here."}
             </p>
-            <button
-              type="button"
-              onClick={() => setShowCreateSheet(true)}
-              className={buttonClassName(
-                "primary",
-                "md",
-                "mt-5 touch-manipulation",
-              )}
-            >
-              <Plus className="h-4 w-4" />
-              Add receipt
-            </button>
+            {canAdd ? (
+              <button
+                type="button"
+                onClick={() => setShowCreateSheet(true)}
+                className={buttonClassName(
+                  "primary",
+                  "md",
+                  "mt-5 touch-manipulation",
+                )}
+              >
+                <Plus className="h-4 w-4" />
+                Add receipt
+              </button>
+            ) : null}
           </section>
         ) : (
           <ul className="space-y-3">
@@ -234,7 +265,11 @@ export function TechnicianReceiptsView({
       </div>
 
       {showCreateSheet ? (
-        <TechnicianExpenseSheet onClose={() => setShowCreateSheet(false)} />
+        <TechnicianExpenseSheet
+          jobOptions={jobOptions}
+          requireJob={requireJob}
+          onClose={() => setShowCreateSheet(false)}
+        />
       ) : null}
     </>
   );

@@ -12,7 +12,10 @@ import {
   MobileSheetPanel,
   MobileSheetSuccess,
 } from "@/shared/components/ui/mobile-sheet";
-import { TechnicianExpenseForm } from "./TechnicianExpenseForm";
+import {
+  TechnicianExpenseForm,
+  type TechnicianExpenseJobOption,
+} from "./TechnicianExpenseForm";
 import {
   technicianFieldPrimaryActionClass,
   technicianFieldSecondaryActionClass,
@@ -21,6 +24,10 @@ import {
 type TechnicianExpenseSheetProps = {
   jobId?: string;
   jobNumber?: string;
+  /** Jobs to choose from when the sheet is not opened from a job. */
+  jobOptions?: TechnicianExpenseJobOption[];
+  /** True when this person cannot save a receipt without a job. */
+  requireJob?: boolean;
   onClose: () => void;
   onSaved?: () => void;
 };
@@ -30,15 +37,21 @@ const TITLE_ID = "technician-expense-sheet-title";
 export function TechnicianExpenseSheet({
   jobId,
   jobNumber,
+  jobOptions,
+  requireJob,
   onClose,
   onSaved,
 }: TechnicianExpenseSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [savedJobNumber, setSavedJobNumber] = useState<string | undefined>(
+    jobNumber,
+  );
   const closeDisabled = isSubmitting;
 
-  function handleSaved() {
+  function handleSaved(saved?: { jobNumber?: string }) {
+    setSavedJobNumber(saved?.jobNumber ?? jobNumber);
     setShowSuccess(true);
     onSaved?.();
   }
@@ -74,7 +87,9 @@ export function TechnicianExpenseSheet({
             <MobileSheetSuccess
               title="Receipt saved"
               subtitle={
-                jobNumber ? `Linked to ${jobNumber}` : "Ready for review"
+                savedJobNumber
+                  ? `Linked to ${savedJobNumber}`
+                  : "Ready for review"
               }
             />
             <MobileSheetFooter>
@@ -103,6 +118,8 @@ export function TechnicianExpenseSheet({
                 key={formKey}
                 jobId={jobId}
                 jobNumber={jobNumber}
+                jobOptions={jobOptions}
+                requireJob={requireJob}
                 onSuccess={handleSaved}
                 onCancel={onClose}
                 onSubmittingChange={setIsSubmitting}
