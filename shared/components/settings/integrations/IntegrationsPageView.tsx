@@ -78,6 +78,12 @@ export type IntegrationsPageViewProps = {
    * bottom.
    */
   platformAdminNotice?: { tone: "success" | "error"; message: string } | null;
+  /**
+   * The QuickBooks Online panel, when QuickBooks is available on this
+   * deployment and the viewer may manage integrations. While it is set,
+   * QuickBooks Online is not offered under "Not available yet".
+   */
+  quickBooksSlot?: React.ReactNode;
 };
 
 const linkClass =
@@ -144,6 +150,7 @@ export function IntegrationsPageView({
   requestedOn,
   platformAdminSlot,
   platformAdminNotice,
+  quickBooksSlot,
 }: IntegrationsPageViewProps) {
   const today: ConnectionRow[] = [
     {
@@ -187,8 +194,9 @@ export function IntegrationsPageView({
       id: "tax-summary",
       icon: FileText,
       title: "A summary for your accountant",
-      detail:
-        "Payments collected, sales tax and expenses for the last 7, 30 or 90 days or the year to date, to print or save as a PDF. Altair does not link to accounting software, so this is how the numbers reach your books. Pick the period on Reports, then open the tax summary.",
+      detail: quickBooksSlot
+        ? "Payments collected, sales tax and expenses for the last 7, 30 or 90 days or the year to date, to print or save as a PDF. Pick the period on Reports, then open the tax summary."
+        : "Payments collected, sales tax and expenses for the last 7, 30 or 90 days or the year to date, to print or save as a PDF. Altair does not link to accounting software, so this is how the numbers reach your books. Pick the period on Reports, then open the tax summary.",
       status: { label: "Ready to use", tone: "success" },
       links: [{ label: "Open Reports", href: "/reports" }],
     });
@@ -255,6 +263,7 @@ export function IntegrationsPageView({
           description="What your company can use right now."
           card={false}
         >
+          {quickBooksSlot ? <div className="mb-3 min-w-0">{quickBooksSlot}</div> : null}
           <ConnectionList rows={today} />
         </SettingsWorkspaceSection>
 
@@ -273,7 +282,11 @@ export function IntegrationsPageView({
           description="Altair does not connect to any of these today. Tick the ones your shop would use and send them to us, so we know what owners need most."
           className="scroll-mt-24"
         >
-          <IntegrationRequestForm companyId={companyId} requestedOn={requestedOn} />
+          <IntegrationRequestForm
+            companyId={companyId}
+            requestedOn={requestedOn}
+            hiddenKeys={quickBooksSlot ? ["quickbooks_online"] : []}
+          />
           <p className="mt-4 border-t border-altair-border/60 pt-3 text-[11px] leading-5 text-altair-ink-muted">
             These names belong to their owners. Seeing one here does not mean
             Altair works with that company or is endorsed by it.

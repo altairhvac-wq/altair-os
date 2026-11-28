@@ -1528,6 +1528,140 @@ export type Database = {
         Update: Partial<{ outcome: "claimed" | "sent" | "skipped" | "failed" }>;
         Relationships: [];
       };
+      // accounting_*: migration 222 — the QuickBooks Online connection. The
+      // connection is owner/admin read; the secrets are service role only;
+      // sync records are billing-role read. All written by the service role
+      // after an application check (lib/accounting).
+      accounting_connections: {
+        Row: {
+          id: string;
+          company_id: string;
+          provider: "quickbooks_online";
+          environment: "sandbox" | "production";
+          realm_id: string;
+          external_company_name: string | null;
+          status: "setup" | "active" | "reauth_required" | "disconnected";
+          start_mode: "from_today" | "from_today_with_open" | null;
+          started_at: string | null;
+          income_account_ref: string | null;
+          income_account_name: string | null;
+          deposit_account_ref: string | null;
+          deposit_account_name: string | null;
+          tax_mode: "automated" | "manual" | "none" | null;
+          manual_tax_code_ref: string | null;
+          manual_tax_code_name: string | null;
+          custom_doc_numbers: boolean | null;
+          general_item_ref: string | null;
+          sync_lock_until: string | null;
+          last_sync_at: string | null;
+          connected_by: string | null;
+          connected_at: string;
+          disconnected_by: string | null;
+          disconnected_at: string | null;
+          previous_realm_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          provider: "quickbooks_online";
+          environment: "sandbox" | "production";
+          realm_id: string;
+          external_company_name?: string | null;
+          status?: "setup" | "active" | "reauth_required" | "disconnected";
+          start_mode?: "from_today" | "from_today_with_open" | null;
+          started_at?: string | null;
+          income_account_ref?: string | null;
+          income_account_name?: string | null;
+          deposit_account_ref?: string | null;
+          deposit_account_name?: string | null;
+          tax_mode?: "automated" | "manual" | "none" | null;
+          manual_tax_code_ref?: string | null;
+          manual_tax_code_name?: string | null;
+          custom_doc_numbers?: boolean | null;
+          general_item_ref?: string | null;
+          sync_lock_until?: string | null;
+          last_sync_at?: string | null;
+          connected_by?: string | null;
+          connected_at?: string;
+          disconnected_by?: string | null;
+          disconnected_at?: string | null;
+          previous_realm_id?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["accounting_connections"]["Insert"]>;
+        Relationships: [];
+      };
+      accounting_connection_secrets: {
+        Row: {
+          connection_id: string;
+          company_id: string;
+          access_token_ciphertext: string;
+          access_token_expires_at: string;
+          refresh_token_ciphertext: string;
+          refresh_token_expires_at: string | null;
+          refresh_lock_until: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          connection_id: string;
+          company_id: string;
+          access_token_ciphertext: string;
+          access_token_expires_at: string;
+          refresh_token_ciphertext: string;
+          refresh_token_expires_at?: string | null;
+          refresh_lock_until?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["accounting_connection_secrets"]["Insert"]>;
+        Relationships: [];
+      };
+      accounting_sync_records: {
+        Row: {
+          id: string;
+          company_id: string;
+          connection_id: string;
+          entity_type: "customer" | "item" | "invoice" | "payment";
+          local_id: string;
+          remote_id: string | null;
+          remote_sync_token: string | null;
+          state: "pending" | "sent" | "attention" | "skipped";
+          sent_fingerprint: string | null;
+          attention_code: string | null;
+          attention_detail: Json;
+          attention_at: string | null;
+          handled_at: string | null;
+          attempts: number;
+          next_attempt_at: string | null;
+          last_attempt_at: string | null;
+          last_intuit_tid: string | null;
+          sent_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          connection_id: string;
+          entity_type: "customer" | "item" | "invoice" | "payment";
+          local_id: string;
+          remote_id?: string | null;
+          remote_sync_token?: string | null;
+          state?: "pending" | "sent" | "attention" | "skipped";
+          sent_fingerprint?: string | null;
+          attention_code?: string | null;
+          attention_detail?: Json;
+          attention_at?: string | null;
+          handled_at?: string | null;
+          attempts?: number;
+          next_attempt_at?: string | null;
+          last_attempt_at?: string | null;
+          last_intuit_tid?: string | null;
+          sent_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["accounting_sync_records"]["Insert"]>;
+        Relationships: [];
+      };
       // company_business_numbers: migration 218 — one row per company with the
       // numbers the owner prices from. Owner/admin read (RLS); written by the
       // service role after an application check. Cents and percent.

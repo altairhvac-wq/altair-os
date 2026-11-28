@@ -1,5 +1,6 @@
 "use server";
 
+import { scheduleAccountingSync } from "@/lib/accounting/run";
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
@@ -72,6 +73,9 @@ export async function recordInvoicePaymentAction(
       fromStatus: previousStatus,
     });
   }
+
+  // QuickBooks Online: the payment is already queued (migration 222); send it now.
+  scheduleAccountingSync(context.company.id);
 
   revalidateInvoiceOperationalPages(invoiceId);
   revalidatePath("/payments");
