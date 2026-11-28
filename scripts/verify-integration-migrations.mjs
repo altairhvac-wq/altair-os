@@ -223,6 +223,16 @@ const PLATFORM_ONLY_TABLES = new Set([
   "directory_quote_requests",
 ]);
 
+/**
+ * ============ SECRET TABLES ============
+ * Company-scoped rows that hold encrypted keys. They carry company_id with a
+ * cascading foreign key like any tenant table, but NOBODY reads them with a
+ * session: they get the platform-only shape (RLS on, no policy, nothing
+ * granted to anon or authenticated, service_role only) instead of the tenant
+ * one. Named, not inferred.
+ */
+const SECRET_TENANT_TABLES = new Set(["accounting_connection_secrets"]);
+
 console.log("\nTenancy, RLS and grants on every new table");
 for (const file of files) {
   const sql = readSql(file);
@@ -236,7 +246,15 @@ for (const file of files) {
     const body =
       sql.split(`create table if not exists public.${table}`)[1] ?? "";
     const definition = body.slice(0, body.indexOf(");") + 2);
-    if (PLATFORM_ONLY_TABLES.has(table)) {
+    if (SECRET_TENANT_TABLES.has(table)) {
+      check(
+        `${table}: is company-scoped with a cascading FK`,
+        /company_id\s+uuid\s+not\s+null\s+references\s+public\.companies\s*\(\s*id\s*\)\s+on\s+delete\s+cascade/.test(
+          definition,
+        ),
+      );
+    }
+    if (PLATFORM_ONLY_TABLES.has(table) || SECRET_TENANT_TABLES.has(table)) {
       check(
         `${table}: enables row level security`,
         new RegExp(
