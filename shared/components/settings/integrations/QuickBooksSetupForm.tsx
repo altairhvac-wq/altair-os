@@ -27,6 +27,7 @@ export type QuickBooksSetupFormProps = {
     readonly taxCodes: readonly Option[];
     readonly suggestedIncomeAccountId: string | null;
     readonly openInvoiceCount: number;
+    readonly reconnectingSameCompany: boolean;
   };
   taxMode: "automated" | "manual" | "none";
 };
@@ -35,7 +36,7 @@ export function QuickBooksSetupForm({ options, taxMode }: QuickBooksSetupFormPro
   const router = useRouter();
   const ids = { income: useId(), deposit: useId(), tax: useId() };
   const [startMode, setStartMode] = useState<"from_today_with_open" | "from_today">(
-    options.openInvoiceCount > 0 ? "from_today_with_open" : "from_today",
+    options.openInvoiceCount > 0 && !options.reconnectingSameCompany ? "from_today_with_open" : "from_today",
   );
   const [incomeAccountId, setIncomeAccountId] = useState(options.suggestedIncomeAccountId ?? options.incomeAccounts[0]?.id ?? "");
   const [depositAccountId, setDepositAccountId] = useState(options.depositAccounts[0]?.id ?? "");
@@ -78,7 +79,7 @@ export function QuickBooksSetupForm({ options, taxMode }: QuickBooksSetupFormPro
       <fieldset className="min-w-0">
         <legend className={fieldLabelClass}>1. Where should Altair start?</legend>
         <div className="mt-1.5 space-y-2">
-          {options.openInvoiceCount > 0 ? (
+          {options.openInvoiceCount > 0 && !options.reconnectingSameCompany ? (
             <label className={`flex max-w-xl cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 ${startMode === "from_today_with_open" ? "border-altair-ink" : "border-altair-border"}`}>
               <input type="radio" name="startMode" className={`${fieldRadioClass} mt-0.5`} checked={startMode === "from_today_with_open"} onChange={() => setStartMode("from_today_with_open")} />
               <span>
@@ -94,9 +95,11 @@ export function QuickBooksSetupForm({ options, taxMode }: QuickBooksSetupFormPro
             <span>
               <span className="block text-sm font-semibold text-altair-ink">From today only</span>
               <span className="block text-xs leading-5 text-altair-ink-secondary">
-                {options.openInvoiceCount > 0
-                  ? "Use this if your bookkeeper already entered your open invoices in QuickBooks."
-                  : "You have no unpaid invoices, so this is the only choice needed."}
+                {options.reconnectingSameCompany
+                  ? "This QuickBooks company was connected before, so it already has what Altair sent then. Starting from today keeps anything from being sent twice."
+                  : options.openInvoiceCount > 0
+                    ? "Use this if your bookkeeper already entered your open invoices in QuickBooks."
+                    : "You have no unpaid invoices, so this is the only choice needed."}
               </span>
             </span>
           </label>

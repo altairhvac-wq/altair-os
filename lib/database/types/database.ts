@@ -1558,6 +1558,7 @@ export type Database = {
           connected_at: string;
           disconnected_by: string | null;
           disconnected_at: string | null;
+          previous_realm_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1586,6 +1587,7 @@ export type Database = {
           connected_at?: string;
           disconnected_by?: string | null;
           disconnected_at?: string | null;
+          previous_realm_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["accounting_connections"]["Insert"]>;
         Relationships: [];

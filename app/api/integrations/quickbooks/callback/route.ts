@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { saveQuickBooksSignIn } from "@/lib/accounting/connection";
+import { isQboError } from "@/lib/accounting/quickbooks/errors";
 import { HttpQboApi } from "@/lib/accounting/quickbooks/http-api";
 import { exchangeQuickBooksCode } from "@/lib/accounting/quickbooks/oauth";
 import { getQuickBooksConfig, isQuickBooksConfigured } from "@/lib/accounting/quickbooks/env";
@@ -56,15 +57,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return back(request, "/settings/integrations?quickbooks=failed");
   }
 
+  // Which step failed goes in the log with the error's kind and number
+  // (never Intuit's words, never a token), so a failed connect can be
+  // diagnosed without guessing.
+  let step = "exchange";
   try {
     const tokens = await exchangeQuickBooksCode(code);
     const environment = getQuickBooksConfig().environment;
+    step = "company_facts";
     const facts = await new HttpQboApi({
       realmId,
       environment,
       getAccessToken: async () => tokens.accessToken,
     }).readCompanyFacts();
 
+    step = "save";
     const connection = await saveQuickBooksSignIn({
       companyId: context.company.id,
       userId: context.user.id,
@@ -81,8 +88,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ? "/settings/integrations?quickbooks=reconnected"
         : "/settings/integrations/quickbooks",
     );
-  } catch {
-    console.error("[quickbooks-callback] connect failed", { companyId: context.company.id });
+  } catch (error) {
+    console.error("[quickbooks-callback] connect failed", {
+      companyId: context.company.id,
+      step,
+      kind: isQboError(error) ? error.kind : error instanceof Error ? error.name : "unknown",
+      code: isQboError(error) ? error.code : null,
+      intuitTid: isQboError(error) ? error.intuitTid : null,
+    });
     return back(request, "/settings/integrations?quickbooks=failed");
   }
 }

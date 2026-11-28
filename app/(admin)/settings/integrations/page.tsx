@@ -171,7 +171,9 @@ function toQuickBooksView(state: QuickBooksPanelState, timeZone: string): QuickB
       const now = new Date();
       const last = state.lastSyncAt
         ? `Last sent ${formatTimeInTimeZone(state.lastSyncAt, timeZone)}${isSameCalendarDayInTimeZone(state.lastSyncAt, now, timeZone) ? " today" : ` on ${formatDateInTimeZone(state.lastSyncAt, timeZone, { month: "short", day: "numeric" })}`}.`
-        : "Nothing sent yet.";
+        : state.sent.customer + state.sent.item + state.sent.invoice + state.sent.payment > 0
+          ? "Sending now."
+          : "Nothing sent yet.";
       const by = `Connected${state.connectedByName ? ` by ${state.connectedByName}` : ""} on ${formatDateInTimeZone(state.connectedAt, timeZone, { month: "short", day: "numeric" })}.`;
       const accounts = [
         state.incomeAccountName ? `Work counts toward ${state.incomeAccountName}.` : null,

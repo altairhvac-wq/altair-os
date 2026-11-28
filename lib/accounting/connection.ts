@@ -267,6 +267,9 @@ export async function disconnectQuickBooks(input: { companyId: string; userId: s
     .from("accounting_connections")
     .update({
       status: "disconnected",
+      // Only the id: reconnecting this same company must start from today,
+      // or its open invoices would be sent a second time.
+      previous_realm_id: connection.realm_id,
       disconnected_by: input.userId,
       disconnected_at: new Date().toISOString(),
       sync_lock_until: null,

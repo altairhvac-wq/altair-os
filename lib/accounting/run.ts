@@ -116,10 +116,24 @@ export function scheduleAccountingSync(companyId: string): void {
   if (!isQuickBooksConfigured()) return;
   try {
     after(async () => {
-      try {
-        await runAccountingSyncForCompany(companyId, { budgetMs: 25_000, maxRecords: 50 });
-      } catch {
-        // Logged inside; the daily job tries again.
+      // A big first send (setup's open invoices) takes more than one round.
+      // Keep going in rounds while there is more, inside the function's
+      // ~60 s limit; whatever is left goes with the next change or the
+      // daily job.
+      const startedAt = Date.now();
+      for (let round = 0; round < 3; round += 1) {
+        const remaining = 50_000 - (Date.now() - startedAt);
+        if (remaining < 10_000) break;
+        try {
+          const outcome = await runAccountingSyncForCompany(companyId, {
+            budgetMs: Math.min(20_000, remaining - 5_000),
+            maxRecords: 50,
+          });
+          if (!outcome.ran || outcome.result.stoppedBecause !== "deadline") break;
+        } catch {
+          // Logged inside; the daily job tries again.
+          break;
+        }
       }
     });
   } catch {

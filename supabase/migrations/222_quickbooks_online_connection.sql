@@ -98,6 +98,11 @@ create table if not exists public.accounting_connections (
   connected_at timestamptz not null default now(),
   disconnected_by uuid references public.profiles (id) on delete set null,
   disconnected_at timestamptz,
+  -- The QuickBooks company this row was last disconnected from. Disconnect
+  -- deletes what Altair sent (Intuit's terms), so reconnecting the SAME
+  -- company must start from today: sending its open invoices again would
+  -- duplicate them. Only the id is kept, never QuickBooks data.
+  previous_realm_id text,
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -120,6 +125,9 @@ create table if not exists public.accounting_connections (
       or (start_mode is not null and started_at is not null and income_account_ref is not null)
     )
 );
+
+-- For a database that ran an earlier draft of this file (scratch only).
+alter table public.accounting_connections add column if not exists previous_realm_id text;
 
 create unique index if not exists accounting_connections_company_provider_idx
   on public.accounting_connections (company_id, provider);

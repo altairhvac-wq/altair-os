@@ -100,17 +100,17 @@ export class HttpQboApi implements QboApi {
         ? `DisplayName = '${quote(by.displayName)}'`
         : null;
     if (!where) return null;
-    const rows = await this.query<{ Id: string; SyncToken: string }>(`select Id, SyncToken from Customer where ${where} maxresults 1`, "Customer");
+    const rows = await this.query<{ Id: string; SyncToken: string }>(`select * from Customer where ${where} MAXRESULTS 1`, "Customer");
     return rows[0] ? { id: rows[0].Id, syncToken: rows[0].SyncToken } : null;
   }
 
   async findItemByName(name: string): Promise<RemoteRef | null> {
-    const rows = await this.query<{ Id: string; SyncToken: string }>(`select Id, SyncToken from Item where Name = '${quote(name)}' maxresults 1`, "Item");
+    const rows = await this.query<{ Id: string; SyncToken: string }>(`select * from Item where Name = '${quote(name)}' MAXRESULTS 1`, "Item");
     return rows[0] ? { id: rows[0].Id, syncToken: rows[0].SyncToken } : null;
   }
 
   async findInvoiceByDocNumber(docNumber: string): Promise<RemoteInvoice | null> {
-    const rows = await this.query<RawInvoice>(`select * from Invoice where DocNumber = '${quote(docNumber)}' maxresults 1`, "Invoice");
+    const rows = await this.query<RawInvoice>(`select * from Invoice where DocNumber = '${quote(docNumber)}' MAXRESULTS 1`, "Invoice");
     return rows[0] ? toRemoteInvoice(rows[0]) : null;
   }
 
@@ -159,7 +159,7 @@ export class HttpQboApi implements QboApi {
   /** Company name, how it does sales tax, and whether apps may set invoice numbers. */
   async readCompanyFacts(): Promise<QboCompanyFacts> {
     const [info, prefs] = await Promise.all([
-      this.query<{ CompanyName?: string }>("select CompanyName from CompanyInfo", "CompanyInfo"),
+      this.query<{ CompanyName?: string }>("select * from CompanyInfo", "CompanyInfo"),
       this.query<RawPreferences>("select * from Preferences", "Preferences"),
     ]);
     const pref = prefs[0] ?? {};
@@ -180,14 +180,14 @@ export class HttpQboApi implements QboApi {
 
   async listAccounts(): Promise<QboAccount[]> {
     const rows = await this.query<{ Id: string; Name: string; AccountType: string; AccountSubType?: string }>(
-      "select Id, Name, AccountType, AccountSubType from Account where Active = true maxresults 1000",
+      "select * from Account where Active = true MAXRESULTS 1000",
       "Account",
     );
     return rows.map((row) => ({ id: row.Id, name: row.Name, type: row.AccountType, subType: row.AccountSubType ?? "" }));
   }
 
   async listTaxCodes(): Promise<QboTaxCode[]> {
-    const rows = await this.query<{ Id: string; Name: string }>("select Id, Name from TaxCode where Active = true maxresults 1000", "TaxCode");
+    const rows = await this.query<{ Id: string; Name: string }>("select * from TaxCode where Active = true MAXRESULTS 1000", "TaxCode");
     return rows.map((row) => ({ id: row.Id, name: row.Name }));
   }
 

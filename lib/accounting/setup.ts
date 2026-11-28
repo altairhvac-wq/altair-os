@@ -24,7 +24,17 @@ export type QuickBooksSetupOptions = {
   readonly taxCodes: readonly SetupAccountOption[];
   readonly suggestedIncomeAccountId: string | null;
   readonly openInvoiceCount: number;
+  /**
+   * This QuickBooks company was connected before and disconnected. What
+   * Altair sent then is in QuickBooks but Altair no longer knows which
+   * records they were, so it starts from today only.
+   */
+  readonly reconnectingSameCompany: boolean;
 };
+
+export function isReconnectingSameCompany(connection: Pick<AccountingConnectionRow, "previous_realm_id" | "realm_id">): boolean {
+  return connection.previous_realm_id !== null && connection.previous_realm_id === connection.realm_id;
+}
 
 export const UNDEPOSITED_FUNDS_OPTION: SetupAccountOption = { id: "", name: "Undeposited Funds (recommended)" };
 
@@ -83,6 +93,7 @@ export async function loadQuickBooksSetupOptions(connection: AccountingConnectio
       .sort((a, b) => a.name.localeCompare(b.name)),
     suggestedIncomeAccountId: suggestIncome(income),
     openInvoiceCount,
+    reconnectingSameCompany: isReconnectingSameCompany(connection),
   };
 }
 
@@ -100,6 +111,9 @@ export async function completeQuickBooksSetup(
 ): Promise<{ error?: string; queued?: number }> {
   if (input.startMode !== "from_today" && input.startMode !== "from_today_with_open") {
     return { error: "Choose where Altair should start." };
+  }
+  if (input.startMode === "from_today_with_open" && isReconnectingSameCompany(connection)) {
+    return { error: "This QuickBooks company already has the invoices Altair sent before. Choose From today only." };
   }
   const options = await loadQuickBooksSetupOptions(connection);
   const income = options.incomeAccounts.find((option) => option.id === input.incomeAccountId);
