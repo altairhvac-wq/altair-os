@@ -201,6 +201,12 @@ export interface SyncStore {
     },
   ): Promise<void>;
   markSkipped(recordId: string): Promise<void>;
+  /**
+   * Forget a record that never reached QuickBooks and has nothing to send
+   * now (an invoice back in draft, a record deleted in Altair). The trigger
+   * queues it again if it changes later.
+   */
+  clear(recordId: string): Promise<void>;
   /** Try again later; the attempt is counted. */
   scheduleRetry(recordId: string, at: Date, intuitTid: string | null): Promise<void>;
 
@@ -236,6 +242,8 @@ export interface QboApi {
   findItemByName(name: string): Promise<RemoteRef | null>;
   findInvoiceByDocNumber(docNumber: string): Promise<RemoteInvoice | null>;
   readInvoice(id: string): Promise<RemoteInvoice | null>;
+  /** The current SyncToken of any record, after QuickBooks refused a stale one. */
+  readSyncToken(entity: QboEntityName, id: string): Promise<string | null>;
   create(entity: QboEntityName, body: Record<string, unknown>, requestId: string): Promise<QboWriteResult>;
   /** Sparse update; body carries Id and SyncToken. */
   update(entity: QboEntityName, body: Record<string, unknown>, requestId: string): Promise<QboWriteResult>;

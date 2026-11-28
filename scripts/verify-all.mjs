@@ -197,6 +197,9 @@ steps.push(
   // The how-to library: every quoted button label is still on its screen,
   // every "take me there" link is a real page. Executes the shipped catalog.
   { name: "help-notes", script: "scripts/verify-help-notes.mjs", typescript: true },
+  // QuickBooks Online: the real sync engine against a practice QuickBooks that
+  // enforces unique names, SyncTokens, its own sales tax and idempotency keys.
+  { name: "quickbooks", script: "scripts/verify-quickbooks.mjs", typescript: true },
 );
 
 const results = [];
