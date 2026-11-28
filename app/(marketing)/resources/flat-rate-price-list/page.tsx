@@ -14,10 +14,12 @@ import {
   ToolStage,
   type FaqItem,
 } from "@/shared/components/resources/tools/ToolGuide";
+import { SavedNumbersNote } from "@/shared/components/resources/SavedNumbersNote";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
 import { RESOURCES_FLAT_RATE_PATH, RESOURCES_PATH, calculatorPath } from "@/shared/lib/resources/catalog";
 import { FLAT_RATE_SAMPLE_AFTER_HOURS, FLAT_RATE_SAMPLE_RATE, FLAT_RATE_SAMPLE_TASKS, markupToMargin, priceListLine } from "@/shared/lib/resources/flat-rate-list";
+import { FLAT_RATE_SAVED_NUMBERS_NOTE } from "@/shared/lib/resources/saved-numbers";
 import { LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
 import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
 import { buildPublicSocialMetadata, PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
@@ -150,6 +152,7 @@ export default function FlatRatePriceListPage() {
 
       <ToolStage>
         <FlatRatePriceList />
+        <SavedNumbersNote className="mx-auto mt-8 max-w-4xl" text={FLAT_RATE_SAVED_NUMBERS_NOTE} href="/hvac-estimating-software" linkText="HVAC estimating software" />
         <NextStep
           className="mx-auto mt-10 max-w-6xl print:hidden"
           placement="flat-rate-price-list"
