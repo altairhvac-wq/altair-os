@@ -122,6 +122,20 @@ export function calculateLineItemTotal(
   quantity: number,
   unitPrice: number,
 ): number {
+  // A quantity and a price are each kept to two decimals, so they multiply
+  // exactly as whole hundredths: 0.5 x $64.35 is 3,217.5 cents, which is
+  // $32.18. Multiplied as they are, the same product is 32.17499... in
+  // floating point and comes out a cent short. Whole quantities never hit
+  // this; part-hours of labor do. The database multiplies exactly too, so
+  // this keeps the screen and the saved total the same.
+  const hundredths = Math.round(quantity * 100);
+  const cents = Math.round(unitPrice * 100);
+  if (
+    Math.abs(quantity * 100 - hundredths) < 1e-6 &&
+    Math.abs(unitPrice * 100 - cents) < 1e-6
+  ) {
+    return Math.round((hundredths * cents) / 100) / 100;
+  }
   return roundCurrency(quantity * unitPrice);
 }
 

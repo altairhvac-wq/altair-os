@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { updateBusinessNumbersAction } from "@/app/actions/business-numbers";
+import type { RatePricedItem } from "@/lib/database/queries/business-setup";
+import { PRICE_BOOK_REPRICE_ID, PriceBookRepriceCard } from "@/shared/components/settings/business-numbers/PriceBookRepriceCard";
 import { NumberBox, ReadingLine } from "@/shared/components/business-numbers/fields";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsWorkspacePage, SettingsWorkspaceSection } from "@/shared/components/settings/SettingsWorkspacePage";
@@ -49,6 +51,8 @@ type BusinessNumbersViewProps = {
   readonly loadError?: string | null;
   /** True when the guided setup can run here; the page then links to it. */
   readonly guidedSetup?: boolean;
+  /** Price book jobs priced from the labor rate that no longer match it. */
+  readonly initialOutOfDate?: readonly RatePricedItem[];
 };
 
 const SAVE_FAILED_MESSAGE = "The numbers could not be saved. Check your connection and try again. Nothing you typed was lost.";
@@ -77,7 +81,9 @@ function sameNumber(typed: string, saved: string): boolean {
   return a !== "invalid" && b !== "invalid" && a === b;
 }
 
-export function BusinessNumbersView({ companyId, initialNumbers, loadError, guidedSetup = false }: BusinessNumbersViewProps) {
+export function BusinessNumbersView({ companyId, initialNumbers, loadError, guidedSetup = false, initialOutOfDate = [] }: BusinessNumbersViewProps) {
+  const [outOfDate, setOutOfDate] = useState<readonly RatePricedItem[]>(initialOutOfDate);
+  const [repriced, setRepriced] = useState<number | null>(null);
   const [saved, setSaved] = useState<BusinessNumbers>(initialNumbers);
   const [text, setText] = useState<FieldText>(() => toFieldText(initialNumbers));
   const [credited, setCredited] = useState(initialNumbers.serviceCallCredited);
@@ -87,6 +93,22 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError, guid
   const formId = useId();
   const feedbackId = useId();
   const formRef = useRef<HTMLFormElement>(null);
+  const repricedRef = useRef<HTMLDivElement>(null);
+
+  // When a save makes the list appear, bring it on screen: it is the next
+  // thing the owner has to decide. When the prices have been updated the
+  // card is gone, so focus moves to the line that says so.
+  const listed = outOfDate.length;
+  const previouslyListed = useRef(listed);
+  useEffect(() => {
+    const before = previouslyListed.current;
+    previouslyListed.current = listed;
+    if (listed > 0 && before === 0) {
+      document.getElementById(PRICE_BOOK_REPRICE_ID)?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    } else if (listed === 0 && before > 0) {
+      repricedRef.current?.focus();
+    }
+  }, [listed]);
 
   const numbers = useMemo(() => toNumbers(text, credited), [text, credited]);
   const derived = useMemo(() => deriveBusinessNumbers(numbers), [numbers]);
@@ -154,6 +176,10 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError, guid
       setText(toFieldText(result.numbers));
       setCredited(result.numbers.serviceCallCredited);
       setBadField(null);
+      if (result.outOfDate) {
+        setOutOfDate(result.outOfDate);
+        setRepriced(null);
+      }
       setFeedback(result.notice ? { tone: "warning", message: result.notice } : { tone: "success", message: "Saved." });
     });
   }
@@ -186,6 +212,19 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError, guid
           </Link>
           . It works these numbers out with you and builds a priced price book.
         </p>
+      ) : null}
+
+      {/* The list itself sits under the Save button, where the owner is when a
+       * save makes it appear. Someone arriving with a list already waiting
+       * is told at the top and taken to it. */}
+      {outOfDate.length > 0 ? (
+        <SettingsAlertBanner tone="warning">
+          {outOfDate.length === 1 ? "1 item in your price book no longer matches" : `${outOfDate.length} items in your price book no longer match`} your numbers.{" "}
+          <a href={`#${PRICE_BOOK_REPRICE_ID}`} className="font-semibold underline underline-offset-2">
+            See the old and new prices
+          </a>
+          .
+        </SettingsAlertBanner>
       ) : null}
 
       <form id={formId} ref={formRef} onSubmit={save} noValidate className="flex flex-col gap-4">
@@ -271,6 +310,22 @@ export function BusinessNumbersView({ companyId, initialNumbers, loadError, guid
           </div>
         </div>
       </form>
+
+      <PriceBookRepriceCard
+        companyId={companyId}
+        items={outOfDate}
+        onUpdated={(remaining, updated) => {
+          setOutOfDate(remaining);
+          setRepriced(updated > 0 ? updated : null);
+        }}
+      />
+      {repriced !== null && outOfDate.length === 0 ? (
+        <div ref={repricedRef} tabIndex={-1} className="outline-none">
+          <SettingsAlertBanner tone="success">
+            {repriced === 1 ? "1 price book price was updated." : `${repriced} price book prices were updated.`} Estimates and invoices you had already written kept theirs.
+          </SettingsAlertBanner>
+        </div>
+      ) : null}
 
       {/* On a phone the page is several screens long and the save button is at
        * the end of it. While something is unsaved, a bar pinned above the tab

@@ -23,7 +23,7 @@ import { altairMcCardClass, altairMcCardPadClass } from "@/shared/design-system/
 import { altairCanvasInkClass, altairCanvasInkMutedClass } from "@/shared/design-system/foundation";
 import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
 import { formatCount, formatDollars, formatDollarsShort } from "@/shared/lib/business-numbers/format";
-import { SERVICE_CALL_SETUP_KEY, type StarterTask } from "@/shared/lib/business-numbers/starter-price-list";
+import { NUMBER_ITEM_KEYS, type StarterTask } from "@/shared/lib/business-numbers/starter-price-list";
 import { BUSINESS_SETUP_STEPS, nextBusinessSetupStep, type BusinessSetupStepId } from "@/shared/types/business-numbers";
 
 /**
@@ -52,7 +52,7 @@ const STEP_META: Record<BusinessSetupStepId, StepMeta> = {
   rate: { title: "Your labor rate", text: "What to charge for an hour of work, from what an hour really costs you. Or type the rate you already use.", minutes: 3 },
   "service-call": { title: "Your service call fee", text: "The fee for coming out, checked against what the visit costs you.", minutes: 1 },
   "price-list": { title: "Your price list", text: "Common jobs priced at your rate. Keep the ones you do; they become your price book.", minutes: 3 },
-  target: { title: "Your monthly target", text: "How many jobs cover the month.", minutes: 1 },
+  target: { title: "Your monthly target", text: "How many jobs cover the month. Your dashboard counts against it from then on.", minutes: 1 },
 };
 
 type GuidedSetupProps = {
@@ -109,7 +109,7 @@ export function GuidedSetup({ companyId, firstName, initialRecord, initialView, 
   const visited = BUSINESS_SETUP_STEPS.filter((step) => setup.steps[step]).length;
   const nextStep = nextBusinessSetupStep(setup);
   // What the price book really holds from the setup: jobs that are live in it.
-  const priceListCount = items.filter((item) => item.key !== SERVICE_CALL_SETUP_KEY && item.active).length;
+  const priceListCount = items.filter((item) => !NUMBER_ITEM_KEYS.has(item.key) && item.active).length;
   const firstRender = useRef(true);
 
   // The address bar follows the screen, so a reload, or coming back on
@@ -292,7 +292,7 @@ export function GuidedSetup({ companyId, firstName, initialRecord, initialView, 
           <Link href="/settings/business-numbers" className="font-semibold underline underline-offset-2">
             Settings, Numbers
           </Link>
-          . A new service call fee reaches your price book by itself. A new labor rate does not re-price your list by itself yet: open your price list here again and save it.
+          . A new fee or labor rate reaches your price book&apos;s Service call and Labor items by itself. The jobs on your price list are shown to you first, old price beside new, and change when you say so.
         </p>
 
         <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

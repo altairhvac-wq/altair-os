@@ -1,3 +1,4 @@
+import type { JobProfitAfterLabor } from "@/shared/lib/business-numbers/job-profit";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Expense, ExpenseCategory, ExpenseStatus } from "@/shared/types/expense";
 import {
@@ -110,6 +111,13 @@ export type JobProfitabilitySnapshot = {
   completeness: JobProfitabilityCompleteness;
   /** Active invoices included in revenue totals. */
   activeInvoiceCount: number;
+  /**
+   * Profit after labor and shop costs, from the company's business numbers
+   * (shared/lib/business-numbers/job-profit.ts). Set only for an owner or
+   * admin, and only where business numbers exist; everyone else gets the
+   * snapshot exactly as it has always been.
+   */
+  afterLabor?: JobProfitAfterLabor;
 };
 
 function isFiniteAmount(value: number | undefined | null): value is number {

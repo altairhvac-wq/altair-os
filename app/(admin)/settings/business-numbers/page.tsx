@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getActiveCompanyBusinessNumbers } from "@/lib/database/queries/business-numbers";
-import { getGuidedSetupAvailability } from "@/lib/database/queries/business-setup";
+import { getGuidedSetupAvailability, listOutOfDateRateItems } from "@/lib/database/queries/business-setup";
 import { BusinessNumbersView } from "@/shared/components/settings/business-numbers/BusinessNumbersView";
 
 /**
@@ -29,5 +29,17 @@ export default async function BusinessNumbersSettingsPage() {
     notFound();
   }
 
-  return <BusinessNumbersView companyId={context.company.id} initialNumbers={load.record.numbers} loadError={load.error} guidedSetup={guidedSetup} />;
+  // Price book jobs priced from the labor rate that no longer match it. Empty
+  // for a company with no such jobs, and in a database without migration 219.
+  const outOfDate = guidedSetup ? await listOutOfDateRateItems(context, load.record.numbers) : [];
+
+  return (
+    <BusinessNumbersView
+      companyId={context.company.id}
+      initialNumbers={load.record.numbers}
+      initialOutOfDate={outOfDate}
+      loadError={load.error}
+      guidedSetup={guidedSetup}
+    />
+  );
 }

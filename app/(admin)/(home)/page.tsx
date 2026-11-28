@@ -15,7 +15,10 @@ import {
 } from "@/lib/onboarding/live-onboarding";
 import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 import { BillingGraceBanner } from "@/shared/components/billing/BillingGraceBanner";
+import { MonthlyTargetCard } from "@/shared/components/business-setup/MonthlyTargetCard";
 import { SetupProgressCard } from "@/shared/components/business-setup/SetupProgressCard";
+import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
+import { computeMonthlyTargetProgress } from "@/shared/lib/business-numbers/job-profit";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { BUSINESS_SETUP_STEPS, nextBusinessSetupStep, type BusinessSetupStepId } from "@/shared/types/business-numbers";
@@ -42,20 +45,28 @@ async function loadSetupCard(companyContext: NonNullable<Awaited<ReturnType<type
     return null;
   }
   // One read settles nearly every company: no table yet, or a setup that is
-  // finished or was put off. Only one that might be shown the card pays for
-  // the check that the price book can take the setup's items.
+  // finished or was put off. Only one that might be shown the setup card pays
+  // for the check that the price book can take the setup's items. The same
+  // read gives the monthly target, so the dashboard asks once for both.
   const { record, available } = await getCompanyBusinessNumbers(companyContext);
-  if (!available || record.setup.completedAt || record.setup.dismissedAt) {
+  if (!available) {
     return null;
   }
+  const target = { breakEvenJobs: deriveBusinessNumbers(record.numbers).breakEvenJobs, monthlyOverhead: record.numbers.monthlyOverhead };
+  if (record.setup.completedAt || record.setup.dismissedAt) {
+    return { setup: null, target };
+  }
   if (!(await getGuidedSetupAvailability())) {
-    return null;
+    return { setup: null, target };
   }
   const next = nextBusinessSetupStep(record.setup);
   return {
-    started: BUSINESS_SETUP_STEPS.some((step) => record.setup.steps[step]),
-    done: BUSINESS_SETUP_STEPS.filter((step) => record.setup.steps[step] === "done").length,
-    nextStepName: next ? SETUP_STEP_NAMES[next] : null,
+    setup: {
+      started: BUSINESS_SETUP_STEPS.some((step) => record.setup.steps[step]),
+      done: BUSINESS_SETUP_STEPS.filter((step) => record.setup.steps[step] === "done").length,
+      nextStepName: next ? SETUP_STEP_NAMES[next] : null,
+    },
+    target,
   };
 }
 
@@ -99,6 +110,21 @@ export default async function DashboardPage() {
     ? getLiveOnboardingInfo()
     : null;
 
+  // This month's finished jobs against the number that covers the shop's
+  // costs. The count is the performance chart's own figure for the current
+  // month (the last month of its window), so the two always agree.
+  const currentMonth = extras.performance?.months.at(-1) ?? null;
+  const monthlyTarget =
+    setupCard && currentMonth
+      ? computeMonthlyTargetProgress(currentMonth.jobsCompleted, setupCard.target.breakEvenJobs)
+      : null;
+
+  // "November", from the month's key ("2026-11"). The chart's own label is the
+  // three-letter one; a card that speaks in sentences wants the whole word.
+  const currentMonthName = currentMonth
+    ? new Date(`${currentMonth.key}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })
+    : "This month";
+
   const userDisplayName =
     companyContext.profile.full_name ??
     companyContext.user.email ??
@@ -112,12 +138,20 @@ export default async function DashboardPage() {
         timeZone={companyContext.company.timezone}
         className="mx-4 mt-4 md:mx-6 md:mt-6"
       />
-      {setupCard ? (
+      {setupCard?.setup ? (
         <SetupProgressCard
           companyId={companyId}
-          started={setupCard.started}
-          done={setupCard.done}
-          nextStepName={setupCard.nextStepName}
+          started={setupCard.setup.started}
+          done={setupCard.setup.done}
+          nextStepName={setupCard.setup.nextStepName}
+          className="mx-4 mt-4 md:mx-6 md:mt-6"
+        />
+      ) : null}
+      {monthlyTarget ? (
+        <MonthlyTargetCard
+          progress={monthlyTarget}
+          monthName={currentMonthName}
+          monthlyOverhead={setupCard?.target.monthlyOverhead ?? null}
           className="mx-4 mt-4 md:mx-6 md:mt-6"
         />
       ) : null}
