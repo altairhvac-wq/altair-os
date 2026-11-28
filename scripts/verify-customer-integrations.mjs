@@ -88,7 +88,8 @@ check(
 const allCopy = PLANNED_INTEGRATIONS.map((item) => `${item.label} ${item.wouldDo}`).join(" ");
 check("no partnership, certification or date is implied", !/\b(partner|certified|official|coming soon|soon|next month|Q[1-4]|202\d)\b/i.test(allCopy));
 check('never "Altair OS", never "free"', !/Altair OS\b/.test(allCopy) && !/\bfree\b/i.test(allCopy));
-check("accounting comes first, QuickBooks Online first of all", PLANNED_INTEGRATION_GROUPS[0].id === "accounting" && PLANNED_INTEGRATIONS[0].key === "quickbooks_online");
+check("accounting comes first, QuickBooks Desktop first of all", PLANNED_INTEGRATION_GROUPS[0].id === "accounting" && PLANNED_INTEGRATIONS[0].key === "quickbooks_desktop");
+check("QuickBooks Online shipped, so it is not listed as not available", !PLANNED_INTEGRATIONS.some((item) => item.key === "quickbooks_online"));
 
 /* ------------------------------------------------------------------ */
 console.log("\nA request is written and read back");
@@ -116,27 +117,27 @@ for (const item of PLANNED_INTEGRATIONS) {
 console.log("\nWhat the browser sends is not trusted");
 {
   const cleaned = normalizeIntegrationRequest({
-    keys: ["xero", "not_a_real_one", "xero", 7, null, "quickbooks_online"],
+    keys: ["xero", "not_a_real_one", "xero", 7, null, "quickbooks_desktop"],
     note: `  line one\n\nAsked for: Zapier   ${"x".repeat(900)}`,
   });
-  check("unknown and repeated keys are dropped, order is the catalog's", JSON.stringify(cleaned.keys) === JSON.stringify(["quickbooks_online", "xero"]), cleaned.keys);
+  check("unknown and repeated keys are dropped, order is the catalog's", JSON.stringify(cleaned.keys) === JSON.stringify(["quickbooks_desktop", "xero"]), cleaned.keys);
   check("the note is flattened to one line and cut to the limit", !/\n/.test(cleaned.note) && cleaned.note.length === INTEGRATION_REQUEST_NOTE_MAX_LENGTH && cleaned.note.startsWith("line one Asked for: Zapier"));
-  const junk = normalizeIntegrationRequest({ keys: "quickbooks_online", note: { a: 1 } });
+  const junk = normalizeIntegrationRequest({ keys: "quickbooks_desktop", note: { a: 1 } });
   check("a non-list and a non-text note become nothing", junk.keys.length === 0 && junk.note === "");
   const stored = buildIntegrationRequestMessage(cleaned);
-  check("a line break smuggled in a note still cannot add a name", JSON.stringify(parseIntegrationRequestMessage(stored)) === JSON.stringify(["quickbooks_online", "xero"]));
+  check("a line break smuggled in a note still cannot add a name", JSON.stringify(parseIntegrationRequestMessage(stored)) === JSON.stringify(["quickbooks_desktop", "xero"]));
 }
 
 console.log("\nWhat a company has asked for");
 {
   const now = "2026-11-27T18:00:00.000Z";
   const rows = [
-    { message: buildIntegrationRequestMessage({ keys: ["quickbooks_online"], note: "" }), createdAt: "2026-11-27T17:00:00.000Z" },
-    { message: buildIntegrationRequestMessage({ keys: ["quickbooks_online", "zapier"], note: "" }), createdAt: "2026-11-20T10:00:00.000Z" },
+    { message: buildIntegrationRequestMessage({ keys: ["quickbooks_desktop"], note: "" }), createdAt: "2026-11-27T17:00:00.000Z" },
+    { message: buildIntegrationRequestMessage({ keys: ["quickbooks_desktop", "zapier"], note: "" }), createdAt: "2026-11-20T10:00:00.000Z" },
     { message: buildIntegrationRequestMessage({ keys: [], note: "payroll please" }), createdAt: "2026-11-27T01:00:00.000Z" },
   ];
   const summary = summarizeIntegrationRequests(rows, now);
-  check("the earliest request for a key keeps its date", summary.requestedAt.quickbooks_online === "2026-11-20T10:00:00.000Z" && summary.requestedAt.zapier === "2026-11-20T10:00:00.000Z");
+  check("the earliest request for a key keeps its date", summary.requestedAt.quickbooks_desktop === "2026-11-20T10:00:00.000Z" && summary.requestedAt.zapier === "2026-11-20T10:00:00.000Z");
   check("only the last 24 hours count towards the daily limit", summary.sentInLastDay === 2, summary.sentInLastDay);
   check("no rows means nothing asked for", Object.keys(summarizeIntegrationRequests([], now).requestedAt).length === 0);
 }
@@ -264,17 +265,20 @@ check("the marketing block still shows env-var NAMES only to whoever the page le
 
 console.log("\nThe public site says the same thing");
 const notYet = read(FILES.notYet);
-check('the public "not yet" list still lists accounting sync', /title: "QuickBooks or other accounting sync"/.test(notYet));
+check('the public "not yet" list still lists the accounting sync that does not exist', /title: "QuickBooks Desktop, Xero or other accounting sync"/.test(notYet));
 {
   const claims = readdirSync("shared/lib/site")
     .filter((file) => file.endsWith(".ts"))
     .filter((file) =>
-      /\bAltair (now )?(syncs|connects|integrates|links|works) (directly )?(with|to) (QuickBooks|Zapier|Xero|Google Calendar|Gusto|ADP)/i.test(
+      /\bAltair (now )?(syncs|connects|integrates|links|works) (directly )?(with|to) (QuickBooks(?! Online)|Zapier|Xero|Google Calendar|Gusto|ADP)/i.test(
         read(`shared/lib/site/${file}`),
       ),
     );
-  check("no file under shared/lib/site says Altair connects to QuickBooks, Zapier, Xero, a calendar or payroll", claims.length === 0, claims);
-  check('the public FAQ still answers the QuickBooks question with "Not yet"', /question: "Does it work with QuickBooks\?",\s*answer:\s*"Not yet\./.test(read("shared/lib/site/faq.ts")));
+  check("no file under shared/lib/site says Altair connects to QuickBooks Desktop, Zapier, Xero, a calendar or payroll", claims.length === 0, claims);
+  {
+    const faq = read("shared/lib/site/faq.ts");
+    check('the public FAQ says "Yes, with QuickBooks Online" and that Desktop is not supported', /question: "Does it work with QuickBooks\?",\s*answer:\s*"Yes, with QuickBooks Online/.test(faq) && /QuickBooks Desktop is not supported yet/.test(faq));
+  }
 }
 
 console.log(`\n${passed}/${passed + failed} checks passed`);

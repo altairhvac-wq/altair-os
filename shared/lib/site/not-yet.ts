@@ -23,8 +23,8 @@ export type NotYetItem = {
 
 export const ALTAIR_NOT_YET: readonly NotYetItem[] = [
   {
-    title: "QuickBooks or other accounting sync",
-    today: "Invoices, payments and expenses are recorded in Altair. Customers, products and open invoices exported from QuickBooks can be imported.",
+    title: "QuickBooks Desktop, Xero or other accounting sync",
+    today: "QuickBooks Online is connected from Settings. For other accounting apps, the tax summary in Reports carries the numbers to your books.",
   },
   {
     title: "A built-in phone system",
