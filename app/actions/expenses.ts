@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { canManageExpenseReceipt } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import type { DbClient } from "@/lib/database/db-client";
 import {
   attachReceiptToExpense,
   createExpense,
@@ -23,6 +24,7 @@ import {
   recordExpenseSubmittedActivity,
 } from "@/lib/database/services/expense-activity";
 import { buildExpenseReceiptStoragePath } from "@/lib/storage/company-files";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { Expense, ExpenseFormData, ExpenseStatus } from "@/shared/types/expense";
 import {
   EXPENSE_RECEIPT_ALLOWED_MIME_TYPES,
@@ -245,6 +247,31 @@ export async function createExpenseAction(input: {
 
   const expenseId = input.expenseId ?? crypto.randomUUID();
 
+  // Who draws the expense number.
+  //
+  // The number allocator (migration 149) lets billing and dispatch roles draw
+  // one as themselves. Anyone else who reaches this line is an assigned
+  // technician: the checks above let them through only for an open job that is
+  // assigned to them, and refuse them outright with no job. The allocator has
+  // no rule for that caller — it expects the request through the service role
+  // once the application has authorized it, which is what just happened.
+  //
+  // Only the number is drawn this way. The receipt row is still inserted with
+  // the technician's own session, so RLS (migration 103) remains the boundary,
+  // and the company ID comes from the server-side context, never from input.
+  let numberAllocationDb: DbClient | undefined;
+
+  if (!context.permissions.manageBilling && !context.permissions.dispatchJobs) {
+    try {
+      numberAllocationDb = createServiceRoleClient();
+    } catch {
+      console.error("[createExpenseAction] service-role client unavailable", {
+        companyId: context.company.id,
+      });
+      return { error: "Could not assign an expense number. Please try again." };
+    }
+  }
+
   const { expense, error } = await createExpense(
     context.company.id,
     context.user.id,
@@ -257,6 +284,7 @@ export async function createExpenseAction(input: {
       customerId: jobContext.customerId ?? null,
       receiptFileName: input.receiptFileName,
       receiptStoragePath: input.receiptStoragePath,
+      numberAllocationDb,
     },
   );
 
