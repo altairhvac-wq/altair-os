@@ -1,4 +1,5 @@
 import { AltairFeatureNote } from "@/shared/components/resources/AltairFeatureNote";
+import { SavedNumbersNote } from "@/shared/components/resources/SavedNumbersNote";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import { NextStep } from "@/shared/components/site/NextStep";
 import {
@@ -24,6 +25,7 @@ import {
   type ResourceCalculatorEntry,
 } from "@/shared/lib/resources/catalog";
 import type { AltairFeatureKey } from "@/shared/lib/resources/feature-links";
+import { SAVED_NUMBERS_LINKS, SAVED_NUMBERS_NOTES } from "@/shared/lib/resources/saved-numbers";
 import { buildResourceWebPageStructuredData } from "@/shared/lib/resources/structured-data";
 import { HUB_TOOLS } from "@/shared/lib/resources/tool-hub";
 import { CALCULATOR_SOFTWARE, SOFTWARE_PAGES } from "@/shared/lib/site/internal-links";
@@ -96,6 +98,9 @@ export function CalculatorFrame({
   const url = `${PUBLIC_SITE_ORIGIN}${path}`;
   const others = RESOURCE_CALCULATORS.filter((calculator) => calculator.slug !== slug);
   const software = CALCULATOR_SOFTWARE[slug].map((softwarePath) => SOFTWARE_PAGES[softwarePath]);
+  // What the product does with this page's number, for the calculators it has a home for.
+  const savedNumbers = SAVED_NUMBERS_NOTES[slug];
+  const savedNumbersPage = SOFTWARE_PAGES[(SAVED_NUMBERS_LINKS[slug] ?? CALCULATOR_SOFTWARE[slug][0]) as keyof typeof SOFTWARE_PAGES] ?? software[0];
 
   const nav: GuideNavItem[] = [
     { id: "how-to-use", label: "How to use it" },
@@ -162,6 +167,7 @@ export function CalculatorFrame({
         <p className="mx-auto mt-3 max-w-4xl px-2 text-center text-xs leading-relaxed text-stone-500 print:mt-6 print:text-left">
           {CALCULATOR_DISCLAIMER} Values marked &ldquo;sample&rdquo; are placeholders, not industry data.
         </p>
+        {savedNumbers ? <SavedNumbersNote className="mx-auto mt-8 max-w-4xl" text={savedNumbers} href={savedNumbersPage.href} linkText={savedNumbersPage.label} /> : null}
         <NextStep
           className="mx-auto mt-10 max-w-6xl print:hidden"
           placement={`calc-${slug}`}

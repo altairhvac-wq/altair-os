@@ -499,6 +499,41 @@ const features = await loadPureModule(FILES.features, "res-feat");
   check("every template feature key has a note", tplKeys.every((k) => k in features.ALTAIR_FEATURE_LINKS));
 }
 
+// ------------------------------------------------- "Keep these numbers"
+console.log("\nKeep these numbers: every note is something the product does");
+{
+  const saved = await loadPureModule(`${LIB}/saved-numbers.ts`, "res-saved");
+  const slugs = (await loadPureModule(FILES.catalog, "res-cat-saved")).RESOURCE_CALCULATORS.map((calculator) => calculator.slug);
+  const notes = { ...saved.SAVED_NUMBERS_NOTES, "flat-rate": saved.FLAT_RATE_SAVED_NUMBERS_NOTE };
+  check("every note belongs to a real calculator", Object.keys(saved.SAVED_NUMBERS_NOTES).every((slug) => slugs.includes(slug)), Object.keys(saved.SAVED_NUMBERS_NOTES));
+  for (const [slug, note] of Object.entries(notes)) {
+    check(`${slug}: uses the product's full name, once, and never "Altair OS"`, (note.match(/Altair Operating System/g) ?? []).length === 1 && !/Altair OS\b/.test(note), note);
+    check(`${slug}: no outcome claim, no price, nothing called free`, !/\b(increase|boost|guarantee|grow|double|more profit|free|\d+%)\b/i.test(note) && !/\$/.test(note), note);
+    check(`${slug}: short enough to read in one breath (under 320 characters)`, note.length < 320, note.length);
+  }
+  // Each note is held to the code that makes it true. If the feature goes, the check fails and the note has to go too.
+  const src = (path) => (existsSync(path) ? read(path) : "");
+  const starter = src("shared/lib/business-numbers/starter-price-list.ts");
+  const setupQueries = src("lib/database/queries/business-setup.ts");
+  const home = src("app/(admin)/(home)/page.tsx");
+  const jobSection = src("shared/components/jobs/JobProfitabilitySection.tsx");
+  const planning = src("shared/lib/business-numbers/planning.ts");
+  const planningView = src("shared/components/settings/business-numbers/PlanningView.tsx");
+  check("labor-rate: the product has a labor price book item, prices the list from the rate, and lists old beside new", /LABOR_SETUP_KEY = "labor_hour"/.test(starter) && /export async function listOutOfDateRateItems/.test(setupQueries) && /export async function repriceRateItems/.test(setupQueries));
+  check("service-call-fee: the product keeps a Service call item that follows the fee", /SERVICE_CALL_SETUP_KEY = "service_call"/.test(starter) && /export async function saveServiceCallItem/.test(setupQueries));
+  check("break-even: the dashboard counts the month's jobs against the target", /<MonthlyTargetCard/.test(home) && /computeMonthlyTargetProgress\(/.test(home));
+  check("job-profitability: a job shows its profit after labor and shop costs under gross profit", /After labor and shop costs \(an estimate\)/.test(jobSection));
+  check("hiring, pay and truck: the three plans exist in the product and start from the saved numbers", /export function hirePlanStart/.test(planning) && /export function payPlanStart/.test(planning) && /export function truckPlanStart/.test(planning));
+  check("truck-cost: the truck's monthly cost goes into the hire in one press", /Use it for this hire/.test(planningView));
+  check("flat-rate: the guided setup builds a priced starter list into the price book", /export function priceStarterLine/.test(starter) && /export async function saveSetupPriceList/.test(setupQueries));
+  const frame = read("shared/components/resources/CalculatorFrame.tsx");
+  check("the note sits under the calculator, above the next steps, and only where there is one", frame.indexOf("<SavedNumbersNote") > frame.indexOf("{CALCULATOR_DISCLAIMER} Values marked") && frame.indexOf("<SavedNumbersNote") < frame.indexOf("<NextStep") && /\{savedNumbers \? <SavedNumbersNote/.test(frame));
+  check("the price list builder carries its note too", /<SavedNumbersNote[^>]*text=\{FLAT_RATE_SAVED_NUMBERS_NOTE\}/.test(read("app/(marketing)/resources/flat-rate-price-list/page.tsx")));
+  check("the note is left out of a printed worksheet and links to a public page", /print:hidden/.test(read("shared/components/resources/SavedNumbersNote.tsx")) && /href=\{savedNumbersPage\.href\}/.test(frame));
+  const softwarePaths = ["/hvac-software", "/hvac-dispatch-software", "/hvac-estimating-software", "/hvac-invoicing-software"];
+  check("every note has its own link, to one of the public software pages", JSON.stringify(Object.keys(saved.SAVED_NUMBERS_LINKS).sort()) === JSON.stringify(Object.keys(saved.SAVED_NUMBERS_NOTES).sort()) && Object.values(saved.SAVED_NUMBERS_LINKS).every((href) => softwarePaths.includes(href)), saved.SAVED_NUMBERS_LINKS);
+}
+
 // ------------------------------------------------------- perimeter + nav
 console.log("\nPerimeter, crawl and nav wiring");
 const catalog = await loadPureModule(FILES.catalog, "res-cat");
