@@ -46,6 +46,7 @@ import {
   type ProfitabilityReportDateRange,
   type ReportChartBucketSize,
   type ReportChartSeriesBundle,
+  type ReportDayBasis,
 } from "@/shared/types/reports";
 import { roundCurrency } from "@/shared/types/invoice";
 
@@ -194,7 +195,16 @@ export function buildChartDatasetsFromDailySeries(
  */
 export function buildReportChartSeriesFromDailySeries(
   series: ReportDailySeries,
-  options: { dateRange?: ProfitabilityReportDateRange } = {},
+  options: {
+    dateRange?: ProfitabilityReportDateRange;
+    /**
+     * The calendar the series was counted on: the basis the caller passed
+     * to the database. Every row here is already a plain date on that
+     * calendar and is never shifted again; the basis decides what "today",
+     * and so the axis, is.
+     */
+    dayBasis?: ReportDayBasis;
+  } = {},
 ): ReportChartSeriesBundle {
   const bundle = buildReportChartSeriesBundle(
     buildChartDatasetsFromDailySeries(series),

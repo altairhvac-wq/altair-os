@@ -51,14 +51,14 @@ export function buildCollectedRevenueSparkline(
   for (const payment of payments) {
     if (
       !payment.paymentDate ||
-      toReportDateOnly(payment.paymentDate) < bounds.startDate ||
-      toReportDateOnly(payment.paymentDate) > bounds.endDate
+      toReportDateOnly(payment.paymentDate, bounds.timeZone) < bounds.startDate ||
+      toReportDateOnly(payment.paymentDate, bounds.timeZone) > bounds.endDate
     ) {
       continue;
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(payment.paymentDate),
+      toReportDateOnly(payment.paymentDate, bounds.timeZone),
       bucketSize,
     );
     if (totals.has(bucketStart)) {
@@ -91,7 +91,7 @@ export function buildJobsCompletedSparkline(
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(completedDate),
+      toReportDateOnly(completedDate, bounds.timeZone),
       bucketSize,
     );
     if (counts.has(bucketStart)) {
@@ -132,14 +132,14 @@ export function buildAvgTicketSparkline(
   for (const payment of payments) {
     if (
       !payment.paymentDate ||
-      toReportDateOnly(payment.paymentDate) < bounds.startDate ||
-      toReportDateOnly(payment.paymentDate) > bounds.endDate
+      toReportDateOnly(payment.paymentDate, bounds.timeZone) < bounds.startDate ||
+      toReportDateOnly(payment.paymentDate, bounds.timeZone) > bounds.endDate
     ) {
       continue;
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(payment.paymentDate),
+      toReportDateOnly(payment.paymentDate, bounds.timeZone),
       bucketSize,
     );
     const existing = totals.get(bucketStart);
@@ -174,11 +174,11 @@ export function buildCloseRateSparkline(
     const sentDate = resolveEstimateSentReportDate(estimate);
     if (
       sentDate &&
-      toReportDateOnly(sentDate) >= bounds.startDate &&
-      toReportDateOnly(sentDate) <= bounds.endDate
+      toReportDateOnly(sentDate, bounds.timeZone) >= bounds.startDate &&
+      toReportDateOnly(sentDate, bounds.timeZone) <= bounds.endDate
     ) {
       const bucketStart = resolveReportChartBucketStart(
-        toReportDateOnly(sentDate),
+        toReportDateOnly(sentDate, bounds.timeZone),
         bucketSize,
       );
       const existing = totals.get(bucketStart);
@@ -190,11 +190,11 @@ export function buildCloseRateSparkline(
     const approvedDate = resolveEstimateApprovedReportDate(estimate);
     if (
       approvedDate &&
-      toReportDateOnly(approvedDate) >= bounds.startDate &&
-      toReportDateOnly(approvedDate) <= bounds.endDate
+      toReportDateOnly(approvedDate, bounds.timeZone) >= bounds.startDate &&
+      toReportDateOnly(approvedDate, bounds.timeZone) <= bounds.endDate
     ) {
       const bucketStart = resolveReportChartBucketStart(
-        toReportDateOnly(approvedDate),
+        toReportDateOnly(approvedDate, bounds.timeZone),
         bucketSize,
       );
       const existing = totals.get(bucketStart);
@@ -231,7 +231,7 @@ export function buildOutstandingSparkline(
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(invoice.issueDate),
+      toReportDateOnly(invoice.issueDate, bounds.timeZone),
       bucketSize,
     );
     if (totals.has(bucketStart)) {
@@ -269,7 +269,7 @@ export function buildOverdueSparkline(
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(dateValue),
+      toReportDateOnly(dateValue, bounds.timeZone),
       bucketSize,
     );
     if (totals.has(bucketStart)) {
@@ -329,7 +329,7 @@ export function buildNetIncomeSparkline(
     }
 
     const bucketStart = resolveReportChartBucketStart(
-      toReportDateOnly(reportDate),
+      toReportDateOnly(reportDate, bounds.timeZone),
       bucketSize,
     );
     if (expenseTotals.has(bucketStart)) {

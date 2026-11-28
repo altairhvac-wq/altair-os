@@ -37,6 +37,8 @@ export default async function TaxSummaryPage({ searchParams }: TaxSummaryPagePro
     dateRange,
     {
       showTechnicianPerformance: false,
+      // The same calendar as the Reports page this summary is opened from.
+      timeZone: companyContext.company.timezone,
     },
   );
 

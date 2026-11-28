@@ -482,6 +482,16 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
     "220_company_timezone_choice.sql",
     new Set(["get_company_report_daily_series"]),
   ],
+  // 221 does the same for the 169 reports summary: a ninth argument, the
+  // time zone (default 'UTC', so an eight-argument call is unchanged), so
+  // the Reports page's figures count the same days as its charts. Still
+  // security definer with the same membership and permission checks and the
+  // same grants; scripts/verify-company-timezone.mjs proves the body is
+  // 169's with only the zone swapped in.
+  [
+    "221_reports_summary_time_zone.sql",
+    new Set(["get_company_reports_summary"]),
+  ],
 ]);
 
 for (const file of files) {

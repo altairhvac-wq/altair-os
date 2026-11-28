@@ -244,6 +244,8 @@ const FUNCTIONS = [
   },
   {
     name: "get_company_reports_summary",
+    // 221 added p_time_zone (default UTC). Called without it here, which is
+    // the eight-argument call every deployment before 221 made.
     migration: "169",
     args: {
       p_company_id: NOWHERE,
