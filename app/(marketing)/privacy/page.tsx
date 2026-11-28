@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      effectiveDate="November 23, 2026"
+      effectiveDate="November 28, 2026"
       intro="Altair Operating System is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
     >
       <LegalSection heading="What we collect">
@@ -62,10 +62,11 @@ export default function PrivacyPolicyPage() {
           sign-in and sign-up forms), Sentry (error reports from the
           application, set up not to include personal details), OpenAI (powers
           optional AI drafting features, using only the content needed to
-          generate the draft), and Meta (only if you connect your Facebook
+          generate the draft), Meta (only if you connect your Facebook
           Page or Instagram account, and only to publish the posts you
-          approve). Each provider processes data solely to deliver their
-          service to us.
+          approve), and Intuit (only if you connect QuickBooks Online, and
+          only to send your records to your own QuickBooks company). Each
+          provider processes data solely to deliver their service to us.
         </p>
       </LegalSection>
 
@@ -165,6 +166,31 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection heading="QuickBooks Online">
+        <p>
+          If you connect QuickBooks Online, Altair sends your customers, price
+          book items, invoices and payments to your own QuickBooks company. To
+          do that, Altair reads your QuickBooks company name, your sales tax
+          and invoice-numbering settings, your list of accounts and tax rates,
+          and whether a record already exists there, so nothing is created
+          twice.
+        </p>
+        <p>
+          Altair stores only the ID numbers of the records it sent, the
+          accounts you chose and your QuickBooks company name, not copies of
+          your QuickBooks data. The keys to your QuickBooks company are
+          encrypted and never shown to anyone. Data from QuickBooks is never
+          sent to AI services or used to train AI models.
+        </p>
+        <p>
+          When you disconnect, Altair asks Intuit to cancel its access and
+          deletes the keys and the stored record IDs at once. It keeps only
+          your QuickBooks company&apos;s ID, so that connecting the same
+          company again never sends the same invoices twice. Intuit&apos;s
+          own privacy statement applies to your QuickBooks account.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="Retention and deletion">
         <p>
           Your data stays in your workspace while your account is active. If
@@ -178,15 +204,15 @@ export default function PrivacyPolicyPage() {
         <p>
           Access to production systems is limited and authenticated. Data is
           encrypted in transit (TLS) and at rest by our infrastructure
-          providers. Connected-account tokens (like your Facebook Page
-          connection) are stored encrypted.
+          providers. Connected-account tokens (like your Facebook Page or
+          QuickBooks connection) are stored encrypted.
         </p>
       </LegalSection>
 
       <LegalSection heading="Your choices">
         <p>
           You can update your company profile and settings at any time,
-          disconnect social accounts at any time, and request a copy or
+          disconnect social accounts or QuickBooks at any time, and request a copy or
           deletion of your data by emailing us.
         </p>
       </LegalSection>
