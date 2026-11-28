@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
-import { canManageBusinessNumbers, canManageDemoData } from "@/lib/database/access-control";
+import { canAccessCompanySettings, canManageBusinessNumbers, canManageDemoData } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBusinessNumbers } from "@/lib/database/queries/business-numbers";
 import { getGuidedSetupAvailability } from "@/lib/database/queries/business-setup";
@@ -17,6 +17,8 @@ import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-acces
 import { BillingGraceBanner } from "@/shared/components/billing/BillingGraceBanner";
 import { MonthlyTargetCard } from "@/shared/components/business-setup/MonthlyTargetCard";
 import { SetupProgressCard } from "@/shared/components/business-setup/SetupProgressCard";
+import { TimeZoneConfirmPrompt } from "@/shared/components/settings/TimeZoneConfirmPrompt";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
 import { computeMonthlyTargetProgress } from "@/shared/lib/business-numbers/job-profit";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
@@ -125,6 +127,14 @@ export default async function DashboardPage() {
     ? new Date(`${currentMonth.key}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })
     : "This month";
 
+  // A company nobody has chosen a time zone for keeps running on the zone
+  // it always ran on, and its owner or admin is asked to confirm it. Never
+  // shown before migration 220 ("unavailable"): there would be nowhere to
+  // record the answer.
+  const askToConfirmTimeZone =
+    canAccessCompanySettings(companyContext) &&
+    getCompanyTimeZoneChoice(companyContext.company) === "unconfirmed";
+
   const userDisplayName =
     companyContext.profile.full_name ??
     companyContext.user.email ??
@@ -138,6 +148,13 @@ export default async function DashboardPage() {
         timeZone={companyContext.company.timezone}
         className="mx-4 mt-4 md:mx-6 md:mt-6"
       />
+      {askToConfirmTimeZone ? (
+        <TimeZoneConfirmPrompt
+          companyId={companyId}
+          currentTimeZone={companyContext.company.timezone}
+          className="mx-4 mt-4 md:mx-6 md:mt-6"
+        />
+      ) : null}
       {setupCard?.setup ? (
         <SetupProgressCard
           companyId={companyId}

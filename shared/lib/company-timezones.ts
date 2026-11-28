@@ -57,18 +57,47 @@ export function normalizeCompanyTimeZone(
   return trimmed;
 }
 
-/** Options for a select, ensuring the current company timezone remains selectable. */
+/**
+ * What a zone is called on screen. The curated zones have plain names
+ * ("Eastern Time (US)"). Any other is named by its city with the full name
+ * after it: "Detroit (America/Detroit)", not a bare "America/Detroit".
+ */
+export function companyTimeZoneLabel(timeZone: string): string {
+  const zone = timeZone.trim();
+  const curated = COMPANY_TIMEZONE_OPTIONS.find((option) => option.value === zone);
+  if (curated) {
+    return curated.label;
+  }
+
+  const city = zone.split("/").pop()?.replace(/_/g, " ").trim();
+  return city && city !== zone ? `${city} (${zone})` : zone;
+}
+
+/**
+ * Options for a select: the curated list, with every zone passed in kept
+ * selectable. Pass each zone the list may need to show (the saved one, the
+ * one this browser suggested, the one picked): a zone that is not on the
+ * curated list would otherwise vanish from the list the moment another is
+ * picked, and could not be picked again.
+ */
 export function getCompanyTimezoneSelectOptions(
-  currentTimeZone?: string | null,
+  ...keepSelectable: Array<string | null | undefined>
 ): Array<{ value: string; label: string }> {
   const options: Array<{ value: string; label: string }> = [
     ...COMPANY_TIMEZONE_OPTIONS,
   ];
-  const current = currentTimeZone?.trim();
+  const extras: Array<{ value: string; label: string }> = [];
 
-  if (current && !options.some((option) => option.value === current)) {
-    options.unshift({ value: current, label: current });
+  for (const candidate of keepSelectable) {
+    const zone = candidate?.trim();
+    if (
+      zone &&
+      !options.some((option) => option.value === zone) &&
+      !extras.some((option) => option.value === zone)
+    ) {
+      extras.push({ value: zone, label: companyTimeZoneLabel(zone) });
+    }
   }
 
-  return options;
+  return [...extras, ...options];
 }

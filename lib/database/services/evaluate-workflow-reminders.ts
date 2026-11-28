@@ -60,7 +60,7 @@ import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
 import {
   buildUnpaidInvoiceFollowUpEntries,
 } from "@/shared/lib/unpaid-invoice-follow-up";
-import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
+import { loadResolvedCompanyTimeZone } from "@/lib/database/queries/company-timezone";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
@@ -192,20 +192,13 @@ async function loadCompanyTimeZone(
   client: DbClient,
   companyId: string,
 ): Promise<string> {
-  const { data, error } = await client
-    .from("companies")
-    .select("timezone")
-    .eq("id", companyId)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[evaluateWorkflowRemindersForCompany] company timezone lookup failed:", {
-      companyId,
-      error,
-    });
-  }
-
-  return resolveCompanyTimeZone(data?.timezone);
+  // Both time zone columns, resolved by the one rule (and still working
+  // before migration 220 adds the second column).
+  return loadResolvedCompanyTimeZone(
+    client,
+    companyId,
+    "evaluateWorkflowRemindersForCompany",
+  );
 }
 
 /**

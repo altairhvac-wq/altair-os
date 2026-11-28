@@ -28,6 +28,10 @@ import {
 } from "@/lib/auth/redirects";
 import { getGuidedSetupAvailabilityFor } from "@/lib/database/queries/business-setup";
 import {
+  readDetectedTimeZone,
+  recordDetectedTimeZoneForNewCompany,
+} from "@/lib/database/queries/company-timezone";
+import {
   clearSignupNetworkInviteCookie,
   readSignupNetworkInviteCookie,
   resolveSignupNetworkInviteToken,
@@ -123,6 +127,13 @@ async function ensureCompanyAfterAuth(
 
       if (bootstrapResult.companyId) {
         createdCompany = true;
+        // The zone their browser reported when they signed up, kept on the
+        // user until now. Recorded before the context is read, so the
+        // context already has it.
+        await recordDetectedTimeZoneForNewCompany({
+          companyId: bootstrapResult.companyId,
+          detectedTimeZone: readDetectedTimeZone(user.user_metadata?.time_zone),
+        });
         await queueWelcomeEmailForNewCompany({
           user,
           companyId: bootstrapResult.companyId,
@@ -376,6 +387,14 @@ export async function signupAction(
   const analyticsVisitorId = String(formData.get("analyticsVisitorId") ?? "").trim();
   const analyticsSessionId = String(formData.get("analyticsSessionId") ?? "").trim();
 
+  // The browser's time zone, so the new company starts in the zone its
+  // owner is in. It rides on the user (like the company name and trade)
+  // because most companies are made later, when the emailed link is opened,
+  // by a request that has no form. Checked here and again where it is used.
+  const browserTimeZone = companyName
+    ? readDetectedTimeZone(formData.get("browserTimeZone"))
+    : null;
+
   const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -386,6 +405,7 @@ export async function signupAction(
         full_name: fullName,
         ...(companyName ? { company_name: companyName } : {}),
         ...(trade ? { trade } : {}),
+        ...(browserTimeZone ? { time_zone: browserTimeZone } : {}),
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
         ...(signupAttribution
           ? {
@@ -467,6 +487,10 @@ export async function signupAction(
 
     if (bootstrapResult.companyId && data.user) {
       createdCompany = true;
+      await recordDetectedTimeZoneForNewCompany({
+        companyId: bootstrapResult.companyId,
+        detectedTimeZone: browserTimeZone,
+      });
       await queueWelcomeEmailForNewCompany({
         user: data.user,
         companyId: bootstrapResult.companyId,
@@ -528,6 +552,12 @@ export async function setupCompanyAction(
   }
 
   if (bootstrapResult.companyId) {
+    await recordDetectedTimeZoneForNewCompany({
+      companyId: bootstrapResult.companyId,
+      detectedTimeZone:
+        readDetectedTimeZone(formData.get("browserTimeZone")) ??
+        readDetectedTimeZone(user.user_metadata?.time_zone),
+    });
     await queueWelcomeEmailForNewCompany({
       user,
       companyId: bootstrapResult.companyId,

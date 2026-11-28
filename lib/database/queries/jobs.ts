@@ -15,8 +15,8 @@ import {
 import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
 import {
+  DEFAULT_COMPANY_TIMEZONE,
   getDayBoundsInTimeZone,
-  resolveCompanyTimeZone,
 } from "@/shared/lib/datetime";
 import type { EstimateLineItem } from "@/shared/types/estimate";
 import type { JobDeleteDependencies } from "@/shared/lib/job-lifecycle";
@@ -575,7 +575,7 @@ export async function createJobFromApprovedEstimate(
   db?: DbClient,
 ): Promise<{ jobId: string | null; jobNumber: string | null; error: string | null }> {
   const supabase = await resolveDbClient(db);
-  const timeZone = input.timeZone?.trim() || resolveCompanyTimeZone();
+  const timeZone = input.timeZone?.trim() || DEFAULT_COMPANY_TIMEZONE;
   const { start: scheduledAt } = getDayBoundsInTimeZone(timeZone);
 
   const { data: customer, error: customerError } = await supabase

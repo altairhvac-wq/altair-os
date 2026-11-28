@@ -2190,11 +2190,15 @@ export type Database = {
       // get_company_report_daily_series: migration 170 — wire into Database
       // types on next gen types run. Per-DAY totals for the four charts and the
       // sparklines, so the bucketing rules stay in TypeScript.
+      // Migration 220 adds p_time_zone (default 'UTC'): the zone a timestamp
+      // is turned into a calendar day in. Before 220 the function has three
+      // arguments and a four-argument call is answered PGRST202.
       get_company_report_daily_series: {
         Args: {
           p_company_id: string;
           p_start_date: string;
           p_end_date: string;
+          p_time_zone?: string;
         };
         Returns: Json;
       };

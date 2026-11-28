@@ -3,13 +3,18 @@
 import { createContext, useContext, useLayoutEffect } from "react";
 import {
   DEFAULT_COMPANY_TIMEZONE,
-  resolveCompanyTimeZone,
   setCompanyTimeZone,
 } from "@/shared/lib/datetime";
 
 const CompanyTimezoneContext = createContext<string>(DEFAULT_COMPANY_TIMEZONE);
 
 type CompanyTimezoneProviderProps = {
+  /**
+   * The company's time zone as the company context resolved it
+   * (`companyContext.company.timezone`). It is used as it is: the one place
+   * that decides what a stored zone means is resolveCompanyTimeZone, on the
+   * server, where the whole row is in hand.
+   */
   timeZone: string;
   children: React.ReactNode;
 };
@@ -18,7 +23,7 @@ export function CompanyTimezoneProvider({
   timeZone,
   children,
 }: CompanyTimezoneProviderProps) {
-  const resolvedTimeZone = resolveCompanyTimeZone(timeZone);
+  const resolvedTimeZone = timeZone?.trim() || DEFAULT_COMPANY_TIMEZONE;
 
   useLayoutEffect(() => {
     setCompanyTimeZone(resolvedTimeZone);

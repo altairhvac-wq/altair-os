@@ -134,6 +134,13 @@ export type CompanyRow = {
   trade: string | null;
   status: CompanyStatus;
   timezone: string;
+  /**
+   * When an owner or admin chose `timezone` (migration 220). Null: nobody has
+   * chosen. Absent from the row: the migration has not run in this database.
+   * Read it through getCompanyTimeZoneChoice / resolveCompanyTimeZone
+   * (shared/lib/datetime.ts), never by comparing `timezone` to a zone name.
+   */
+  timezone_set_at?: Timestamp | null;
   phone: string | null;
   email: string | null;
   address_line1: string | null;

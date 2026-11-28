@@ -8,6 +8,7 @@ import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/compani
 import { getDemoDataStatusSafe } from "@/lib/database/queries/demo-data";
 import { listCompanyMembers } from "@/lib/database/queries/memberships";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import { CompanySettingsView } from "@/shared/components/settings/CompanySettingsView";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
@@ -69,6 +70,10 @@ export default async function CompanySettingsPage() {
     <CompanySettingsView
       companyProfile={companyProfile}
       canManage={canAccessCompanySettings(companyContext)}
+      askToConfirmTimeZone={
+        canAccessCompanySettings(companyContext) &&
+        getCompanyTimeZoneChoice(company) === "unconfirmed"
+      }
       billingDefaults={getCompanyBillingDefaultsFromRow(company)}
       showBillingDefaultsSetupHint={
         !hasSavedCompanyBillingDefaults(company.settings)

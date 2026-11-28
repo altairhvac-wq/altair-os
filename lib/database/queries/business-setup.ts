@@ -24,6 +24,7 @@ import {
   priceRateItem,
   priceStarterLine,
 } from "@/shared/lib/business-numbers/starter-price-list";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import type { BusinessNumbers } from "@/shared/types/business-numbers";
 import { CUSTOM_SETUP_KEY_PATTERN, type PriceListStep, type ShopContactPatch } from "@/shared/types/business-setup";
 
@@ -159,33 +160,49 @@ export async function listSetupPriceBookItems(context: ActiveCompanyContext): Pr
 }
 
 /**
- * Saves the contact boxes that were sent, and only those. It never writes the
- * time zone, name or trade: those have their own place in Settings > Company.
+ * Saves the contact boxes that were sent, and only those. It never writes
+ * the name or trade: those have their own place in Settings > Company.
+ *
+ * @param chosenTimeZone the zone the owner picked in this step, already
+ *   checked, or null when the step did not ask. Saving it marks it as the
+ *   company's choice (migration 220). Where that cannot be recorded (the
+ *   column is not in this database yet) the zone is not written at all: the
+ *   step does not show the box there, and a zone stored without its mark
+ *   would mean nothing.
  */
 export async function updateCompanyShopContact(
   companyId: string,
   context: ActiveCompanyContext,
   patch: ShopContactPatch,
-): Promise<{ error: string | null }> {
+  chosenTimeZone: string | null = null,
+): Promise<{ error: string | null; /** True when this call stored a time zone. */ timeZoneWritten: boolean }> {
   const accessError = assertBusinessNumbersAccess(context) ?? assertMatchingCompanyScope(context, companyId);
-  if (accessError) return { error: accessError };
+  if (accessError) return { error: accessError, timeZoneWritten: false };
 
-  const columns: { phone?: string | null; address_line1?: string | null; city?: string | null; state?: string | null; postal_code?: string | null } = {};
+  const columns: { phone?: string | null; address_line1?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; timezone?: string; timezone_set_at?: string } = {};
+  const choice = getCompanyTimeZoneChoice(context.company);
+  // Already chosen and unchanged: nothing to write. Otherwise this is the
+  // owner answering "what time zone is your shop in?", which is a choice
+  // even when the answer is the zone the company was already running on.
+  if (chosenTimeZone && choice !== "unavailable" && !(choice === "chosen" && chosenTimeZone === context.company.timezone)) {
+    columns.timezone = chosenTimeZone;
+    columns.timezone_set_at = new Date().toISOString();
+  }
   if (patch.phone !== undefined) columns.phone = patch.phone;
   if (patch.addressLine1 !== undefined) columns.address_line1 = patch.addressLine1;
   if (patch.city !== undefined) columns.city = patch.city;
   if (patch.state !== undefined) columns.state = patch.state;
   if (patch.postalCode !== undefined) columns.postal_code = patch.postalCode;
-  if (Object.keys(columns).length === 0) return { error: null };
+  if (Object.keys(columns).length === 0) return { error: null, timeZoneWritten: false };
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("companies").update(columns).eq("id", companyId).select("id").maybeSingle();
 
   if (error || !data) {
     console.error("[updateCompanyShopContact] update failed:", { companyId, code: error?.code });
-    return { error: error ? mapDatabaseError(error) : "Your shop's details could not be saved. Try again." };
+    return { error: error ? mapDatabaseError(error) : "Your shop's details could not be saved. Try again.", timeZoneWritten: false };
   }
-  return { error: null };
+  return { error: null, timeZoneWritten: columns.timezone !== undefined };
 }
 
 /**

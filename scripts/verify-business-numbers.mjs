@@ -391,7 +391,12 @@ console.log("\nThe guided setup's actions");
   check("the setup's own queries are server-only and use the signed-in session (no service role)", /^import "server-only";/.test(setupQueries) && !/createServiceRoleClient/.test(setupQueries));
   const writers = ["updateCompanyShopContact", "saveSetupPriceList", "saveServiceCallItem"];
   check("each write checks owner/admin and the company before touching the database", writers.every((name) => new RegExp(`export async function ${name}\\([\\s\\S]{0,400}?const accessError = assertBusinessNumbersAccess\\(context\\) \\?\\? assertMatchingCompanyScope\\(context, companyId\\);\\s*if \\(accessError\\) return`).test(setupQueries)));
-  check("the shop step never writes the company's name, trade or time zone", !/\b(name|trade|timezone):/.test(setupQueries.slice(setupQueries.indexOf("export async function updateCompanyShopContact"), setupQueries.indexOf("export async function saveSetupPriceList"))));
+  // Since migration 220 the shop step may save the time zone, and only as a
+  // choice (the zone and its mark together); scripts/verify-company-timezone.mjs
+  // holds that. It still never writes the company's name or trade.
+  const shopWrite = setupQueries.slice(setupQueries.indexOf("export async function updateCompanyShopContact"), setupQueries.indexOf("export async function saveSetupPriceList"));
+  check("the shop step never writes the company's name or trade", !/\b(name|trade)\b\s*[:=]/.test(shopWrite.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")) && !/columns\.(name|trade)\b/.test(shopWrite));
+  check("the shop step writes a time zone only together with its chosen mark", (shopWrite.match(/columns\.timezone = /g) ?? []).length === 1 && /columns\.timezone = chosenTimeZone;\s*columns\.timezone_set_at = new Date\(\)\.toISOString\(\);/.test(shopWrite));
   check("every price book write is scoped to the company", (setupQueries.match(/\.from\("service_items"\)/g) ?? []).length === (setupQueries.match(/\.eq\("company_id", (companyId|context\.company\.id)\)|company_id: companyId/g) ?? []).length, [(setupQueries.match(/\.from\("service_items"\)/g) ?? []).length, (setupQueries.match(/\.eq\("company_id", (companyId|context\.company\.id)\)|company_id: companyId/g) ?? []).length]);
   check("the setup never deletes a price book item", !/\.delete\(\)/.test(setupQueries));
   const save = setupQueries.slice(setupQueries.indexOf("export async function saveSetupPriceList"), setupQueries.indexOf("export async function saveServiceCallItem"));

@@ -27,6 +27,8 @@ import {
   STARTER_TASK_KEYS,
 } from "@/shared/lib/business-numbers/starter-price-list";
 import { hasSavedCompanyBillingDefaults, validateCompanyBillingDefaultsInput } from "@/shared/lib/company-billing-defaults";
+import { validateCompanyTimezoneInput } from "@/shared/lib/company-profile";
+import { getCompanyTimeZoneChoice } from "@/shared/lib/datetime";
 import {
   BUSINESS_SETUP_STEPS,
   validateBusinessNumbersInput,
@@ -149,6 +151,23 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
   const contact = validateShopContact(input);
   if (contact.error || !contact.data) return { error: contact.error ?? "Your shop's details could not be read.", field: contact.field ?? null };
 
+  // Time zone. Asked, and saved, only where the choice can be recorded
+  // (migration 220); before that the step does not show the box and a value
+  // sent anyway is ignored. Checked by the rule Settings > Company uses: any
+  // zone this server knows.
+  //
+  // A zone the owner picked from the list is always theirs to save. One the
+  // list only suggested (the browser's zone, left as it was) is saved only
+  // while the company still has not chosen: if someone confirmed a zone
+  // after this page was opened, the suggestion does not replace it.
+  let chosenTimeZone: string | null = null;
+  const zoneChoice = getCompanyTimeZoneChoice(context.company);
+  if ("timezone" in input && zoneChoice !== "unavailable") {
+    const zone = validateCompanyTimezoneInput(input.timezone);
+    if (zone.error || !zone.timezone) return { error: "Pick your time zone from the list.", field: "timezone" };
+    if (input.timezoneSource === "picked" || zoneChoice === "unconfirmed") chosenTimeZone = zone.timezone;
+  }
+
   // Sales tax. A number replaces the default and keeps the other document
   // defaults. A blank box means "we do not charge it": for a company that
   // had a rate saved, that is 0%; for one that never set a rate there is
@@ -174,8 +193,12 @@ export async function saveShopStepAction(rawInput: ShopStepInput, expectedCompan
     : { data: {} as BusinessNumbersPatch };
   if (numbers.error !== undefined) return { error: numbers.error, field: numbers.field };
 
-  const contactResult = await updateCompanyShopContact(context.company.id, context, contact.data);
+  const contactResult = await updateCompanyShopContact(context.company.id, context, contact.data, chosenTimeZone);
   if (contactResult.error) return { error: contactResult.error };
+  // A new zone is stored from this line on, whatever happens to the rest of
+  // the step: every page is drawn again in it now, not only if the step
+  // finishes.
+  if (contactResult.timeZoneWritten) revalidatePath("/", "layout");
 
   if (defaults) {
     const taxResult = await updateCompanyBillingDefaults(context.company.id, context, defaults);

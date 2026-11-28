@@ -8,7 +8,7 @@ import {
   altairMcListRowClass,
   altairMcMetricLabelClass,
 } from "@/shared/design-system/components/mc-surface";
-import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
+import { DEFAULT_COMPANY_TIMEZONE, formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatCurrencyExact } from "@/shared/types/customer";
 import {
   formatPaymentDisputeReason,
@@ -34,7 +34,8 @@ function formatDisputeWhen(
 
   return formatDateTimeInTimeZone(
     value,
-    resolveCompanyTimeZone(companyTimezone),
+    // Already resolved by the company context; used as it is.
+    companyTimezone?.trim() || DEFAULT_COMPANY_TIMEZONE,
     {
       month: "short",
       day: "numeric",

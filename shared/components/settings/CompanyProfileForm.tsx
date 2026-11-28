@@ -39,7 +39,19 @@ export function CompanyProfileForm({
     message: string;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
-  const timezoneOptions = getCompanyTimezoneSelectOptions(values.timezone);
+  // The company's zone can change under this form: the "Confirm your time
+  // zone" card above it saves one. The box follows, so the form never holds
+  // (and later saves back) the old zone. Only the zone is taken; whatever
+  // else is being typed stays.
+  const [zoneOnRecord, setZoneOnRecord] = useState(initialProfile.timezone);
+  if (zoneOnRecord !== initialProfile.timezone) {
+    setZoneOnRecord(initialProfile.timezone);
+    setValues((previous) => ({ ...previous, timezone: initialProfile.timezone }));
+  }
+  const timezoneOptions = getCompanyTimezoneSelectOptions(
+    initialProfile.timezone,
+    values.timezone,
+  );
 
   function updateField<K extends keyof CompanyProfileFormValues>(
     key: K,
