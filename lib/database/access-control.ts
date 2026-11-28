@@ -161,6 +161,27 @@ export function assertCompanySettingsAccess(
   return null;
 }
 
+/**
+ * Business numbers (migration 218) hold wages, costs and margins: owner and
+ * admin only, to read as well as to change. The database enforces the same
+ * rule for reads (RLS); writes go through the service role after this check.
+ */
+export function canManageBusinessNumbers(
+  context: ActiveCompanyContext,
+): boolean {
+  return context.permissions.manageCompany;
+}
+
+export function assertBusinessNumbersAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canManageBusinessNumbers(context)) {
+    return "Only an owner or admin can see or change business numbers.";
+  }
+
+  return null;
+}
+
 const DEMO_DATA_MANAGER_ROLES = ["owner", "admin"] as const satisfies readonly CompanyRole[];
 
 export function canManageDemoData(context: ActiveCompanyContext): boolean {
@@ -464,7 +485,8 @@ export type AdminNavHref =
   | "/community"
   | "/reports"
   | "/alpha-tracker"
-  | "/settings";
+  | "/settings"
+  | "/help";
 
 const ADMIN_NAV_HREF_SET = new Set<string>([
   "/",
@@ -490,6 +512,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/reports",
   "/alpha-tracker",
   "/settings",
+  "/help",
 ]);
 
 export function isAdminNavHref(href: string): href is AdminNavHref {
@@ -561,6 +584,9 @@ export function canAccessAdminNavItem(
       return context.isPlatformAdmin && permissions.manageCompany;
     case "/settings":
       return permissions.manageCompany;
+    case "/help":
+      // Support contacts and live onboarding: everyone in the office shell.
+      return true;
     default:
       return false;
   }
@@ -603,6 +629,7 @@ export function getAccessibleAdminNavHrefs(
     "/reports",
     "/alpha-tracker",
     "/settings",
+    "/help",
   ];
 
   const visible = hrefs.filter(
@@ -615,6 +642,7 @@ export function getAccessibleAdminNavHrefs(
 
 export type TechnicianNavId =
   | "today"
+  | "schedule"
   | "jobs"
   | "time"
   | "receipts"
@@ -627,6 +655,7 @@ export function canAccessTechnicianNavItem(
 ): boolean {
   switch (navId) {
     case "today":
+    case "schedule":
     case "time":
     case "receipts":
     case "notifications":
@@ -649,6 +678,7 @@ export function canAccessAppRedirectPath(
     path.startsWith("/technician") ||
     path.startsWith("/tech/") ||
     path.startsWith("/setup") ||
+    path.startsWith("/help") ||
     path.startsWith("/expenses") ||
     path.startsWith("/time") ||
     path.startsWith("/payroll")
@@ -658,6 +688,11 @@ export function canAccessAppRedirectPath(
 
   if (path.startsWith("/time-clock")) {
     return canViewCompanyTimeEntries(context);
+  }
+
+  // The guided setup. The page itself sends anyone else to the dashboard.
+  if (path === "/get-started") {
+    return canManageBusinessNumbers(context);
   }
 
   if (path === "/team") {

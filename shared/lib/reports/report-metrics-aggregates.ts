@@ -54,10 +54,13 @@ import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import { resolveOptionalSubjectAttributionName } from "@/shared/lib/profile-attribution";
 import type { LeadSourcePerformanceInput } from "@/shared/types/lead";
 import {
+  reportDayBasisReferenceDate,
   resolveProfitabilityReportDateBounds,
   resolveReportDateBounds,
+  withReportDayBasis,
   type ProfitabilityReportDateBounds,
   type ReportChartSeriesBundle,
+  type ReportDayBasis,
 } from "@/shared/types/reports";
 import type {
   AccountantSummaryData,
@@ -525,10 +528,22 @@ export function buildReportsPageDataFromAggregates(input: {
   laborCostRates: Map<string, number>;
   showTechnicianProfitability: boolean;
   showLeadPipeline?: boolean;
+  /**
+   * The calendar the aggregate was counted on. It must be the basis the
+   * caller passed to the database: this function does not count anything,
+   * it only states the period the counts are for. Left out: the server's
+   * own today, as before.
+   */
+  dayBasis?: ReportDayBasis;
 }): ReportsPageData {
-  const dateBounds =
-    resolveReportDateBounds(input.dateRange) ??
-    resolveProfitabilityReportDateBounds(input.dateRange);
+  const referenceDate = input.dayBasis
+    ? reportDayBasisReferenceDate(input.dayBasis)
+    : new Date();
+  const dateBounds = withReportDayBasis(
+    resolveReportDateBounds(input.dateRange, referenceDate) ??
+      resolveProfitabilityReportDateBounds(input.dateRange, referenceDate),
+    input.dayBasis,
+  );
   const { aggregate } = input;
 
   const technicianProfitability = input.showTechnicianProfitability

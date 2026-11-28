@@ -3,11 +3,12 @@ import {
   LegalPageShell,
   LegalSection,
 } from "@/shared/components/marketing/LegalPageShell";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Altair OS collects, uses, and protects your data and your customers' data.",
+    "How Altair Operating System collects, uses, and protects your data and your customers' data.",
 };
 
 /**
@@ -18,8 +19,8 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      effectiveDate="October 19, 2026"
-      intro="Altair OS is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
+      effectiveDate="November 23, 2026"
+      intro="Altair Operating System is field-service management software. This policy explains what we collect, why we collect it, and what we do with it when you use altair-op.com and app.altair-op.com. The short version: your business data belongs to you, and we never sell it."
     >
       <LegalSection heading="What we collect">
         <p>
@@ -51,14 +52,20 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="Who processes it">
         <p>
-          We rely on a small set of infrastructure providers to run Altair OS:
+          We rely on a small set of infrastructure providers to run Altair:
           Supabase (database and file storage), Vercel (application hosting),
           Stripe (payment processing — card details go directly to Stripe and
-          we never store card numbers), OpenAI (powers optional AI drafting
-          features, using only the content needed to generate the draft), and
-          Meta (only if you connect your Facebook Page or Instagram account,
-          and only to publish the posts you approve). Each provider processes
-          data solely to deliver their service to us.
+          we never store card numbers), Resend (delivers the emails the
+          product sends, such as estimates, invoices, invitations and account
+          messages), Mapbox (draws the dispatch map; job addresses are sent to
+          it to place the pins), Cloudflare (the automated-abuse check on our
+          sign-in and sign-up forms), Sentry (error reports from the
+          application, set up not to include personal details), OpenAI (powers
+          optional AI drafting features, using only the content needed to
+          generate the draft), and Meta (only if you connect your Facebook
+          Page or Instagram account, and only to publish the posts you
+          approve). Each provider processes data solely to deliver their
+          service to us.
         </p>
       </LegalSection>
 
@@ -88,12 +95,71 @@ export default function PrivacyPolicyPage() {
           Global Privacy Control or Do Not Track, we do not record your visit.
           We delete these records after 25 months.
         </p>
+        <p>
+          On the public site the same analytics count a few actions: playing
+          the video, pressing a free-trial button, using a calculator,
+          downloading a template, or asking for a result by email. We record
+          which one it was, never anything you typed.
+        </p>
+      </LegalSection>
+
+      <LegalSection heading="Free calculators and the email list">
+        <p>
+          The calculators run in your browser. The numbers you type are saved
+          on your own device so they are there next time, and they are not
+          sent to us.
+        </p>
+        <p>
+          If you ask us to email your result, the numbers in the calculator
+          and your email address are sent to our server to write that one
+          email, which Resend delivers. We do not store the numbers. We keep
+          your address only if you tick the box to hear about new calculators
+          and guides; we then send a confirmation link and add you to the
+          list only after you press it. Every email to the list has an
+          unsubscribe link, and you can also write to us to be removed.
+        </p>
+      </LegalSection>
+
+      <LegalSection heading="The contractor directory">
+        <p>
+          If you list a business in our public directory, the details you
+          enter (business name, trade, city and state, ZIP code, service area,
+          phone number, website and description) are shown publicly once a
+          person here has approved the listing. Your email address is not
+          shown. We use it to confirm the listing and to send you the link
+          that lets you edit or remove it.
+        </p>
+        <p>
+          You can remove your listing at any time with that link, and it comes
+          off the site straight away. To have the record deleted from our
+          systems as well, write to us. If you report a listing, we store the
+          reason and any note you add, not who you are.
+        </p>
+        <p>
+          If you send a business a quote request or offer it sub work from its
+          listing, what you enter (your name, phone number, email if you give
+          one, company, city or ZIP, timing and your message) goes to that one
+          business by email, and into its Altair workspace if it uses Altair
+          Operating System. We keep a copy so we can stop abuse and tell the
+          business how many requests its listing brings. It is never shown
+          publicly or given to anyone else. To have it deleted, write to us.
+        </p>
+      </LegalSection>
+
+      <LegalSection heading="The affiliate program">
+        <p>
+          If you apply to our affiliate program, we keep what you enter (your
+          name, email address, business name, state, the links you give us and
+          your answers) so a person here can read the application and reply.
+          None of it is shown publicly and none of it is sold or shared for
+          advertising. To have your application deleted, write to us.
+        </p>
       </LegalSection>
 
       <LegalSection heading="Your customers' data">
         <p>
           You may store your own customers&apos; contact details and service
-          history in Altair OS. That data is yours: we process it only by
+          history in Altair. That data is yours: we process it only by
           operating the software on your instructions, and we never contact
           your customers or use their information for our own purposes.
         </p>
@@ -130,9 +196,9 @@ export default function PrivacyPolicyPage() {
           Questions about this policy:{" "}
           <a
             className="font-medium text-[#77591b] underline underline-offset-2"
-            href="mailto:altairhvac@gmail.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
           >
-            altairhvac@gmail.com
+            {SUPPORT_EMAIL}
           </a>
           . We&apos;ll post any material changes to this page and update the
           effective date.

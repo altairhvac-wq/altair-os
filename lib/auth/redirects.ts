@@ -36,6 +36,9 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/community",
   "/reports",
   "/alpha-tracker",
+  // So signing in from /login?next=/help lands on Help, not the dashboard.
+  "/help",
+  "/get-started",
   "/settings",
   "/settings/system-check",
   "/technician",
@@ -124,6 +127,14 @@ export function getDefaultPostLoginPath(
 ): string {
   return shouldUseTechnicianHome(context) ? "/technician" : "/";
 }
+
+/**
+ * Where someone lands straight after their company is created: the guided
+ * setup (app/(admin)/get-started). Used only when they were not already
+ * heading somewhere (`next`). The page sends them on to the dashboard if the
+ * setup cannot run for them.
+ */
+export const NEW_COMPANY_START_PATH = "/get-started";
 
 export function resolvePostLoginRedirect(
   context: ActiveCompanyContext,

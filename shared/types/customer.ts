@@ -137,6 +137,40 @@ export function validateCustomerFormData(
   return null;
 }
 
+export const CUSTOMER_CONTACT_REQUIRED_MESSAGE =
+  "Add a phone number or an email address.";
+
+/**
+ * What it takes to SAVE a customer (new customer, lead conversion, import):
+ * a name and one way to reach them — phone OR email. The service address is
+ * optional.
+ *
+ * Saving used to require email AND phone AND a full address. A homeowner with
+ * no email could not be added without inventing one, and that invented address
+ * then received their estimates and invoices (retention audit 2026-11-12).
+ * Records missing details still land in the "Needs info" queue, which is
+ * where completeness is asked for, not at the door.
+ *
+ * `validateCustomerFormData(..., { requireContact, requireAddress })` keeps
+ * its old meaning: it is the "complete profile" test the queues use.
+ */
+export function validateCustomerRecord(data: CustomerFormData): string | null {
+  const validationError = validateCustomerFormData(data, {
+    requireContact: false,
+    requireAddress: false,
+  });
+  if (validationError) {
+    return validationError;
+  }
+
+  const normalized = normalizeCustomerFormData(data);
+  if (!normalized.phone && !normalized.email) {
+    return CUSTOMER_CONTACT_REQUIRED_MESSAGE;
+  }
+
+  return null;
+}
+
 export function mapCustomerToFormData(customer: Customer): CustomerFormData {
   return {
     name: customer.name,

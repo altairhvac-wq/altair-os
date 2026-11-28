@@ -4,7 +4,16 @@ import {
   type ParsedCustomerImportCsv,
 } from "@/shared/lib/customer-import-parser";
 
+/** Rows the server takes in one import call (one batch). */
 export const CUSTOMER_IMPORT_MAX_ROWS = 500;
+
+/**
+ * Rows one uploaded file may hold. The screen splits a bigger file into
+ * CUSTOMER_IMPORT_MAX_ROWS batches and sends them one after another, so a
+ * Jobber export split at 1,500 rows or a ServiceTitan list of several
+ * thousand customers comes in from one upload (switch page audit 2026-11-26).
+ */
+export const CUSTOMER_IMPORT_FILE_MAX_ROWS = 10_000;
 
 export const CUSTOMER_IMPORT_ALTAIR_FIELDS = [
   "name",
@@ -14,6 +23,7 @@ export const CUSTOMER_IMPORT_ALTAIR_FIELDS = [
   "phone",
   "email",
   "address",
+  "address_line2",
   "city",
   "state",
   "zip",
@@ -34,6 +44,9 @@ export type CustomerImportPreset =
   | "servicetitan"
   | "housecall_pro"
   | "jobber"
+  | "fieldedge"
+  | "service_fusion"
+  | "workiz"
   | "quickbooks"
   | "other";
 
@@ -43,11 +56,14 @@ export const CUSTOMER_IMPORT_PRESET_OPTIONS: {
 }[] = [
   { value: "altair", label: "Altair template" },
   { value: "google_sheets", label: "Google Sheets / Excel" },
-  { value: "servicetitan", label: "ServiceTitan CSV export" },
-  { value: "housecall_pro", label: "Housecall Pro CSV export" },
-  { value: "jobber", label: "Jobber CSV export" },
-  { value: "quickbooks", label: "QuickBooks customer CSV" },
-  { value: "other", label: "Other CSV" },
+  { value: "servicetitan", label: "ServiceTitan customer export" },
+  { value: "housecall_pro", label: "Housecall Pro customer export" },
+  { value: "jobber", label: "Jobber client export" },
+  { value: "fieldedge", label: "FieldEdge customer export" },
+  { value: "service_fusion", label: "Service Fusion customer list" },
+  { value: "workiz", label: "Workiz client report" },
+  { value: "quickbooks", label: "QuickBooks customer list" },
+  { value: "other", label: "Other file" },
 ];
 
 export const CUSTOMER_IMPORT_FIELD_LABELS: Record<
@@ -61,6 +77,7 @@ export const CUSTOMER_IMPORT_FIELD_LABELS: Record<
   phone: "Phone",
   email: "Email",
   address: "Street address",
+  address_line2: "Apt / suite (address line 2)",
   city: "City",
   state: "State",
   zip: "ZIP / postal code",
@@ -75,12 +92,23 @@ const FIELD_MAPPING_PRIORITY: CustomerImportAltairField[] = [
   "phone",
   "email",
   "address",
+  "address_line2",
   "city",
   "state",
   "zip",
   "notes",
 ];
 
+/**
+ * Header names matched on any source. Matching is exact after normalising case,
+ * spaces, dashes and underscores, so each common spelling has to be listed.
+ *
+ * The retention audit (2026-11-12) imported a Housecall Pro style file on the
+ * default "Other CSV" source: "Mobile Number" was not recognised, every
+ * customer came in without a phone, and "Customer Notes" and "Street Line 2"
+ * were dropped. The extra names below are the ones field-service and
+ * accounting exports actually use.
+ */
 const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
   name: [
     "name",
@@ -90,15 +118,21 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "contact name",
     "display name",
     "client name",
+    "customer full name",
+    "client",
+    "account name",
+    "customer display name",
+    "client display name",
   ],
-  first_name: ["first name", "first", "fname", "given name"],
-  last_name: ["last name", "last", "lname", "surname", "family name"],
+  first_name: ["first name", "first", "fname", "given name", "contact first name"],
+  last_name: ["last name", "last", "lname", "surname", "family name", "contact last name"],
   company_name: [
     "company",
     "company name",
     "business name",
     "organization",
     "business",
+    "organization name",
   ],
   phone: [
     "phone",
@@ -109,8 +143,49 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "home phone",
     "work phone",
     "telephone",
+    "mobile number",
+    "mobile phone",
+    "mobile phone number",
+    "cell phone",
+    "cell number",
+    "cell phone number",
+    "home number",
+    "home phone number",
+    "work number",
+    "work phone number",
+    "main phone",
+    "main phone number",
+    "primary phone number",
+    "phone 1",
+    "phone1",
+    "phone number 1",
+    "telephone number",
+    "contact phone",
+    "phone #",
+    "mobile #",
+    "main phone #",
+    "client phone",
+    "customer phone",
+    "customer phone number",
+    "client phone number",
+    "phone number 1",
   ],
-  email: ["email", "email address", "e mail", "e-mail"],
+  email: [
+    "email",
+    "email address",
+    "e mail",
+    "e-mail",
+    "email 1",
+    "email address 1",
+    "primary email",
+    "primary email address",
+    "main email",
+    "contact email",
+    "e mail address",
+    "client email",
+    "customer email",
+    "customer email address",
+  ],
   address: [
     "address",
     "street",
@@ -119,11 +194,71 @@ const COMMON_FIELD_ALIASES: Record<CustomerImportAltairField, string[]> = {
     "address line 1",
     "service address",
     "billing address",
+    "address1",
+    "street 1",
+    "street line 1",
+    "street address 1",
+    "service address line 1",
+    "property address",
+    "service street",
+    "billing street",
+    "customer address",
+    "client address",
+    "location address",
+    "service location",
+    "street address line 1",
   ],
-  city: ["city", "town"],
-  state: ["state", "province", "st"],
-  zip: ["zip", "zip code", "postal code", "postcode"],
-  notes: ["notes", "note", "comments", "memo", "description"],
+  address_line2: [
+    "address 2",
+    "address2",
+    "address line 2",
+    "street 2",
+    "street line 2",
+    "street address 2",
+    "service address line 2",
+    "billing address line 2",
+    "apt",
+    "apt / suite",
+    "apartment",
+    "suite",
+  ],
+  city: ["city", "town", "service city", "billing city", "property city"],
+  state: [
+    "state",
+    "province",
+    "st",
+    "state / province",
+    "state/province",
+    "service state",
+    "billing state",
+    "property state",
+  ],
+  zip: [
+    "zip",
+    "zip code",
+    "postal code",
+    "postcode",
+    "zipcode",
+    "zip / postal code",
+    "zip/postal code",
+    "postal",
+    "service zip",
+    "billing zip",
+    "property zip",
+  ],
+  notes: [
+    "notes",
+    "note",
+    "comments",
+    "memo",
+    "description",
+    "customer notes",
+    "customer note",
+    "client notes",
+    "internal notes",
+    "private notes",
+    "notes 1",
+  ],
 };
 
 const PRESET_FIELD_ALIASES: Partial<
@@ -160,6 +295,25 @@ const PRESET_FIELD_ALIASES: Partial<
     email: ["email", "email address"],
     address: ["property address", "street 1", "street address"],
   },
+  fieldedge: {
+    name: ["customer name", "customer", "display name"],
+    phone: ["primary phone", "phone", "mobile phone"],
+    email: ["email", "email address"],
+    address: ["address", "service address", "address 1"],
+  },
+  service_fusion: {
+    name: ["customer name", "customer", "account name"],
+    phone: ["phone 1", "phone", "mobile"],
+    email: ["email 1", "email"],
+    address: ["street 1", "address 1", "address"],
+    address_line2: ["street 2", "address 2"],
+  },
+  workiz: {
+    name: ["client name", "client", "name"],
+    phone: ["client phone", "phone"],
+    email: ["client email", "email"],
+    address: ["address", "client address"],
+  },
   quickbooks: {
     name: ["customer", "customer name", "display name"],
     phone: ["phone", "phone number", "mobile"],
@@ -184,9 +338,12 @@ export type CustomerImportRowInput = {
   company: string;
 };
 
-function getCustomerImportRowLimitError(rowCount: number): string | null {
-  if (rowCount > CUSTOMER_IMPORT_MAX_ROWS) {
-    return `This file has ${rowCount} rows. Import up to ${CUSTOMER_IMPORT_MAX_ROWS} customers at a time.`;
+function getCustomerImportRowLimitError(
+  rowCount: number,
+  maxRows: number,
+): string | null {
+  if (rowCount > maxRows) {
+    return `This file has ${rowCount.toLocaleString("en-US")} rows. Import up to ${maxRows.toLocaleString("en-US")} customers at a time.`;
   }
 
   return null;
@@ -201,6 +358,7 @@ export function createEmptyCustomerImportFieldMapping(): CustomerImportFieldMapp
     phone: null,
     email: null,
     address: null,
+    address_line2: null,
     city: null,
     state: null,
     zip: null,
@@ -253,6 +411,7 @@ export type MappedImportRowValues = {
   phone: string;
   email: string;
   address: string;
+  address_line2: string;
   city: string;
   state: string;
   zip: string;
@@ -272,6 +431,7 @@ export function extractMappedRowValues(
     phone: getValueForHeader(record, headers, mapping.phone),
     email: getValueForHeader(record, headers, mapping.email),
     address: getValueForHeader(record, headers, mapping.address),
+    address_line2: getValueForHeader(record, headers, mapping.address_line2),
     city: getValueForHeader(record, headers, mapping.city),
     state: getValueForHeader(record, headers, mapping.state),
     zip: getValueForHeader(record, headers, mapping.zip),
@@ -321,11 +481,15 @@ export function buildCustomerNameFromMappedValues(values: MappedImportRowValues)
 export function mapCsvRecordsToImportRowsWithCompany(
   parsed: ParsedCustomerImportCsv,
   mapping: CustomerImportFieldMapping,
+  maxRows: number = CUSTOMER_IMPORT_MAX_ROWS,
 ): {
   error?: string;
   rows?: CustomerImportRowInput[];
 } {
-  const rowLimitError = getCustomerImportRowLimitError(parsed.dataRecords.length);
+  const rowLimitError = getCustomerImportRowLimitError(
+    parsed.dataRecords.length,
+    maxRows,
+  );
   if (rowLimitError) {
     return { error: rowLimitError };
   }
@@ -339,7 +503,11 @@ export function mapCsvRecordsToImportRowsWithCompany(
       name: built.name,
       phone: values.phone,
       email: values.email,
-      address: values.address,
+      // Customers keep one street line, so an apartment or suite number from
+      // a second address column is appended rather than dropped.
+      address: [values.address.trim(), values.address_line2.trim()]
+        .filter(Boolean)
+        .join(", "),
       city: values.city,
       state: values.state,
       zip: values.zip,
@@ -380,4 +548,59 @@ export function sanitizeCustomerImportFieldMapping(
   }
 
   return sanitized;
+}
+
+export type CustomerImportMappingGaps = {
+  /** Plain-language warnings, most serious first. */
+  warnings: string[];
+  /** CSV columns that will not be imported anywhere. */
+  unmappedHeaders: string[];
+};
+
+/**
+ * What the column matching will silently leave behind, said before the import
+ * runs rather than discovered afterwards. A file whose phone column was not
+ * matched imported every customer without a phone number, and the matching
+ * step showed nothing but a row of dropdowns (retention audit 2026-11-12).
+ */
+export function describeCustomerImportMappingGaps(
+  mapping: CustomerImportFieldMapping,
+  headers: string[],
+): CustomerImportMappingGaps {
+  const warnings: string[] = [];
+
+  if (!mapping.phone && !mapping.email) {
+    warnings.push(
+      "No column is matched to Phone or Email. Every customer needs one of them, so nothing will import until you pick a phone or email column.",
+    );
+  } else if (!mapping.phone) {
+    warnings.push(
+      "No column is matched to Phone. Customers will import without phone numbers, so technicians cannot call them from the job. Pick your phone column above if the file has one.",
+    );
+  } else if (!mapping.email) {
+    warnings.push(
+      "No column is matched to Email. Estimates and invoices cannot be emailed to these customers until an email is added.",
+    );
+  }
+
+  if (!mapping.name && !mapping.first_name && !mapping.last_name && !mapping.company_name) {
+    warnings.push(
+      "No column is matched to a customer name, first and last name, or company. Rows without a name are skipped.",
+    );
+  }
+
+  if (!mapping.address) {
+    warnings.push(
+      "No column is matched to Street address. Customers will import without a service address, and each one will need it before the first visit.",
+    );
+  }
+
+  const used = new Set(
+    Object.values(mapping).filter((value): value is string => Boolean(value)),
+  );
+  const unmappedHeaders = headers.filter(
+    (header) => header.trim() && !used.has(header),
+  );
+
+  return { warnings, unmappedHeaders };
 }

@@ -113,6 +113,48 @@ const ENTRY_POINTS = [
     scope: "public.analytics_new_visitor",
     why: "a tool opening the site in fresh browser profiles counted as a crowd of new visitors",
   },
+  {
+    file: "app/api/resources/email-results/route.ts",
+    fn: "POST",
+    scope: "public.resource_email",
+    why: "mail flooding: the calculators email a result to any address typed into the form",
+  },
+  {
+    file: "app/actions/directory.ts",
+    fn: "submitListingAction",
+    scope: "public.directory_submit",
+    why: "mail flooding and review-queue flooding: a listing emails a confirmation link to the address typed",
+  },
+  {
+    file: "app/actions/directory.ts",
+    fn: "requestManageLinkAction",
+    scope: "public.directory_manage_link",
+    why: "mail flooding against a lister's inbox, and probing which addresses have a listing",
+  },
+  {
+    file: "app/actions/directory.ts",
+    fn: "reportListingAction",
+    scope: "public.directory_report",
+    why: "report flooding against a business's listing",
+  },
+  {
+    file: "app/actions/directory-quote.ts",
+    fn: "sendQuoteRequestAction",
+    scope: "public.directory_quote",
+    why: "mail flooding against a listed business: each request emails that business and may add a lead to its workspace",
+  },
+  {
+    file: "app/actions/affiliates.ts",
+    fn: "submitAffiliateApplicationAction",
+    scope: "public.affiliate_apply",
+    why: "mail flooding and review-queue flooding: an application emails a receipt to the address typed and adds a row for the owner to read",
+  },
+  {
+    file: "app/actions/contact.ts",
+    fn: "sendContactMessageAction",
+    scope: "public.contact_message",
+    why: "mail flooding against the founder's inbox: each message from /contact emails the support inbox",
+  },
 ];
 
 /** The body of one exported function, to its closing brace at column 0. */

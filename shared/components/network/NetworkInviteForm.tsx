@@ -20,6 +20,8 @@ type NetworkInviteFormProps = {
   ) => void;
   onCancel?: () => void;
   surface?: NetworkSurface;
+  /** Starts the form with what is already known (for example a public directory listing). */
+  initialValues?: Partial<NetworkInviteFormData>;
 };
 
 const DEFAULT_FORM: NetworkInviteFormData = {
@@ -37,6 +39,7 @@ export function NetworkInviteForm({
   onSuccess,
   onCancel,
   surface = "legacy",
+  initialValues,
 }: NetworkInviteFormProps) {
   const isNorthStar = surface === "north-star";
   const inputClass = isNorthStar ? st.formInput : inputClassName;
@@ -44,7 +47,7 @@ export function NetworkInviteForm({
   const optionalClass = isNorthStar ? st.formLabelOptional : "font-normal text-altair-ink-on-paper-muted";
   const submitClass = isNorthStar ? st.saveButton : "admin-btn-primary";
   const cancelClass = isNorthStar ? st.cancelButton : "admin-btn-secondary";
-  const [formData, setFormData] = useState<NetworkInviteFormData>(DEFAULT_FORM);
+  const [formData, setFormData] = useState<NetworkInviteFormData>(() => ({ ...DEFAULT_FORM, ...initialValues }));
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 

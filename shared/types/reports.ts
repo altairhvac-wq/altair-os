@@ -4,12 +4,50 @@ import type { Job, JobStatus } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import { roundCurrency, type InvoiceStatus } from "@/shared/types/invoice";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
+import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 
 export type ProfitabilityReportDateRange = AnalyticsDateRange | "all";
 
 export type ProfitabilityReportDateBounds = {
   startDate: string;
   endDate: string;
+  /**
+   * The zone a TIMESTAMP is turned into a calendar day in before it is
+   * compared with these dates. Left out: the UTC day, which is what every
+   * report compared before the Reports page knew the company's zone, and
+   * what every other caller of these bounds still compares.
+   *
+   * It travels with the dates so the two cannot be paired wrongly: "October
+   * 31" only means something together with whose October 31 it is.
+   */
+  timeZone?: string;
+};
+
+/**
+ * How a report counts days: whose calendar a timestamp is read on, and what
+ * "today" is on that calendar.
+ *
+ * ============================== WHY THIS IS ONE VALUE ==============================
+ * The Reports page turns a moment into a day in three places: the database
+ * functions that count (migrations 169/221 and 170/220), the date range
+ * ("last 30 days" ends today), and the aging reference date. If any one of
+ * them uses a different calendar from the others, a job finished in the
+ * evening is inside the period in one figure and outside it in the next.
+ * So the page resolves this once and hands the same value to all of them.
+ *
+ *   timeZone set   the company's zone. Timestamps are read on the company's
+ *                  calendar and "today" is the company's today.
+ *   timeZone null  the rule from before: timestamps are read as UTC days and
+ *                  "today" is the server's own date. Used when no zone is
+ *                  known, and whenever the database functions do not take a
+ *                  zone yet (their migration has not run), so that the
+ *                  TypeScript half never counts on a different calendar
+ *                  from the SQL half.
+ */
+export type ReportDayBasis = {
+  timeZone: string | null;
+  /** Today, YYYY-MM-DD, on that calendar. */
+  today: string;
 };
 
 export type ProfitabilityReportSummary = {
@@ -45,6 +83,77 @@ function toDateOnly(value: Date): string {
   const month = String(value.getMonth() + 1).padStart(2, "0");
   const day = String(value.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function isUsableTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The day basis for a company's zone, or the old rule when there is none.
+ *
+ * A zone this runtime does not know resolves to the old rule rather than
+ * throwing: the caller then does not pass it to the database either, and
+ * both halves count UTC days.
+ */
+export function resolveReportDayBasis(
+  timeZone?: string | null,
+  now: Date = new Date(),
+): ReportDayBasis {
+  const zone = timeZone?.trim();
+
+  if (!zone || !isUsableTimeZone(zone)) {
+    return { timeZone: null, today: toDateOnly(now) };
+  }
+
+  return { timeZone: zone, today: getDateOnlyInTimeZone(now, zone) };
+}
+
+/**
+ * The basis's "today" as the Date the bounds helpers below take.
+ *
+ * They read a Date with the local getters, so the date is rebuilt from its
+ * parts as a local date: whatever zone the server runs in, the helpers see
+ * the basis's calendar date and nothing else.
+ */
+export function reportDayBasisReferenceDate(basis: ReportDayBasis): Date {
+  const [year, month, day] = basis.today.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/** Marks bounds with the zone their days are in. No zone: left as they are. */
+export function withReportDayBasis<
+  T extends ProfitabilityReportDateBounds | null,
+>(bounds: T, basis: ReportDayBasis | null | undefined): T {
+  if (!bounds || !basis?.timeZone) {
+    return bounds;
+  }
+
+  return { ...bounds, timeZone: basis.timeZone };
+}
+
+/**
+ * The Reports page's period for a range, on the basis's calendar.
+ *
+ * One function so the page, its charts and its sparklines cannot each work
+ * out "the last 30 days" from a different today.
+ */
+export function resolveReportPageDateBounds(
+  dateRange: AnalyticsDateRange,
+  basis: ReportDayBasis,
+): ProfitabilityReportDateBounds {
+  return withReportDayBasis(
+    resolveProfitabilityReportDateBounds(
+      dateRange,
+      reportDayBasisReferenceDate(basis),
+    ),
+    basis,
+  );
 }
 
 function roundMarginPercent(value: number): number {
@@ -532,7 +641,30 @@ export type ReportChartSeriesBundle = {
   meta: ReportSectionMeta;
 };
 
-export function toReportDateOnly(value: string): string {
+/**
+ * The calendar day a report counts a value on.
+ *
+ * A plain date ("2026-10-31") is that date, in every zone: payment dates,
+ * issue dates, due dates and purchase dates are stored as dates and are
+ * never shifted.
+ *
+ * A timestamp ("2026-11-01T03:30:00+00:00") is a moment, and which day it
+ * falls on depends on whose calendar is read. With a zone it is that zone's
+ * day (October 31 in Denver). Without one it is the text before the "T",
+ * which for the timestamps the database returns is the UTC day: the rule
+ * every report used before the Reports page knew the company's zone.
+ */
+export function toReportDateOnly(
+  value: string,
+  timeZone?: string | null,
+): string {
+  if (timeZone && value.includes("T")) {
+    const instant = new Date(value);
+    if (!Number.isNaN(instant.getTime())) {
+      return getDateOnlyInTimeZone(instant, timeZone);
+    }
+  }
+
   return value.split("T")[0] ?? value;
 }
 
@@ -555,7 +687,7 @@ export function isDateWithinReportBounds(
     return false;
   }
 
-  const dateOnly = toReportDateOnly(value);
+  const dateOnly = toReportDateOnly(value, bounds.timeZone);
   return dateOnly >= bounds.startDate && dateOnly <= bounds.endDate;
 }
 
@@ -578,8 +710,10 @@ export function buildReportSectionMeta(input: {
   };
 }
 
-function parseReportDateOnly(value: string): Date {
-  const [year, month, day] = toReportDateOnly(value).split("-").map(Number);
+function parseReportDateOnly(value: string, timeZone?: string | null): Date {
+  const [year, month, day] = toReportDateOnly(value, timeZone)
+    .split("-")
+    .map(Number);
   return new Date(year, month - 1, day);
 }
 
@@ -632,11 +766,17 @@ export function resolveReportChartDateBounds(
   return bounds ?? resolveProfitabilityReportDateBounds("30d", referenceDate);
 }
 
+/**
+ * @param timeZone the zone a timestamp is read in (see toReportDateOnly).
+ *   Pass the bounds' own zone, so a value is bucketed on the same day it
+ *   was tested against the bounds on.
+ */
 export function resolveReportChartBucketStart(
   value: string,
   bucketSize: ReportChartBucketSize,
+  timeZone?: string | null,
 ): string {
-  const date = parseReportDateOnly(value);
+  const date = parseReportDateOnly(value, timeZone);
 
   switch (bucketSize) {
     case "day":

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="56" viewBox="0 0 200 56" role="img" aria-label="Listed on Altair Operating System">
+  <title>Listed on Altair Operating System</title>
+  <defs>
+    <radialGradient id="glow" cx="0.85" cy="0" r="0.9">
+      <stop offset="0" stop-color="#C2A05A" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#C2A05A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="0.5" y="0.5" width="199" height="55" rx="11" fill="#0D0F0C" stroke="#C2A05A" stroke-opacity="0.45"/>
+  <rect x="0.5" y="0.5" width="199" height="55" rx="11" fill="url(#glow)"/>
+  <circle cx="28" cy="28" r="14" fill="#A4823A"/>
+  <path d="M21.5 28.4l4.4 4.4 8.6-9.3" fill="none" stroke="#0D0F0C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="52" y="20" fill="#C2A05A" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="700" letter-spacing="1.6">LISTED ON</text>
+  <text x="52" y="37" fill="#FFF9EA" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="0.2">Altair</text>
+  <text x="52" y="48" fill="#A99F8F" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="500" letter-spacing="0.3">Operating System</text>
+</svg>

@@ -21,6 +21,7 @@ import {
   type CustomerQueueRequest,
 } from "@/lib/database/queries/customer-queue-filters";
 import type { CustomerRow } from "@/lib/database/types/core-tables";
+import { CUSTOMER_OPTION_LIMIT } from "@/shared/lib/customers/customer-options";
 import type { Customer } from "@/shared/types/customer";
 import type { CustomerWorkQueue } from "@/shared/components/customers/customer-work-queues";
 
@@ -247,9 +248,15 @@ export async function getCustomerQueueCounts(
     newThisMonthPromise,
   ]);
 
+  const total = totalResult.count ?? 0;
+
   return {
-    byQueue: Object.fromEntries(results) as Record<CustomerWorkQueue, number>,
-    total: totalResult.count ?? 0,
+    // `all` is the lifecycle-active book, which is exactly what `total` counts.
+    byQueue: {
+      ...(Object.fromEntries(results) as Omit<Record<CustomerWorkQueue, number>, "all">),
+      all: total,
+    },
+    total,
     newThisMonth: newResult.count ?? 0,
   };
 }
@@ -275,14 +282,20 @@ export async function getCustomerQueueCounts(
  *
  * The cap is reported. A caller that wants to say "showing the first 25 of many"
  * can, rather than presenting a truncated list as the answer.
+ *
+ * ============================== WITHOUT A TERM IT IS STILL A SLICE ==============================
+ * Called with no search, this returns the newest 25 and nothing else. That is
+ * a starting list for a picker, never the picker's whole range: whatever
+ * renders it has to offer the search as well (CustomerPicker does), and a
+ * record the form was opened for has to be added by id (withSelectedOption).
+ * For a while the forms rendered this slice in a bare select, and a job opened
+ * from an older customer's page was saved for the newest customer instead.
  */
 export type CustomerOptionsResult = {
   customers: Customer[];
   /** True when more customers matched than were returned. */
   truncated: boolean;
 };
-
-export const CUSTOMER_OPTION_LIMIT = 25;
 
 export async function listCustomerOptions(
   companyId: string,

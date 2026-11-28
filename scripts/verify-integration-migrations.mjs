@@ -200,6 +200,27 @@ const PLATFORM_ONLY_TABLES = new Set([
   // Migration 206: hashed browser ids the owner marked as internal. Same
   // shape as the events they filter: no tenant, service role only.
   "web_analytics_internal_visitors",
+  // Migration 209: people who opted in to hear about new free tools. A
+  // platform mailing list, not tenant data: no company, service role only.
+  "resource_email_subscribers",
+  // Migration 210: the public contractor directory. Listings belong to no
+  // workspace (a lister has no account), one column is private, and public
+  // pages read only through the directory_* functions: service role only.
+  "directory_listings",
+  "directory_listing_reports",
+  // Migration 213: applications to the affiliate program. An applicant has
+  // no account and no workspace, and every column is private: service role
+  // only, read by the Platform review page after a platform admin check.
+  "affiliate_applications",
+  // Migration 214: directory listing owners' numbers (counts per listing per
+  // day, no visitor data) and which months were emailed. They hang off
+  // directory_listings, which has no workspace: service role only.
+  "directory_listing_daily_stats",
+  "directory_stats_emails",
+  // Migration 216: quote and sub-work requests sent to a listing. The sender
+  // has no account and every column is private contact data; a copy may
+  // become a lead in the listing's workspace, written by the service role.
+  "directory_quote_requests",
 ]);
 
 console.log("\nTenancy, RLS and grants on every new table");
@@ -244,7 +265,11 @@ for (const file of files) {
       );
       check(
         `${table}: has no policy (service role only)`,
-        !new RegExp(`on\\s+public\\.${table}\\s+for\\s+`).test(sql),
+        // A policy names a command ("for select"); a trigger says "for each
+        // row" on the same table and is not a policy.
+        !new RegExp(
+          `create\\s+policy[^;]*on\\s+public\\.${table}\\b|on\\s+public\\.${table}\\s+for\\s+(select|insert|update|delete|all)\\b`,
+        ).test(sql),
       );
       continue;
     }
@@ -405,6 +430,67 @@ const MIGRATIONS_WITH_REVIEWED_FUNCTIONS = new Map([
   [
     "208_time_entry_close_clock_skew.sql",
     new Set(["close_time_entry"]),
+  ],
+  // 209 adds engagement events to web analytics: one read-only aggregation
+  // over web_analytics_events, security invoker, executable by service_role
+  // only, with the owner's browsers excluded exactly as the 206 summary does.
+  [
+    "209_site_engagement_events_and_resource_subscribers.sql",
+    new Set(["platform_web_analytics_engagement"]),
+  ],
+  // 210 adds the public directory's only read path: three read-only
+  // functions that return the public columns of PUBLISHED listings, security
+  // invoker, executable by service_role only.
+  [
+    "210_public_contractor_directory.sql",
+    new Set(["directory_search_listings", "directory_public_listing", "directory_published_paths"]),
+  ],
+  // 211 replaces two of those functions with versions that add one key,
+  // is_member (a yes/no), and list members first. Still read-only, security
+  // invoker, service_role only; the linked workspace id is never returned.
+  [
+    "211_directory_listing_claims.sql",
+    new Set(["directory_search_listings", "directory_public_listing"]),
+  ],
+  // 214 replaces the same two with versions that add the optional details,
+  // approved image paths and an awaiting-owner yes/no; adds directory_facets
+  // (counts of published listings by state, city and trade; no names or
+  // ids) and directory_record_listing_event (adds one to a published
+  // listing's daily count; counts only). All security invoker, service_role
+  // only; scripts/verify-directory.mjs holds each to its rules.
+  [
+    "214_directory_rich_listings_and_stats.sql",
+    new Set(["directory_search_listings", "directory_public_listing", "directory_facets", "directory_record_listing_event"]),
+  ],
+  // 217 replaces the two read-only web analytics aggregations (206 summary,
+  // 209 engagement) with versions that count visible time, engaged visits,
+  // returning visitors from visit history and days in the owner's time zone,
+  // and adds web_analytics_is_site_path (immutable: is a path a page of the
+  // public website). All security invoker, service_role only;
+  // scripts/verify-platform-analytics.mjs holds them to their rules.
+  [
+    "217_web_analytics_accuracy.sql",
+    new Set(["platform_web_analytics_summary", "platform_web_analytics_engagement", "web_analytics_is_site_path"]),
+  ],
+  // 220 gives the 170 per-day series a fourth argument, the time zone a
+  // timestamp is turned into a calendar day in (default 'UTC', so a
+  // three-argument call is unchanged). Still security definer with the same
+  // membership and permission checks and the same grants;
+  // scripts/verify-company-timezone.mjs proves the body is 170's with only
+  // the zone swapped in.
+  [
+    "220_company_timezone_choice.sql",
+    new Set(["get_company_report_daily_series"]),
+  ],
+  // 221 does the same for the 169 reports summary: a ninth argument, the
+  // time zone (default 'UTC', so an eight-argument call is unchanged), so
+  // the Reports page's figures count the same days as its charts. Still
+  // security definer with the same membership and permission checks and the
+  // same grants; scripts/verify-company-timezone.mjs proves the body is
+  // 169's with only the zone swapped in.
+  [
+    "221_reports_summary_time_zone.sql",
+    new Set(["get_company_reports_summary"]),
   ],
 ]);
 

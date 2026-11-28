@@ -226,7 +226,6 @@ export function EstimateDocumentSection({
               taxAmount={estimate.tax ?? 0}
               total={estimate.total}
               documentStyle="estimate"
-              hideTotal
               compactSubtotal
               northStar={northStar}
             />

@@ -222,7 +222,7 @@ export function OverviewPerformanceCard({
             icon={Briefcase}
             tone="bg-altair-brass/15 text-[var(--brand-metal-text)]"
             value={String(performance.jobsCompletedTotal)}
-            label="Jobs completed"
+            label="Jobs completed, 6 months"
             delta={jobsDelta ?? "First 6 months on record"}
             deltaTone={deltaTone(performance.jobsCompletedTotal, performance.jobsCompletedPriorWindow)}
           />
@@ -230,7 +230,10 @@ export function OverviewPerformanceCard({
             icon={FileCheck2}
             tone="bg-altair-information-surface text-altair-information-foreground"
             value={performance.estimateCloseRate != null ? `${performance.estimateCloseRate}%` : "—"}
-            label="Estimate close rate"
+            // The period is in the label (UI audit 2026-11-12, B4). Reports shows
+            // the same rate for the period picked there (30 days by default),
+            // so an unlabelled "64%" here beside "67%" there read as a mistake.
+            label="Estimate close rate, 6 months"
             delta={
               performance.estimatesSentTotal > 0
                 ? `${performance.estimatesApprovedTotal} of ${performance.estimatesSentTotal} sent were approved`

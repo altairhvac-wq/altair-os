@@ -311,7 +311,7 @@ function ReportsPreview() {
 function TechnicianPreview() {
   return (
     <PreviewShell
-      title="Technician App"
+      title="Technician Phone View"
       description="The active job, customer details, and field actions in one view."
       icon={Smartphone}
     >

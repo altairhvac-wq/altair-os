@@ -16,9 +16,9 @@ import { YOUTUBE_CHANNELS } from "@/shared/lib/resources/youtube-feed";
 import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 
-const TITLE = "Resource library";
+const TITLE = "Videos and articles";
 const DESCRIPTION =
-  "Search Altair Insights articles and public videos from the Altair HVAC Exploration and Altair Operating System YouTube channels in one place.";
+  "Guides and videos on running an HVAC business, and lessons on how the equipment works, from Altair Insights and the two Altair YouTube channels. Search them in one place.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -36,6 +36,7 @@ export default async function ResourceLibraryPage() {
   const articles: LibraryItem[] = pages.map((page) => ({
     id: `article:${page.id}`,
     kind: "article",
+    audience: "business",
     title: page.title,
     summary: page.metaDescription ?? "",
     source: "Insights",
@@ -48,6 +49,8 @@ export default async function ResourceLibraryPage() {
     channel.videos.map((video) => ({
       id: `video:${video.videoId}`,
       kind: "video" as const,
+      // The software channel is about running the shop; the school channel teaches the equipment.
+      audience: video.channelKey === "operating-system" ? ("business" as const) : ("equipment" as const),
       title: video.title,
       summary: "",
       source: video.channelLabel,
@@ -72,8 +75,13 @@ export default async function ResourceLibraryPage() {
     <ResourcePageShell
       eyebrow="Library"
       title={TITLE}
-      crumbs={[{ label: "Library" }]}
-      intro={<p>{DESCRIPTION} Videos open on YouTube.</p>}
+      crumbs={[{ label: "Videos and articles" }]}
+      intro={
+        <p>
+          Two shelves: guides and videos on running the business, and lessons on how the equipment works. Search either one.
+          Videos open on YouTube.
+        </p>
+      }
     >
       <JsonLdScript
         data={buildResourceCollectionStructuredData({

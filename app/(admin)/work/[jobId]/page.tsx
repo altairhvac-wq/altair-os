@@ -1,13 +1,15 @@
 import { notFound, redirect } from "next/navigation";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import {
+  canManageBusinessNumbers,
   canViewBilling,
   canViewJob,
   canViewJobFinancials,
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCustomers } from "@/lib/database/queries/customers";
+import { getCustomerById, listCustomers } from "@/lib/database/queries/customers";
+import { withSelectedOption } from "@/shared/lib/customers/customer-options";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
 import { listJobAttachmentsForJob } from "@/lib/database/queries/job-attachments";
@@ -19,7 +21,10 @@ import { listJobBillingSummariesForJob } from "@/lib/database/queries/job-billin
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { getTechnicianLaborCostRate } from "@/lib/database/queries/team-member-profile";
 import { listJobLaborEntriesForJob } from "@/lib/database/queries/time-entries";
+import { getCompanyBusinessNumbers } from "@/lib/database/queries/business-numbers";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
+import { deriveBusinessNumbers } from "@/shared/lib/business-numbers/derive";
+import { computeJobProfitAfterLabor } from "@/shared/lib/business-numbers/job-profit";
 import { getJobOperationalInconsistencies } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -62,7 +67,7 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
     expenses,
     materials,
     serviceItems,
-    customers,
+    activeCustomers,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyContext.company.id, companyContext)
@@ -80,6 +85,17 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
       : Promise.resolve([]),
   ]);
 
+  // The job's own customer must be one of the edit form's options. The list
+  // above is the customers still on the books; a job whose customer has since
+  // been archived is not in it, and the form then showed a DIFFERENT customer
+  // as already chosen — saving any edit moved the job to that customer.
+  const jobCustomer =
+    canEditJob &&
+    !activeCustomers.some((customer) => customer.id === job.customerId)
+      ? await getCustomerById(companyContext.company.id, job.customerId)
+      : null;
+  const customers = withSelectedOption(activeCustomers, jobCustomer);
+
   const deleteDependencies = await getJobDeleteDependencies(
     companyContext.company.id,
     jobId,
@@ -91,6 +107,7 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
     billingContext,
     laborCostRate,
     laborEntries,
+    businessNumbers,
   ] = await Promise.all([
     canViewFinancials
       ? getJobProfitabilitySnapshot(companyContext.company.id, jobId, {
@@ -113,7 +130,34 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
         )
       : Promise.resolve(null),
     listJobLaborEntriesForJob(companyContext.company.id, jobId),
+    // For "profit after labor and shop costs", below. Owner and admin only;
+    // read alongside the rest so the page does not wait for it separately.
+    canViewFinancials && canManageBusinessNumbers(companyContext)
+      ? getCompanyBusinessNumbers(companyContext)
+      : Promise.resolve(null),
   ]);
+
+  // Profit after labor and shop costs: a second line beside gross profit, for
+  // an owner or admin, from what an hour costs the company (Settings >
+  // Numbers). The read is under row level security and returns blanks for
+  // anyone else; where business numbers do not exist yet nothing is added.
+  let jobProfitability = profitability;
+  if (profitability && businessNumbers) {
+    const numbers = businessNumbers;
+    if (numbers.available && !numbers.error) {
+      jobProfitability = {
+        ...profitability,
+        afterLabor: computeJobProfitAfterLabor(
+          {
+            grossProfit: profitability.grossProfit,
+            collected: profitability.revenue.collected,
+            laborHours: profitability.labor.totalHours,
+          },
+          deriveBusinessNumbers(numbers.record.numbers),
+        ),
+      };
+    }
+  }
 
   const laborSummary =
     profitability?.labor ??
@@ -136,7 +180,7 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
       expenses={expenses}
       materials={materials}
       laborEntries={laborEntries}
-      profitability={profitability}
+      profitability={jobProfitability}
       laborSummary={laborSummary}
       laborCostRate={laborCostRate}
       serviceItems={serviceItems}

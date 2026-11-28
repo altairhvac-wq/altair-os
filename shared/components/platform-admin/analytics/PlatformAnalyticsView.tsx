@@ -229,7 +229,7 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
   return (
     <>
       <KpiGrid columns={5}>
-        <Kpi label="Visitors today" value={metricText(t.windows.today)} hint="since midnight UTC" />
+        <Kpi label="Visitors today" value={metricText(t.windows.today)} hint={`since midnight, ${t.timeZone.replace("_", " ")}`} />
         <Kpi label="Visitors · 7 days" value={metricText(t.windows.last7Days)} />
         <Kpi label="Visitors · 30 days" value={metricText(t.windows.last30Days)} />
         <Kpi label="Unique visitors" value={metricText(t.visitors)} hint={data.range.label.toLowerCase()} />
@@ -247,6 +247,30 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
         />
       </AnalyticsPanel>
 
+      <AnalyticsPanel
+        title="What visitors did"
+        description="Deliberate actions on the public site: the video played, a trial button pressed, a calculator used, a template downloaded. Counts how many times and by how many different visitors. Nothing a visitor typed is recorded."
+      >
+        {t.actions === null ? (
+          <p className="text-sm text-[#6B6255]">
+            Not measured yet. Apply migration 209 in Supabase to start counting these.
+          </p>
+        ) : (
+          <BarList
+            rows={t.actions}
+            valueLabel="Times"
+            secondaryLabel="Visitors"
+            emptyTitle="No actions recorded in this period."
+          />
+        )}
+        {t.emailList ? (
+          <p className="mt-3 text-sm text-[#6B6255]">
+            Email list today: <strong className="text-[#1F1B14]">{t.emailList.confirmed}</strong> confirmed,{" "}
+            {t.emailList.pending} waiting to confirm.
+          </p>
+        ) : null}
+      </AnalyticsPanel>
+
       <div className="grid gap-3 lg:grid-cols-2">
         <AnalyticsPanel title="Most visited pages">
           <BarList rows={t.topPages} valueLabel="Views" secondaryLabel="Visitors" />
@@ -260,6 +284,7 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
         <AnalyticsPanel title="Devices and returning visitors">
           <BarList rows={t.devices} valueLabel="Visitors" labelFormatter={deviceLabel} />
           {t.returning ? (
+            <>
             <div className="mt-4 grid grid-cols-2 gap-2.5">
               <Kpi label="New visitors" value={formatCount(t.returning.newVisitors)} hint={formatPercent(totalReturning ? t.returning.newVisitors / totalReturning : null)} />
               <Kpi
@@ -268,6 +293,11 @@ function TrafficTab({ data }: { data: PlatformAnalytics }) {
                 hint={formatPercent(totalReturning ? t.returning.returningVisitors / totalReturning : null)}
               />
             </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-[#6B6255]">
+              Returning means a new visit 30+ minutes after their first one. Phones and the browsers inside YouTube,
+              Facebook and TikTok often forget a visitor, so the real number is at least this.
+            </p>
+            </>
           ) : null}
         </AnalyticsPanel>
       </div>
@@ -328,10 +358,10 @@ function VisitDetail({ traffic: t }: { traffic: NonNullable<PlatformAnalytics["t
 
       {e ? (
         <KpiGrid columns={4}>
-          <Kpi label="Visits" value={formatCount(e.sessions)} hint="one per browser tab session" />
-          <Kpi label="Bounce rate" value={formatPercent(e.sessions ? e.bouncedSessions / e.sessions : null)} hint="left after one page" />
+          <Kpi label="Visits" value={formatCount(e.sessions)} hint="ends after 30 min with no activity" />
+          <Kpi label="Bounce rate" value={formatPercent(e.sessions ? e.bouncedSessions / e.sessions : null)} hint="under 10 s, one page, did nothing" />
           <Kpi label="Pages per visit" value={e.avgPages == null ? DASH : e.avgPages.toFixed(1)} />
-          <Kpi label="Time on site" value={formatDuration(e.medianSeconds)} hint="median, visits of 2+ pages" />
+          <Kpi label="Time on site" value={formatDuration(e.medianSeconds)} hint="median time the pages were on screen" />
         </KpiGrid>
       ) : null}
 
@@ -397,8 +427,8 @@ function VisitDetail({ traffic: t }: { traffic: NonNullable<PlatformAnalytics["t
                 visitSource(visit),
                 `${deviceLabel(visit.device)}${visit.isReturning ? " · returning" : visit.isReturning === false ? " · new" : ""}`,
                 visit.paths.join(" → ") + (visit.pages > visit.paths.length ? " → …" : ""),
-                visit.pages > 1 ? formatDuration(visit.seconds) : DASH,
-                visit.signupCompleted ? "Signed up" : visit.signupStarted ? "Started signup" : visit.pages <= 1 ? "Bounced" : DASH,
+                visit.seconds > 0 ? formatDuration(visit.seconds) : DASH,
+                visit.signupCompleted ? "Signed up" : visit.signupStarted ? "Started signup" : visit.engaged ? DASH : "Bounced",
               ],
             }))}
             emptyTitle="No visits in this period."
@@ -719,7 +749,7 @@ export function PlatformAnalyticsView({ data, tab }: { data: PlatformAnalytics; 
         {tab === "marketing" ? <MarketingTab data={data} /> : null}
         <p className="flex items-center gap-1.5 px-1 text-[11px] text-[#6B6255]">
           <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
-          {data.range.label} · days in UTC · generated {formatDate(data.generatedAt)}
+          {data.range.label} · days in {(data.traffic?.timeZone ?? "UTC").replace("_", " ")} time · generated {formatDate(data.generatedAt)}
         </p>
       </MasterContentStack>
     </MasterShellPage>

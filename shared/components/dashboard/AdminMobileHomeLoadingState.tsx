@@ -17,7 +17,7 @@
  * not something a timeout would fix. The first frame was simply the wrong
  * layout, and the slower the page the longer it was wrong for.
  *
- * This skeleton matches AdminMobileHome's actual structure -- same dark radial
+ * This skeleton matches AdminMobileHome's actual structure -- same light
  * canvas, same top bar, same "Needs attention" band, same two-tile grid -- so
  * the frame before the data and the frame after it are the same shape.
  */
@@ -32,31 +32,30 @@ export function AdminMobileHomeLoadingState() {
       aria-busy="true"
       aria-label="Loading home"
       data-testid="page-dashboard-mobile-loading"
-      className="min-h-[calc(100dvh-7rem)] bg-[radial-gradient(130%_90%_at_50%_-15%,#333631_0%,#1c1e1b_48%,#0a0a09_100%)] px-5 pb-12 pt-4"
+      className="space-y-4 px-1 pb-4 pt-1"
     >
-      {/* Top bar: menu, greeting block, calendar */}
-      <div className="flex items-start justify-between gap-3">
-        <Skeleton className="h-9 w-9 rounded-xl bg-white/10" />
-        <div className="min-w-0 flex-1 px-1">
-          <Skeleton className="h-3 w-24 bg-white/10" />
-          <Skeleton className="mt-2 h-5 w-40 bg-white/10" />
+      {/* Greeting block, then the schedule shortcut */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="mt-2 h-6 w-44" />
         </div>
-        <Skeleton className="h-9 w-9 rounded-xl bg-white/10" />
+        <Skeleton className="h-11 w-11 rounded-xl" />
       </div>
 
-      <section aria-label="Loading needs attention" className="mt-6">
-        <Skeleton className="h-2.5 w-28 bg-white/10" />
+      <section aria-label="Loading needs attention">
+        <Skeleton className="h-2.5 w-28" />
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="mt-2 flex items-center gap-3 rounded-2xl bg-white/[0.07] px-3.5 py-3.5 ring-1 ring-inset ring-white/10"
+            className="mt-2 flex items-center gap-3 rounded-2xl bg-altair-paper px-3.5 py-3.5 border border-altair-border/40"
           >
-            <Skeleton className="h-9 w-9 shrink-0 rounded-xl bg-white/10" />
+            <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">
-              <Skeleton className="h-4 w-32 bg-white/10" />
-              <Skeleton className="mt-1.5 h-3 w-20 bg-white/10" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="mt-1.5 h-3 w-20" />
             </div>
-            <Skeleton className="h-4 w-4 shrink-0 rounded bg-white/10" />
+            <Skeleton className="h-4 w-4 shrink-0 rounded" />
           </div>
         ))}
       </section>
@@ -65,13 +64,13 @@ export function AdminMobileHomeLoadingState() {
         {Array.from({ length: 2 }).map((_, index) => (
           <div
             key={index}
-            className="flex min-h-[9.5rem] flex-col rounded-2xl bg-white/[0.07] px-3.5 py-3.5 ring-1 ring-inset ring-white/10"
+            className="flex min-h-[9.5rem] flex-col rounded-2xl bg-altair-paper px-3.5 py-3.5 border border-altair-border/40"
           >
-            <Skeleton className="h-2.5 w-16 bg-white/10" />
-            <Skeleton className="mt-2 h-9 w-14 bg-white/10" />
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="mt-2 h-9 w-14" />
             <div className="mt-auto space-y-1.5 pt-3">
-              <Skeleton className="h-3.5 w-24 bg-white/10" />
-              <Skeleton className="h-3 w-20 bg-white/10" />
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3 w-20" />
             </div>
           </div>
         ))}

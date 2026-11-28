@@ -250,10 +250,18 @@ export function getPlanAccountAllowance(planKey: SaasPlanKey): SaasPlanAccountAl
   };
 }
 
-/** The one sentence every pricing surface uses for a plan's accounts. */
+/**
+ * The one sentence every PUBLIC pricing surface uses for a plan's seats
+ * (pricing page, landing pages, structured data).
+ *
+ * It says "users": "1 account" read to a buyer like one company account, and
+ * the comparison pages already say users. The code and the in-app billing
+ * messages keep the word "account"; they mean the same thing, anyone who
+ * signs in.
+ */
 export function describePlanAccounts(plan: Pick<SaasCatalogPlan, "includedAccounts" | "additionalAccountPriceUsd">): string | null {
   if (plan.includedAccounts === null) return null;
-  const base = plan.includedAccounts === 1 ? "1 account" : `Up to ${plan.includedAccounts} accounts`;
+  const base = plan.includedAccounts === 1 ? "1 user" : `Up to ${plan.includedAccounts} users`;
   if (plan.additionalAccountPriceUsd === null) return base;
-  return `${plan.includedAccounts} accounts, then $${plan.additionalAccountPriceUsd}/month each`;
+  return `${plan.includedAccounts} users, then $${plan.additionalAccountPriceUsd}/month each`;
 }

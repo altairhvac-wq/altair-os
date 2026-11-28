@@ -63,12 +63,17 @@ export function TimeClockStatStrip({
         >
           <div className={altairMcTileClass}>
             <p className={altairMcMetricLabelClass}>Hours today</p>
-            <p className={altairMcMetricValueClass}>
-              {timeTracking.shiftHoursToday}
+            <p className={altairMcMetricValueClass} data-testid="time-clock-hours-today">
+              {timeTracking.shiftHoursToday.toFixed(1)}
               <span className="ml-1 text-base font-semibold text-altair-ink-on-paper-muted sm:text-lg">
                 h
               </span>
             </p>
+            {staleCount > 0 ? (
+              <p className="mt-1.5 text-xs font-medium text-altair-ink-on-paper-muted">
+                Not counting {staleCount === 1 ? "the 1 shift" : `the ${staleCount} shifts`} left open
+              </p>
+            ) : null}
           </div>
           <div className={altairMcTileClass}>
             <p className={altairMcMetricLabelClass}>Open shifts</p>
@@ -77,10 +82,10 @@ export function TimeClockStatStrip({
             </p>
           </div>
           <div className={altairMcTileClass}>
-            <p className={altairMcMetricLabelClass}>Stale open</p>
+            <p className={altairMcMetricLabelClass}>Left open</p>
             <p className={altairMcMetricValueClass}>{staleCount}</p>
             <p className="mt-1.5 text-xs font-medium text-altair-ink-on-paper-muted">
-              Unclosed ≥ 12h
+              Clocked in 12 hours ago or more. Probably a missed clock-out.
             </p>
           </div>
         </div>

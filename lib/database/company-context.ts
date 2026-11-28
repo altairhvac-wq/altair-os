@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/database/auth";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import type {
@@ -55,9 +56,13 @@ function toActiveCompanyContext(
     user,
     profile,
     membership: { ...membership, role },
+    // The one place a signed-in request decides what the stored zone means.
+    // `timezone` leaves here RESOLVED and is used as it is from then on;
+    // `timezone_set_at` rides along untouched, so a page can still ask
+    // whether the zone was chosen (getCompanyTimeZoneChoice).
     company: {
       ...company,
-      timezone: resolveCompanyTimeZone(company.timezone),
+      timezone: resolveCompanyTimeZone(company),
     },
     role,
     // Resolved here so client-safe guards can read it off the context instead
@@ -71,10 +76,9 @@ function toActiveCompanyContext(
 export const getUserCompanies = cache(async function getUserCompanies(): Promise<
   MembershipWithCompany[]
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getCurrentUser is request-cached: one auth-server check per request,
+  // shared by the layout, this lookup and the company context.
+  const [supabase, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   if (!user) {
     return [];
@@ -105,10 +109,7 @@ const getActiveCompanyContextCached = cache(
   async function getActiveCompanyContextCached(
     companyId?: string,
   ): Promise<ActiveCompanyContext | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   if (!user) {
     return null;

@@ -6,13 +6,13 @@ import {
   BarChart3,
   CheckCircle2,
   ClipboardList,
+  FileCheck,
   Loader2,
   MapPin,
-  Network,
   Radio,
   Smartphone,
-  TrendingUp,
-  Users,
+  Sparkles,
+  Upload,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
@@ -32,10 +32,20 @@ const NEXT_STEPS = [
   },
 ] as const;
 
+/**
+ * What a new account can use on day one, in plain words.
+ *
+ * These three cards used to be named like plan tiers ("Core Operations",
+ * "Pro Analytics", "Network Platform") and promised routing, crew tracking,
+ * utilization and multi-office sync. None of that exists, the three plans
+ * all carry the same features, and this is the last thing a visitor reads
+ * before typing an email address. Every line below is checked against the
+ * product: no routing, no GPS, no locations, no utilization metric.
+ */
 const PLATFORM_TIERS = [
   {
-    tier: "Core Operations",
-    tagline: "Dispatch & field execution",
+    tier: "The day's work",
+    tagline: "Office and field on the same job",
     accent: "border-[#C2A05A]/20",
     /* Sits on the LIGHT tier card, not the dark hero: brass-500 measures
      * 2.4:1 there. Uses the AA-safe brass-700, same as the other two tiers. */
@@ -44,48 +54,49 @@ const PLATFORM_TIERS = [
       {
         icon: MapPin,
         title: "Dispatch",
-        description: "Assign, route, and track crews in real time.",
+        // No routing and no live GPS exist; the board shows every crew's day.
+        description: "Assign jobs and see every crew's day on one board.",
       },
       {
         icon: Smartphone,
-        title: "Technician Mobile",
-        description: "Field-ready workflows built for crews on the move.",
+        title: "Technician phone view",
+        description: "Each tech opens the day's jobs in the phone's browser.",
       },
     ],
   },
   {
-    tier: "Pro Analytics",
-    tagline: "Operational intelligence",
+    tier: "Getting paid",
+    tagline: "Estimate to invoice to payment",
     accent: "border-[#C2A05A]/14",
     labelColor: "text-[#77591B]",
     features: [
+      {
+        icon: FileCheck,
+        title: "Estimates & invoices",
+        description: "Customers approve from a link. Approved work becomes the invoice.",
+      },
       {
         icon: BarChart3,
-        title: "Live Dashboards",
-        description: "Revenue, utilization, and job flow at a glance.",
-      },
-      {
-        icon: TrendingUp,
-        title: "Performance Insights",
-        description: "Spot bottlenecks from first call to final invoice.",
+        title: "Reports",
+        description: "Collected, outstanding and overdue, from the same records.",
       },
     ],
   },
   {
-    tier: "Network Platform",
-    tagline: "Connected field ecosystem",
+    tier: "Your first day",
+    tagline: "Start without retyping",
     accent: "border-[#C2A05A]/14",
     labelColor: "text-[#77591B]",
     features: [
       {
-        icon: Network,
-        title: "Partner Network",
-        description: "Connect offices, subs, and customers in one system.",
+        icon: Upload,
+        title: "Bring your customers",
+        description: "Import a customer list from a spreadsheet or another system.",
       },
       {
-        icon: Users,
-        title: "Multi-Office Sync",
-        description: "Coordinate teams and capacity across locations.",
+        icon: Sparkles,
+        title: "Sample data",
+        description: "Load sample jobs to look around, then clear them in one step.",
       },
     ],
   },

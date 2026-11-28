@@ -23,5 +23,12 @@ export default async function SystemCheckPage() {
 
   const report = await runSystemChecks();
 
-  return <SystemCheckPageView report={report} />;
+  // The raw checks name server settings. Only the people who run the platform
+  // can act on those, so only they are shown them.
+  return (
+    <SystemCheckPageView
+      report={report}
+      showTechnicalDetail={companyContext.isPlatformAdmin}
+    />
+  );
 }

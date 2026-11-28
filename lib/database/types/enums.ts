@@ -36,6 +36,7 @@ export type LeadSource =
   | "facebook"
   | "referral"
   | "network_referral"
+  | "directory"
   | "door_hanger"
   | "yard_sign"
   | "truck_wrap"

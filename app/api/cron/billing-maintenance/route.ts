@@ -6,6 +6,10 @@ import {
 import { runOverdueInvoiceSweep } from "@/lib/database/services/overdue-invoice-sweep";
 import { runRetentionSweeps } from "@/lib/database/services/retention-sweeps";
 import {
+  refreshDirectoryMemberFlags,
+  type MemberFlagRefreshResult,
+} from "@/lib/directory/claims";
+import {
   runTrialPaymentReminders,
   type TrialReminderSweepResult,
 } from "@/lib/saas-billing/trial-reminders";
@@ -128,10 +132,30 @@ export async function GET(request: Request) {
           };
         }
 
+        // ==================== DIRECTORY MEMBER BADGES ====================
+        // A public directory listing linked to a workspace shows "Altair
+        // member" and is listed first only while that workspace has access
+        // (migration 211). This re-asks the billing resolver once a day for
+        // every linked listing, so a trial that ends or a subscription that
+        // lapses loses the badge within a day. Kept from failing the invoice
+        // sweep, like the reminders above.
+        let memberFlags: MemberFlagRefreshResult;
+        try {
+          memberFlags = await refreshDirectoryMemberFlags();
+        } catch {
+          memberFlags = {
+            installed: true,
+            checked: 0,
+            changed: 0,
+            errors: ["directory member re-check threw"],
+          };
+        }
+
         const errorCount =
           result.errors.length +
           retention.errors.length +
-          reminders.errors.length;
+          reminders.errors.length +
+          memberFlags.errors.length;
         const hasErrors = errorCount > 0;
 
         await recordPlatformAutomationRunFinished(runId, {
@@ -155,6 +179,8 @@ export async function GET(request: Request) {
             webAnalyticsSweepInstalled: retention.webAnalyticsSweepInstalled,
             trialReminderCandidates: reminders.candidates,
             trialRemindersSent: reminders.remindersSent,
+            directoryLinkedListingsChecked: memberFlags.checked,
+            directoryMemberBadgesChanged: memberFlags.changed,
           },
           errorSummary: hasErrors
             ? sanitizeErrorSummary(
@@ -166,6 +192,7 @@ export async function GET(request: Request) {
                   reminders.errors.length > 0
                     ? `${reminders.errors.length} trial reminder ${reminders.errors.length === 1 ? "error" : "errors"}`
                     : null,
+                  ...memberFlags.errors,
                 ]
                   .filter(Boolean)
                   .join("; "),
@@ -193,6 +220,8 @@ export async function GET(request: Request) {
           trialReminderCandidates: reminders.candidates,
           trialRemindersSent: reminders.remindersSent,
           trialRemindersSkipped: reminders.remindersSkipped,
+          directoryLinkedListingsChecked: memberFlags.checked,
+          directoryMemberBadgesChanged: memberFlags.changed,
         });
       } catch (error) {
         await recordPlatformAutomationRunFinished(runId, {

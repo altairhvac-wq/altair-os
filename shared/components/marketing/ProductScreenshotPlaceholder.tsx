@@ -6,14 +6,24 @@ import { Expand, X } from "lucide-react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
 
-/** Typical marketing screenshot dimensions (~2560×1370); used for layout ratio only. */
-const SCREENSHOT_INTRINSIC_WIDTH = 2560;
-const SCREENSHOT_INTRINSIC_HEIGHT = 1440;
+/**
+ * The tour screenshots (public/marketing/screenshots/tour): the app at 1440x810 CSS pixels captured at 2.67x,
+ * so 3840x2160. Re-captured 2026-11-25 because the 1920x1080 copies looked blurry once shrunk to fit
+ * (owner: "a lot of photos on the website that are blurry").
+ */
+const SCREENSHOT_INTRINSIC_WIDTH = 3840;
+const SCREENSHOT_INTRINSIC_HEIGHT = 2160;
 
 type ProductScreenshotPlaceholderProps = {
   alt: string;
   label: string;
   src?: string;
+  /**
+   * A 4:3 crop of the same screen for phone widths. A full desktop screenshot
+   * scaled to a 350px column is unreadable; the crop shows the working area
+   * at about twice the size. The lightbox always opens the full screenshot.
+   */
+  mobileSrc?: string;
   className?: string;
 };
 
@@ -48,7 +58,7 @@ function ScreenshotLightbox({ src, alt, onClose }: ScreenshotLightboxProps) {
           onClick={onClose}
           className="absolute inset-0 bg-[#0A0A0A]/80 backdrop-blur-[2px]"
         />
-        <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border border-[#C2A05A]/28 bg-[#0A0A0A] shadow-[0_24px_64px_rgba(0,0,0,0.55),0_8px_24px_rgba(194,160,90,0.12)] sm:max-h-[90vh] sm:rounded-2xl">
+        <div className="relative z-10 flex max-h-[94vh] w-full max-w-[min(96vw,1800px)] flex-col overflow-hidden rounded-t-2xl border border-[#C2A05A]/28 bg-[#0A0A0A] shadow-[0_24px_64px_rgba(0,0,0,0.55),0_8px_24px_rgba(194,160,90,0.12)] sm:max-h-[94vh] sm:rounded-2xl">
           <header className="flex shrink-0 items-center gap-3 border-b border-[#C2A05A]/16 px-4 py-3">
             <h2
               id={titleId}
@@ -67,15 +77,15 @@ function ScreenshotLightbox({ src, alt, onClose }: ScreenshotLightboxProps) {
             </button>
           </header>
 
-          <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-3 sm:p-4">
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-2 sm:p-3">
             <Image
               src={src}
               alt={alt}
               width={SCREENSHOT_INTRINSIC_WIDTH}
               height={SCREENSHOT_INTRINSIC_HEIGHT}
-              sizes="(max-width: 768px) 100vw, 1024px"
+              sizes="(max-width: 768px) 100vw, 96vw"
               quality={90}
-              className="mx-auto max-h-[calc(92vh-4.5rem)] w-auto max-w-full rounded-lg object-contain sm:max-h-[calc(90vh-4.5rem)]"
+              className="mx-auto max-h-[calc(94vh-4.5rem)] w-auto max-w-full rounded-lg object-contain sm:max-h-[calc(94vh-4.5rem)]"
               priority
             />
           </div>
@@ -89,6 +99,7 @@ export function ProductScreenshotPlaceholder({
   alt,
   label,
   src,
+  mobileSrc,
   className = "",
 }: ProductScreenshotPlaceholderProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -104,16 +115,34 @@ export function ProductScreenshotPlaceholder({
         <button
           type="button"
           onClick={() => setIsLightboxOpen(true)}
-          className={`${frameClass} relative aspect-[16/9] w-full cursor-zoom-in text-left`}
+          className={`${frameClass} relative w-full cursor-zoom-in text-left ${
+            mobileSrc ? "aspect-[4/3] sm:aspect-[16/9]" : "aspect-[16/9]"
+          }`}
           aria-label={`View larger: ${alt}`}
         >
+          {mobileSrc ? (
+            // Same alt as the desktop copy: only one of the two is displayed
+            // at a time, and the hidden one is skipped by screen readers.
+            <Image
+              src={mobileSrc}
+              alt={alt}
+              fill
+              sizes="95vw"
+              quality={90}
+              className="object-cover object-center sm:hidden"
+            />
+          ) : null}
           <Image
             src={src}
             alt={alt}
             fill
-            sizes="(max-width: 640px) 95vw, (max-width: 1024px) 45vw, 640px"
+            sizes="(max-width: 1024px) 92vw, 700px"
             quality={90}
-            className="object-contain object-center"
+            className={
+              mobileSrc
+                ? "hidden object-contain object-center sm:block"
+                : "object-contain object-center"
+            }
           />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0A0A0A]/70 via-[#0A0A0A]/20 to-transparent pb-2.5 pt-6" />
           <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-[#C2A05A]/28 bg-[#0A0A0A]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#C2A05A]/90 shadow-sm motion-safe:transition-opacity motion-safe:duration-200 sm:bottom-2.5 sm:right-2.5 sm:px-2.5 sm:py-1 sm:text-[11px]">

@@ -24,6 +24,19 @@
  * aging bucket against $10,076,347. Comparing the SQL to it would prove the SQL
  * reproduces the bug.
  *
+ * ===================== ON EVERY CALENDAR THE PAGE CAN COUNT ON =====================
+ * Migrations 220 and 221 let both functions count a timestamp on the
+ * company's calendar instead of UTC's. So the whole comparison above runs
+ * three times: on the old rule (no zone argument at all, the call every
+ * deployment made before), on Mountain time and on Eastern time. The oracle
+ * is the same shipped array builders, given the same day basis the page
+ * gives them.
+ *
+ * Then, on a company made for the purpose, the case the change exists for: a
+ * job finished at 03:30 UTC on the first of a month is in the month before
+ * for a Mountain or Eastern company, in both the figures and the per-day
+ * series, and stays where it was for a caller that passes no zone.
+ *
  * ===================== AND THE PRIVILEGE HALF =====================
  * Both functions are SECURITY DEFINER, so behaviour is tested rather than
  * inferred from the migration text: anon, a member of a DIFFERENT company, and
@@ -55,7 +68,8 @@ import { resolvePreviousReportDateBounds } from "@/shared/lib/reports/report-met
 import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
 import {
   resolveProfitabilityReportDateBounds,
-  resolveReportDateBounds,
+  resolveReportDayBasis,
+  resolveReportPageDateBounds,
 } from "@/shared/types/reports";
 
 const URL_ENV = "ALTAIR_LOADTEST_SUPABASE_URL";
@@ -64,6 +78,8 @@ const ANON_ENV = "ALTAIR_LOADTEST_ANON_KEY";
 
 const TIME_ZONE = "America/New_York";
 const DATE_RANGES = ["7d", "30d", "90d", "ytd"];
+// null is the old rule: no zone argument, UTC days, this machine's own today.
+const DAY_ZONES = [null, "America/Denver", "America/New_York"];
 
 let failures = 0;
 let checks = 0;
@@ -262,20 +278,31 @@ async function main() {
         "distinguish a paged read from a truncated one",
     );
 
-    for (const dateRange of DATE_RANGES) {
-      console.log(`\n=== ${dateRange} ===\n`);
+    // What each calendar counted, so the run can say whether the fixture
+    // tells them apart at all.
+    const countedOn = new Map();
 
-      const dateBounds =
-        resolveReportDateBounds(dateRange) ??
-        resolveProfitabilityReportDateBounds(dateRange);
-      const previousBounds = resolvePreviousReportDateBounds(dateBounds);
+    for (const dayZone of DAY_ZONES) {
+    for (const dateRange of DATE_RANGES) {
+      const zoneLabel = dayZone ?? "UTC days (no zone argument)";
+      const label = `[${dayZone ?? "old rule"}] ${dateRange}`;
+      console.log(`\n=== ${dateRange} on ${zoneLabel} ===\n`);
 
       const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      // The page's own rule: one basis for the period, the aging reference
+      // date and every timestamp.
+      const dayBasis = resolveReportDayBasis(dayZone, now);
+      const dateBounds = resolveReportPageDateBounds(dateRange, dayBasis);
+      const previousBounds = resolvePreviousReportDateBounds(dateBounds);
+      const today = dayBasis.today;
       const followUpCutoff = getLeadFollowUpDueCutoff(now, TIME_ZONE);
+      const zoneArg = dayBasis.timeZone ? { p_time_zone: dayBasis.timeZone } : {};
 
       // ---------------- oracle ----------------
-      const oracleCharts = buildReportChartSeriesBundle(datasets, { dateRange });
+      const oracleCharts = buildReportChartSeriesBundle(datasets, {
+        dateRange,
+        dayBasis,
+      });
       const oracle = attachReportPageSparklines(
         buildReportsPageData({
           companyName: "Bench",
@@ -283,6 +310,7 @@ async function main() {
           showTechnicianProfitability: true,
           showLeadPipeline: true,
           timeZone: TIME_ZONE,
+          dayBasis,
           totalCustomerCount: datasets.customers.length,
           datasets: { ...datasets, chartSeries: oracleCharts, laborCostRates },
         }),
@@ -306,6 +334,7 @@ async function main() {
           p_today: today,
           p_follow_up_cutoff: followUpCutoff,
           p_limit: 5,
+          ...zoneArg,
         },
       );
       if (summaryError) throw new Error(`summary rpc: ${summaryError.message}`);
@@ -316,15 +345,17 @@ async function main() {
           p_company_id: companyId,
           p_start_date: dateBounds.startDate,
           p_end_date: dateBounds.endDate,
+          ...zoneArg,
         },
       );
       if (seriesError) throw new Error(`series rpc: ${seriesError.message}`);
 
-      check(`${dateRange} summary authorized`, summary?.authorized === true);
-      check(`${dateRange} series authorized`, series?.authorized === true);
+      check(`${label} summary authorized`, summary?.authorized === true);
+      check(`${label} series authorized`, series?.authorized === true);
 
       const aggregateCharts = buildReportChartSeriesFromDailySeries(series, {
         dateRange,
+        dayBasis,
       });
       const actual = attachReportPageSparklinesFromAggregates(
         buildReportsPageDataFromAggregates({
@@ -335,22 +366,44 @@ async function main() {
           laborCostRates,
           showTechnicianProfitability: true,
           showLeadPipeline: true,
+          dayBasis,
         }),
         { series, chartSeries: aggregateCharts },
+      );
+
+      check(
+        `${label} both paths state the same period`,
+        JSON.stringify(actual.dateBounds) === JSON.stringify(oracle.dateBounds) &&
+          JSON.stringify(actual.dateBounds) === JSON.stringify(dateBounds),
+        `aggregate ${JSON.stringify(actual.dateBounds)} oracle ${JSON.stringify(oracle.dateBounds)}`,
+      );
+
+      countedOn.set(
+        `${dayZone ?? "old"}|${dateRange}`,
+        JSON.stringify({
+          bounds: [dateBounds.startDate, dateBounds.endDate],
+          funnel: actual.salesFunnel.map((stage) => stage.count),
+          jobs: aggregateCharts.jobs.series.map((entry) =>
+            entry.points.map((point) => point.value),
+          ),
+          labor: aggregateCharts.labor.series.map((entry) =>
+            entry.points.map((point) => point.value),
+          ),
+        }),
       );
 
       // ---------------- KPIs ----------------
       for (let i = 0; i < oracle.kpis.length; i += 1) {
         const id = oracle.kpis[i].id;
-        eq(`${dateRange} kpi ${id} value`, actual.kpis[i].value, oracle.kpis[i].value);
+        eq(`${label} kpi ${id} value`, actual.kpis[i].value, oracle.kpis[i].value);
         eq(
-          `${dateRange} kpi ${id} comparison`,
+          `${label} kpi ${id} comparison`,
           actual.kpis[i].comparison,
           oracle.kpis[i].comparison,
         );
-        eq(`${dateRange} kpi ${id} trend`, actual.kpis[i].trend, oracle.kpis[i].trend);
+        eq(`${label} kpi ${id} trend`, actual.kpis[i].trend, oracle.kpis[i].trend);
         eqNumbers(
-          `${dateRange} kpi ${id} sparkline`,
+          `${label} kpi ${id} sparkline`,
           actual.kpis[i].sparkline,
           oracle.kpis[i].sparkline,
         );
@@ -365,7 +418,7 @@ async function main() {
         "collectionRateLabel",
       ]) {
         eq(
-          `${dateRange} cashHealth.${field}`,
+          `${label} cashHealth.${field}`,
           actual.cashHealth[field],
           oracle.cashHealth[field],
         );
@@ -373,7 +426,7 @@ async function main() {
 
       // ---------------- funnel ----------------
       eqList(
-        `${dateRange} salesFunnel`,
+        `${label} salesFunnel`,
         actual.salesFunnel,
         oracle.salesFunnel,
         (stage) => `${stage.key}=${stage.count}`,
@@ -390,14 +443,14 @@ async function main() {
         "netIncomeEstimate",
       ]) {
         eq(
-          `${dateRange} accountantSummary.${field}`,
+          `${label} accountantSummary.${field}`,
           actual.accountantSummary[field],
           oracle.accountantSummary[field],
         );
       }
 
       eqList(
-        `${dateRange} invoiceAging`,
+        `${label} invoiceAging`,
         actual.accountantSummary.invoiceAging,
         oracle.accountantSummary.invoiceAging,
         (b) => `${b.label}:${b.count}:${b.amount}`,
@@ -407,7 +460,7 @@ async function main() {
       // order), so it is compared as a set.
       const methodKey = (m) => `${m.method}:${m.amount}:${m.count}`;
       eqList(
-        `${dateRange} paymentsByMethod (sorted)`,
+        `${label} paymentsByMethod (sorted)`,
         [...actual.accountantSummary.paymentsByMethod].sort((x, y) =>
           methodKey(x).localeCompare(methodKey(y)),
         ),
@@ -420,25 +473,25 @@ async function main() {
       // ---------------- snapshots ----------------
       const rowKey = (r) => `${r.id}|${r.label}|${r.detail ?? ""}|${r.value}`;
       eqList(
-        `${dateRange} topCustomers`,
+        `${label} topCustomers`,
         actual.operationsSnapshot.topCustomers,
         oracle.operationsSnapshot.topCustomers,
         rowKey,
       );
       eqList(
-        `${dateRange} topServiceCategories`,
+        `${label} topServiceCategories`,
         actual.operationsSnapshot.topServiceCategories,
         oracle.operationsSnapshot.topServiceCategories,
         rowKey,
       );
       eqList(
-        `${dateRange} overdueInvoices`,
+        `${label} overdueInvoices`,
         actual.operationsSnapshot.overdueInvoices,
         oracle.operationsSnapshot.overdueInvoices,
         rowKey,
       );
       eqList(
-        `${dateRange} workCompleted`,
+        `${label} workCompleted`,
         actual.operationsSnapshot.workCompleted,
         oracle.operationsSnapshot.workCompleted,
         rowKey,
@@ -446,7 +499,7 @@ async function main() {
 
       // ---------------- technicians ----------------
       eqList(
-        `${dateRange} technicianProfitability`,
+        `${label} technicianProfitability`,
         actual.technicianProfitability,
         oracle.technicianProfitability,
         (t) =>
@@ -463,7 +516,7 @@ async function main() {
         "lifetimeRevenueLabel",
       ]) {
         eq(
-          `${dateRange} customerHealth.${field}`,
+          `${label} customerHealth.${field}`,
           actual.customerHealth[field],
           oracle.customerHealth[field],
         );
@@ -480,13 +533,13 @@ async function main() {
         "topSourceInsight",
       ]) {
         eq(
-          `${dateRange} leadPipeline.${field}`,
+          `${label} leadPipeline.${field}`,
           actual.leadPipeline[field],
           oracle.leadPipeline[field],
         );
       }
       eqList(
-        `${dateRange} leadPipeline.sourcePerformance`,
+        `${label} leadPipeline.sourcePerformance`,
         actual.leadPipeline.sourcePerformance,
         oracle.leadPipeline.sourcePerformance,
         (s) => `${s.source}:${s.total}:${s.won}:${s.lost}:${s.conversionRate}`,
@@ -501,13 +554,13 @@ async function main() {
             (s) => s.key === seriesEntry.key,
           );
           eqNumbers(
-            `${dateRange} chart ${chartId}.${seriesEntry.key}`,
+            `${label} chart ${chartId}.${seriesEntry.key}`,
             seriesEntry.points.map((p) => p.value),
             expected?.points.map((p) => p.value),
           );
         }
         eqList(
-          `${dateRange} chart ${chartId} limitations`,
+          `${label} chart ${chartId} limitations`,
           aggregateCharts[chartId].limitations,
           oracleCharts[chartId].limitations,
           (line) => line,
@@ -515,7 +568,7 @@ async function main() {
       }
 
       eqList(
-        `${dateRange} revenueTrend`,
+        `${label} revenueTrend`,
         actual.revenueTrend,
         oracle.revenueTrend,
         (p) => `${p.label}:${p.value}`,
@@ -524,7 +577,7 @@ async function main() {
       // ---------------- ledger sparklines ----------------
       for (const id of ["collected", "outstanding", "overdue", "net-income"]) {
         eqNumbers(
-          `${dateRange} ledger sparkline ${id}`,
+          `${label} ledger sparkline ${id}`,
           actual.accountantSummary.sparklines?.[id],
           oracle.accountantSummary.sparklines?.[id],
         );
@@ -532,11 +585,102 @@ async function main() {
 
       // ---------------- limitations ----------------
       eqList(
-        `${dateRange} limitations`,
+        `${label} limitations`,
         actual.limitations,
         oracle.limitations,
         (line) => line,
       );
+    }
+    }
+
+    // -------------------------------------------------------------------
+    // The comparison above is only worth three runs if the calendars
+    // disagree somewhere on this fixture. Same period, different counts.
+    // -------------------------------------------------------------------
+    console.log("\n=== the calendars are told apart ===\n");
+    for (const zone of DAY_ZONES.filter((entry) => entry !== null)) {
+      const pairs = DATE_RANGES.map((range) => ({
+        old: JSON.parse(countedOn.get(`old|${range}`)),
+        zoned: JSON.parse(countedOn.get(`${zone}|${range}`)),
+      }));
+      const samePeriod = pairs.filter(
+        (pair) => JSON.stringify(pair.old.bounds) === JSON.stringify(pair.zoned.bounds),
+      );
+      if (samePeriod.length === 0) {
+        console.log(
+          `  NOTE  today differs between ${zone} and this machine right now, so the periods differ; the 90-day check and the first-of-month case below are the proof`,
+        );
+        continue;
+      }
+      check(
+        `${zone} counts at least one range differently from UTC days over the same period`,
+        samePeriod.some((pair) => JSON.stringify(pair.old) !== JSON.stringify(pair.zoned)),
+        "every figure matched: this fixture has no timestamp near midnight, so it cannot tell the calendars apart",
+      );
+    }
+
+    // -------------------------------------------------------------------
+    // A caller that passes no zone gets exactly what it got before, and
+    // 'UTC' and a zone the server does not know are the same thing.
+    // -------------------------------------------------------------------
+    console.log("\n=== a caller on UTC is unchanged ===\n");
+    {
+      const utcBounds = resolveProfitabilityReportDateBounds("90d");
+      const utcPrev = resolvePreviousReportDateBounds(utcBounds);
+      const base = {
+        p_company_id: companyId,
+        p_start_date: utcBounds.startDate,
+        p_end_date: utcBounds.endDate,
+      };
+      const summaryBase = {
+        ...base,
+        p_prev_start_date: utcPrev.startDate,
+        p_prev_end_date: utcPrev.endDate,
+        p_today: utcBounds.endDate,
+        p_follow_up_cutoff: new Date().toISOString(),
+        p_limit: 5,
+      };
+      for (const [fn, callArgs] of [
+        ["get_company_reports_summary", summaryBase],
+        ["get_company_report_daily_series", base],
+      ]) {
+        const plain = await owner.rpc(fn, callArgs);
+        const utc = await owner.rpc(fn, { ...callArgs, p_time_zone: "UTC" });
+        const unknown = await owner.rpc(fn, {
+          ...callArgs,
+          p_time_zone: "Mars/Olympus",
+        });
+        const blank = await owner.rpc(fn, { ...callArgs, p_time_zone: "  " });
+        const denver = await owner.rpc(fn, {
+          ...callArgs,
+          p_time_zone: "America/Denver",
+        });
+        if (plain.error) throw new Error(`${fn}: ${plain.error.message}`);
+        const asText = (result) => JSON.stringify(result.data);
+        check(
+          `${fn}: no zone argument and 'UTC' give the same answer`,
+          utc.error == null && asText(plain) === asText(utc),
+          utc.error?.message ?? "",
+        );
+        check(
+          `${fn}: a zone the server does not know counts UTC days instead of failing`,
+          unknown.error == null && asText(plain) === asText(unknown),
+          unknown.error?.message ?? "",
+        );
+        check(
+          `${fn}: a blank zone counts UTC days`,
+          blank.error == null && asText(plain) === asText(blank),
+          blank.error?.message ?? "",
+        );
+        check(
+          `${fn}: a real zone is accepted and moves this fixture's counts`,
+          denver.error == null &&
+            denver.data?.authorized === true &&
+            asText(plain) !== asText(denver),
+          denver.error?.message ??
+            "Mountain time gave exactly the UTC answer over 90 days",
+        );
+      }
     }
 
     // -------------------------------------------------------------------
@@ -603,6 +747,119 @@ async function main() {
     isolationCompanyId = otherCompany.id;
 
     const outsider = await makeMember("owner", otherCompany.id);
+
+    // -------------------------------------------------------------------
+    // The case migration 221 exists for, on a company that holds nothing
+    // else: one job finished at 03:30 UTC on the first of this month. That
+    // is the evening of the last day of LAST month in Denver and New York.
+    // Read as that company's own owner.
+    // -------------------------------------------------------------------
+    console.log("\n=== 03:30 UTC on the first of the month ===\n");
+    {
+      const nowUtc = new Date();
+      const year = nowUtc.getUTCFullYear();
+      const month = nowUtc.getUTCMonth();
+      const iso = (date) => date.toISOString().slice(0, 10);
+      const firstOfMonth = new Date(Date.UTC(year, month, 1));
+      const lastOfMonth = new Date(Date.UTC(year, month + 1, 0));
+      const firstOfPrev = new Date(Date.UTC(year, month - 1, 1));
+      const lastOfPrev = new Date(Date.UTC(year, month, 0));
+      const finishedAt = new Date(Date.UTC(year, month, 1, 3, 30)).toISOString();
+
+      const { data: proofCustomer, error: proofCustomerError } = await admin
+        .from("customers")
+        .insert({
+          company_id: otherCompany.id,
+          name: `[LOADTEST] Zone Proof ${suffix}`,
+          status: "active",
+        })
+        .select("id")
+        .single();
+      if (proofCustomerError) {
+        throw new Error(`proof customer: ${proofCustomerError.message}`);
+      }
+      const { error: proofJobError } = await admin.from("jobs").insert({
+        company_id: otherCompany.id,
+        customer_id: proofCustomer.id,
+        job_number: `TZ-PROOF-${suffix}`,
+        job_type: "Zone proof",
+        status: "completed",
+        scheduled_at: finishedAt,
+        completed_at: finishedAt,
+        description: "Finished at 03:30 UTC on the first of the month",
+      });
+      if (proofJobError) throw new Error(`proof job: ${proofJobError.message}`);
+
+      const months = {
+        before: [iso(firstOfPrev), iso(lastOfPrev)],
+        current: [iso(firstOfMonth), iso(lastOfMonth)],
+      };
+      const readMonth = async (zone, [startDate, endDate]) => {
+        const zoneArg = zone ? { p_time_zone: zone } : {};
+        const summary = await outsider.rpc("get_company_reports_summary", {
+          p_company_id: otherCompany.id,
+          p_start_date: startDate,
+          p_end_date: endDate,
+          p_prev_start_date: startDate,
+          p_prev_end_date: endDate,
+          p_today: iso(nowUtc),
+          p_follow_up_cutoff: nowUtc.toISOString(),
+          p_limit: 5,
+          ...zoneArg,
+        });
+        const series = await outsider.rpc("get_company_report_daily_series", {
+          p_company_id: otherCompany.id,
+          p_start_date: startDate,
+          p_end_date: endDate,
+          ...zoneArg,
+        });
+        if (summary.error) throw new Error(`proof summary: ${summary.error.message}`);
+        if (series.error) throw new Error(`proof series: ${series.error.message}`);
+        return {
+          figure: Number(summary.data?.jobs?.completedInBounds ?? -1),
+          categories: (summary.data?.serviceCategories ?? [])
+            .map((row) => `${row.jobType}:${row.jobCount}`)
+            .join(","),
+          days: (series.data?.jobs ?? [])
+            .filter((row) => Number(row.completed) > 0)
+            .map((row) => `${row.d}:${row.completed}`)
+            .join(","),
+        };
+      };
+
+      for (const zone of ["America/Denver", "America/New_York"]) {
+        const prev = await readMonth(zone, months.before);
+        const current = await readMonth(zone, months.current);
+        check(
+          `${zone}: the figures count it in the month before`,
+          prev.figure === 1 &&
+            current.figure === 0 &&
+            prev.categories === "Zone proof:1" &&
+            current.categories === "",
+          `before=${JSON.stringify(prev)} this=${JSON.stringify(current)}`,
+        );
+        check(
+          `${zone}: the per-day series puts it on the last day of the month before`,
+          prev.days === `${iso(lastOfPrev)}:1` && current.days === "",
+          `before=${prev.days} this=${current.days}`,
+        );
+      }
+      for (const zone of [null, "UTC"]) {
+        const name = zone ?? "no zone argument";
+        const prev = await readMonth(zone, months.before);
+        const current = await readMonth(zone, months.current);
+        check(
+          `${name}: the figures count it this month, as before`,
+          prev.figure === 0 && current.figure === 1,
+          `before=${JSON.stringify(prev)} this=${JSON.stringify(current)}`,
+        );
+        check(
+          `${name}: the per-day series puts it on the first, as before`,
+          prev.days === "" && current.days === `${iso(firstOfMonth)}:1`,
+          `before=${prev.days} this=${current.days}`,
+        );
+      }
+    }
     for (const [fn, callArgs] of [
       ["get_company_reports_summary", summaryArgs],
       ["get_company_report_daily_series", seriesArgs],
@@ -661,6 +918,9 @@ async function main() {
       await admin.auth.admin.deleteUser(userId).catch(() => {});
     }
     if (isolationCompanyId) {
+      // The zone-proof job and its customer, before the company they belong to.
+      await admin.from("jobs").delete().eq("company_id", isolationCompanyId);
+      await admin.from("customers").delete().eq("company_id", isolationCompanyId);
       await admin
         .from("company_memberships")
         .delete()

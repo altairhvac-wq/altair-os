@@ -29,10 +29,14 @@ export function ResourceMain({
   width = "default",
   children,
 }: {
-  readonly width?: "default" | "wide";
+  readonly width?: "default" | "wide" | "app" | "directory";
   readonly children: React.ReactNode;
 }) {
-  const maxWidth = width === "wide" ? "max-w-5xl" : "max-w-3xl";
+  // "app": the directory's search and listing screens, which carry a side
+  // column on wide screens. "directory": the directory search, which carries
+  // a column on each side from xl up, so it uses more of a wide screen.
+  const maxWidth =
+    width === "directory" ? "max-w-6xl xl:max-w-[88rem]" : width === "app" ? "max-w-6xl" : width === "wide" ? "max-w-5xl" : "max-w-3xl";
   return (
     <main className={`relative mx-auto ${maxWidth} px-4 pb-16 pt-24 sm:px-8 sm:pt-28`}>
       {children}
@@ -51,7 +55,7 @@ export function ResourcePageHeader({
   readonly intro: React.ReactNode;
   readonly crumbs?: readonly ResourceCrumb[];
 }) {
-  const trail: ResourceCrumb[] = [{ label: "Resources", href: RESOURCES_PATH }, ...crumbs];
+  const trail: ResourceCrumb[] = [{ label: "Free tools", href: RESOURCES_PATH }, ...crumbs];
   const centered = crumbs.length === 0;
 
   return (

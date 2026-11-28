@@ -8,7 +8,12 @@ import {
 import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invite-cookie";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
+import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
+import { COMPETITOR_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
+import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
+import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
+import { isHowToPath } from "@/shared/lib/help/paths";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = [
@@ -44,11 +49,31 @@ const SITE_PAGE_ROUTE_PREFIX = "/insights";
  * needed and nothing here reads or writes tenant data.
  */
 const RESOURCES_ROUTE_PREFIX = "/resources";
+/**
+ * The embeddable calculators (shared/lib/resources/embeds.ts): one free
+ * calculator per page, shown inside other websites. No account, no data.
+ */
+const EMBED_ROUTE_PREFIX = "/embed";
+/**
+ * The public contractor directory (migration 210): search, a page per
+ * published listing, the "list your business" form and the manage page a
+ * lister reaches from their email. Visitors have no account. The pages read
+ * only published listings' public columns, and every change goes through a
+ * Server Action that checks a signed link or the rate limit itself
+ * (app/actions/directory.ts).
+ */
+const DIRECTORY_ROUTE_PREFIX = "/directory";
 const SITEMAP_ROUTE = "/sitemap.xml";
 const INSTALL_ROUTE = "/install";
 const CONTACT_ROUTE = "/contact";
+/** The About page and the page for technicians (shared/lib/site/about.ts). Static, no data. */
+const COMPANY_PAGE_ROUTES: readonly string[] = COMPANY_PAGE_PATHS;
+/** The Utah pages (shared/lib/site/utah-pages.ts): static, sourced figures, no data reads. */
+const UTAH_PAGE_ROUTES: readonly string[] = UTAH_PAGE_PATHS;
 /** Search landing pages: static marketing, one per way an owner searches. */
 const LANDING_ROUTES: readonly string[] = LANDING_PAGE_PATHS;
+/** The commercial's watch page (shared/lib/site/commercial-video.ts). */
+const VIDEO_PAGE_ROUTE = VIDEO_PAGE_PATH;
 /** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
 const MARKETING_HOMEPAGE_ROUTE = "/welcome";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
@@ -82,6 +107,25 @@ const MARKETING_MEDIA_INGEST_ROUTE = "/api/marketing/media/ingest";
  * sanitised event. Exact path only.
  */
 const ANALYTICS_COLLECT_ROUTE = "/api/analytics/collect";
+/**
+ * "Email me these results" on the free calculators. Visitors have no account,
+ * so it must not redirect to /login. The handler refuses cross-site posts,
+ * recomputes the result itself and is rate limited per address and per inbox
+ * (app/api/resources/email-results/route.ts). Exact path only.
+ */
+const RESOURCE_EMAIL_ROUTE = "/api/resources/email-results";
+/**
+ * The public directory's two endpoints (migration 214). Visitors and listers
+ * have no account, so neither may redirect to /login:
+ *   listing-event  counts a view or a tap on a published listing; refuses
+ *                  bots, other sites and non-production deployments, is rate
+ *                  limited, and stores counts only.
+ *   media          a lister's logo or photo upload; requires the signed
+ *                  manage link, stores into the PRIVATE bucket only.
+ * Exact paths only.
+ */
+const DIRECTORY_EVENT_ROUTE = "/api/directory/listing-event";
+const DIRECTORY_MEDIA_ROUTE = "/api/directory/media";
 
 /**
  * Files a browser or crawler fetches on its own initiative, before anyone has
@@ -94,6 +138,8 @@ const ANALYTICS_COLLECT_ROUTE = "/api/analytics/collect";
  */
 const PUBLIC_WEB_ASSET_ROUTES = [
   "/robots.txt",
+  // The plain description of the company for AI assistants (app/llms.txt/route.ts): public facts only.
+  "/llms.txt",
   "/manifest.webmanifest",
   "/sw.js",
   "/opengraph-image",
@@ -128,15 +174,17 @@ const PUBLIC_WEB_ASSET_ROUTES = [
 const AUTHENTICATED_ROUTE_PREFIXES = [
   // app/(admin)
   "/alpha-tracker",
-  "/altair-design-lab",
-  "/command-center-v1",
   "/community",
   "/customers",
-  "/dashboard-north-star-v1",
-  "/dashboard-north-star-v2",
   "/dispatch",
   "/estimates",
   "/expenses",
+  // The guided setup. A new owner who follows a link to it while signed out
+  // is asked to sign in, not shown a 404.
+  "/get-started",
+  // The welcome email links here; without this entry a new owner who opens
+  // that link on a device where they are not signed in is shown a 404.
+  "/help",
   "/invoices",
   "/jobs",
   "/leads",
@@ -155,12 +203,6 @@ const AUTHENTICATED_ROUTE_PREFIXES = [
   "/time",
   "/time-clock",
   "/work",
-  "/workspace-v1",
-  // app/(concept)
-  "/altair-shell-color-lab-v1",
-  "/altair-shell-north-star-v1",
-  "/altair-shell-north-star-v2",
-  "/altair-shell-north-star-v3",
   // other authenticated roots
   "/technician",
   "/tech",
@@ -261,6 +303,17 @@ function isResourcesRoute(pathname: string) {
   );
 }
 
+function isEmbedRoute(pathname: string) {
+  return pathname.startsWith(`${EMBED_ROUTE_PREFIX}/`);
+}
+
+function isDirectoryRoute(pathname: string) {
+  return (
+    pathname === DIRECTORY_ROUTE_PREFIX ||
+    pathname.startsWith(`${DIRECTORY_ROUTE_PREFIX}/`)
+  );
+}
+
 function isSitemapRoute(pathname: string) {
   return pathname === SITEMAP_ROUTE;
 }
@@ -273,8 +326,25 @@ function isContactRoute(pathname: string) {
   return pathname === CONTACT_ROUTE;
 }
 
+function isCompanyPageRoute(pathname: string) {
+  return COMPANY_PAGE_ROUTES.includes(pathname);
+}
+
+function isUtahPageRoute(pathname: string) {
+  return UTAH_PAGE_ROUTES.includes(pathname);
+}
+
 function isLandingRoute(pathname: string) {
   return LANDING_ROUTES.includes(pathname);
+}
+
+function isVideoPageRoute(pathname: string) {
+  return pathname === VIDEO_PAGE_ROUTE;
+}
+
+/** Competitor comparison pages and /switch (shared/lib/site/comparison-paths.ts). */
+function isComparisonRoute(pathname: string) {
+  return COMPETITOR_PAGE_PATHS.includes(pathname);
 }
 
 function isMarketingHomepageRoute(pathname: string) {
@@ -313,9 +383,17 @@ function isMarketingRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isEmbedRoute(pathname) ||
+    isDirectoryRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
-    isLandingRoute(pathname)
+    isCompanyPageRoute(pathname) ||
+    isLandingRoute(pathname) ||
+    isUtahPageRoute(pathname) ||
+    isVideoPageRoute(pathname) ||
+    isComparisonRoute(pathname) ||
+    // The public how-to pages (shared/lib/help): static copy, no tenant data.
+    isHowToPath(pathname)
   );
 }
 
@@ -327,10 +405,17 @@ function isPublicRoute(pathname: string) {
     isLegalRoute(pathname) ||
     isSitePageRoute(pathname) ||
     isResourcesRoute(pathname) ||
+    isEmbedRoute(pathname) ||
+    isDirectoryRoute(pathname) ||
     isSitemapRoute(pathname) ||
     isInstallRoute(pathname) ||
     isContactRoute(pathname) ||
+    isCompanyPageRoute(pathname) ||
     isLandingRoute(pathname) ||
+    isUtahPageRoute(pathname) ||
+    isVideoPageRoute(pathname) ||
+    isComparisonRoute(pathname) ||
+    isHowToPath(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
@@ -341,6 +426,9 @@ function isPublicRoute(pathname: string) {
     isAgentBridgeRoute(pathname) ||
     isMarketingMediaIngestRoute(pathname) ||
     pathname === ANALYTICS_COLLECT_ROUTE ||
+    pathname === RESOURCE_EMAIL_ROUTE ||
+    pathname === DIRECTORY_EVENT_ROUTE ||
+    pathname === DIRECTORY_MEDIA_ROUTE ||
     isDemoFingerprintRoute(pathname)
   );
 }

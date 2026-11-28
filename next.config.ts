@@ -2,7 +2,8 @@ import os from "os";
 import type { NextConfig } from "next";
 // Relative import on purpose: next.config.ts is evaluated by the config loader
 // before the tsconfig path alias is available.
-import { buildSecurityHeaders } from "./lib/security/response-headers";
+import { buildEmbedHeaderOverrides, buildEmbedHeaderSource, buildSecurityHeaders } from "./lib/security/response-headers";
+import { EMBED_TOOLS } from "./shared/lib/resources/embeds";
 
 function getLocalDevOrigins(): string[] {
   const origins = new Set<string>();
@@ -35,6 +36,18 @@ const nextConfig: NextConfig = {
     : {}),
   // Nothing gains from announcing the framework and version to a scanner.
   poweredByHeader: false,
+  /**
+   * Title, description, canonical and link-preview tags always in <head>.
+   *
+   * Next streams metadata for dynamic pages: an ordinary browser, and
+   * Googlebot, received the Insights articles with those tags inside <body>.
+   * Search Console showed Google coping with it, but Lighthouse reported
+   * "no meta description" and tags in <body> are outside what the HTML spec
+   * and most crawlers expect. Matching every user agent turns streaming
+   * metadata off; the cost is one metadata lookup before the first byte on
+   * the few dynamic public pages.
+   */
+  htmlLimitedBots: /.*/,
   images: {
     qualities: [70, 75, 90],
     // Marketing screenshots change a few times a year, not a few times a
@@ -50,11 +63,12 @@ const nextConfig: NextConfig = {
    * see lib/security/response-headers.ts for each directive's justification.
    */
   async headers() {
-    const securityHeaders = buildSecurityHeaders({
+    const headerOptions = {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
       sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       isDevelopment: process.env.NODE_ENV !== "production",
-    });
+    };
+    const securityHeaders = buildSecurityHeaders(headerOptions);
     // Files under /public ship with `max-age=0, must-revalidate`, so every
     // repeat visit re-checks each screenshot, icon and the link-preview
     // image. A day in the browser (a week stale-while-revalidate) is safe:
@@ -65,6 +79,11 @@ const nextConfig: NextConfig = {
     };
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The embeddable calculators: the full set above still applies; these two
+      // keys replace theirs so another website may frame the listed embed
+      // pages and nothing else, not even an unknown address under /embed
+      // (a later entry wins for the same key on the same path).
+      { source: buildEmbedHeaderSource(EMBED_TOOLS.map((tool) => tool.id)), headers: buildEmbedHeaderOverrides(headerOptions) },
       { source: "/marketing/:path*", headers: [marketingAssetCache] },
       { source: "/icons/:path*", headers: [marketingAssetCache] },
       { source: "/og.png", headers: [marketingAssetCache] },
@@ -86,6 +105,18 @@ const nextConfig: NextConfig = {
         destination: "/technician",
         permanent: false,
       },
+      // Retired design experiments (removed 2026-11-12). Old bookmarks land on
+      // the dashboard instead of a 404, as their stub pages used to do.
+      ...[
+        "/command-center-v1",
+        "/workspace-v1",
+        "/dashboard-north-star-v1",
+        "/dashboard-north-star-v2",
+        "/altair-shell-color-lab-v1",
+        "/altair-shell-north-star-v1",
+        "/altair-shell-north-star-v2",
+        "/altair-shell-north-star-v3",
+      ].map((source) => ({ source, destination: "/", permanent: false })),
       {
         source: "/tech/jobs",
         destination: "/technician",
@@ -100,6 +131,15 @@ const nextConfig: NextConfig = {
         source: "/sign-up",
         destination: "/signup",
         permanent: true,
+      },
+      {
+        // "ZGlyZWN0b3J5" is "directory" written in base64. A visit landed on
+        // /ZGlyZWN0b3 (the first ten characters) in November 2026: some shared
+        // link carried an encoded, cut-off copy of the address. Nothing in this
+        // repository writes it; this sends any such visit where it meant to go.
+        source: "/:encoded(ZGlyZWN0b3[A-Za-z0-9_=-]*)",
+        destination: "/directory",
+        permanent: false,
       },
     ];
   },

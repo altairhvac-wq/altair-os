@@ -24,7 +24,7 @@
  *   OUTPUT_WIDTH=1600 LABEL=before ROUTES=/ npm run capture:comparison-screenshots
  *
  * Output:
- *   public/marketing/screenshots/comparison/<page>-<label>.png
+ *   captures/screenshots/comparison/<page>-<label>.png
  */
 
 import { execSync } from "child_process";
@@ -39,8 +39,7 @@ const ENV_PATH = path.join(ROOT, ".env.local");
 const AUTH_PATH = path.join(ROOT, ".playwright", "founder-auth.json");
 const OUTPUT_DIR = path.join(
   ROOT,
-  "public",
-  "marketing",
+  "captures",
   "screenshots",
   "comparison",
 );

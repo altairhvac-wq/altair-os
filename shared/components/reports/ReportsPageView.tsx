@@ -32,7 +32,7 @@ import { TopPerformersChartCard } from "./TopPerformersChartCard";
 import { TopRevenueSourcesChartCard } from "./TopRevenueSourcesChartCard";
 import { LeadPipelineSection } from "./LeadPipelineSection";
 import { TimeTrackingSummaryCard } from "./TimeTrackingSummaryCard";
-import { ReportsNorthStarView } from "./north-star-m8";
+import { ReportsOverviewView } from "./overview/ReportsOverviewView";
 
 type ReportsPageViewProps = {
   data: ReportsPageData;
@@ -90,7 +90,7 @@ export function ReportsPageView({
 
   if (isNorthStarShellEnabled()) {
     return (
-      <ReportsNorthStarView
+      <ReportsOverviewView
         data={data}
         aiFeaturesEnabled={aiFeaturesEnabled}
         canManageCustomers={canManageCustomers}

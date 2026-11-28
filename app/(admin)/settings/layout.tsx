@@ -4,6 +4,7 @@ import {
   canAccessSystemCheck,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { isBusinessNumbersAvailable } from "@/lib/database/queries/business-numbers";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SettingsShell } from "@/shared/components/settings/SettingsShell";
 
@@ -24,8 +25,14 @@ export default async function SettingsLayout({
     );
   }
 
+  // False until migration 218 has run. Asks the database for no data.
+  const showBusinessNumbers = await isBusinessNumbersAvailable();
+
   return (
-    <SettingsShell showSystemCheck={canAccessSystemCheck(companyContext)}>
+    <SettingsShell
+      showSystemCheck={canAccessSystemCheck(companyContext)}
+      showBusinessNumbers={showBusinessNumbers}
+    >
       {children}
     </SettingsShell>
   );

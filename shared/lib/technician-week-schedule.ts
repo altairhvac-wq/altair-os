@@ -145,6 +145,24 @@ export function formatTechnicianScheduleEmptyDescription(
   return `You're clear for ${dayName}. Select another day to review your week.`;
 }
 
+/**
+ * Title for a day that HAD jobs and has none left open. "No jobs scheduled
+ * today" on a day showing two finished jobs contradicted itself (UI audit
+ * 2026-11-12); the day was not empty, it was done.
+ */
+export function formatTechnicianScheduleCaughtUpTitle(
+  dateOnly: string,
+  context: TechnicianScheduleDayContext,
+): string {
+  if (dateOnly === context.todayDateOnly) {
+    return "All done for today";
+  }
+
+  const dayName = formatTechnicianScheduleDayHeading(dateOnly, context);
+
+  return `Nothing left open for ${dayName}`;
+}
+
 export function formatTechnicianScheduleCaughtUpDescription(
   dateOnly: string,
   context: TechnicianScheduleDayContext,

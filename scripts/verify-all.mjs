@@ -79,6 +79,7 @@ steps.push(
     script: "scripts/verify-responsive-loading-states.mjs",
   },
   { name: "pwa-offline", script: "scripts/verify-pwa-offline.mjs" },
+  { name: "public-stylesheet", script: "scripts/verify-public-stylesheet.mjs" },
   {
     name: "key-rotation",
     script: "scripts/verify-key-rotation.mjs",
@@ -124,6 +125,29 @@ steps.push(
     // Runs the SHIPPED policy + gate (grace window, H7), not a copy.
     typescript: true,
   },
+  // The free calculators, templates and library (pure modules + wiring).
+  { name: "resource-center", script: "scripts/verify-resource-center.mjs" },
+  // A company's business numbers (migration 218): the math is the public
+  // calculators', code limits match the database's, owner/admin only.
+  { name: "business-numbers", script: "scripts/verify-business-numbers.mjs" },
+  // A company's time zone (migration 220): chosen is a column, not a zone
+  // name; resolved once from the row; nothing moves before the migration.
+  { name: "company-timezone", script: "scripts/verify-company-timezone.mjs" },
+  // Settings > Integrations for every company: it never claims a connection,
+  // a request is remembered, and the marketing channels stay platform-admin only.
+  {
+    name: "customer-integrations",
+    script: "scripts/verify-customer-integrations.mjs",
+  },
+  // The public contractor directory: listing rules, migration 210, wiring.
+  { name: "public-directory", script: "scripts/verify-directory.mjs" },
+  // The pricing plan finder and the software pages' metadata (batch 3).
+  {
+    name: "pricing-calculator",
+    script: "scripts/verify-pricing-calculator.mjs",
+    // Runs the shipped calculator against the plan catalog.
+    typescript: true,
+  },
   { name: "measured-render-qa", script: "scripts/verify-measured-render-qa.mjs" },
   { name: "platform-specific-copy", script: "scripts/verify-platform-specific-copy.mjs" },
   {
@@ -157,6 +181,10 @@ steps.push(
   { name: "youtube-connect", script: "scripts/verify-youtube-connect.mjs" },
   { name: "youtube-upload", script: "scripts/verify-youtube-upload.mjs" },
   { name: "site-publishing", script: "scripts/verify-site-publishing.mjs" },
+  { name: "article-markdown", script: "scripts/verify-article-markdown.mjs" },
+  { name: "site-menu", script: "scripts/verify-site-menu.mjs" },
+  // The switching imports (CSV/Excel price book and unpaid invoices) and /switch content.
+  { name: "switch-imports", script: "scripts/verify-switch-imports.mjs" },
   { name: "marketing-command", script: "scripts/verify-marketing-command.mjs" },
   { name: "work-requests", script: "scripts/verify-work-requests.mjs" },
   // Behavioural, not static: the two above read these modules as text and
@@ -166,6 +194,9 @@ steps.push(
     script: "scripts/verify-agent-queue-integrity.mjs",
   },
   { name: "agent-heartbeat", script: "scripts/verify-agent-heartbeat.mjs" },
+  // The how-to library: every quoted button label is still on its screen,
+  // every "take me there" link is a real page. Executes the shipped catalog.
+  { name: "help-notes", script: "scripts/verify-help-notes.mjs", typescript: true },
 );
 
 const results = [];

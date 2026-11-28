@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { swipeItem, swipeRow } from "@/shared/components/marketing/phone/phone-classes";
 import {
   SAAS_TRIAL_CONFIG,
   describePlanAccounts,
@@ -35,11 +36,11 @@ export function HomepagePricingSection() {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#c9bfae] sm:text-lg">
             Choose the plan that fits your team. Every plan starts with the same
-            connected Altair experience and live onboarding.
+            connected Altair experience and a one-on-one setup call.
           </p>
         </div>
 
-        <div className="mt-9 grid gap-4 lg:mt-11 lg:grid-cols-3">
+        <div className={`mt-9 grid gap-4 lg:mt-11 lg:grid-cols-3 ${swipeRow}`}>
           {plans.map((plan) => {
             const featured = plan.planKey === "growth";
 
@@ -47,6 +48,7 @@ export function HomepagePricingSection() {
               <article
                 key={plan.planKey}
                 className={[
+                  swipeItem,
                   "relative flex flex-col rounded-2xl border p-5 sm:p-6",
                   featured
                     ? "border-[rgba(194,160,90,0.5)] bg-[linear-gradient(165deg,rgba(50,42,25,0.72),rgba(14,17,13,0.96))] shadow-[0_24px_60px_-38px_rgba(194,160,90,0.55)]"
@@ -55,7 +57,7 @@ export function HomepagePricingSection() {
               >
                 {featured ? (
                   <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#c2a05a]">
-                    Most popular
+                    Best for teams of 2 to 5
                   </p>
                 ) : null}
                 <h3 className="text-lg font-semibold text-[#fff9ea]">{plan.label}</h3>

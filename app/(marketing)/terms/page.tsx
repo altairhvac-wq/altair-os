@@ -3,11 +3,12 @@ import {
   LegalPageShell,
   LegalSection,
 } from "@/shared/components/marketing/LegalPageShell";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms that govern your use of Altair OS, the operating system for field service businesses.",
+    "The terms that govern your use of Altair Operating System, software for field service businesses.",
 };
 
 /**
@@ -19,7 +20,7 @@ export default function TermsOfServicePage() {
     <LegalPageShell
       title="Terms of Service"
       effectiveDate="August 8, 2026"
-      intro="These terms govern your use of Altair OS, the field-service management platform at altair-op.com and app.altair-op.com. By creating an account you agree to them."
+      intro="These terms govern your use of Altair Operating System, the field-service management platform at altair-op.com and app.altair-op.com. By creating an account you agree to them."
     >
       <LegalSection heading="1. Your account">
         <p>
@@ -43,8 +44,8 @@ export default function TermsOfServicePage() {
 
       <LegalSection heading="3. Subscriptions and billing">
         <p>
-          Altair OS is sold as a subscription with a free trial. Pricing is
-          shown at signup and in Settings. Payments are processed by Stripe.
+          Altair is sold as a subscription with a free trial. Pricing is
+          shown on our pricing page and in Settings. Payments are processed by Stripe.
           Subscriptions renew automatically until canceled; you can cancel
           anytime and keep access through the end of the paid period. Except
           where required by law, payments are non-refundable.
@@ -72,7 +73,7 @@ export default function TermsOfServicePage() {
 
       <LegalSection heading="6. Service availability">
         <p>
-          We work hard to keep Altair OS fast and available, but the service is
+          We work hard to keep Altair fast and available, but the service is
           provided &quot;as is&quot; without warranties of uninterrupted or
           error-free operation. We may update, add, or remove features as the
           product evolves.
@@ -119,9 +120,9 @@ export default function TermsOfServicePage() {
           Questions about these terms:{" "}
           <a
             className="font-medium text-[#77591b] underline underline-offset-2"
-            href="mailto:altairhvac@gmail.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
           >
-            altairhvac@gmail.com
+            {SUPPORT_EMAIL}
           </a>
           .
         </p>

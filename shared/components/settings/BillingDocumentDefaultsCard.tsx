@@ -427,8 +427,11 @@ export function BillingDocumentDefaultsCard({
           <div
             className={
               northStar
-                ? "border-t border-[rgba(119,89,27,0.12)] pt-2.5 sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
-                : "border-t border-slate-100 pt-2.5 sm:admin-sticky-footer-inline sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+                ? // Not sticky. A sticky footer with no background floated the
+                  // button over the notes fields (UI audit 2026-11-12). It sits
+                  // at the end of the form, right-aligned like the profile's.
+                  "flex justify-end border-t border-[rgba(119,89,27,0.12)] pt-3"
+                : "flex justify-end border-t border-slate-100 pt-3"
             }
           >
             <button

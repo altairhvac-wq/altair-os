@@ -29,7 +29,7 @@ import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   type Customer,
   type CustomerFormData,
-  validateCustomerFormData,
+  validateCustomerRecord,
 } from "@/shared/types/customer";
 import {
   MasterListPageLayout,
@@ -289,7 +289,7 @@ export function CustomersPageView({
   const effectiveWorkQueue: CustomerWorkQueue = isArchivedScope
     ? "past"
     : workQueue === "past"
-      ? "active"
+      ? resolveDefaultCustomerWorkQueue()
       : workQueue;
 
   const queueScopedCustomers = useMemo(
@@ -513,9 +513,7 @@ export function CustomersPageView({
 
     setCreateError(null);
 
-    const validationError = validateCustomerFormData(data, {
-      requireContact: false,
-    });
+    const validationError = validateCustomerRecord(data);
     if (validationError) {
       setCreateError(validationError);
       return;
@@ -543,7 +541,14 @@ export function CustomersPageView({
   const scopedForEmpty = isArchivedScope
     ? filterCustomersForWorkQueue(customers, "past")
     : bookCustomers;
-  const hasNoCustomers = scopedForEmpty.length === 0;
+  // "Add your first customer" must mean the BOOK is empty, not that this page
+  // of one queue (or one search) came back empty. Deciding it from the loaded
+  // rows told a company with nine imported customers that it had none, and hid
+  // the strip that would have shown them under Needs info.
+  const hasNoCustomers =
+    !isArchivedScope && serverCounts
+      ? serverCounts.total + locallyCreated.length === 0
+      : scopedForEmpty.length === 0;
   const hasNoQueueCustomers =
     !hasNoCustomers && queueScopedCustomers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;

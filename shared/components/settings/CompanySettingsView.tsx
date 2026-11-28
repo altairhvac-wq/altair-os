@@ -1,76 +1,65 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { CreditCard, Megaphone } from "lucide-react";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
-import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
-import { buildMarketingConnectedAccountStatusRows } from "@/shared/types/marketing-connected-account";
-import {
-  altairMcListClass,
-  altairMcListRowClass,
-} from "@/shared/design-system/components/mc-surface";
 import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
 import { normalizeTradeKey } from "@/shared/lib/trades/trade-options";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { CompanyProfileForm } from "./CompanyProfileForm";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
+import { TimeZoneConfirmPrompt } from "./TimeZoneConfirmPrompt";
 import {
   SettingsWorkspacePage,
   SettingsWorkspaceSection,
 } from "./SettingsWorkspacePage";
+import { WorkspaceExportCard } from "./WorkspaceExportCard";
 
 /**
  * Company — the consolidated "everything about your business" tab
- * (settings IA v2). Absorbs the former Preferences (one timezone field),
- * Documents (one defaults card), and Integrations (a status list) tabs;
- * their legacy routes redirect here with anchors. One page, five sections,
- * no tab-hopping to answer "is my company set up?".
+ * (settings IA v2). Absorbs the former Preferences (one timezone field) and
+ * Documents (one defaults card) tabs; their legacy routes redirect here with
+ * anchors. Connections used to be a section here too; since 2026-11-27 they
+ * live on Settings > Integrations, which every owner and admin can open, and
+ * this page keeps one line pointing there.
  */
 export function CompanySettingsView({
   companyProfile,
   canManage,
+  askToConfirmTimeZone = false,
   billingDefaults,
   showBillingDefaultsSetupHint,
-  facebookAccounts,
-  canManageMarketingAccounts,
-  stripeConnected,
-  stripeStatusLabel,
   demoDataStatus,
   demoDataLoadError,
 }: {
   companyProfile: CompanyProfileSummary;
   canManage: boolean;
+  /**
+   * True for an owner or admin of a company nobody has chosen a time zone
+   * for (and only once migration 220 is in). The page decides.
+   */
+  askToConfirmTimeZone?: boolean;
   billingDefaults: ComponentProps<
     typeof BillingDocumentDefaultsCard
   >["initialDefaults"];
   showBillingDefaultsSetupHint: boolean;
-  facebookAccounts: MarketingConnectedAccount[];
-  canManageMarketingAccounts: boolean;
-  stripeConnected: boolean;
-  stripeStatusLabel: string;
   demoDataStatus?: DemoDataStatus;
   demoDataLoadError?: string;
 }) {
-  const facebookRows = buildMarketingConnectedAccountStatusRows(facebookAccounts);
-  const facebookRow = facebookRows.find((row) => row.provider === "facebook");
-  const facebookStatus = facebookRow?.displayStatus ?? "not_connected";
-  const facebookStatusLabel =
-    facebookStatus === "connected"
-      ? "Connected"
-      : facebookStatus === "expired"
-        ? "Expired"
-        : facebookStatus === "error"
-          ? "Needs attention"
-          : "Not connected";
-
   return (
     <SettingsWorkspacePage
       title="Company"
-      description="Profile, document defaults, timezone, and connections — everything about your business in one place."
+      description="Profile, document defaults and timezone: everything about your business in one place."
     >
       {/* Timezone merged into the profile form (it saves the same field);
        * the empty #preferences anchor keeps the legacy redirect landing here. */}
       <div id="preferences" aria-hidden="true" />
+      {askToConfirmTimeZone ? (
+        <TimeZoneConfirmPrompt
+          companyId={companyProfile.id}
+          currentTimeZone={companyProfile.timezone}
+          dismissible={false}
+        />
+      ) : null}
       <div id="profile" className="scroll-mt-24">
         <SettingsWorkspaceSection
           title="Company profile"
@@ -110,74 +99,22 @@ export function CompanySettingsView({
         </SettingsWorkspaceSection>
       </div>
 
-      <div id="connections" className="scroll-mt-24">
-        <SettingsWorkspaceSection
-          title="Connections"
-          description="Services Altair supports today. Setup lives where each is used."
-          card={false}
+      {/* Connections moved to Settings > Integrations (2026-11-27). The
+       * anchor stays so an old link to #connections still lands on a line
+       * that says where they went. */}
+      <p
+        id="connections"
+        className="scroll-mt-24 px-1 text-[13px] leading-relaxed text-altair-ink-on-paper-secondary"
+      >
+        Card payments and everything else Altair connects to are on the{" "}
+        <Link
+          href="/settings/integrations"
+          className="font-semibold text-altair-ink-on-paper underline underline-offset-2"
         >
-          <ul className={altairMcListClass}>
-            <li
-              className={`${altairMcListRowClass} flex flex-wrap items-center justify-between gap-2`}
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                <CreditCard
-                  className="h-4 w-4 shrink-0 text-altair-brass"
-                  aria-hidden="true"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-altair-ink">
-                    Stripe Connect
-                  </span>
-                  <span className="block text-xs text-altair-ink-muted">
-                    Customer payments ·{" "}
-                    {stripeConnected ? stripeStatusLabel : "Not connected"}
-                  </span>
-                </span>
-              </span>
-              <Link
-                href="/settings/billing#customer-payments"
-                className="shrink-0 text-xs font-semibold text-altair-ink underline-offset-2 hover:underline"
-              >
-                Open in Billing
-              </Link>
-            </li>
-
-            <li
-              className={`${altairMcListRowClass} flex flex-wrap items-center justify-between gap-2 border-t border-altair-border`}
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                <Megaphone
-                  className="h-4 w-4 shrink-0 text-altair-brass"
-                  aria-hidden="true"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-altair-ink">
-                    Facebook / Instagram
-                  </span>
-                  <span className="block text-xs text-altair-ink-muted">
-                    Marketing publishing · {facebookStatusLabel}
-                    {!canManageMarketingAccounts
-                      ? " · Owners and admins can connect"
-                      : ""}
-                  </span>
-                </span>
-              </span>
-              <Link
-                href="/marketing"
-                className="shrink-0 text-xs font-semibold text-altair-ink underline-offset-2 hover:underline"
-              >
-                Open Marketing Hub
-              </Link>
-            </li>
-          </ul>
-          <p className="mt-2 text-xs text-altair-ink-muted">
-            Twilio, Resend, QuickBooks, Google Business Profile, Zapier, Google
-            Calendar, and webhooks are not tenant Connect integrations today —
-            Twilio and Resend are server send paths configured by environment.
-          </p>
-        </SettingsWorkspaceSection>
-      </div>
+          Integrations page
+        </Link>
+        .
+      </p>
 
       {demoDataStatus || demoDataLoadError ? (
         <SettingsWorkspaceSection
@@ -201,6 +138,17 @@ export function CompanySettingsView({
           ) : null}
         </SettingsWorkspaceSection>
       ) : null}
+
+      {/* Last on the page: a complete copy of the workspace, for the owner's
+       * records or for leaving. The server action decides who may run it. */}
+      <SettingsWorkspaceSection
+        id="export"
+        title="Export your data"
+        description="A complete copy of this workspace's records, in one file."
+        className="scroll-mt-24"
+      >
+        <WorkspaceExportCard companyName={companyProfile.name} />
+      </SettingsWorkspaceSection>
     </SettingsWorkspacePage>
   );
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { queueWelcomeEmailForNewCompany } from "@/lib/onboarding/welcome";
 import type { User } from "@supabase/supabase-js";
 import { recordSecurityAuditEvent } from "@/lib/security/audit";
 import {
@@ -10,7 +11,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PASSWORD_RESET_RATE_LIMIT_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
-import { validateNewPassword } from "@/lib/auth/password";
+import { validateNewPassword, validatePasswordLength } from "@/lib/auth/password";
 import {
   buildAuthCallbackUrl,
   resolveAuthRedirectOrigin,
@@ -20,7 +21,16 @@ import {
   emailHasPendingTeamInvite,
   userHasPendingTeamInvites,
 } from "@/lib/auth/pending-team-invites";
-import { resolvePostLoginRedirect, sanitizeNextPath } from "@/lib/auth/redirects";
+import {
+  NEW_COMPANY_START_PATH,
+  resolvePostLoginRedirect,
+  sanitizeNextPath,
+} from "@/lib/auth/redirects";
+import { getGuidedSetupAvailabilityFor } from "@/lib/database/queries/business-setup";
+import {
+  readDetectedTimeZone,
+  recordDetectedTimeZoneForNewCompany,
+} from "@/lib/database/queries/company-timezone";
 import {
   clearSignupNetworkInviteCookie,
   readSignupNetworkInviteCookie,
@@ -62,22 +72,43 @@ export type AuthActionState = {
   needsEmailConfirmation?: boolean;
 };
 
-async function redirectAfterAuth(next?: string | null): Promise<never> {
+/**
+ * @param createdCompany true when this request has just created the person's
+ *   company. They open on the guided setup, unless they were already heading
+ *   somewhere (`next`).
+ */
+async function redirectAfterAuth(
+  next?: string | null,
+  createdCompany = false,
+): Promise<never> {
   const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
     redirect("/setup");
   }
 
-  redirect(resolvePostLoginRedirect(companyContext, next));
+  // Asked only for a company made this moment: in a database that cannot run
+  // the setup yet, a new owner goes straight to the dashboard, as before.
+  const startOnSetup =
+    createdCompany &&
+    !next &&
+    (await getGuidedSetupAvailabilityFor(companyContext));
+
+  redirect(
+    resolvePostLoginRedirect(
+      companyContext,
+      startOnSetup ? NEW_COMPANY_START_PATH : next,
+    ),
+  );
 }
 
 async function ensureCompanyAfterAuth(
   user: User,
   companyName?: string,
   trade?: TradeKey | null,
-): Promise<AuthActionState | null> {
+): Promise<(AuthActionState & { createdCompany?: boolean }) | null> {
   let context = await getActiveCompanyContext();
+  let createdCompany = false;
 
   if (!context) {
     if (await userHasPendingTeamInvites(user)) {
@@ -95,6 +126,18 @@ async function ensureCompanyAfterAuth(
       }
 
       if (bootstrapResult.companyId) {
+        createdCompany = true;
+        // The zone their browser reported when they signed up, kept on the
+        // user until now. Recorded before the context is read, so the
+        // context already has it.
+        await recordDetectedTimeZoneForNewCompany({
+          companyId: bootstrapResult.companyId,
+          detectedTimeZone: readDetectedTimeZone(user.user_metadata?.time_zone),
+        });
+        await queueWelcomeEmailForNewCompany({
+          user,
+          companyId: bootstrapResult.companyId,
+        });
         context = await getActiveCompanyContext({
           companyId: bootstrapResult.companyId,
         });
@@ -111,7 +154,7 @@ async function ensureCompanyAfterAuth(
     });
   }
 
-  return null;
+  return createdCompany ? { createdCompany } : null;
 }
 
 export async function loginAction(
@@ -194,10 +237,10 @@ export async function loginAction(
     : null;
 
   if (setupResult?.error) {
-    return setupResult;
+    return { error: setupResult.error };
   }
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, setupResult?.createdCompany === true);
 }
 
 export async function signupAction(
@@ -239,6 +282,13 @@ export async function signupAction(
 
   if (!fullName || !email || !password) {
     return { error: "Full name, email, and password are required." };
+  }
+
+  // The form's minLength is a hint, not a rule: a request that skips the form
+  // must meet the same minimum (launch audit M5).
+  const passwordLengthError = validatePasswordLength(password);
+  if (passwordLengthError) {
+    return { error: passwordLengthError };
   }
 
   // ============================== THE COMPANY NAME IS FOR FOUNDERS ==============================
@@ -337,6 +387,14 @@ export async function signupAction(
   const analyticsVisitorId = String(formData.get("analyticsVisitorId") ?? "").trim();
   const analyticsSessionId = String(formData.get("analyticsSessionId") ?? "").trim();
 
+  // The browser's time zone, so the new company starts in the zone its
+  // owner is in. It rides on the user (like the company name and trade)
+  // because most companies are made later, when the emailed link is opened,
+  // by a request that has no form. Checked here and again where it is used.
+  const browserTimeZone = companyName
+    ? readDetectedTimeZone(formData.get("browserTimeZone"))
+    : null;
+
   const captchaToken = readCaptchaToken(formData);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -347,6 +405,7 @@ export async function signupAction(
         full_name: fullName,
         ...(companyName ? { company_name: companyName } : {}),
         ...(trade ? { trade } : {}),
+        ...(browserTimeZone ? { time_zone: browserTimeZone } : {}),
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
         ...(signupAttribution
           ? {
@@ -414,6 +473,8 @@ export async function signupAction(
     return redirectAfterAuth(next);
   }
 
+  let createdCompany = false;
+
   if (companyName) {
     const bootstrapResult = await bootstrapCompanyForNewUser(
       companyName,
@@ -425,6 +486,15 @@ export async function signupAction(
     }
 
     if (bootstrapResult.companyId && data.user) {
+      createdCompany = true;
+      await recordDetectedTimeZoneForNewCompany({
+        companyId: bootstrapResult.companyId,
+        detectedTimeZone: browserTimeZone,
+      });
+      await queueWelcomeEmailForNewCompany({
+        user: data.user,
+        companyId: bootstrapResult.companyId,
+      });
       await processNetworkInviteAfterCompanyBootstrap({
         user: data.user,
         companyId: bootstrapResult.companyId,
@@ -435,7 +505,7 @@ export async function signupAction(
 
   await clearSignupNetworkInviteCookie();
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, createdCompany);
 }
 
 export async function setupCompanyAction(
@@ -482,6 +552,16 @@ export async function setupCompanyAction(
   }
 
   if (bootstrapResult.companyId) {
+    await recordDetectedTimeZoneForNewCompany({
+      companyId: bootstrapResult.companyId,
+      detectedTimeZone:
+        readDetectedTimeZone(formData.get("browserTimeZone")) ??
+        readDetectedTimeZone(user.user_metadata?.time_zone),
+    });
+    await queueWelcomeEmailForNewCompany({
+      user,
+      companyId: bootstrapResult.companyId,
+    });
     await processNetworkInviteAfterCompanyBootstrap({
       user,
       companyId: bootstrapResult.companyId,
@@ -512,7 +592,7 @@ export async function setupCompanyAction(
     };
   }
 
-  return redirectAfterAuth(next);
+  return redirectAfterAuth(next, Boolean(bootstrapResult.companyId));
 }
 
 export async function logoutAction() {

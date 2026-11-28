@@ -16,12 +16,14 @@ import { importCustomersFromMappedCsvAction } from "@/app/actions/customers-impo
 import type { ImportCustomersFromCsvActionResult } from "@/app/actions/customers-import";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
+  buildCustomerImportBatches,
   classifyCustomerImportRows,
   CUSTOMER_IMPORT_ALTAIR_FIELDS,
   CUSTOMER_IMPORT_FIELD_LABELS,
+  CUSTOMER_IMPORT_FILE_MAX_ROWS,
   CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT,
   CUSTOMER_IMPORT_PRESET_OPTIONS,
-  getCustomerImportFileSizeError,
+  getCustomerImportUploadSizeError,
   mapCustomerImportCsvWithMapping,
   parseCustomerImportCsvRaw,
   suggestCustomerImportFieldMapping,
@@ -31,6 +33,11 @@ import {
   type CustomerImportPreset,
   type CustomerImportPreviewRow,
 } from "@/shared/lib/customer-import";
+import { describeCustomerImportMappingGaps } from "@/shared/lib/customer-import-mapping";
+import {
+  readSpreadsheetFileAsCsv,
+  SPREADSHEET_FILE_ACCEPT,
+} from "@/shared/lib/spreadsheet-file";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   MasterContentStack,
@@ -46,12 +53,14 @@ import { adminFormInputClass } from "@/shared/lib/admin-density";
 
 type CustomerImportPageViewProps = {
   existingContacts: CustomerImportContact[];
+  /** From ?from=<preset> (links on altair-op.com/switch). */
+  initialPreset?: CustomerImportPreset;
 };
 
 type ImportPhase = "upload" | "mapping" | "preview" | "result";
 
 const IMPORT_STEPS: { id: ImportPhase; label: string }[] = [
-  { id: "upload", label: "Upload CSV" },
+  { id: "upload", label: "Upload File" },
   { id: "mapping", label: "Match Columns" },
   { id: "preview", label: "Review Preview" },
   { id: "result", label: "Import Results" },
@@ -75,6 +84,9 @@ const STATUS_STYLES: Record<
   },
 };
 
+/** Rows listed by name on the result screen; the rest are counted. */
+const RESULT_LIST_LIMIT = 200;
+
 function formatAddressPreview(row: CustomerImportPreviewRow): string {
   const parts = [row.address, row.city, row.state, row.zip].filter(Boolean);
   return parts.join(", ") || "—";
@@ -87,10 +99,13 @@ function formatContactPreview(row: CustomerImportPreviewRow): string {
 
 export function CustomerImportPageView({
   existingContacts,
+  initialPreset,
 }: CustomerImportPageViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<ImportPhase>("upload");
-  const [preset, setPreset] = useState<CustomerImportPreset>("other");
+  const [preset, setPreset] = useState<CustomerImportPreset>(
+    initialPreset ?? "other",
+  );
   const [fileName, setFileName] = useState<string | null>(null);
   const [csvText, setCsvText] = useState("");
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
@@ -103,6 +118,10 @@ export function CustomerImportPageView({
     useState<ImportCustomersFromCsvActionResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, startImportTransition] = useTransition();
+  const [importProgress, setImportProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
 
   const previewSummary = useMemo(
     () => summarizeCustomerImportPreview(previewRows),
@@ -117,6 +136,11 @@ export function CustomerImportPageView({
   const hasHiddenPreviewRows =
     previewRows.length > CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT;
 
+  const mappingGaps = useMemo(
+    () => describeCustomerImportMappingGaps(fieldMapping, csvHeaders),
+    [fieldMapping, csvHeaders],
+  );
+
   function resetImportState() {
     setPhase("upload");
     setFileName(null);
@@ -127,6 +151,7 @@ export function CustomerImportPageView({
     setPreviewRows([]);
     setImportResult(null);
     setImportError(null);
+    setImportProgress(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -137,7 +162,11 @@ export function CustomerImportPageView({
     headers: string[],
     mapping: CustomerImportFieldMapping,
   ) {
-    const mapped = mapCustomerImportCsvWithMapping(text, mapping);
+    const mapped = mapCustomerImportCsvWithMapping(
+      text,
+      mapping,
+      CUSTOMER_IMPORT_FILE_MAX_ROWS,
+    );
 
     if (mapped.error || !mapped.rows) {
       setParseError(mapped.error ?? "Could not map customer rows.");
@@ -172,7 +201,7 @@ export function CustomerImportPageView({
     setImportResult(null);
     setFileName(file.name);
 
-    const sizeError = getCustomerImportFileSizeError(file.size);
+    const sizeError = getCustomerImportUploadSizeError(file.size);
     if (sizeError) {
       setParseError(sizeError);
       setCsvText("");
@@ -185,17 +214,21 @@ export function CustomerImportPageView({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = typeof reader.result === "string" ? reader.result : "";
-      const parsed = parseCustomerImportCsvRaw(text);
+    void readSpreadsheetFileAsCsv(file).then((read) => {
+      const text = read.text ?? "";
+      const parsed = read.error
+        ? { error: read.error, parsed: undefined }
+        : parseCustomerImportCsvRaw(text);
 
       if (parsed.error || !parsed.parsed) {
-        setParseError(parsed.error ?? "Could not read this CSV file.");
+        setParseError(parsed.error ?? "Could not read this file.");
         setCsvText("");
         setCsvHeaders([]);
         setPreviewRows([]);
         setPhase("upload");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         return;
       }
 
@@ -208,14 +241,7 @@ export function CustomerImportPageView({
       setCsvHeaders(parsed.parsed.headers);
       setFieldMapping(suggestedMapping);
       setPhase("mapping");
-    };
-
-    reader.onerror = () => {
-      setParseError("Could not read this file. Try again with a CSV export.");
-      setPhase("upload");
-    };
-
-    reader.readAsText(file);
+    });
   }
 
   function handlePresetChange(nextPreset: CustomerImportPreset) {
@@ -249,23 +275,79 @@ export function CustomerImportPageView({
 
     setImportError(null);
 
-    startImportTransition(async () => {
-      const result = await importCustomersFromMappedCsvAction(
-        csvText,
-        fieldMapping,
-      );
+    const built = buildCustomerImportBatches(csvText, fieldMapping);
+    if (built.error || !built.batches || built.batches.length === 0) {
+      setImportError(built.error ?? "Could not prepare this file for import.");
+      return;
+    }
+    const batches = built.batches;
 
-      if (result.error && result.importedRows.length === 0) {
+    startImportTransition(async () => {
+      // A big file goes up in batches, one after another, so every batch
+      // passes the same server checks as a small file. Customers created by
+      // an earlier batch are found by the next batch's duplicate check.
+      const combined: ImportCustomersFromCsvActionResult = {
+        importedRows: [],
+        skippedRows: [],
+        errorRows: [],
+      };
+      const total = batches.reduce((sum, batch) => sum + batch.rowCount, 0);
+      let done = 0;
+      let stoppedWith: string | null = null;
+      setImportProgress({ done, total });
+
+      const offsetRows = <T extends { rowNumber: number }>(
+        rows: T[],
+        offset: number,
+      ) => rows.map((row) => ({ ...row, rowNumber: row.rowNumber + offset }));
+
+      for (const batch of batches) {
+        let result: ImportCustomersFromCsvActionResult;
+        try {
+          result = await importCustomersFromMappedCsvAction(
+            batch.csv,
+            fieldMapping,
+          );
+        } catch {
+          stoppedWith = "The connection dropped during the import.";
+          break;
+        }
+        combined.importedRows.push(
+          ...offsetRows(result.importedRows, batch.rowOffset),
+        );
+        combined.skippedRows.push(
+          ...offsetRows(result.skippedRows, batch.rowOffset),
+        );
+        combined.errorRows.push(
+          ...offsetRows(result.errorRows, batch.rowOffset),
+        );
+        if (result.error) {
+          stoppedWith = result.error;
+          break;
+        }
+        done += batch.rowCount;
+        setImportProgress({ done, total });
+      }
+      setImportProgress(null);
+
+      if (stoppedWith && combined.importedRows.length === 0) {
         setImportError(
           formatActionError(
-            result.error,
+            stoppedWith,
             "We couldn't import these customers. Try again.",
           ),
         );
         return;
       }
 
-      setImportResult(result);
+      if (stoppedWith) {
+        // Some batches went in. Show what did and say the rest did not, so
+        // importing the same file again brings in only the missing customers
+        // (the ones already in are skipped as duplicates).
+        combined.error = `${formatActionError(stoppedWith, "The import stopped.")} ${done.toLocaleString("en-US")} of ${total.toLocaleString("en-US")} rows were processed. Import the same file again to bring in the rest; customers already added are skipped.`;
+      }
+
+      setImportResult(combined);
       setPhase("result");
     });
   }
@@ -278,7 +360,7 @@ export function CustomerImportPageView({
         <MasterContentStack density="compact" scrollable>
           <MasterPageHeader
             title="Import Customers"
-            subtitle="Smart CSV import for spreadsheets and field-service exports"
+            subtitle="CSV or Excel files from spreadsheets and field-service apps"
             density="compact"
             secondaryAction={
               <Link
@@ -380,19 +462,29 @@ export function CustomerImportPageView({
             </h2>
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
-                <span className="font-medium text-slate-800">Google Sheets:</span>{" "}
-                File &gt; Download &gt; Comma Separated Values (.csv)
+                <span className="font-medium text-slate-800">Excel:</span> upload
+                the .xlsx as it is. The first sheet is read.
               </li>
               <li>
-                <span className="font-medium text-slate-800">Excel:</span> Save
-                As &gt; CSV
+                <span className="font-medium text-slate-800">Google Sheets:</span>{" "}
+                File &gt; Download &gt; Comma Separated Values (.csv) or
+                Microsoft Excel (.xlsx)
               </li>
               <li>
                 <span className="font-medium text-slate-800">
-                  ServiceTitan, Housecall Pro, Jobber, QuickBooks:
+                  Another field-service app or QuickBooks:
                 </span>{" "}
-                Export customers as CSV, then upload here. If columns differ,
-                Altair will help match them.
+                upload the customer export as it arrives. The export menus for
+                each app are at{" "}
+                <a
+                  href="https://www.altair-op.com/switch"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-cyan-700 underline-offset-2 hover:underline"
+                >
+                  altair-op.com/switch
+                </a>
+                .
               </li>
             </ul>
           </div>
@@ -425,11 +517,13 @@ export function CustomerImportPageView({
 
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-slate-900">
-              Upload your CSV
+              Upload your file
             </h2>
             <p className="text-sm text-slate-600">
-              Import up to 500 customers at a time. You&apos;ll match columns,
-              review a preview, then confirm the import.
+              A CSV or Excel file with up to{" "}
+              {CUSTOMER_IMPORT_FILE_MAX_ROWS.toLocaleString("en-US")} customers.
+              You&apos;ll match columns, review a preview, then confirm the
+              import.
             </p>
             <label
               className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
@@ -441,7 +535,7 @@ export function CustomerImportPageView({
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-900">
-                  Tap to choose a CSV file
+                  Tap to choose a CSV or Excel file
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   or drag and drop it here
@@ -450,7 +544,7 @@ export function CustomerImportPageView({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,text/csv"
+                accept={SPREADSHEET_FILE_ACCEPT}
                 className="sr-only"
                 onChange={(event) =>
                   handleFileSelected(event.target.files?.[0] ?? null)
@@ -472,7 +566,7 @@ export function CustomerImportPageView({
                 Match your columns
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                {fileName ? `File: ${fileName}` : "Uploaded CSV"} ·{" "}
+                {fileName ? `File: ${fileName}` : "Uploaded file"} ·{" "}
                 {csvHeaders.length} column{csvHeaders.length === 1 ? "" : "s"}{" "}
                 detected
               </p>
@@ -540,6 +634,33 @@ export function CustomerImportPageView({
             ))}
           </div>
 
+          {mappingGaps.warnings.length > 0 ||
+          mappingGaps.unmappedHeaders.length > 0 ? (
+            <div
+              role="status"
+              className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-900"
+            >
+              {mappingGaps.warnings.map((warning) => (
+                <p key={warning} className="flex items-start gap-2">
+                  <AlertCircle
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>{warning}</span>
+                </p>
+              ))}
+              {mappingGaps.unmappedHeaders.length > 0 ? (
+                <p className="text-amber-800">
+                  Not imported:{" "}
+                  <span className="font-medium">
+                    {mappingGaps.unmappedHeaders.join(", ")}
+                  </span>
+                  . Match any of these above if you want to keep them.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
@@ -601,7 +722,7 @@ export function CustomerImportPageView({
                   Review preview
                 </h2>
                 <p className="text-xs text-slate-500">
-                  {fileName ? `File: ${fileName}` : "Uploaded CSV"}
+                  {fileName ? `File: ${fileName}` : "Uploaded file"}
                   {hasHiddenPreviewRows
                     ? ` · Showing first ${CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT} of ${previewRows.length} rows`
                     : ` · ${previewRows.length} row${previewRows.length === 1 ? "" : "s"}`}
@@ -719,7 +840,13 @@ export function CustomerImportPageView({
                 >
                   <AdminPendingLabel
                     pending={isImporting}
-                    pendingLabel="Importing…"
+                    pendingLabel={
+                      importProgress && importProgress.total > 0
+                        ? `Importing… ${Math.round(
+                            (importProgress.done / importProgress.total) * 100,
+                          )}%`
+                        : "Importing…"
+                    }
                     idleLabel={`Import ${previewSummary.readyCount} customer${
                       previewSummary.readyCount === 1 ? "" : "s"
                     }`}
@@ -733,6 +860,9 @@ export function CustomerImportPageView({
 
           {phase === "result" && importResult ? (
             <MasterPageSurface variant="card" className="space-y-4 p-4 sm:p-6">
+          {importResult.error ? (
+            <SettingsAlertBanner tone="error">{importResult.error}</SettingsAlertBanner>
+          ) : null}
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
@@ -777,15 +907,27 @@ export function CustomerImportPageView({
                 Skipped or invalid rows
               </h3>
               <ul className="mt-2 space-y-2 text-sm text-slate-600">
-                {[...importResult.skippedRows, ...importResult.errorRows].map(
-                  (row) => (
+                {[...importResult.errorRows, ...importResult.skippedRows]
+                  .slice(0, RESULT_LIST_LIMIT)
+                  .map((row) => (
                     <li key={`${row.rowNumber}-${row.customerName}`}>
                       Row {row.rowNumber}: {row.customerName}
                       {row.message ? ` — ${row.message}` : ""}
                     </li>
-                  ),
-                )}
+                  ))}
               </ul>
+              {importResult.skippedRows.length + importResult.errorRows.length >
+              RESULT_LIST_LIMIT ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  and{" "}
+                  {(
+                    importResult.skippedRows.length +
+                    importResult.errorRows.length -
+                    RESULT_LIST_LIMIT
+                  ).toLocaleString("en-US")}{" "}
+                  more.
+                </p>
+              ) : null}
             </div>
           ) : null}
 

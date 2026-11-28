@@ -1,3 +1,4 @@
+import "../public.css";
 import type { Metadata } from "next";
 import { Instrument_Serif } from "next/font/google";
 import { MetaPixel } from "@/shared/components/analytics/MetaPixel";

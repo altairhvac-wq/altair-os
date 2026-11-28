@@ -12,6 +12,7 @@ import { allocateDocumentNumber } from "@/lib/database/queries/document-numbers"
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { readPreviousInvoiceNumber } from "@/shared/lib/invoice-import";
 import type { Database } from "@/lib/database/types";
 import type {
   InvoiceActivityInsert,
@@ -1863,4 +1864,45 @@ export async function listInvoiceDocumentRefsForEstimates(
     estimateId: row.estimate_id ?? undefined,
     jobId: row.job_id ?? undefined,
   }));
+}
+
+/**
+ * The old invoice numbers already brought in by the unpaid invoice import,
+ * read back from the notes prefix it writes ("Previous invoice #1234.").
+ * Includes trashed invoices, so a deleted import is not silently recreated.
+ */
+export async function listImportedPreviousInvoiceNumbers(
+  companyId: string,
+): Promise<{ numbers: string[]; error: string | null }> {
+  const supabase = await createClient();
+  const PAGE = 1000;
+  const numbers: string[] = [];
+
+  for (let from = 0; from < 100_000; from += PAGE) {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("notes")
+      .eq("company_id", companyId)
+      .like("notes", "Previous invoice #%")
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      console.error("[listImportedPreviousInvoiceNumbers] query failed:", {
+        companyId,
+        code: error.code,
+        message: error.message,
+      });
+      return { numbers: [], error: mapDatabaseError(error) };
+    }
+
+    const rows = (data ?? []) as { notes: string | null }[];
+    for (const row of rows) {
+      const number = readPreviousInvoiceNumber(row.notes);
+      if (number) numbers.push(number);
+    }
+    if (rows.length < PAGE) break;
+  }
+
+  return { numbers, error: null };
 }

@@ -54,7 +54,7 @@ import {
 } from "@/shared/types/lead";
 import {
   normalizeCustomerFormData,
-  validateCustomerFormData,
+  validateCustomerRecord,
 } from "@/shared/types/customer";
 
 export type LeadActionResult = {
@@ -460,10 +460,8 @@ async function ensureLeadCustomerRecord(
   const customerData = normalizeCustomerFormData(
     buildCustomerFormDataFromLead(latestLead),
   );
-  const validationError = validateCustomerFormData(customerData, {
-    requireAddress: false,
-    requireContact: true,
-  });
+  // Same rule as a new customer: name plus phone OR email.
+  const validationError = validateCustomerRecord(customerData);
 
   if (validationError) {
     return { error: validationError };

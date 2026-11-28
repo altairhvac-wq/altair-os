@@ -1,83 +1,225 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, CalendarClock, Mail } from "lucide-react";
+import { getLiveOnboardingInfo } from "@/lib/onboarding/live-onboarding";
+import { SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
+import { ContactComposer } from "@/shared/components/marketing/ContactComposer";
+import { MarketingFaqSection } from "@/shared/components/marketing/MarketingFaqSection";
 import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
-import { SUPPORT_EMAIL } from "@/shared/lib/site/faq";
-import { buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
+import { NextStep } from "@/shared/components/site/NextStep";
+import { BAND, TONE } from "@/shared/lib/site/bands";
+import { CONTACT_EXPECTATIONS, CONTACT_FAQ, CONTACT_PATH } from "@/shared/lib/site/contact";
+import { NEXT_STEPS } from "@/shared/lib/site/next-steps";
+import { PUBLIC_SITE_NAME, PUBLIC_SITE_ORIGIN, buildPublicSocialMetadata } from "@/shared/lib/site/public-site";
+import { buildFaqPageStructuredData } from "@/shared/lib/site/structured-data";
+import { SUPPORT_EMAIL } from "@/shared/lib/site/support";
+
+// 31 + " · Altair Operating System" = 57 characters; the description is 145.
+const TITLE = "Contact Us and Common Questions";
+const DESCRIPTION =
+  "Message the founder of Altair Operating System, book a demo call on Zoom, and get straight answers to the questions asked most often.";
 
 export const metadata: Metadata = {
-  title: "Contact",
-  description:
-    "Reach the people behind Altair Operating System: email for questions and support, and live onboarding sessions twice a week for every customer.",
-  ...buildPublicSocialMetadata({ path: "/contact" }),
+  title: TITLE,
+  description: DESCRIPTION,
+  ...buildPublicSocialMetadata({ path: CONTACT_PATH, title: `Contact ${PUBLIC_SITE_NAME}`, description: DESCRIPTION }),
 };
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c2a05a]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080907]";
+const eyebrow = "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]";
+const card = "rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)]";
+
+/** ContactPage with the one support address, the same one the page shows. */
+function buildContactPageStructuredData(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: `Contact ${PUBLIC_SITE_NAME}`,
+    url: `${PUBLIC_SITE_ORIGIN}${CONTACT_PATH}`,
+    mainEntity: {
+      "@type": "Organization",
+      name: PUBLIC_SITE_NAME,
+      url: PUBLIC_SITE_ORIGIN,
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: SUPPORT_EMAIL,
+        availableLanguage: "English",
+      },
+    },
+  };
+}
+
 /**
- * Visitors type /contact (the analytics saw it land on the 404 page). The
- * two ways to reach us are the ones every other page already states: the
- * email on the privacy and terms pages, and the live onboarding sessions.
+ * Visitors type /contact (the analytics saw it land on the 404 page).
+ *
+ * 2026-11-24 (owner: "they have every ability to reach out to our company"):
+ *   - "Write to us" SENDS the message from the site (app/actions/contact.ts);
+ *     before, it only opened the visitor's own email app;
+ *   - "Book a demo call" opens the same booking page as the customers' setup
+ *     call (ALTAIR_LIVE_ONBOARDING_URL), so anyone can talk to the founder
+ *     before signing up. Without that setting the card asks for a demo
+ *     through the form instead. No phone number, by the owner's choice.
  */
 export default function ContactPage() {
+  const trialDays = SAAS_TRIAL_CONFIG.durationDays;
+  const bookingUrl = getLiveOnboardingInfo().joinUrl;
   return (
-    <div className="mc-homepage relative flex min-h-dvh flex-col bg-[#080907] text-[#f3ebdd]">
+    <div className="mc-homepage relative flex min-h-dvh flex-col overflow-x-clip bg-[#080907] text-[#f3ebdd]">
+      <JsonLdScript data={buildContactPageStructuredData()} />
+      <JsonLdScript data={buildFaqPageStructuredData(CONTACT_FAQ)} />
       <HomepageNav />
-      <main className="relative flex-1 px-5 pb-20 pt-28 sm:px-8 sm:pt-32">
-        <div className="mx-auto max-w-2xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c2a05a]">
-            Contact
-          </p>
-          <h1 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.5rem] sm:leading-[1.15]">
-            Talk to a person.
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-[#c9bfae]">
-            Questions about the product, the trial, or whether Altair fits the
-            way your company runs: write to us, and the founder reads it.
-          </p>
+      <main className="relative flex-1">
+        <div className={`${BAND.hero} px-5 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36`}>
+          <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-14">
+            {/* ---------- left: who and how ---------- */}
+            <div>
+              <p className={eyebrow}>Contact</p>
+              <h1 className="ah-hero-display mt-4 text-[2.3rem] font-normal leading-[1.08] tracking-[-0.015em] text-[#fff9ea] sm:text-[3.2rem]">
+                Talk to a person.
+              </h1>
+              <p className="mt-5 text-base leading-relaxed text-[#c9bfae] sm:text-lg sm:leading-[1.75]">
+                Questions about the product, the trial, or whether Altair fits the way your company runs: book a demo
+                call, or send a message. Either way you reach the founder.
+              </p>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            <section className="rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#c2a05a]">
-                Email
-              </h2>
-              <a
-                href={`mailto:${SUPPORT_EMAIL}`}
-                className="mt-3 block break-all text-lg font-semibold text-[#fff9ea] underline-offset-4 hover:underline"
-              >
-                {SUPPORT_EMAIL}
-              </a>
-              <p className="mt-2 text-sm leading-relaxed text-[#c9bfae]">
-                Support, billing and sales questions all go to the same inbox.
-              </p>
-            </section>
+              <div className="mt-8 space-y-3">
+                <div className={`flex gap-4 p-5 ${card}`}>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(194,160,90,0.12)] text-[#c2a05a]">
+                    <Mail aria-hidden="true" className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8e826f]">Email</h2>
+                    <a
+                      href={`mailto:${SUPPORT_EMAIL}`}
+                      className={`mt-1 block break-all text-lg font-semibold text-[#fff9ea] underline-offset-4 hover:underline ${focusRing}`}
+                    >
+                      {SUPPORT_EMAIL}
+                    </a>
+                    <p className="mt-1 text-sm leading-relaxed text-[#c9bfae]">
+                      Support, billing and sales questions all go to the same inbox.
+                    </p>
+                  </div>
+                </div>
+                <div className={`flex gap-4 p-5 ${card}`}>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(194,160,90,0.12)] text-[#c2a05a]">
+                    <CalendarClock aria-hidden="true" className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8e826f]">Demo call</h2>
+                    <p className="mt-1 text-lg font-semibold text-[#fff9ea]">One-on-one with the founder, on Zoom</p>
+                    <p className="mt-1 text-sm leading-relaxed text-[#c9bfae]">
+                      See Altair on the kind of jobs you run and ask anything, before you sign up. Customers book their free
+                      setup call the same way.
+                    </p>
+                    {bookingUrl ? (
+                      <a
+                        href={bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-cta="contact-demo"
+                        className={`mt-3 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[rgba(194,160,90,0.55)] px-5 text-sm font-semibold text-[#fff9ea] transition-colors hover:border-[#c2a05a] hover:bg-[rgba(194,160,90,0.1)] ${focusRing}`}
+                      >
+                        Book a demo call
+                        <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <p className="mt-2 text-sm text-[#e8d9ac]">Pick &ldquo;I&apos;d like a demo&rdquo; in the form and we will set a time.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-            <section className="rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[rgba(14,17,13,0.6)] p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[#c2a05a]">
-                Live onboarding
+              <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-5">
+                <Link
+                  href="/signup"
+                  data-cta="contact"
+                  className={`inline-flex min-h-12 items-center justify-center whitespace-nowrap rounded-lg bg-[#a4823a] px-6 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a] ${focusRing}`}
+                >
+                  Start Your {trialDays}-Day Free Trial
+                </Link>
+                <a
+                  href="#faq"
+                  className={`inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#c2a05a] underline-offset-4 hover:text-[#e8d9ac] hover:underline ${focusRing}`}
+                >
+                  Common questions
+                  <ArrowRight aria-hidden="true" className="h-4 w-4 rotate-90" />
+                </a>
+              </div>
+            </div>
+
+            {/* ---------- right: write to us ---------- */}
+            <section
+              aria-labelledby="contact-write-heading"
+              className="rounded-2xl border border-[rgba(230,227,220,0.12)] bg-[linear-gradient(165deg,rgba(32,37,29,0.72)_0%,rgba(14,17,13,0.92)_100%)] p-5 sm:p-7 md:mt-2"
+            >
+              <p className={eyebrow}>Write to us</p>
+              <h2 id="contact-write-heading" className="mt-2 text-xl font-semibold text-[#fff9ea] sm:text-[1.4rem]">
+                Say what you need, we take it from there
               </h2>
-              <p className="mt-3 text-lg font-semibold text-[#fff9ea]">
-                Twice every week, on Zoom
-              </p>
               <p className="mt-2 text-sm leading-relaxed text-[#c9bfae]">
-                Every customer can join: setup help, workflow guidance and open
-                questions. The invitation is in your workspace after you sign up.
+                Pick a topic and write a few lines. It goes straight to {SUPPORT_EMAIL}, and we reply to the email you give.
               </p>
+              <div className="mt-6">
+                <ContactComposer />
+              </div>
             </section>
           </div>
+        </div>
 
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#a4823a] px-6 py-3 text-sm font-semibold text-[#080907] transition-colors hover:bg-[#c2a05a]"
+        {/* ---------- what to expect ---------- */}
+        <section aria-labelledby="contact-expect-heading" className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
+          <div className="mx-auto max-w-5xl">
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE.light.eyebrow}`}>What happens next</p>
+            <h2
+              id="contact-expect-heading"
+              className="mt-3 text-[1.5rem] font-semibold tracking-tight text-[#14120e] sm:text-[1.9rem]"
             >
-              Start Your 14-Day Free Trial
-            </Link>
-            <Link
-              href="/pricing#faq"
-              className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[rgba(230,227,220,0.18)] px-6 py-3 text-sm font-semibold text-[#fbf7ef] transition-colors hover:border-[rgba(230,227,220,0.32)]"
-            >
-              Read the common questions
-            </Link>
+              Who answers, and when
+            </h2>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {CONTACT_EXPECTATIONS.map((item) => (
+                <li key={item.title} className={`flex flex-col p-5 ${TONE.light.card}`}>
+                  <h3 className="text-[15px] font-semibold text-[#14120e]">{item.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-stone-600">{item.text}</p>
+                  {item.href && item.linkLabel ? (
+                    <Link
+                      href={item.href}
+                      className="mt-auto inline-flex items-center gap-1 pt-3 text-[13px] font-semibold text-[#77591B] underline-offset-4 hover:text-[#14120e] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a4823a]/60"
+                    >
+                      {item.linkLabel}
+                      <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
           </div>
+        </section>
+
+        <div className={`${BAND.olive} py-4 sm:py-8`}>
+          <MarketingFaqSection
+            variant="dark"
+            items={CONTACT_FAQ}
+            eyebrowText="Common questions"
+            headingText="Answers to what people write in about."
+            introText="The questions that come in most, answered from what the product does today."
+          />
+        </div>
+
+        <div className={`${BAND.light} px-5 py-16 sm:px-8 sm:py-20`}>
+          <NextStep
+            className="mx-auto max-w-5xl"
+            tone="light"
+            placement="contact"
+            steps={NEXT_STEPS.contact}
+            eyebrow="While you are here"
+            heading="See it, try the free tools, or read up"
+            trial={false}
+          />
         </div>
       </main>
       <MarketingFooter />

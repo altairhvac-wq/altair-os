@@ -37,7 +37,7 @@ Typical request flow:
 - `app/(admin)/`: authenticated office/admin product surfaces.
 - `app/(auth)/`: login, signup, password recovery, and reset flows.
 - `app/technician/`: current database-backed technician experience.
-- `app/tech/`: older technician routes; the root still uses mock dashboard data.
+- `app/tech/`: live technician pages for time (`/tech/time`), receipts and alerts, linked from the technician nav. `/tech` itself redirects to `/technician` (next.config.ts).
 - `app/actions/`: mutation boundary. Actions must authenticate, resolve company context, check permissions, validate input, and revalidate affected routes as appropriate.
 - `lib/database/`: company context, access control, typed queries, domain services, revalidation helpers, and database types.
 - `lib/supabase/`: browser, server-cookie, request-boundary, and service-role Supabase clients.
@@ -45,10 +45,10 @@ Typical request flow:
 - `lib/ai/`, `lib/email/`, `lib/payments/`, `lib/sms/`, `lib/integrations/`: server-side external-service integrations.
 - `shared/components/`: reusable UI grouped by product domain. North Star variants are colocated in domain-specific `north-star-*` folders.
 - `shared/design-system/`: tokens, shell, signature, components, and design-system documentation.
+- `shared/lib/help/`: the how-to library. One typed catalog of short notes read by the signed-in Help page (`/help`), the public pages (`/how-to`) and, later, the assistant (`docs/product/ALTAIR_ASSISTANT.md`). Every on-screen label a note quotes is anchored to its source file and checked by `npm run verify:help-notes`.
 - `shared/types/`: domain models, validation/normalization helpers, and action-facing types.
-- `shared/data/`: legacy/sample mock data; do not assume it is production data.
 - `supabase/migrations/`: ordered PostgreSQL schema, RLS, function, trigger, and grant migrations.
-- `public/`: static assets, PWA files, import templates, and marketing screenshots.
+- `public/`: static assets, PWA files, import templates, and the marketing pictures and video the public pages show. Everything in it is served to anyone with the address, so it holds only files a page uses.
 - `scripts/`: integration smoke scripts and local asset/screenshot tooling.
 - `docs/README.md`: documentation architecture index.
 - `docs/DOCUMENTATION_ARCHITECTURE.md`: documentation organization audit and move log.
@@ -93,7 +93,7 @@ LABEL=after ROUTES=/,/customers BASE_URL=<preview-or-prod-url> npm run capture:c
 ```
 
 
-Output lands in `public/marketing/screenshots/comparison/<page>-<label>.png`. Refresh auth for the target host when needed: `BASE_URL=<url> npm run capture:founder-auth`.
+Output lands in `captures/screenshots/comparison/<page>-<label>.png` (git-ignored; captures of a signed-in company never go under `public/`). Refresh auth for the target host when needed: `BASE_URL=<url> npm run capture:founder-auth`.
 
 The Marketing page no longer has an in-app capture control (removed 2026-10-25 with the three-tab simplification); run the capture scripts above from a terminal. For non-localhost targets, refresh auth for that host first: `BASE_URL=<url> npm run capture:founder-auth`.
 
@@ -156,7 +156,7 @@ These scripts require local environment configuration, connect to Supabase, and 
 - Generated PWA PNGs under `public/icons/`: regenerate them with `node scripts/generate-pwa-icons.mjs` when changing their SVG source.
 - Existing applied SQL migrations: add a new ordered migration for schema/RLS/grant changes rather than rewriting database history.
 
-Do not commit `.env.local`, Playwright auth state, build output, credentials, access tokens, service-role keys, webhook secrets, or customer data.
+Do not commit `.env.local`, Playwright auth state, build output, credentials, access tokens, service-role keys, webhook secrets, or customer data. Screenshots of a signed-in company are customer data: capture scripts write to the git-ignored `captures/` folder, and a picture goes into `public/` only when a public page shows it and it contains sample data only.
 
 ## Security and environment precautions
 
@@ -184,4 +184,5 @@ A change is complete when all applicable items are true:
 - New configuration is documented in `.env.example` without real values, and secrets remain server-only.
 - Database changes are delivered as a new ordered migration with appropriate RLS, grants, and typed application updates.
 - Current source-of-truth documentation is updated when architecture, production status, setup, commands, routes, or operational procedures change.
+- When a change renames a button, tab, field or page a how-to note quotes, the note in `shared/lib/help/notes/` is updated in the same change and `npm run verify:help-notes` passes. A new screen people will ask about gets a note.
 - No generated output, credentials, local auth state, or unrelated user changes are included in the diff.

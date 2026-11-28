@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
-import { LoginLandingPage } from "@/shared/components/homepage/LoginLandingPage";
+import { HomeLandingPage } from "@/shared/components/homepage/HomeLandingPage";
 import { JsonLdScript } from "@/shared/components/site/JsonLdScript";
 import {
   buildPublicSocialMetadata,
   PUBLIC_SITE_DESCRIPTION,
+  PUBLIC_SITE_NAME,
+  PUBLIC_SITE_ORIGIN,
   PUBLIC_SITE_TITLE,
 } from "@/shared/lib/site/public-site";
+import { VIDEO_PAGE_PATH, buildCommercialVideoStructuredData } from "@/shared/lib/site/commercial-video";
+import { buildProductTourStructuredData } from "@/shared/lib/site/product-tour-video";
 import {
   buildOrganizationStructuredData,
   buildSoftwareApplicationStructuredData,
 } from "@/shared/lib/site/structured-data";
 
 export const metadata: Metadata = {
-  // `absolute` opts the logged-out homepage out of the root "%s · Altair OS"
+  // `absolute` opts the logged-out homepage out of the root "%s · Altair Operating System"
   // template — this title already leads with the product name.
   title: {
     absolute: PUBLIC_SITE_TITLE,
@@ -36,7 +40,23 @@ export default function WelcomePage() {
           catalog and site constants the visible page renders. */}
       <JsonLdScript data={buildOrganizationStructuredData()} />
       <JsonLdScript data={buildSoftwareApplicationStructuredData()} />
-      <LoginLandingPage />
+      {/* The product tour in the hero; this page is its watch page. */}
+      <JsonLdScript
+        data={buildProductTourStructuredData({
+          origin: PUBLIC_SITE_ORIGIN,
+          pageUrl: `${PUBLIC_SITE_ORIGIN}/`,
+          publisherName: PUBLIC_SITE_NAME,
+        })}
+      />
+      {/* The one-job commercial; its watch page is /how-it-works. */}
+      <JsonLdScript
+        data={buildCommercialVideoStructuredData({
+          origin: PUBLIC_SITE_ORIGIN,
+          pageUrl: `${PUBLIC_SITE_ORIGIN}${VIDEO_PAGE_PATH}`,
+          publisherName: PUBLIC_SITE_NAME,
+        })}
+      />
+      <HomeLandingPage />
     </>
   );
 }

@@ -101,7 +101,7 @@ export function TeamSettingsView({
   return (
     <SettingsWorkspacePage
       title="Users"
-      description="Your company tree — click a member to manage them."
+      description="Everyone with access to your company. Pick a person to change their role or access."
     >
       <div className={altairMcListClass}>
         {/* One toolbar: invite + incoming invitations behind buttons, search right. */}

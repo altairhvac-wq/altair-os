@@ -22,6 +22,7 @@ import {
   adminFormStackClass,
 } from "@/shared/lib/admin-density";
 import { Button } from "@/shared/design-system/components";
+import { CustomerPicker } from "@/shared/components/customers/CustomerPicker";
 import { InvoiceLineItemsEditor } from "./InvoiceLineItemsEditor";
 
 type InvoiceFormProps = {
@@ -145,21 +146,12 @@ export function InvoiceForm({
             <label htmlFor="customerId" className={adminFormLabelClass}>
               Customer
             </label>
-            <select
-              id="customerId"
-              name="customerId"
-              required
+            <CustomerPicker
+              customers={customers}
               value={customerId}
-              onChange={(e) => handleCustomerChange(e.target.value)}
-              className={adminFormInputClass}
-            >
-              <option value="">Select…</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
+              onChange={handleCustomerChange}
+              required
+            />
           </div>
 
           <div>

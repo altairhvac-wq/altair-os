@@ -1,9 +1,18 @@
 import type { MetadataRoute } from "next";
 import { listPublishedSitePages } from "@/lib/database/queries/marketing-site-pages";
+import { listPublishedListingPaths } from "@/lib/directory/listings";
+import { listIndexableHubPaths } from "@/lib/directory/places";
+import { DIRECTORY_LIST_PATH, DIRECTORY_PATH, directoryListingPath } from "@/shared/types/directory";
 import { SITE_PAGE_PATH_PREFIX } from "@/shared/types/site-page";
 import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
+import { VIDEO_PAGE_PATH } from "@/shared/lib/site/commercial-video";
+import { COMPETITOR_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { RESOURCE_STATIC_PATHS, RESOURCES_PATH } from "@/shared/lib/resources/catalog";
+import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
+import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
+import { HELP_NOTES } from "@/shared/lib/help/all-notes";
+import { HOW_TO_PATH, howToNotePath } from "@/shared/lib/help/paths";
 
 /**
  * The sitemap — the only place a published page announces itself.
@@ -43,6 +52,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${origin}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${origin}/pricing`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${origin}${VIDEO_PAGE_PATH}`, changeFrequency: "monthly", priority: 0.8 },
+    ...COMPETITOR_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     ...LANDING_PAGE_PATHS.map((path) => ({
       url: `${origin}${path}`,
       changeFrequency: "monthly" as const,
@@ -60,7 +75,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: path === RESOURCES_PATH ? 0.7 : 0.6,
     })),
+    ...UTAH_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+    ...COMPANY_PAGE_PATHS.map((path) => ({
+      url: `${origin}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+    // The how-to library: its index and one page per note in the catalog.
+    { url: `${origin}${HOW_TO_PATH}`, changeFrequency: "monthly", priority: 0.6 },
+    ...HELP_NOTES.map((note) => ({
+      url: `${origin}${howToNotePath(note.slug)}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+    { url: `${origin}${DIRECTORY_PATH}`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${origin}${DIRECTORY_LIST_PATH}`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${origin}/contact`, changeFrequency: "monthly", priority: 0.4 },
+    // The trial sign-up page ranks for the brand; robots.ts allows it.
+    { url: `${origin}/signup`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${origin}/install`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${origin}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${origin}/terms`, changeFrequency: "yearly", priority: 0.2 },
@@ -80,5 +116,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticEntries, ...pageEntries];
+  // Published directory listings, each at its own address. An empty list
+  // (no listings yet, or the directory not set up) adds nothing.
+  const listingEntries: MetadataRoute.Sitemap = (await listPublishedListingPaths()).map((listing) => ({
+    url: `${origin}${directoryListingPath(listing.slug)}`,
+    ...(listing.updatedAt ? { lastModified: new Date(listing.updatedAt) } : {}),
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  }));
+
+  // State, city and city-and-trade pages, only once enough businesses are
+  // based there to make a real page (DIRECTORY_HUB_INDEX_MIN). The same
+  // rule marks thinner ones noindex, so the two never disagree.
+  const hubEntries: MetadataRoute.Sitemap = (await listIndexableHubPaths()).map((path) => ({
+    url: `${origin}${path}`,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticEntries, ...pageEntries, ...listingEntries, ...hubEntries];
 }

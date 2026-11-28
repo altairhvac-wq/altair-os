@@ -11,6 +11,8 @@ import type { DashboardData } from "@/shared/types/dashboard";
 import type { DashboardOverviewExtras } from "@/shared/types/dashboard-overview";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import type { LiveOnboardingInfo } from "@/shared/types/live-onboarding";
+import { LiveOnboardingBanner } from "@/shared/components/support/LiveOnboardingBanner";
 import { OverviewActionList } from "./OverviewActionList";
 import { OverviewDispatchStrip } from "./OverviewDispatchStrip";
 import { OverviewJobsTable } from "./OverviewJobsTable";
@@ -29,6 +31,8 @@ export type DashboardOverviewViewProps = {
   billingAccess?: CompanyBillingAccess | null;
   onboardingChecklist?: OnboardingChecklist;
   demoDataStatus?: DemoDataStatus | null;
+  /** Live onboarding invitation; null outside a company's first weeks. */
+  liveOnboarding?: LiveOnboardingInfo | null;
 };
 
 /** One sentence under the heading, built from the same numbers as the cards. */
@@ -68,6 +72,7 @@ export function DashboardOverviewView({
   billingAccess,
   onboardingChecklist,
   demoDataStatus,
+  liveOnboarding = null,
 }: DashboardOverviewViewProps) {
   const actions = buildDashboardActionRows(data);
   const showSampleDataDiscovery = Boolean(
@@ -122,6 +127,8 @@ export function DashboardOverviewView({
             ))}
           </nav>
         </header>
+
+        {liveOnboarding ? <LiveOnboardingBanner info={liveOnboarding} /> : null}
 
         {/* A company still in setup sees what to do next before a row of
             zeros. Once the checklist is complete this block moves to the

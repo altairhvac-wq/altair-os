@@ -39,6 +39,10 @@ yarn-error.log*
 
 # local screenshot / debug artifacts
 .tmp/
+# Output of the capture and comparison scripts. These are taken from a signed-in
+# company, so they stay on the machine: never under public/, which is served to
+# anyone, and never in a commit.
+/captures/
 
 # typescript
 *.tsbuildinfo

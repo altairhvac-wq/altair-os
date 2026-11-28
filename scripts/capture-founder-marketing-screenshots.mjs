@@ -16,7 +16,7 @@
  *   FOUNDER_CAPTURE_JSON=1 …  (machine-readable progress for the local Marketing Hub button)
  *
  * Output:
- *   public/marketing/screenshots/social/*-full-page.png (1600×900 viewport)
+ *   captures/screenshots/social/*-full-page.png (1600×900 viewport)
  */
 
 import { execSync } from "child_process";
@@ -28,7 +28,7 @@ import { chromium } from "playwright";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const ENV_PATH = path.join(ROOT, ".env.local");
 const AUTH_PATH = path.join(ROOT, ".playwright", "founder-auth.json");
-const OUTPUT_DIR = path.join(ROOT, "public", "marketing", "screenshots", "social");
+const OUTPUT_DIR = path.join(ROOT, "captures", "screenshots", "social");
 const BASE_URL = process.env.BASE_URL?.trim() || "http://localhost:3000";
 const JSON_MODE = process.env.FOUNDER_CAPTURE_JSON === "1";
 const FOUNDER_EMAIL = "altairhvac@gmail.com";
@@ -179,7 +179,7 @@ const CAPTURES = [
     label: "Reports workspace",
     route: "/reports?range=30d",
     output: "reports-full-page.png",
-    // ReportsNorthStarView uses a plain <header><h1>; tax-summary keeps the old NS header class.
+    // ReportsOverviewView uses a plain <header><h1>; tax-summary keeps the old NS header class.
     anchor: "header h1",
     ready: 'a[href*="/reports/tax-summary"]',
   },

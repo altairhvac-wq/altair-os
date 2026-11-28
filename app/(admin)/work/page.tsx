@@ -13,6 +13,7 @@ import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import { listJobsPage } from "@/lib/database/queries/list-pages";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { withSelectedOption } from "@/shared/lib/customers/customer-options";
 import { parseJobsPageSearchParams } from "@/shared/lib/jobs-page-filters";
 import type { JobFormData } from "@/shared/types/job";
 
@@ -75,6 +76,8 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
   // the picker at all. They now get a bounded slice, and searching goes to the
   // server through searchCustomerOptionsAction — which searches the WHOLE
   // tenant, so it can offer customers the old array had already truncated away.
+  // The New Job form's picker has the same search (CustomerPicker), so the
+  // slice is where it starts and not all it can reach.
   const [jobs, deletedJobs, todayJobs, customerOptions, technicians] =
     await Promise.all([
     Promise.resolve(jobsPage.rows),
@@ -95,8 +98,6 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
       : Promise.resolve([]),
     ]);
 
-  const customers = customerOptions.customers;
-
   const allJobsForBilling = [...jobs, ...deletedJobs, ...todayJobs];
   const billingSummaries = await listJobBillingSummariesForJobs(
     companyContext.company.id,
@@ -106,11 +107,28 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
   // By primary key, not by scanning an array that may not contain them. The
   // deep link carries a customer id; the bounded option list is the newest
   // twenty-five and has no reason to include that particular customer.
-  const preselectedCustomer =
+  const linkedCustomer =
     customerId && canViewAll
-      ? ((await getCustomerById(companyContext.company.id, customerId)) ??
-        undefined)
+      ? await getCustomerById(companyContext.company.id, customerId)
+      : null;
+
+  // Only a customer still on the books. The picker has never offered archived
+  // or deleted customers, and a link is not a way around that.
+  const preselectedCustomer =
+    linkedCustomer && !linkedCustomer.archivedAt && !linkedCustomer.deletedAt
+      ? linkedCustomer
       : undefined;
+
+  // ============================== THE PRESELECTED CUSTOMER MUST BE AN OPTION ==============================
+  // The form's default is this customer's id, so the picker has to hold an
+  // option for it. When it did not, the browser showed the first customer in
+  // the list instead — under this customer's address — and the job was saved
+  // for that other customer. Seen on a company with more than twenty-five
+  // customers, opening "New job" from an older customer's page.
+  const customers = withSelectedOption(
+    customerOptions.customers,
+    preselectedCustomer,
+  );
 
   const createInitialData: Partial<JobFormData> | undefined =
     preselectedCustomer

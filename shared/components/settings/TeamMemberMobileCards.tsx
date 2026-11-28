@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { ChevronDown } from "lucide-react";
 import { formatDate } from "@/shared/types/customer";
 import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
@@ -107,6 +108,14 @@ export function TeamMemberMobileCards({
     useState<ConfirmingAction | null>(null);
   const [pendingRoleChange, setPendingRoleChange] =
     useState<PendingRoleChange | null>(null);
+  /*
+   * One person open at a time (UI audit 2026-11-12, section E). Every card
+   * used to show its role, manager and specialty controls and a red "Suspend
+   * access" button all at once, so each person took a full phone screen and
+   * the page was a column of red buttons. Now a card is two lines: who they
+   * are and what they do. Tap it to manage that one person.
+   */
+  const [openMemberId, setOpenMemberId] = useState<string | null>(null);
 
   const activeOwnerCount = useMemo(
     () =>
@@ -389,13 +398,24 @@ export function TeamMemberMobileCards({
           ? [...editableRoles]
           : [...editableRoles, member.role];
 
+        const isOpen = openMemberId === member.id;
+        const panelId = `team-member-panel-${member.id}`;
+
         return (
           <article
             key={member.id}
-            className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm"
+            data-testid="settings-user-card"
+            className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
           >
-            <div className="flex items-start gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-altair-brass text-xs font-bold text-white">
+            <button
+              type="button"
+              onClick={() => setOpenMemberId(isOpen ? null : member.id)}
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+              data-testid="settings-user-toggle"
+              className="flex min-h-14 w-full items-center gap-2.5 p-2.5 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--focus-ring)]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-brass text-xs font-bold text-white">
                 {getTeamMemberInitials(member.name)}
               </div>
               <div className="min-w-0 flex-1">
@@ -413,12 +433,24 @@ export function TeamMemberMobileCards({
                     className="shrink-0 scale-90 origin-left"
                   />
                 </div>
-                <p className="truncate text-xs text-altair-ink-on-paper-muted">{member.email}</p>
-                <p className="text-[11px] text-altair-ink-on-paper-muted">
-                  {getMemberDateCaption(member)} {getMemberDateLabel(member)}
+                <p className="truncate text-[13px] font-medium text-altair-ink-on-paper-secondary">
+                  {formatTeamMemberRole(member.role)}
                 </p>
               </div>
-            </div>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-altair-ink-on-paper-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+                aria-hidden
+              />
+            </button>
+
+            {isOpen ? (
+            <div id={panelId} className="border-t border-slate-100 px-2.5 pb-2.5">
+            <p className="mt-2 truncate text-xs text-altair-ink-on-paper-secondary">
+              {member.email}
+            </p>
+            <p className="text-xs text-altair-ink-on-paper-muted">
+              {getMemberDateCaption(member)} {getMemberDateLabel(member)}
+            </p>
 
             <div className="mt-2">
               <Link
@@ -440,11 +472,7 @@ export function TeamMemberMobileCards({
                   compact
                   aria-label={`Role for ${member.name}`}
                 />
-              ) : (
-                <p className="text-xs font-medium text-slate-700">
-                  {formatTeamMemberRole(member.role)}
-                </p>
-              )}
+              ) : null}
 
               {canEditReportsTo ? (
                 <ReportsToSelectorField
@@ -580,6 +608,8 @@ export function TeamMemberMobileCards({
                 </div>
               ) : null}
             </div>
+            </div>
+            ) : null}
           </article>
         );
       })}

@@ -61,6 +61,7 @@ export function CustomerEditControl({
 
     const validationError = validateCustomerFormData(data, {
       requireContact: false,
+      requireAddress: false,
     });
     if (validationError) {
       setError(validationError);

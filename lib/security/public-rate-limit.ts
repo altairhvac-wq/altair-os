@@ -46,7 +46,14 @@ export type PublicRateLimitScope =
   | "public.invoice_checkout"
   | "public.token_view"
   | "public.analytics_collect"
-  | "public.analytics_new_visitor";
+  | "public.analytics_new_visitor"
+  | "public.resource_email"
+  | "public.directory_submit"
+  | "public.directory_manage_link"
+  | "public.directory_report"
+  | "public.directory_quote"
+  | "public.affiliate_apply"
+  | "public.contact_message";
 
 export type PublicRateLimitDimension = "ip" | "email" | "token";
 
@@ -117,6 +124,57 @@ export const PUBLIC_RATE_LIMITS: Record<
   // carrier address do not arrive at that rate. Over the cap, the pageview
   // is dropped (silently, like the limit above).
   "public.analytics_new_visitor": [{ dimension: "ip", windowSeconds: 600, limit: 30 }],
+  // "Email me these results" on the free calculators (migration 209). It
+  // sends mail to an address a stranger typed, so the inbox dimension is the
+  // one that matters: six a day covers one result from each calculator and
+  // stops the form being pointed at someone else's inbox. The address limit
+  // stops one client working through a list of inboxes.
+  "public.resource_email": [
+    { dimension: "email", windowSeconds: 86400, limit: 6 },
+    { dimension: "ip", windowSeconds: 3600, limit: 12 },
+  ],
+  // "List your business" on the public directory (migration 210). Each
+  // submission sends one confirmation email to the address typed, so the
+  // inbox dimension stops the form being aimed at someone else; the address
+  // dimension stops one client filling the review queue. A contractor lists
+  // one business, perhaps two.
+  "public.directory_submit": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 6 },
+  ],
+  // "Email me my manage link": mails the listing's own address, so the same
+  // two dimensions for the same two reasons.
+  "public.directory_manage_link": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 10 },
+  ],
+  // "Report this listing": writes one row for the owner to read. No mail.
+  "public.directory_report": [{ dimension: "ip", windowSeconds: 3600, limit: 10 }],
+  // A quote or sub-work request to one listing (migration 216). Each one
+  // emails that business, so: few per sender address (a person asks two or
+  // three businesses, not twenty), few per typed inbox, and a daily ceiling
+  // per listing ("token" = the listing id) so one business cannot be flooded.
+  // "Write to us" on /contact (2026-11-24): one email to the support inbox per
+  // message, nothing stored. The inbox dimension stops one address flooding
+  // the founder's inbox; the address dimension stops one client cycling addresses.
+  "public.contact_message": [
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+    { dimension: "email", windowSeconds: 86400, limit: 5 },
+  ],
+  "public.directory_quote": [
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+    { dimension: "email", windowSeconds: 86400, limit: 8 },
+    { dimension: "token", windowSeconds: 86400, limit: 25 },
+  ],
+  // The affiliate program application (migration 213). Each submission
+  // stores one row for the owner to read and sends one "we have it" email to
+  // the address typed, so the inbox dimension stops the form being aimed at
+  // someone else and the address dimension stops one client filling the
+  // owner's queue. A person applies once, perhaps again to correct something.
+  "public.affiliate_apply": [
+    { dimension: "email", windowSeconds: 86400, limit: 3 },
+    { dimension: "ip", windowSeconds: 3600, limit: 5 },
+  ],
 };
 
 /**

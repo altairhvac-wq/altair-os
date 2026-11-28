@@ -44,6 +44,21 @@ const FILES = {
   labor: `${LIB}/labor-rate.ts`,
   job: `${LIB}/job-profitability.ts`,
   breakEven: `${LIB}/break-even.ts`,
+  agreement: `${LIB}/maintenance-agreement.ts`,
+  techPay: `${LIB}/technician-pay.ts`,
+  callback: `${LIB}/callback-cost.ts`,
+  serviceCall: `${LIB}/service-call-fee.ts`,
+  newHire: `${LIB}/new-hire.ts`,
+  truck: `${LIB}/truck-cost.ts`,
+  flatRate: `${LIB}/flat-rate-list.ts`,
+  invoiceMath: `${LIB}/invoice-builder.ts`,
+  embeds: `${LIB}/embeds.ts`,
+  summaries: `${LIB}/calculator-summaries.ts`,
+  emailList: `${LIB}/email-list.ts`,
+  emailRoute: "app/api/resources/email-results/route.ts",
+  emailForm: "shared/components/resources/ResultsEmailForm.tsx",
+  subscribers: "lib/resources/subscribers.ts",
+  subscriberActions: "app/actions/resource-subscribers.ts",
   templates: `${LIB}/templates.ts`,
   feed: `${LIB}/youtube-feed.ts`,
   features: `${LIB}/feature-links.ts`,
@@ -122,6 +137,281 @@ const be = await loadPureModule(FILES.breakEven, "res-be");
   check("jobs per week 9.83", near(r.breakEvenJobsPerWeek, 9.8316, 1e-3), r.breakEvenJobsPerWeek);
   check("100% variable -> null", be.calculateBreakEven({ ...be.BREAK_EVEN_DEFAULTS, variableCostRate: 1 }) === null);
   check("$0 job -> null", be.calculateBreakEven({ ...be.BREAK_EVEN_DEFAULTS, averageJobRevenue: 0 }) === null);
+}
+
+console.log("\nMaintenance agreement");
+const agr = await loadPureModule(FILES.agreement, "res-agr");
+{
+  // 2 visits x (1.5 h x $96 + $15) = 318; office 20; 15% of $300 repairs = 45.
+  //   cost to serve 383; at a 20% margin 478.75 a year, 39.90 a month, 95.75 left.
+  const r = agr.calculateMaintenanceAgreement(agr.MAINTENANCE_AGREEMENT_DEFAULTS);
+  check("cost per visit 159.00", near(r.costPerVisit, 159));
+  check("visits per year at cost 318.00", near(r.visitCostPerYear, 318));
+  check("repair discount given 45.00", near(r.repairDiscountGiven, 45));
+  check("cost to serve 383.00", near(r.costToServePerYear, 383));
+  check("annual price 478.75", near(r.annualPrice, 478.75));
+  check("monthly price 39.90", near(r.monthlyPrice, 39.8958));
+  check("left per agreement 95.75", near(r.profitPerAgreement, 95.75));
+  check("price minus cost is the margin share of price", near(r.profitPerAgreement / r.annualPrice, 0.2, 1e-9));
+  check("0 visits -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, visitsPerYear: 0 }) === null);
+  check("100% margin -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, targetNetMargin: 1 }) === null);
+  check("discount above 100% -> null", agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, repairDiscountRate: 1.2 }) === null);
+  check("NaN input does not produce NaN", Number.isFinite(agr.calculateMaintenanceAgreement({ ...agr.MAINTENANCE_AGREEMENT_DEFAULTS, materialsPerVisit: Number.NaN }).annualPrice));
+}
+
+console.log("\nTechnician pay");
+const pay = await loadPureModule(FILES.techPay, "res-pay");
+{
+  // $30/h, 45 h on the clock: 40 x 30 + 5 x 45 = 1,425.
+  //   flat rate 38 book h x $34 = 1,292; commission 12% of $7,500 = 900.
+  //   to match hourly: 1,425 / 34 = 41.91 book hours; 1,425 / 0.12 = $11,875.
+  const r = pay.calculateTechnicianPay(pay.TECHNICIAN_PAY_DEFAULTS);
+  check("overtime threshold is 40 h at time and a half", pay.OVERTIME_THRESHOLD_HOURS === 40 && pay.OVERTIME_MULTIPLIER === 1.5);
+  check("regular 40 h, overtime 5 h", r.regularHours === 40 && r.overtimeHours === 5);
+  check("hourly pay 1425.00", near(r.hourlyPay, 1425));
+  check("flat rate pay 1292.00", near(r.flatRatePay, 1292));
+  check("commission pay 900.00", near(r.commissionPay, 900));
+  check("hourly per clock hour 31.67", near(r.effectiveHourly.hourly, 31.6667));
+  check("flat rate per clock hour 28.71", near(r.effectiveHourly["flat-rate"], 28.7111));
+  check("commission per clock hour 20.00", near(r.effectiveHourly.commission, 20));
+  check("highest is hourly", r.highest === "hourly");
+  check("book hours to match hourly 41.91", near(r.bookHoursToMatchHourly, 41.9118));
+  check("revenue to match hourly 11875.00", near(r.revenueToMatchHourly, 11875));
+  const busy = pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, bookHours: 50 });
+  check("a busy flat-rate week wins", busy.highest === "flat-rate" && near(busy.flatRatePay, 1700));
+  const none = pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, hoursOnClock: 0 });
+  check("0 hours -> per-hour figures null, not Infinity", none.effectiveHourly.hourly === null && none.effectiveHourly.commission === null);
+  check("0% commission -> no revenue target, not Infinity", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, commissionRate: 0 }).revenueToMatchHourly === null);
+  check("more than 168 hours -> null", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, hoursOnClock: 169 }) === null);
+  check("commission above 100% -> null", pay.calculateTechnicianPay({ ...pay.TECHNICIAN_PAY_DEFAULTS, commissionRate: 1.5 }) === null);
+}
+
+console.log("\nCallback cost");
+const cb = await loadPureModule(FILES.callback, "res-cb");
+{
+  // 6 callbacks in 120 jobs = 5%. Each: 1.5 h x $96 + $25 parts = 169.
+  //   1,014 a month, 12,168 a year; 9 hours lost, which would bill 9 x $121 = 1,089.
+  const r = cb.calculateCallbackCost(cb.CALLBACK_COST_DEFAULTS);
+  check("callback rate 5%", near(r.callbackRate, 0.05, 1e-9));
+  check("cost per callback 169.00", near(r.costPerCallback, 169));
+  check("cost per month 1014.00", near(r.costPerMonth, 1014));
+  check("cost per year 12168.00", near(r.costPerYear, 12168));
+  check("hours lost per month 9", near(r.hoursLostPerMonth, 9));
+  check("revenue those hours would bill 1089.00", near(r.revenueNotBilledPerMonth, 1089));
+  check("more callbacks than jobs -> null", cb.calculateCallbackCost({ ...cb.CALLBACK_COST_DEFAULTS, callbacksPerMonth: 200 }) === null);
+  check("0 jobs -> rate null, not NaN", cb.calculateCallbackCost({ ...cb.CALLBACK_COST_DEFAULTS, callbacksPerMonth: 0, jobsPerMonth: 0 })?.callbackRate === null);
+}
+
+console.log("\nService call fee");
+const scf = await loadPureModule(FILES.serviceCall, "res-scf");
+{
+  // $121 rate, $96.15 of cost, 1 hour, a $49 fee, 80 calls with 25% ending in no repair.
+  //   fee at rate 121.00; floor 96.15; short 47.15; 20 visits; 943.00 a month, 11,316.00 a year.
+  const r = scf.calculateServiceCallFee(scf.SERVICE_CALL_FEE_DEFAULTS);
+  check("fee at rate 121.00", near(r.feeAtRate, 121));
+  check("cost floor 96.15", near(r.costFloor, 96.15));
+  check("a $49 fee is below cost", r.status === "below-cost");
+  check("short of cost 47.15", near(r.shortOfCostPerVisit, 47.15));
+  check("short of rate 72.00", near(r.shortOfRatePerVisit, 72));
+  check("20 visits with no repair", near(r.noRepairVisitsPerMonth, 20));
+  check("lost per month 943.00", near(r.lostPerMonth, 943));
+  check("lost per year 11,316.00", near(r.lostPerYear, 11316));
+  const covers = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 100 });
+  check("a $100 fee covers cost but is under the rate, and loses nothing", covers.status === "below-rate" && covers.lostPerMonth === 0 && near(covers.shortOfRatePerVisit, 21));
+  const atRate = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 121 });
+  check("a fee equal to the rate is at rate", atRate.status === "at-rate" && atRate.shortOfRatePerVisit === 0);
+  const free = scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: 0 });
+  check("a free call loses the whole floor per visit", near(free.shortOfCostPerVisit, 96.15) && near(free.lostPerMonth, 1923));
+  check("no rate -> null", scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, billableRate: 0 }) === null);
+  check("no hours -> null", scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, hoursCovered: 0 }) === null);
+  check("a share over 100% is capped", near(scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, noRepairPercent: 250 }).noRepairVisitsPerMonth, 80));
+  check("a negative fee counts as 0", near(scf.calculateServiceCallFee({ ...scf.SERVICE_CALL_FEE_DEFAULTS, currentFee: -20 }).shortOfCostPerVisit, 96.15));
+}
+
+console.log("\nHiring a technician");
+const hire = await loadPureModule(FILES.newHire, "res-hire");
+{
+  // $28 x 1.25 x 40 = 1,400 a week of pay, plus a $1,200 truck x 12 / 52 = 276.92: 1,676.92 a week, 7,266.67 a month.
+  //   Break-even 1,676.92 / 121 = 13.86 billed hours. At 28 billed: 3,388 a week, 1,711.08 left, 7,414.67 a month.
+  //   8-week ramp bills 423.50 more each week: weeks 1-3 are short 1,253.42 + 829.92 + 406.42 = 2,489.77; week 4 is the first above cost.
+  const r = hire.calculateNewHire(hire.NEW_HIRE_DEFAULTS);
+  check("cost a week 1,676.92", near(r.weeklyCost, 1676.92, 0.005));
+  check("cost a month 7,266.67", near(r.monthlyCost, 7266.67, 0.005));
+  check("cost a year 87,200.00", near(r.yearlyCost, 87200, 0.005));
+  check("break-even 13.86 billed hours", near(r.breakEvenHoursPerWeek, 13.859, 0.001));
+  check("break-even is 34.6% of paid hours", near(r.breakEvenShare, 0.3465, 0.0001));
+  check("bills 3,388 a week", near(r.weeklyRevenue, 3388));
+  check("left over 7,414.67 a month", near(r.monthlyLeftOver, 7414.67, 0.005));
+  check("left over 88,976 a year", near(r.yearlyLeftOver, 88976, 0.01));
+  check("the hire pays", r.pays === true);
+  check("cash to carry 2,489.77", near(r.cashToCarry, 2489.77, 0.005));
+  check("first week in the black is week 4", r.firstWeekInTheBlack === 4);
+  const slow = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billedHoursPerWeek: 10 });
+  check("10 billed hours loses money every week of the ramp", slow.pays === false && slow.monthlyLeftOver < 0 && slow.firstWeekInTheBlack === null);
+  const noRamp = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, rampWeeks: 0 });
+  check("no ramp -> no cash to carry", noRamp.cashToCarry === 0 && noRamp.firstWeekInTheBlack === null);
+  const helper = hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, hourlyWage: 18, truckPerMonth: 0, billedHoursPerWeek: 15 });
+  check("an $18 helper with no truck: 900 a week, 7.44 hours to break even", near(helper.weeklyCost, 900) && near(helper.breakEvenHoursPerWeek, 7.438, 0.001));
+  check("no wage -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, hourlyWage: 0 }) === null);
+  check("no rate -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billableRate: 0 }) === null);
+  check("more billed than paid hours -> null", hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, billedHoursPerWeek: 45 }) === null);
+  check("a negative truck cost counts as 0", near(hire.calculateNewHire({ ...hire.NEW_HIRE_DEFAULTS, truckPerMonth: -500 }).weeklyCost, 1400));
+}
+
+console.log("\nTruck cost");
+const truck = await loadPureModule(FILES.truck, "res-truck");
+{
+  // 650 + 180 + 450 + 150 + 600 / 12 = 1,480 a month, 17,760 a year. Over 21 days: 70.48 a day,
+  //   11.75 a billed hour at 6 hours, 23.49 a job at 3 jobs. Parked: (650 + 180 + 50) / 21 = 41.90.
+  const r = truck.calculateTruckCost(truck.TRUCK_COST_DEFAULTS);
+  check("cost per month 1,480.00", near(r.perMonth, 1480));
+  check("cost per year 17,760.00", near(r.perYear, 17760));
+  check("cost per working day 70.48", near(r.perWorkingDay, 70.476, 0.001));
+  check("cost per billed hour 11.75", near(r.perBilledHour, 11.746, 0.001));
+  check("cost per job 23.49", near(r.perJob, 23.492, 0.001));
+  check("a parked day 41.90", near(r.parkedDay, 41.905, 0.001));
+  const paidOff = truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, paymentPerMonth: 0 });
+  check("a paid-off truck: 830 a month, parked day 10.95", near(paidOff.perMonth, 830) && near(paidOff.parkedDay, 10.952, 0.001));
+  const noUse = truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, billedHoursPerDay: 0, jobsPerDay: 0 });
+  check("no hours or jobs -> those two are null, the day still has a cost", noUse.perBilledHour === null && noUse.perJob === null && near(noUse.perWorkingDay, 70.476, 0.001));
+  check("no working days -> null", truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, workingDaysPerMonth: 0 }) === null);
+  check("more than 31 working days -> null", truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, workingDaysPerMonth: 40 }) === null);
+  check("no costs at all -> null", truck.calculateTruckCost({ paymentPerMonth: 0, insurancePerMonth: 0, fuelPerMonth: 0, maintenancePerMonth: 0, otherPerYear: 0, workingDaysPerMonth: 21, billedHoursPerDay: 6, jobsPerDay: 3 }) === null);
+  check("a negative cost counts as 0", near(truck.calculateTruckCost({ ...truck.TRUCK_COST_DEFAULTS, fuelPerMonth: -450 }).perMonth, 1030));
+}
+
+console.log("\nFlat-rate price list");
+const flat = await loadPureModule(FILES.flatRate, "res-flat");
+{
+  // Replace run capacitor: 0.75 h x $121 = 90.75 labor; $18 part doubled = 36.00; 126.75.
+  //   Listed at $127 ($1 steps) or $130 ($5 steps). After hours: 90.75 x 1.5 + 36 = 172.125 -> 172.13, $173, $175.
+  const task = flat.FLAT_RATE_SAMPLE_TASKS[0];
+  const exact = flat.priceListLine(task, 121, 1.5, "exact");
+  check("capacitor labor 90.75", near(exact.labor, 90.75));
+  check("capacitor part 36.00", near(exact.part, 36));
+  check("capacitor price 126.75", near(exact.standard, 126.75));
+  check("capacitor after hours 172.13", near(exact.afterHours, 172.13, 0.005));
+  check("rounds up to the next dollar: 127 and 173", flat.priceListLine(task, 121, 1.5, "dollar").standard === 127 && flat.priceListLine(task, 121, 1.5, "dollar").afterHours === 173);
+  check("rounds up to the next $5: 130 and 175", flat.priceListLine(task, 121, 1.5, "five").standard === 130 && flat.priceListLine(task, 121, 1.5, "five").afterHours === 175);
+  check("a whole-dollar price is not pushed up a step", flat.roundPriceUp(127, "dollar") === 127 && flat.roundPriceUp(130, "five") === 130);
+  check("0.1 + 0.2 style sums do not round 127 up to 128", flat.roundPriceUp(126.99999999999, "dollar") === 127 && flat.roundPriceUp(100.00000000001, "dollar") === 100);
+  check("never rounds down", flat.roundPriceUp(126.01, "dollar") === 127 && flat.roundPriceUp(125.01, "five") === 130);
+  check("a multiplier under 1 is treated as 1", near(flat.priceListLine(task, 121, 0.5, "exact").afterHours, 126.75));
+  check("the after-hours multiplier leaves the part alone", near(flat.priceListLine({ bookHours: 0, partCost: 50, markupPercent: 100 }, 121, 2, "exact").afterHours, 100));
+  check("negative hours and costs count as 0", flat.priceListLine({ bookHours: -1, partCost: -5, markupPercent: -10 }, 121, 1.5, "exact").standard === 0);
+  check("100% markup is a 50% margin", near(flat.markupToMargin(100), 0.5));
+  check("50% markup is a 33.3% margin", near(flat.markupToMargin(50), 1 / 3, 1e-9));
+  check("the sample list has eight named tasks", flat.FLAT_RATE_SAMPLE_TASKS.length === 8 && flat.FLAT_RATE_SAMPLE_TASKS.every((t) => t.name.length > 3));
+  check("the builder page exists", existsSync("app/(marketing)/resources/flat-rate-price-list/page.tsx"));
+}
+
+console.log("\nEstimate builder");
+{
+  // The sample estimate (shared/components/resources/invoice/doc-words.ts): 1.5 h and 0.5 h of labor at $121
+  //   (181.50 + 60.50, not taxed), a $224 motor and a $36 capacitor (taxed at 7%): subtotal 502.00, tax 18.20, total 520.20.
+  const inv = await loadPureModule(FILES.invoiceMath, "res-inv");
+  const words = read("shared/components/resources/invoice/doc-words.ts");
+  const lines = [
+    { id: "l1", kind: "labor", description: "Labor", partNumber: "", qty: "1.5", price: "121", taxable: false },
+    { id: "l2", kind: "part", description: "Motor", partNumber: "", qty: "1", price: "224", taxable: true },
+    { id: "l3", kind: "part", description: "Capacitor", partNumber: "", qty: "1", price: "36", taxable: true },
+    { id: "l4", kind: "labor", description: "Labor", partNumber: "", qty: "0.5", price: "121", taxable: false },
+  ];
+  const t = inv.calculateInvoiceTotals({ lines, taxRate: "7", discountMode: "amount", discount: "", discountReducesTax: false, amountPaid: "" });
+  check("sample estimate subtotal 502.00", t.subtotalCents === 50200, t.subtotalCents);
+  check("sample estimate tax 18.20 on 260.00 of parts", t.taxCents === 1820 && t.taxBaseCents === 26000, [t.taxCents, t.taxBaseCents]);
+  check("sample estimate total 520.20", t.totalCents === 52020, t.totalCents);
+  check("a 50% deposit on it is 260.10", inv.depositRequestCents(t.totalCents, "50") === 26010);
+  check("the sample in doc-words.ts uses those four lines", ['qty: "1.5", price: "121"', 'qty: "1", price: "224"', 'qty: "1", price: "36"', 'qty: "0.5", price: "121"'].every((part) => words.includes(part)));
+  check("an estimate never counts a payment", /amountPaid: doc === "estimate" \? "" : state\.amountPaid/.test(read("shared/components/resources/invoice/InvoicePaper.tsx")));
+  check("the invoice builder still defaults to an invoice", /doc = "invoice"/.test(read("shared/components/resources/invoice/InvoiceBuilder.tsx")));
+  check("the estimate page exists", existsSync("app/(marketing)/resources/estimate-builder/page.tsx"));
+}
+
+console.log("\nEmbeddable calculators");
+{
+  const emb = await loadPureModule(FILES.embeds, "res-emb");
+  check("three calculators can be embedded", emb.EMBED_TOOLS.length === 3, emb.EMBED_TOOLS.map((t) => t.id));
+  check("every embed lives under /embed/", emb.EMBED_TOOLS.every((t) => emb.embedPath(t.id) === `/embed/${t.id}`));
+  check("every embed links back to a full tool that has a page", emb.EMBED_TOOLS.every((t) => existsSync(`app/(marketing)${t.fullPath}/page.tsx`)));
+  const snippet = emb.embedSnippet(emb.EMBED_TOOLS[0], "https://www.altair-op.com");
+  check("the snippet frames the embed page", snippet.includes('<iframe src="https://www.altair-op.com/embed/labor-rate"'));
+  check("the snippet carries a plain link back to the full tool", snippet.includes('<a href="https://www.altair-op.com/resources/calculators/labor-rate">HVAC labor rate calculator</a> by Altair Operating System'));
+  check("the snippet has no script in it", !/<script|javascript:|onload=/i.test(snippet));
+  check("an unknown tool is not found", emb.findEmbedTool("../login") === null && emb.findEmbedTool("pricing") === null);
+  check("the embed route and the code page exist", existsSync("app/embed/[tool]/page.tsx") && existsSync("app/(marketing)/resources/embed/page.tsx"));
+  check("analytics is off inside a frame", /if \(window\.self !== window\.top\) return false;/.test(read("shared/lib/analytics/client.ts")));
+}
+
+// ------------------------------------------------- summaries + email results
+console.log("\nResult summaries (page and email share them)");
+const sums = await loadPureModule(FILES.summaries, "res-sum");
+const list = await loadPureModule(FILES.emailList, "res-list");
+{
+  const slugs = Object.keys(sums.CALCULATOR_FIELD_KEYS);
+  check("a summary exists for all nine calculators", slugs.length === 9, slugs);
+  const example = {
+    "labor-rate": { hourlyWage: "30", burdenPercent: "25", billableHoursPerWeek: "30", nonBillableHoursPerWeek: "10", monthlyOverhead: "6000", targetMarginPercent: "20" },
+    "job-profitability": { revenue: "2500", laborHours: "6", loadedLaborRate: "45", materialsCost: "900", subcontractCost: "0", overheadPercent: "25" },
+    "break-even": { fixedMonthlyCosts: "18000", averageJobRevenue: "650", variableCostPercent: "35" },
+    "maintenance-agreement": { visitsPerYear: "2", hoursPerVisit: "1.5", costPerBillableHour: "96", materialsPerVisit: "15", officeCostPerYear: "20", expectedRepairSpendPerYear: "300", repairDiscountPercent: "15", targetMarginPercent: "20" },
+    "technician-pay": { hourlyWage: "30", hoursOnClock: "45", bookHours: "38", payPerBookHour: "34", revenueProduced: "7500", commissionPercent: "12" },
+    "callback-cost": { callbacksPerMonth: "6", jobsPerMonth: "120", hoursPerCallback: "1.5", costPerBillableHour: "96", partsPerCallback: "25", billableRate: "121" },
+    "service-call-fee": { billableRate: "121", costPerBillableHour: "96.15", hoursCovered: "1", currentFee: "49", callsPerMonth: "80", noRepairPercent: "25" },
+    "hiring-a-technician": { hourlyWage: "28", burdenPercent: "25", paidHoursPerWeek: "40", truckPerMonth: "1200", billableRate: "121", billedHoursPerWeek: "28", rampWeeks: "8" },
+    "truck-cost": { paymentPerMonth: "650", insurancePerMonth: "180", fuelPerMonth: "450", maintenancePerMonth: "150", otherPerYear: "600", workingDaysPerMonth: "21", billedHoursPerDay: "6", jobsPerDay: "3" },
+  };
+  const headline = {
+    "labor-rate": "$120.19",
+    "job-profitability": "$705.00",
+    "break-even": "43",
+    "maintenance-agreement": "$39.90",
+    "technician-pay": "Hourly: $1,425.00",
+    "callback-cost": "$1,014.00",
+    "service-call-fee": "$121.00",
+    "hiring-a-technician": "13.9",
+    "truck-cost": "$70.48",
+  };
+  for (const slug of slugs) {
+    const picked = sums.pickCalculatorValues(slug, example[slug]);
+    check(`${slug}: example values are accepted`, picked !== null && Object.keys(picked).length === sums.CALCULATOR_FIELD_KEYS[slug].length);
+    const s = sums.summarizeCalculator(slug, picked ?? {});
+    check(`${slug}: headline is the worked example (${headline[slug]})`, s?.headlineValue === headline[slug], s?.headlineValue);
+    check(`${slug}: summary has working lines`, Array.isArray(s?.lines) && s.lines.length >= 3);
+    check(`${slug}: has a page`, existsSync(`app/(marketing)/resources/calculators/${slug}/page.tsx`));
+  }
+  check("a missing field is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "2" }) === null);
+  check("text in a number field is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "<b>2</b>", variableCostPercent: "3" }) === null);
+  check("a non-string value is refused", sums.pickCalculatorValues("break-even", { fixedMonthlyCosts: 1, averageJobRevenue: "2", variableCostPercent: "3" }) === null);
+  check("extra keys are dropped", !("note" in (sums.pickCalculatorValues("break-even", { ...example["break-even"], note: "hello" }) ?? { note: 1 })));
+  check("inputs with no answer -> null summary", sums.summarizeCalculator("break-even", { fixedMonthlyCosts: "1", averageJobRevenue: "0", variableCostPercent: "3" }) === null);
+
+  check("email: ordinary address accepted and lower-cased", list.normalizeListEmail("  Owner@Example.COM ") === "owner@example.com");
+  for (const bad of ["", "a@b", "no at sign.com", "two@@example.com", "a b@example.com", "x@example.com, y@example.com", "<x@example.com>", 42, null]) {
+    check(`email: ${JSON.stringify(bad)} refused`, list.normalizeListEmail(bad) === null);
+  }
+  check("the opt-in sentence says how often and how to stop", /month/i.test(list.RESOURCE_LIST_CONSENT_TEXT) && /unsubscribe/i.test(list.RESOURCE_LIST_CONSENT_TEXT));
+
+  const route = read(FILES.emailRoute);
+  check("email route recomputes the result on the server", /summarizeCalculator\(/.test(route) && /pickCalculatorValues\(/.test(route));
+  check("email route never reads a result from the request", !/body\.(headline|result|lines|summary)/.test(route));
+  check("email route is rate limited by address and by inbox", /enforcePublicRateLimit\(\s*"public\.resource_email"/.test(route) && /\bip:/.test(route) && /\bemail\b/.test(route));
+  check("email route refuses cross-site posts", /isSameOrigin/.test(route));
+  check("email route has a size limit and a honeypot", /MAX_BODY/.test(route) && /website/.test(route));
+  check("email route stores an address only when the box was ticked", /subscribe === true/.test(route));
+  const form = read(FILES.emailForm);
+  check("the opt-in box starts unticked", /useState\(false\)/.test(form) && form.includes("RESOURCE_LIST_CONSENT_TEXT"));
+  const subs = read(FILES.subscribers);
+  check("subscriber service is server-only and uses the service role", /import "server-only"/.test(subs) && /createServiceRoleClient/.test(subs));
+  check("links are compared in constant time", /timingSafeEqual/.test(subs));
+  const actions = read(FILES.subscriberActions);
+  check("confirm and unsubscribe happen on a button press, not on opening the link", /"use server"/.test(actions) && /confirmResourceSubscriptionAction/.test(actions) && /unsubscribeResourceSubscriptionAction/.test(actions));
+  check("the link page acts only through a form posted to a server action", /<form action=\{action\}>/.test(read("shared/components/resources/SubscriberLinkPage.tsx")));
+  for (const page of ["confirm", "unsubscribe"]) {
+    const src = read(`app/(marketing)/resources/email/${page}/page.tsx`);
+    check(`/resources/email/${page} is noindex`, /index: false/.test(src));
+    check(`/resources/email/${page} changes nothing when the link is opened`, /<SubscriberLinkPage/.test(src) && !/(confirm|unsubscribe)Subscriber\(/.test(src));
+  }
 }
 
 // -------------------------------------------------------------- templates
@@ -209,6 +499,41 @@ const features = await loadPureModule(FILES.features, "res-feat");
   check("every template feature key has a note", tplKeys.every((k) => k in features.ALTAIR_FEATURE_LINKS));
 }
 
+// ------------------------------------------------- "Keep these numbers"
+console.log("\nKeep these numbers: every note is something the product does");
+{
+  const saved = await loadPureModule(`${LIB}/saved-numbers.ts`, "res-saved");
+  const slugs = (await loadPureModule(FILES.catalog, "res-cat-saved")).RESOURCE_CALCULATORS.map((calculator) => calculator.slug);
+  const notes = { ...saved.SAVED_NUMBERS_NOTES, "flat-rate": saved.FLAT_RATE_SAVED_NUMBERS_NOTE };
+  check("every note belongs to a real calculator", Object.keys(saved.SAVED_NUMBERS_NOTES).every((slug) => slugs.includes(slug)), Object.keys(saved.SAVED_NUMBERS_NOTES));
+  for (const [slug, note] of Object.entries(notes)) {
+    check(`${slug}: uses the product's full name, once, and never "Altair OS"`, (note.match(/Altair Operating System/g) ?? []).length === 1 && !/Altair OS\b/.test(note), note);
+    check(`${slug}: no outcome claim, no price, nothing called free`, !/\b(increase|boost|guarantee|grow|double|more profit|free|\d+%)\b/i.test(note) && !/\$/.test(note), note);
+    check(`${slug}: short enough to read in one breath (under 320 characters)`, note.length < 320, note.length);
+  }
+  // Each note is held to the code that makes it true. If the feature goes, the check fails and the note has to go too.
+  const src = (path) => (existsSync(path) ? read(path) : "");
+  const starter = src("shared/lib/business-numbers/starter-price-list.ts");
+  const setupQueries = src("lib/database/queries/business-setup.ts");
+  const home = src("app/(admin)/(home)/page.tsx");
+  const jobSection = src("shared/components/jobs/JobProfitabilitySection.tsx");
+  const planning = src("shared/lib/business-numbers/planning.ts");
+  const planningView = src("shared/components/settings/business-numbers/PlanningView.tsx");
+  check("labor-rate: the product has a labor price book item, prices the list from the rate, and lists old beside new", /LABOR_SETUP_KEY = "labor_hour"/.test(starter) && /export async function listOutOfDateRateItems/.test(setupQueries) && /export async function repriceRateItems/.test(setupQueries));
+  check("service-call-fee: the product keeps a Service call item that follows the fee", /SERVICE_CALL_SETUP_KEY = "service_call"/.test(starter) && /export async function saveServiceCallItem/.test(setupQueries));
+  check("break-even: the dashboard counts the month's jobs against the target", /<MonthlyTargetCard/.test(home) && /computeMonthlyTargetProgress\(/.test(home));
+  check("job-profitability: a job shows its profit after labor and shop costs under gross profit", /After labor and shop costs \(an estimate\)/.test(jobSection));
+  check("hiring, pay and truck: the three plans exist in the product and start from the saved numbers", /export function hirePlanStart/.test(planning) && /export function payPlanStart/.test(planning) && /export function truckPlanStart/.test(planning));
+  check("truck-cost: the truck's monthly cost goes into the hire in one press", /Use it for this hire/.test(planningView));
+  check("flat-rate: the guided setup builds a priced starter list into the price book", /export function priceStarterLine/.test(starter) && /export async function saveSetupPriceList/.test(setupQueries));
+  const frame = read("shared/components/resources/CalculatorFrame.tsx");
+  check("the note sits under the calculator, above the next steps, and only where there is one", frame.indexOf("<SavedNumbersNote") > frame.indexOf("{CALCULATOR_DISCLAIMER} Values marked") && frame.indexOf("<SavedNumbersNote") < frame.indexOf("<NextStep") && /\{savedNumbers \? <SavedNumbersNote/.test(frame));
+  check("the price list builder carries its note too", /<SavedNumbersNote[^>]*text=\{FLAT_RATE_SAVED_NUMBERS_NOTE\}/.test(read("app/(marketing)/resources/flat-rate-price-list/page.tsx")));
+  check("the note is left out of a printed worksheet and links to a public page", /print:hidden/.test(read("shared/components/resources/SavedNumbersNote.tsx")) && /href=\{savedNumbersPage\.href\}/.test(frame));
+  const softwarePaths = ["/hvac-software", "/hvac-dispatch-software", "/hvac-estimating-software", "/hvac-invoicing-software"];
+  check("every note has its own link, to one of the public software pages", JSON.stringify(Object.keys(saved.SAVED_NUMBERS_LINKS).sort()) === JSON.stringify(Object.keys(saved.SAVED_NUMBERS_NOTES).sort()) && Object.values(saved.SAVED_NUMBERS_LINKS).every((href) => softwarePaths.includes(href)), saved.SAVED_NUMBERS_LINKS);
+}
+
 // ------------------------------------------------------- perimeter + nav
 console.log("\nPerimeter, crawl and nav wiring");
 const catalog = await loadPureModule(FILES.catalog, "res-cat");
@@ -220,13 +545,18 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   check("robots allows /resources", /"\/resources"/.test(read(FILES.robots)));
   const sm = read(FILES.sitemap);
   check("sitemap lists the Resource Center paths", sm.includes("RESOURCE_STATIC_PATHS"));
-  check("catalog lists hub, index, 3 calculators, templates, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 8, catalog.RESOURCE_STATIC_PATHS);
+  check("catalog lists hub, index, 9 calculators, templates, the price list, the estimate builder, the embed page, guides, library", catalog.RESOURCE_STATIC_PATHS.length === 17, catalog.RESOURCE_STATIC_PATHS);
   for (const path of catalog.RESOURCE_STATIC_PATHS) {
     const file = `app/(marketing)${path}/page.tsx`;
     check(`${path} has a page`, existsSync(file), file);
   }
-  check("public nav links Resources", /href: "\/resources", label: "Resources"/.test(read(FILES.nav)));
-  check("footer links Resources", /href: "\/resources", label: "Resources"/.test(read(FILES.footer)));
+  // Since 2026-11-21 the top bar's "Free tools" menu (shared/lib/site/site-menu.ts) ends with "All free tools",
+  // and the footer keeps "All Free Tools".
+  const menu = read("shared/lib/site/site-menu.ts");
+  check("public menu has a Free tools group", /id: "tools",\s*label: "Free tools"/.test(menu));
+  check("public menu links the hub as All free tools", /href: "\/resources", label: "All free tools"/.test(menu));
+  check("top bar renders the site menu", /SITE_MENU/.test(read(FILES.nav)));
+  check("footer links the hub", /href: "\/resources", label: "All Free Tools"/.test(read(FILES.footer)));
 
   const route = read(FILES.route);
   check("download route rejects unknown ids (dynamicParams = false)", /export const dynamicParams = false/.test(route));
@@ -236,7 +566,8 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   const frame = read(FILES.frame);
   check("calculator frame renders the shared disclaimer", frame.includes("CALCULATOR_DISCLAIMER"));
   check("disclaimer names accountant and not-advice", /not financial, tax or legal advice/.test(read(FILES.catalog)) && /accountant/.test(read(FILES.catalog)));
-  for (const slug of ["labor-rate", "job-profitability", "break-even"]) {
+  check("catalog and summaries name the same calculators", JSON.stringify(catalog.RESOURCE_CALCULATORS.map((c) => c.slug).sort()) === JSON.stringify(Object.keys(sums.CALCULATOR_FIELD_KEYS).sort()));
+  for (const slug of catalog.RESOURCE_CALCULATORS.map((c) => c.slug)) {
     const page = read(`app/(marketing)/resources/calculators/${slug}/page.tsx`);
     check(`${slug} page uses CalculatorFrame with assumptions and how-to`, /<CalculatorFrame/.test(page) && /assumptions=/.test(page) && /howToUse=/.test(page) && /formula=/.test(page));
   }
@@ -250,8 +581,75 @@ const catalog = await loadPureModule(FILES.catalog, "res-cat");
   const sources = roots.flatMap(walk).filter((p) => /\.(ts|tsx)$/.test(p));
   const offenders = sources.filter((p) => read(p).includes("dangerouslySetInnerHTML"));
   check("no dangerouslySetInnerHTML in Resource Center sources", offenders.length === 0, offenders);
-  const iframes = sources.filter((p) => /<iframe/i.test(read(p)));
+  // Two files may mention a frame, and only for this site's own embed pages: the "put a calculator on
+  // your website" page previews /embed/<id>, and embeds.ts holds the code other sites paste.
+  const OWN_EMBED_FILES = ["app/(marketing)/resources/embed/page.tsx", "shared/lib/resources/embeds.ts"];
+  const iframes = sources.filter((p) => /<iframe/i.test(read(p)) && !OWN_EMBED_FILES.includes(p.split("\\").join("/")));
   check("no iframes (videos are links to YouTube)", iframes.length === 0, iframes);
+  check(
+    "the only frames are this site's own embed pages",
+    /<iframe src=\{embedPath\(tool\.id\)\}/.test(read(OWN_EMBED_FILES[0])) &&
+      (read(OWN_EMBED_FILES[0]).match(/<iframe/g) ?? []).length === 1 &&
+      /<iframe src="\$\{origin\}\$\{embedPath\(tool\.id\)\}"/.test(read(OWN_EMBED_FILES[1])) &&
+      !/youtube|ytimg|vimeo/i.test(read(OWN_EMBED_FILES[0]) + read(OWN_EMBED_FILES[1])),
+  );
+}
+
+// ------------------------------------------- batch 2: files, carry, metadata
+console.log("\nEditable template files (site upgrade batch 2)");
+{
+  const files = await loadPureModule(`${LIB}/template-files.ts`, "res-files");
+  const names = files.TEMPLATE_FILES.map((f) => f.name);
+  check("a blank and an example file per template", names.length === tpl.RESOURCE_TEMPLATES.length * 2, names);
+  check("file names are unique safe slugs", new Set(names).size === names.length && names.every((n) => /^[a-z0-9-]+\.(xlsx|docx)$/.test(n)), names);
+  for (const file of files.TEMPLATE_FILES) {
+    const bytes = file.build();
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    check(`${file.name}: a zip (local header first, end record last)`, view.getUint32(0, true) === 0x04034b50 && view.getUint32(bytes.length - 22, true) === 0x06054b50);
+    const text = new TextDecoder().decode(bytes);
+    check(`${file.name}: carries its main part`, text.includes(file.ext === "xlsx" ? "xl/workbook.xml" : "word/document.xml"));
+    check(`${file.name}: no raw HTML`, !/<\s*(script|iframe|html)\b/i.test(text));
+  }
+  const ooxml = await loadPureModule(`${LIB}/ooxml.ts`, "res-ooxml");
+  check("crc32 matches the standard check value", ooxml.crc32(new TextEncoder().encode("123456789")) === 0xcbf43926);
+  check("column names run A..Z, AA", ooxml.colName(0) === "A" && ooxml.colName(25) === "Z" && ooxml.colName(26) === "AA");
+  check("XML text is escaped", ooxml.escapeXml(`<a & "b">`) === "&lt;a &amp; &quot;b&quot;&gt;");
+  const route = read("app/(marketing)/resources/templates/download/[file]/route.ts");
+  check("file route rejects unknown names (dynamicParams = false)", /export const dynamicParams = false/.test(route));
+  check("file route sets nosniff and an attachment name from the list", /X-Content-Type-Options/.test(route) && /filename="\$\{file\.name\}"/.test(route));
+  const ex = tpl.ESTIMATE_EXAMPLE;
+  check("estimate example subtotal is 607.00", near(tpl.estimateTotals(ex).subtotal, 607));
+}
+
+console.log("\nCarry my numbers and calculator pages");
+{
+  const carry = read("shared/components/resources/calc/carry.ts");
+  check("carried numbers live in localStorage only (no fetch, no beacon)", /localStorage/.test(carry) && !/fetch\(|sendBeacon|XMLHttpRequest/.test(carry));
+  check("reads, writes and removals are each wrapped in try/catch", (carry.match(/try \{/g) ?? []).length >= 3 && (carry.match(/catch \{/g) ?? []).length >= 3);
+  const hook = read("shared/components/resources/calc/useCalculatorTool.ts");
+  check("calculator use is tracked by name only", /trackEngagement\("calculator_used", slug\)/.test(hook));
+  for (const slug of catalog.RESOURCE_CALCULATORS.map((c) => c.slug)) {
+    const page = read(`app/(marketing)/resources/calculators/${slug}/page.tsx`);
+    check(`${slug}: has an FAQ (one FAQPage JSON-LD, built by the frame)`, /faq=\{/.test(page));
+    const title = page.match(/const TITLE = "([^"]+)"/)?.[1] ?? "";
+    const description = (page.match(/const DESCRIPTION =\s*"([^"]+)"/)?.[1] ?? "").trim();
+    const absolute = /title: \{ absolute: TITLE \}/.test(page);
+    const shownTitle = absolute ? title : `${title} · Altair Operating System`;
+    check(`${slug}: title ≤ 60 characters (${shownTitle.length})`, shownTitle.length > 0 && shownTitle.length <= 60, shownTitle);
+    check(`${slug}: description ≤ 155 characters (${description.length})`, description.length > 0 && description.length <= 155, description);
+  }
+  const frame = read(FILES.frame);
+  check("the frame emits exactly one FAQPage", (frame.match(/buildFaqPageStructuredData\(/g) ?? []).length === 1);
+  for (const path of ["app/(marketing)/resources/templates/page.tsx", "app/(marketing)/resources/calculators/page.tsx"]) {
+    const page = read(path);
+    const title = page.match(/const TITLE = "([^"]+)"/)?.[1] ?? "";
+    const description = (page.match(/const DESCRIPTION =\s*"([^"]+)"/)?.[1] ?? "").trim();
+    check(`${path}: title ≤ 60 with the site suffix`, `${title} · Altair Operating System`.length <= 60, title);
+    check(`${path}: description ≤ 155`, description.length > 0 && description.length <= 155, description.length);
+  }
+  check("templates page has one FAQPage", (read("app/(marketing)/resources/templates/page.tsx").match(/buildFaqPageStructuredData\(/g) ?? []).length === 1);
+  const labor = read("app/(marketing)/resources/calculators/labor-rate/page.tsx");
+  check("the quick labor rate page keeps its own canonical and links the workspace", /calculatorPath\("labor-rate"\)/.test(labor) && /LABOR_WORKSPACE_PATH/.test(labor) && !/redirect\(/.test(labor));
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

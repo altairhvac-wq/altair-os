@@ -122,8 +122,19 @@ export async function updateCompanyProfileAction(
   return { profile: validation.data };
 }
 
+/**
+ * An owner or admin confirming (or changing) the company's time zone: the
+ * "Confirm your time zone" card. Saving here is what marks a zone as chosen
+ * (migration 220), after which it is used exactly as stored.
+ *
+ * A public entry point like every action: it resolves the signed-in person
+ * and their company itself, checks they may change company settings, refuses
+ * if the card was drawn for a different company than the one now active,
+ * and checks the zone is one this server knows.
+ */
 export async function updateCompanyTimezoneAction(
   timezone: string,
+  expectedCompanyId: string,
 ): Promise<UpdateCompanyTimezoneActionResult> {
   const contextResult = await requireCompanySettingsContext();
   if ("error" in contextResult) {
@@ -135,9 +146,19 @@ export async function updateCompanyTimezoneAction(
     return { error: accessError };
   }
 
+  if (
+    typeof expectedCompanyId !== "string" ||
+    expectedCompanyId !== contextResult.context.company.id
+  ) {
+    return {
+      error:
+        "You are now working in a different company than this page was opened for. Reload the page, then try again.",
+    };
+  }
+
   const validation = validateCompanyTimezoneInput(timezone);
   if (validation.error || !validation.timezone) {
-    return { error: validation.error ?? "Invalid timezone." };
+    return { error: "Pick your time zone from the list." };
   }
 
   const { timezone: savedTimezone, error } = await updateCompanyTimezone(

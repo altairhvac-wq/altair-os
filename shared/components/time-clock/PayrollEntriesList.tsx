@@ -28,7 +28,7 @@ function EntryStatusBadge({ entry }: { entry: TimeEntry }) {
     <span
       className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset ${getPayrollEntryStatusStyles(isActive)}`}
     >
-      {isActive ? "Active" : "Closed"}
+      {isActive ? "Active" : "Ended"}
     </span>
   );
 }

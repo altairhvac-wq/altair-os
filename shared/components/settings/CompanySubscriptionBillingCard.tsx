@@ -270,8 +270,8 @@ export function CompanySubscriptionBillingCard({
           <div className="min-w-0">
             <h3 className={titleClass}>Company subscription</h3>
             <p className={`mt-0.5 ${mutedClass}`}>
-              Altair Operating System SaaS plan. Customer invoices are managed separately
-              under Online payments.
+              Your Altair Operating System plan. What your customers pay you is
+              separate, under Online payments.
             </p>
           </div>
         </div>

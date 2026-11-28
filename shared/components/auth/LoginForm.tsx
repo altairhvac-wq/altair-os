@@ -21,24 +21,40 @@ import {
 
 const initialState: AuthActionState = {};
 
-export function LoginFormFields() {
+/** The "sign-in link failed" message after a bad auth callback (?error=auth_callback). */
+function CallbackErrorMessage() {
   const searchParams = useSearchParams();
-  const callbackError =
-    searchParams.get("error") === "auth_callback"
-      ? AUTH_CALLBACK_ERROR_MESSAGE
-      : null;
+  return searchParams.get("error") === "auth_callback" ? (
+    <AuthMessage tone="error">{AUTH_CALLBACK_ERROR_MESSAGE}</AuthMessage>
+  ) : null;
+}
+
+export function LoginFormFields({
+  deferSecurityCheck = false,
+}: {
+  /** Start the Turnstile check on the first interaction (logged-out homepage). */
+  deferSecurityCheck?: boolean;
+} = {}) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaPending = isCaptchaConfigured && !captchaToken;
-  const displayError = state.error ?? callbackError;
 
   return (
     <form action={formAction} className="space-y-4">
       <Suspense fallback={null}>
         <NextRedirectField />
       </Suspense>
-      {displayError ? <AuthMessage tone="error">{displayError}</AuthMessage> : null}
+      {state.error ? (
+        <AuthMessage tone="error">{state.error}</AuthMessage>
+      ) : (
+        // Reading the URL is isolated in its own Suspense boundary so the rest
+        // of the form is server-rendered: a useSearchParams call at this level
+        // made Next.js leave the whole form out of the HTML until JS ran.
+        <Suspense fallback={null}>
+          <CallbackErrorMessage />
+        </Suspense>
+      )}
       {state.success ? (
         <AuthMessage tone="success">{state.success}</AuthMessage>
       ) : null}
@@ -104,6 +120,7 @@ export function LoginFormFields() {
         theme="dark"
         resetSignal={state}
         onTokenChange={setCaptchaToken}
+        startOnInteraction={deferSecurityCheck}
       />
 
       <div className="pt-2">

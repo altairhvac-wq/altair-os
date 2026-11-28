@@ -1,4 +1,5 @@
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
+import { loadResolvedCompanyTimeZone } from "@/lib/database/queries/company-timezone";
 import {
   getEstimateById,
   listEstimatesForJob,
@@ -57,7 +58,7 @@ async function loadCompanyBillingContext(companyId: string): Promise<{
 
   const { data, error } = await supabase
     .from("companies")
-    .select("timezone, settings")
+    .select("settings")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -71,7 +72,15 @@ async function loadCompanyBillingContext(companyId: string): Promise<{
   }
 
   return {
-    timeZone: data.timezone ?? undefined,
+    // Resolved by the one rule, like everywhere else. This used to take the
+    // stored zone as it was, so a company that had never chosen dated its
+    // draft invoices in Eastern time while the rest of the product ran on
+    // Mountain.
+    timeZone: await loadResolvedCompanyTimeZone(
+      supabase,
+      companyId,
+      "maybeAutoCreateDraftInvoiceForCompletedJob",
+    ),
     billingDefaults: getCompanyBillingDefaultsFromRow(data),
   };
 }

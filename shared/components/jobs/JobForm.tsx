@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, type ChangeEvent, type FormEvent, type RefObject } from "react";
+import { useRef, useState, type FormEvent, type RefObject } from "react";
+import { CustomerPicker } from "@/shared/components/customers/CustomerPicker";
 import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
@@ -81,6 +82,7 @@ export function JobForm({
   lockStatus = false,
 }: JobFormProps) {
   const defaults = { ...emptyForm, ...initialData };
+  const [customerId, setCustomerId] = useState(defaults.customerId);
   const manuallyEdited = useRef(new Set<AddressField>());
   const serviceAddressRef = useRef<HTMLInputElement>(null);
   const cityRef = useRef<HTMLInputElement>(null);
@@ -91,8 +93,11 @@ export function JobForm({
     manuallyEdited.current.add(field);
   }
 
-  function handleCustomerChange(e: ChangeEvent<HTMLSelectElement>) {
-    const customer = customers.find((c) => c.id === e.target.value);
+  // The picker hands over the record, not just the id: a customer found by
+  // search is not in `customers`, and looking them up there would skip the
+  // address fill for exactly the customers the search exists to reach.
+  function handleCustomerChange(nextCustomerId: string, customer: Customer | null) {
+    setCustomerId(nextCustomerId);
     if (!customer) return;
 
     const addressFields: {
@@ -146,23 +151,12 @@ export function JobForm({
           <label htmlFor="customerId" className={adminFormLabelClass}>
             Customer
           </label>
-          <select
-            id="customerId"
-            name="customerId"
-            required
-            defaultValue={defaults.customerId}
+          <CustomerPicker
+            customers={customers}
+            value={customerId}
             onChange={handleCustomerChange}
-            className={adminFormInputClass}
-          >
-            <option value="" disabled>
-              Select…
-            </option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name}
-              </option>
-            ))}
-          </select>
+            required
+          />
         </div>
 
         <div>

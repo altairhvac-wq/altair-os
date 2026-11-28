@@ -15,11 +15,10 @@ import {
   recordJobActivity,
 } from "@/lib/database/queries/job-activities";
 import { emitEstimateApprovedEvent } from "@/lib/database/services/operational-events";
+import { loadResolvedCompanyTimeZone } from "@/lib/database/queries/company-timezone";
 import {
-  DEFAULT_COMPANY_TIMEZONE,
   getDayBoundsInTimeZone,
   isSameCalendarDayInTimeZone,
-  resolveCompanyTimeZone,
 } from "@/shared/lib/datetime";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { EstimateApprovalSource } from "@/shared/types/estimate-approval";
@@ -69,17 +68,7 @@ async function getCompanyTimeZone(
   companyId: string,
   db: DbClient,
 ): Promise<string> {
-  const { data, error } = await db
-    .from("companies")
-    .select("timezone")
-    .eq("id", companyId)
-    .maybeSingle();
-
-  if (error || !data?.timezone?.trim()) {
-    return DEFAULT_COMPANY_TIMEZONE;
-  }
-
-  return resolveCompanyTimeZone(data.timezone);
+  return loadResolvedCompanyTimeZone(db, companyId, "estimateApprovalRouting");
 }
 
 async function unassignJobForRemoteApproval(

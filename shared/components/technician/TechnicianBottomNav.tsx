@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
+import { useTechnicianNotificationBadge } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
 import {
   getTechnicianNavItemForPath,
   getTechnicianNavItems,
@@ -13,59 +13,78 @@ type TechnicianBottomNavProps = {
   companyContext: ActiveCompanyContext;
 };
 
+/**
+ * Fixed bottom tab bar: the only navigation in the technician shell.
+ *
+ * Five equal tabs that fill the width (no sideways scrolling, no empty
+ * slot), each a full 56px target at the bottom of the screen where a thumb
+ * reaches. The active tab carries a tinted pill, the brass icon and a bold
+ * label, so it can be found without reading. The unread alert count rides on
+ * the Alerts tab; there is no second bell in the header.
+ */
 export function TechnicianBottomNav({
   companyContext,
 }: TechnicianBottomNavProps) {
   const pathname = usePathname();
   const navItems = getTechnicianNavItems(companyContext);
   const activeItem = getTechnicianNavItemForPath(pathname, companyContext);
-  const activeLinkRef = useRef<HTMLAnchorElement | null>(null);
-
-  useEffect(() => {
-    const activeLink = activeLinkRef.current;
-    if (!activeLink) {
-      return;
-    }
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    activeLink.scrollIntoView({
-      inline: "nearest",
-      block: "nearest",
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
-  }, [pathname, activeItem.id]);
+  const { unreadCount } = useTechnicianNotificationBadge();
 
   return (
     <nav
       aria-label="Technician navigation"
       className="tech-bottom-nav fixed inset-x-0 bottom-0 z-30"
     >
-      <div className="tech-shell-nav-inner mx-auto pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2">
-        <ul className="mobile-nav-rail-scroll flex items-stretch gap-0.5 overflow-x-auto overscroll-x-contain px-3">
+      <div className="tech-shell-nav-inner mx-auto pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-1.5">
+        <ul className="flex items-stretch gap-1 px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.id === activeItem.id;
+            const badge =
+              item.id === "notifications" && unreadCount > 0
+                ? unreadCount > 9
+                  ? "9+"
+                  : String(unreadCount)
+                : null;
 
             return (
-              <li key={item.id} className="shrink-0">
+              <li key={item.id} className="min-w-0 flex-1">
                 <Link
-                  ref={isActive ? activeLinkRef : undefined}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`relative flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 ${
+                  aria-label={
+                    badge ? `${item.label}, ${unreadCount} unread` : undefined
+                  }
+                  data-testid={`tech-nav-${item.id}`}
+                  className={`relative flex min-h-14 w-full touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-altair-brass ${
                     isActive
-                      ? "bg-cyan-50 text-cyan-700"
-                      : "text-altair-ink-on-paper-muted hover:bg-slate-50/80 hover:text-slate-700 active:bg-slate-100/80"
+                      ? "bg-altair-brass/15 text-altair-ink-on-paper"
+                      : "text-altair-ink-on-paper-muted active:bg-altair-paper-subtle"
                   }`}
                 >
-                  <Icon
-                    className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`}
-                    aria-hidden="true"
-                  />
-                  <span className="w-full truncate text-center text-[11px] font-semibold">
+                  <span className="relative">
+                    <Icon
+                      className={`h-[22px] w-[22px] ${
+                        isActive
+                          ? "stroke-[2.25] text-[var(--brand-metal-text)]"
+                          : ""
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {badge ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--chrome-elevated)] px-1 text-[10px] font-bold leading-none text-white"
+                      >
+                        {badge}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={`w-full truncate text-center text-[11px] leading-none ${
+                      isActive ? "font-bold" : "font-semibold"
+                    }`}
+                  >
                     {item.label}
                   </span>
                 </Link>

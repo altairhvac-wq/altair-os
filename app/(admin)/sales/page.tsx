@@ -36,6 +36,8 @@ import {
 } from "@/shared/lib/company-billing-defaults";
 import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 import { resolveSalesHubTab } from "@/shared/lib/sales/sales-hub";
+import { withSelectedOption } from "@/shared/lib/customers/customer-options";
+import type { Customer } from "@/shared/types/customer";
 import { buildEstimatePipelineMetrics } from "@/shared/lib/sales/estimate-pipeline-metrics";
 import {
   isInvoiceWorkQueue,
@@ -66,6 +68,16 @@ type SalesPageProps = {
     estimateQueue?: string;
   }>;
 };
+
+/**
+ * Only a customer still on the books is preselected. The pickers have never
+ * offered archived or deleted customers, and a link is not a way around that.
+ */
+function onTheBooks(customer: Customer | null): Customer | undefined {
+  return customer && !customer.archivedAt && !customer.deletedAt
+    ? customer
+    : undefined;
+}
 
 /** Sales hub — Estimates, Invoices, Payments, and Estimate Pipeline panels. */
 export const metadata: Metadata = {
@@ -215,9 +227,6 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
         })
       : null;
 
-  const customers = customerOptions.customers;
-  const jobs = jobOptions.jobs;
-
   // The estimate list shows an "invoiced as INV-1234" badge. That needs the
   // invoices belonging to the estimates ON THIS PAGE, not to the company:
   // reading all of them was 1,000 refs per render out of 10,000 invoices, and
@@ -233,12 +242,31 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
   // for either to contain the one the link is about.
   const [preselectedCustomer, preselectedJob] = await Promise.all([
     customerId
-      ? getCustomerById(companyId, customerId).then((c) => c ?? undefined)
+      ? getCustomerById(companyId, customerId).then(onTheBooks)
       : Promise.resolve(undefined),
     jobId
       ? getJobById(companyId, jobId).then((j) => j ?? undefined)
       : Promise.resolve(undefined),
   ]);
+
+  // A link that names only a job ("Create invoice" on a job) still opens the
+  // form for that job's customer. This used to be looked up in the bounded
+  // list, where an older customer is not.
+  const jobCustomer =
+    !preselectedCustomer && preselectedJob
+      ? onTheBooks(await getCustomerById(companyId, preselectedJob.customerId))
+      : undefined;
+
+  // ============================== WHAT A FORM OPENS FOR MUST BE AN OPTION ==============================
+  // Both forms take a customer id and a job id as defaults, and both render a
+  // select over these lists. A default with no matching option does not show
+  // as chosen: the customer select read "Select…" for any customer outside the
+  // newest twenty-five, and that customer could not be picked either.
+  const customers = withSelectedOption(
+    customerOptions.customers,
+    preselectedCustomer ?? jobCustomer,
+  );
+  const jobs = withSelectedOption(jobOptions.jobs, preselectedJob);
 
   const estimatePreselectedJob =
     preselectedJob && preselectedCustomer &&
@@ -282,10 +310,7 @@ export default async function SalesPage({ searchParams }: SalesPageProps) {
 
   const invoiceCustomer = customerJobMismatch
     ? preselectedCustomer
-    : preselectedCustomer ??
-      (validJob
-        ? customers.find((customer) => customer.id === validJob.customerId)
-        : undefined);
+    : preselectedCustomer ?? (validJob ? jobCustomer : undefined);
 
   const shouldOpenInvoiceCreate =
     create === "1" && Boolean(invoiceCustomer ?? validJob);

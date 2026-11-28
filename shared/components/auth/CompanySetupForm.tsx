@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Suspense, useActionState } from "react";
+import { BrowserTimeZoneField } from "./BrowserTimeZoneField";
 import { NextRedirectField } from "./NextRedirectField";
 import {
   setupCompanyAction,
@@ -41,6 +42,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
       aboveCard={aboveCard}
     >
       <form action={formAction} className="space-y-5" aria-busy={pending}>
+        <BrowserTimeZoneField />
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>

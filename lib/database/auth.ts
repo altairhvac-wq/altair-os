@@ -30,10 +30,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Use
 export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<
   ProfileRow | null
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   if (!user) {
     return null;

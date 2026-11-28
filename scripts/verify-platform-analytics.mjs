@@ -173,7 +173,43 @@ check(
 // ------------------------------------------------------------------ static guarantees
 console.log("\nIngest route");
 const route = read("app/api/analytics/collect/route.ts");
-check("only pageview, signup_started and exclude_device accepted from browsers", /CLIENT_EVENTS = new Set\(\["pageview", "signup_started", "exclude_device"\]\)/.test(route));
+check("browsers may send pageview, page_engaged, signup_started, exclude_device and the named engagement events, nothing else", /CLIENT_EVENTS = new Set<string>\(\["pageview", "page_engaged", "signup_started", "exclude_device", \.\.\.ENGAGEMENT_EVENT_NAMES\]\)/.test(route));
+{
+  // Migration 217: visible time, visits, returning, days, website pages only.
+  check("217: page_engaged carries a whole number of milliseconds, 1 ms to 30 minutes", /Number\.isInteger\(body\.engagedMs\)/.test(route) && /MAX_ENGAGED_MS = 30 \* 60 \* 1000/.test(route));
+  check("217: the new-visitor limit counts only a browser's first pageview, after the owner checks", /body\.firstVisit === true/.test(route) && route.indexOf("body.firstVisit === true") > route.indexOf('event === "exclude_device"'));
+  const m217 = read("supabase/migrations/217_web_analytics_accuracy.sql").replace(/--[^\n]*/g, "").toLowerCase();
+  check("217: only page_engaged rows carry a time, at most 30 minutes", /engaged_ms between 1 and 1800000/.test(m217) && /event_name <> 'page_engaged' and engaged_ms is null/.test(m217));
+  check("217: every website figure goes through web_analytics_is_site_path", (m217.match(/public\.web_analytics_is_site_path\(path\)/g) ?? []).length >= 4);
+  check("217: customer estimate and invoice links are not website pages", /'\/estimate-approval\/%'/.test(m217) && /'\/invoice-payment\/%'/.test(m217));
+  check("217: days use p_tz, not UTC", !/'utc'\)/.test(m217.split("as $$")[1] ?? "") && /at time zone p_tz\)::date/.test(m217));
+  check("217: every summary read still leaves out internal browsers", (m217.match(/not exists \(select 1 from internal i/g) ?? []).length >= 4);
+  check("217: the engagement table leaves out the time beacon", /not in \('pageview', 'page_engaged', 'signup_started', 'signup_completed'\)/.test(m217));
+  check(
+    "217: functions executable by service_role only",
+    /grant execute on function public\.platform_web_analytics_summary\(timestamptz, timestamptz, text\) to service_role/.test(m217) &&
+      /grant execute on function public\.platform_web_analytics_engagement\(timestamptz, timestamptz\) to service_role/.test(m217) &&
+      /grant execute on function public\.web_analytics_is_site_path\(text\) to service_role/.test(m217) &&
+      !/to authenticated/.test(m217) && !/to anon/.test(m217) && !/security definer/.test(m217),
+  );
+  const client217 = read("shared/lib/analytics/client.ts");
+  check("217: a visit is shared across tabs and ends after 30 idle minutes", /VISIT_IDLE_MS = 30 \* 60 \* 1000/.test(client217) && /localStorage|storage\("local"\)/.test(client217) && !/storage\("session"\)/.test(client217));
+  check("217: a pageview is sent when the path changes, not the query string", /export function trackPageview\(pathname: string\)/.test(client217) && !/useSearchParams/.test(read("shared/components/analytics/FirstPartyAnalytics.tsx")));
+}
+{
+  // Migration 209: the engagement events and their one label.
+  const engagementSource = read("shared/lib/analytics/engagement.ts");
+  const names = [...engagementSource.matchAll(/^\s*"([a-z_]+)",$/gm)].map((m) => m[1]);
+  check("six engagement events are declared", names.length === 6, names);
+  check("signup_completed is not an engagement event", !names.includes("signup_completed") && !names.includes("pageview"));
+  const migration209 = read("supabase/migrations/209_site_engagement_events_and_resource_subscribers.sql");
+  check("every engagement event is allowed by the 209 check constraint", names.every((name) => migration209.includes(`'${name}'`)), names);
+  check("a label must be a slug in the database too", migration209.includes("event_label ~ '^[a-z0-9][a-z0-9_-]{0,63}$'") && engagementSource.includes("/^[a-z0-9][a-z0-9_-]{0,63}$/"));
+  check("a malformed label drops the whole event", /if \(label !== null && !isValidEngagementLabel\(label\)\) return NO_CONTENT\(\)/.test(route));
+  check("the engagement summary leaves out the owner's browsers and signed-in use", /web_analytics_internal_visitors/.test(migration209) && /e\.user_id is null/.test(migration209));
+  const fields = read("shared/components/resources/calc/useCalculatorTool.ts");
+  check("calculator use records the calculator's name only", /trackEngagement\("calculator_used", slug\)/.test(fields));
+}
 check("signup_completed cannot be posted by a browser", !/CLIENT_EVENTS[^\n]*signup_completed/.test(route));
 check("cross-site origins refused", /if \(!isSameOriginBeacon\(request\)\) return NO_CONTENT\(\)/.test(route));
 check("origin check fails closed (exact host:port, no Host means refuse)", /originHost === hostHeader/.test(route) && /Boolean\(hostHeader\)/.test(route) && /catch \{\s*return false;/.test(route));

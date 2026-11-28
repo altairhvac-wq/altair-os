@@ -29,7 +29,7 @@ export function LegalPageShell({
           <Link
             href="/"
             className={`inline-flex rounded-sm ${focusRing}`}
-            aria-label="Altair OS home"
+            aria-label="Altair Operating System home"
           >
             <AltairLogo variant="white" size="sm" showWordmark />
           </Link>
@@ -67,7 +67,7 @@ export function LegalPageShell({
       <main className="flex-1 bg-[#fbf7ef] px-5 py-12 sm:px-8 sm:py-16">
         <article className="mx-auto max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#77591b]">
-            Altair OS
+            Altair Operating System
           </p>
           <h1 className="mt-3 font-[family-name:var(--font-altair-display)] text-4xl tracking-tight text-[#17130e] sm:text-5xl">
             {title}

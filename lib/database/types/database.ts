@@ -1278,7 +1278,11 @@ export type Database = {
         Row: {
           id: number;
           occurred_at: string;
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          /** Migration 209: which video / calculator / template / button. */
+          event_label: string | null;
+          /** 217: page_engaged only, visible milliseconds. */
+          engaged_ms: number | null;
           path: string;
           referrer_host: string | null;
           channel: string;
@@ -1297,7 +1301,9 @@ export type Database = {
         Insert: {
           id?: never;
           occurred_at?: string;
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
+          event_label?: string | null;
+          engaged_ms?: number | null;
           path: string;
           referrer_host?: string | null;
           channel?: string;
@@ -1314,8 +1320,408 @@ export type Database = {
           dedupe_key: string;
         };
         Update: Partial<{
-          event_name: "pageview" | "signup_started" | "signup_completed";
+          event_name: "pageview" | "page_engaged" | "signup_started" | "signup_completed" | "cta_click" | "video_play" | "calculator_used" | "template_download" | "results_email_requested" | "boss_share";
           path: string;
+        }>;
+        Relationships: [];
+      };
+      // resource_email_subscribers: migration 209 — people who ticked "send me
+      // new tools" on a free calculator. Double opt-in. Service role only.
+      resource_email_subscribers: {
+        Row: {
+          id: string;
+          email: string;
+          status: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          created_at: string;
+          last_requested_at: string;
+          confirmed_at: string | null;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          status?: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          created_at?: string;
+          last_requested_at?: string;
+          confirmed_at?: string | null;
+          unsubscribed_at?: string | null;
+        };
+        Update: Partial<{
+          status: "pending" | "confirmed" | "unsubscribed";
+          source: string;
+          consent_text: string;
+          last_requested_at: string;
+          confirmed_at: string | null;
+          unsubscribed_at: string | null;
+        }>;
+        Relationships: [];
+      };
+      // directory_listings / directory_listing_reports: migration 210 — the
+      // public contractor directory. Service role only; public pages read
+      // through the directory_* functions, which never return contact_email.
+      directory_listings: {
+        Row: {
+          id: string;
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code: string | null;
+          service_area: string;
+          phone: string;
+          website: string | null;
+          description: string;
+          accepts_sub_work: boolean;
+          contact_email: string;
+          status: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          review_note: string | null;
+          published_at: string | null;
+          removed_at: string | null;
+          // Migration 211: the linked Altair workspace, and whether it is active.
+          claimed_company_id: string | null;
+          claimed_at: string | null;
+          member_active: boolean;
+          // Migration 214: optional details, approved images, the waiting
+          // image set, and the monthly numbers email preference.
+          services: string[];
+          hours: Record<string, unknown> | null;
+          license_number: string | null;
+          license_state: string | null;
+          insured: boolean | null;
+          emergency_service: boolean | null;
+          year_founded: number | null;
+          service_radius_miles: number | null;
+          languages: string[];
+          logo_path: string | null;
+          photo_paths: string[];
+          pending_media: Record<string, unknown> | null;
+          stats_email_opt_out: boolean;
+          stats_email_opt_out_at: string | null;
+          source: "self_listed" | "added_with_permission";
+          permission_given_by: string | null;
+          permission_given_at: string | null;
+          permission_note: string | null;
+          added_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code?: string | null;
+          service_area?: string;
+          phone: string;
+          website?: string | null;
+          description: string;
+          accepts_sub_work?: boolean;
+          services?: string[];
+          hours?: Record<string, unknown> | null;
+          license_number?: string | null;
+          license_state?: string | null;
+          insured?: boolean | null;
+          emergency_service?: boolean | null;
+          year_founded?: number | null;
+          service_radius_miles?: number | null;
+          languages?: string[];
+          source?: "self_listed" | "added_with_permission";
+          permission_given_by?: string | null;
+          permission_given_at?: string | null;
+          permission_note?: string | null;
+          added_by?: string | null;
+          contact_email: string;
+          status?: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes?: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          review_note?: string | null;
+          published_at?: string | null;
+          removed_at?: string | null;
+        };
+        Update: Partial<{
+          slug: string;
+          business_name: string;
+          trade_type: string;
+          city: string;
+          state: string;
+          postal_code: string | null;
+          service_area: string;
+          phone: string;
+          website: string | null;
+          description: string;
+          accepts_sub_work: boolean;
+          status: "pending_email" | "pending_review" | "published" | "rejected" | "removed";
+          pending_changes: Record<string, unknown> | null;
+          consent_text: string;
+          email_confirmed_at: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          review_note: string | null;
+          published_at: string | null;
+          removed_at: string | null;
+          claimed_company_id: string | null;
+          claimed_at: string | null;
+          member_active: boolean;
+          services: string[];
+          hours: Record<string, unknown> | null;
+          license_number: string | null;
+          license_state: string | null;
+          insured: boolean | null;
+          emergency_service: boolean | null;
+          year_founded: number | null;
+          service_radius_miles: number | null;
+          languages: string[];
+          logo_path: string | null;
+          photo_paths: string[];
+          pending_media: Record<string, unknown> | null;
+          stats_email_opt_out: boolean;
+          stats_email_opt_out_at: string | null;
+          source: "self_listed" | "added_with_permission";
+          permission_given_by: string | null;
+          permission_given_at: string | null;
+          permission_note: string | null;
+          added_by: string | null;
+        }>;
+        Relationships: [];
+      };
+      // Migration 214: listing owners' numbers, per listing per UTC day.
+      // Counts only. Service role only.
+      directory_listing_daily_stats: {
+        Row: {
+          listing_id: string;
+          day: string;
+          views: number;
+          calls: number;
+          website_taps: number;
+          directions_taps: number;
+        };
+        Insert: {
+          listing_id: string;
+          day: string;
+          views?: number;
+          calls?: number;
+          website_taps?: number;
+          directions_taps?: number;
+        };
+        Update: Partial<{ views: number; calls: number; website_taps: number; directions_taps: number }>;
+        Relationships: [];
+      };
+      // Migration 214: which months of numbers were emailed to which listing.
+      directory_stats_emails: {
+        Row: { listing_id: string; month: string; outcome: "claimed" | "sent" | "skipped" | "failed"; created_at: string };
+        Insert: { listing_id: string; month: string; outcome?: "claimed" | "sent" | "skipped" | "failed" };
+        Update: Partial<{ outcome: "claimed" | "sent" | "skipped" | "failed" }>;
+        Relationships: [];
+      };
+      // company_business_numbers: migration 218 — one row per company with the
+      // numbers the owner prices from. Owner/admin read (RLS); written by the
+      // service role after an application check. Cents and percent.
+      company_business_numbers: {
+        Row: {
+          company_id: string;
+          labor_rate_cents: number | null;
+          after_hours_multiplier: number | null;
+          service_call_fee_cents: number | null;
+          service_call_credited: boolean;
+          parts_markup_percent: number | null;
+          average_wage_cents: number | null;
+          payroll_burden_percent: number | null;
+          billed_hours_per_week: number | null;
+          unbilled_hours_per_week: number | null;
+          technician_count: number | null;
+          monthly_overhead_cents: number | null;
+          target_net_margin_percent: number | null;
+          average_job_revenue_cents: number | null;
+          job_variable_cost_percent: number | null;
+          setup_steps: Json;
+          setup_completed_at: string | null;
+          setup_dismissed_at: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          company_id: string;
+          labor_rate_cents?: number | null;
+          after_hours_multiplier?: number | null;
+          service_call_fee_cents?: number | null;
+          service_call_credited?: boolean;
+          parts_markup_percent?: number | null;
+          average_wage_cents?: number | null;
+          payroll_burden_percent?: number | null;
+          billed_hours_per_week?: number | null;
+          unbilled_hours_per_week?: number | null;
+          technician_count?: number | null;
+          monthly_overhead_cents?: number | null;
+          target_net_margin_percent?: number | null;
+          average_job_revenue_cents?: number | null;
+          job_variable_cost_percent?: number | null;
+          setup_steps?: Json;
+          setup_completed_at?: string | null;
+          setup_dismissed_at?: string | null;
+          updated_by?: string | null;
+        };
+        Update: Partial<{
+          labor_rate_cents: number | null;
+          after_hours_multiplier: number | null;
+          service_call_fee_cents: number | null;
+          service_call_credited: boolean;
+          parts_markup_percent: number | null;
+          average_wage_cents: number | null;
+          payroll_burden_percent: number | null;
+          billed_hours_per_week: number | null;
+          unbilled_hours_per_week: number | null;
+          technician_count: number | null;
+          monthly_overhead_cents: number | null;
+          target_net_margin_percent: number | null;
+          average_job_revenue_cents: number | null;
+          job_variable_cost_percent: number | null;
+          setup_steps: Json;
+          setup_completed_at: string | null;
+          setup_dismissed_at: string | null;
+          updated_by: string | null;
+        }>;
+        Relationships: [];
+      };
+      // affiliate_applications: migration 213 — applications to the affiliate
+      // program and the owner's decision on each. Service role only; every
+      // column is private.
+      affiliate_applications: {
+        Row: {
+          id: string;
+          full_name: string;
+          email: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships: string;
+          state: string;
+          rules_text: string;
+          status: "new" | "approved" | "declined";
+          partner_code: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          full_name: string;
+          email: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url?: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships?: string;
+          state: string;
+          rules_text: string;
+          status?: "new" | "approved" | "declined";
+          partner_code?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+        };
+        Update: Partial<{
+          full_name: string;
+          business_name: string;
+          partner_type: string;
+          audience_url: string;
+          linkedin_url: string | null;
+          audience_size: string;
+          audience_description: string;
+          promotion_plan: string;
+          existing_partnerships: string;
+          state: string;
+          rules_text: string;
+          status: "new" | "approved" | "declined";
+          partner_code: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+        }>;
+        Relationships: [];
+      };
+      directory_listing_reports: {
+        Row: {
+          id: string;
+          listing_id: string;
+          reason: "wrong_details" | "closed" | "not_a_real_business" | "offensive" | "other";
+          note: string;
+          status: "open" | "resolved";
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          reason: "wrong_details" | "closed" | "not_a_real_business" | "offensive" | "other";
+          note?: string;
+          status?: "open" | "resolved";
+        };
+        Update: Partial<{
+          status: "open" | "resolved";
+          resolved_at: string | null;
+        }>;
+        Relationships: [];
+      };
+      // directory_quote_requests: migration 216 — a quote or sub-work request
+      // sent from a listing page. Visitor contact details: service role only.
+      directory_quote_requests: {
+        Row: {
+          id: string;
+          listing_id: string;
+          kind: "customer" | "sub";
+          sender_name: string;
+          sender_phone: string;
+          sender_email: string | null;
+          sender_company: string | null;
+          place: string;
+          timing: string;
+          details: string;
+          status: "sent" | "not_sent";
+          lead_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          kind: "customer" | "sub";
+          sender_name: string;
+          sender_phone: string;
+          sender_email?: string | null;
+          sender_company?: string | null;
+          place?: string;
+          timing?: string;
+          details: string;
+          status?: "sent" | "not_sent";
+          lead_id?: string | null;
+        };
+        Update: Partial<{
+          status: "sent" | "not_sent";
+          lead_id: string | null;
         }>;
         Relationships: [];
       };
@@ -1768,6 +2174,9 @@ export type Database = {
       // on next gen types run. Every scalar, group and top-N the reports page
       // needs, with the aging reference date and the follow-up cutoff passed in
       // so the time-zone rules stay defined once, in TypeScript.
+      // Migration 221 adds p_time_zone (default 'UTC'): the zone a timestamp
+      // is turned into a calendar day in. Before 221 the function has eight
+      // arguments and a nine-argument call is answered PGRST202.
       get_company_reports_summary: {
         Args: {
           p_company_id: string;
@@ -1778,17 +2187,22 @@ export type Database = {
           p_today: string;
           p_follow_up_cutoff: string;
           p_limit: number;
+          p_time_zone?: string;
         };
         Returns: Json;
       };
       // get_company_report_daily_series: migration 170 — wire into Database
       // types on next gen types run. Per-DAY totals for the four charts and the
       // sparklines, so the bucketing rules stay in TypeScript.
+      // Migration 220 adds p_time_zone (default 'UTC'): the zone a timestamp
+      // is turned into a calendar day in. Before 220 the function has three
+      // arguments and a four-argument call is answered PGRST202.
       get_company_report_daily_series: {
         Args: {
           p_company_id: string;
           p_start_date: string;
           p_end_date: string;
+          p_time_zone?: string;
         };
         Returns: Json;
       };
@@ -1811,6 +2225,44 @@ export type Database = {
           expenses_missing_amount: number | string;
           open_labor_entry_count: number | string;
         }[];
+      };
+      // directory_*: migration 210 — service_role only. The public directory's
+      // only read path: public columns of published listings, as jsonb.
+      directory_search_listings: {
+        Args: {
+          p_trade?: string | null;
+          p_state?: string | null;
+          p_place?: string | null;
+          p_sub_only?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: unknown;
+      };
+      directory_public_listing: {
+        Args: { p_slug: string };
+        Returns: unknown;
+      };
+      directory_published_paths: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      // Migration 214: place-and-trade counts of published listings, and the
+      // counter behind listing owners' numbers. Service role only.
+      directory_facets: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
+      directory_record_listing_event: {
+        Args: { p_slug: string; p_event: string };
+        Returns: boolean;
+      };
+      // platform_web_analytics_engagement: migration 209 — service_role only.
+      // Counts of deliberate visitor actions by event and label; one jsonb
+      // array, parsed defensively by lib/database/services/platform-analytics.ts.
+      platform_web_analytics_engagement: {
+        Args: { p_from: string; p_to: string };
+        Returns: unknown;
       };
       // platform_web_analytics_summary: migration 202, replaced by 206 (owner's
       // browsers excluded, session detail, optional p_tz) — service_role only.

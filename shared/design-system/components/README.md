@@ -5,7 +5,7 @@ Reusable visual building blocks for Altair OS V2. Form controls (`Field`,
 language — see the Input/Field sections below. Other V2 surface components
 remain on deliberate adoption passes.
 
-**Design Lab:** Visual review of all V2 components with realistic sample content at `/altair-design-lab` (internal route — not in admin nav).
+**Design Lab:** the `/altair-design-lab` component review page was removed on 2026-11-12 (it had been switched off since launch; it is in git history). Theming lives at `/platform/design-lab`.
 
 ## HeroHeader
 

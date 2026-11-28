@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
+import { DispatchAgenda } from "./DispatchAgenda";
 import { DispatchMapPanel } from "./DispatchMapPanel";
 import { DispatchTimeGrid } from "./DispatchTimeGrid";
 import { UnassignedJobsPanel } from "./UnassignedJobsPanel";
@@ -16,6 +17,8 @@ type DispatchBoardProps = {
   highlightUnassignedPanel?: boolean;
   overloadedTechnicianIds?: string[];
   focusTechnicianId?: string | null;
+  /** The day the board shows (YYYY-MM-DD). Omitted when the board is today. */
+  boardDateOnly?: string;
 };
 
 function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> {
@@ -45,6 +48,7 @@ export const DispatchBoard = memo(function DispatchBoard({
   highlightUnassignedPanel = false,
   overloadedTechnicianIds = [],
   focusTechnicianId = null,
+  boardDateOnly,
 }: DispatchBoardProps) {
   const unassignedJobs = useMemo(
     () => jobs.filter((job) => !job.technicianId),
@@ -85,6 +89,21 @@ export const DispatchBoard = memo(function DispatchBoard({
       ) : null}
 
       <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2.5 overflow-hidden max-md:overflow-visible">
+        {/* Phones: the day as a list, ahead of the map. The timeline below
+            needs eleven hours of width a phone does not have. */}
+        {showTechnicianColumns ? (
+          <DispatchAgenda
+            className="md:hidden"
+            technicians={visibleTechnicians}
+            jobsByTechnician={grouped}
+            selectedJobId={selectedJobId}
+            pendingJobId={pendingJobId}
+            focusTechnicianId={focusTechnicianId}
+            boardDateOnly={boardDateOnly}
+            onSelectJob={onSelectJob}
+          />
+        ) : null}
+
         <DispatchMapPanel
           jobs={jobs}
           selectedJobId={selectedJobId}
@@ -92,7 +111,7 @@ export const DispatchBoard = memo(function DispatchBoard({
         />
 
         {showTechnicianColumns ? (
-          <div className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden max-md:min-h-[20rem] md:min-h-0">
+          <div className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden max-md:hidden md:min-h-0">
             <DispatchTimeGrid
               technicians={visibleTechnicians}
               jobsByTechnician={grouped}

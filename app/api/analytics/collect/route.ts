@@ -11,6 +11,11 @@ import {
   markInternalVisitor,
   recordAnalyticsEvent,
 } from "@/lib/analytics/server-events";
+import {
+  ENGAGEMENT_EVENT_NAMES,
+  isValidEngagementLabel,
+  type EngagementEventName,
+} from "@/shared/lib/analytics/engagement";
 import { enforceNewVisitorBurstLimit } from "@/lib/analytics/new-visitor-burst";
 import { isInternalAnalyticsUser } from "@/lib/analytics/internal";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin-emails";
@@ -46,11 +51,18 @@ export const runtime = "nodejs";
  *     browser internal the same way, for devices the owner never signs in on.
  *
  * signup_completed is NOT accepted here: only the signup action records it.
+ *
+ * Engagement events (migration 209: a video played, a trial button pressed, a
+ * calculator used, a template downloaded) arrive here too. Each carries at
+ * most a label, which must be a slug our own code chose; anything else is
+ * dropped. No value a visitor typed is ever accepted.
  */
 
 const NO_CONTENT = () => new Response(null, { status: 204 });
 const INTERNAL = () => new Response(null, { status: 204, headers: { "x-altair-analytics": "internal" } });
-const CLIENT_EVENTS = new Set(["pageview", "signup_started", "exclude_device"]);
+const CLIENT_EVENTS = new Set<string>(["pageview", "page_engaged", "signup_started", "exclude_device", ...ENGAGEMENT_EVENT_NAMES]);
+/** page_engaged (217): visible milliseconds since the page's last report; the database refuses more than 30 minutes. */
+const MAX_ENGAGED_MS = 30 * 60 * 1000;
 const CHANNELS = new Set<AnalyticsChannel>([
   "direct", "search", "social", "email", "paid", "referral", "internal", "unknown",
 ]);
@@ -109,15 +121,21 @@ export async function POST(request: Request): Promise<Response> {
     if (!isValidClientId(body.visitorId) || !isValidClientId(body.eventId)) return NO_CONTENT();
     const path = typeof body.path === "string" ? body.path : null;
     if (!path || !path.startsWith("/")) return NO_CONTENT();
+    // A label is optional, but a malformed one refuses the whole event rather
+    // than being stored blank: it means the sender is not our code.
+    const label = body.label === undefined || body.label === null ? null : body.label;
+    if (label !== null && !isValidEngagementLabel(label)) return NO_CONTENT();
 
     const address = await resolveRequestAddress();
     const limit = await enforcePublicRateLimit("public.analytics_collect", { ip: address });
     if (!limit.allowed) return NO_CONTENT();
 
-    // A burst of never-seen browsers from one address is a tool, not a crowd
-    // (lib/analytics/new-visitor-burst.ts). Their first pageview is dropped.
-    if (event === "pageview" && body.isReturning === false) {
-      if (!(await enforceNewVisitorBurstLimit(address))) return NO_CONTENT();
+    // page_engaged carries a whole number of visible milliseconds and nothing else.
+    let engagedMs: number | null = null;
+    if (event === "page_engaged") {
+      if (typeof body.engagedMs !== "number" || !Number.isInteger(body.engagedMs)) return NO_CONTENT();
+      if (body.engagedMs < 1 || body.engagedMs > MAX_ENGAGED_MS) return NO_CONTENT();
+      engagedMs = body.engagedMs;
     }
 
     // Signed-in visitors: product usage is attributed to the user; the owner's
@@ -147,6 +165,15 @@ export async function POST(request: Request): Promise<Response> {
       return INTERNAL();
     }
 
+    // A burst of never-seen browsers from one address is a tool, not a crowd
+    // (lib/analytics/new-visitor-burst.ts). Only a browser's very first
+    // pageview counts (217: it used to be every pageview of its first day, so
+    // a few real readers on one office or phone-carrier address used the
+    // allowance up and lost pages), and only after the owner checks above.
+    if (event === "pageview" && body.firstVisit === true) {
+      if (!(await enforceNewVisitorBurstLimit(address))) return NO_CONTENT();
+    }
+
     const referrerHost = normalizeHost(str(body.referrerHost, 255));
     const utm = {
       source: str(body.utmSource, 100)?.toLowerCase() ?? null,
@@ -164,7 +191,9 @@ export async function POST(request: Request): Promise<Response> {
     });
 
     await recordAnalyticsEvent({
-      event: event as "pageview" | "signup_started",
+      event: event as "pageview" | "page_engaged" | "signup_started" | EngagementEventName,
+      label: label as string | null,
+      engagedMs,
       path,
       visitorId: body.visitorId as string,
       sessionId: typeof body.sessionId === "string" ? body.sessionId : null,

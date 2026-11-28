@@ -12,8 +12,8 @@ import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode
 import { getNavItemForPath } from "./nav-items";
 import { AdminNavSkeleton } from "./AdminNavSkeleton";
 import { AdminShellContentLoadingState } from "./AdminShellContentLoadingState";
+import { AdminBottomNav } from "./AdminBottomNav";
 import { AdminQuickNavDrawer } from "./AdminQuickNavDrawer";
-import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
 import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
 import type { Notification } from "@/shared/types/notification";
@@ -113,23 +113,14 @@ export function AdminShell({
           showViewSwitcher={isOwner}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
-          showQuickNav={showMobileDestinationNav}
-          quickNavOpen={quickNavOpen}
-          onQuickNavOpenChange={setQuickNavOpen}
           billingAccess={billingAccess}
         />
       </div>
 
-      {showMobileDestinationNav ? (
-        <div className="no-print md:hidden">
-          <MobileNav
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-        </div>
-      ) : null}
-
-      <main data-testid="admin-shell-main" className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
+      {/* On a phone the navigation is the tab bar fixed to the bottom of the
+        * screen (AdminBottomNav, rendered below). The bottom padding keeps
+        * the last of each page clear of it. */}
+      <main data-testid="admin-shell-main" data-bottom-nav={showMobileDestinationNav ? "true" : undefined} className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
           {redirectPending ? <AdminShellContentLoadingState /> : children}
@@ -137,6 +128,13 @@ export function AdminShell({
       </main>
       </div>
       </div>
+      {showMobileDestinationNav ? (
+        <AdminBottomNav
+          companyContext={navigationContext}
+          menuOpen={quickNavOpen}
+          onMenuOpenChange={setQuickNavOpen}
+        />
+      ) : null}
       {showMobileDestinationNav ? (
         <AdminQuickNavDrawer
           open={quickNavOpen}
@@ -148,7 +146,7 @@ export function AdminShell({
       {isBetaBugReportEnabled() &&
       !(isMobile && pathname.startsWith("/settings")) &&
       !isMobileDashboard ? (
-        <BetaBugReportButton />
+        <BetaBugReportButton aboveMobileBottomNav={isMobile && showMobileDestinationNav} />
       ) : null}
     </CompanyTimezoneProvider>
     </FounderMarketingDisplayProvider>

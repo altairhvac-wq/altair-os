@@ -7,6 +7,7 @@ import {
   listOpenClockEntriesForCompany,
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
+import { loadOnReportDayBasis } from "@/shared/lib/reports/report-day-basis";
 import { resolvePreviousReportDateBounds } from "@/shared/lib/reports/report-metrics";
 import { buildReportsPageDataFromAggregates } from "@/shared/lib/reports/report-metrics-aggregates";
 import {
@@ -16,8 +17,8 @@ import {
 import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
 import { buildShiftTimeTrackingSummary } from "@/shared/lib/time-tracking/shift-time-tracking-summary";
 import {
-  resolveProfitabilityReportDateBounds,
-  resolveReportDateBounds,
+  resolveReportPageDateBounds,
+  type ReportDayBasis,
 } from "@/shared/types/reports";
 import type {
   ReportsPageData,
@@ -61,19 +62,57 @@ async function listTechnicianLaborCostRates(
 }
 
 /**
- * The aging reference date.
+ * The two aggregates, read on one calendar.
  *
- * buildInvoiceAging measured "today" with `toDateOnly(new Date())` using local
- * getFullYear / getMonth / getDate, so the reference is the SERVER's local
- * calendar date. It is resolved here and passed to the aggregate rather than
- * computed in SQL, for the same reason migration 160 takes a follow-up cutoff
- * instead of a time-zone name: one definition of the rule, in TypeScript.
+ * ============================== WHERE A MOMENT BECOMES A DAY ==============================
+ * Everything on the Reports page that turns a timestamp into a day, or asks
+ * what today is, goes through the basis handed in here:
+ *
+ *   the period              "last 30 days" ends on basis.today
+ *   the period before       the same length, ending the day before
+ *   the aging reference     basis.today (it was the server's local date)
+ *   the summary function    p_time_zone = basis.timeZone (migration 221)
+ *   the per-day series      p_time_zone = basis.timeZone (migration 220)
+ *
+ * The dates are still worked out here and passed in, rather than computed
+ * in SQL, for the reason migration 160 takes a follow-up cutoff: one
+ * definition of the rule, in TypeScript.
+ *
+ * With a zone, neither read falls back by itself: if either function cannot
+ * take a zone yet, the result says so and loadOnReportDayBasis reads both
+ * again on the old calendar, with the old calendar's own dates.
  */
-function resolveAgingReferenceDate(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+async function loadReportAggregates(
+  companyId: string,
+  dateRange: ReportsPageDateRange,
+  basis: ReportDayBasis,
+  followUpCutoff: string,
+) {
+  const dateBounds = resolveReportPageDateBounds(dateRange, basis);
+  const timeZone = basis.timeZone ?? undefined;
+
+  const [summary, dailySeries] = await Promise.all([
+    getCompanyReportsSummary(companyId, {
+      dateBounds,
+      previousBounds: resolvePreviousReportDateBounds(dateBounds),
+      today: basis.today,
+      followUpCutoff,
+      timeZone,
+    }),
+    getCompanyReportDailySeries(companyId, dateBounds, {
+      timeZone,
+      fallBackToUtcDays: false,
+    }),
+  ]);
+
+  return {
+    basis,
+    summary,
+    dailySeries,
+    timeZoneUnsupported: Boolean(
+      summary.timeZoneUnsupported || dailySeries.timeZoneUnsupported,
+    ),
+  };
 }
 
 /**
@@ -101,6 +140,13 @@ function resolveAgingReferenceDate(): string {
  * The counting now happens in the database (migrations 169 and 170) and the
  * shipped builders derive everything else from those counts.
  *
+ * ============================== WHOSE DAYS ==============================
+ * The company's. options.timeZone is the company's resolved zone
+ * (companyContext.company.timezone, used as it is), and the figures, the
+ * charts and the sparklines all count a job finished at 9:30 pm on the 31st
+ * on the 31st. Until migrations 220 and 221 have both run the whole page
+ * counts UTC days instead, as it always did; see loadReportAggregates.
+ *
  * ============================== WHAT STILL READS ROWS ==============================
  * The two time-tracking reads. Both are bounded by what they select -- clocks
  * currently open, and today's entries -- and neither grows with the tenant.
@@ -116,30 +162,29 @@ export async function getReportsPageData(
   } = {},
 ): Promise<ReportsPageData> {
   const showLeadPipeline = options.showLeadPipeline ?? false;
-  const dateBounds =
-    resolveReportDateBounds(dateRange) ??
-    resolveProfitabilityReportDateBounds(dateRange);
+  // One "now" for every date on the page, so a request that straddles
+  // midnight cannot put the period and the aging reference on different days.
+  const now = new Date();
+  // The same helper migration 160 was built around: the cutoff is the last
+  // instant of today in the company's zone, resolved once here. It was
+  // already the company's zone and does not depend on the day basis.
+  const followUpCutoff = getLeadFollowUpDueCutoff(now, options.timeZone);
 
-  const [
-    summary,
-    dailySeries,
-    laborCostRates,
-    openClockEntries,
-    todayTimeEntries,
-  ] = await Promise.all([
-    getCompanyReportsSummary(companyId, {
-      dateBounds,
-      previousBounds: resolvePreviousReportDateBounds(dateBounds),
-      today: resolveAgingReferenceDate(),
-      // The same helper migration 160 was built around: the cutoff is the last
-      // instant of today in the company's zone, resolved once here.
-      followUpCutoff: getLeadFollowUpDueCutoff(new Date(), options.timeZone),
-    }),
-    getCompanyReportDailySeries(companyId, dateBounds),
-    listTechnicianLaborCostRates(companyId),
-    listOpenClockEntriesForCompany(companyId),
-    listTodayTimeEntriesForCompany(companyId, options.timeZone),
-  ]);
+  const [aggregates, laborCostRates, openClockEntries, todayTimeEntries] =
+    await Promise.all([
+      loadOnReportDayBasis(
+        options.timeZone,
+        (basis) =>
+          loadReportAggregates(companyId, dateRange, basis, followUpCutoff),
+        now,
+      ),
+      listTechnicianLaborCostRates(companyId),
+      listOpenClockEntriesForCompany(companyId),
+      listTodayTimeEntriesForCompany(companyId, options.timeZone),
+    ]);
+  // The basis the aggregates were ACTUALLY counted on, which is the old one
+  // when the database could not take a zone. Everything below uses it.
+  const { basis: dayBasis, summary, dailySeries } = aggregates;
 
   if (!summary.ok || !summary.data || !dailySeries.ok || !dailySeries.data) {
     // A failed aggregate must not render as a company with no business. The
@@ -155,6 +200,7 @@ export async function getReportsPageData(
 
   const chartSeries = buildReportChartSeriesFromDailySeries(dailySeries.data, {
     dateRange,
+    dayBasis,
   });
 
   const report = buildReportsPageDataFromAggregates({
@@ -162,6 +208,7 @@ export async function getReportsPageData(
     dateRange,
     aggregate: summary.data,
     chartSeries,
+    dayBasis,
     laborCostRates,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
     showLeadPipeline,

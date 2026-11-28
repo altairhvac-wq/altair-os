@@ -384,6 +384,7 @@ export function DispatchPageView({
                       focusTechnicianId={
                         dispatchPageFocus?.focusTechnicianId ?? null
                       }
+                      boardDateOnly={isBoardToday ? undefined : boardDateOnly}
                     />
                   )}
                 </div>

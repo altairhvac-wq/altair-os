@@ -51,9 +51,11 @@ First-party and cookieless. No third-party script is added.
 
 1. `FirstPartyAnalytics` (mounted once in `app/layout.tsx`) sends a beacon on
    every route change to `POST /api/analytics/collect`.
-2. The browser keeps a random visitor id in `localStorage` and a per-tab
-   session id in `sessionStorage`. First-touch and session attribution (UTM
-   tags, referrer host, landing path) are kept the same way. No cookies.
+2. The browser keeps a random visitor id and the current visit in
+   `localStorage` (since 217: one visit for all tabs, ended after 30 minutes
+   with no activity; before, one per tab in `sessionStorage` that never
+   ended). First-touch and visit attribution (UTM tags, referrer host,
+   landing path) are kept the same way. No cookies.
 3. The route refuses, silently with 204: non-production deployments, bots and
    headless browsers, cross-site origins, oversized or malformed bodies,
    unknown events, bad ids, more than 300 events per address per 15 minutes,
@@ -66,8 +68,10 @@ First-party and cookieless. No third-party script is added.
    new user (`user_metadata.signup_attribution`), so the source of every signup
    after deploy is known even if the visitor later clears storage.
 
-Events: `pageview`, `signup_started` (first focus in the signup form),
-`signup_completed` (server only).
+Events: `pageview` (when the path changes; query-string changes are the same
+page since 217), `page_engaged` (217: milliseconds the page was visible, sent
+when the tab is hidden, closed or left), `signup_started` (first focus in the
+signup form), `signup_completed` (server only).
 
 Channels: direct, search, social, email, paid, referral, internal, unknown.
 UTM medium and source win over the referrer. YouTube, Facebook, Instagram,
@@ -236,6 +240,113 @@ Tested on the scratch project inside a rolled-back transaction: a marked
 browser's views move to `excluded`, and sessions, bounce, time on site,
 landing and exit pages and journeys come out as expected.
 
+## Migration 209
+
+`supabase/migrations/209_site_engagement_events_and_resource_subscribers.sql`
+does two things.
+
+1. Engagement events. It widens the `event_name` check on
+   `web_analytics_events` to allow `cta_click`, `video_play`,
+   `calculator_used`, `template_download`, `results_email_requested` and
+   `boss_share`, adds a nullable `event_label` column (a slug chosen by our
+   code: which button, video, calculator or template; never anything a visitor
+   typed; the same pattern is enforced in the browser, the collect route and a
+   check constraint), and adds `platform_web_analytics_engagement(p_from, p_to)`
+   for the "What visitors did" panel. Like the 206 summary it leaves out the
+   owner's browsers and signed-in use. Service role only.
+2. `public.resource_email_subscribers`: the opt-in list from the free
+   calculators (RLS on, nothing granted to anon or authenticated). It holds an
+   email address, a status (`pending`, `confirmed`, `unsubscribed`), which
+   calculator it came from and the consent sentence that was shown. No
+   calculator inputs are stored anywhere.
+
+Where the events come from (`shared/lib/analytics/engagement.ts`,
+`trackEngagement` in `shared/lib/analytics/client.ts`):
+
+| Event | Sent when | Label |
+| --- | --- | --- |
+| `cta_click` | a link to `/signup` is pressed | the link's `data-cta`, or `signup` |
+| `video_play` | a video starts playing, except the muted preview loop | `data-video`, or `commercial` |
+| `calculator_used` | the first field change on a calculator, once per page view | the calculator's slug |
+| `template_download` | a template link is pressed | the template's id |
+| `results_email_requested` | "Email me these results" succeeds | the calculator's slug |
+| `boss_share` | a "Send this to your boss" button is pressed | `text`, `email`, `copy` or `share` |
+
+Order: deploying before 209 is applied is safe. Pageviews are unaffected (a
+pageview row never names the new column). Engagement events are refused by
+the old check constraint and dropped with one log line each, the panel reads
+"Not measured yet", "email me these results" still sends, and ticking the
+list box reports that the list is unavailable. It deletes nothing and changes
+no rows when applied, and can be run twice.
+
+Read-only probe:
+
+```sql
+select
+  to_regclass('public.resource_email_subscribers') is not null as list_table,
+  to_regprocedure('public.platform_web_analytics_engagement(timestamptz, timestamptz)') is not null as engagement_fn,
+  exists (select 1 from information_schema.columns where table_name = 'web_analytics_events' and column_name = 'event_label') as label_column,
+  has_table_privilege('anon', 'public.resource_email_subscribers', 'select') as anon_can_read_list,
+  has_function_privilege('anon', 'public.platform_web_analytics_engagement(timestamptz, timestamptz)', 'execute') as anon_can_call;
+```
+
+Expected: `true, true, true, false, false`.
+
+Tested on the scratch project 2026-11-12: applied twice without error; with a
+browser that does not announce itself as automated, one calculator change,
+one deliberate video play, one trial-button press, one template download and
+one "copy the message" each produced exactly one row with the expected label,
+and the muted preview loop produced none.
+
+## Migration 217
+
+`supabase/migrations/217_web_analytics_accuracy.sql` (2026-11-24, after the
+owner saw "time on site 9 seconds", "0 returning" and days that reset at
+5 pm). Same function signatures, so the app works before and after it runs.
+
+- **Time on site** is the visible time pages report (`page_engaged`,
+  `engaged_ms`, at most 30 minutes per row) over every visit. Before, it was
+  first-to-last pageview over visits of 2+ pages, so the last page and every
+  one-page visit counted as nothing. Visits from before 217 (no report) fall
+  back to first-to-last event.
+- **Bounce**: under 10 seconds, one page and no action. A one-page visit that
+  played the video or used a calculator is engaged.
+- **Returning**: a visit that started 30+ minutes after the visitor's first
+  visit we hold. Before, the period's first event decided it, so anyone whose
+  first visit fell in the period was "new". Phones and in-app browsers
+  (YouTube, Facebook, TikTok) often clear storage, so this is a lower bound.
+- **Days, "today" and daily charts** run in `p_tz` (the app passes
+  `ANALYTICS_TIME_ZONE`, default America/Denver). Before, midnight UTC
+  (5 pm in Denver).
+- **Website pages only**: `web_analytics_is_site_path` leaves out customer
+  estimate and invoice links, sign-in and password pages, setup, install,
+  subscription activation and the technician screens from every website
+  figure.
+- The engagement table (209) leaves out `page_engaged`.
+
+Code changes in the same release, no migration needed: the new-visitor burst
+limit counts only a browser's first-ever pageview (flag `firstVisit`) and runs
+after the owner checks (before, every pageview of a visitor's first UTC day
+counted, so a few readers on one office or phone-carrier address lost pages);
+a browser without storage keeps one in-memory id per page load instead of a
+new id per event.
+
+Run it in production after the release is merged (the app keeps working
+either way: until it runs, `page_engaged` rows are refused by the old check
+constraint and the old figures show). Probe:
+
+```sql
+select
+  to_regprocedure('public.web_analytics_is_site_path(text)') is not null as helper,
+  exists(select 1 from information_schema.columns where table_name = 'web_analytics_events' and column_name = 'engaged_ms') as engaged_ms,
+  has_function_privilege('anon', 'public.platform_web_analytics_summary(timestamptz, timestamptz, text)', 'execute') as anon_can_call;
+```
+
+Expected: `true, true, false`. Tested on the scratch project inside a rolled-back
+transaction (applied twice): an invoice-link visitor left out of every figure,
+a 3-hour return counted as returning, a one-page calculator visit not a
+bounce, median of visible times, Denver days, a time on a pageview refused.
+
 ## Tagging links
 
 Use UTM tags on every video description, post and ad link so the Marketing tab
@@ -289,6 +400,6 @@ https://altair-op.com/?utm_source=facebook&utm_medium=paid_social&utm_campaign=b
   tracking".
 - DAU / WAU / MAU fall back to sign-in times until tracking has data.
 - A visitor who switches device or clears storage counts as a new visitor.
-- `shared/components/analytics/AnalyticsPageView.tsx` and its siblings are an
-  older company-level analytics module on mock data that no route imports.
-  This work does not touch it; it is a candidate for removal.
+- The older company-level analytics module on mock data
+  (`shared/components/analytics/AnalyticsPageView.tsx` and its siblings), which
+  no route imported, was removed in the 2026-11-11 unused-code cleanup.

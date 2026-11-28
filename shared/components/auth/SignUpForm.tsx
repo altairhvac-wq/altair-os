@@ -6,6 +6,7 @@ import {
   trackSignupStarted,
 } from "@/shared/lib/analytics/client";
 import { useSearchParams } from "next/navigation";
+import { BrowserTimeZoneField } from "./BrowserTimeZoneField";
 import { NextRedirectField } from "./NextRedirectField";
 import {
   signupAction,
@@ -105,6 +106,7 @@ export function SignUpForm({
         <input type="hidden" name="analyticsVisitorId" value={analytics.visitorId} />
         <input type="hidden" name="analyticsSessionId" value={analytics.sessionId} />
         <input type="hidden" name="analyticsAttribution" value={analytics.attribution} />
+        <BrowserTimeZoneField />
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>
