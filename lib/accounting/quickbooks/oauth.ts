@@ -30,13 +30,13 @@ export type QuickBooksTokens = {
   readonly refreshTokenExpiresAt: Date | null;
 };
 
-export function buildQuickBooksAuthorizeUrl(state: string): string {
+export function buildQuickBooksAuthorizeUrl(state: string, redirectUri: string): string {
   const config = getQuickBooksConfig();
   const url = new URL(INTUIT_AUTHORIZE_URL);
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", QUICKBOOKS_SCOPE);
-  url.searchParams.set("redirect_uri", config.redirectUri);
+  url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
   return url.toString();
 }
@@ -98,11 +98,12 @@ async function tokenRequest(form: Record<string, string>): Promise<QuickBooksTok
   };
 }
 
-export function exchangeQuickBooksCode(code: string): Promise<QuickBooksTokens> {
+/** `redirectUri` must be the one the sign-in was started with (Intuit checks). */
+export function exchangeQuickBooksCode(code: string, redirectUri: string): Promise<QuickBooksTokens> {
   return tokenRequest({
     grant_type: "authorization_code",
     code,
-    redirect_uri: getQuickBooksConfig().redirectUri,
+    redirect_uri: redirectUri,
   });
 }
 

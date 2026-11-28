@@ -62,7 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // diagnosed without guessing.
   let step = "exchange";
   try {
-    const tokens = await exchangeQuickBooksCode(code);
+    const tokens = await exchangeQuickBooksCode(code, verified.redirectUri ?? getQuickBooksConfig().redirectUri);
     const environment = getQuickBooksConfig().environment;
     step = "company_facts";
     const facts = await new HttpQboApi({

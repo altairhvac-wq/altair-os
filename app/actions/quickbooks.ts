@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { disconnectQuickBooks, getAccountingConnection } from "@/lib/accounting/connection";
 import { buildQuickBooksAuthorizeUrl } from "@/lib/accounting/quickbooks/oauth";
-import { isQuickBooksConfigured } from "@/lib/accounting/quickbooks/env";
+import { isQuickBooksConfigured, quickBooksRedirectUriFor } from "@/lib/accounting/quickbooks/env";
 import {
   createQuickBooksState,
   QUICKBOOKS_STATE_COOKIE,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/accounting/quickbooks/oauth-state";
 import { runAccountingSyncForCompany, scheduleAccountingSync } from "@/lib/accounting/run";
 import { completeQuickBooksSetup, type QuickBooksSetupInput } from "@/lib/accounting/setup";
+import { resolveAuthRedirectOrigin } from "@/lib/auth/request-origin";
 import { assertIntegrationsManagementAccess } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -50,7 +51,11 @@ function revalidateIntegrations() {
 export async function startQuickBooksConnectAction(): Promise<{ error?: string; url?: string }> {
   const auth = await authorize();
   if ("error" in auth) return { error: auth.error };
-  const { state, cookieValue } = createQuickBooksState(auth);
+  // Back to this same host (app. or www.): the state cookie and the session
+  // are host-only.
+  const redirectUri = quickBooksRedirectUriFor((await resolveAuthRedirectOrigin()).origin);
+  if (!redirectUri) return { error: NOT_AVAILABLE };
+  const { state, cookieValue } = createQuickBooksState({ ...auth, redirectUri });
   const jar = await cookies();
   jar.set(QUICKBOOKS_STATE_COOKIE, cookieValue, {
     httpOnly: true,
@@ -59,7 +64,7 @@ export async function startQuickBooksConnectAction(): Promise<{ error?: string; 
     path: "/api/integrations/quickbooks",
     maxAge: QUICKBOOKS_STATE_TTL_SECONDS,
   });
-  return { url: buildQuickBooksAuthorizeUrl(state) };
+  return { url: buildQuickBooksAuthorizeUrl(state, redirectUri) };
 }
 
 /** Step 2: the owner's three answers; then sending starts. */

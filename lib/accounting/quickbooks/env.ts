@@ -13,9 +13,12 @@ import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
  *                           separate keys for each; the keys and this value
  *                           must match.
  * One optional override:
- *   QUICKBOOKS_REDIRECT_URI defaults to {NEXT_PUBLIC_APP_URL}/api/integrations/quickbooks/callback.
- *                           Intuit matches it exactly against the list in the
- *                           developer portal.
+ *   QUICKBOOKS_REDIRECT_URI pins every sign-in to one return address. Leave
+ *                           it unset in production: the sign-in then returns
+ *                           to the Altair host it started on (app. or www.,
+ *                           see quickBooksRedirectUriFor), and both callbacks
+ *                           are registered in the Intuit developer portal,
+ *                           which matches them exactly.
  *
  * The connection also needs the integrations encryption key
  * (INTEGRATIONS_ENCRYPTION_KEY), the same one the marketing channels use.
@@ -66,6 +69,21 @@ function resolveRedirectUri(): string | null {
   if (explicit) return explicit;
   const base = resolveAppBaseUrl();
   return base.ok ? `${base.url}${QUICKBOOKS_CALLBACK_PATH}` : null;
+}
+
+/**
+ * The return address for a sign-in started at `origin` (the request's own
+ * origin when it is a sibling of NEXT_PUBLIC_APP_URL, from
+ * resolveAuthRedirectOrigin). The state cookie and the session are host-only,
+ * so the sign-in must come back to the host it left from. An explicit
+ * QUICKBOOKS_REDIRECT_URI wins; Intuit refuses any address not registered for
+ * the app, so an unexpected origin fails closed at Intuit.
+ */
+export function quickBooksRedirectUriFor(origin: string | null): string | null {
+  const explicit = process.env[REDIRECT_URI_ENV]?.trim();
+  if (explicit) return explicit;
+  if (origin) return `${new URL(origin).origin}${QUICKBOOKS_CALLBACK_PATH}`;
+  return resolveRedirectUri();
 }
 
 /** Env var NAMES (never values) that are missing. */

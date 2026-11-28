@@ -14,6 +14,12 @@ import { decryptIntegrationSecret, encryptIntegrationSecret } from "@/lib/integr
  * The callback requires all three to match the signed-in session. The cookie
  * is single use: the callback deletes it.
  *
+ * The cookie also carries the exact redirect_uri sent to Intuit. The app is
+ * served on two hosts (app.altair-op.com and www.altair-op.com) and the
+ * sign-in returns to the host it started on, where this host-only cookie and
+ * the session live; Intuit then requires the token exchange to repeat that
+ * same redirect_uri, so the callback reads it from here instead of guessing.
+ *
  * No table: nothing to clean up, nothing to leak.
  */
 
@@ -25,20 +31,30 @@ type StatePayload = {
   readonly c: string;
   readonly u: string;
   readonly e: number;
+  readonly r?: string;
 };
 
-export function createQuickBooksState(input: { companyId: string; userId: string }): { state: string; cookieValue: string } {
+export function createQuickBooksState(input: { companyId: string; userId: string; redirectUri: string }): {
+  state: string;
+  cookieValue: string;
+} {
   const nonce = randomBytes(24).toString("base64url");
   const payload: StatePayload = {
     n: nonce,
     c: input.companyId,
     u: input.userId,
     e: Date.now() + QUICKBOOKS_STATE_TTL_SECONDS * 1000,
+    r: input.redirectUri,
   };
   return { state: nonce, cookieValue: encryptIntegrationSecret(JSON.stringify(payload)) };
 }
 
-export type VerifiedQuickBooksState = { readonly companyId: string; readonly userId: string };
+export type VerifiedQuickBooksState = {
+  readonly companyId: string;
+  readonly userId: string;
+  /** Null only for a cookie written before the redirect_uri was stored. */
+  readonly redirectUri: string | null;
+};
 
 /** The company and user the sign-in was started for, or null if anything is off. */
 export function readQuickBooksState(cookieValue: string | undefined, stateParam: string | null): VerifiedQuickBooksState | null {
@@ -56,5 +72,5 @@ export function readQuickBooksState(cookieValue: string | undefined, stateParam:
   const expected = Buffer.from(payload.n);
   const given = Buffer.from(stateParam);
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
-  return { companyId: payload.c, userId: payload.u };
+  return { companyId: payload.c, userId: payload.u, redirectUri: typeof payload.r === "string" ? payload.r : null };
 }
