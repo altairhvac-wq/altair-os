@@ -130,6 +130,12 @@ steps.push(
   // A company's business numbers (migration 218): the math is the public
   // calculators', code limits match the database's, owner/admin only.
   { name: "business-numbers", script: "scripts/verify-business-numbers.mjs" },
+  // Settings > Integrations for every company: it never claims a connection,
+  // a request is remembered, and the marketing channels stay platform-admin only.
+  {
+    name: "customer-integrations",
+    script: "scripts/verify-customer-integrations.mjs",
+  },
   // The public contractor directory: listing rules, migration 210, wiring.
   { name: "public-directory", script: "scripts/verify-directory.mjs" },
   // The pricing plan finder and the software pages' metadata (batch 3).

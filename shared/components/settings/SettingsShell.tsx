@@ -10,8 +10,6 @@ import {
 type SettingsShellProps = {
   children: React.ReactNode;
   showSystemCheck: boolean;
-  /** The marketing-channel Integrations tab (platform admins only). */
-  showIntegrations?: boolean;
   /** Business numbers, once migration 218 is in this database. */
   showBusinessNumbers?: boolean;
 };
@@ -29,7 +27,6 @@ type SettingsShellProps = {
 export function SettingsShell({
   children,
   showSystemCheck,
-  showIntegrations = false,
   showBusinessNumbers = false,
 }: SettingsShellProps) {
   return (
@@ -48,7 +45,6 @@ export function SettingsShell({
       <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-[14.5rem_minmax(0,1fr)] lg:items-start lg:gap-6">
         <SettingsNavigation
           showSystemCheck={showSystemCheck}
-          showIntegrations={showIntegrations}
           showBusinessNumbers={showBusinessNumbers}
         />
         <SettingsRouteContent>{children}</SettingsRouteContent>
