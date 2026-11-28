@@ -163,13 +163,12 @@ export async function getCompanyBusinessNumbers(context: ActiveCompanyContext): 
 
 /**
  * Whether this database has the business numbers table (migration 218) and
- * the signed-in person may use it. Asks for the company id and nothing else:
- * the settings menu calls this on every settings page just to decide whether
- * to list the section, and wages have no business travelling for that.
+ * this person may use it. Asks for the company id and nothing else: it is
+ * called just to decide whether to offer something, and wages have no
+ * business travelling for that.
  */
-export const isBusinessNumbersAvailable = cache(async function isBusinessNumbersAvailable(): Promise<boolean> {
-  const context = await getActiveCompanyContext();
-  if (!context || assertBusinessNumbersAccess(context)) return false;
+export async function isBusinessNumbersAvailableFor(context: ActiveCompanyContext): Promise<boolean> {
+  if (assertBusinessNumbersAccess(context)) return false;
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -182,6 +181,12 @@ export const isBusinessNumbersAvailable = cache(async function isBusinessNumbers
     console.error("[isBusinessNumbersAvailable] probe failed:", { companyId: context.company.id, code: error.code });
   }
   return !error;
+}
+
+/** The same, for the signed-in company, asked once per request (the settings menu asks on every settings page). */
+export const isBusinessNumbersAvailable = cache(async function isBusinessNumbersAvailable(): Promise<boolean> {
+  const context = await getActiveCompanyContext();
+  return context ? isBusinessNumbersAvailableFor(context) : false;
 });
 
 /**

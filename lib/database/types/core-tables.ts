@@ -868,6 +868,14 @@ export type ServiceItemRow = {
   delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
+  /**
+   * Migration 219: how the price was worked out. Optional because a database
+   * that has not run 219 returns rows without them; read them as "manual".
+   */
+  book_hours?: number | null;
+  parts_markup_percent?: number | null;
+  price_source?: "manual" | "rate";
+  setup_key?: string | null;
 };
 
 export type ServiceItemInsert = {
@@ -883,6 +891,11 @@ export type ServiceItemInsert = {
   is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
+  /** Migration 219. Only code that has checked the columns exist may send these. */
+  book_hours?: number | null;
+  parts_markup_percent?: number | null;
+  price_source?: "manual" | "rate";
+  setup_key?: string | null;
 };
 
 export type ServiceItemUpdate = Partial<

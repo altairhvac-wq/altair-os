@@ -54,6 +54,17 @@ const FILES = {
   nav: "shared/components/settings/SettingsNavigation.tsx",
   layout: "app/(admin)/settings/layout.tsx",
   dbTypes: "lib/database/types/database.ts",
+  // The guided setup (piece 2).
+  setupTypes: "shared/types/business-setup.ts",
+  starter: "shared/lib/business-numbers/starter-price-list.ts",
+  migration219: "supabase/migrations/219_service_item_pricing.sql",
+  setupQueries: "lib/database/queries/business-setup.ts",
+  setupActions: "app/actions/business-setup.ts",
+  setupPage: "app/(admin)/get-started/page.tsx",
+  setupShell: "shared/components/business-setup/GuidedSetup.tsx",
+  setupSteps: "shared/components/business-setup/steps.tsx",
+  setupFrame: "shared/components/business-setup/StepFrame.tsx",
+  setupCard: "shared/components/business-setup/SetupProgressCard.tsx",
 };
 
 console.log("\nFiles exist");
@@ -266,8 +277,8 @@ check("the store is server-only", /^import "server-only";/.test(queries));
   const order = ["assertBusinessNumbersAccess(context)", "assertMatchingCompanyScope(context, companyId)", "createServiceRoleClient()"].map((needle) => save.indexOf(needle));
   check("the service role is reached only after the access and company checks", order.every((at) => at > -1) && order[0] < order[1] && order[1] < order[2], order);
   check("the service role is used for the write and nowhere else in the store", (queries.match(/createServiceRoleClient\(\)/g) ?? []).length === 1);
-  const load = queries.slice(queries.indexOf("export async function getCompanyBusinessNumbers"), queries.indexOf("export const isBusinessNumbersAvailable"));
-  const probe = queries.slice(queries.indexOf("export const isBusinessNumbersAvailable"), queries.indexOf("export const getActiveCompanyBusinessNumbers"));
+  const load = queries.slice(queries.indexOf("export async function getCompanyBusinessNumbers"), queries.indexOf("export async function isBusinessNumbersAvailableFor"));
+  const probe = queries.slice(queries.indexOf("export async function isBusinessNumbersAvailableFor"), queries.indexOf("export const getActiveCompanyBusinessNumbers"));
   check("the settings menu's probe asks for the company id only, never a wage or a cost", /\.select\("company_id"\)/.test(probe) && !/select\("\*"\)/.test(probe) && /assertBusinessNumbersAccess\(context\)/.test(probe) && !/createServiceRoleClient/.test(probe));
   check("a number that is undefined is left alone; only null clears it", /if \(value === undefined\) continue;/.test(queries));
   check("reads use the signed-in person's own session (row level security decides)", /await createClient\(\)/.test(load) && !/createServiceRoleClient/.test(load));
@@ -284,12 +295,157 @@ check("the settings area is owner and admin only", /canAccessCompanySettings\(co
 const view = read(FILES.view);
 check("the form sends only what changed", /for \(const key of changedKeys\) input\[key\] = text\[key\];/.test(view));
 check("a save that throws keeps what was typed and says so (no error page)", /try \{\s*result = await updateBusinessNumbersAction\(input, companyId\);\s*\} catch \{/.test(view) && /SAVE_FAILED_MESSAGE/.test(view));
-check("boxes go read-only, not disabled, during a save (keyboard focus is kept)", /readOnly=\{busy\}/.test(view) && !/<input[^>]*\bdisabled=\{(isPending|busy|disabled)\}/.test(view.replace(/\n/g, " ")));
-check("a refused number is focused and tied to its message", /showField\(result\.field\)/.test(view) && /aria-describedby=\{describedBy\}/.test(view) && /errorId=\{badField === field \? feedbackId : null\}/.test(view));
+const fields = read("shared/components/business-numbers/fields.tsx");
+check("boxes go read-only, not disabled, during a save (keyboard focus is kept)", /readOnly=\{busy\}/.test(fields) && !/<input[^>]*\bdisabled=/.test(fields.replace(/\n/g, " ")) && /busy=\{isPending\}/.test(view));
+check("a refused number is focused and tied to its message", /showField\(result\.field\)/.test(view) && /aria-describedby=\{describedBy\}/.test(fields) && /aria-invalid=\{errorId \? true : undefined\}/.test(fields) && /errorId=\{badField === field \? feedbackId : null\}/.test(view));
 check("the phone save bar carries the message for a save that did not go through", /admin-sticky-footer sm:hidden[\s\S]{0,200}feedback\?\.tone === "error"[\s\S]{0,120}role="alert"/.test(view));
 check("a rate that cannot be stored is never offered", /const suggested = usableSuggestedRate\(derived\);/.test(view));
 check("the screen works the readings out with the shared math, not its own", /deriveBusinessNumbers\(numbers\)/.test(view) && !/\* 12\) \/ 52|\/ \(1 - /.test(view));
 check("the math files import nothing but each other and the calculators", [FILES.derive, FILES.readings, FILES.format, FILES.types].every((path) => [...read(path).matchAll(/from "([^"]+)"/g)].every((m) => m[1].startsWith("."))));
+
+/* ===================================================== the guided setup */
+const setupTypes = await loadPureModule(FILES.setupTypes, "bn-setup");
+const starter = await loadPureModule(FILES.starter, "bn-starter");
+const flat = await loadPureModule("shared/lib/resources/flat-rate-list.ts", "bn-flat");
+
+console.log("\nThe starter price list is priced with the public price list's formula");
+{
+  const hvac = starter.starterTasksForTrade("hvac");
+  const general = starter.starterTasksForTrade("plumbing");
+  check("HVAC gets ten repairs; every other trade gets a short list by size of job", hvac.length === 10 && general.length === 4 && starter.starterTasksForTrade(null).length === 4 && starter.starterTasksForTrade("nonsense").length === 4);
+  const all = [...hvac, ...general];
+  check("every key is unique, lower case, and fits the database's rule for setup keys", new Set(all.map((t) => t.key)).size === all.length && all.every((t) => /^[a-z0-9_]{1,60}$/.test(t.key)), all.map((t) => t.key));
+  check("the service call key fits the same rule and is not a starter key", /^[a-z0-9_]{1,60}$/.test(starter.SERVICE_CALL_SETUP_KEY) && !starter.STARTER_TASK_KEYS.has(starter.SERVICE_CALL_SETUP_KEY));
+  check("the list of known keys is exactly the starter keys", starter.STARTER_TASK_KEYS.size === all.length && all.every((t) => starter.STARTER_TASK_KEYS.has(t.key)));
+  check("every starter job has a name, some hours, and no negative part cost", all.every((t) => t.name.length >= 2 && t.name.length <= 80 && t.bookHours > 0 && t.bookHours <= 1000 && t.partCost >= 0));
+  check("the website's eight sample repairs are all on the HVAC list, with the same hours and part costs", flat.FLAT_RATE_SAMPLE_TASKS.every((sample) => hvac.some((t) => t.name === sample.name && t.bookHours === sample.bookHours && t.partCost === sample.partCost)));
+  const cap = hvac.find((t) => t.key === "hvac_capacitor");
+  const line = starter.priceStarterLine(cap, 121, 100, 1.5);
+  const site = flat.priceListLine({ bookHours: cap.bookHours, partCost: cap.partCost, markupPercent: 100 }, 121, 1.5, "dollar");
+  check("a line's price equals the public price list's, to the dollar ($127, $173 after hours)", line.standard === site.standard && line.afterHours === site.afterHours && line.standard === 127 && line.afterHours === 173, line);
+  check("prices are whole dollars, rounded up", all.every((t) => Number.isInteger(starter.priceStarterLine(t, 97.37, 55, 1.5).standard) && starter.priceStarterLine(t, 97.37, 55, 1.5).standard >= t.bookHours * 97.37 + t.partCost * 1.55 - 1e-9));
+  check("after hours raises the labor only, never the part", starter.priceStarterLine({ bookHours: 0, partCost: 100 }, 121, 50, 2).afterHours === 150 && starter.priceStarterLine({ bookHours: 1, partCost: 0 }, 121, 50, 2).afterHours === 242);
+}
+
+console.log("\nThe price list a form sends is checked before anything is added");
+{
+  const KEYS = starter.STARTER_TASK_KEYS;
+  const v = (input) => setupTypes.validatePriceListStepInput(input, KEYS, starter.STARTER_MAX_TASKS);
+  const ok = v({ markupPercent: "100", tasks: [{ key: "hvac_capacitor", name: " Replace  run capacitor ", bookHours: "0.75", partCost: "18" }, { key: null, name: "Duct leak repair", bookHours: 2, partCost: "" }] });
+  check("a good list comes back tidied (names trimmed, blank part cost is none)", ok.data && ok.data.markupPercent === 100 && ok.data.tasks[0].name === "Replace run capacitor" && ok.data.tasks[1].partCost === 0 && ok.data.tasks[1].key === null, ok);
+  check("an unknown key is refused (a form cannot name its own setup key)", v({ markupPercent: "100", tasks: [{ key: "service_call", name: "X job", bookHours: 1, partCost: 0 }] }).error !== undefined && v({ markupPercent: "100", tasks: [{ key: "made_up", name: "X job", bookHours: 1, partCost: 0 }] }).error !== undefined);
+  check("the same name twice is refused, whatever the capitals", /on the list twice/.test(v({ markupPercent: "0", tasks: [{ key: null, name: "Tune up", bookHours: 1, partCost: 0 }, { key: null, name: "tune UP", bookHours: 1, partCost: 0 }] }).error ?? ""));
+  check("the same starter job twice is refused", v({ markupPercent: "0", tasks: [{ key: "hvac_igniter", name: "A", bookHours: 1, partCost: 0 }, { key: "hvac_igniter", name: "B", bookHours: 1, partCost: 0 }] }).error !== undefined);
+  check("a problem names its row", v({ markupPercent: "0", tasks: [{ key: null, name: "Good job", bookHours: 1, partCost: 0 }, { key: null, name: "Bad job", bookHours: "lots", partCost: 0 }] }).row === 1);
+  check("a job with no hours and no part has no price and is refused", /has no price/.test(v({ markupPercent: "0", tasks: [{ key: null, name: "Nothing", bookHours: 0, partCost: 0 }] }).error ?? ""));
+  check("an empty list, a nameless job and a missing markup are refused", v({ markupPercent: "100", tasks: [] }).error !== undefined && v({ markupPercent: "100", tasks: [{ key: null, name: " ", bookHours: 1, partCost: 0 }] }).error !== undefined && v({ markupPercent: "", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 0 }] }).error !== undefined);
+  check("more jobs than the limit are refused", v({ markupPercent: "0", tasks: Array.from({ length: starter.STARTER_MAX_TASKS + 1 }, (_, i) => ({ key: null, name: `Job ${i}`, bookHours: 1, partCost: 0 })) }).error !== undefined);
+  check("out-of-range hours, part cost and markup are refused", v({ markupPercent: "0", tasks: [{ key: null, name: "Job", bookHours: 1001, partCost: 0 }] }).error !== undefined && v({ markupPercent: "0", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 100001 }] }).error !== undefined && v({ markupPercent: "1001", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 0 }] }).error !== undefined && v({ markupPercent: "-1", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 0 }] }).error !== undefined);
+  check("junk in place of a list is refused, not a crash", [null, undefined, "x", {}, { tasks: "x" }, { markupPercent: 1, tasks: [null] }, { markupPercent: 1, tasks: [7] }].every((junk) => v(junk).error !== undefined));
+  const custom = "custom_0123456789ab";
+  check("a job the owner added before keeps its own key; a made-up one in that shape is treated as that, nothing else", v({ markupPercent: "0", tasks: [{ key: custom, name: "Duct leak repair", bookHours: 2, partCost: 25 }] }).data?.tasks[0].key === custom && v({ markupPercent: "0", tasks: [{ key: "custom_short", name: "X job", bookHours: 1, partCost: 0 }] }).error !== undefined && v({ markupPercent: "0", tasks: [{ key: "CUSTOM_0123456789AB", name: "X job", bookHours: 1, partCost: 0 }] }).error !== undefined);
+  check("jobs to remove are checked like keys, and a list of only removals is allowed", JSON.stringify(v({ markupPercent: "0", tasks: [], removeKeys: ["hvac_igniter", custom, "hvac_igniter"] }).data?.removeKeys) === JSON.stringify(["hvac_igniter", custom]) && v({ markupPercent: "0", tasks: [], removeKeys: ["made_up"] }).error !== undefined && v({ markupPercent: "0", tasks: [], removeKeys: "hvac_igniter" }).error !== undefined && v({ markupPercent: "0", tasks: [], removeKeys: [] }).error !== undefined);
+  check("a job cannot be both kept and removed", v({ markupPercent: "0", tasks: [{ key: "hvac_igniter", name: "Igniter", bookHours: 1, partCost: 0 }], removeKeys: ["hvac_igniter"] }).error !== undefined);
+  check("a markup problem names the markup box", v({ markupPercent: "lots", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 0 }] }).field === "markupPercent" && v({ markupPercent: "1001", tasks: [{ key: null, name: "Job", bookHours: 1, partCost: 0 }] }).field === "markupPercent");
+  check("the screen and the save round hours and part costs the same way (0.333 hours is 0.33)", setupTypes.roundPriceListNumber(0.333) === 0.33 && v({ markupPercent: "0", tasks: [{ key: null, name: "Job", bookHours: "0.333", partCost: "9.999" }] }).data.tasks[0].bookHours === 0.33 && v({ markupPercent: "0", tasks: [{ key: null, name: "Job", bookHours: "0.333", partCost: "9.999" }] }).data.tasks[0].partCost === 10);
+  check("the limits match migration 219's (hours 0-1000, markup 0-1000)", setupTypes.PRICE_LIST_MAX_HOURS === 1000 && setupTypes.PRICE_LIST_MAX_MARKUP === 1000);
+  const contact = setupTypes.validateShopContact({ phone: " 801-555-0142 ", city: "", state: null, addressLine1: "x".repeat(201) });
+  check("shop details: too long is refused with its field", contact.error !== undefined && contact.field === "addressLine1");
+  const tidy = setupTypes.validateShopContact({ phone: " 801-555-0142 ", city: "", state: null });
+  check("shop details: only the boxes sent come back; blank clears", JSON.stringify(tidy.data) === JSON.stringify({ phone: "801-555-0142", city: null, state: null }), tidy);
+  check("shop details: a value that is not text is refused", setupTypes.validateShopContact({ phone: 8015550142 }).error !== undefined);
+}
+
+console.log("\nMigration 219: the price book's pricing columns");
+{
+  const sql219 = read(FILES.migration219);
+  const code219 = sql219.replace(/--.*$/gm, "");
+  check("it only adds columns to service_items (no new table, no function, no policy or grant change)", /alter table public\.service_items\s+add column if not exists book_hours/.test(sql219) && !/create table|create (or replace )?function|create policy|\bgrant\b|\brevoke\b/.test(code219));
+  check("every existing item stays priced by hand", /price_source text not null default 'manual'/.test(sql219) && !/\bupdate\s+public\.service_items/.test(code219));
+  check("a rate-priced item must say how many hours it is", /check \(price_source <> 'rate' or book_hours is not null\)/.test(sql219));
+  check("price_source can only be manual or rate", /check \(price_source in \('manual', 'rate'\)\)/.test(sql219));
+  check("hours and markup ranges match the code's", /book_hours is null or book_hours between 0 and 1000/.test(sql219) && /parts_markup_percent is null or parts_markup_percent between 0 and 1000/.test(sql219));
+  check("one live item per setup key per company; an item in the trash does not block", /create unique index if not exists service_items_company_setup_key_idx\s+on public\.service_items \(company_id, setup_key\)\s+where setup_key is not null and deleted_at is null/.test(sql219));
+  check("it can be run twice", (code219.match(/add constraint/g) ?? []).length === (code219.match(/drop constraint if exists/g) ?? []).length && /add column if not exists/.test(sql219) && /create unique index if not exists/.test(sql219));
+  const coreTables = read("lib/database/types/core-tables.ts");
+  check("the new columns are optional in the row type (a database without 219 returns rows without them)", /book_hours\?: number \| null;[\s\S]{0,200}price_source\?: "manual" \| "rate";[\s\S]{0,80}setup_key\?: string \| null;/.test(coreTables));
+  check("existing price book code still reads whole rows, so it works with or without 219", !/select\("[^"*]*(book_hours|setup_key|price_source)/.test(read("lib/database/queries/service-items.ts")));
+}
+
+console.log("\nThe guided setup's actions");
+{
+  const actions = read(FILES.setupActions);
+  const setupQueries = read(FILES.setupQueries);
+  check("the actions are server actions", /^"use server";/.test(actions));
+  const gate = actions.slice(actions.indexOf("async function requireSetupContext"), actions.indexOf("function revalidateSetupPaths"));
+  const gateOrder = ["getActiveCompanyContext()", "assertBusinessNumbersAccess(context)", "expectedCompanyId !== context.company.id", "getGuidedSetupAvailability()"].map((needle) => gate.indexOf(needle));
+  check("every save goes through one gate: signed-in company, owner or admin, the page's company, setup switched on", gateOrder.every((at) => at > -1) && gateOrder.every((at, i) => i === 0 || at > gateOrder[i - 1]), gateOrder);
+  const exported = [...actions.matchAll(/export async function (\w+)\(/g)].map((m) => m[1]);
+  check("seven actions, and each one calls the gate before anything else", exported.length === 7 && exported.every((name) => new RegExp(`export async function ${name}\\([^)]*\\): Promise<SetupActionResult> \\{\\s*const required = await requireSetupContext\\(expectedCompanyId\\);\\s*if \\("error" in required\\) return \\{ error: required\\.error \\};`).test(actions)), exported);
+  check("no action takes the company from the form", !/input\??\.company|\.companyId\b/.test(actions.replace(/context\.company\.id/g, "")));
+  check("each step passes on only the numbers it owns", /pick\(input, RATE_KEYS\)/.test(actions) && /pick\(input, \["serviceCallFee", "serviceCallCredited"\]\)/.test(actions) && /pick\(input, \["monthlyOverhead", "averageJobRevenue", "jobVariableCostPercent"\]\)/.test(actions));
+  check("the price list is priced from the stored rate, never one sent by the form", /const laborRate = record\.numbers\.laborRate;/.test(actions) && !/input\.laborRate/.test(actions));
+  check("a skip never undoes a finished step", /status === "skipped" && record\.setup\.steps\[step\] === "done" \? "done" : status/.test(actions));
+  check("the setup completes once, the first time every step has been visited", /allVisited && !record\.setup\.completedAt \? new Date\(\)\.toISOString\(\) : undefined/.test(actions));
+  check("a step's numbers and its done mark are saved in one write", /saveCompanyBusinessNumbers\(context\.company\.id, context, patch, await stepMark\(context, step, "done"\)\)/.test(actions));
+  check("the setup's own queries are server-only and use the signed-in session (no service role)", /^import "server-only";/.test(setupQueries) && !/createServiceRoleClient/.test(setupQueries));
+  const writers = ["updateCompanyShopContact", "saveSetupPriceList", "saveServiceCallItem"];
+  check("each write checks owner/admin and the company before touching the database", writers.every((name) => new RegExp(`export async function ${name}\\([\\s\\S]{0,400}?const accessError = assertBusinessNumbersAccess\\(context\\) \\?\\? assertMatchingCompanyScope\\(context, companyId\\);\\s*if \\(accessError\\) return`).test(setupQueries)));
+  check("the shop step never writes the company's name, trade or time zone", !/\b(name|trade|timezone):/.test(setupQueries.slice(setupQueries.indexOf("export async function updateCompanyShopContact"), setupQueries.indexOf("export async function saveSetupPriceList"))));
+  check("every price book write is scoped to the company", (setupQueries.match(/\.from\("service_items"\)/g) ?? []).length === (setupQueries.match(/\.eq\("company_id", (companyId|context\.company\.id)\)|company_id: companyId/g) ?? []).length, [(setupQueries.match(/\.from\("service_items"\)/g) ?? []).length, (setupQueries.match(/\.eq\("company_id", (companyId|context\.company\.id)\)|company_id: companyId/g) ?? []).length]);
+  check("the setup never deletes a price book item", !/\.delete\(\)/.test(setupQueries));
+  const save = setupQueries.slice(setupQueries.indexOf("export async function saveSetupPriceList"), setupQueries.indexOf("export async function saveServiceCallItem"));
+  check("names are matched one at a time, exactly, never as a list filter (a name may hold commas and quotes)", /\.eq\("name", task\.name\)/.test(save) && !/\.in\("name"/.test(setupQueries));
+  check("an unticked job is archived, never deleted, and only if the setup made it and the owner has not archived it already", /for \(const key of step\.removeKeys\)/.test(save) && /update\(\{ archived_at: archivedAt, is_active: false \}\)/.test(save) && /key === SERVICE_CALL_SETUP_KEY \|\| row\.archived_at !== null\) continue;/.test(save));
+  check("a job being added that matches the owner's own item is refused, not overwritten", /Your price book already has/.test(save) && save.indexOf("customByName.get(task.name)") < save.indexOf('.eq("name", task.name)'));
+  check("a job the owner added gets a key of its own from the server", /setup_key: isStarterKey \? task\.key : newCustomKey\(\)/.test(save) && /return `custom_\$\{randomUUID\(\)\.replace\(\/-\/g, ""\)\.slice\(0, 12\)\}`;/.test(setupQueries));
+  check("an item in the trash gives up its key before the setup makes that item again", (setupQueries.match(/await releaseTrashedSetupKeys\(/g) ?? []).length === 2 && /update\(\{ setup_key: null \}\)[\s\S]{0,120}\.not\("deleted_at", "is", null\)/.test(setupQueries));
+  check("the setup shows a job the owner has re-priced or archived as theirs, and leaves it unless ticked", /handPriced: row\.price_source !== "rate" && row\.setup_key !== SERVICE_CALL_SETUP_KEY/.test(setupQueries) && /active: row\.archived_at === null && row\.is_active !== false/.test(setupQueries) && /checked: existing \? !isOwnersNow\(existing\) : keptBefore \? false : task\.common/.test(read(FILES.setupSteps)));
+  const priceBookQueries = read("lib/database/queries/service-items.ts");
+  check("a price typed by hand in the price book makes a rate-priced item the owner's (manual)", /currentRow\?\.price_source === "rate" &&\s*Number\(currentRow\.unit_price\) !== update\.unit_price\s*\) \{\s*update\.price_source = "manual";/.test(priceBookQueries));
+  check("that check reads the whole row, so it works before migration 219", /\.select\("\*"\)\s*\.eq\("company_id", companyId\)\s*\.eq\("id", serviceItemId\)\s*\.maybeSingle\(\);/.test(priceBookQueries));
+  const numbersAction = read(FILES.action);
+  check("a fee changed in Settings reaches the price book's Service call item, and never adds one", /saveServiceCallItem\(context\.company\.id, context, validation\.data\.serviceCallFee, \{ createIfMissing: false \}\)/.test(numbersAction) && /createIfMissing: true/.test(actions) && /if \(!options\.createIfMissing\) return \{ error: null \};/.test(setupQueries));
+  check("a blank sales tax clears a saved rate instead of pretending to", /typedTax === "" && "defaultTaxRate" in input && hasSavedCompanyBillingDefaults\(context\.company\.settings\) \? "0" : typedTax/.test(actions));
+  check("the shop step survives an argument that is not an object", /const input: ShopStepInput = rawInput && typeof rawInput === "object" \? rawInput : \{\};/.test(actions));
+  check("setup-made items are marked as priced from the rate, with their hours", /price_source: "rate" as const/.test(setupQueries) && /book_hours: task\.bookHours/.test(setupQueries));
+  check("availability needs both migrations: the numbers table and the price book columns", /if \(!\(await isBusinessNumbersAvailableFor\(context\)\)\) return false;/.test(setupQueries) && /\.select\("id, book_hours, parts_markup_percent, price_source, setup_key"\)/.test(setupQueries) && /isMissingDatabaseColumnError\(error\)/.test(setupQueries));
+}
+
+console.log("\nThe guided setup's screens and the way in");
+{
+  const setupPage = read(FILES.setupPage);
+  const shell = read(FILES.setupShell);
+  const steps = read(FILES.setupSteps);
+  const frame = read(FILES.setupFrame);
+  const card = read(FILES.setupCard);
+  const dashboard = read("app/(admin)/(home)/page.tsx");
+  check("the page sends anyone who cannot run the setup to the dashboard", /if \(!canManageBusinessNumbers\(context\) \|\| !\(await getGuidedSetupAvailability\(\)\)\) \{\s*redirect\("\/"\);/.test(setupPage));
+  check("the steps on screen are the steps in the store, in the same order", types.BUSINESS_SETUP_STEPS.join() === "shop,rate,service-call,price-list,target" && types.BUSINESS_SETUP_STEPS.every((step) => new RegExp(`view === "${step}"`).test(shell)));
+  check("every step can be skipped and left", /Skip for now/.test(frame) && /onSkip/.test(frame) && /I&apos;ll do this later/.test(shell) && /<Link href="\/"/.test(shell));
+  check("a save that throws keeps the page (no error screen)", /try \{\s*result = await call\(\);\s*\} catch \{/.test(frame) && /try \{\s*result = await skipSetupStepAction\(step, companyId\);\s*\} catch \{/.test(shell));
+  check("the phone bar sits on the tab-bar offset class, not a fixed position of its own", /admin-sticky-footer sm:hidden/.test(frame));
+  check("examples are labelled as examples", /example numbers for a one-truck shop/.test(steps));
+  check("example numbers nobody touched are never saved as the company's own", /if \(mode === "work" && !\(usingExamples && !edited\)\) for \(const key of RATE_INPUT_KEYS\) input\[key\] = inputs\[key\];/.test(steps) && /averageJobRevenue: numberToFieldText\(numbers\.averageJobRevenue\),/.test(steps) && /placeholder: String\(BREAK_EVEN_DEFAULTS\.averageJobRevenue\)/.test(steps));
+  check("the price on screen is rounded the way the save rounds it", /priceStarterLine\(\{ bookHours: roundPriceListNumber\(hours\), partCost: roundPriceListNumber\(part\) \}/.test(steps));
+  check("Enter in a job's box does not send the whole list", (steps.match(/onKeyDown=\{keepEnter\}/g) ?? []).length === 3);
+  check("a new screen starts at its top with the question focused", /screen\?\.scrollIntoView\(\{ block: "start" \}\)/.test(shell) && /querySelector<HTMLElement>\("h1"\)\?\.focus\(\{ preventScroll: true \}\)/.test(shell) && /<h1 tabIndex=\{-1\}/.test(frame));
+  check("calculator numbers stop being offered to the step once the rate is saved", /if \(step === "rate"\) setPrefill\(null\);/.test(shell));
+  check("on a phone one message is announced, not two", /aria-live="polite" className="mt-3 min-h-0 max-sm:hidden"/.test(frame));
+  check("the steps use the shared math and sentences, not their own", /deriveBusinessNumbers\(/.test(steps) && /priceStarterLine\(/.test(steps) && !/\* 12\) \/ 52|\/ \(1 - /.test(steps));
+  check("website calculator numbers stay in the browser until the step's own button is pressed", /useCarried\(\)/.test(shell) && !/Action\(/.test(shell.slice(shell.indexOf("function toRatePrefill"), shell.indexOf("export function GuidedSetup"))) && /setPrefill\(toRatePrefill\(carried\)\)/.test(shell));
+  check("no step promises a use the product does not have yet (estimates, job profit, the dashboard)", !/on every estimate and invoice|profit shown on each job|dashboard (tracks|counts)/i.test(steps.replace(/These go on the top of every estimate and invoice you send/, "")) && !/dashboard tracks/i.test(shell));
+  check("the dashboard offers the setup only when it can run, is unfinished and was not put off", /if \(!canManageBusinessNumbers\(companyContext\)\) \{\s*return null;/.test(dashboard) && /if \(!available \|\| record\.setup\.completedAt \|\| record\.setup\.dismissedAt\) \{\s*return null;/.test(dashboard) && /if \(!\(await getGuidedSetupAvailability\(\)\)\) \{\s*return null;/.test(dashboard));
+  check("a company that finished or put off the setup costs the dashboard one read, not three", dashboard.indexOf("getCompanyBusinessNumbers(companyContext)") < dashboard.indexOf("if (!(await getGuidedSetupAvailability()))"));
+  check("the card counts finished steps as done, not skipped ones", /done: BUSINESS_SETUP_STEPS\.filter\(\(step\) => record\.setup\.steps\[step\] === "done"\)\.length/.test(dashboard) && /`\$\{done\} of \$\{total\} steps done\./.test(card));
+  check("the card is placed above the dashboard for computer and phone alike", /<SetupProgressCard[\s\S]{0,260}\/>\s*\) : null\}\s*<OperationalDashboardView/.test(dashboard) && /dismissGuidedSetupAction\(companyId\)/.test(card));
+  const redirects = read("lib/auth/redirects.ts");
+  const auth = read("app/actions/auth.ts");
+  const postAuth = read("lib/auth/post-auth.ts");
+  check("a new company opens on the setup only when it was not already heading somewhere, and only where the setup can run", /createdCompany &&\s*!next &&\s*\(await getGuidedSetupAvailabilityFor\(companyContext\)\)/.test(auth) && /startOnSetup \? NEW_COMPANY_START_PATH : next/.test(auth) && /createdCompany &&\s*!requested &&\s*\(await getGuidedSetupAvailabilityFor\(companyContext\)\)/.test(postAuth) && /startOnSetup \? NEW_COMPANY_START_PATH : requested/.test(postAuth));
+  check("only a request that just created the company sets that flag", (auth.match(/createdCompany = true;/g) ?? []).length === 2 && (postAuth.match(/createdCompany = true;/g) ?? []).length === 1 && /redirectAfterAuth\(next, Boolean\(bootstrapResult\.companyId\)\)/.test(auth));
+  check("the setup path is an allowed destination, owner/admin only, and known to the gatekeeper", /export const NEW_COMPANY_START_PATH = "\/get-started";/.test(redirects) && /"\/get-started",/.test(redirects) && /if \(path === "\/get-started"\) \{\s*return canManageBusinessNumbers\(context\);/.test(read(FILES.access)) && /"\/get-started",/.test(read("lib/supabase/middleware.ts")));
+}
 
 console.log(`\n${passed}/${passed + failed} checks passed`);
 process.exit(failed === 0 ? 0 : 1);

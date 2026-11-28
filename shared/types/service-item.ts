@@ -12,6 +12,20 @@ export type ServiceItem = {
   archivedAt?: string;
   deletedAt?: string;
   deleteAfter?: string;
+  /**
+   * How the price was worked out (migration 219). Absent on an item priced by
+   * hand, and on every item in a database that has not run 219.
+   */
+  pricing?: ServiceItemPricing;
+};
+
+export type ServiceItemPricing = {
+  /** "rate": price = book hours x the company's labor rate + part cost x (1 + markup). */
+  source: "manual" | "rate";
+  bookHours: number | null;
+  partsMarkupPercent: number | null;
+  /** The guided setup's stable name for this item, when it made it. */
+  setupKey: string | null;
 };
 
 export type ServiceItemFormData = {

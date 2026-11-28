@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getActiveCompanyBusinessNumbers } from "@/lib/database/queries/business-numbers";
+import { getGuidedSetupAvailability } from "@/lib/database/queries/business-setup";
 import { BusinessNumbersView } from "@/shared/components/settings/business-numbers/BusinessNumbersView";
 
 /**
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BusinessNumbersSettingsPage() {
-  const [context, load] = await Promise.all([getActiveCompanyContext(), getActiveCompanyBusinessNumbers()]);
+  const [context, load, guidedSetup] = await Promise.all([getActiveCompanyContext(), getActiveCompanyBusinessNumbers(), getGuidedSetupAvailability()]);
 
   if (!context || !load) {
     return null;
@@ -28,5 +29,5 @@ export default async function BusinessNumbersSettingsPage() {
     notFound();
   }
 
-  return <BusinessNumbersView companyId={context.company.id} initialNumbers={load.record.numbers} loadError={load.error} />;
+  return <BusinessNumbersView companyId={context.company.id} initialNumbers={load.record.numbers} loadError={load.error} guidedSetup={guidedSetup} />;
 }
