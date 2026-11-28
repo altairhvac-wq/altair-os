@@ -8,7 +8,8 @@ import {
   getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCustomers } from "@/lib/database/queries/customers";
+import { getCustomerById, listCustomers } from "@/lib/database/queries/customers";
+import { withSelectedOption } from "@/shared/lib/customers/customer-options";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
 import { listJobAttachmentsForJob } from "@/lib/database/queries/job-attachments";
@@ -66,7 +67,7 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
     expenses,
     materials,
     serviceItems,
-    customers,
+    activeCustomers,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyContext.company.id, companyContext)
@@ -83,6 +84,17 @@ export default async function WorkJobDetailPage({ params }: JobDetailPageProps) 
       ? listCustomers(companyContext.company.id)
       : Promise.resolve([]),
   ]);
+
+  // The job's own customer must be one of the edit form's options. The list
+  // above is the customers still on the books; a job whose customer has since
+  // been archived is not in it, and the form then showed a DIFFERENT customer
+  // as already chosen — saving any edit moved the job to that customer.
+  const jobCustomer =
+    canEditJob &&
+    !activeCustomers.some((customer) => customer.id === job.customerId)
+      ? await getCustomerById(companyContext.company.id, job.customerId)
+      : null;
+  const customers = withSelectedOption(activeCustomers, jobCustomer);
 
   const deleteDependencies = await getJobDeleteDependencies(
     companyContext.company.id,

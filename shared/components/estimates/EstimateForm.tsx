@@ -18,6 +18,7 @@ import {
   adminFormLabelClass,
 } from "@/shared/lib/admin-density";
 import { Button } from "@/shared/design-system/components";
+import { CustomerPicker } from "@/shared/components/customers/CustomerPicker";
 import { EstimateDescriptionAiAssistant } from "./EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "./LineItemsEditor";
 
@@ -85,6 +86,10 @@ export function EstimateForm({
     defaults.lineItems,
   );
   const [stepError, setStepError] = useState<string | null>(null);
+  // The record behind the chosen id, kept here rather than in the picker: the
+  // picker leaves the screen on step 2, and a customer it found by search is
+  // in no list this form was given.
+  const [pickedCustomer, setPickedCustomer] = useState<Customer | null>(null);
 
   const customerJobs = useMemo(
     () => jobs.filter((job) => job.customerId === customerId),
@@ -92,8 +97,11 @@ export function EstimateForm({
   );
 
   const selectedCustomer = useMemo(
-    () => customers.find((customer) => customer.id === customerId),
-    [customers, customerId],
+    () =>
+      pickedCustomer?.id === customerId
+        ? pickedCustomer
+        : customers.find((customer) => customer.id === customerId),
+    [customers, customerId, pickedCustomer],
   );
 
   const selectedJob = useMemo(
@@ -105,8 +113,12 @@ export function EstimateForm({
     (option) => option.value !== "all",
   );
 
-  function handleCustomerChange(nextCustomerId: string) {
+  function handleCustomerChange(
+    nextCustomerId: string,
+    customer: Customer | null,
+  ) {
     setCustomerId(nextCustomerId);
+    setPickedCustomer(customer);
     setJobId("");
     setStepError(null);
   }
@@ -189,21 +201,13 @@ export function EstimateForm({
                 <label htmlFor="customerId" className={adminFormLabelClass}>
                   Customer
                 </label>
-                <select
-                  id="customerId"
-                  name="customerId"
-                  required
+                <CustomerPicker
+                  customers={customers}
                   value={customerId}
-                  onChange={(e) => handleCustomerChange(e.target.value)}
-                  className={adminFormInputClass}
-                >
-                  <option value="">Select…</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
-                </select>
+                  selectedCustomer={selectedCustomer}
+                  onChange={handleCustomerChange}
+                  required
+                />
               </div>
 
               <div>
