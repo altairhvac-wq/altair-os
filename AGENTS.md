@@ -45,6 +45,7 @@ Typical request flow:
 - `lib/ai/`, `lib/email/`, `lib/payments/`, `lib/sms/`, `lib/integrations/`: server-side external-service integrations.
 - `shared/components/`: reusable UI grouped by product domain. North Star variants are colocated in domain-specific `north-star-*` folders.
 - `shared/design-system/`: tokens, shell, signature, components, and design-system documentation.
+- `shared/lib/help/`: the how-to library. One typed catalog of short notes read by the signed-in Help page (`/help`), the public pages (`/how-to`) and, later, the assistant (`docs/product/ALTAIR_ASSISTANT.md`). Every on-screen label a note quotes is anchored to its source file and checked by `npm run verify:help-notes`.
 - `shared/types/`: domain models, validation/normalization helpers, and action-facing types.
 - `supabase/migrations/`: ordered PostgreSQL schema, RLS, function, trigger, and grant migrations.
 - `public/`: static assets, PWA files, import templates, and the marketing pictures and video the public pages show. Everything in it is served to anyone with the address, so it holds only files a page uses.
@@ -183,4 +184,5 @@ A change is complete when all applicable items are true:
 - New configuration is documented in `.env.example` without real values, and secrets remain server-only.
 - Database changes are delivered as a new ordered migration with appropriate RLS, grants, and typed application updates.
 - Current source-of-truth documentation is updated when architecture, production status, setup, commands, routes, or operational procedures change.
+- When a change renames a button, tab, field or page a how-to note quotes, the note in `shared/lib/help/notes/` is updated in the same change and `npm run verify:help-notes` passes. A new screen people will ask about gets a note.
 - No generated output, credentials, local auth state, or unrelated user changes are included in the diff.

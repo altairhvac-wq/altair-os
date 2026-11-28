@@ -191,6 +191,9 @@ steps.push(
     script: "scripts/verify-agent-queue-integrity.mjs",
   },
   { name: "agent-heartbeat", script: "scripts/verify-agent-heartbeat.mjs" },
+  // The how-to library: every quoted button label is still on its screen,
+  // every "take me there" link is a real page. Executes the shipped catalog.
+  { name: "help-notes", script: "scripts/verify-help-notes.mjs", typescript: true },
 );
 
 const results = [];

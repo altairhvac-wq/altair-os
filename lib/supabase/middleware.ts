@@ -13,6 +13,7 @@ import { COMPETITOR_PAGE_PATHS } from "@/shared/lib/site/comparison-paths";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
+import { isHowToPath } from "@/shared/lib/help/paths";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = [
@@ -390,7 +391,9 @@ function isMarketingRoute(pathname: string) {
     isLandingRoute(pathname) ||
     isUtahPageRoute(pathname) ||
     isVideoPageRoute(pathname) ||
-    isComparisonRoute(pathname)
+    isComparisonRoute(pathname) ||
+    // The public how-to pages (shared/lib/help): static copy, no tenant data.
+    isHowToPath(pathname)
   );
 }
 
@@ -412,6 +415,7 @@ function isPublicRoute(pathname: string) {
     isUtahPageRoute(pathname) ||
     isVideoPageRoute(pathname) ||
     isComparisonRoute(pathname) ||
+    isHowToPath(pathname) ||
     isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||

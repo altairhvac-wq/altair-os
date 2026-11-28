@@ -5,6 +5,7 @@ import { LANDING_PAGE_PATHS } from "@/shared/lib/site/landing-pages";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/lib/site/public-site";
 import { COMPANY_PAGE_PATHS } from "@/shared/lib/site/about";
 import { UTAH_PAGE_PATHS } from "@/shared/lib/site/utah-pages";
+import { HOW_TO_PATH } from "@/shared/lib/help/paths";
 
 /**
  * Crawl policy for the public origin.
@@ -52,6 +53,8 @@ export default function robots(): MetadataRoute.Robots {
           ...COMPETITOR_PAGE_PATHS,
           "/insights",
           "/resources",
+          // The how-to library: the index and one page per note.
+          HOW_TO_PATH,
           // The contractor directory: search, listings and the listing form.
           // The manage page is under it and marks itself noindex.
           "/directory",

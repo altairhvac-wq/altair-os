@@ -1,3 +1,6 @@
+import { HELP_AREAS } from "@/shared/lib/help/catalog";
+import { HOW_TO_PATH } from "@/shared/lib/help/paths";
+import { HOW_TO_SECTION_NAME } from "@/shared/lib/help/structured-data";
 import { SAAS_SUBSCRIPTION_CATALOG, SAAS_TRIAL_CONFIG } from "@/lib/saas-billing/catalog";
 import { RESOURCE_CALCULATORS, RESOURCES_ESTIMATE_PATH, RESOURCES_FLAT_RATE_PATH, calculatorPath } from "@/shared/lib/resources/catalog";
 import { INVOICE_BUILDER_PATH, LABOR_WORKSPACE_PATH } from "@/shared/lib/resources/tool-hub";
@@ -97,6 +100,11 @@ function buildLlmsText(): string {
       .filter((guide) => !guide.href.includes("#"))
       .map((guide) => `- [${guide.title}](${url(guide.href)}): ${guide.text}`),
     ...links("learn"),
+    "",
+    "## How to use the software",
+    "",
+    `- [${HOW_TO_SECTION_NAME}](${url(HOW_TO_PATH)}): step-by-step notes for each task, with the buttons named as they appear on the screen.`,
+    ...HELP_AREAS.map((area) => `- [${area.label}](${url(`${HOW_TO_PATH}#${area.id}`)}): ${area.blurb}`),
     "",
     "## Company",
     "",
